@@ -8,13 +8,20 @@ export default function Home() {
   const router = useRouter();
   const [userType, setUserType] = useState<'patient' | 'doctor' | null>(null);
 
-  // Autocomplete logic
-  const hyderabadLocations = [
-    "Banjara Hills", "Jubilee Hills", "Gachibowli", "Hitech City", "Madhapur",
-    "Begumpet", "Ameerpet", "Kukatpally", "Secunderabad", "Kondapur",
-    "Mehdipatnam", "Somajiguda", "Dilsukhnagar", "LB Nagar", "Tolichowki",
-    "Kompally", "Uppal", "Miyapur", "Nallagandla", "Manikonda", "Attapur"
-  ];
+  
+const hyderabadLocations = [
+  "Banjara Hills", "Jubilee Hills", "Gachibowli", "Hitech City", "Madhapur", "Manikonda",
+  "Begumpet", "Ameerpet", "Kukatpally", "Secunderabad", "Kondapur", "Miyapur",
+  "Mehdipatnam", "Somajiguda", "Dilsukhnagar", "LB Nagar", "Tolichowki", "Kompally",
+  "Uppal", "Nallagandla", "Attapur", "Khairatabad", "Panjagutta", "Yousufguda",
+  "Erragadda", "SR Nagar", "Moosapet", "RTC X Roads", "Basheerbagh", "Koti",
+  "Abids", "Himayatnagar", "Chikkadpally", "Musheerabad", "Amberpet", "Nagole",
+  "Charminar", "Malakpet", "Bahadurpura", "Shamshabad", "Rajendra Nagar", "Alwal",
+  "ECIL", "Malkajgiri", "Nacharam", "Peerzadiguda", "LB Nagar", "Hayathnagar",
+  "Gandipet", "Patancheru", "Isnapur", "Tellapur", "Tarnaka", "Habsiguda", "Moosarambagh",
+  "Sainikpuri", "Bowenpally", "Nizampet", "Bachupally", "Chandanagar", "Beeramguda"
+];
+
 
   const [searchInput, setSearchInput] = useState('');
   const [filteredLocations, setFilteredLocations] = useState<string[]>([]);
@@ -146,7 +153,7 @@ export default function Home() {
                   </select>
                   <input type="text" placeholder="Location" className="input-style" />
 
-                  {/* Preferred Locations Field */}
+                
                   <div className="relative">
                     <input
                       type="text"
