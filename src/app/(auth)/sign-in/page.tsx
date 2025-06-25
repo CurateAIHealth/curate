@@ -27,7 +27,7 @@ export default function SignIn() {
   };
 
   const handleRegisterRedirect = () => {
-    router.push('/');
+    router.push('/register');
   };
 
   return (
@@ -35,19 +35,19 @@ export default function SignIn() {
       <section className="w-full max-w-md bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow-2xl p-6 text-center space-y-6 animate-fade-in">
 
 
-        <div className="flex justify-center">
+        <div className="flex items-center justify-center ">
           <Image
             src="/Icons/Curate-logo.png"
             alt="Curate AI Health Logo"
-            width={80}
-            height={80}
+            width={85}
+            height={85}
             priority
-            className="rounded-full shadow-md transition-transform duration-300 hover:scale-110"
+            className="rounded-full pl-2 shadow-md transition-transform duration-300 hover:scale-110 "
           />
         </div>
 
         <h1 className="text-3xl font-bold text-gray-800">
-          Sign in to <span className="text-teal-600">Curate Ai Health</span>
+          Sign in to <span className="text-teal-600">Curate Digital AI Health</span>
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4 text-left">
           <input
