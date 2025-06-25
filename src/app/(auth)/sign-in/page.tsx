@@ -10,15 +10,14 @@ export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-const ReduxValue=useSelector((state:any)=>state.FirstValue)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     try {
-   
+
       if (email === 'admin@curate.com' && password === 'password') {
-        router.push('/dashboard'); 
+        router.push('/dashboard');
       } else {
         setError('Invalid email or password');
       }
@@ -35,7 +34,7 @@ const ReduxValue=useSelector((state:any)=>state.FirstValue)
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-teal-100 p-4">
       <section className="w-full max-w-md bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow-2xl p-6 text-center space-y-6 animate-fade-in">
 
-       
+
         <div className="flex justify-center">
           <Image
             src="/Icons/Curate-logo.png"
@@ -50,7 +49,6 @@ const ReduxValue=useSelector((state:any)=>state.FirstValue)
         <h1 className="text-3xl font-bold text-gray-800">
           Sign in to <span className="text-teal-600">Curate Ai Health</span>
         </h1>
-<p>{ReduxValue}</p>
         <form onSubmit={handleSubmit} className="space-y-4 text-left">
           <input
             type="email"
