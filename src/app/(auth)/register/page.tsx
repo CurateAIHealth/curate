@@ -17,7 +17,7 @@ export default function Home() {
     }, [router, userType]);
 
     const handleSignIn = useCallback(() => {
-        router.push('/signin');
+        router.push('/sign-in');
     }, [router]);
 
     return (
