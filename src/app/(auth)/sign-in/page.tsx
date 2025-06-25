@@ -3,21 +3,21 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useSelector } from 'react-redux';
 
 export default function SignIn() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     try {
-      // Replace this with your real sign-in logic (e.g. API call)
+
       if (email === 'admin@curate.com' && password === 'password') {
-        router.push('/dashboard'); // Navigate to dashboard or home
+        router.push('/dashboard');
       } else {
         setError('Invalid email or password');
       }
@@ -34,7 +34,7 @@ export default function SignIn() {
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-teal-100 p-4">
       <section className="w-full max-w-md bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow-2xl p-6 text-center space-y-6 animate-fade-in">
 
-        {/* Logo */}
+
         <div className="flex justify-center">
           <Image
             src="/Icons/Curate-logo.png"
