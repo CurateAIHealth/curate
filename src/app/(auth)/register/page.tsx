@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { HYDERABAD_LOCATIONS, medicalSpecialties } from '@/Lib/Content';
+import Logo from '@/Components/Logo/page';
 
 
 
@@ -30,7 +31,7 @@ export default function Home() {
     ).slice(0, 5);
   }, [DoctorSearchInput]);
 
-  const handleSelect = useCallback((e:any) => {
+  const handleSelect = useCallback((e: any) => {
     setUserType(e.target.value);
   }, []);
 
@@ -42,32 +43,32 @@ export default function Home() {
     router.push('/sign-in');
   }, [router]);
 
-  const handleSelectLocation = (location:any) => {
+  const handleSelectLocation = (location: any) => {
     if (selectedLocations.length < 4) {
       setSelectedLocations(prev => [...prev, location]);
       setSearchInput('');
     }
   };
 
-  const handleRemoveLocation = (location:any) => {
+  const handleRemoveLocation = (location: any) => {
     setSelectedLocations(prev => prev.filter(loc => loc !== location));
   };
 
-  const updateSelectedService = useCallback((service:any) => {
+  const updateSelectedService = useCallback((service: any) => {
     setSelected(prev => [...prev, service]);
     setDoctorSearchInput("");
   }, []);
 
-  const removeSelectedService = useCallback((service:any) => {
+  const removeSelectedService = useCallback((service: any) => {
     setSelected(prev => prev.filter(item => item !== service));
   }, []);
 
   return (
     <main className="h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-teal-100 p-4">
       <section className="w-full max-w-md md:max-w-lg bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow-2xl p-6 sm:p-8 text-center space-y-6 animate-fade-in m-2">
-        <div className="flex items-center justify-center">
-          <Image src="/Icons/Curate-logo.png" alt="Curate AI Health Logo" width={85} height={85} priority />
-        </div>
+        <Logo />
+
+
         <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-800 leading-snug">
           Register with <span className="text-teal-600"><span className='text-pink-400'>Curate</span> Digital AI</span>
         </h1>
@@ -174,10 +175,10 @@ export default function Home() {
               )}
             </div>
             <button onClick={handleRegister} className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 rounded-full shadow-lg transition duration-300 mt-4">
-                   Register as {userType === 'patientFamily' ? 'Patient Family' : userType.charAt(0).toUpperCase() + userType.slice(1)}
+              Register as {userType === 'patientFamily' ? 'Patient Family' : userType.charAt(0).toUpperCase() + userType.slice(1)}
             </button>
             <div className="text-sm text-gray-700 mt-2">
-              Already registered? <button onClick={handleSignIn} className="text-teal-600 font-semibold hover:underline">Sign In</button>
+              Already registered? <button onClick={handleSignIn} className="text-teal-600 font-semibold hover:underline hover:curser">Sign In</button>
             </div>
           </>
         )}
