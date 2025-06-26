@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useSelector } from 'react-redux';
+import Logo from '@/Components/Logo/page';
 
 export default function SignIn() {
   const router = useRouter();
@@ -33,19 +34,7 @@ export default function SignIn() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-teal-100 p-4">
       <section className="w-full max-w-md bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow-2xl p-6 text-center space-y-6 animate-fade-in">
-
-
-        <div className="flex items-center justify-center">
-               <Image
-                 src="/Icons/Curate-logo.png"
-                 alt="Curate AI Health Logo"
-                 width={85}
-                 height={85}
-                 priority
-                 
-               />
-             </div>
-
+        <Logo />
         <h1 className="text-3xl font-bold text-gray-800">
           Sign in to <span className="text-teal-600"><span className='text-pink-400'>Curate</span> Digital AI </span>
         </h1>
