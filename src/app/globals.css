@@ -26,10 +26,23 @@ body {
 }
 
 
-.input-style {
-  @apply w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400 transition;
-}
 
 .input-style {
-  @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 transition;
+  @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400 transition;
+}
+
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #a0aec0;
+  border-radius: 4px;
 }
