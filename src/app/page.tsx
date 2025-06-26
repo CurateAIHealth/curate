@@ -28,9 +28,12 @@ export default function Home() {
              </div>
 
 
-        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800">
-          Register with <span className="text-teal-600"><span className='text-pink-400'>Curate</span> Digital AI </span>
-        </h1>
+       <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800"> 
+  Register with <span className="text-teal-600">
+    <span className="text-pink-400">Curate</span> Digital AI<sup className="text-xs align-super">™</sup>
+  </span>
+</h1>
+
 
 
         <p className="text-gray-600 text-sm md:text-base">
