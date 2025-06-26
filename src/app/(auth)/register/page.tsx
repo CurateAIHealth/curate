@@ -94,7 +94,7 @@ export default function Home() {
         )}
         {userType && (
           <>
-            <div className="md:h-[220px] h-[280px] flex flex-col gap-2 overflow-auto p-2">
+            <div className="md:h-[210px] h-[280px] flex flex-col gap-2 overflow-auto p-2">
               {userType === 'doctor' && (
                 <>
                   <input type="text" placeholder="First Name" className="input-style" />
