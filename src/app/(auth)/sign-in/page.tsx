@@ -5,23 +5,22 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import Logo from '@/Components/Logo/page';
+import { UpdateInformation } from '@/Lib/user.action';
 
 export default function SignIn() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loginInfo,setloginInfo]=useState({Name:"Curate",Password:"Testing"})
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     try {
 
-      if (email === 'admin@curate.com' && password === 'password') {
-        router.push('/dashboard');
-      } else {
-        setError('Invalid email or password');
-      }
+  //  const PostingResult= await UpdateInformation(loginInfo.Name,loginInfo.Password)
+    // console.log("Result---",PostingResult)
     } catch (err) {
       setError('Something went wrong. Please try again.');
     }
@@ -31,6 +30,10 @@ export default function SignIn() {
     router.push('/register');
   };
 
+
+const UpdateLoginInfo=(e:any)=>{
+  setloginInfo({...loginInfo,[e.target.name]:e.target.value})
+}
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-teal-100 p-4">
       <section className="w-full max-w-md bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow-2xl p-6 text-center space-y-6 animate-fade-in">
@@ -42,20 +45,23 @@ export default function SignIn() {
           <input
             type="email"
             placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            name='Name'
+            value={loginInfo.Name}
+            onChange={UpdateLoginInfo}
             required
             className="w-full text-center p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
           />
           <input
             type="password"
             placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            name='Password'
+            value={loginInfo.Password}
+            onChange={UpdateLoginInfo}
             required
             className="w-full p-2 text-center rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
           />
           {error && <p className="text-red-600 text-sm">{error}</p>}
+
 
           <button
             type="submit"
