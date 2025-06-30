@@ -15,6 +15,7 @@ export const medicalSpecialties = [
   "Urologist",
   "Gastroenterologist",
   "Nephrologist",
+  
 
 
   "Registered Nurse (RN)",

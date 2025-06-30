@@ -1,0 +1,51 @@
+"use server";
+import clientPromise from "./db";
+
+export const UpdateInformation = async (doctorInfo: {
+  userType: any,
+  FirstName: any,
+  LastName: any,
+  Qualification: any,
+  Location: any,
+  RegistrationNumber: any,
+  College: any,
+  Email: any,
+  userId: any,
+  OfferableService: any,
+  PreferredLocationsforHomeVisits: any,
+}) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+   
+    const existingDoctor = await collection.findOne({
+      $or: [
+        { Email: doctorInfo.Email },
+        { RegistrationNumber: doctorInfo.RegistrationNumber },
+      ],
+    });
+
+    if (existingDoctor) {
+      return {
+        success: false,
+        message: "Doctor registered with email or registration number already exists.",
+      };
+    }
+
+    const result = await collection.insertOne({
+      ...doctorInfo,
+      createdAt: new Date(),
+    });
+
+    return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedId: result.insertedId.toString(),
+    };
+  } catch (error) {
+    console.error("Error inserting doctor data:", error);
+    throw error;
+  }
+};

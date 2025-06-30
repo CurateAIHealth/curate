@@ -1,204 +1,57 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { HYDERABAD_LOCATIONS, medicalSpecialties } from '@/Lib/Content';
+import { useState, useCallback } from 'react';
+
+import axios from 'axios';
+import { UpdateInformation } from '@/Lib/user.action';
 import Logo from '@/Components/Logo/page';
+import DoctorForm from '@/Components/DocterForm/page';
+import NurseForm from '@/Components/NurseForm/page';
+import PatientForm from '@/Components/PatientForm/page';
+import PatientFamilyForm from '@/Components/PatientFamilyForm/page';
+import UserTypeSelector from '@/Components/UserTypeSelector/page';
 
-export default function Home() {
-  const router = useRouter();
-  const [userType, setUserType] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [DoctorSearchInput, setDoctorSearchInput] = useState('');
-  const [selected, setSelected] = useState<string[]>([]);
+export default function RegisterPage() {
+  const [userType, setUserType] = useState<string>('');
 
-  const filteredLocations = useMemo(() => {
-    if (!searchInput) return [];
-    return HYDERABAD_LOCATIONS.filter(loc =>
-      loc.toLowerCase().includes(searchInput.toLowerCase()) &&
-      !selectedLocations.includes(loc)
-    ).slice(0, 5);
-  }, [searchInput, selectedLocations]);
+  const handleRegister = useCallback(async (formData: any) => {
+    const result = await UpdateInformation(formData);
 
-  const filteredServices = useMemo(() => {
-    if (!DoctorSearchInput) return [];
-    return medicalSpecialties.filter(service =>
-      service.toLowerCase().includes(DoctorSearchInput.toLowerCase())
-    ).slice(0, 5);
-  }, [DoctorSearchInput]);
+    await axios.post('/api/MailSend', {
+      to: 'srivanikasham@gmail.com',
+      subject: 'Curate Digital AI Health Registration',
+      html: `
+        <p>Dear User,</p>
+        <p>Thank you for registering with <strong>Curate Digital AI Health</strong>.</p>
+        <p>We have received your registration details. Our team will review and reach out if needed.</p>
+        <p>Best regards,<br/>Curate Digital AI Health Team</p>
+      `,
+    });
 
-  const handleSelect = useCallback((e: any) => {
-    setUserType(e.target.value);
-  }, []);
-
-  const handleRegister = useCallback(() => {
-    router.push('/register');
-  }, [router]);
-
-  const handleSignIn = useCallback(() => {
-    router.push('/sign-in');
-  }, [router]);
-
-  const handleSelectLocation = (location: any) => {
-    if (selectedLocations.length < 4) {
-      setSelectedLocations(prev => [...prev, location]);
-      setSearchInput('');
-    }
-  };
-
-  const handleRemoveLocation = (location: any) => {
-    setSelectedLocations(prev => prev.filter(loc => loc !== location));
-  };
-
-  const updateSelectedService = useCallback((service: any) => {
-    setSelected(prev => [...prev, service]);
-    setDoctorSearchInput('');
-  }, []);
-
-  const removeSelectedService = useCallback((service: any) => {
-    setSelected(prev => prev.filter(item => item !== service));
+    alert('Registration successful!');
   }, []);
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-teal-100 p-4">
-     <section className="w-full max-w-md md:max-w-lg bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow-2xl px-6 py-8 sm:p-10 text-center space-y-6 overflow-hidden">
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-100 via-white to-green-100 md:p-2 p-6">
+      <section className="w-full max-w-xl bg-white/80 backdrop-blur-md border border-white/40 rounded-3xl shadow-xl overflow-hidden">
+        <div className="pl-4 pr-4 pb-2">
+          <Logo />
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-800 mb-4">
+            Register with <span className="text-pink-500">Curate</span> <span className="text-teal-600">Digital AI</span>
+          </h2>
 
-  <Logo />
+       
+          <UserTypeSelector userType={userType} setUserType={setUserType} />
 
-  <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-800 leading-snug">
-    Register with <span className="text-teal-600"><span className='text-pink-400'>Curate</span> Digital AI</span>
-  </h1>
-
-  <div className="flex flex-wrap justify-center gap-4 text-gray-700 font-medium text-sm sm:text-base">
-    {["patient", "patientFamily", "doctor", "nurse"].map(type => (
-      <label key={type} className="flex items-center space-x-2 cursor-pointer">
-        <input
-          type="radio"
-          name="userType"
-          value={type}
-          onChange={handleSelect}
-          checked={userType === type}
-          className="accent-teal-600"
-        />
-        <span>{type === 'patientFamily' ? 'Patient Family' : type.charAt(0).toUpperCase() + type.slice(1)}</span>
-      </label>
-    ))}
-  </div>
-
-  {/* Scrollable form container */}
-  {userType && (
-    <div className="max-h-[330px] overflow-y-auto pr-1 flex flex-col gap-4 text-left">
-      {/* Doctor Form Fields */}
-      {userType === 'doctor' && (
-        <>
-          <input type="text" placeholder="First Name" className="input-style" />
-          <input type="text" placeholder="Last Name" className="input-style" />
-          <input type="text" placeholder="Qualification" className="input-style" />
-
-          <div className="relative">
-            <input
-              type="text"
-              placeholder={selected.length >= 1 ? 'Service Chosen' : 'Offerable Service'}
-              value={DoctorSearchInput}
-              onChange={e => setDoctorSearchInput(e.target.value)}
-              disabled={selected.length >= 1}
-              className="input-style"
-            />
-            <div className="flex flex-wrap gap-2 mt-2">
-              {selected.map((service, i) => (
-                <span key={i} className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm flex items-center">
-                  {service}
-                  <button onClick={() => removeSelectedService(service)} className="ml-2 text-teal-600 hover:text-red-500 font-bold">×</button>
-                </span>
-              ))}
-            </div>
-            {DoctorSearchInput && (
-              <ul className="absolute z-10 bg-white border border-gray-200 w-full mt-1 rounded shadow-md max-h-40 overflow-auto text-left">
-                {filteredServices.map((service, index) => (
-                  <li key={index} onClick={() => updateSelectedService(service)} className="px-3 py-2 hover:bg-teal-100 cursor-pointer">
-                    {service}
-                  </li>
-                ))}
-              </ul>
-            )}
+         
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 text-sm text-gray-700 relative overflow-visible">
+            {userType === 'doctor' && <DoctorForm onSubmit={handleRegister} />}
+            {userType === 'nurse' && <NurseForm onSubmit={handleRegister} />}
+            {userType === 'patient' && <PatientForm onSubmit={handleRegister} />}
+            {userType === 'patientFamily' && <PatientFamilyForm onSubmit={handleRegister} />}
           </div>
-
-          <input type="text" placeholder="Location" className="input-style" />
-
-          <div className="relative">
-            <input
-              type="text"
-              placeholder={selectedLocations.length >= 4 ? 'Max 4 locations' : 'Preferred locations for home visits'}
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
-              disabled={selectedLocations.length >= 4}
-              className="input-style"
-            />
-            {filteredLocations.length > 0 && (
-              <ul className="absolute z-10 bg-white border border-gray-200 w-full mt-1 rounded shadow-md max-h-40 overflow-auto text-left">
-                {filteredLocations.map((location, index) => (
-                  <li key={index} onClick={() => handleSelectLocation(location)} className="px-3 py-2 hover:bg-teal-100 cursor-pointer">
-                    {location}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-2 mt-2">
-            {selectedLocations.map((loc, i) => (
-              <span key={i} className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm flex items-center">
-                {loc}
-                <button onClick={() => handleRemoveLocation(loc)} className="ml-2 text-teal-600 hover:text-red-500 font-bold">×</button>
-              </span>
-            ))}
-          </div>
-
-          <input type="text" placeholder="Registration Number" className="input-style" />
-          <input type="text" placeholder="College" className="input-style" />
-          <input type="email" placeholder="Email" className="input-style" />
-        </>
-      )}
-
-      {/* Other User Types */}
-      {(userType === 'patient' || userType === 'patientFamily' || userType === 'nurse') && (
-        <>
-          <input type="text" placeholder="Full Name" className="input-style" />
-          <input type="email" placeholder="Email" className="input-style" />
-          <input type="number" placeholder="Age" className="input-style" />
-          {userType === 'nurse' && (
-            <>
-              <input type="text" placeholder="Qualification" className="input-style" />
-              <input type="text" placeholder="Registration Number" className="input-style" />
-            </>
-          )}
-        </>
-      )}
-    </div>
-  )}
-
-  {/* Bottom buttons */}
-  {userType && (
-    <>
-      <button
-        onClick={handleRegister}
-        className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 rounded-full shadow-lg transition duration-300"
-      >
-        Register as {userType === 'patientFamily' ? 'Patient Family' : userType.charAt(0).toUpperCase() + userType.slice(1)}
-      </button>
-
-      <div className="text-sm text-gray-700">
-        Already registered?{' '}
-        <button onClick={handleSignIn} className="text-teal-600 font-semibold hover:underline">
-          Sign In
-        </button>
-      </div>
-    </>
-  )}
-</section>
-
+        </div>
+      </section>
     </main>
   );
 }

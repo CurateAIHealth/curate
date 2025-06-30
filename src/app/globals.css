@@ -27,9 +27,11 @@ body {
 
 
 
+/* Add in globals.css or tailwind.config.js */
 .input-style {
-  @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400 transition;
+  @apply w-full px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400;
 }
+
 
 
 @keyframes fade-in {
@@ -45,4 +47,31 @@ body {
 ::-webkit-scrollbar-thumb {
   background-color: #a0aec0;
   border-radius: 4px;
+}
+.input-style {
+  @apply px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500;
+}
+
+.primary-button {
+  @apply w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 rounded-full shadow transition duration-300;
+}
+
+.badge-style {
+  @apply bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm flex items-center;
+}
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out both;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
