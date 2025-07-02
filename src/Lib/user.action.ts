@@ -13,13 +13,15 @@ export const UpdateInformation = async (doctorInfo: {
   userId: any,
   OfferableService: any,
   PreferredLocationsforHomeVisits: any,
+  Password: any,
+  ConfirmPassword: any
 }) => {
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
 
-   
+
     const existingDoctor = await collection.findOne({
       $or: [
         { Email: doctorInfo.Email },
@@ -45,19 +47,56 @@ export const UpdateInformation = async (doctorInfo: {
       insertedId: result.insertedId.toString(),
     };
   } catch (error) {
- 
+
     throw error;
   }
 };
 
 
-export const GetUserIdwithEmail=async(Mail:any)=>{
+export const GetUserIdwithEmail = async (Mail: any) => {
+  try {
+    const cluster = await clientPromise
+    const Db = cluster.db("CurateInformation")
+    const Collection = Db.collection("Registration")
+    const FinelResult: any = await Collection.findOne({ Email: Mail })
+    return FinelResult.userId
+  } catch (err: any) {
+
+  }
+}
+
+
+export const SignInRessult = async (SignInfor: { Name: any, Password: any }) => {
+  try {
+    const Clustor = await clientPromise
+    const Db = Clustor.db("CurateInformation")
+    const Collection = Db.collection("Registration")
+    const SignInInformation:any = Collection.findOne({
+       Email: SignInfor.Name,
+       ConfirmPassword: SignInfor.Password,
+    })
+    if (!SignInInformation) return null;
+    return SignInInformation.userId
+  } catch (err: any) {
+
+  }
+}
+
+export const UpdatePassword=async(UpdatedData:{InputUserId:any,NewPassword:any,ConfirmNewPassword:any})=>{
 try{
-const cluster=await clientPromise
-const Db=cluster.db("CurateInformation")
-const Collection=Db.collection("Registration")
-const FinelResult:any= await Collection.findOne({Email:Mail})
-return FinelResult.userId
+ const Clustor = await clientPromise
+    const Db = Clustor.db("CurateInformation")
+    const Collection = Db.collection("Registration")
+    const UpdatedInfo= await Collection.updateOne(
+      {userId:UpdatedData.InputUserId},
+          {
+      $set: {
+        Password: UpdatedData.NewPassword,
+        ConfirmPassword: UpdatedData.ConfirmNewPassword,
+      },
+    }
+
+    )
 }catch(err:any){
 
 }

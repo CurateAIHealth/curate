@@ -5,12 +5,11 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import Logo from '@/Components/Logo/page';
-import { UpdateInformation } from '@/Lib/user.action';
+import { SignInRessult, UpdateInformation } from '@/Lib/user.action';
 
 export default function SignIn() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+
   const [error, setError] = useState('');
   const [loginInfo,setloginInfo]=useState({Name:"Curate",Password:"Testing"})
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,8 +18,10 @@ export default function SignIn() {
 
     try {
 
-  //  const PostingResult= await UpdateInformation(loginInfo.Name,loginInfo.Password)
-    // console.log("Result---",PostingResult)
+      const Result= await SignInRessult(loginInfo)
+      localStorage.setItem("UserId",Result)
+      console.log("SignIn Information---",Result)
+   router.push("/HomePage")
     } catch (err) {
       setError('Something went wrong. Please try again.');
     }
@@ -42,6 +43,7 @@ const UpdateLoginInfo=(e:any)=>{
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-teal-100 p-4">
       <section className="w-full max-w-md bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow-2xl p-6 text-center space-y-6 animate-fade-in">
         <Logo />
+        <p>Sidd</p>
         <h1 className="text-3xl font-bold text-gray-800">
           Sign in to <span className="text-teal-600"><span className='text-pink-400'>Curate</span> Digital AI </span>
         </h1>
