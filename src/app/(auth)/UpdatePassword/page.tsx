@@ -62,7 +62,7 @@ const router=useRouter()
         NewUpdatedPassword: password,
         NewConfirmUpdatedPassword: confirmPassword,
       };
-
+console.log("Test Token---",payload.UpdatedUserid)
       const result:any = await UpdatePassword(payload);
 
       if (result.success) {
