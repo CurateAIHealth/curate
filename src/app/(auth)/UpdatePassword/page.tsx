@@ -65,7 +65,7 @@ const router=useRouter()
 
       const result:any = await UpdatePassword(payload);
 
-      if (result) {
+      if (result.success) {
         setSuccess('Password updated successfully.');
         setTimeout(() => {
          router.push( '/sign-in')

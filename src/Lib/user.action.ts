@@ -87,16 +87,20 @@ try{
  const Clustor = await clientPromise
     const Db = Clustor.db("CurateInformation")
     const Collection = Db.collection("Registration")
-    const UpdatedInfo= await Collection.updateOne(
-      {userId:UpdatedData.InputUserId},
-          {
-      $set: {
-        Password: UpdatedData.NewPassword,
-        ConfirmPassword: UpdatedData.ConfirmNewPassword,
-      },
+      const result = await Collection.updateOne(
+      { userId: UpdatedData.InputUserId },
+      {
+        $set: {
+          Password: UpdatedData.NewPassword,
+        },
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return { success: false, message: 'User not found or no changes made.' };
     }
 
-    )
+    return { success: true, message: 'Password updated successfully.' };
 }catch(err:any){
 
 }
