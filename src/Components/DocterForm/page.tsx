@@ -4,7 +4,7 @@ import { HYDERABAD_LOCATIONS, medicalSpecialties } from '@/Lib/Content';
 import { UpdateInformation } from '@/Lib/user.action';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
- import ReactDOMServer from 'react-dom/server';
+import ReactDOMServer from 'react-dom/server';
 import { useState, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -64,91 +64,90 @@ export default function DoctorForm() {
     setSelectedLocations(prev => prev.filter(l => l !== loc));
 
   const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const finalData = {
-        ...formData,
-        userId: uuidv4(),
-        OfferableService: selectedServices,
-        PreferredLocationsforHomeVisits: selectedLocations,
-      };
+  e.preventDefault();
 
-      const Result = await UpdateInformation(finalData)
-     
+  try {
+    const finalData = {
+      ...formData,
+      userId: uuidv4(),
+      OfferableService: selectedServices,
+      PreferredLocationsforHomeVisits: selectedLocations,
+    };
 
-const EmailComponent = () => (
-  <div>
-    <div style={{ textAlign: 'center' }}>
-      <img
-        src="https://curate-pearl.vercel.app/Icons/Curate-logo.png"
-        alt="Curate Digital AI Health"
-        width="150"
-      />
-    </div>
-    <p>Dear User,</p>
-    <p>Thank you for registering with <strong>Curate Digital AI Health</strong>.</p>
-    <p>We have successfully received your registration details. Our team will review the information and get back to you shortly if any further steps are required.</p>
-    <p>If you have any questions or need assistance, feel free to contact us at <a href="mailto:support@curatedigital.ai">support@curatedigital.ai</a>.</p>
-    <p>Best regards,<br />Curate Digital AI Health Team</p>
-  </div>
-);
+    const Result = await UpdateInformation(finalData);
 
-const htmlComponent = ReactDOMServer.renderToString(<EmailComponent />);
-
-
-      if (Result.success) {
-        setStatusMesssage(Result.message)
-        const SenMail = await axios.post("/api/MailSend", {
-          to: formData.Email,
-          subject: 'Curate Digital AI Health Registration',
-          html: htmlComponent,
-        });
-        console.log("Testing---", formData.Email)
-        console.log("Email Result---", SenMail)
-        router.push("/SuccefullRegistration")
-        alert("Finisged!")
-        return
-      } else {
-        setStatusMesssage(Result.message)
-        setFormData(
-          {
-            userType: 'doctor',
-            FirstName: '',
-            LastName: '',
-            Qualification: '',
-            Location: '',
-            RegistrationNumber: '',
-            College: '',
-            Email: '',
-          }
-        )
-        setSelectedServices([])
-        setSelectedLocations([])
-      }
-    } catch (err: any) {
-      setStatusMesssage("Unexpected Error")
-        setFormData(
-          {
-            userType: 'doctor',
-            FirstName: '',
-            LastName: '',
-            Qualification: '',
-            Location: '',
-            RegistrationNumber: '',
-            College: '',
-            Email: '',
-          }
-        )
-        setSelectedServices([])
-        setSelectedLocations([])
+    if (!Result.success) {
+      setStatusMesssage(Result.message);
+      return;
     }
 
+ 
+    const EmailComponent = () => (
+      <div>
+        <div style={{ textAlign: 'center' }}>
+          <img
+            src="https://curate-pearl.vercel.app/Icons/Curate-logo.png"
+            alt="Curate Digital AI Health"
+            width="150"
+          />
+        </div>
+        <p>Dear User,</p>
+        <p>Thank you for registering with <strong>Curate Digital AI Health</strong>.</p>
+        <p>We have successfully received your registration details. Our team will review the information and get back to you shortly if any further steps are required.</p>
+        <p>If you have any questions or need assistance, feel free to contact us at <a href="mailto:support@curatedigital.ai">support@curatedigital.ai</a>.</p>
+        <p>Best regards,<br />Curate Digital AI Health Team</p>
+      </div>
+    );
 
+    const htmlComponent = ReactDOMServer.renderToString(<EmailComponent />);
 
+    try {
+      const SenMail = await axios.post("/api/MailSend", {
+        to: formData.Email,
+        subject: 'Curate Digital AI Health Registration',
+        html: htmlComponent,
+      });
 
+      
+      setStatusMesssage(Result.message);
+      setFormData({
+        userType: 'doctor',
+        FirstName: '',
+        LastName: '',
+        Qualification: '',
+        Location: '',
+        RegistrationNumber: '',
+        College: '',
+        Email: '',
+      });
+      setSelectedServices([]);
+      setSelectedLocations([]);
+ 
+      router.push("/SuccessfulRegistration");
+    
+    } catch (emailErr) {
+      console.error("Email sending failed:", emailErr);
+      setStatusMesssage("Registration successful, but failed to send confirmation email.");
+    }
 
+  } catch (err) {
+    console.error("Form submission failed:", err);
+    setStatusMesssage("Unexpected Error");
+    setFormData({
+      userType: 'doctor',
+      FirstName: '',
+      LastName: '',
+      Qualification: '',
+      Location: '',
+      RegistrationNumber: '',
+      College: '',
+      Email: '',
+    });
+    setSelectedServices([]);
+    setSelectedLocations([]);
+  }
+};
 
-  };
 
   return (
     <form onSubmit={handleFormSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-0">
@@ -314,8 +313,8 @@ const htmlComponent = ReactDOMServer.renderToString(<EmailComponent />);
       <div className="md:col-span-2 flex justify-center">
         <p
           className={`text-center font-bold w-full ${statusMesssage === "You registered successfully with Curate Digital AI"
-              ? "text-[#00FF00]"
-              : "text-[#FF0000]"
+            ? "text-[#00FF00]"
+            : "text-[#FF0000]"
             }`}
         >
           {statusMesssage}
