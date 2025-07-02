@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import ReactDOMServer from 'react-dom/server';
 import { useState, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function DoctorForm() {
   const [formData, setFormData] = useState({
@@ -18,13 +19,17 @@ export default function DoctorForm() {
     RegistrationNumber: '',
     College: '',
     Email: '',
+    Password: '',
+    ConfirmPassword: '',
   });
-
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [DoctorSearchInput, setDoctorSearchInput] = useState('');
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [statusMesssage, setStatusMesssage] = useState("")
+  const [SubmissionRequest, setSubmissionRequest] = useState(true)
   const router = useRouter()
 
   const filteredServices = useMemo(() => {
@@ -43,6 +48,7 @@ export default function DoctorForm() {
   }, [searchInput, selectedLocations]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStatusMesssage("")
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -58,58 +64,109 @@ export default function DoctorForm() {
       setSearchInput('');
     }
   };
+  const getPasswordStrength = (password: string) => {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    return strength;
+  };
 
+  const passwordStrength = getPasswordStrength(formData.Password);
+  const strengthLabel = ["Weak", "Fair", "Good", "Strong"];
+  const strengthColor = ["text-red-500", "text-yellow-500", "text-blue-500", "text-green-600"];
   const removeService = () => setSelectedServices([]);
   const removeLocation = (loc: string) =>
     setSelectedLocations(prev => prev.filter(l => l !== loc));
 
   const handleFormSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
+    setSubmissionRequest(false)
+    const passwordValid =
+      formData.Password.length >= 8 &&
+      /[A-Z]/.test(formData.Password) &&
+      /[0-9]/.test(formData.Password) &&
+      /[^A-Za-z0-9]/.test(formData.Password);
 
-  try {
-    const finalData = {
-      ...formData,
-      userId: uuidv4(),
-      OfferableService: selectedServices,
-      PreferredLocationsforHomeVisits: selectedLocations,
-    };
-
-    const Result = await UpdateInformation(finalData);
-
-    if (!Result.success) {
-      setStatusMesssage(Result.message);
+    if (!passwordValid) {
+      setStatusMesssage("Password must contain at least 8 characters, one uppercase letter, one number, and one special character.");
+      return;
+    }
+    if (formData.Password !== formData.ConfirmPassword) {
+      setStatusMesssage("Passwords do not match.");
       return;
     }
 
- 
-    const EmailComponent = () => (
-      <div>
-        <div style={{ textAlign: 'center' }}>
-          <img
-            src="https://curate-pearl.vercel.app/Icons/Curate-logo.png"
-            alt="Curate Digital AI Health"
-            width="150"
-          />
-        </div>
-        <p>Dear User,</p>
-        <p>Thank you for registering with <strong>Curate Digital AI Health</strong>.</p>
-        <p>We have successfully received your registration details. Our team will review the information and get back to you shortly if any further steps are required.</p>
-        <p>If you have any questions or need assistance, feel free to contact us at <a href="mailto:support@curatedigital.ai">support@curatedigital.ai</a>.</p>
-        <p>Best regards,<br />Curate Digital AI Health Team</p>
-      </div>
-    );
-
-    const htmlComponent = ReactDOMServer.renderToString(<EmailComponent />);
-
     try {
-      const SenMail = await axios.post("/api/MailSend", {
-        to: formData.Email,
-        subject: 'Curate Digital AI Health Registration',
-        html: htmlComponent,
-      });
+      const finalData = {
+        ...formData,
+        userId: uuidv4(),
+        OfferableService: selectedServices,
+        PreferredLocationsforHomeVisits: selectedLocations,
+      };
 
+      const Result = await UpdateInformation(finalData);
+
+      if (!Result.success) {
+        setStatusMesssage(Result.message);
+        return;
+      }
+
+
+      const EmailComponent = () => (
+        <div>
+          <div style={{ textAlign: 'center' }}>
+            <img
+              src={`${process.env.NEXT_PUBLIC_BASE_URL}/Icons/Curate-logo.png`}
+              alt="Curate Digital AI Health"
+              width="150"
+            />
+          </div>
+          <p>Dear User,</p>
+          <p>Thank you for registering with <strong>Curate Digital AI Health</strong>.</p>
+          <p>We have successfully received your registration details. Our team will review the information and get back to you shortly if any further steps are required.</p>
+          <p>If you have any questions or need assistance, feel free to contact us at <a href="mailto:support@curatedigital.ai">support@curatedigital.ai</a>.</p>
+          <p>Best regards,<br />Curate Digital AI Health Team</p>
+        </div>
+      );
+
+      const htmlComponent = ReactDOMServer.renderToString(<EmailComponent />);
+
+      try {
+        const SenMail = await axios.post("/api/MailSend", {
+          to: formData.Email,
+          subject: 'Curate Digital AI Health Registration',
+          html: htmlComponent,
+        });
+
+
+        setStatusMesssage(Result.message);
+        setFormData({
+          userType: 'doctor',
+          FirstName: '',
+          LastName: '',
+          Qualification: '',
+          Location: '',
+          RegistrationNumber: '',
+          College: '',
+          Email: '',
+          Password: '',
+          ConfirmPassword: '',
+        });
+        setSelectedServices([]);
+        setSelectedLocations([]);
+        setSubmissionRequest(true)
+        router.push("/SuccessfulRegistration");
+
+      } catch (emailErr) {
       
-      setStatusMesssage(Result.message);
+        setStatusMesssage("Registration successful, but failed to send confirmation email.");
+      }
+
+    } catch (err) {
+     
+      setStatusMesssage("Unexpected Error");
       setFormData({
         userType: 'doctor',
         FirstName: '',
@@ -119,34 +176,13 @@ export default function DoctorForm() {
         RegistrationNumber: '',
         College: '',
         Email: '',
+        Password: '',
+        ConfirmPassword: '',
       });
       setSelectedServices([]);
       setSelectedLocations([]);
- 
-      router.push("/SuccessfulRegistration");
-    
-    } catch (emailErr) {
-      console.error("Email sending failed:", emailErr);
-      setStatusMesssage("Registration successful, but failed to send confirmation email.");
     }
-
-  } catch (err) {
-    console.error("Form submission failed:", err);
-    setStatusMesssage("Unexpected Error");
-    setFormData({
-      userType: 'doctor',
-      FirstName: '',
-      LastName: '',
-      Qualification: '',
-      Location: '',
-      RegistrationNumber: '',
-      College: '',
-      Email: '',
-    });
-    setSelectedServices([]);
-    setSelectedLocations([]);
-  }
-};
+  };
 
 
   return (
@@ -310,21 +346,56 @@ export default function DoctorForm() {
           ))}
         </div>
       </div>
+
+      <div className="flex flex-col gap-1 md:col-span-2 relative">
+        <label className="text-xs font-semibold uppercase">Password</label>
+        <input
+          type={showPassword ? "text" : "password"}
+          name="Password"
+          value={formData.Password}
+          onChange={handleChange}
+          className="input-style"
+          required
+        />
+        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-8">
+          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+        </button>
+        <p className={`text-sm ${strengthColor[passwordStrength - 1]}`}>
+          Strength: {strengthLabel[passwordStrength - 1] || "Too Short"}
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-1 md:col-span-2 relative">
+        <label className="text-xs font-semibold uppercase">Confirm Password</label>
+        <input
+          type={showConfirmPassword ? "text" : "password"}
+          name="ConfirmPassword"
+          value={formData.ConfirmPassword}
+          onChange={handleChange}
+          className="input-style"
+          required
+        />
+        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-2 top-8">
+          {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+        </button>
+        {formData.ConfirmPassword && formData.Password !== formData.ConfirmPassword && (
+          <p className="text-sm text-red-500">Passwords do not match</p>
+        )}
+      </div>
+
       <div className="md:col-span-2 flex justify-center">
         <p
           className={`text-center font-bold w-full ${statusMesssage === "You registered successfully with Curate Digital AI"
-            ? "text-[#00FF00]"
+            ? "text-green-700"
             : "text-[#FF0000]"
             }`}
         >
           {statusMesssage}
         </p>
       </div>
-
-
-
       <button type="submit" className="primary-button md:col-span-2">
-        Submit as Doctor
+        {SubmissionRequest ? "Submit as Doctor" : "Please Wait,Registering as Doctor...."}
+
       </button>
 
 

@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await sgMail.send({ to, from: 'admin@curatehealth.in', subject, html });
     res.status(200).json({ success: true });
   } catch (error: any) {
-    console.log("Mail Error---",error)
+
     res.status(500).json({ success: false, error: error.message });
   }
 }

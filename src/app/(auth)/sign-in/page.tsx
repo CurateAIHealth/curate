@@ -30,6 +30,10 @@ export default function SignIn() {
     router.push('/register');
   };
 
+  const RestPassword=()=>{
+    router.push("/SendUpdatePasswordMail")
+  }
+
 
 const UpdateLoginInfo=(e:any)=>{
   setloginInfo({...loginInfo,[e.target.name]:e.target.value})
@@ -70,17 +74,26 @@ const UpdateLoginInfo=(e:any)=>{
             Sign In
           </button>
         </form>
-
+        <div className='flex gap-4'>
+<div className="text-sm text-center text-gray-700 mt-4">
+         Forgot Your Password ?{' '}
+          <button
+            onClick={RestPassword}
+            className="text-teal-600 font-semibold hover:underline hover:cursor-pointer"
+          >
+            Reset Password
+          </button>
+        </div>
         <div className="text-sm text-gray-700 mt-4">
           Don't have an account?{' '}
           <button
             onClick={handleRegisterRedirect}
-            className="text-teal-600 font-semibold hover:underline"
+            className="text-teal-600 font-semibold hover:underline hover:cursor-pointer"
           >
             Register here
           </button>
         </div>
-
+</div>
       </section>
     </main>
   );
