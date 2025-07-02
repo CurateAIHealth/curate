@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function PatientFamilyForm({ onSubmit }: { onSubmit: (data: any) => void }) {
+export default function PatientFamilyForm() {
   const [formData, setFormData] = useState({
     FullName: '',
     Email: '',
@@ -30,7 +30,7 @@ export default function PatientFamilyForm({ onSubmit }: { onSubmit: (data: any) 
 
       <button
         type="button"
-        onClick={() => onSubmit(formData)}
+      
         className="primary-button"
       >
         Submit as Patient Family

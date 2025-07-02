@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 
 import axios from 'axios';
-import { UpdateInformation } from '@/Lib/user.action';
+
 import Logo from '@/Components/Logo/page';
 import DoctorForm from '@/Components/DocterForm/page';
 import NurseForm from '@/Components/NurseForm/page';
@@ -14,22 +14,7 @@ import UserTypeSelector from '@/Components/UserTypeSelector/page';
 export default function RegisterPage() {
   const [userType, setUserType] = useState<string>('');
 
-  const handleRegister = useCallback(async (formData: any) => {
-    const result = await UpdateInformation(formData);
 
-    await axios.post('/api/MailSend', {
-      to: 'srivanikasham@gmail.com',
-      subject: 'Curate Digital AI Health Registration',
-      html: `
-        <p>Dear User,</p>
-        <p>Thank you for registering with <strong>Curate Digital AI Health</strong>.</p>
-        <p>We have received your registration details. Our team will review and reach out if needed.</p>
-        <p>Best regards,<br/>Curate Digital AI Health Team</p>
-      `,
-    });
-
-    alert('Registration successful!');
-  }, []);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-100 via-white to-green-100 md:p-2 p-6">
@@ -45,10 +30,10 @@ export default function RegisterPage() {
 
          
           <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 text-sm text-gray-700 relative overflow-visible">
-            {userType === 'doctor' && <DoctorForm onSubmit={handleRegister} />}
-            {userType === 'nurse' && <NurseForm onSubmit={handleRegister} />}
-            {userType === 'patient' && <PatientForm onSubmit={handleRegister} />}
-            {userType === 'patientFamily' && <PatientFamilyForm onSubmit={handleRegister} />}
+            {userType === 'doctor' && <DoctorForm  />}
+            {userType === 'nurse' && <NurseForm  />}
+            {userType === 'patient' && <PatientForm  />}
+            {userType === 'patientFamily' && <PatientFamilyForm  />}
           </div>
         </div>
       </section>

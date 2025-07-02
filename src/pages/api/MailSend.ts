@@ -1,8 +1,11 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
-
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+const ApiKey = process.env.SENDGRID_API_KEY;
+if (!ApiKey) {
+  throw new Error('Missing SendGrid API Key');
+}
+sgMail.setApiKey(ApiKey);
 
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -16,6 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await sgMail.send({ to, from: 'admin@curatehealth.in', subject, html });
     res.status(200).json({ success: true });
   } catch (error: any) {
+    console.log("Mail Error---",error)
     res.status(500).json({ success: false, error: error.message });
   }
 }

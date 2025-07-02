@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function NurseForm({ onSubmit }: { onSubmit: (data: any) => void }) {
+export default function NurseForm() {
   const [formData, setFormData] = useState({
     FullName: '',
     Email: '',
@@ -32,7 +32,7 @@ export default function NurseForm({ onSubmit }: { onSubmit: (data: any) => void 
 
       <button
         type="button"
-        onClick={() => onSubmit(formData)}
+       
         className="primary-button"
       >
         Submit as Nurse
