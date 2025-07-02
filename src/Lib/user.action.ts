@@ -45,7 +45,20 @@ export const UpdateInformation = async (doctorInfo: {
       insertedId: result.insertedId.toString(),
     };
   } catch (error) {
-    console.error("Error inserting doctor data:", error);
+ 
     throw error;
   }
 };
+
+
+export const GetUserIdwithEmail=async(Mail:any)=>{
+try{
+const cluster=await clientPromise
+const Db=cluster.db("CurateInformation")
+const Collection=Db.collection("Registration")
+const FinelResult:any= await Collection.findOne({Email:Mail})
+return FinelResult.userId
+}catch(err:any){
+
+}
+}

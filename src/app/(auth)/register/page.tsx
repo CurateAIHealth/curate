@@ -24,7 +24,7 @@ export default function RegisterPage() {
           <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-800 mb-4">
             Register with <span className="text-pink-500">Curate</span> <span className="text-teal-600">Digital AI</span>
           </h2>
-<p>Sidd</p>
+    
        
           <UserTypeSelector userType={userType} setUserType={setUserType} />
 
