@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import Logo from '@/Components/Logo/page';
+import { useSearchParams } from 'next/navigation';
 
 const validateStrength = (password: string) => {
   let strength = 0;
@@ -34,9 +35,9 @@ export default function PasswordResetForm() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
+const PathURLUserId=useSearchParams()
   const strength = validateStrength(password);
-
+const PathURLUserIdValue=PathURLUserId?.get("token")
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-teal-100">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">\
@@ -84,7 +85,7 @@ export default function PasswordResetForm() {
             {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
-
+<p>{PathURLUserIdValue}</p>
         {confirmPassword && confirmPassword !== password && (
           <p className="text-red-500 text-sm mb-2">Passwords do not match.</p>
         )}
