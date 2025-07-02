@@ -43,7 +43,7 @@ const UpdateLoginInfo=(e:any)=>{
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-teal-100 p-4">
       <section className="w-full max-w-md bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow-2xl p-6 text-center space-y-6 animate-fade-in">
         <Logo />
-        <p>Sidd</p>
+     
         <h1 className="text-3xl font-bold text-gray-800">
           Sign in to <span className="text-teal-600"><span className='text-pink-400'>Curate</span> Digital AI </span>
         </h1>
