@@ -13,6 +13,7 @@
               className="object-contain"
             />
           </div>
+          
         </div>
     )
 }
