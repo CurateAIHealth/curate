@@ -21,10 +21,15 @@ export default function RegisterPage() {
       <section className="w-full max-w-xl bg-white/80 backdrop-blur-md border border-white/40 rounded-3xl shadow-xl overflow-hidden">
         <div className="pl-4 pr-4 pb-2">
           <Logo />
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-800 mb-4">
-            Register with <span className="text-pink-500">Curate</span> <span className="text-teal-600">Digital AI</span>
-          </h2>
-    
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-800 leading-tight mb-4">
+  <div>Register with</div>
+  <div>
+    <span className="text-pink-500">Curate</span>{' '}
+    <span className="text-teal-600">Digital AI</span>
+  </div>
+</h2>
+
+     
        
           <UserTypeSelector userType={userType} setUserType={setUserType} />
 
@@ -33,7 +38,7 @@ export default function RegisterPage() {
             {userType === 'doctor' && <DoctorForm  />}
             {userType === 'nurse' && <NurseForm  />}
             {userType === 'patient' && <PatientForm  />}
-            {userType === 'patientFamily' && <PatientFamilyForm  />}
+            {userType === 'Curate Family' && <PatientFamilyForm  />}
           </div>
         </div>
       </section>

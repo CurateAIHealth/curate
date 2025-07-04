@@ -33,7 +33,7 @@ export default function PatientFamilyForm() {
       
         className="primary-button"
       >
-        Submit as Patient Family
+        Submit as Curate Family
       </button>
        <div className="text-sm text-gray-700 text-center">
         Already registered?{' '}

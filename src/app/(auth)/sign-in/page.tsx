@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import Logo from '@/Components/Logo/page';
-import { SignInRessult, UpdateInformation } from '@/Lib/user.action';
+import { SignInRessult } from '@/Lib/user.action';
 
 export default function SignIn() {
   const router = useRouter();
