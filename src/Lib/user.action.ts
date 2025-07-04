@@ -82,26 +82,31 @@ export const SignInRessult = async (SignInfor: { Name: any, Password: any }) => 
   }
 }
 
-export const UpdatePassword=async(UpdatedData:{InputUserId:any,NewPassword:any,ConfirmNewPassword:any})=>{
-try{
- const Clustor = await clientPromise
+export const UpdatePassword = async (UpdatedData: { UpdatedUserid: any, NewUpdatedPassword: any, NewConfirmUpdatedPassword: any }) => {
+  try {
+    const Clustor = await clientPromise
     const Db = Clustor.db("CurateInformation")
     const Collection = Db.collection("Registration")
-      const result = await Collection.updateOne(
-      { userId: UpdatedData.InputUserId },
+    const inputUserId = UpdatedData.UpdatedUserid
+    const result = await Collection.updateOne(
+      { userId: inputUserId },
       {
         $set: {
-          Password: UpdatedData.NewPassword,
+          Password: UpdatedData.NewUpdatedPassword,
+
+          ConfirmPassword: UpdatedData.NewConfirmUpdatedPassword
         },
       }
     );
+
+
 
     if (result.modifiedCount === 0) {
       return { success: false, message: 'User not found or no changes made.' };
     }
 
     return { success: true, message: 'Password updated successfully.' };
-}catch(err:any){
+  } catch (err: any) {
 
-}
+  }
 }

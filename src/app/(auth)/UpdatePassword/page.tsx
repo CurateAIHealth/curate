@@ -62,14 +62,14 @@ const router=useRouter()
         NewUpdatedPassword: password,
         NewConfirmUpdatedPassword: confirmPassword,
       };
-console.log("Test Token---",payload.UpdatedUserid)
+
       const result:any = await UpdatePassword(payload);
 
       if (result.success) {
-        setSuccess('Password updated successfully.');
+        setSuccess('Password updated successfully. Redirecting to Sign-in page....');
         setTimeout(() => {
          router.push( '/sign-in')
-        }, 3500);
+        }, 2500);
       } else {
         setError(result?.message || 'Update failed.');
       }
