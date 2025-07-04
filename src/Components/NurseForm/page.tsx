@@ -376,10 +376,10 @@ export default function NurseForm() {
             name="ContactNumber"
             value={formData.ContactNumber}
             onChange={handleChange}
-            className="input-style rounded-l-none"
+          className="border border-gray-300 w-full rounded-r-md h-8 pl-2"
             maxLength={10}
             required
-            placeholder="Enter 10‑digit mobile"
+            placeholder="Enter 10‑digit mobile Number"
           />
         </div>
         {phoneDigits > 0 && phoneDigits < 10 && (
