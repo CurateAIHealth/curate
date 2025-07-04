@@ -9,19 +9,28 @@ import { SignInRessult, UpdateInformation } from '@/Lib/user.action';
 
 export default function SignIn() {
   const router = useRouter();
-
+  const [signinStatus, setsigninStatus] = useState(true)
   const [error, setError] = useState('');
-  const [loginInfo,setloginInfo]=useState({Name:"Curate",Password:"Testing"})
+  const [loginInfo, setloginInfo] = useState({ Name: "Curate", Password: "Testing" })
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
+    setsigninStatus(false)
     try {
 
-      const Result= await SignInRessult(loginInfo)
-      localStorage.setItem("UserId",Result)
-      console.log("SignIn Information---",Result)
-   router.push("/HomePage")
+      const Result = await SignInRessult(loginInfo)
+
+      if (Result !== null) {
+        
+        localStorage.setItem("UserId", Result.userId)
+        setsigninStatus(true)
+        router.push("/HomePage")
+      } else {
+        setsigninStatus(true)
+        setError("Wrong Credentials..")
+      }
+
     } catch (err) {
       setError('Something went wrong. Please try again.');
     }
@@ -31,19 +40,19 @@ export default function SignIn() {
     router.push('/register');
   };
 
-  const RestPassword=()=>{
+  const RestPassword = () => {
     router.push("/SendUpdatePasswordMail")
   }
 
 
-const UpdateLoginInfo=(e:any)=>{
-  setloginInfo({...loginInfo,[e.target.name]:e.target.value})
-}
+  const UpdateLoginInfo = (e: any) => {
+    setloginInfo({ ...loginInfo, [e.target.name]: e.target.value })
+  }
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-teal-100 p-4">
       <section className="w-full max-w-md bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow-2xl p-6 text-center space-y-6 animate-fade-in">
         <Logo />
-     
+
         <h1 className="text-3xl font-bold text-gray-800">
           Sign in to <span className="text-teal-600"><span className='text-pink-400'>Curate</span> Digital AI </span>
         </h1>
@@ -73,29 +82,30 @@ const UpdateLoginInfo=(e:any)=>{
             type="submit"
             className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 rounded-full shadow-lg transition duration-300"
           >
-            Sign In
+            {signinStatus ? "Sign In" : "Verifying your details. Please wait..."}
+
           </button>
         </form>
         <div className='flex gap-4'>
-<div className="text-sm text-center text-gray-700 mt-4">
-         Forgot Your Password ?{' '}
-          <button
-            onClick={RestPassword}
-            className="text-teal-600 font-semibold hover:underline hover:cursor-pointer"
-          >
-            Reset Password
-          </button>
+          <div className="text-sm text-center text-gray-700 mt-4">
+            Forgot Your Password ?{' '}
+            <button
+              onClick={RestPassword}
+              className="text-teal-600 font-semibold hover:underline hover:cursor-pointer"
+            >
+              Reset Password
+            </button>
+          </div>
+          <div className="text-sm text-gray-700 mt-4">
+            Don't have an account?{' '}
+            <button
+              onClick={handleRegisterRedirect}
+              className="text-teal-600 font-semibold hover:underline hover:cursor-pointer"
+            >
+              Register here
+            </button>
+          </div>
         </div>
-        <div className="text-sm text-gray-700 mt-4">
-          Don't have an account?{' '}
-          <button
-            onClick={handleRegisterRedirect}
-            className="text-teal-600 font-semibold hover:underline hover:cursor-pointer"
-          >
-            Register here
-          </button>
-        </div>
-</div>
       </section>
     </main>
   );

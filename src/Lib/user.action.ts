@@ -75,8 +75,11 @@ export const SignInRessult = async (SignInfor: { Name: any, Password: any }) => 
        Email: SignInfor.Name,
        ConfirmPassword: SignInfor.Password,
     })
-    if (!SignInInformation) return null;
-    return SignInInformation.userId
+ 
+    return SignInInformation
+
+    
+    
   } catch (err: any) {
 
   }
