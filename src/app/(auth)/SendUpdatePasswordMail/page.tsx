@@ -66,7 +66,7 @@ const EmailComponent = memo(({ UpdatedFilterUserId }: { UpdatedFilterUserId: str
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
-  const [mailStatusMessage, setMailStatusMessage] = useState('');
+  const [mailStatusMessage, setMailStatusMessage] = useState('Eand Email');
   const router = useRouter();
 
   const handleSubmit = useCallback(
@@ -86,8 +86,11 @@ export default function ForgotPassword() {
           html: htmlComponent,
         });
 
+        
+        alert("Check Your Email to Update Your Password")
+        
         setMailStatusMessage('Email sent successfully!');
-        router.push('/sign-in');
+        // router.push('/sign-in');
       } catch (error) {
         console.error('Error sending email:', error);
         setMailStatusMessage('Error sending email. Please try again later.');
@@ -113,15 +116,15 @@ export default function ForgotPassword() {
             type="submit"
             className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-md shadow-md transition duration-200"
           >
-            Send Email
+            {mailStatusMessage}
           </button>
-          {mailStatusMessage && (
+          {/* {mailStatusMessage && (
             <div className="text-center font-bold w-full">
               <p className={mailStatusMessage.includes('success') ? 'text-green-700' : 'text-red-600'}>
                 {mailStatusMessage}
               </p>
             </div>
-          )}
+          )} */}
         </form>
       </div>
     </div>
