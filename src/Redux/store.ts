@@ -1,8 +1,9 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { TaskOne } from "./reducer";
+import { TaskOne, UserIdValue } from "./reducer";
 
 export const store = configureStore({
     reducer: {
-        FirstValue: TaskOne
+        FirstValue: TaskOne,
+        StoredUserId:UserIdValue
     }
 })

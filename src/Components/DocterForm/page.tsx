@@ -13,6 +13,7 @@ import { useState, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Eye, EyeOff } from 'lucide-react';
 import { getPasswordStrength, isValidAadhar } from '@/Lib/Actions';
+import { Console } from 'console';
 
 export default function DoctorForm() {
   const [formData, setFormData] = useState({
@@ -29,6 +30,7 @@ export default function DoctorForm() {
     ConfirmPassword: '',
     ContactNumber: '',
     Type: '',
+    VerificationStatus:"Pending"
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -193,9 +195,8 @@ export default function DoctorForm() {
           to: formData.Email,
           subject: 'Curate Digital AI Health Registration',
           html: htmlComponent,
-        });
-
-        setStatusMesssage(Result.message);
+        });        
+setStatusMesssage(Result.message);
 
         setFormData({
           userType: 'doctor',
@@ -211,6 +212,8 @@ export default function DoctorForm() {
           ConfirmPassword: '',
           ContactNumber: '',
           Type: '',
+          VerificationStatus:''
+
         });
         setSelectedServices([]);
         setSelectedLocations([]);
@@ -235,6 +238,7 @@ export default function DoctorForm() {
         ConfirmPassword: '',
         ContactNumber: '',
         Type: '',
+           VerificationStatus:''
       });
       setSelectedServices([]);
       setSelectedLocations([]);

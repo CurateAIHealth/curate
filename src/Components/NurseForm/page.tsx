@@ -28,6 +28,7 @@ export default function NurseForm() {
     Password: '',
     ConfirmPassword: '',
     Type: '',
+    VerificationStatus:'Pending'
   });
 
   const [statusMesssage, setStatusMesssage] = useState('');
@@ -172,6 +173,7 @@ export default function NurseForm() {
           Password: '',
           ConfirmPassword: '',
           Type: '',
+          VerificationStatus:""
         });
 
         setSubmissionRequest(true);
@@ -198,6 +200,7 @@ export default function NurseForm() {
         Password: '',
         ConfirmPassword: '',
         Type: '',
+        VerificationStatus:""
       });
     }
   };

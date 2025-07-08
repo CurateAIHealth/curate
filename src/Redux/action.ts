@@ -5,4 +5,9 @@ export const Update_Value = (A: any) => {
     }
 }
 
-
+export const UpdateUserId=(UpdatedValue:any)=>{
+    return{
+        type:"UpdatedUserId",
+        payload:UpdatedValue
+    }
+}
