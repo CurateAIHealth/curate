@@ -25,6 +25,8 @@ export default function StaticInfoPage() {
 
       try {
         const ProfileInformation = await GetUserInformation(localValue)
+
+        console.log("Information---",ProfileInformation)
         if (ProfileInformation?.VerificationStatus === "Success") {
           router.push("/HomePage")
 
