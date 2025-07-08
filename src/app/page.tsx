@@ -1,36 +1,78 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { useCallback } from 'react';
 import Logo from '@/Components/Logo/page';
+import { GetUserInformation } from '@/Lib/user.action';
+import { UpdateUserId } from '@/Redux/action';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-export default function Home() {
+export default function StaticInfoPage() {
+  const [isChecking, setIsChecking] = useState(true);
+  const dispatch = useDispatch();
   const router = useRouter();
 
-  const handleRegister = useCallback(() => {
-    router.push('/register');
-  }, [router]);
+  const storedUserId = useSelector((state: any) => state.StoredUserId);
+
+  useEffect(() => {
+    const Fetch = async () => {
+      const localValue = localStorage.getItem("UserId");
+
+      if (!localValue) {
+        router.push("/sign-in");
+        return;
+      }
+
+      try {
+        const ProfileInformation = await GetUserInformation(localValue)
+        if (ProfileInformation?.VerificationStatus === "Success") {
+          dispatch(UpdateUserId(localValue));
+          router.push("/HomePage")
+
+        } else {
+          dispatch(UpdateUserId(localValue));
+          setIsChecking(false);
+        }
+      } catch (err: any) {
+        console.error("Fetch Error", err);
+        router.push("/sign-in");
+      }
+    }
+    Fetch()
+  }, [dispatch, router]);
+
+  if (isChecking) {
+    return (
+      <div className='h-screen flex items-center justify-center font-bold'>
+        Loading....
+      </div>
+    );
+  }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-teal-100 px-4">
-      <section className="backdrop-blur-xl bg-white/30 border border-white/40 shadow-2xl rounded-2xl p-8 max-w-md w-full text-center animate-fade-in space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#D4FCF4] to-[#F0FFF4] px-6 py-12">
+      <div className="max-w-3xl bg-white rounded-3xl shadow-xl p-10 text-center">
         <Logo />
-        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800">
-          Register with <span className="text-teal-600">
-            <span className="text-pink-400">Curate</span> Digital AI
-          </span>
+
+        <h1 className="text-3xl font-extrabold text-gray-900 mb-4">
+          <span className="text-black">Account </span>
+          <span className="text-pink-500">Verification </span>
+          <span className="text-teal-600">In Progress</span>
         </h1>
-        <p className="text-gray-600 text-sm md:text-base">
-          Start your journey with smarter health insights.
+
+        <p className="text-gray-700 text-lg leading-relaxed mb-6">
+          Thank you for registering with <span className="font-semibold text-teal-600">Curate Digital AI Health</span>.
+          Your account is currently under verification. This process helps us maintain a secure and trusted network for all users.
         </p>
-        <button
-          onClick={handleRegister}
-          className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-2 rounded-full transition duration-300 shadow-lg"
-        >
-          Register
-        </button>
-      </section>
-    </main>
+
+        <p className="text-gray-700 text-lg leading-relaxed mb-6">
+          We’ll notify you as soon as the verification is successfully completed. In the meantime, feel free to explore our platform and stay connected.
+        </p>
+<button onClick={()=>localStorage.removeItem("UserId")}>Logout</button>
+        <p className="text-teal-600 font-semibold text-xl">
+          We appreciate your patience and look forward to welcoming you soon!
+        </p>
+      </div>
+    </div>
   );
 }

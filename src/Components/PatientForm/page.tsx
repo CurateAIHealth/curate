@@ -21,6 +21,7 @@ export default function PatientForm() {
     Password: '',
     ConfirmPassword: '',
     Location: '',
+    VerificationStatus:'Pending'
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -148,6 +149,7 @@ export default function PatientForm() {
         Password: '',
         ConfirmPassword: '',
         Location: '',
+        VerificationStatus:''
       });
       router.push('/SuccessfulRegistration');
     } catch {

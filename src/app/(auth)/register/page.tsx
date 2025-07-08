@@ -21,7 +21,6 @@ export default function RegisterPage() {
       <section className="w-full max-w-xl bg-white/80 backdrop-blur-md border border-white/40 rounded-3xl shadow-xl overflow-hidden">
         <div className="pl-4 pr-4 pb-2">
           <Logo />
-          <p>Changes</p>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-800 leading-tight mb-4">
   <div>Register with</div>
   <div>

@@ -23,9 +23,9 @@ export default function SignIn() {
 
       if (Result !== null) {
         
-        localStorage.setItem("UserId", Result.userId)
+        localStorage.setItem("UserId", Result)
         setsigninStatus(true)
-        router.push("/HomePage")
+        router.push("/")
       } else {
         setsigninStatus(true)
         setError("Wrong Credentials..")

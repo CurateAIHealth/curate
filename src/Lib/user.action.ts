@@ -16,6 +16,7 @@ export const UpdateDocterInformation = async (doctorInfo: {
   Password: any,
   ConfirmPassword: any
   AadharNumber: any
+  VerificationStatus: any
 }) => {
   try {
     const cluster = await clientPromise;
@@ -41,7 +42,7 @@ export const UpdateDocterInformation = async (doctorInfo: {
 
     const result = await collection.insertOne({
       ...doctorInfo,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     });
 
     return {
@@ -72,6 +73,7 @@ export const UpdateNurseInfo = async (NurseInfor: {
   userId: any,
   ConfirmPassword: any,
   Type: any
+  VerificationStatus: any
 }) => {
   try {
     const cluster = await clientPromise;
@@ -96,7 +98,7 @@ export const UpdateNurseInfo = async (NurseInfor: {
 
     const result = await collection.insertOne({
       ...NurseInfor,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     });
 
     return {
@@ -125,22 +127,24 @@ export const GetUserIdwithEmail = async (Mail: any) => {
 
 export const SignInRessult = async (SignInfor: { Name: any, Password: any }) => {
   try {
-    const Clustor = await clientPromise
-    const Db = Clustor.db("CurateInformation")
-    const Collection = Db.collection("Registration")
-    const SignInInformation: any = Collection.findOne({
+    const Clustor = await clientPromise;
+    const Db = Clustor.db("CurateInformation");
+    const Collection = Db.collection("Registration");
+
+    const SignInInformation: any = await Collection.findOne({
       Email: SignInfor.Name,
       ConfirmPassword: SignInfor.Password,
-    })
+    });
 
-    return SignInInformation
+    if (!SignInInformation) return null;
 
-
-
+    return SignInInformation.userId?.toString?.();
   } catch (err: any) {
-
+    console.error("Error in SignInRessult:", err);
+    return null;
   }
-}
+};
+
 
 export const UpdatePassword = async (UpdatedData: { UpdatedUserid: any, NewUpdatedPassword: any, NewConfirmUpdatedPassword: any }) => {
   try {
@@ -184,6 +188,7 @@ export const UpdatePatientInformation = async (Patient: {
   Password: any,
   userId: any,
   ConfirmPassword: any,
+  VerificationStatus: any
 
 }) => {
   try {
@@ -209,7 +214,7 @@ export const UpdatePatientInformation = async (Patient: {
 
     const result = await collection.insertOne({
       ...Patient,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     });
 
     return {
@@ -221,4 +226,17 @@ export const UpdatePatientInformation = async (Patient: {
 
     throw error;
   }
+}
+
+
+export const GetUserInformation=async(UserIdFromLocal:any)=>{
+try{
+   const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration")
+    const UserInformation=await collection.findOne({userId:UserIdFromLocal})
+    return UserInformation
+}catch(err:any){
+
+}
 }
