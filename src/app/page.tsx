@@ -17,7 +17,7 @@ export default function StaticInfoPage() {
   useEffect(() => {
     const Fetch = async () => {
       const localValue = localStorage.getItem("UserId");
-
+ dispatch(UpdateUserId(localValue));
       if (!localValue) {
         router.push("/sign-in");
         return;
@@ -26,11 +26,13 @@ export default function StaticInfoPage() {
       try {
         const ProfileInformation = await GetUserInformation(localValue)
         if (ProfileInformation?.VerificationStatus === "Success") {
-          dispatch(UpdateUserId(localValue));
           router.push("/HomePage")
 
-        } else {
-          dispatch(UpdateUserId(localValue));
+        }if(ProfileInformation?.Email==="tsiddu805@gmail.com"){
+          router.push("/AdminPage")
+        }
+        
+        else {
           setIsChecking(false);
         }
       } catch (err: any) {
