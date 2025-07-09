@@ -74,7 +74,7 @@ const router=useRouter()
         setError(result?.message || 'Update failed.');
       }
     } catch (err) {
-      console.error('Password update error:', err);
+  
       setError('Something went wrong.');
     }
   }, [token, password, confirmPassword, strength]);

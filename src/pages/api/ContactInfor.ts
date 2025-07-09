@@ -43,7 +43,7 @@ export default async function handler(req:NextApiRequest, res:NextApiResponse) {
 
       return res.status(201).json({ success: true, id: result.insertedId });
     } catch (error:any) {
-      console.error('Contact API error:', error);
+     
       return res.status(500).json({ success: false, error: error.message || 'Internal error' });
     }
   }

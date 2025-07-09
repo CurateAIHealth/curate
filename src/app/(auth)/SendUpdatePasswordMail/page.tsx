@@ -92,7 +92,7 @@ export default function ForgotPassword() {
         setMailStatusMessage('Email sent successfully!');
         // router.push('/sign-in');
       } catch (error) {
-        console.error('Error sending email:', error);
+  ;
         setMailStatusMessage('Error sending email. Please try again later.');
       }
     },
