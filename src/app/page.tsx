@@ -25,6 +25,13 @@ export default function StaticInfoPage() {
         if (ProfileInformation?.VerificationStatus === "Success") {
           router.push("/HomePage")
 
+        }  if (
+          ProfileInformation?.Email === "tsiddu805@gmail.com" &&
+          !sessionStorage.getItem("adminRedirected")
+        ) {
+          sessionStorage.setItem("adminRedirected", "true");
+          router.push("/AdminPage");
+          return;
         }
 
         else {

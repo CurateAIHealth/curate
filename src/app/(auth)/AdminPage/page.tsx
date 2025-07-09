@@ -63,7 +63,7 @@ setUpdatedStatusMsg(`${first} Verification Status Updated Successfully`);
       }
     };
     Fetch();
-  }, [updatedStatusMsg]);
+  }, []);
 const ShowDompleteInformation=(A:any)=>{
 const FullDetails=users.filter((each:any)=>each.userId===A)
 dispatch(UpdateUserInformation(FullDetails[0]))
