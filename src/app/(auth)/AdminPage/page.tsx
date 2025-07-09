@@ -52,7 +52,7 @@ setUpdatedStatusMsg(`${first} Verification Status Updated Successfully`);
       try {
         const localValue = localStorage.getItem("UserId");
         const ProfileInformation = await GetUserInformation(localValue)
-        if (ProfileInformation?.Email !== "tsiddu805@gmail.com") {
+        if (ProfileInformation?.Email !== "admin@curatehealth.in") {
           router.push("/");
         }
         const RegisterdUsersResult = await GetRegidterdUsers();
@@ -63,7 +63,7 @@ setUpdatedStatusMsg(`${first} Verification Status Updated Successfully`);
       }
     };
     Fetch();
-  }, []);
+  }, [updatedStatusMsg]);
 const ShowDompleteInformation=(A:any)=>{
 const FullDetails=users.filter((each:any)=>each.userId===A)
 dispatch(UpdateUserInformation(FullDetails[0]))
