@@ -9,41 +9,34 @@ import { useDispatch, useSelector } from 'react-redux';
 
 export default function StaticInfoPage() {
   const [isChecking, setIsChecking] = useState(true);
-  const dispatch = useDispatch();
   const router = useRouter();
 
-  const storedUserId = useSelector((state: any) => state.StoredUserId);
 
   useEffect(() => {
     const Fetch = async () => {
       const localValue = localStorage.getItem("UserId");
- dispatch(UpdateUserId(localValue));
+
       if (!localValue) {
         router.push("/sign-in");
         return;
       }
-
       try {
         const ProfileInformation = await GetUserInformation(localValue)
-
-        console.log("Information---",ProfileInformation)
         if (ProfileInformation?.VerificationStatus === "Success") {
           router.push("/HomePage")
 
-        }if(ProfileInformation?.Email==="tsiddu805@gmail.com"){
-          router.push("/AdminPage")
         }
-        
+
         else {
           setIsChecking(false);
         }
       } catch (err: any) {
-        console.error("Fetch Error", err);
+       
         router.push("/sign-in");
       }
     }
     Fetch()
-  }, [dispatch, router]);
+  }, [router]);
 
   if (isChecking) {
     return (
@@ -72,7 +65,7 @@ export default function StaticInfoPage() {
         <p className="text-gray-700 text-lg leading-relaxed mb-6">
           We’ll notify you as soon as the verification is successfully completed. In the meantime, feel free to explore our platform and stay connected.
         </p>
-<button onClick={()=>localStorage.removeItem("UserId")}>Logout</button>
+        <button onClick={() => localStorage.removeItem("UserId")}>Logout</button>
         <p className="text-teal-600 font-semibold text-xl">
           We appreciate your patience and look forward to welcoming you soon!
         </p>

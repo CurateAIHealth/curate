@@ -16,7 +16,8 @@ export const UpdateDocterInformation = async (doctorInfo: {
   Password: any,
   ConfirmPassword: any
   AadharNumber: any
-  VerificationStatus: any
+  VerificationStatus: any,
+  Age: any
 }) => {
   try {
     const cluster = await clientPromise;
@@ -140,7 +141,7 @@ export const SignInRessult = async (SignInfor: { Name: any, Password: any }) => 
 
     return SignInInformation.userId?.toString?.();
   } catch (err: any) {
-    console.error("Error in SignInRessult:", err);
+   
     return null;
   }
 };
@@ -227,16 +228,65 @@ export const UpdatePatientInformation = async (Patient: {
     throw error;
   }
 }
+  
 
-
-export const GetUserInformation=async(UserIdFromLocal:any)=>{
-try{
-   const cluster = await clientPromise;
+export const GetUserInformation = async (UserIdFromLocal: any) => {
+  try {
+    const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration")
-    const UserInformation=await collection.findOne({userId:UserIdFromLocal})
-    return UserInformation
-}catch(err:any){
+    const UserInformation:any = await collection.findOne({ userId: UserIdFromLocal })
+     if (!UserInformation) return null;
 
+   
+    return {
+      ...UserInformation,
+      _id: UserInformation._id?.toString() ?? null, 
+     
+    }
+  } catch (err: any) {
+
+  }
 }
+
+
+export const GetRegidterdUsers = async () => {
+  try {
+    const Cluster = await clientPromise
+    const Db = Cluster.db("CurateInformation")
+    const Collection = Db.collection("Registration")
+    const RegistrationResult = await Collection.find().toArray()
+    const safeUsers = RegistrationResult.map((user:any) => ({
+  ...user,
+  _id: user._id.toString(), 
+}));
+    return safeUsers
+  } catch (err: any) {
+    return err
+  }
 }
+
+export const UpdateUserVerificationstatus = async (UserId: string, UpdatedStatus: string) => {
+  try {
+    const Cluster = await clientPromise
+    const Db = Cluster.db("CurateInformation")
+    const Collection = Db.collection("Registration")
+    const UpdateVerificationStatus = await Collection.updateOne(
+      { userId: UserId }, {
+      $set: {
+        VerificationStatus: UpdatedStatus
+      }
+    }
+    )
+    if (UpdateVerificationStatus.modifiedCount === 0) {
+      return { success: false, message: 'Internal Error Try Again!' };
+    }
+
+    return { success: true, message: 'Verification Status updated successfully.' };
+  } catch (err: any) {
+    return err
+  }
+}
+
+
+ 

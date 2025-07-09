@@ -15,3 +15,12 @@ export const UserIdValue = (state: any = "", action: any) => {
             return state
     }
 }
+
+export const UserInformation=(state:any={},action:any)=>{
+switch(action.type){
+case "UpdateUserInformation":
+    return action.payload;
+    default:
+        return state
+}
+}

@@ -13,7 +13,7 @@ import { useState, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Eye, EyeOff } from 'lucide-react';
 import { getPasswordStrength, isValidAadhar } from '@/Lib/Actions';
-import { Console } from 'console';
+
 
 export default function DoctorForm() {
   const [formData, setFormData] = useState({
@@ -30,7 +30,8 @@ export default function DoctorForm() {
     ConfirmPassword: '',
     ContactNumber: '',
     Type: '',
-    VerificationStatus:"Pending"
+    VerificationStatus:"Pending",
+    Age:''
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -212,7 +213,8 @@ setStatusMesssage(Result.message);
           ConfirmPassword: '',
           ContactNumber: '',
           Type: '',
-          VerificationStatus:''
+          VerificationStatus:'',
+            Age:''
 
         });
         setSelectedServices([]);
@@ -238,7 +240,8 @@ setStatusMesssage(Result.message);
         ConfirmPassword: '',
         ContactNumber: '',
         Type: '',
-           VerificationStatus:''
+           VerificationStatus:'',
+             Age:''
       });
       setSelectedServices([]);
       setSelectedLocations([]);
@@ -309,7 +312,18 @@ setStatusMesssage(Result.message);
           <option value="Student">Student</option>
         </select>
       </div>
-
+  <div className="flex flex-col gap-1">
+        <label className="text-xs font-semibold uppercase">Age</label>
+        <input
+          type="number"
+          name="Age"
+          value={formData.Age}
+          onChange={handleChange}
+          className="input-style"
+          min={18}
+          required
+        />
+      </div>
       {formData.Type === 'doctor' && (
         <div className="flex flex-col gap-1">
           <label className="text-xs font-semibold uppercase">Registration Number</label>
