@@ -30,8 +30,9 @@ export default function DoctorForm() {
     ConfirmPassword: '',
     ContactNumber: '',
     Type: '',
-    VerificationStatus:"Pending",
-    Age:''
+    VerificationStatus: "Pending",
+    Age: '',
+    TermsAndConditions:"Accepted"
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +44,7 @@ export default function DoctorForm() {
   const [statusMesssage, setStatusMesssage] = useState('');
   const [SubmissionRequest, setSubmissionRequest] = useState(true);
   const [collegeInput, setCollegeInput] = useState('');
+  const [CheckBoxStatus,setCheckBoxStatus]=useState(false)
 
   const router = useRouter();
 
@@ -196,8 +198,8 @@ export default function DoctorForm() {
           to: formData.Email,
           subject: 'Curate Digital AI Health Registration',
           html: htmlComponent,
-        });        
-setStatusMesssage(Result.message);
+        });
+        setStatusMesssage(Result.message);
 
         setFormData({
           userType: 'doctor',
@@ -213,8 +215,9 @@ setStatusMesssage(Result.message);
           ConfirmPassword: '',
           ContactNumber: '',
           Type: '',
-          VerificationStatus:'',
-            Age:''
+          VerificationStatus: 'Pending',
+          Age: '',
+           TermsAndConditions:"Accepted"
 
         });
         setSelectedServices([]);
@@ -240,8 +243,9 @@ setStatusMesssage(Result.message);
         ConfirmPassword: '',
         ContactNumber: '',
         Type: '',
-           VerificationStatus:'',
-             Age:''
+        VerificationStatus: 'Pending',
+        Age: '',
+         TermsAndConditions:"Accepted"
       });
       setSelectedServices([]);
       setSelectedLocations([]);
@@ -312,7 +316,7 @@ setStatusMesssage(Result.message);
           <option value="Student">Student</option>
         </select>
       </div>
-  <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1">
         <label className="text-xs font-semibold uppercase">Age</label>
         <input
           type="number"
@@ -417,20 +421,20 @@ setStatusMesssage(Result.message);
           disabled={selectedServices.length >= 1}
           className="input-style"
         />
-           <div className="flex flex-wrap gap-2 mt-2 md:col-span-2">
-        {selectedServices.map(service => (
-          <span key={service} className="badge-style">
-            {service}
-            <button
-              type="button"
-              onClick={() => setSelectedServices([])}
-              className="ml-2 font-bold"
-            >
-              ×
-            </button>
-          </span>
-        ))}
-      </div>
+        <div className="flex flex-wrap gap-2 mt-2 md:col-span-2">
+          {selectedServices.map(service => (
+            <span key={service} className="badge-style">
+              {service}
+              <button
+                type="button"
+                onClick={() => setSelectedServices([])}
+                className="ml-2 font-bold"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
         {DoctorSearchInput && filteredServices.length > 0 && (
           <div className="absolute inset-x-0 top-full mt-1 max-h-60 overflow-auto bg-white border rounded shadow-lg z-50">
             {filteredServices.map((s, idx) => (
@@ -462,20 +466,20 @@ setStatusMesssage(Result.message);
           disabled={selectedLocations.length >= 4}
           className="input-style"
         />
-           <div className="flex flex-wrap gap-2 mt-2 md:col-span-2">
-        {selectedLocations.map(loc => (
-          <span key={loc} className="badge-style">
-            {loc}
-            <button
-              type="button"
-              onClick={() => setSelectedLocations(prev => prev.filter(l => l !== loc))}
-              className="ml-2 font-bold"
-            >
-              ×
-            </button>
-          </span>
-        ))}
-      </div>
+        <div className="flex flex-wrap gap-2 mt-2 md:col-span-2">
+          {selectedLocations.map(loc => (
+            <span key={loc} className="badge-style">
+              {loc}
+              <button
+                type="button"
+                onClick={() => setSelectedLocations(prev => prev.filter(l => l !== loc))}
+                className="ml-2 font-bold"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
         {searchInput && filteredLocations.length > 0 && (
           <div className="absolute inset-x-0 top-full mt-1 max-h-60 overflow-auto bg-white border rounded shadow-lg z-50">
             {filteredLocations.map((loc, idx) => (
@@ -491,9 +495,9 @@ setStatusMesssage(Result.message);
         )}
       </div>
 
-   
 
-   
+
+
 
       <div className="flex flex-col gap-1 md:col-span-2">
         <label className="text-xs font-semibold uppercase">Email</label>
@@ -553,23 +557,35 @@ setStatusMesssage(Result.message);
           <p className="text-sm text-red-500">Passwords do not match</p>
         )}
       </div>
+      <div className='flex gap-2'>
+<input
+  type="checkbox"
+  className="cursor-pointer"
+  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+    setCheckBoxStatus(e.target.checked)
+  }
+/>
+        <p>Accept <a className='text-blue-600 cursor-pointer' href='/TermsAndConditions'>Terms&Condtions</a></p>
+      </div>
 
       <div className="md:col-span-2 flex justify-center">
         <p
-          className={`text-center font-bold w-full ${
-            statusMesssage === 'You registered successfully with Curate Digital AI'
+          className={`text-center font-bold w-full ${statusMesssage === 'You registered successfully with Curate Digital AI'
               ? 'text-green-700'
               : 'text-[#FF0000]'
-          }`}
+            }`}
         >
           {statusMesssage}
         </p>
       </div>
 
-      <button type="submit" className="primary-button md:col-span-2">
-        {SubmissionRequest ? 'Submit as Doctor' : 'Please Wait, Registering as Doctor....'}
-      </button>
-
+    <button
+  type="submit"
+  disabled={!CheckBoxStatus}
+  className={`primary-button md:col-span-2 ${!CheckBoxStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+>
+  {SubmissionRequest ? 'Submit as Doctor' : 'Please Wait, Registering as Doctor....'}
+</button>
       <div className="md:col-span-2 flex justify-center">
         <p className="text-sm text-gray-700 text-center">
           Already registered?{' '}

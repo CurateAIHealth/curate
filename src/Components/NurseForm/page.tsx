@@ -28,9 +28,10 @@ export default function NurseForm() {
     Password: '',
     ConfirmPassword: '',
     Type: '',
-    VerificationStatus:'Pending'
+    VerificationStatus:'Pending',
+     TermsAndConditions:"Accepted"
   });
-
+  const [CheckBoxStatus,setCheckBoxStatus]=useState(false)
   const [statusMesssage, setStatusMesssage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -173,7 +174,8 @@ export default function NurseForm() {
           Password: '',
           ConfirmPassword: '',
           Type: '',
-          VerificationStatus:""
+          VerificationStatus:"Pending",
+           TermsAndConditions:"Accepted"
         });
 
         setSubmissionRequest(true);
@@ -200,7 +202,8 @@ export default function NurseForm() {
         Password: '',
         ConfirmPassword: '',
         Type: '',
-        VerificationStatus:""
+        VerificationStatus:"Pending",
+         TermsAndConditions:"Accepted"
       });
     }
   };
@@ -440,7 +443,16 @@ export default function NurseForm() {
             <p className="text-sm text-red-500">Passwords do not match</p>
           )}
       </div>
-
+<div className='flex gap-2'>
+<input
+  type="checkbox"
+  className="cursor-pointer"
+  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+    setCheckBoxStatus(e.target.checked)
+  }
+/>
+<p>Accept <a className='text-blue-600 cursor-pointer' href='/TermsAndConditions'>Terms&Condtions</a></p>
+      </div>
       <div className="md:col-span-2 flex justify-center">
         <p
           className={`text-center font-bold w-full ${
@@ -454,11 +466,13 @@ export default function NurseForm() {
         </p>
       </div>
 
-      <button type="submit" className="primary-button md:col-span-2">
-        {SubmissionRequest
-          ? 'Submit as Nurse'
-          : 'Please Wait, Registering as Nurse....'}
-      </button>
+       <button
+  type="submit"
+  disabled={!CheckBoxStatus}
+  className={`primary-button md:col-span-2 ${!CheckBoxStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+>
+  {SubmissionRequest ? 'Submit as Doctor' : 'Please Wait, Registering as Doctor....'}
+</button>
 
       <div className="text-sm text-gray-700 text-center">
         Already registered?{' '}
