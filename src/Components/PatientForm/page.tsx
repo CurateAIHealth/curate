@@ -21,14 +21,15 @@ export default function PatientForm() {
     Password: '',
     ConfirmPassword: '',
     Location: '',
-    VerificationStatus:'Pending'
+    VerificationStatus:'Pending',
+    TermsAndConditions:"Accepted"
   });
-
+ const [CheckBoxStatus,setCheckBoxStatus]=useState(false)
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [SubmissionRequest, setSubmissionRequest] = useState(true);
   const router = useRouter();
 
   const handleChange = (
@@ -149,7 +150,8 @@ export default function PatientForm() {
         Password: '',
         ConfirmPassword: '',
         Location: '',
-        VerificationStatus:''
+        VerificationStatus:'',
+        TermsAndConditions:"Accepted"
       });
       router.push('/SuccessfulRegistration');
     } catch {
@@ -199,7 +201,7 @@ export default function PatientForm() {
         />
       </div>
 
-      {/* Age and Location are now side‑by‑side on md+ screens */}
+  
       <div className="flex flex-col gap-1">
         <label className="text-xs font-semibold uppercase">Age</label>
         <input
@@ -321,7 +323,16 @@ export default function PatientForm() {
           <p className="text-sm text-red-500">Passwords do not match</p>
         )}
       </div>
-
+<div className='flex gap-2'>
+<input
+  type="checkbox"
+  className="cursor-pointer"
+  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+    setCheckBoxStatus(e.target.checked)
+  }
+/>
+<p>Accept <a className='text-blue-600 cursor-pointer'href='/TermsAndConditions'>Terms&Condtions</a></p>
+      </div>
       <div className="md:col-span-2 flex justify-center">
         <p
           className={`text-center font-bold w-full ${statusMessage === 'You registered successfully with Curate Digital AI' ? 'text-green-700' : 'text-[#FF0000]'}`}
@@ -330,13 +341,14 @@ export default function PatientForm() {
         </p>
       </div>
 
-      <button
-        type="submit"
-        className="primary-button md:col-span-2"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? 'Please wait…' : 'Submit as Patient'}
-      </button>
+    
+       <button
+  type="submit"
+  disabled={!CheckBoxStatus}
+  className={`primary-button md:col-span-2 ${!CheckBoxStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+>
+  {SubmissionRequest ? 'Submit as Doctor' : 'Please Wait, Registering as Doctor....'}
+</button>
 
       <div className="md:col-span-2 flex justify-center">
         <p className="text-sm text-gray-700 text-center">

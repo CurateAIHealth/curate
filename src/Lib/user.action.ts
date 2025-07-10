@@ -17,7 +17,8 @@ export const UpdateDocterInformation = async (doctorInfo: {
   ConfirmPassword: any
   AadharNumber: any
   VerificationStatus: any,
-  Age: any
+  Age: any,
+   TermsAndConditions:any
 }) => {
   try {
     const cluster = await clientPromise;
@@ -74,7 +75,8 @@ export const UpdateNurseInfo = async (NurseInfor: {
   userId: any,
   ConfirmPassword: any,
   Type: any
-  VerificationStatus: any
+  VerificationStatus: any,
+  TermsAndConditions:any
 }) => {
   try {
     const cluster = await clientPromise;
@@ -112,6 +114,53 @@ export const UpdateNurseInfo = async (NurseInfor: {
     throw error;
   }
 }
+
+export const UpdateCurateFamilyInfo = async (FamilyInfo: any[]) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+  
+    const existingDoctors = await Promise.all(
+      FamilyInfo.map((each: any) =>
+        collection.findOne({
+          $or: [
+            { Email: each.Email },
+            { RegistrationNumber: each.ContactNumber },
+            { AadharNumber: each.AadharNumber }
+          ]
+        })
+      )
+    );
+
+
+    const duplicates = existingDoctors.filter(doc => doc !== null);
+    if (duplicates.length > 0) {
+      return {
+        success: false,
+        message: "One or more family members already exist with these details."
+      };
+    }
+
+  
+    const result = await collection.insertMany(FamilyInfo);
+
+    return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedIds: Object.values(result.insertedIds).map(id => id.toString()),
+    };
+
+  } catch (err: any) {
+    console.error("UpdateCurateFamilyInfo error:", err);
+    return {
+      success: false,
+      message: "An error occurred while updating family info.",
+      error: err.message || "Unknown error"
+    };
+  }
+};
 
 export const GetUserIdwithEmail = async (Mail: any) => {
   try {
@@ -189,7 +238,8 @@ export const UpdatePatientInformation = async (Patient: {
   Password: any,
   userId: any,
   ConfirmPassword: any,
-  VerificationStatus: any
+  VerificationStatus: any,
+  TermsAndConditions:any
 
 }) => {
   try {
@@ -288,5 +338,3 @@ export const UpdateUserVerificationstatus = async (UserId: string, UpdatedStatus
   }
 }
 
-
- 

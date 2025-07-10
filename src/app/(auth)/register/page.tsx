@@ -10,6 +10,7 @@ import NurseForm from '@/Components/NurseForm/page';
 import PatientForm from '@/Components/PatientForm/page';
 import PatientFamilyForm from '@/Components/PatientFamilyForm/page';
 import UserTypeSelector from '@/Components/UserTypeSelector/page';
+import HealthcareAssistantForm from '@/Components/HCA/page';
 
 export default function RegisterPage() {
   const [userType, setUserType] = useState<string>('');
@@ -39,6 +40,7 @@ export default function RegisterPage() {
             {userType === 'nurse' && <NurseForm  />}
             {userType === 'patient' && <PatientForm  />}
             {userType === 'Curate Family' && <PatientFamilyForm  />}
+            { userType ===  'Healthcare Assistant'&&<HealthcareAssistantForm/>}
           </div>
         </div>
       </section>
