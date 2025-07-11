@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Eye, EyeOff } from 'lucide-react';
 import { getPasswordStrength, isValidAadhar } from '@/Lib/Actions';
 import { useRouter } from 'next/navigation';
-import { UpdatePatientInformation } from '@/Lib/user.action';
+import { HCARegistration, UpdatePatientInformation } from '@/Lib/user.action';
 import ReactDOMServer from 'react-dom/server';
 import axios from 'axios';
 
@@ -38,6 +38,7 @@ export default function HealthcareAssistantForm() {
   const router = useRouter();
 
   const handleChange = (e:any) => {
+   
     setStatusMessage('');
     const { name, value } = e.target;
 
@@ -66,7 +67,7 @@ export default function HealthcareAssistantForm() {
   const handleSubmit = async (e:any) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+ setSubmissionRequest(false)
     if (!isValidAadhar(formData.AadharNumber)) {
       setStatusMessage('Please enter a valid 12-digit Aadhaar number.');
       setIsSubmitting(false);
@@ -98,7 +99,7 @@ export default function HealthcareAssistantForm() {
         userId: uuidv4(),
       };
 
-      const result = await UpdatePatientInformation(payload);
+      const result:any = await HCARegistration(payload);
       if (!result.success) {
         setStatusMessage(result.message);
         setIsSubmitting(false);
@@ -124,7 +125,7 @@ export default function HealthcareAssistantForm() {
         subject: 'Curate Digital AI Health Registration',
         html: htmlComponent,
       });
-
+ setSubmissionRequest(true)
       setStatusMessage(result.message);
       setFormData({
         userType: 'healthcare-assistant',

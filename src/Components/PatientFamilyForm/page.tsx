@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { UpdateCurateFamilyInfo } from '@/Lib/user.action';
+import ReactDOMServer from 'react-dom/server';
+import axios from 'axios';
 
 export default function PatientFamilyForm() {
   const [familyMembers, setFamilyMembers] = useState([
@@ -105,6 +107,25 @@ export default function PatientFamilyForm() {
   
    
       const Result=await UpdateCurateFamilyInfo(familyMembers)
+         const EmailComponent = () => (
+        <div>
+          <div style={{ textAlign: 'center' }}>
+            <img src={`${process.env.NEXT_PUBLIC_BASE_URL}/Icons/Curate-logo.png`} alt="Curate Digital AI Health" width="150" />
+          </div>
+          <p>Dear User,</p>
+          <p>Thank you for registering with <strong>Curate Digital AI Health</strong>.</p>
+          <p>We have received your details. Our team will review the information and contact you if anything else is required.</p>
+          <p>For help, email <a href="mailto:support@curatedigital.ai">support@curatedigital.ai</a>.</p>
+          <p>Best regards,<br />Curate Digital AI Health Team</p>
+        </div>
+      );
+
+      const htmlComponent = ReactDOMServer.renderToString(<EmailComponent />);
+      await axios.post('/api/MailSend', {
+        to: familyMembers[0].Email,
+        subject: 'Curate Digital AI Health Registration',
+        html: htmlComponent,
+      });
          console.log('Submitting family members:', Result);
          if(Result.success)
           {  setStatusMessage('All members submitted successfully!')
@@ -137,6 +158,7 @@ export default function PatientFamilyForm() {
     <form className="space-y-6">
       {familyMembers.map((member, index) => (
         <div key={index} className="border p-4 rounded-lg space-y-4 bg-gray-50 relative">
+          {index===0&&<p className="text-s font-semibold uppercase text-center text-gray-500">Head of Household</p>}
           {familyMembers.length > 1 && (
             <button
               type="button"
