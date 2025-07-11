@@ -11,7 +11,7 @@ export default function UserTypeSelector({
 }: UserTypeSelectorProps) {
   const options = [
     { value: 'patient', label: 'Patient' },
-    { value: 'Curate Family', label: 'Curate Family' },
+    { value: 'Organisation', label: 'Organisation' },
     { value: 'doctor', label: 'Doctor' },
     { value: 'nurse', label: 'Nurse' },
     { value: 'Healthcare Assistant', label: 'Healthcare Assistant' },

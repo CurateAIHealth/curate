@@ -180,7 +180,7 @@ export const SignInRessult = async (SignInfor: { Name: any, Password: any }) => 
     const Clustor = await clientPromise;
     const Db = Clustor.db("CurateInformation");
     const Collection = Db.collection("Registration");
-
+console.log()
     const SignInInformation: any = await Collection.findOne({
       Email: SignInfor.Name,
       ConfirmPassword: SignInfor.Password,
