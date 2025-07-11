@@ -54,7 +54,11 @@ export default function SignIn() {
         <Logo />
 
         <h1 className="text-3xl font-bold text-gray-800">
-          Sign in to <span className="text-teal-600"><span className='text-pink-400'>Curate</span> Digital AI </span>
+          Sign in to <div>
+  <span style={{ color: '#4CC38A' }}>Curate</span>{' '}
+  <span style={{ color: '#4CC38A' }}>Digital AI</span>
+</div>
+
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4 text-left">
           <input

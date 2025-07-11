@@ -214,7 +214,19 @@ export default function PatientForm() {
           required
         />
       </div>
-
+ <div className="flex flex-col gap-1">
+       <label className="text-xs font-semibold ">DateOfBirth</label>
+<input type="date" className="input-style" name="DateOfBirth"  onChange={handleChange} required />
+</div>
+ <div className="flex flex-col gap-1">
+       <label className="text-xs font-semibold ">Select Gender</label>
+         <select name="Gender" className="input-style"  onChange={handleChange} required>
+            <option value="">Select Gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+      </select>
+      </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs font-semibold uppercase">Location</label>
         <input

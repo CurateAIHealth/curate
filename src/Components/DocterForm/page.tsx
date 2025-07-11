@@ -32,7 +32,7 @@ export default function DoctorForm() {
     Type: '',
     VerificationStatus: "Pending",
     Age: '',
-    TermsAndConditions:"Accepted"
+    TermsAndConditions: "Accepted"
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -44,7 +44,7 @@ export default function DoctorForm() {
   const [statusMesssage, setStatusMesssage] = useState('');
   const [SubmissionRequest, setSubmissionRequest] = useState(true);
   const [collegeInput, setCollegeInput] = useState('');
-  const [CheckBoxStatus,setCheckBoxStatus]=useState(false)
+  const [CheckBoxStatus, setCheckBoxStatus] = useState(false)
 
   const router = useRouter();
 
@@ -217,7 +217,7 @@ export default function DoctorForm() {
           Type: '',
           VerificationStatus: 'Pending',
           Age: '',
-           TermsAndConditions:"Accepted"
+          TermsAndConditions: "Accepted"
 
         });
         setSelectedServices([]);
@@ -245,7 +245,7 @@ export default function DoctorForm() {
         Type: '',
         VerificationStatus: 'Pending',
         Age: '',
-         TermsAndConditions:"Accepted"
+        TermsAndConditions: "Accepted"
       });
       setSelectedServices([]);
       setSelectedLocations([]);
@@ -307,7 +307,19 @@ export default function DoctorForm() {
           required
         />
       </div>
-
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-semibold ">DateOfBirth</label>
+        <input type="date" className="input-style" name="DateOfBirth" onChange={handleChange} required />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-semibold ">Select Gender</label>
+        <select name="Gender" className="input-style" onChange={handleChange} required>
+     <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs font-semibold uppercase">Type</label>
         <select name="Type" className="input-style" onChange={handleChange} required>
@@ -558,34 +570,34 @@ export default function DoctorForm() {
         )}
       </div>
       <div className='flex gap-2'>
-<input
-  type="checkbox"
-  className="cursor-pointer"
-  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-    setCheckBoxStatus(e.target.checked)
-  }
-/>
+        <input
+          type="checkbox"
+          className="cursor-pointer"
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setCheckBoxStatus(e.target.checked)
+          }
+        />
         <p>Accept <a className='text-blue-600 cursor-pointer' href='/TermsAndConditions'>Terms&Condtions</a></p>
       </div>
 
       <div className="md:col-span-2 flex justify-center">
         <p
           className={`text-center font-bold w-full ${statusMesssage === 'You registered successfully with Curate Digital AI'
-              ? 'text-green-700'
-              : 'text-[#FF0000]'
+            ? 'text-green-700'
+            : 'text-[#FF0000]'
             }`}
         >
           {statusMesssage}
         </p>
       </div>
 
-    <button
-  type="submit"
-  disabled={!CheckBoxStatus}
-  className={`primary-button md:col-span-2 ${!CheckBoxStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
->
-  {SubmissionRequest ? 'Submit as Doctor' : 'Please Wait, Registering as Doctor....'}
-</button>
+      <button
+        type="submit"
+        disabled={!CheckBoxStatus}
+        className={`primary-button md:col-span-2 ${!CheckBoxStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+      >
+        {SubmissionRequest ? 'Submit as Doctor' : 'Please Wait, Registering as Doctor....'}
+      </button>
       <div className="md:col-span-2 flex justify-center">
         <p className="text-sm text-gray-700 text-center">
           Already registered?{' '}

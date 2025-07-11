@@ -25,9 +25,10 @@ export default function RegisterPage() {
           <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-800 leading-tight mb-4">
   <div>Register with</div>
   <div>
-    <span className="text-pink-500">Curate</span>{' '}
-    <span className="text-teal-600">Digital AI</span>
-  </div>
+  <span style={{ color: '#4CC38A' }}>Curate</span>{' '}
+  <span style={{ color: '#4CC38A' }}>Digital AI</span>
+</div>
+
 </h2>
 
      
@@ -39,7 +40,7 @@ export default function RegisterPage() {
             {userType === 'doctor' && <DoctorForm  />}
             {userType === 'nurse' && <NurseForm  />}
             {userType === 'patient' && <PatientForm  />}
-            {userType === 'Curate Family' && <PatientFamilyForm  />}
+                {userType === 'Organisation' && ""}
             { userType ===  'Healthcare Assistant'&&<HealthcareAssistantForm/>}
           </div>
         </div>
