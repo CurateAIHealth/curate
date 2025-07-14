@@ -11,6 +11,7 @@ import PatientForm from '@/Components/PatientForm/page';
 import PatientFamilyForm from '@/Components/PatientFamilyForm/page';
 import UserTypeSelector from '@/Components/UserTypeSelector/page';
 import HealthcareAssistantForm from '@/Components/HCA/page';
+import OrganizationForm from '@/Components/Organisation/page';
 
 export default function RegisterPage() {
   const [userType, setUserType] = useState<string>('');
@@ -24,9 +25,9 @@ export default function RegisterPage() {
           <Logo />
           <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-800 leading-tight mb-4">
   <div>Register with</div>
-  <div>
-  <span style={{ color: '#4CC38A' }}>Curate</span>{' '}
-  <span style={{ color: '#4CC38A' }}>Digital AI</span>
+  <div> 
+  <span style={{ color: '#50c896' }}> AI Digital</span>{' '}
+  <span style={{ color: '#50c896' }}>Health</span>
 </div>
 
 </h2>
@@ -40,7 +41,7 @@ export default function RegisterPage() {
             {userType === 'doctor' && <DoctorForm  />}
             {userType === 'nurse' && <NurseForm  />}
             {userType === 'patient' && <PatientForm  />}
-                {userType === 'Organisation' && ""}
+                {userType === 'Organisation' && <OrganizationForm/>}
             { userType ===  'Healthcare Assistant'&&<HealthcareAssistantForm/>}
           </div>
         </div>

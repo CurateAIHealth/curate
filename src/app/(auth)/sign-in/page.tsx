@@ -55,8 +55,8 @@ export default function SignIn() {
 
         <h1 className="text-3xl font-bold text-gray-800">
           Sign in to <div>
-  <span style={{ color: '#4CC38A' }}>Curate</span>{' '}
-  <span style={{ color: '#4CC38A' }}>Digital AI</span>
+  <span style={{ color: '#50c896' }}>AI Digital</span>{' '}
+  <span style={{ color: '#50c896' }}>Health</span>
 </div>
 
         </h1>
@@ -95,7 +95,7 @@ export default function SignIn() {
             Forgot Your Password ?{' '}
             <button
               onClick={RestPassword}
-              className="text-teal-600 font-semibold hover:underline hover:cursor-pointer"
+              className="text-[#50c896] font-semibold hover:underline hover:cursor-pointer"
             >
               Reset Password
             </button>
@@ -104,7 +104,8 @@ export default function SignIn() {
             Don't have an account?{' '}
             <button
               onClick={handleRegisterRedirect}
-              className="text-teal-600 font-semibold hover:underline hover:cursor-pointer"
+className="text-[#50c896] font-semibold hover:underline hover:cursor-pointer"
+
             >
               Register here
             </button>

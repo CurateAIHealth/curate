@@ -223,7 +223,7 @@ export default function NurseForm() {
   return (
     <form onSubmit={handleFormSubmit} className="space-y-4">
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">First Name</label>
+        <label className="text-xs ">First Name</label>
         <input
           type="text"
           name="FirstName"
@@ -235,7 +235,7 @@ export default function NurseForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Last Name</label>
+        <label className="text-xs ">Last Name</label>
         <input
           type="text"
           name="LastName"
@@ -247,7 +247,7 @@ export default function NurseForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Age</label>
+        <label className="text-xs ">Age</label>
         <input
           type="number"
           name="Age"
@@ -260,7 +260,7 @@ export default function NurseForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Qualification</label>
+        <label className="text-xs">Qualification</label>
         <input
           type="text"
           name="Qualification"
@@ -275,7 +275,7 @@ export default function NurseForm() {
 <input type="date" className="input-style" name="DateOfBirth"  onChange={handleChange} required />
 </div>
  <div className="flex flex-col gap-1">
-       <label className="text-xs font-semibold ">Select Gender</label>
+       <label className="text-xs ">Select Gender</label>
          <select name="Gender" className="input-style"  onChange={handleChange} required>
             <option value="">Select Gender</option>
         <option value="Male">Male</option>
@@ -284,7 +284,7 @@ export default function NurseForm() {
       </select>
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Type</label>
+        <label className="text-xs ">Type</label>
         <select
           name="Type"
           className="input-style"
@@ -299,7 +299,7 @@ export default function NurseForm() {
 
       {formData.Type === 'Nurse' && (
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold uppercase">
+          <label className="text-xs ">
             Registration Number
           </label>
           <input
@@ -314,7 +314,7 @@ export default function NurseForm() {
       )}
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Location</label>
+        <label className="text-xs ">Location</label>
         <input
           type="text"
           name="Location"
@@ -326,7 +326,7 @@ export default function NurseForm() {
       </div>
 
       <div className="flex flex-col gap-1 relative">
-        <label className="text-xs font-semibold uppercase">College</label>
+        <label className="text-xs ">College</label>
         <input
           type="text"
           name="College"
@@ -354,7 +354,7 @@ export default function NurseForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Aadhaar Number</label>
+        <label className="text-xs ">Aadhaar Number</label>
         <input
           type="text"
           name="AadharNumber"
@@ -372,7 +372,7 @@ export default function NurseForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Email</label>
+        <label className="text-xs ">Email</label>
         <input
           type="email"
           name="Email"
@@ -384,7 +384,7 @@ export default function NurseForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Contact Number</label>
+        <label className="text-xs ">Contact Number</label>
         <div className="flex">
           <span className="inline-flex items-center px-3 rounded-l-md bg-gray-100 border border-r-0 border-gray-300 text-sm select-none">
             +91
@@ -408,7 +408,7 @@ export default function NurseForm() {
       </div>
 
       <div className="flex flex-col gap-1 relative">
-        <label className="text-xs font-semibold uppercase">Password</label>
+        <label className="text-xs ">Password</label>
         <input
           type={showPassword ? 'text' : 'password'}
           name="Password"
@@ -434,7 +434,7 @@ export default function NurseForm() {
       </div>
 
       <div className="flex flex-col gap-1 relative">
-        <label className="text-xs font-semibold uppercase">Confirm Password</label>
+        <label className="text-xs ">Confirm Password</label>
         <input
           type={showConfirmPassword ? 'text' : 'password'}
           name="ConfirmPassword"
@@ -483,14 +483,14 @@ export default function NurseForm() {
   disabled={!CheckBoxStatus}
   className={`primary-button md:col-span-2 ${!CheckBoxStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
 >
-  {SubmissionRequest ? 'Submit as Doctor' : 'Please Wait, Registering as Doctor....'}
+  {SubmissionRequest ? 'Submit as Nurse' : 'Please Wait, Registering as Nurse....'}
 </button>
 
       <div className="text-sm text-gray-700 text-center">
         Already registered?{' '}
         <a
           href="/sign-in"
-          className="text-teal-600 font-semibold hover:underline"
+          className="text-[#50c896] font-semibold hover:underline"
         >
           Sign In
         </a>

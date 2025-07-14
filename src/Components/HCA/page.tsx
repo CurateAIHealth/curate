@@ -16,8 +16,6 @@ export default function HealthcareAssistantForm() {
     LastName: '',
     Gender: '',
     DateOfBirth: '',
-    MaritalStatus: '',
-    Nationality: '',
     AadharNumber: '',
     Age: '',
     ContactNumber: '',
@@ -93,7 +91,7 @@ export default function HealthcareAssistantForm() {
     }
 
     try {
-      const payload = {
+      const payload:any = {
         ...formData,
         AadharNumber: formData.AadharNumber.replace(/\s/g, ''),
         userId: uuidv4(),
@@ -133,8 +131,6 @@ export default function HealthcareAssistantForm() {
         LastName: '',
         Gender: '',
         DateOfBirth: '',
-        MaritalStatus: '',
-        Nationality: '',
         AadharNumber: '',
         Age: '',
         ContactNumber: '',
@@ -171,14 +167,7 @@ export default function HealthcareAssistantForm() {
         <option value="Other">Other</option>
       </select>
       <input type="date" className="input-style" name="DateOfBirth" value={formData.DateOfBirth} onChange={handleChange} required />
-      <select name="MaritalStatus" className="input-style" value={formData.MaritalStatus} onChange={handleChange} required>
-        <option value="">Select Marital Status</option>
-        <option value="Single">Single</option>
-        <option value="Married">Married</option>
-        <option value="Divorced">Divorced</option>
-        <option value="Widowed">Widowed</option>
-      </select>
-      <input name="Nationality" className="input-style" value={formData.Nationality} onChange={handleChange} placeholder="Nationality" required />
+
       <input name="AadharNumber" className="input-style" value={formData.AadharNumber} onChange={handleChange} maxLength={14} required placeholder="Aadhaar Number" />
       {digitCount > 0 && digitCount < 12 && <p className="text-red-500 text-sm">Aadhaar number must be 12 digits</p>}
       <input name="Age" className="input-style" value={formData.Age} onChange={handleChange} type="number" placeholder="Age" required />
@@ -202,9 +191,9 @@ export default function HealthcareAssistantForm() {
       </div>
       <p className={`md:col-span-2 text-center font-bold ${statusMessage.includes('successfully') ? 'text-green-700' : 'text-red-500'}`}>{statusMessage}</p>
       <button type="submit" disabled={!CheckBoxStatus} className={`primary-button md:col-span-2 ${!CheckBoxStatus ? 'opacity-50 cursor-not-allowed' : ''}`}>
-        {SubmissionRequest ? 'Submit as Healthcare Assistant' : 'Registering...'}
+        {SubmissionRequest ? 'Submit as Healthcare Assistant' : 'Registering as Healthcare Assistant...'}
       </button>
-      <p className="md:col-span-2 text-sm text-center">Already registered? <a href="/sign-in" className="text-teal-600 font-semibold hover:underline">Sign In</a></p>
+      <p className="md:col-span-2 text-sm text-center">Already registered? <a href="/sign-in" className="text-[#50c896] font-semibold hover:underline">Sign In</a></p>
     </form>
   );
 }

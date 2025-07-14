@@ -261,7 +261,7 @@ export default function DoctorForm() {
       className="grid grid-cols-1 md:grid-cols-2 gap-4"
     >
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">First Name</label>
+        <label className="text-xs ">First Name</label>
         <input
           type="text"
           name="FirstName"
@@ -273,7 +273,7 @@ export default function DoctorForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Last Name</label>
+        <label className="text-xs  ">Last Name</label>
         <input
           type="text"
           name="LastName"
@@ -285,7 +285,7 @@ export default function DoctorForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Qualification</label>
+        <label className="text-xs ">Qualification</label>
         <input
           type="text"
           name="Qualification"
@@ -297,7 +297,7 @@ export default function DoctorForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Location</label>
+        <label className="text-xs ">Location</label>
         <input
           type="text"
           name="Location"
@@ -308,11 +308,11 @@ export default function DoctorForm() {
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold ">DateOfBirth</label>
+        <label className="text-xs  ">Date Of Birth</label>
         <input type="date" className="input-style" name="DateOfBirth" onChange={handleChange} required />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold ">Select Gender</label>
+        <label className="text-xs  ">Select Gender</label>
         <select name="Gender" className="input-style" onChange={handleChange} required>
      <option value="">Select Gender</option>
           <option value="Male">Male</option>
@@ -321,7 +321,7 @@ export default function DoctorForm() {
         </select>
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Type</label>
+        <label className="text-xs ">Type</label>
         <select name="Type" className="input-style" onChange={handleChange} required>
           <option value="">Select Type</option>
           <option value="doctor">doctor</option>
@@ -329,7 +329,7 @@ export default function DoctorForm() {
         </select>
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Age</label>
+        <label className="text-xs ">Age</label>
         <input
           type="number"
           name="Age"
@@ -342,7 +342,7 @@ export default function DoctorForm() {
       </div>
       {formData.Type === 'doctor' && (
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold uppercase">Registration Number</label>
+          <label className="text-xs ">Registration Number</label>
           <input
             type="text"
             name="RegistrationNumber"
@@ -355,7 +355,7 @@ export default function DoctorForm() {
       )}
 
       <div className="flex flex-col gap-1 md:col-span-2">
-        <label className="text-xs font-semibold uppercase">Aadhaar Number</label>
+        <label className="text-xs ">Aadhaar Number</label>
         <input
           type="text"
           name="AadharNumber"
@@ -371,7 +371,7 @@ export default function DoctorForm() {
       </div>
 
       <div className="flex flex-col gap-1 md:col-span-2 relative">
-        <label className="text-xs font-semibold uppercase">College</label>
+        <label className="text-xs ">College</label>
         <input
           type="text"
           name="College"
@@ -400,7 +400,7 @@ export default function DoctorForm() {
       </div>
 
       <div className="flex flex-col gap-1 md:col-span-2">
-        <label className="text-xs font-semibold uppercase">Contact Number</label>
+        <label className="text-xs ">Contact Number</label>
         <div className="flex">
           <span className="inline-flex items-center px-3 rounded-l-md bg-gray-100 border border-r-0 border-gray-300 text-sm select-none">
             +91
@@ -422,7 +422,7 @@ export default function DoctorForm() {
       </div>
 
       <div className="md:col-span-2 relative">
-        <label className="text-xs font-semibold uppercase">Offerable Service</label>
+        <label className="text-xs">Offerable Service</label>
         <input
           type="text"
           value={DoctorSearchInput}
@@ -463,7 +463,7 @@ export default function DoctorForm() {
       </div>
 
       <div className="md:col-span-2 relative">
-        <label className="text-xs font-semibold uppercase">
+        <label className="text-xs">
           Preferred Locations for Home Visits
         </label>
         <input
@@ -512,7 +512,7 @@ export default function DoctorForm() {
 
 
       <div className="flex flex-col gap-1 md:col-span-2">
-        <label className="text-xs font-semibold uppercase">Email</label>
+        <label className="text-xs ">Email</label>
         <input
           type="email"
           name="Email"
@@ -524,7 +524,7 @@ export default function DoctorForm() {
       </div>
 
       <div className="flex flex-col gap-1 md:col-span-2 relative">
-        <label className="text-xs font-semibold uppercase">Password</label>
+        <label className="text-xs ">Password</label>
         <input
           type={showPassword ? 'text' : 'password'}
           name="Password"
@@ -549,7 +549,7 @@ export default function DoctorForm() {
       </div>
 
       <div className="flex flex-col gap-1 md:col-span-2 relative">
-        <label className="text-xs font-semibold uppercase">Confirm Password</label>
+        <label className="text-xs ">Confirm Password</label>
         <input
           type={showConfirmPassword ? 'text' : 'password'}
           name="ConfirmPassword"
@@ -601,7 +601,7 @@ export default function DoctorForm() {
       <div className="md:col-span-2 flex justify-center">
         <p className="text-sm text-gray-700 text-center">
           Already registered?{' '}
-          <a href="/sign-in" className="text-teal-600 font-semibold hover:underline">
+          <a href="/sign-in" className="text-[#50c896] font-semibold hover:underline">
             Sign In
           </a>
         </p>
