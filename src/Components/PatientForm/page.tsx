@@ -30,8 +30,38 @@ export default function PatientForm() {
   const [statusMessage, setStatusMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [SubmissionRequest, setSubmissionRequest] = useState(true);
+ const [familyMembers, setFamilyMembers] = useState<
+    { FullName: any; Email: any; Age: any; AadharNumber: any; ContactNumber: any }[]
+  >([]);
   const router = useRouter();
+const UpdateNewFamilyMembar=()=>{
+     setFamilyMembers([
+      ...familyMembers,
+      {
+        FullName: '',
+        Email: '',
+        Age: '',
+        AadharNumber: '',
+        ContactNumber: '',
+    
+      },
+    ])
+}
 
+const removeMember=(index:any)=>{
+  const updated = [...familyMembers];
+    updated.splice(index, 1);
+    setFamilyMembers(updated);
+}
+
+  const handleNewChange = (In: any, e: any) => {
+    const { name, value } = e.target
+
+    const NewResult: any = [...familyMembers]
+    NewResult[In][name] = value;
+    setFamilyMembers(NewResult)
+
+  }
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
@@ -171,14 +201,14 @@ export default function PatientForm() {
     'text-blue-500',
     'text-green-600',
   ];
-
+console.log("Test---",familyMembers)
   return (
     <form
       onSubmit={handleSubmit}
       className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-0"
     >
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">First Name</label>
+        <label className="text-xs ">First Name</label>
         <input
           type="text"
           name="FirstName"
@@ -190,7 +220,7 @@ export default function PatientForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Last Name</label>
+        <label className="text-xs ">Last Name</label>
         <input
           type="text"
           name="LastName"
@@ -203,7 +233,7 @@ export default function PatientForm() {
 
   
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Age</label>
+        <label className="text-xs ">Age</label>
         <input
           type="number"
           name="Age"
@@ -215,11 +245,11 @@ export default function PatientForm() {
         />
       </div>
  <div className="flex flex-col gap-1">
-       <label className="text-xs font-semibold ">DateOfBirth</label>
+       <label className="text-xs ">Date Of Birth</label>
 <input type="date" className="input-style" name="DateOfBirth"  onChange={handleChange} required />
 </div>
  <div className="flex flex-col gap-1">
-       <label className="text-xs font-semibold ">Select Gender</label>
+       <label className="text-xs ">Select Gender</label>
          <select name="Gender" className="input-style"  onChange={handleChange} required>
             <option value="">Select Gender</option>
         <option value="Male">Male</option>
@@ -228,7 +258,7 @@ export default function PatientForm() {
       </select>
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase">Location</label>
+        <label className="text-xs ">Location</label>
         <input
           type="text"
           name="Location"
@@ -240,7 +270,7 @@ export default function PatientForm() {
       </div>
 
       <div className="flex flex-col gap-1 md:col-span-2">
-        <label className="text-xs font-semibold uppercase">Aadhaar Number</label>
+        <label className="text-xs ">Aadhaar Number</label>
         <input
           type="text"
           name="AadharNumber"
@@ -256,7 +286,7 @@ export default function PatientForm() {
       </div>
 
       <div className="flex flex-col gap-1 md:col-span-2">
-        <label className="text-xs font-semibold uppercase">Contact Number</label>
+        <label className="text-xs ">Contact Number</label>
         <div className="flex">
           <span className="inline-flex items-center px-3 rounded-l-md bg-gray-100 border border-r-0 border-gray-300 text-sm select-none">
             +91
@@ -278,7 +308,7 @@ export default function PatientForm() {
       </div>
 
       <div className="flex flex-col gap-1 md:col-span-2">
-        <label className="text-xs font-semibold uppercase">Email</label>
+        <label className="text-xs ">Email</label>
         <input
           type="email"
           name="Email"
@@ -290,7 +320,7 @@ export default function PatientForm() {
       </div>
 
       <div className="flex flex-col gap-1 md:col-span-2 relative">
-        <label className="text-xs font-semibold uppercase">Password</label>
+        <label className="text-xs ">Password</label>
         <input
           type={showPassword ? 'text' : 'password'}
           name="Password"
@@ -315,7 +345,7 @@ export default function PatientForm() {
       </div>
 
       <div className="flex flex-col gap-1 md:col-span-2 relative">
-        <label className="text-xs font-semibold uppercase">Confirm Password</label>
+        <label className="text-xs ">Confirm Password</label>
         <input
           type={showConfirmPassword ? 'text' : 'password'}
           name="ConfirmPassword"
@@ -335,6 +365,112 @@ export default function PatientForm() {
           <p className="text-sm text-red-500">Passwords do not match</p>
         )}
       </div>
+      <div className="md:col-span-2 w-full">
+  <div className="w-full grid grid-cols-1 gap-4">
+    {familyMembers.map((member: any, index: number) => (
+      <div
+        key={index}
+        className="w-full bg-white border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl relative"
+      >
+        <button
+          type="button"
+          className="absolute top-4 right-4 text-sm text-red-500 hover:text-red-700 transition cursor-pointer"
+          onClick={() => removeMember(index)}
+        >
+          ✕ Remove
+        </button>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label className="block text-sm  text-gray-700 mb-1">Full Name</label>
+            <input
+              type="text"
+              name="FullName"
+              value={member.FullName}
+              onChange={(e: any) => handleNewChange(index, e)}
+              className="input-style"
+              placeholder="Enter full name"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm  text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              name="Email"
+              value={member.Email}
+              onChange={(e: any) => handleNewChange(index, e)}
+              className="input-style"
+              placeholder="example@email.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm  text-gray-700 mb-1">Age</label>
+            <input
+              type="text"
+              name="Age"
+              value={member.Age}
+              onChange={(e: any) => handleNewChange(index, e)}
+              className="input-style"
+              placeholder="Enter age"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm  text-gray-700 mb-1">Aadhaar Number</label>
+            <input
+              type="text"
+              name="AadharNumber"
+              value={member.AadharNumber}
+              onChange={(e: any) => handleNewChange(index, e)}
+              className="input-style"
+              maxLength={14}
+              placeholder="XXXX-XXXX-XXXX"
+              required
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm  text-gray-700 mb-1">Contact Number</label>
+            <input
+              type="text"
+              name="ContactNumber"
+              value={member.ContactNumber}
+              onChange={(e: any) => handleNewChange(index, e)}
+              className="input-style"
+              maxLength={10}
+              placeholder="Enter contact number"
+              required
+            />
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div className="mt-4">
+    <button
+      type="button"
+      onClick={UpdateNewFamilyMembar}
+      className="text-sm text-teal-600 underline cursor-pointer"
+    >
+      + Add Another Family Member
+    </button>
+  </div>
+</div>
+
+
+      <div className="md:col-span-2 flex justify-center">
+        <p
+          className={`text-center font-bold w-full ${statusMessage === 'You registered successfully with Curate Digital AI' ? 'text-green-700' : 'text-[#FF0000]'}`}
+        >
+          {statusMessage}
+        </p>
+      </div>
 <div className='flex gap-2'>
 <input
   type="checkbox"
@@ -345,27 +481,19 @@ export default function PatientForm() {
 />
 <p>Accept <a className='text-blue-600 cursor-pointer'href='/TermsAndConditions'>Terms&Condtions</a></p>
       </div>
-      <div className="md:col-span-2 flex justify-center">
-        <p
-          className={`text-center font-bold w-full ${statusMessage === 'You registered successfully with Curate Digital AI' ? 'text-green-700' : 'text-[#FF0000]'}`}
-        >
-          {statusMessage}
-        </p>
-      </div>
-
     
        <button
   type="submit"
   disabled={!CheckBoxStatus}
   className={`primary-button md:col-span-2 ${!CheckBoxStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
 >
-  {SubmissionRequest ? 'Submit as Doctor' : 'Please Wait, Registering as Doctor....'}
+  {SubmissionRequest ? 'Submit as Patient' : 'Please Wait, Registering as Patient....'}
 </button>
 
       <div className="md:col-span-2 flex justify-center">
         <p className="text-sm text-gray-700 text-center">
           Already registered?{' '}
-          <a href="/sign-in" className="text-teal-600 font-semibold hover:underline">
+          <a href="/sign-in" className="text-[#50c896] font-semibold hover:underline">
             Sign In
           </a>
         </p>
