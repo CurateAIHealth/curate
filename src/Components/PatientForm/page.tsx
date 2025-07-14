@@ -21,21 +21,21 @@ export default function PatientForm() {
     Password: '',
     ConfirmPassword: '',
     Location: '',
-    VerificationStatus:'Pending',
-    TermsAndConditions:"Accepted"
+    VerificationStatus: 'Pending',
+    TermsAndConditions: "Accepted"
   });
- const [CheckBoxStatus,setCheckBoxStatus]=useState(false)
+  const [CheckBoxStatus, setCheckBoxStatus] = useState(false)
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [SubmissionRequest, setSubmissionRequest] = useState(true);
- const [familyMembers, setFamilyMembers] = useState<
-    { FullName: any; Email: any; Age: any; AadharNumber: any; ContactNumber: any }[]
+  const [familyMembers, setFamilyMembers] = useState<
+    { FullName: any; Email: any; Age: any; AadharNumber: any; ContactNumber: any, dateofBirth: any, Gender: any }[]
   >([]);
   const router = useRouter();
-const UpdateNewFamilyMembar=()=>{
-     setFamilyMembers([
+  const UpdateNewFamilyMembar = () => {
+    setFamilyMembers([
       ...familyMembers,
       {
         FullName: '',
@@ -43,16 +43,17 @@ const UpdateNewFamilyMembar=()=>{
         Age: '',
         AadharNumber: '',
         ContactNumber: '',
-    
+        dateofBirth: '',
+        Gender: ''
       },
     ])
-}
+  }
 
-const removeMember=(index:any)=>{
-  const updated = [...familyMembers];
+  const removeMember = (index: any) => {
+    const updated = [...familyMembers];
     updated.splice(index, 1);
     setFamilyMembers(updated);
-}
+  }
 
   const handleNewChange = (In: any, e: any) => {
     const { name, value } = e.target
@@ -180,8 +181,8 @@ const removeMember=(index:any)=>{
         Password: '',
         ConfirmPassword: '',
         Location: '',
-        VerificationStatus:'',
-        TermsAndConditions:"Accepted"
+        VerificationStatus: '',
+        TermsAndConditions: "Accepted"
       });
       router.push('/SuccessfulRegistration');
     } catch {
@@ -201,7 +202,7 @@ const removeMember=(index:any)=>{
     'text-blue-500',
     'text-green-600',
   ];
-console.log("Test---",familyMembers)
+  console.log("Test---", familyMembers)
   return (
     <form
       onSubmit={handleSubmit}
@@ -231,7 +232,7 @@ console.log("Test---",familyMembers)
         />
       </div>
 
-  
+
       <div className="flex flex-col gap-1">
         <label className="text-xs ">Age</label>
         <input
@@ -244,18 +245,18 @@ console.log("Test---",familyMembers)
           required
         />
       </div>
- <div className="flex flex-col gap-1">
-       <label className="text-xs ">Date Of Birth</label>
-<input type="date" className="input-style" name="DateOfBirth"  onChange={handleChange} required />
-</div>
- <div className="flex flex-col gap-1">
-       <label className="text-xs ">Select Gender</label>
-         <select name="Gender" className="input-style"  onChange={handleChange} required>
-            <option value="">Select Gender</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-        <option value="Other">Other</option>
-      </select>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs ">Date Of Birth</label>
+        <input type="date" className="input-style" name="DateOfBirth" onChange={handleChange} required />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs ">Select Gender</label>
+        <select name="Gender" className="input-style" onChange={handleChange} required>
+          <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs ">Location</label>
@@ -296,7 +297,7 @@ console.log("Test---",familyMembers)
             name="ContactNumber"
             value={formData.ContactNumber}
             onChange={handleChange}
-          className="border border-gray-300 w-full rounded-r-md h-8 pl-2"
+            className="border border-gray-300 w-full rounded-r-md h-8 pl-2"
             maxLength={10}
             required
             placeholder="Enter 10‑digit mobile"
@@ -366,102 +367,114 @@ console.log("Test---",familyMembers)
         )}
       </div>
       <div className="md:col-span-2 w-full">
-  <div className="w-full grid grid-cols-1 gap-4">
-    {familyMembers.map((member: any, index: number) => (
-      <div
-        key={index}
-        className="w-full bg-white border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl relative"
-      >
-        <button
-          type="button"
-          className="absolute top-4 right-4 text-sm text-red-500 hover:text-red-700 transition cursor-pointer"
-          onClick={() => removeMember(index)}
-        >
-          ✕ Remove
-        </button>
+        <div className="w-full grid grid-cols-1 gap-4">
+          {familyMembers.map((member: any, index: number) => (
+            <div
+              key={index}
+              className="w-full bg-white border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl relative"
+            >
+              <button
+                type="button"
+                className="absolute top-4 right-4 text-sm text-red-500 hover:text-red-700 transition cursor-pointer"
+                onClick={() => removeMember(index)}
+              >
+                ✕ Remove
+              </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          <div>
-            <label className="block text-sm  text-gray-700 mb-1">Full Name</label>
-            <input
-              type="text"
-              name="FullName"
-              value={member.FullName}
-              onChange={(e: any) => handleNewChange(index, e)}
-              className="input-style"
-              placeholder="Enter full name"
-              required
-            />
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm  text-gray-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    name="FullName"
+                    value={member.FullName}
+                    onChange={(e: any) => handleNewChange(index, e)}
+                    className="input-style"
+                    placeholder="Enter full name"
+                    required
+                  />
+                </div>
 
-          <div>
-            <label className="block text-sm  text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              name="Email"
-              value={member.Email}
-              onChange={(e: any) => handleNewChange(index, e)}
-              className="input-style"
-              placeholder="example@email.com"
-              required
-            />
-          </div>
+                <div>
+                  <label className="block text-sm  text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    name="Email"
+                    value={member.Email}
+                    onChange={(e: any) => handleNewChange(index, e)}
+                    className="input-style"
+                    placeholder="example@email.com"
+                    required
+                  />
+                </div>
 
-          <div>
-            <label className="block text-sm  text-gray-700 mb-1">Age</label>
-            <input
-              type="text"
-              name="Age"
-              value={member.Age}
-              onChange={(e: any) => handleNewChange(index, e)}
-              className="input-style"
-              placeholder="Enter age"
-              required
-            />
-          </div>
+                <div>
+                  <label className="block text-sm  text-gray-700 mb-1">Age</label>
+                  <input
+                    type="text"
+                    name="Age"
+                    value={member.Age}
+                    onChange={(e: any) => handleNewChange(index, e)}
+                    className="input-style"
+                    placeholder="Enter age"
+                    required
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs ">Date Of Birth</label>
+                  <input type="date" className="input-style" name="DateOfBirth" onChange={(e: any) => handleNewChange(index, e)} required />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs ">Select Gender</label>
+                  <select name="Gender" className="input-style" onChange={(e: any) => handleNewChange(index, e)} required>
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm  text-gray-700 mb-1">Aadhaar Number</label>
+                  <input
+                    type="text"
+                    name="AadharNumber"
+                    value={member.AadharNumber}
+                    onChange={(e: any) => handleNewChange(index, e)}
+                    className="input-style"
+                    maxLength={14}
+                    placeholder="XXXX-XXXX-XXXX"
+                    required
+                  />
+                </div>
 
-          <div>
-            <label className="block text-sm  text-gray-700 mb-1">Aadhaar Number</label>
-            <input
-              type="text"
-              name="AadharNumber"
-              value={member.AadharNumber}
-              onChange={(e: any) => handleNewChange(index, e)}
-              className="input-style"
-              maxLength={14}
-              placeholder="XXXX-XXXX-XXXX"
-              required
-            />
-          </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm  text-gray-700 mb-1">Contact Number</label>
+                  <input
+                    type="text"
+                    name="ContactNumber"
+                    value={member.ContactNumber}
+                    onChange={(e: any) => handleNewChange(index, e)}
+                    className="input-style"
+                    maxLength={10}
+                    placeholder="Enter contact number"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm  text-gray-700 mb-1">Contact Number</label>
-            <input
-              type="text"
-              name="ContactNumber"
-              value={member.ContactNumber}
-              onChange={(e: any) => handleNewChange(index, e)}
-              className="input-style"
-              maxLength={10}
-              placeholder="Enter contact number"
-              required
-            />
-          </div>
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={UpdateNewFamilyMembar}
+            className="text-sm text-teal-600 underline cursor-pointer"
+          >
+            + Add Another Family Member
+          </button>
         </div>
       </div>
-    ))}
-  </div>
-
-  <div className="mt-4">
-    <button
-      type="button"
-      onClick={UpdateNewFamilyMembar}
-      className="text-sm text-teal-600 underline cursor-pointer"
-    >
-      + Add Another Family Member
-    </button>
-  </div>
-</div>
 
 
       <div className="md:col-span-2 flex justify-center">
@@ -471,24 +484,24 @@ console.log("Test---",familyMembers)
           {statusMessage}
         </p>
       </div>
-<div className='flex gap-2'>
-<input
-  type="checkbox"
-  className="cursor-pointer"
-  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-    setCheckBoxStatus(e.target.checked)
-  }
-/>
-<p>Accept <a className='text-blue-600 cursor-pointer'href='/TermsAndConditions'>Terms&Condtions</a></p>
+      <div className='flex gap-2'>
+        <input
+          type="checkbox"
+          className="cursor-pointer"
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setCheckBoxStatus(e.target.checked)
+          }
+        />
+        <p>Accept <a className='text-blue-600 cursor-pointer' href='/TermsAndConditions'>Terms&Condtions</a></p>
       </div>
-    
-       <button
-  type="submit"
-  disabled={!CheckBoxStatus}
-  className={`primary-button md:col-span-2 ${!CheckBoxStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
->
-  {SubmissionRequest ? 'Submit as Patient' : 'Please Wait, Registering as Patient....'}
-</button>
+
+      <button
+        type="submit"
+        disabled={!CheckBoxStatus}
+        className={`primary-button md:col-span-2 ${!CheckBoxStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+      >
+        {SubmissionRequest ? 'Submit as Patient' : 'Please Wait, Registering as Patient....'}
+      </button>
 
       <div className="md:col-span-2 flex justify-center">
         <p className="text-sm text-gray-700 text-center">
