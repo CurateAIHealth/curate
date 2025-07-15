@@ -3,13 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-poppins); /* 💡 Set Poppins as default sans font */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,34 +16,12 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans); /* ✅ Use Poppins globally */
 }
 
-
-
-/* Add in globals.css or tailwind.config.js */
+/* Utility classes */
 .input-style {
   @apply w-full px-4 py-2 bg-white text-gray-800 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400;
-}
-
-
-
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in {
-  animation: fade-in 0.2s ease-out;
-}
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-thumb {
-  background-color: #a0aec0;
-  border-radius: 4px;
-}
-.input-style {
-  @apply px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500;
 }
 
 .primary-button {
@@ -59,6 +31,16 @@ body {
 .badge-style {
   @apply bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm flex items-center;
 }
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
 @layer utilities {
   .animate-fade-in-up {
     animation: fadeInUp 0.5s ease-out both;
@@ -74,4 +56,13 @@ body {
       transform: translateY(0);
     }
   }
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #a0aec0;
+  border-radius: 4px;
 }
