@@ -22,7 +22,8 @@ export default function PatientForm() {
     ConfirmPassword: '',
     Location: '',
     VerificationStatus: 'Pending',
-    TermsAndConditions: "Accepted"
+    TermsAndConditions: "Accepted",
+    
   });
   const [CheckBoxStatus, setCheckBoxStatus] = useState(false)
   const [showPassword, setShowPassword] = useState(false);
@@ -94,6 +95,7 @@ export default function PatientForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmissionRequest(false)
 
     if (!isValidAadhar(formData.AadharNumber)) {
       setStatusMessage('Please enter a valid 12‑digit Aadhaar number.');
@@ -126,6 +128,7 @@ export default function PatientForm() {
         ...formData,
         AadharNumber: formData.AadharNumber.replace(/\s/g, ''),
         userId: uuidv4(),
+        FamilyMembars:familyMembers
       };
 
       const result = await UpdatePatientInformation(payload);
@@ -184,6 +187,7 @@ export default function PatientForm() {
         VerificationStatus: '',
         TermsAndConditions: "Accepted"
       });
+        setSubmissionRequest(true)
       router.push('/SuccessfulRegistration');
     } catch {
       setStatusMessage('Unexpected error. Please try again.');
@@ -247,7 +251,7 @@ export default function PatientForm() {
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs ">Date Of Birth</label>
-        <input type="date" className="input-style" name="DateOfBirth" onChange={handleChange} required />
+        <input type="date" className="input-style" name="dateofBirth" onChange={handleChange} required />
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs ">Select Gender</label>
@@ -422,7 +426,7 @@ export default function PatientForm() {
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs ">Date Of Birth</label>
-                  <input type="date" className="input-style" name="DateOfBirth" onChange={(e: any) => handleNewChange(index, e)} required />
+                  <input type="date" className="input-style" name="dateofBirth" onChange={(e: any) => handleNewChange(index, e)} required />
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs ">Select Gender</label>

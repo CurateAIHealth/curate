@@ -18,7 +18,7 @@ export const UpdateDocterInformation = async (doctorInfo: {
   AadharNumber: any
   VerificationStatus: any,
   Age: any,
-   TermsAndConditions:any
+  TermsAndConditions:any
 }) => {
   try {
     const cluster = await clientPromise;
@@ -240,7 +240,7 @@ export const UpdatePatientInformation = async (Patient: {
   ConfirmPassword: any,
   VerificationStatus: any,
   TermsAndConditions:any
-
+FamilyMembars:any
 }) => {
   try {
     const cluster = await clientPromise;
@@ -279,7 +279,57 @@ export const UpdatePatientInformation = async (Patient: {
   }
 }
   
+export const UpdateOrganisation=async(Organisation:{ userType: any,
+    OrganizationName: any,
+    RegistrationNumber: any,
+    OrganizationType:any,
+    HeadName: any,
+    HeadContact: any,
+    Location: any,
+    Email: any,
+     userId: any,
+    Password: any,
+    ConfirmPassword: any,
+    NumberOfPeople: any,
+    VerificationStatus: any,
+    TermsAndConditions: any,})=>{
 
+try{
+const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+
+    const existingDoctor = await collection.findOne({
+      $or: [
+        { Email: Organisation.Email },
+        { RegistrationNumber: Organisation.HeadContact },
+      ],
+    });
+
+    if (existingDoctor) {
+      return {
+        success: false,
+        message: "An account with these details already exists.",
+      };
+    }
+
+    const result = await collection.insertOne({
+      ...Organisation,
+      createdAt: new Date().toISOString(),
+    });
+
+    return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedId: result.insertedId.toString(),
+    };
+}catch(err:any){
+
+}
+
+
+}
 export const HCARegistration=async(HCA:{
    userType:any,
     FirstName:any,

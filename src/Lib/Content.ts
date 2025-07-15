@@ -421,7 +421,7 @@ export const HYDERABAD_LOCATIONS = [
 
 
 export const All_Medical_Colleges_Names = [
-  // Telangana Colleges
+
   "Osmania Medical College, Telangana, MBBS, MD/MS, BPT, BSc Nursing, Medical Lab Technology, Allied Health Sciences, MPH",
   "Gandhi Medical College, Telangana, MBBS, MD/MS, BDS, BPT, BSc Nursing, Allied Health Sciences" ,
   "Kakatiya Medical College, Telangana, MBBS, MD/MS, BPT, BSc Nursing, Allied Health Sciences",
@@ -450,8 +450,6 @@ export const All_Medical_Colleges_Names = [
   "PIMTECH College of BSc MLT, Telangana, BSc MLT",
   "Shaarvani Institute of Medical Sciences, Telangana, BSc MLT",
   "Indian Institute of Public Health, Telangana, MPH",
-
-  // Andhra Pradesh Colleges
   "Andhra Medical College, Andhra Pradesh, MBBS, MD/MS, BSc Nursing, Pharmacy",
   "Guntur Medical College, Andhra Pradesh, MBBS, MD/MS, BSc Nursing",
   "Kurnool Medical College, Andhra Pradesh, MBBS, MD/MS, BSc Nursing",

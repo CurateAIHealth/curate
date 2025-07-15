@@ -22,7 +22,7 @@ export default function UserTypeSelector({
       className="
         flex flex-wrap sm:flex-nowrap               
         justify-center items-center
-        gap-x-4 gap-y-2
+        gap-x-3 gap-y-2
         text-sm sm:text-base font-medium text-gray-700
         mb-4
       "
@@ -31,7 +31,7 @@ export default function UserTypeSelector({
         <label
           key={value}
           className="
-            flex items-center space-x-2 cursor-pointer
+            flex items-center space-x-1 cursor-pointer
             whitespace-nowrap                      /* prevent label line‑breaks */
           "
         >

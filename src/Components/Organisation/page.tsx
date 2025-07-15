@@ -21,7 +21,7 @@ export default function OrganizationForm() {
     Email: '',
     Password: '',
     ConfirmPassword: '',
-     NumberOfPeople: '',
+    NumberOfPeople: '',
     VerificationStatus: 'Pending',
     TermsAndConditions: 'Accepted',
   });
@@ -52,7 +52,7 @@ export default function OrganizationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+setSubmissionRequest(false)
     const pwOk =
       formData.Password.length >= 8 &&
       /[A-Z]/.test(formData.Password) &&
@@ -136,7 +136,7 @@ export default function OrganizationForm() {
         VerificationStatus: 'Pending',
         TermsAndConditions: 'Accepted',
       });
-
+setSubmissionRequest(true)
       router.push('/SuccessfulRegistration');
     } catch (error) {
       console.error(error);
