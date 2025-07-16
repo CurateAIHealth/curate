@@ -23,8 +23,9 @@ export default function HealthcareAssistantForm() {
     Password: '',
     ConfirmPassword: '',
     Location: '',
-    VerificationStatus: 'Pending',
-    TermsAndConditions: 'Accepted'
+    VerificationStatus: 'Success',
+    TermsAndConditions: 'Accepted',
+    FinelVerification:false
   });
 
   const [CheckBoxStatus, setCheckBoxStatus] = useState(false);
@@ -139,7 +140,8 @@ export default function HealthcareAssistantForm() {
         ConfirmPassword: '',
         Location: '',
         VerificationStatus: 'Pending',
-        TermsAndConditions: 'Accepted'
+        TermsAndConditions: 'Accepted',
+        FinelVerification:false
       });
 
       router.push('/SuccessfulRegistration');
