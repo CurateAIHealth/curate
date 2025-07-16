@@ -110,24 +110,32 @@ export default function RootLayout({
 
       
         <header className="bg-white shadow px-4 flex items-center justify-between" style={{ height: '10vh' }}>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={toggleMobileSidebar}
-              className="md:hidden"
-              aria-label="Toggle Sidebar"
-            >
-              <Menu className="w-6 h-6 text-gray-700" />
-            </button>
-            <div className="bg-white rounded-full pl-1 shadow-md w-[40px] h-[40px] flex items-center justify-center">
-              <img
-                src="/Icons/Curate-logo.png"
-                alt="Curate AI Health Logo"
-                className="w-6 h-6 object-contain"
-              />
-            </div>
-          </div>
-          <div className="text-gray-600 hidden md:block">Welcome, {ProfileName}</div>
-        </header>
+  {/* LEFT SIDE (Hamburger + Title in mobile) */}
+  <div className="flex items-center md:hidden">
+    <button
+      onClick={toggleMobileSidebar}
+      className="mr-2"
+      aria-label="Toggle Sidebar"
+    >
+      <Menu className="w-6 h-6 text-gray-700" />
+    </button>
+  </div>
+
+  {/* MIDDLE (Company logo on mobile only) */}
+  <div className="md:hidden">
+    <div className="bg-white rounded-full shadow-md w-[40px] h-[40px] flex items-center justify-center ml-auto">
+      <img
+        src="/Icons/Curate-logo.png"
+        alt="Curate AI Health Logo"
+        className="w-6 h-6 object-contain"
+      />
+    </div>
+  </div>
+
+  {/* RIGHT SIDE (Greeting message) */}
+  <div className="text-gray-600 hidden md:block">Welcome, {ProfileName}</div>
+</header>
+
 
        
         <main className="flex-1 overflow-y-auto px-4 py-3 bg-gray-100">
