@@ -54,7 +54,6 @@ export default function RootLayout({
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
 
-  
       <aside
         className={`
           fixed z-30 inset-y-0 left-0 transform transition-transform duration-300 ease-in-out
@@ -105,12 +104,13 @@ export default function RootLayout({
         </div>
       </aside>
 
-     
+    
       <div className="flex flex-col flex-1 ml-0 md:ml-auto">
-
-      
+    
         <header className="bg-white shadow px-4 flex items-center justify-between" style={{ height: '10vh' }}>
+      
           <div className="flex items-center space-x-4">
+         
             <button
               onClick={toggleMobileSidebar}
               className="md:hidden"
@@ -118,7 +118,9 @@ export default function RootLayout({
             >
               <Menu className="w-6 h-6 text-gray-700" />
             </button>
-            <div className="bg-white rounded-full pl-1 shadow-md w-[40px] h-[40px] flex items-center justify-center">
+
+        
+            <div className="hidden md:flex bg-white rounded-full pl-1 shadow-md w-[40px] h-[40px] items-center justify-center">
               <img
                 src="/Icons/Curate-logo.png"
                 alt="Curate AI Health Logo"
@@ -126,10 +128,21 @@ export default function RootLayout({
               />
             </div>
           </div>
+
+    
+          <div className="md:hidden bg-white rounded-full shadow-md w-[40px] h-[40px] flex items-center justify-center">
+            <img
+              src="/Icons/Curate-logo.png"
+              alt="Curate AI Health Logo"
+              className="w-6 h-6 object-contain"
+            />
+          </div>
+
+       
           <div className="text-gray-600 hidden md:block">Welcome, {ProfileName}</div>
         </header>
 
-       
+      
         <main className="flex-1 overflow-y-auto px-4 py-3 bg-gray-100">
           {children}
         </main>
