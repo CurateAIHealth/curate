@@ -2,7 +2,7 @@
 
 import { GetUserInformation } from '@/Lib/user.action';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function DoctorProfileForm() {
   const [preview, setPreview] = useState<string | null>(null);
@@ -111,7 +111,7 @@ const totalFields = flatFields.length + 1;
 const completion = Math.round((filled / totalFields) * 100);
 
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
 
     if (type === 'checkbox') {
@@ -137,7 +137,7 @@ const completion = Math.round((filled / totalFields) * 100);
         }
       }
     }
-  };
+  },[]);
 useEffect(()=>{
  const Fetch=async()=>{
 try{
@@ -164,7 +164,7 @@ setForm(prev => ({
  }
  Fetch()
 },[])
- const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+ const handleImageChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
   setPictureUploading(true)
   const file = e.target.files?.[0];
   if (!file) return;
@@ -188,12 +188,12 @@ setPictureUploading(false)
   } catch (error: any) {
     console.error("Upload failed:", error.message);
   }
-};
+},[]);
 
 
 
 
-   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+   const handleSubmit =useCallback( (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 SetUpdateingStatus(false)
     const dob = new Date(form.dateOfBirth);
@@ -220,7 +220,7 @@ if(preview===null){
     setUpdatedStatusMessage("Successfully Updated Your Information.");
      SetUpdateingStatus(true)
     console.log('Form submitted:', FinelForm);
-  };
+  },[form, preview, completion]);
 
   return (
     <div className="md:min-h-[86.5vh] md:h-[86.5vh] bg-gradient-to-br from-[#f6f9fc] to-[#eef2f7] flex items-center justify-center p-6 overflow-hidden">
