@@ -22,20 +22,26 @@ export default function StaticInfoPage() {
       }
       try {
         const ProfileInformation = await GetUserInformation(localValue)
+        console.log("Test---",ProfileInformation)
+        if (ProfileInformation?.Email === "admin@curatehealth.in") {
+          router.push("/AdminPage");
+         return
+        }
+        if (ProfileInformation?.FinelVerification === false&&ProfileInformation?.userType==="healthcare-assistant") {
+          router.push("/Try")
+          return
+        }
         if (ProfileInformation?.VerificationStatus === "Success") {
           router.push("/HomePage")
+          return
 
-        }  if (ProfileInformation?.Email === "admin@curatehealth.in" &&!sessionStorage.getItem("adminRedirected")) {
-          sessionStorage.setItem("adminRedirected", "true");
-          router.push("/AdminPage");
-          return;
-        }
+        } 
 
         else {
           setIsChecking(false);
         }
       } catch (err: any) {
-       
+
         router.push("/sign-in");
       }
     }

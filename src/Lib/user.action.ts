@@ -348,6 +348,7 @@ export const HCARegistration=async(HCA:{
     VerificationStatus: any,
     TermsAndConditions: any,
     userId: any,
+   FinelVerification:any
 })=>{
   try{
 const cluster = await clientPromise;
