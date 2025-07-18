@@ -434,6 +434,21 @@ export const HCARegistration = async (HCA: {
   }
 }
 
+export const PostFullRegistration=async(Info:any)=>{
+try{
+ const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("CompliteRegistrationInformation");
+    const FinelResult=await collection.insertOne({HCAComplitInformation:Info})
+       return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedId: FinelResult.insertedId.toString(),
+    };
+}catch(err:any){
+
+}
+}
 export const GetUserInformation = async (UserIdFromLocal: any) => {
   try {
     const cluster = await clientPromise;

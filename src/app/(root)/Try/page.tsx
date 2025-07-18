@@ -1,6 +1,6 @@
 'use client';
 
-import { GetUserInformation } from '@/Lib/user.action';
+import { GetUserInformation, PostFullRegistration } from '@/Lib/user.action';
 import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -12,7 +12,7 @@ export default function DoctorProfileForm() {
   const [ProfileName, SetProfileName] = useState('');
   const [PictureUploading, setPictureUploading] = useState(false);
   const [UpdateingStatus, SetUpdateingStatus] = useState(true);
-  const [DocName,setDocName]=useState("")
+  const [DocName, setDocName] = useState("")
   const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
   const [Docs, setDocs] = useState({
     ProfilePic: DEFAULT_PROFILE_PIC,
@@ -289,10 +289,10 @@ export default function DoctorProfileForm() {
   );
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
+    async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       SetUpdateingStatus(false);
-      console.log("Test----", Object.values(Docs).every((each) => each !== null))
+
       const dob = new Date(form.dateOfBirth);
       const today = new Date();
       let age = today.getFullYear() - dob.getFullYear();
@@ -307,7 +307,7 @@ export default function DoctorProfileForm() {
 
       if (Docs.ProfilePic === DEFAULT_PROFILE_PIC) {
         setUpdatedStatusMessage('Please Update Your Profile Picture!');
-        SetUpdateingStatus(true); 
+        SetUpdateingStatus(true);
         return;
       }
 
@@ -317,170 +317,118 @@ export default function DoctorProfileForm() {
         return;
       }
 
-      if (Object.values(Docs).every((each) => each !== null)) {
-        alert("Upload all the Required Documents!")
-        SetUpdateingStatus(true);
-        return
-      }
+      // if (Object.values(Docs).every((each) => each !== null)) {
+      //   alert("Upload all the Required Documents!")
+      //   SetUpdateingStatus(true);
+      //   return
+      // }
 
       const FinelForm = { ...form, Documents: Docs };
 
       setUpdatedStatusMessage('Successfully Updated Your Information.');
       SetUpdateingStatus(true);
-      console.log('Form submitted:', FinelForm);
+      const PostResult = await PostFullRegistration(FinelForm)
+      console.log("Result---", PostResult)
     },
     [form, completion, Docs]
   );
 
   return (
-    <div className="md:min-h-[86.5vh] md:h-[86.5vh] bg-gradient-to-br from-[#f0f4f8] to-[#e0e8f0] flex items-center justify-center p-6 overflow-hidden">
-      <div className="max-w-6xl w-full h-full bg-white rounded-3xl shadow-xl flex flex-col md:flex-row overflow-hidden">
+    <div className="md:min-h-[86.5vh] md:h-[86.5vh] bg-gradient-to-br from-[#f0f4f8] to-[#e0e8f0] flex flex-col items-center justify-center  overflow-hidden">
 
 
-        <div className="md:w-1/3 bg-[#50c896] text-white flex flex-col items-center p-8 relative overflow-y-auto custom-scrollbar">
 
-          <div className="flex flex-col items-center text-center z-10 w-full">
-
-
-            <img
-              src={Docs.ProfilePic}
-              alt="Profile"
-              className="w-40 h-40 object-cover rounded-full border-4 border-white shadow-md"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = DEFAULT_PROFILE_PIC;
-              }}
-            />
-            <label
-              htmlFor="ProfilePic"
-              className="cursor-pointer mt-3 inline-block text-sm font-medium text-white bg-[#50c896] hover:bg-[#43a07c] px-5 py-2 rounded-full transition-colors duration-300 shadow"
-            >
-              {Docs.ProfilePic && Docs.ProfilePic !== DEFAULT_PROFILE_PIC
-                ? 'Update Profile Picture'
-                : 'Upload Profile Picture'}
-            </label>
-            <input
-              id="ProfilePic"
-              name="ProfilePic"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-              required
-            />
+      <div className="md:w-full bg-[#50c896] text-white flex gap-6 justify-between items-center p-2">
 
 
-            <div className="mt-8 relative">
-              <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  stroke="white"
-                  strokeWidth="8"
-                  fill="transparent"
-                  className="opacity-30"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  stroke="#fde047"
-                  strokeWidth="10"
-                  fill="transparent"
-                  strokeDasharray="282.78"
-                  strokeDashoffset={`${282.78 - (282.78 * completion) / 100}`}
-                  className="transition-all duration-700 ease-out"
-                  strokeLinecap="round"
-                />
-                <text
-                  x="50"
-                  y="55"
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize="20px"
-                  fontWeight="bold"
-                  dominantBaseline="middle"
-                  transform="rotate(90, 50, 55)"
-                >
-                  {completion}%
-                </text>
-              </svg>
-              <p className="text-sm text-blue-100 mt-2">Profile Completion</p>
-            </div>
-
-
-            <div className="mt-10 w-full px-4">
-              <h3 className="text-xl font-semibold text-white mb-4 border-b border-blue-300 pb-2" >Your Documents <span>{ PictureUploading&&  <p className="text-sm font-semibold text-gray-800 mt-2">Please Wait Uploading {DocName}....</p>}</span></h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {['AdharCard', 'PanCard', 'CertificatOne', 'CertificatTwo', 'AccountPassBook'].map((docKey) => (
-                  <div
-                    key={docKey}
-                    className="flex flex-col items-center justify-between p-2 border border-blue-300 rounded-md bg-white bg-opacity-10 w-full h-40"
-                  >
-                    {Docs[docKey as keyof typeof Docs] ? (
-                      <img
-                        src={Docs[docKey as keyof typeof Docs]}
-                        alt={docKey}
-                        className="w-24 h-24 object-cover rounded-md shadow-sm mb-2"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = DEFAULT_DOCUMENT_ICON;
-                        }}
-                      />
-                    ) : (
-                      <div className="w-24 h-24 bg-white bg-opacity-20 rounded-md flex items-center justify-center text-white text-opacity-70 mb-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-12 w-12"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                          />
-                        </svg>
-                      </div>
-                    )}
-                    <label
-                      htmlFor={docKey}
-                      className="cursor-pointer text-center flex-shrink-0 text-xs text-white bg-teal-600 hover:bg-teal-400 px-3 py-1 rounded-full transition-colors duration-300"
-                    >
-                      {Docs[docKey as keyof typeof Docs] ? 'Update' : 'Upload'}{' '}
-                      {docKey.replace(/([A-Z])/g, ' $1').replace('Card', ' Card').replace('Book', ' Book').trim()}
-                    </label>
-                    <input
-                      id={docKey}
-                      name={docKey}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                      required
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+        <div className='flex flex-col  items-center justify-center text-center'>
+          <img
+            src={Docs.ProfilePic}
+            alt="Profile"
+            className="w-20 h-20 object-cover rounded-full border-4 border-white shadow-md"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = DEFAULT_PROFILE_PIC;
+            }}
+          />
+          <label
+            htmlFor="ProfilePic"
+            className="cursor-pointer mt-1 inline-block text-[10px] font-medium text-white bg-[#50c896] hover:bg-[#43a07c] px-5 py-2 rounded-full transition-colors duration-300 shadow"
+          >
+            {Docs.ProfilePic && Docs.ProfilePic !== DEFAULT_PROFILE_PIC
+              ? 'Update Profile Picture'
+              : 'Upload Profile Picture'}
+          </label>
+          <input
+            id="ProfilePic"
+            name="ProfilePic"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
+            required
+          />
         </div>
 
-
-        <form
-          onSubmit={handleSubmit}
-          className="md:w-2/3 p-8 space-y-8 overflow-y-auto custom-scrollbar h-full" 
-        >
-          <h2 className="text-4xl font-extrabold text-[#1392d3] mb-6 text-center">{ProfileName}'s Profile</h2>
+        <div>
+          <h2 className="text-4xl font-extrabold text-white bg-[#50c896]  mb-6 text-center">{ProfileName}'s Profile</h2>
 
           <p className="text-gray-600 text-center mb-8">
             Fill in the details below to keep your profile accurate and up-to-date.
           </p>
+          {PictureUploading && <p className="text-sm text-center font-semibold text-gray-800 mt-2">Please Wait Uploading {DocName}....</p>}
+        </div>
+        <div className="flex flex-col  items-center justify-center text-center  ">
+          <svg className="w-18 h-18 transform -rotate-90" viewBox="0 0 100 100">
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              stroke="gray"
+              strokeWidth="8"
+              fill="transparent"
+              className="opacity-30"
+            />
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              stroke="#fde047"
+              strokeWidth="10"
+              fill="transparent"
+              strokeDasharray="282.78"
+              strokeDashoffset={`${282.78 - (282.78 * completion) / 100}`}
+              className="transition-all duration-700 ease-out"
+              strokeLinecap="round"
+            />
+            <text
+              x="50"
+              y="55"
+              textAnchor="middle"
+              fill="white"
+              fontSize="20px"
+              fontWeight="bold"
+              dominantBaseline="middle"
+              transform="rotate(90, 50, 55)"
+            >
+              {completion}%
+            </text>
+          </svg>
+          <p className="text-sm text-gray-700 mt-2">Profile Completion</p>
+        </div>
 
-          <section className="bg-blue-50 p-6 rounded-xl shadow-md">
-            <h3 className="text-2xl font-semibold text-[#ff1493] mb-5 pb-3 border-b border-blue-200 flex items-center">
+
+      </div>
+
+
+      <form
+        onSubmit={handleSubmit}
+        className="md:w-full p-8 space-y-8 overflow-y-auto custom-scrollbar h-full"
+      >
+
+        <div className='md:flex  justify-center gap-2'>
+          <section className="md:w-1/2 bg-blue-50 pl-4 mt-2 p-2 rounded-xl shadow-md">
+
+            <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 mr-2 text-[#6366f1]"
@@ -504,7 +452,7 @@ export default function DoctorProfileForm() {
                 value={form.title}
                 onChange={handleChange}
                 placeholder="Title (e.g., Dr., Mr.)"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -513,7 +461,7 @@ export default function DoctorProfileForm() {
                 value={form.firstName}
                 onChange={handleChange}
                 placeholder="First Name"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -522,7 +470,7 @@ export default function DoctorProfileForm() {
                 value={form.surname}
                 onChange={handleChange}
                 placeholder="Surname"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -531,7 +479,7 @@ export default function DoctorProfileForm() {
                 value={form.fatherName}
                 onChange={handleChange}
                 placeholder="Father's Name"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -540,7 +488,7 @@ export default function DoctorProfileForm() {
                 value={form.motherName}
                 onChange={handleChange}
                 placeholder="Mother's Name"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -549,13 +497,13 @@ export default function DoctorProfileForm() {
                 value={form.husbandName}
                 onChange={handleChange}
                 placeholder="Husband's Name"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               />
               <select
                 name="gender"
                 value={form.gender}
                 onChange={handleChange}
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all appearance-none bg-white pr-8"
+                className="input-field border h-8 border-gray-300 pl-2 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all appearance-none bg-white pr-8"
                 required
               >
                 <option value="">Select Gender</option>
@@ -569,11 +517,11 @@ export default function DoctorProfileForm() {
                   name="dateOfBirth"
                   value={form.dateOfBirth}
                   onChange={handleChange}
-                  className="input-field border p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  className="input-field border p-3 h-8 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
                 />
                 {form.dateOfBirth && (
-                  <p className="absolute -bottom-6 left-0 text-xs text-gray-500 mt-1">
+                  <p className="absolute  left-0 text-xs text-gray-500">
                     Age:{' '}
                     {(() => {
                       const dob = new Date(form.dateOfBirth);
@@ -591,7 +539,7 @@ export default function DoctorProfileForm() {
                 name="maritalStatus"
                 value={form.maritalStatus}
                 onChange={handleChange}
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all appearance-none bg-white pr-8"
+                className="input-field border border-gray-300 h-8 pl-2 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all appearance-none bg-white pr-8"
                 required
               >
                 <option value="">Select Marital Status</option>
@@ -606,7 +554,7 @@ export default function DoctorProfileForm() {
                 value={form.emailId}
                 onChange={handleChange}
                 placeholder="Email ID"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -615,15 +563,15 @@ export default function DoctorProfileForm() {
                 value={form.mobileNumber}
                 onChange={handleChange}
                 placeholder="Mobile Number"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
             </div>
           </section>
 
 
-          <section className="bg-blue-50 p-6 rounded-xl shadow-md">
-            <h3 className="text-2xl font-semibold text-[#ff1493] mb-5 pb-3 border-b border-blue-200 flex items-center">
+          <section className="md:w-1/2 bg-blue-50 mt-2 p-2 rounded-xl shadow-md">
+            <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 mr-2 text-[#6366f1]"
@@ -647,7 +595,7 @@ export default function DoctorProfileForm() {
                 value={form.aadharCardNo}
                 onChange={handleChange}
                 placeholder="Aadhar Card No."
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -656,7 +604,7 @@ export default function DoctorProfileForm() {
                 value={form.panNumber}
                 onChange={handleChange}
                 placeholder="PAN Number"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -665,7 +613,7 @@ export default function DoctorProfileForm() {
                 value={form.voterIdNo}
                 onChange={handleChange}
                 placeholder="Voter ID No."
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -674,7 +622,7 @@ export default function DoctorProfileForm() {
                 value={form.rationCardNo}
                 onChange={handleChange}
                 placeholder="Ration Card No."
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
             </div>
@@ -683,7 +631,7 @@ export default function DoctorProfileForm() {
               value={form.permanentAddress}
               onChange={handleChange}
               placeholder="Permanent Address (Per GOVT ID)"
-              className="input-field resize-y h-24 border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
+              className="input-field resize-y h-18 border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
               required
             />
             <input
@@ -692,7 +640,7 @@ export default function DoctorProfileForm() {
               value={form.cityPostcodePermanent}
               onChange={handleChange}
               placeholder="City & Postcode (Permanent)"
-              className="input-field border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
+              className="input-field border border-gray-300 p-3 h-8 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
               required
             />
             <textarea
@@ -700,7 +648,7 @@ export default function DoctorProfileForm() {
               value={form.currentAddress}
               onChange={handleChange}
               placeholder="Current Address"
-              className="input-field resize-y h-24 border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
+              className="input-field resize-y h-18 border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
               required
             />
             <input
@@ -709,14 +657,15 @@ export default function DoctorProfileForm() {
               value={form.cityPostcodeCurrent}
               onChange={handleChange}
               placeholder="City & Postcode (Current)"
-              className="input-field border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+              className="input-field border border-gray-300 p-3 h-8 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               required
             />
           </section>
 
-
-          <section className="bg-blue-50 p-6 rounded-xl shadow-md">
-            <h3 className="text-2xl font-semibold text-[#ff1493] mb-5 pb-3 border-b border-blue-200 flex items-center">
+        </div>
+        <div className='md:flex  justify-center gap-2'>
+          <section className="md:w-1/2 bg-blue-50 p-2 rounded-xl shadow-md">
+            <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 mr-2 text-[#6366f1]"
@@ -741,7 +690,7 @@ export default function DoctorProfileForm() {
                   value={form.higherEducation}
                   onChange={handleChange}
                   placeholder="Higher Education (e.g., MBBS, MD)"
-                  className="input-field w-full mb-3 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  className="input-field w-full mb-3 h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -751,7 +700,7 @@ export default function DoctorProfileForm() {
                     value={form.higherEducationYearStart}
                     onChange={handleChange}
                     placeholder="Higher Ed. Year Start"
-                    className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                    className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                     required
                   />
                   <input
@@ -760,7 +709,7 @@ export default function DoctorProfileForm() {
                     value={form.higherEducationYearEnd}
                     onChange={handleChange}
                     placeholder="Higher Ed. Year End"
-                    className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                    className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                     required
                   />
                 </div>
@@ -772,7 +721,7 @@ export default function DoctorProfileForm() {
                   value={form.professionalEducation}
                   onChange={handleChange}
                   placeholder="Professional Education (e.g., Fellowship)"
-                  className="input-field w-full mb-3 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  className="input-field w-full mb-3 border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -782,7 +731,7 @@ export default function DoctorProfileForm() {
                     value={form.professionalEducationYearStart}
                     onChange={handleChange}
                     placeholder="Professional Ed. Year Start"
-                    className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                    className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                     required
                   />
                   <input
@@ -791,7 +740,7 @@ export default function DoctorProfileForm() {
                     value={form.professionalEducationYearEnd}
                     onChange={handleChange}
                     placeholder="Professional Ed. Year End"
-                    className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                    className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                     required
                   />
                 </div>
@@ -802,7 +751,7 @@ export default function DoctorProfileForm() {
                 value={form.registrationCouncil}
                 onChange={handleChange}
                 placeholder="Registration Council"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -811,7 +760,7 @@ export default function DoctorProfileForm() {
                 value={form.registrationNo}
                 onChange={handleChange}
                 placeholder="Registration No."
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <textarea
@@ -819,7 +768,7 @@ export default function DoctorProfileForm() {
                 value={form.professionalSkill}
                 onChange={handleChange}
                 placeholder="Professional Skill (e.g., Surgery, Diagnosis)"
-                className="input-field resize-y h-24 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field resize-y h-18 w-full border border-gray-300 p-3  rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -828,7 +777,7 @@ export default function DoctorProfileForm() {
                 value={form.certifiedBy}
                 onChange={handleChange}
                 placeholder="Certified By (e.g., Medical Council of India)"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -837,7 +786,7 @@ export default function DoctorProfileForm() {
                 value={form.professionalWork1}
                 onChange={handleChange}
                 placeholder="Professional Work 1 (e.g., Sr. Consultant, AIIMS)"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -846,7 +795,7 @@ export default function DoctorProfileForm() {
                 value={form.professionalWork2}
                 onChange={handleChange}
                 placeholder="Professional Work 2 (Optional)"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               />
               <input
                 type="number"
@@ -854,15 +803,15 @@ export default function DoctorProfileForm() {
                 value={form.experience}
                 onChange={handleChange}
                 placeholder="Experience in Years"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
             </div>
           </section>
 
 
-          <section className="bg-blue-50 p-6 rounded-xl shadow-md">
-            <h3 className="text-2xl font-semibold text-[#ff1493] mb-5 pb-3 border-b border-blue-200 flex items-center">
+          <section className="md:w-1/2 bg-blue-50 p-2 rounded-xl shadow-md">
+            <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 mr-2 text-[#6366f1]"
@@ -886,7 +835,7 @@ export default function DoctorProfileForm() {
                 value={form.height}
                 onChange={handleChange}
                 placeholder="Height (e.g., 5'8&quot; or 173cm)"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -895,7 +844,7 @@ export default function DoctorProfileForm() {
                 value={form.weight}
                 onChange={handleChange}
                 placeholder="Weight (e.g., 70kg)"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -904,7 +853,7 @@ export default function DoctorProfileForm() {
                 value={form.hairColour}
                 onChange={handleChange}
                 placeholder="Hair Colour"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -913,7 +862,7 @@ export default function DoctorProfileForm() {
                 value={form.eyeColour}
                 onChange={handleChange}
                 placeholder="Eye Colour"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -922,7 +871,7 @@ export default function DoctorProfileForm() {
                 value={form.complexion}
                 onChange={handleChange}
                 placeholder="Complexion"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -931,7 +880,7 @@ export default function DoctorProfileForm() {
                 value={form.anyDeformity}
                 onChange={handleChange}
                 placeholder="Any Deformity (if any)"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               />
               <input
                 type="text"
@@ -939,7 +888,7 @@ export default function DoctorProfileForm() {
                 value={form.moleBodyMark1}
                 onChange={handleChange}
                 placeholder="Mole/Body Mark 1"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               />
               <input
                 type="text"
@@ -947,14 +896,11 @@ export default function DoctorProfileForm() {
                 value={form.moleBodyMark2}
                 onChange={handleChange}
                 placeholder="Mole/Body Mark 2 (Optional)"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               />
+
             </div>
-          </section>
-
-
-          <section className="bg-blue-50 p-6 rounded-xl shadow-md">
-            <h3 className="text-2xl font-semibold text-[#ff1493] mb-5 pb-3 border-b border-blue-200 flex items-center">
+            <h3 className="text-md font-semibold text-[#ff1493] mb-5 mt-2  pb-3 border-b border-blue-200 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 mr-2 text-[#6366f1]"
@@ -977,7 +923,7 @@ export default function DoctorProfileForm() {
                 value={form.reportPreviousHealthProblems}
                 onChange={handleChange}
                 placeholder="Report Previous Health Problems"
-                className="input-field resize-y h-24 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <textarea
@@ -985,15 +931,54 @@ export default function DoctorProfileForm() {
                 value={form.reportCurrentHealthProblems}
                 onChange={handleChange}
                 placeholder="Report Current Health Problems"
-                className="input-field resize-y h-24 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
             </div>
           </section>
 
+        </div>
+        {/* <section className="bg-blue-50 p-3 rounded-xl shadow-md">
+            <h3 className="text-md font-semibold text-[#ff1493] mb-5 pb-3 border-b border-blue-200 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2 text-[#6366f1]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                />
+              </svg>
+              Health Information
+            </h3>
+            <div className="space-y-5">
+              <textarea
+                name="reportPreviousHealthProblems"
+                value={form.reportPreviousHealthProblems}
+                onChange={handleChange}
+                placeholder="Report Previous Health Problems"
+                className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                required
+              />
+              <textarea
+                name="reportCurrentHealthProblems"
+                value={form.reportCurrentHealthProblems}
+                onChange={handleChange}
+                placeholder="Report Current Health Problems"
+                className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                required
+              />
+            </div>
+          </section> */}
+        <div className='md:flex  justify-center gap-2'>
 
-          <section className="bg-blue-50 p-6 rounded-xl shadow-md">
-            <h3 className="text-2xl font-semibold text-[#ff1493] mb-5 pb-3 border-b border-blue-200 flex items-center">
+          <section className=" md:w-1/2 bg-blue-50 p-3 rounded-xl shadow-md">
+            <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 mr-2 text-[#6366f1]"
@@ -1017,7 +1002,7 @@ export default function DoctorProfileForm() {
                 value={form.sourceOfReferral}
                 onChange={handleChange}
                 placeholder="Source of Referral"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1026,19 +1011,19 @@ export default function DoctorProfileForm() {
                 value={form.dateOfReferral}
                 onChange={handleChange}
                 placeholder="Date of Referral"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
             </div>
             <div className="space-y-5 mt-5">
-              <h4 className="text-xl font-semibold text-gray-700">Reference 1:</h4>
+              <h4 className="text-md font-semibold text-gray-700">Reference 1:</h4>
               <input
                 type="text"
                 name="reference1Name"
                 value={form.reference1Name}
                 onChange={handleChange}
                 placeholder="Reference 1 Name"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1047,7 +1032,7 @@ export default function DoctorProfileForm() {
                 value={form.reference1Aadhar}
                 onChange={handleChange}
                 placeholder="Reference 1 Aadhar No."
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1056,7 +1041,7 @@ export default function DoctorProfileForm() {
                 value={form.reference1Mobile}
                 onChange={handleChange}
                 placeholder="Reference 1 Mobile"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <textarea
@@ -1064,7 +1049,7 @@ export default function DoctorProfileForm() {
                 value={form.reference1Address}
                 onChange={handleChange}
                 placeholder="Reference 1 Address"
-                className="input-field resize-y h-24 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field resize-y h-18 w-full border border-gray-300 p-3  rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1073,19 +1058,19 @@ export default function DoctorProfileForm() {
                 value={form.reference1Relationship}
                 onChange={handleChange}
                 placeholder="Reference 1 Relationship"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
             </div>
             <div className="space-y-5 mt-5">
-              <h4 className="text-xl font-semibold text-gray-700">Reference 2 (Optional):</h4>
+              <h4 className="text-md font-semibold text-gray-700">Reference 2 (Optional):</h4>
               <input
                 type="text"
                 name="reference2Name"
                 value={form.reference2Name}
                 onChange={handleChange}
                 placeholder="Reference 2 Name"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               />
               <input
                 type="text"
@@ -1093,7 +1078,7 @@ export default function DoctorProfileForm() {
                 value={form.reference2Aadhar}
                 onChange={handleChange}
                 placeholder="Reference 2 Aadhar No."
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               />
               <input
                 type="tel"
@@ -1101,21 +1086,21 @@ export default function DoctorProfileForm() {
                 value={form.reference2Mobile}
                 onChange={handleChange}
                 placeholder="Reference 2 Mobile"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               />
               <textarea
                 name="reference2Address"
                 value={form.reference2Address}
                 onChange={handleChange}
                 placeholder="Reference 2 Address"
-                className="input-field resize-y h-24 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               />
             </div>
           </section>
 
 
-          <section className="bg-blue-50 p-6 rounded-xl shadow-md">
-            <h3 className="text-2xl font-semibold text-[#ff1493] mb-5 pb-3 border-b border-blue-200 flex items-center">
+          <section className="md:w-1/2 bg-blue-50 p-3 rounded-xl shadow-md">
+            <h3 className="text-2md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 mr-2 text-[#6366f1]"
@@ -1145,7 +1130,7 @@ export default function DoctorProfileForm() {
                     name="serviceHours12hrs"
                     checked={form.serviceHours12hrs}
                     onChange={handleChange}
-                    className="form-checkbox h-5 w-5 text-blue-600 rounded"
+                    className="form-checkbox h-4 w-4 text-blue-600 rounded"
                   />
                   <span className="ml-2 text-gray-700">12 Hours Service</span>
                 </label>
@@ -1155,7 +1140,7 @@ export default function DoctorProfileForm() {
                     name="serviceHours24hrs"
                     checked={form.serviceHours24hrs}
                     onChange={handleChange}
-                    className="form-checkbox h-5 w-5 text-blue-600 rounded"
+                    className="form-checkbox h-4 w-4 text-blue-600 rounded"
                   />
                   <span className="ml-2 text-gray-700">24 Hours Service</span>
                 </label>
@@ -1166,7 +1151,7 @@ export default function DoctorProfileForm() {
                 value={form.preferredService}
                 onChange={handleChange}
                 placeholder="Preferred Service (e.g., OPD, Home Visit)"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1175,7 +1160,7 @@ export default function DoctorProfileForm() {
                 value={form.paymentService}
                 onChange={handleChange}
                 placeholder="Payment Service (e.g., Online, Cash)"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1184,7 +1169,7 @@ export default function DoctorProfileForm() {
                 value={form.paymentBankName}
                 onChange={handleChange}
                 placeholder="Bank Name for Payments"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1193,7 +1178,7 @@ export default function DoctorProfileForm() {
                 value={form.paymentBankAccountNumber}
                 onChange={handleChange}
                 placeholder="Bank Account Number"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1202,7 +1187,7 @@ export default function DoctorProfileForm() {
                 value={form.ifscCode}
                 onChange={handleChange}
                 placeholder="IFSC Code"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <textarea
@@ -1210,7 +1195,7 @@ export default function DoctorProfileForm() {
                 value={form.bankBranchAddress}
                 onChange={handleChange}
                 placeholder="Bank Branch Address"
-                className="input-field resize-y h-24 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1219,7 +1204,7 @@ export default function DoctorProfileForm() {
                 value={form.Bankbranchname}
                 onChange={handleChange}
                 placeholder="Bank Branch Name"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1228,7 +1213,7 @@ export default function DoctorProfileForm() {
                 value={form.Branchcity}
                 onChange={handleChange}
                 placeholder="Branch City"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1237,7 +1222,7 @@ export default function DoctorProfileForm() {
                 value={form.Branchstate}
                 onChange={handleChange}
                 placeholder="Branch State"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1246,15 +1231,16 @@ export default function DoctorProfileForm() {
                 value={form.Branchpincode}
                 onChange={handleChange}
                 placeholder="Branch Pincode"
-                className="input-field w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
             </div>
           </section>
 
-
-          <section className="bg-blue-50 p-6 rounded-xl shadow-md">
-            <h3 className="text-2xl font-semibold text-[#ff1493] mb-5 pb-3 border-b border-blue-200 flex items-center">
+        </div>
+        <section className="md:flex  justify-center gap-2 bg-blue-50 p-3 rounded-xl shadow-md">
+          <div className='w-1/2'>
+            <h3 className="text-md font-semibold text-[#ff1493]  pb-3 border-b border-blue-200 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 mr-2 text-[#6366f1]"
@@ -1278,7 +1264,7 @@ export default function DoctorProfileForm() {
                 value={form.languages}
                 onChange={handleChange}
                 placeholder="Languages Spoken (comma-separated)"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1287,7 +1273,7 @@ export default function DoctorProfileForm() {
                 value={form.type}
                 onChange={handleChange}
                 placeholder="Type (e.g., General Physician, Specialist)"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1296,7 +1282,7 @@ export default function DoctorProfileForm() {
                 value={form.specialties}
                 onChange={handleChange}
                 placeholder="Specialties (comma-separated)"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
               <input
@@ -1305,31 +1291,88 @@ export default function DoctorProfileForm() {
                 value={form.website}
                 onChange={handleChange}
                 placeholder="Personal Website/Portfolio URL (Optional)"
-                className="input-field border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               />
             </div>
-          </section>
+          </div>
+          <div className=" w-1/2 ">
+            <h3 className="text-xl font-semibold text-[#ff1493] mb-4 border-b border-blue-300 pb-2" >Your Documents </h3>
+
+            <div className="flex flex-wrap sm:grid-cols-2 gap-2">
+              {['AdharCard', 'PanCard', 'CertificatOne', 'CertificatTwo', 'AccountPassBook'].map((docKey) => (
+                <div
+                  key={docKey}
+                  className="flex flex-col items-center justify-between p-2 border border-blue-300 rounded-md bg-white bg-opacity-10 w-40 h-40"
+                >
+                  {Docs[docKey as keyof typeof Docs] ? (
+                    <img
+                      src={Docs[docKey as keyof typeof Docs]}
+                      alt={docKey}
+                      className="w-24 h-24 object-cover rounded-md shadow-sm mb-2"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = DEFAULT_DOCUMENT_ICON;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-24 h-24 bg-white bg-opacity-20 rounded-md flex items-center justify-center text-white text-opacity-70 mb-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-12 w-12"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                  <label
+                    htmlFor={docKey}
+                    className="cursor-pointer text-center flex-shrink-0 text-[9px] text-white bg-teal-600 hover:bg-teal-400 px-3 py-1 rounded-full transition-colors duration-300"
+                  >
+                    {Docs[docKey as keyof typeof Docs] ? 'Update' : 'Upload'}{' '}
+                    {docKey.replace(/([A-Z])/g, ' $1').replace('Card', ' Card').replace('Book', ' Book').trim()}
+                  </label>
+                  <input
+                    id={docKey}
+                    name={docKey}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
 
-          <div className="flex justify-center mt-8">
-            <button
-              type="submit"
-              disabled={!UpdateingStatus}
-              className={`px-10 py-3 rounded-full text-white font-semibold shadow-lg transition-all duration-300
+        <div className="flex justify-center mt-8">
+          <button
+            type="submit"
+            disabled={!UpdateingStatus}
+            className={`px-10 py-3 rounded-full text-white font-semibold shadow-lg transition-all duration-300
                 ${UpdateingStatus ? 'bg-[#50c896] hover:bg-teal-700 focus:ring-4 focus:ring-indigo-300' : 'bg-gray-400 cursor-not-allowed'}
               `}
-            >
-              {UpdateingStatus ? 'Update Profile' : 'Updating...'}
-            </button>
-          </div>
+          >
+            {UpdateingStatus ? 'Update Profile' : 'Updating...'}
+          </button>
+        </div>
 
-          {UpdatedStatusMessage && (
-            <p className="text-center mt-4 text-sm font-medium text-green-600">
-              {UpdatedStatusMessage}
-            </p>
-          )}
-        </form>
-      </div>
+        {UpdatedStatusMessage && (
+          <p className="text-center mt-4 text-sm font-medium text-green-600">
+            {UpdatedStatusMessage}
+          </p>
+        )}
+      </form>
+
     </div>
   );
 }
