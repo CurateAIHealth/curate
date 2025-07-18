@@ -19,7 +19,13 @@ export default function SignIn() {
     setsigninStatus(false)
     try {
 
-      const Result = await SignInRessult(loginInfo)
+      const Result:any = await SignInRessult(loginInfo)
+      console.log("Test result---",Result)
+      if(Result.success===false){
+        setsigninStatus(true)
+        setError(Result.message)
+        return
+      }
 
       if (Result !== null) {
         

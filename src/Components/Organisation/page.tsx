@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getPasswordStrength } from '@/Lib/Actions';
-import { UpdatePatientInformation } from '@/Lib/user.action'; // Rename if needed
+import { UpdateOrganisation, UpdatePatientInformation } from '@/Lib/user.action'; // Rename if needed
 import ReactDOMServer from 'react-dom/server';
 import axios from 'axios';
 
@@ -24,6 +24,8 @@ export default function OrganizationForm() {
     NumberOfPeople: '',
     VerificationStatus: 'Pending',
     TermsAndConditions: 'Accepted',
+    EmailVerification:false,
+ FinelVerification:false,
   });
 
   const [CheckBoxStatus, setCheckBoxStatus] = useState(false);
@@ -74,49 +76,78 @@ setSubmissionRequest(false)
     }
 
     try {
+       const generatedUserId = uuidv4();
       const payload:any = {
         ...formData,
-        userId: uuidv4(),
+        userId: generatedUserId,
       };
 
-      const result = await UpdatePatientInformation(payload);
+      const result:any = await UpdateOrganisation(payload);
       if (!result.success) {
+        
         setStatusMessage(result.message);
-        setIsSubmitting(false);
+         setSubmissionRequest(true);
         return;
       }
 
-      const EmailComponent = () => (
-        <div>
-          <div style={{ textAlign: 'center' }}>
+     const EmailComponent = memo(({ UpdatedFilterUserId }: { UpdatedFilterUserId: string }) => (
+        <div
+          style={{
+            maxWidth: '400px',
+            width: '100%',
+            background: '#ffffff',
+            borderRadius: '16px',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+            padding: '32px',
+            boxSizing: 'border-box',
+            textAlign: 'center',
+            margin: '0 auto', 
+            fontFamily: 'Arial, sans-serif',
+          }}
+        >
+          <div style={{ marginBottom: '24px' }}>
             <img
               src={`${process.env.NEXT_PUBLIC_BASE_URL}/Icons/Curate-logo.png`}
               alt="Curate Digital AI Health"
               width="150"
+              style={{ display: 'block', margin: '0 auto' }}
             />
+            <h2
+              style={{
+                fontSize: '22px',
+                fontWeight: 700,
+                color: '#1f2937',
+                margin: '20px 0 10px',
+              }}
+            >
+              Verify With {' '}
+              <span style={{ color: '#ec4899' }}>Curate</span>{' '}
+              <span style={{ color: '#0d9488' }}>Digital AI</span> 
+            </h2>
           </div>
-          <p>Dear Organization,</p>
-          <p>
-            Thank you for registering with <strong>Curate Digital AI Health</strong>.
-          </p>
-          <p>
-            We have received your details. Our team will review the information
-            and contact you if anything else is required.
-          </p>
-          <p>
-            For help, email <a href="mailto:support@curatedigital.ai">support@curatedigital.ai</a>.
-          </p>
-          <p>
-            Best regards,<br />
-            Curate Digital AI Health Team
-          </p>
+      
+          <a
+            href={`${process.env.NEXT_PUBLIC_BASE_URL}/VerifyEmail?token=${generatedUserId}`}
+            style={{
+              display: 'inline-block',
+              padding: '12px 24px',
+              backgroundColor: '#0d9488',
+              color: '#ffffff',
+              fontWeight: 600,
+              borderRadius: '8px',
+              fontSize: '16px',
+              textDecoration: 'none', 
+              marginTop: '10px',
+            }}
+          >
+          Verify Your Email
+          </a>
         </div>
-      );
-
-      const htmlComponent = ReactDOMServer.renderToString(<EmailComponent />);
+      ));
+            const htmlComponent = ReactDOMServer.renderToString(<EmailComponent UpdatedFilterUserId={uuidv4()} />);
       await axios.post('/api/MailSend', {
         to: formData.Email,
-        subject: 'Curate Digital AI Health - Organization Registration',
+        subject: 'Curate Digital AI Health Email Verification',
         html: htmlComponent,
       });
 
@@ -135,12 +166,15 @@ setSubmissionRequest(false)
          NumberOfPeople: '',
         VerificationStatus: 'Pending',
         TermsAndConditions: 'Accepted',
+            EmailVerification:false,
+             FinelVerification:false,
       });
 setSubmissionRequest(true)
       router.push('/SuccessfulRegistration');
     } catch (error) {
       console.error(error);
       setStatusMessage('Unexpected error. Please try again.');
+        setIsSubmitting(false);
     } finally {
       setIsSubmitting(false);
     }

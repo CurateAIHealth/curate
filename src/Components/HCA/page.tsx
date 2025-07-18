@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Eye, EyeOff } from 'lucide-react';
 import { getPasswordStrength, isValidAadhar } from '@/Lib/Actions';
@@ -25,7 +25,8 @@ export default function HealthcareAssistantForm() {
     Location: '',
     VerificationStatus: 'Success',
     TermsAndConditions: 'Accepted',
-    FinelVerification:false
+    FinelVerification:false,
+        EmailVerification:false
   });
 
   const [CheckBoxStatus, setCheckBoxStatus] = useState(false);
@@ -53,7 +54,26 @@ export default function HealthcareAssistantForm() {
       setFormData(prev => ({ ...prev, ContactNumber: digitsOnly }));
       return;
     }
+ if (name === 'DateOfBirth') {
+    const birthDate = new Date(value);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
 
+    if (age < 18) {
+      alert("You must be at least 18 years old to register.");
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      DateOfBirth: value,
+      Age: age.toString(),
+    }));
+    return;
+  }
     if (name === 'Age') {
       const digitsOnly = value.replace(/\D/g, '').slice(0, 3);
       setFormData(prev => ({ ...prev, Age: digitsOnly }));
@@ -92,36 +112,79 @@ export default function HealthcareAssistantForm() {
     }
 
     try {
+         const generatedUserId = uuidv4();
       const payload:any = {
         ...formData,
         AadharNumber: formData.AadharNumber.replace(/\s/g, ''),
-        userId: uuidv4(),
+        userId: generatedUserId,
       };
 
       const result:any = await HCARegistration(payload);
       if (!result.success) {
+          setSubmissionRequest(true);
         setStatusMessage(result.message);
-        setIsSubmitting(false);
+     
         return;
       }
 
-      const EmailComponent = () => (
-        <div>
-          <div style={{ textAlign: 'center' }}>
-            <img src={`${process.env.NEXT_PUBLIC_BASE_URL}/Icons/Curate-logo.png`} alt="Curate Digital AI Health" width="150" />
-          </div>
-          <p>Dear User,</p>
-          <p>Thank you for registering with <strong>Curate Digital AI Health</strong>.</p>
-          <p>We have received your details. Our team will review the information and contact you if anything else is required.</p>
-          <p>For help, email <a href="mailto:support@curatedigital.ai">support@curatedigital.ai</a>.</p>
-          <p>Best regards,<br />Curate Digital AI Health Team</p>
-        </div>
-      );
-
-      const htmlComponent = ReactDOMServer.renderToString(<EmailComponent />);
+  const EmailComponent = memo(({ UpdatedFilterUserId }: { UpdatedFilterUserId: string }) => (
+    <div
+      style={{
+        maxWidth: '400px',
+        width: '100%',
+        background: '#ffffff',
+        borderRadius: '16px',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+        padding: '32px',
+        boxSizing: 'border-box',
+        textAlign: 'center',
+        margin: '0 auto', 
+        fontFamily: 'Arial, sans-serif',
+      }}
+    >
+      <div style={{ marginBottom: '24px' }}>
+        <img
+          src={`${process.env.NEXT_PUBLIC_BASE_URL}/Icons/Curate-logo.png`}
+          alt="Curate Digital AI Health"
+          width="150"
+          style={{ display: 'block', margin: '0 auto' }}
+        />
+        <h2
+          style={{
+            fontSize: '22px',
+            fontWeight: 700,
+            color: '#1f2937',
+            margin: '20px 0 10px',
+          }}
+        >
+          Verify With {' '}
+          <span style={{ color: '#ec4899' }}>Curate</span>{' '}
+          <span style={{ color: '#0d9488' }}>Digital AI</span> 
+        </h2>
+      </div>
+  
+      <a
+        href={`${process.env.NEXT_PUBLIC_BASE_URL}/VerifyEmail?token=${generatedUserId}`}
+        style={{
+          display: 'inline-block',
+          padding: '12px 24px',
+          backgroundColor: '#0d9488',
+          color: '#ffffff',
+          fontWeight: 600,
+          borderRadius: '8px',
+          fontSize: '16px',
+          textDecoration: 'none', 
+          marginTop: '10px',
+        }}
+      >
+      Verify Your Email
+      </a>
+    </div>
+  ));
+        const htmlComponent = ReactDOMServer.renderToString(<EmailComponent UpdatedFilterUserId={uuidv4()} />);
       await axios.post('/api/MailSend', {
         to: formData.Email,
-        subject: 'Curate Digital AI Health Registration',
+        subject: 'Curate Digital AI Health Email Verification',
         html: htmlComponent,
       });
  setSubmissionRequest(true)
@@ -141,7 +204,8 @@ export default function HealthcareAssistantForm() {
         Location: '',
         VerificationStatus: 'Pending',
         TermsAndConditions: 'Accepted',
-        FinelVerification:false
+        FinelVerification:false,
+        EmailVerification:false
       });
 
       router.push('/SuccessfulRegistration');

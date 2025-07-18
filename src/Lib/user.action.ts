@@ -18,7 +18,11 @@ export const UpdateDocterInformation = async (doctorInfo: {
   AadharNumber: any
   VerificationStatus: any,
   Age: any,
-  TermsAndConditions:any
+  Gender:any
+  DateOfBirth:any,
+  TermsAndConditions: any,
+  EmailVerification: any,
+   FinelVerification:any,
 }) => {
   try {
     const cluster = await clientPromise;
@@ -64,6 +68,7 @@ export const UpdateNurseInfo = async (NurseInfor: {
   FirstName: any,
   LastName: any,
   Age: any,
+  DateOfBirth:any,
   Qualification: any,
   Location: any,
   RegistrationNumber: any,
@@ -76,7 +81,9 @@ export const UpdateNurseInfo = async (NurseInfor: {
   ConfirmPassword: any,
   Type: any
   VerificationStatus: any,
-  TermsAndConditions:any
+  TermsAndConditions: any,
+  EmailVerification: any,
+   FinelVerification:any,
 }) => {
   try {
     const cluster = await clientPromise;
@@ -121,7 +128,7 @@ export const UpdateCurateFamilyInfo = async (FamilyInfo: any[]) => {
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
 
-  
+
     const existingDoctors = await Promise.all(
       FamilyInfo.map((each: any) =>
         collection.findOne({
@@ -143,7 +150,7 @@ export const UpdateCurateFamilyInfo = async (FamilyInfo: any[]) => {
       };
     }
 
-  
+
     const result = await collection.insertMany(FamilyInfo);
 
     return {
@@ -180,17 +187,19 @@ export const SignInRessult = async (SignInfor: { Name: any, Password: any }) => 
     const Clustor = await clientPromise;
     const Db = Clustor.db("CurateInformation");
     const Collection = Db.collection("Registration");
-console.log()
+
     const SignInInformation: any = await Collection.findOne({
       Email: SignInfor.Name,
       ConfirmPassword: SignInfor.Password,
     });
 
-    if (!SignInInformation) return null;
+    if (!SignInInformation.EmailVerification) {
+      return { success: false, message: 'Verify your Email To Login' };
+    }
 
     return SignInInformation.userId?.toString?.();
   } catch (err: any) {
-   
+
     return null;
   }
 };
@@ -225,6 +234,33 @@ export const UpdatePassword = async (UpdatedData: { UpdatedUserid: any, NewUpdat
   }
 }
 
+export const UpdateEmailVerification=async (UpdatedUserid:any) => {
+  try {
+    const Clustor = await clientPromise
+    const Db = Clustor.db("CurateInformation")
+    const Collection = Db.collection("Registration")
+    const inputUserId =UpdatedUserid
+    const result = await Collection.updateOne(
+      { userId: inputUserId },
+      {
+        $set: {
+          EmailVerification: true,     
+        },
+      }
+    );
+
+
+
+    if (result.modifiedCount === 0) {
+      return { success: false, message: 'User not found or no changes made.' };
+    }
+
+    return { success: true, message: 'Password updated successfully.' };
+  } catch (err: any) {
+
+  }
+}
+
 
 export const UpdatePatientInformation = async (Patient: {
   userType: any,
@@ -232,15 +268,19 @@ export const UpdatePatientInformation = async (Patient: {
   LastName: any,
   Age: any,
   Location: any,
+   dateofBirth: any,
   AadharNumber: any,
   Email: any,
   ContactNumber: any,
   Password: any,
   userId: any,
+  Gender:any
   ConfirmPassword: any,
   VerificationStatus: any,
-  TermsAndConditions:any
-FamilyMembars:any
+  TermsAndConditions: any
+  FamilyMembars: any,
+  EmailVerification: any,
+   FinelVerification:any,
 }) => {
   try {
     const cluster = await clientPromise;
@@ -278,24 +318,31 @@ FamilyMembars:any
     throw error;
   }
 }
-  
-export const UpdateOrganisation=async(Organisation:{ userType: any,
-    OrganizationName: any,
-    RegistrationNumber: any,
-    OrganizationType:any,
-    HeadName: any,
-    HeadContact: any,
-    Location: any,
-    Email: any,
-     userId: any,
-    Password: any,
-    ConfirmPassword: any,
-    NumberOfPeople: any,
-    VerificationStatus: any,
-    TermsAndConditions: any,})=>{
 
-try{
-const cluster = await clientPromise;
+
+
+
+export const UpdateOrganisation = async (Organisation: {
+  userType: any,
+  OrganizationName: any,
+  RegistrationNumber: any,
+  OrganizationType: any,
+  HeadName: any,
+  HeadContact: any,
+  Location: any,
+  Email: any,
+  userId: any,
+  Password: any,
+  ConfirmPassword: any,
+  NumberOfPeople: any,
+  VerificationStatus: any,
+  TermsAndConditions: any,
+  EmailVerification:any,
+   FinelVerification:any,
+}) => {
+
+  try {
+    const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
 
@@ -324,34 +371,35 @@ const cluster = await clientPromise;
       message: "You registered successfully with Curate Digital AI",
       insertedId: result.insertedId.toString(),
     };
-}catch(err:any){
+  } catch (err: any) {
+
+  }
+
 
 }
-
-
-}
-export const HCARegistration=async(HCA:{
-   userType:any,
-    FirstName:any,
-    LastName:any ,
-    Gender: any,
-    DateOfBirth: any,
-    MaritalStatus: any,
-    Nationality: any,
-    AadharNumber: any,
-    Age: any,
-    ContactNumber: any
-    Email: any,
-    Password: any,
-    ConfirmPassword: any,
-    Location: any,
-    VerificationStatus: any,
-    TermsAndConditions: any,
-    userId: any,
-   FinelVerification:any
-})=>{
-  try{
-const cluster = await clientPromise;
+export const HCARegistration = async (HCA: {
+  userType: any,
+  FirstName: any,
+  LastName: any,
+  Gender: any,
+  DateOfBirth: any,
+  MaritalStatus: any,
+  Nationality: any,
+  AadharNumber: any,
+  Age: any,
+  ContactNumber: any
+  Email: any,
+  Password: any,
+  ConfirmPassword: any,
+  Location: any,
+  VerificationStatus: any,
+  TermsAndConditions: any,
+  userId: any,
+  FinelVerification: any,
+  EmailVerification: any
+}) => {
+  try {
+    const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
 
@@ -371,7 +419,7 @@ const cluster = await clientPromise;
       };
     }
 
-     const result = await collection.insertOne({
+    const result = await collection.insertOne({
       ...HCA,
       createdAt: new Date().toISOString(),
     });
@@ -381,7 +429,7 @@ const cluster = await clientPromise;
       message: "You registered successfully with Curate Digital AI",
       insertedId: result.insertedId.toString(),
     };
-  }catch(err:any){
+  } catch (err: any) {
 
   }
 }
@@ -391,14 +439,14 @@ export const GetUserInformation = async (UserIdFromLocal: any) => {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration")
-    const UserInformation:any = await collection.findOne({ userId: UserIdFromLocal })
-     if (!UserInformation) return null;
+    const UserInformation: any = await collection.findOne({ userId: UserIdFromLocal })
+    if (!UserInformation) return null;
 
-   
+
     return {
       ...UserInformation,
-      _id: UserInformation._id?.toString() ?? null, 
-     
+      _id: UserInformation._id?.toString() ?? null,
+
     }
   } catch (err: any) {
 
@@ -412,10 +460,10 @@ export const GetRegidterdUsers = async () => {
     const Db = Cluster.db("CurateInformation")
     const Collection = Db.collection("Registration")
     const RegistrationResult = await Collection.find().toArray()
-    const safeUsers = RegistrationResult.map((user:any) => ({
-  ...user,
-  _id: user._id.toString(), 
-}));
+    const safeUsers = RegistrationResult.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
     return safeUsers
   } catch (err: any) {
     return err
