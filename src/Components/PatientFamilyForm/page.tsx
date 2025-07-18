@@ -56,6 +56,7 @@ export default function PatientFamilyForm() {
         ContactNumber: '',
         Password: '',
         ConfirmPassword: '',
+        
       },
     ]);
   };

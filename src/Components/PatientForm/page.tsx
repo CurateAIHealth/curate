@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Eye, EyeOff } from 'lucide-react';
 import { getPasswordStrength, isValidAadhar } from '@/Lib/Actions';
@@ -16,13 +16,17 @@ export default function PatientForm() {
     LastName: '',
     AadharNumber: '',
     Age: '',
+    dateofBirth: '',
     ContactNumber: '',
     Email: '',
+    Gender:'',
     Password: '',
     ConfirmPassword: '',
     Location: '',
     VerificationStatus: 'Pending',
     TermsAndConditions: "Accepted",
+    EmailVerification:false,
+     FinelVerification:false,
     
   });
   const [CheckBoxStatus, setCheckBoxStatus] = useState(false)
@@ -58,39 +62,82 @@ export default function PatientForm() {
 
   const handleNewChange = (In: any, e: any) => {
     const { name, value } = e.target
+ if (name === 'dateofBirth') {
+    const birthDate = new Date(value);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
 
+    if (age < 18) {
+      alert("You must be at least 18 years old to register.");
+    }
+
+const updatedFamilyMembers = [...familyMembers];
+    updatedFamilyMembers[In] = {
+      ...updatedFamilyMembers[In],
+      dateofBirth: value,
+      Age: age.toString(),
+    };
+    setFamilyMembers(updatedFamilyMembers);
+    return;
+  }
     const NewResult: any = [...familyMembers]
     NewResult[In][name] = value;
     setFamilyMembers(NewResult)
 
   }
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    setStatusMessage('');
-    const { name, value } = e.target;
+  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+) => {
+  setStatusMessage('');
+  const { name, value } = e.target;
 
-    if (name === 'AadharNumber') {
-      const digitsOnly = value.replace(/\D/g, '').slice(0, 12);
-      const formatted = digitsOnly.replace(/(.{4})/g, '$1 ').trim();
-      setFormData(prev => ({ ...prev, AadharNumber: formatted }));
-      return;
+  if (name === 'AadharNumber') {
+    const digitsOnly = value.replace(/\D/g, '').slice(0, 12);
+    const formatted = digitsOnly.replace(/(.{4})/g, '$1 ').trim();
+    setFormData(prev => ({ ...prev, AadharNumber: formatted }));
+    return;
+  }
+
+  if (name === 'ContactNumber') {
+    const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+    setFormData(prev => ({ ...prev, ContactNumber: digitsOnly }));
+    return;
+  }
+
+  if (name === 'Age') {
+    const digitsOnly = value.replace(/\D/g, '').slice(0, 3);
+    setFormData(prev => ({ ...prev, Age: digitsOnly }));
+    return;
+  }
+
+  if (name === 'dateofBirth') {
+    const birthDate = new Date(value);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
     }
 
-    if (name === 'ContactNumber') {
-      const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
-      setFormData(prev => ({ ...prev, ContactNumber: digitsOnly }));
-      return;
+    if (age < 18) {
+      alert("You must be at least 18 years old to register.");
     }
 
-    if (name === 'Age') {
-      const digitsOnly = value.replace(/\D/g, '').slice(0, 3);
-      setFormData(prev => ({ ...prev, Age: digitsOnly }));
-      return;
-    }
+    setFormData(prev => ({
+      ...prev,
+      dateofBirth: value,
+      Age: age.toString(),
+    }));
+    return;
+  }
 
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  setFormData(prev => ({ ...prev, [name]: value }));
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,52 +171,79 @@ export default function PatientForm() {
     }
 
     try {
+         const generatedUserId = uuidv4();
       const payload = {
         ...formData,
         AadharNumber: formData.AadharNumber.replace(/\s/g, ''),
-        userId: uuidv4(),
+        userId: generatedUserId,
         FamilyMembars:familyMembers
       };
 
       const result = await UpdatePatientInformation(payload);
       if (!result.success) {
+       setSubmissionRequest(true);
         setStatusMessage(result.message);
-        setIsSubmitting(false);
+        
         return;
       }
-
-      const EmailComponent = () => (
-        <div>
-          <div style={{ textAlign: 'center' }}>
+   const EmailComponent = memo(({ UpdatedFilterUserId }: { UpdatedFilterUserId: string }) => (
+        <div
+          style={{
+            maxWidth: '400px',
+            width: '100%',
+            background: '#ffffff',
+            borderRadius: '16px',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+            padding: '32px',
+            boxSizing: 'border-box',
+            textAlign: 'center',
+            margin: '0 auto', 
+            fontFamily: 'Arial, sans-serif',
+          }}
+        >
+          <div style={{ marginBottom: '24px' }}>
             <img
               src={`${process.env.NEXT_PUBLIC_BASE_URL}/Icons/Curate-logo.png`}
               alt="Curate Digital AI Health"
               width="150"
+              style={{ display: 'block', margin: '0 auto' }}
             />
+            <h2
+              style={{
+                fontSize: '22px',
+                fontWeight: 700,
+                color: '#1f2937',
+                margin: '20px 0 10px',
+              }}
+            >
+              Verify With {' '}
+              <span style={{ color: '#ec4899' }}>Curate</span>{' '}
+              <span style={{ color: '#0d9488' }}>Digital AI</span> 
+            </h2>
           </div>
-          <p>Dear User,</p>
-          <p>
-            Thank you for registering with <strong>Curate Digital AI Health</strong>.
-          </p>
-          <p>
-            We have received your details. Our team will review the information
-            and contact you if anything else is required.
-          </p>
-          <p>
-            For help, email <a href="mailto:support@curatedigital.ai">support@curatedigital.ai</a>.
-          </p>
-          <p>
-            Best regards,
-            <br />
-            Curate Digital AI Health Team
-          </p>
+      
+          <a
+            href={`${process.env.NEXT_PUBLIC_BASE_URL}/VerifyEmail?token=${generatedUserId}`}
+            style={{
+              display: 'inline-block',
+              padding: '12px 24px',
+              backgroundColor: '#0d9488',
+              color: '#ffffff',
+              fontWeight: 600,
+              borderRadius: '8px',
+              fontSize: '16px',
+              textDecoration: 'none', 
+              marginTop: '10px',
+            }}
+          >
+          Verify Your Email
+          </a>
         </div>
-      );
-
-      const htmlComponent = ReactDOMServer.renderToString(<EmailComponent />);
+      ));
+            const htmlComponent = ReactDOMServer.renderToString(<EmailComponent UpdatedFilterUserId={uuidv4()} />);
       await axios.post('/api/MailSend', {
         to: formData.Email,
-        subject: 'Curate Digital AI Health Registration',
+        subject: 'Curate Digital AI Health Email Verification',
         html: htmlComponent,
       });
       setStatusMessage(result.message);
@@ -179,13 +253,17 @@ export default function PatientForm() {
         LastName: '',
         AadharNumber: '',
         Age: '',
+         dateofBirth: '',
+         Gender:'',
         ContactNumber: '',
         Email: '',
         Password: '',
         ConfirmPassword: '',
         Location: '',
         VerificationStatus: '',
-        TermsAndConditions: "Accepted"
+        TermsAndConditions: "Accepted",
+         EmailVerification:false,
+          FinelVerification:false,
       });
         setSubmissionRequest(true)
       router.push('/SuccessfulRegistration');

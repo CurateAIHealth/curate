@@ -9,7 +9,7 @@ import { UpdateDocterInformation } from '@/Lib/user.action';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import ReactDOMServer from 'react-dom/server';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Eye, EyeOff } from 'lucide-react';
 import { getPasswordStrength, isValidAadhar } from '@/Lib/Actions';
@@ -24,6 +24,8 @@ export default function DoctorForm() {
     Location: '',
     RegistrationNumber: '',
     College: '',
+    DateOfBirth:'',
+    Gender:'',
     AadharNumber: '',
     Email: '',
     Password: '',
@@ -32,7 +34,9 @@ export default function DoctorForm() {
     Type: '',
     VerificationStatus: "Pending",
     Age: '',
-    TermsAndConditions: "Accepted"
+    TermsAndConditions: "Accepted",
+    EmailVerification: false,
+     FinelVerification:false,
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -95,7 +99,26 @@ export default function DoctorForm() {
       setFormData(prev => ({ ...prev, AadharNumber: formatted }));
       return;
     }
+if (name === 'DateOfBirth') {
+    const birthDate = new Date(value);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
 
+    if (age < 18) {
+      alert("You must be at least 18 years old to register.");
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      dateofBirth: value,
+      Age: age.toString(),
+    }));
+    return;
+  }
     if (name === 'ContactNumber') {
       const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
       setFormData(prev => ({ ...prev, ContactNumber: digitsOnly }));
@@ -150,53 +173,83 @@ export default function DoctorForm() {
     }
 
     try {
+      const generatedUserId = uuidv4();
       const finalData = {
         ...formData,
         AadharNumber: formData.AadharNumber.replace(/\s/g, ''),
-        userId: uuidv4(),
+        userId:generatedUserId,
         OfferableService: selectedServices,
         PreferredLocationsforHomeVisits: selectedLocations,
       };
 
       const Result = await UpdateDocterInformation(finalData);
       if (!Result.success) {
+            setSubmissionRequest(true);
         setStatusMesssage(Result.message);
+        
         return;
       }
 
-      const EmailComponent = () => (
-        <div>
-          <div style={{ textAlign: 'center' }}>
-            <img
-              src={`${process.env.NEXT_PUBLIC_BASE_URL}/Icons/Curate-logo.png`}
-              alt="Curate Digital AI Health"
-              width="150"
-            />
-          </div>
-          <p>Dear User,</p>
-          <p>
-            Thank you for registering with <strong>Curate Digital AI Health</strong>.
-          </p>
-          <p>
-            We have received your details. Our team will review the information and contact you if anything else is required.
-          </p>
-          <p>
-            For help, email <a href="mailto:support@curatedigital.ai">support@curatedigital.ai</a>.
-          </p>
-          <p>
-            Best regards,
-            <br />
-            Curate Digital AI Health Team
-          </p>
-        </div>
-      );
+const EmailComponent = memo(({ UpdatedFilterUserId }: { UpdatedFilterUserId: string }) => (
+  <div
+    style={{
+      maxWidth: '400px',
+      width: '100%',
+      background: '#ffffff',
+      borderRadius: '16px',
+      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+      padding: '32px',
+      boxSizing: 'border-box',
+      textAlign: 'center',
+      margin: '0 auto', 
+      fontFamily: 'Arial, sans-serif',
+    }}
+  >
+    <div style={{ marginBottom: '24px' }}>
+      <img
+        src={`${process.env.NEXT_PUBLIC_BASE_URL}/Icons/Curate-logo.png`}
+        alt="Curate Digital AI Health"
+        width="150"
+        style={{ display: 'block', margin: '0 auto' }}
+      />
+      <h2
+        style={{
+          fontSize: '22px',
+          fontWeight: 700,
+          color: '#1f2937',
+          margin: '20px 0 10px',
+        }}
+      >
+        Verify With {' '}
+        <span style={{ color: '#ec4899' }}>Curate</span>{' '}
+        <span style={{ color: '#0d9488' }}>Digital AI</span> 
+      </h2>
+    </div>
 
-      const htmlComponent = ReactDOMServer.renderToString(<EmailComponent />);
+    <a
+      href={`${process.env.NEXT_PUBLIC_BASE_URL}/VerifyEmail?token=${generatedUserId}`}
+      style={{
+        display: 'inline-block',
+        padding: '12px 24px',
+        backgroundColor: '#0d9488',
+        color: '#ffffff',
+        fontWeight: 600,
+        borderRadius: '8px',
+        fontSize: '16px',
+        textDecoration: 'none', 
+        marginTop: '10px',
+      }}
+    >
+    Verify Your Email
+    </a>
+  </div>
+));
+      const htmlComponent = ReactDOMServer.renderToString(<EmailComponent UpdatedFilterUserId={uuidv4()} />);
 
       try {
         await axios.post('/api/MailSend', {
           to: formData.Email,
-          subject: 'Curate Digital AI Health Registration',
+          subject: 'Curate AI Digital Health Email Verification',
           html: htmlComponent,
         });
         setStatusMesssage(Result.message);
@@ -210,14 +263,18 @@ export default function DoctorForm() {
           RegistrationNumber: '',
           College: '',
           AadharNumber: '',
+          Gender:'',
           Email: '',
           Password: '',
           ConfirmPassword: '',
           ContactNumber: '',
           Type: '',
           VerificationStatus: 'Pending',
+          DateOfBirth:'',
           Age: '',
-          TermsAndConditions: "Accepted"
+          TermsAndConditions: "Accepted",
+          EmailVerification: false,
+           FinelVerification:false,
 
         });
         setSelectedServices([]);
@@ -242,10 +299,14 @@ export default function DoctorForm() {
         Password: '',
         ConfirmPassword: '',
         ContactNumber: '',
+        Gender:'',
         Type: '',
         VerificationStatus: 'Pending',
         Age: '',
-        TermsAndConditions: "Accepted"
+        DateOfBirth:"",
+        TermsAndConditions: "Accepted",
+        EmailVerification: false,
+         FinelVerification:false,
       });
       setSelectedServices([]);
       setSelectedLocations([]);
@@ -314,7 +375,7 @@ export default function DoctorForm() {
       <div className="flex flex-col gap-1">
         <label className="text-xs  ">Select Gender</label>
         <select name="Gender" className="input-style" onChange={handleChange} required>
-     <option value="">Select Gender</option>
+          <option value="">Select Gender</option>
           <option value="Male">Male</option>
           <option value="Female">Female</option>
           <option value="Other">Other</option>

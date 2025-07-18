@@ -8,7 +8,7 @@ import { UpdateNurseInfo } from '@/Lib/user.action';
 import axios from 'axios';
 import { Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -19,6 +19,7 @@ export default function NurseForm() {
     LastName: '',
     Age: '',
     Qualification: '',
+    DateOfBirth:'',
     Location: '',
     RegistrationNumber: '',
     College: '',
@@ -29,7 +30,9 @@ export default function NurseForm() {
     ConfirmPassword: '',
     Type: '',
     VerificationStatus:'Pending',
-     TermsAndConditions:"Accepted"
+     TermsAndConditions:"Accepted",
+         EmailVerification:false,
+          FinelVerification:false,
   });
   const [CheckBoxStatus,setCheckBoxStatus]=useState(false)
   const [statusMesssage, setStatusMesssage] = useState('');
@@ -60,6 +63,27 @@ export default function NurseForm() {
       setFormData(prev => ({ ...prev, AadharNumber: formatted }));
       return;
     }
+
+    if (name === 'DateOfBirth') {
+    const birthDate = new Date(value);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    if (age < 18) {
+      alert("You must be at least 18 years old to register.");
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      dateofBirth: value,
+      Age: age.toString(),
+    }));
+    return;
+  }
 
     if (name === 'ContactNumber') {
       const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
@@ -103,57 +127,80 @@ export default function NurseForm() {
     }
 
     try {
+         const generatedUserId = uuidv4();
       const finalData = {
         ...formData,
         AadharNumber: formData.AadharNumber.replace(/\s/g, ''),
-        userId: uuidv4(),
+        userId: generatedUserId,
       };
 
       const Result = await UpdateNurseInfo(finalData);
       if (!Result.success) {
+          setSubmissionRequest(true);
         setStatusMesssage(Result.message);
         return;
       }
 
-      const EmailComponent = () => (
-        <div>
-          <div style={{ textAlign: 'center' }}>
+     const EmailComponent = memo(({ UpdatedFilterUserId }: { UpdatedFilterUserId: string }) => (
+        <div
+          style={{
+            maxWidth: '400px',
+            width: '100%',
+            background: '#ffffff',
+            borderRadius: '16px',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+            padding: '32px',
+            boxSizing: 'border-box',
+            textAlign: 'center',
+            margin: '0 auto', 
+            fontFamily: 'Arial, sans-serif',
+          }}
+        >
+          <div style={{ marginBottom: '24px' }}>
             <img
               src={`${process.env.NEXT_PUBLIC_BASE_URL}/Icons/Curate-logo.png`}
               alt="Curate Digital AI Health"
               width="150"
+              style={{ display: 'block', margin: '0 auto' }}
             />
+            <h2
+              style={{
+                fontSize: '22px',
+                fontWeight: 700,
+                color: '#1f2937',
+                margin: '20px 0 10px',
+              }}
+            >
+              Verify With {' '}
+              <span style={{ color: '#ec4899' }}>Curate</span>{' '}
+              <span style={{ color: '#0d9488' }}>Digital AI</span> 
+            </h2>
           </div>
-          <p>Dear User,</p>
-          <p>
-            Thank you for registering with{' '}
-            <strong>Curate Digital AI Health</strong>.
-          </p>
-          <p>
-            We have received your details. Our team will review the information
-            and contact you if anything else is required.
-          </p>
-          <p>
-            For help, email{' '}
-            <a href="mailto:support@curatedigital.ai">
-              support@curatedigital.ai
-            </a>
-            .
-          </p>
-          <p>
-            Best regards,
-            <br />
-            Curate Digital AI Health Team
-          </p>
+      
+          <a
+            href={`${process.env.NEXT_PUBLIC_BASE_URL}/VerifyEmail?token=${generatedUserId}`}
+            style={{
+              display: 'inline-block',
+              padding: '12px 24px',
+              backgroundColor: '#0d9488',
+              color: '#ffffff',
+              fontWeight: 600,
+              borderRadius: '8px',
+              fontSize: '16px',
+              textDecoration: 'none', 
+              marginTop: '10px',
+            }}
+          >
+          Verify Your Email
+          </a>
         </div>
-      );
-
-      const htmlComponent = ReactDOMServer.renderToString(<EmailComponent />);
+      ));
+            const htmlComponent = ReactDOMServer.renderToString(<EmailComponent UpdatedFilterUserId={uuidv4()} />);
 
       try {
         await axios.post('/api/MailSend', {
           to: formData.Email,
-          subject: 'Curate Digital AI Health Registration',
+          subject: 'Curate Digital AI Health Email Verification',
           html: htmlComponent,
         });
 
@@ -164,6 +211,7 @@ export default function NurseForm() {
           FirstName: '',
           LastName: '',
           Age: '',
+          DateOfBirth:'',
           Qualification: '',
           Location: '',
           RegistrationNumber: '',
@@ -175,7 +223,9 @@ export default function NurseForm() {
           ConfirmPassword: '',
           Type: '',
           VerificationStatus:"Pending",
-           TermsAndConditions:"Accepted"
+           TermsAndConditions:"Accepted",
+               EmailVerification:false,
+                FinelVerification:false,
         });
 
         setSubmissionRequest(true);
@@ -192,6 +242,7 @@ export default function NurseForm() {
         FirstName: '',
         LastName: '',
         Age: '',
+        DateOfBirth:'',
         Qualification: '',
         Location: '',
         RegistrationNumber: '',
@@ -203,7 +254,9 @@ export default function NurseForm() {
         ConfirmPassword: '',
         Type: '',
         VerificationStatus:"Pending",
-         TermsAndConditions:"Accepted"
+         TermsAndConditions:"Accepted",
+             EmailVerification:false,
+              FinelVerification:false,
       });
     }
   };
