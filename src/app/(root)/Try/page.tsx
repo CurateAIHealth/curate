@@ -163,7 +163,7 @@ export default function DoctorProfileForm() {
         const ProfileInformation = await GetUserInformation(localValue);
 
         SetProfileName(ProfileInformation.FirstName);
-setIsChecking(false)
+          setIsChecking(false) 
 
         setDocs((prev) => ({
           ...prev,
@@ -248,6 +248,7 @@ setIsChecking(false)
           website: ProfileInformation.Website || '',
         }));
       } catch (err: any) {
+        setIsChecking(false)
         console.error('Error fetching user information:', err);
       }
     };
@@ -319,11 +320,11 @@ setIsChecking(false)
         return;
       }
 
-      // if (Object.values(Docs).every((each) => each !== null)) {
-      //   alert("Upload all the Required Documents!")
-      //   SetUpdateingStatus(true);
-      //   return
-      // }
+      if (Object.values(Docs).every((each) => each === null)) {
+        alert("Upload all the Required Documents!")
+        SetUpdateingStatus(true);
+        return
+      }
 
       const FinelForm = { ...form, Documents: Docs };
 
