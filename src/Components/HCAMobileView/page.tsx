@@ -1275,7 +1275,7 @@ export default function HCAMobileView() {
                                             accept="image/*,application/pdf"
                                             onChange={handleImageChange}
                                             className="hidden"
-                                            required
+                                            
                                         />
                                     </div>
 
@@ -1299,7 +1299,7 @@ export default function HCAMobileView() {
                                             accept="image/*,application/pdf"
                                             onChange={handleImageChange}
                                             className="hidden"
-                                            required
+                                            
                                         />
                                     </div>
 
@@ -1323,7 +1323,7 @@ export default function HCAMobileView() {
                                             accept="image/*,application/pdf"
                                             onChange={handleImageChange}
                                             className="hidden"
-                                            required
+                                            
                                         />
                                     </div>
 
@@ -1347,7 +1347,7 @@ export default function HCAMobileView() {
                                             accept="image/*,application/pdf"
                                             onChange={handleImageChange}
                                             className="hidden"
-                                            required
+                                            
                                         />
                                     </div>
 
@@ -1371,7 +1371,7 @@ export default function HCAMobileView() {
                                             accept="image/*,application/pdf"
                                             onChange={handleImageChange}
                                             className="hidden"
-                                            required
+                                            
                                         />
                                     </div>
                                 </div>
