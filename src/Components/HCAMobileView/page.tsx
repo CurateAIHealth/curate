@@ -421,14 +421,16 @@ export default function HCAMobileView() {
       ></div>
     </div>
     <p className="text-xs text-gray-800 mt-2">{completion}% Complete</p>
-    {PictureUploading&&<p>Please Wait {DocName} Uploading... </p>}
+    {PictureUploading?<p>Please Wait {DocName} Uploading... </p>: <p className="text-center mt-4 text-sm font-medium text-green-700">
+            {UpdatedStatusMessage}
+          </p>}
   </div>
  
 </div>
 
       <form
         onSubmit={handleSubmit}
-        className="w-full p-2 flex flex-col justify-between overflow-y-auto custom-scrollbar h-full"
+        className="w-full bg-blue-50 p-2 flex flex-col justify-between overflow-y-auto custom-scrollbar h-full"
       >
 <div>
         {currentStep === 0 && (
@@ -1386,11 +1388,7 @@ export default function HCAMobileView() {
           </div>
         )}
         
-   {UpdatedStatusMessage && (
-          <p className="text-center mt-4 text-sm font-medium text-green-700">
-            {UpdatedStatusMessage}
-          </p>
-        )}
+  
     </div>
         <div className="flex items-end mt-8">
           {currentStep > 0 && (
