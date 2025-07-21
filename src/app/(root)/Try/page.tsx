@@ -320,7 +320,7 @@ export default function DoctorProfileForm() {
         return;
       }
 
-      if (Object.values(Docs).every((each) => each === null)) {
+      if (Object.values(Docs).some((each) => each === null)) {
         alert("Upload all the Required Documents!")
         SetUpdateingStatus(true);
         return
