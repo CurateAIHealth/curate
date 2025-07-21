@@ -316,15 +316,15 @@ export default function HCAMobileView() {
                 return;
             }
 
-            if (Docs.ProfilePic === DEFAULT_PROFILE_PIC) {
-                setUpdatedStatusMessage('Please Update Your Profile Picture!');
-                SetUpdatingStatus(true);
-                return;
-            }
+          if (Object.values(Docs).some((each) => each === null)) {
+        setUpdatedStatusMessage("Upload all the Required Documents!")
+        SetUpdatingStatus(true);
+        return
+      }
 
 
             if (completion !== 100) {
-                alert('Please complete all required fields to update your profile!');
+                setUpdatedStatusMessage('Please complete all required fields to update your profile!');
                 SetUpdatingStatus(true);
                 return;
             }
@@ -334,7 +334,7 @@ export default function HCAMobileView() {
             setUpdatedStatusMessage('Successfully Updated Your Information.');
             SetUpdatingStatus(true);
             const PostResult = await PostFullRegistration(FinelForm);
-            console.log('Result---', PostResult);
+            console.log('Result---', FinelForm);
         },
         [form, completion, Docs]
     );
@@ -410,7 +410,7 @@ export default function HCAMobileView() {
       {PictureUploading ? (
         <span className="text-yellow-600 animate-pulse">Uploading <strong>{DocName}</strong>...</span>
       ) : (
-        <span className="text-green-600 font-medium">{UpdatedStatusMessage}</span>
+        <span className={`${(UpdatedStatusMessage==="Please complete all required fields to update your profile!")||(UpdatedStatusMessage==="Upload all the Required Documents!")?"text-red-500":"text-green-800"} font-medium`}>{UpdatedStatusMessage}</span>
       )}
     </div>
   </div>
@@ -669,117 +669,154 @@ export default function HCAMobileView() {
 
 
                     {currentStep === 2 && (
-                        <div className="md:flex justify-center gap-2">
-                            <section className="md:w-1/2 bg-blue-50 p-2 rounded-xl shadow-md">
-                                <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-6 w-6 mr-2 text-[#6366f1]"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        strokeWidth={2}
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                                        />
-                                    </svg>
-                                    Education & Professional Experience
-                                </h3>
-                                <div className="space-y-5">
-                                    <div>
-                                        <input
-                                            type="text"
-                                            name="higherEducation"
-                                            value={form.higherEducation}
-                                            onChange={handleChange}
-                                            placeholder="Higher Education (e.g., MBBS, MD)"
-                                            className="input-field w-full mb-3 h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                                            required
-                                        />
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                            <input
-                                                type="number"
-                                                name="higherEducationYearStart"
-                                                value={form.higherEducationYearStart}
-                                                onChange={handleChange}
-                                                placeholder="Higher Ed. Year Start"
-                                                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                                                required
-                                            />
-                                            <input
-                                                type="number"
-                                                name="higherEducationYearEnd"
-                                                value={form.higherEducationYearEnd}
-                                                onChange={handleChange}
-                                                placeholder="Higher Ed. Year End"
-                                                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <input
-                                            type="text"
-                                            name="professionalEducation"
-                                            value={form.professionalEducation}
-                                            onChange={handleChange}
-                                            placeholder="Professional Education (e.g., Fellowship)"
-                                            className="input-field w-full mb-3 border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                                            required
-                                        />
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                            <input
-                                                type="number"
-                                                name="professionalEducationYearStart"
-                                                value={form.professionalEducationYearStart}
-                                                onChange={handleChange}
-                                                placeholder="Professional Ed. Year Start"
-                                                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                                                required
-                                            />
-                                            <input
-                                                type="number"
-                                                name="professionalEducationYearEnd"
-                                                value={form.professionalEducationYearEnd}
-                                                onChange={handleChange}
-                                                placeholder="Professional Ed. Year End"
-                                                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        name="registrationCouncil"
-                                        value={form.registrationCouncil}
-                                        onChange={handleChange}
-                                        placeholder="Registration Council"
-                                        className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                                        required
-                                    />
-                                    <input
-                                        type="text"
-                                        name="registrationNo"
-                                        value={form.registrationNo}
-                                        onChange={handleChange}
-                                        placeholder="Registration No."
-                                        className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                                        required
-                                    />
-                                    <textarea
-                                        name="professionalSkill"
-                                        value={form.professionalSkill}
-                                        onChange={handleChange}
-                                        placeholder="Professional Skill (e.g., Surgery, Diagnosis)"
-                                        className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                                        required
-                                    />
-                                </div>
-                            </section>
-                        </div>
+                        <div className='md:flex  justify-center gap-2'>
+            <section className="md:w-1/2 bg-blue-50 p-2 rounded-xl shadow-md">
+              <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 mr-2 text-[#6366f1]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+                Education & Professional Experience
+              </h3>
+              <div className="space-y-5">
+                <div>
+                  <input
+                    type="text"
+                    name="higherEducation"
+                    value={form.higherEducation}
+                    onChange={handleChange}
+                    placeholder="Higher Education (e.g., MBBS, MD)"
+                    className="input-field w-full mb-3 h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                    required
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <input
+                      type="number"
+                      name="higherEducationYearStart"
+                      value={form.higherEducationYearStart}
+                      onChange={handleChange}
+                      placeholder="Higher Ed. Year Start"
+                      className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                      required
+                    />
+                    <input
+                      type="number"
+                      name="higherEducationYearEnd"
+                      value={form.higherEducationYearEnd}
+                      onChange={handleChange}
+                      placeholder="Higher Ed. Year End"
+                      className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    name="professionalEducation"
+                    value={form.professionalEducation}
+                    onChange={handleChange}
+                    placeholder="Professional Education (e.g., Fellowship)"
+                    className="input-field w-full mb-3 border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                    required
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <input
+                      type="number"
+                      name="professionalEducationYearStart"
+                      value={form.professionalEducationYearStart}
+                      onChange={handleChange}
+                      placeholder="Professional Ed. Year Start"
+                      className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                      required
+                    />
+                    <input
+                      type="number"
+                      name="professionalEducationYearEnd"
+                      value={form.professionalEducationYearEnd}
+                      onChange={handleChange}
+                      placeholder="Professional Ed. Year End"
+                      className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  name="registrationCouncil"
+                  value={form.registrationCouncil}
+                  onChange={handleChange}
+                  placeholder="Registration Council"
+                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
+                />
+                <input
+                  type="text"
+                  name="registrationNo"
+                  value={form.registrationNo}
+                  onChange={handleChange}
+                  placeholder="Registration No."
+                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
+                />
+                <textarea
+                  name="professionalSkill"
+                  value={form.professionalSkill}
+                  onChange={handleChange}
+                  placeholder="Professional Skill (e.g., Surgery, Diagnosis)"
+                  className="input-field resize-y h-18 w-full border border-gray-300 p-3  rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
+                />
+                <input
+                  type="text"
+                  name="certifiedBy"
+                  value={form.certifiedBy}
+                  onChange={handleChange}
+                  placeholder="Certified By (e.g., Medical Council of India)"
+                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
+                />
+                <input
+                  type="text"
+                  name="professionalWork1"
+                  value={form.professionalWork1}
+                  onChange={handleChange}
+                  placeholder="Professional Work 1 (e.g., Sr. Consultant, AIIMS)"
+                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
+                />
+                <input
+                  type="text"
+                  name="professionalWork2"
+                  value={form.professionalWork2}
+                  onChange={handleChange}
+                  placeholder="Professional Work 2 (Optional)"
+                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                />
+                <input
+                  type="number"
+                  name="experience"
+                  value={form.experience}
+                  onChange={handleChange}
+                  placeholder="Experience in Years"
+                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+            </section>
+
+
+          </div>
                     )}
 
 
