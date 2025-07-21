@@ -341,6 +341,7 @@ export default function HCAMobileView() {
 
     const handleNext = () => {
         const ScrollResult = document.getElementById("RegisrationForm")
+    
         ScrollResult?.scrollIntoView({ behavior: "smooth" })
         if (currentStep < formSections.length - 1) {
             setCurrentStep((prev) => prev + 1);
@@ -358,83 +359,69 @@ export default function HCAMobileView() {
 
     return (
         <div className="md:hidden min-h-[86.5vh] h-[86.5vh] bg-white flex flex-col items-center justify-center overflow-hidden">
-            <div className="w-full flex flex-col items-center p-2 bg-[#50c896] rounded-xl shadow-lg  sm:m-auto max-w-sm border border-gray-100">
+          <div className="max-w-2xl w-full mx-auto bg-white shadow-md border border-gray-200 rounded-xl p-4 flex items-center gap-4 animate-fade-in-short">
 
 
+  <div className="flex flex-col items-center">
+  <label htmlFor="Profile" className="relative group w-20 h-20 min-w-[5rem] rounded-full overflow-hidden border-4 border-[#50c896] shadow-md cursor-pointer hover:scale-105 transition-all duration-300">
+    <img
+      src={Docs.ProfilePic}
+      alt="Profile"
+      className="w-full h-full object-cover"
+      onError={(e) => {
+        (e.target as HTMLImageElement).src = DEFAULT_PROFILE_PIC;
+      }}
+    />
+    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h1.2a2 2 0 001.6-.8l.8-1.2a2 2 0 011.6-.8h4.8a2 2 0 011.6.8l.8 1.2a2 2 0 001.6.8H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+      </svg>
+    </div>
+    <input id="Profile" name="ProfilePic" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+  </label>
+  {Docs.ProfilePic===DEFAULT_PROFILE_PIC&& <p className="text-[11px] text-gray-500 mt-1">Tap to upload</p>}
+ 
+</div>
+
+ 
+
+  <div className="flex-1 flex flex-col justify-between h-full py-1">
+    <div className="flex justify-between items-start">
+      <div>
+        <h2 className="text-base font-bold text-gray-800">{ProfileName}</h2>
+        <p className="text-xs text-gray-500">Profile Dashboard</p>
+      </div>
+      <span className="text-xs bg-[#50c896]/20 text-[#1392d3] px-2 py-0.5 rounded-full font-medium">
+        {completion}% complete
+      </span>
+    </div>
 
 
-                <div className="relative mb-8">
-                    <label
-                        htmlFor="Profile"
-                        className="relative w-32 h-32 rounded-full overflow-hidden block cursor-pointer group border-4 border-gray-200 hover:border-[#50c896] transition-colors duration-300 shadow-md"
-                    >
-                        <img
-                            src={Docs.ProfilePic}
-                            alt="Profile"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                                (e.target as HTMLImageElement).src = DEFAULT_PROFILE_PIC;
-                            }}
-                        />
+    <div className="mt-2 w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+      <div
+        className="h-2 bg-gradient-to-r from-[#50c896] to-[#1392d3] transition-all duration-700 rounded-full"
+        style={{ width: `${completion}%` }}
+      />
+    </div>
 
-                        <div className="absolute inset-0 bg-black bg-opacity-40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-9 w-9 text-white"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                                />
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                            </svg>
-                        </div>
-                    </label>
-                    <input
-                        id="Profile"
-                        name="ProfilePic"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
-                        required
-                    />
-                    <p className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-800 whitespace-nowrap">
-                        Tap to upload or change
-                    </p>
+    
+    <div className="mt-2 text-xs text-gray-600">
+      {PictureUploading ? (
+        <span className="text-yellow-600 animate-pulse">Uploading <strong>{DocName}</strong>...</span>
+      ) : (
+        <span className="text-green-600 font-medium">{UpdatedStatusMessage}</span>
+      )}
+    </div>
+  </div>
+</div>
 
-                </div>
-                <h1 className='text-[#ff1493] font-bold text-[18px]'>{ProfileName}'s Dashboard</h1>
-                <div className="w-full text-center mb-6">
-
-
-                    <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
-                        <div
-                            className="bg-[#1392d3] h-2.5 rounded-full"
-                            style={{ width: `${completion}%` }}
-                        ></div>
-                    </div>
-                    <p className="text-xs text-gray-800 mt-2">{completion}% Complete</p>
-                    {PictureUploading ? <p>Please Wait {DocName} Uploading... </p> : <p className="text-center mt-4 text-sm font-medium text-green-700">
-                        {UpdatedStatusMessage}
-                    </p>}
-                </div>
-
-            </div>
 
             <form
               
                 onSubmit={handleSubmit}
-                className="w-full bg-blue-50 p-2 flex flex-col justify-between overflow-y-auto custom-scrollbar h-full"
+         className="w-full p-2 flex flex-col justify-between overflow-y-auto h-full hide-scrollbar"
+
             >
                 <div   id='RegisrationForm'>
                     {currentStep === 0 && (
