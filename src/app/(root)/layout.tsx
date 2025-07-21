@@ -35,7 +35,10 @@ export default function RootLayout({
     const Fetch = async () => {
       try {
         const localValue = localStorage.getItem('UserId');
-        if (!localValue) return;
+    if (!localValue) {
+    router.push("/sign-in");
+        return;
+    };
 
         const ProfileInformation = await GetUserInformation(localValue);
         SetProfileName(ProfileInformation.FirstName);
