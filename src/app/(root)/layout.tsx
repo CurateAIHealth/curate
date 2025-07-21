@@ -107,7 +107,7 @@ export default function RootLayout({
     
       <div className="flex flex-col flex-1 ml-0 md:ml-auto">
     
-        <header className="bg-white shadow px-4 flex items-center justify-between" style={{ height: '10vh' }}>
+        <header className="bg-gray-100 shadow px-4 flex items-center justify-between" style={{ height: '10vh' }}>
       
           <div className="flex items-center space-x-4">
          
