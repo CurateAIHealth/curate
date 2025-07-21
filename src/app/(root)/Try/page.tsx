@@ -1,5 +1,6 @@
 'use client';
 
+import HCAMobileView from '@/Components/HCAMobileView/page';
 import { GetUserInformation, PostFullRegistration } from '@/Lib/user.action';
 import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
@@ -334,7 +335,9 @@ export default function DoctorProfileForm() {
   );
 
   return (
-    <div className="md:min-h-[86.5vh] md:h-[86.5vh] bg-gradient-to-br from-[#f0f4f8] to-[#e0e8f0] flex flex-col items-center justify-center  overflow-hidden">
+    <div>
+<div className="hidden md:flex md:min-h-[86.5vh] md:h-[86.5vh] bg-white flex-col items-center justify-center overflow-hidden">
+
 
 
 
@@ -345,7 +348,7 @@ export default function DoctorProfileForm() {
           <img
             src={Docs.ProfilePic}
             alt="Profile"
-            className="w-20 h-20 object-cover rounded-full border-4 border-white shadow-md"
+            className="w-20 h-20 hover:w-40 hover:h-40 object-cover rounded-full border-4 border-white shadow-md"
             onError={(e) => {
               (e.target as HTMLImageElement).src = DEFAULT_PROFILE_PIC;
             }}
@@ -975,7 +978,7 @@ export default function DoctorProfileForm() {
               />
             </div>
           </section> */}
-        <div className='md:flex  justify-center gap-2'>
+        <div className='md:flex  justify-center gap-4'>
 
           <section className=" md:w-1/2 bg-blue-50 p-3 rounded-xl shadow-md">
             <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
@@ -1373,6 +1376,8 @@ export default function DoctorProfileForm() {
         )}
       </form>
 
+    </div>
+   <HCAMobileView/>
     </div>
   );
 }

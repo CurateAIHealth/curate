@@ -52,7 +52,7 @@ export default function RootLayout({
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-white overflow-hidden">
 
       <aside
         className={`
@@ -143,7 +143,7 @@ export default function RootLayout({
         </header>
 
       
-        <main className="flex-1 overflow-y-auto px-4 py-3 bg-gray-100">
+        <main className="flex-1 overflow-y-auto px-2 py-3 bg-white">
           {children}
         </main>
       </div>
