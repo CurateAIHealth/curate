@@ -25,6 +25,7 @@ export default function HCAMobileView() {
         'Service & Payment Details',
         'Other Details',
         'Document Uploads',
+        'Video Upload'
     ];
 
     const [Docs, setDocs] = useState({
@@ -34,6 +35,7 @@ export default function HCAMobileView() {
         AccountPassBook: '',
         CertificatOne: '',
         CertificatTwo: '',
+        VideoFile:''
     });
     const [form, setForm] = useState({
         title: '',
@@ -263,41 +265,51 @@ export default function HCAMobileView() {
         Fetch();
     }, []);
 
-    const handleImageChange = useCallback(
-        async (e: React.ChangeEvent<HTMLInputElement>) => {
-            setUpdatedStatusMessage('');
-            const file = e.target.files?.[0];
-            const InputName = e.target.name;
-            if (!file) return;
+const handleImageChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+        setUpdatedStatusMessage('');
+        const file = e.target.files?.[0];
+        const inputName = e.target.name;
+        if (!file) return;
 
-            if (file.size > 10 * 1024 * 1024) {
-                alert('File too large. Max allowed is 10MB.');
-                return;
-            }
+    
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File too large. Max allowed is 10MB.');
+            return;
+        }
 
-            const formData = new FormData();
-            formData.append('file', file);
+        
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Only image or video files are allowed.');
+            return;
+        }
 
-            try {
-                setDocName(InputName);
-                setPictureUploading(true);
-                const res = await axios.post('/api/Upload', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
+        const formData = new FormData();
+        formData.append('file', file);
 
-                setDocs((prev) => ({ ...prev, [InputName]: res.data.url }));
-                setUpdatedStatusMessage(`${InputName} uploaded successfully!`);
-            } catch (error: any) {
-                console.error('Upload failed:', error.message);
-                setUpdatedStatusMessage('Document upload failed!');
-            } finally {
-                setPictureUploading(false);
-            }
-        },
-        []
-    );
+        try {
+            setDocName(inputName);
+            setPictureUploading(true);
+
+            const res = await axios.post('/api/Upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            setDocs((prev) => ({ ...prev, [inputName]: res.data.url }));
+            setUpdatedStatusMessage(`${inputName} uploaded successfully!`);
+        } catch (error: any) {
+            console.error('Upload failed:', error.message);
+            setUpdatedStatusMessage('Document upload failed!');
+        } finally {
+            setPictureUploading(false);
+        }
+    },
+    []
+);
+
 
     const handleSubmit = useCallback(
         async (e: React.FormEvent<HTMLFormElement>) => {
@@ -316,11 +328,11 @@ export default function HCAMobileView() {
                 return;
             }
 
-          if (Object.values(Docs).some((each) => each === null)) {
-        setUpdatedStatusMessage("Upload all the Required Documents!")
-        SetUpdatingStatus(true);
-        return
-      }
+            if (Object.values(Docs).some((each) => each === '')) {
+                setUpdatedStatusMessage("Upload all the Required Documents along with Video!")
+                SetUpdatingStatus(true);
+                return
+            }
 
 
             if (completion !== 100) {
@@ -328,8 +340,9 @@ export default function HCAMobileView() {
                 SetUpdatingStatus(true);
                 return;
             }
+            const localValue = localStorage.getItem('UserId');
+            const FinelForm = { ...form, Documents: Docs, UserId: localValue };
 
-            const FinelForm = { ...form, Documents: Docs };
 
             setUpdatedStatusMessage('Successfully Updated Your Information.');
             SetUpdatingStatus(true);
@@ -341,7 +354,7 @@ export default function HCAMobileView() {
 
     const handleNext = () => {
         const ScrollResult = document.getElementById("RegisrationForm")
-    
+
         ScrollResult?.scrollIntoView({ behavior: "smooth" })
         if (currentStep < formSections.length - 1) {
             setCurrentStep((prev) => prev + 1);
@@ -359,71 +372,71 @@ export default function HCAMobileView() {
 
     return (
         <div className="md:hidden min-h-[86.5vh] h-[86.5vh] bg-white flex flex-col items-center justify-center overflow-hidden">
-          <div className="max-w-2xl w-full mx-auto bg-white shadow-md border border-gray-200 rounded-xl p-4 flex items-center gap-4 animate-fade-in-short">
+            <div className="max-w-2xl w-full mx-auto bg-white shadow-md border border-gray-200 rounded-xl p-4 flex items-center gap-4 animate-fade-in-short">
 
 
-  <div className="flex flex-col items-center">
-  <label htmlFor="Profile" className="relative group w-20 h-20 min-w-[5rem] rounded-full overflow-hidden border-4 border-[#50c896] shadow-md cursor-pointer hover:scale-105 transition-all duration-300">
-    <img
-      src={Docs.ProfilePic}
-      alt="Profile"
-      className="w-full h-full object-cover"
-      onError={(e) => {
-        (e.target as HTMLImageElement).src = DEFAULT_PROFILE_PIC;
-      }}
-    />
-    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h1.2a2 2 0 001.6-.8l.8-1.2a2 2 0 011.6-.8h4.8a2 2 0 011.6.8l.8 1.2a2 2 0 001.6.8H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-      </svg>
-    </div>
-    <input id="Profile" name="ProfilePic" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-  </label>
-  {Docs.ProfilePic===DEFAULT_PROFILE_PIC&& <p className="text-[11px] text-gray-500 mt-1">Tap to upload</p>}
- 
-</div>
+                <div className="flex flex-col items-center">
+                    <label htmlFor="Profile" className="relative group w-20 h-20 min-w-[5rem] rounded-full overflow-hidden border-4 border-[#50c896] shadow-md cursor-pointer hover:scale-105 transition-all duration-300">
+                        <img
+                            src={Docs.ProfilePic}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).src = DEFAULT_PROFILE_PIC;
+                            }}
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h1.2a2 2 0 001.6-.8l.8-1.2a2 2 0 011.6-.8h4.8a2 2 0 011.6.8l.8 1.2a2 2 0 001.6.8H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            </svg>
+                        </div>
+                        <input id="Profile" name="ProfilePic" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                    </label>
+                    {Docs.ProfilePic === DEFAULT_PROFILE_PIC && <p className="text-[11px] text-gray-500 mt-1">Tap to upload</p>}
 
- 
-
-  <div className="flex-1 flex flex-col justify-between h-full py-1">
-    <div className="flex justify-between items-start">
-      <div>
-        <h2 className="text-base font-bold text-gray-800">{ProfileName}</h2>
-        <p className="text-xs text-gray-500">Profile Dashboard</p>
-      </div>
-      <span className="text-xs bg-[#50c896]/20 text-[#1392d3] px-2 py-0.5 rounded-full font-medium">
-        {completion}% complete
-      </span>
-    </div>
+                </div>
 
 
-    <div className="mt-2 w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-      <div
-        className="h-2 bg-gradient-to-r from-[#50c896] to-[#1392d3] transition-all duration-700 rounded-full"
-        style={{ width: `${completion}%` }}
-      />
-    </div>
 
-    
-    <div className="mt-2 text-xs text-gray-600">
-      {PictureUploading ? (
-        <span className="text-yellow-600 animate-pulse">Uploading <strong>{DocName}</strong>...</span>
-      ) : (
-        <span className={`${(UpdatedStatusMessage==="Please complete all required fields to update your profile!")||(UpdatedStatusMessage==="Upload all the Required Documents!")?"text-red-500":"text-green-800"} font-medium`}>{UpdatedStatusMessage}</span>
-      )}
-    </div>
-  </div>
-</div>
+                <div className="flex-1 flex flex-col justify-between h-full py-1">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h2 className="text-base font-bold text-gray-800">{ProfileName}</h2>
+                            <p className="text-xs text-gray-500">Profile Dashboard</p>
+                        </div>
+                        <span className="text-xs bg-[#50c896]/20 text-[#1392d3] px-2 py-0.5 rounded-full font-medium">
+                            {completion}% complete
+                        </span>
+                    </div>
+
+
+                    <div className="mt-2 w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div
+                            className="h-2 bg-gradient-to-r from-[#50c896] to-[#1392d3] transition-all duration-700 rounded-full"
+                            style={{ width: `${completion}%` }}
+                        />
+                    </div>
+
+
+                    <div className="mt-2 text-xs text-gray-600">
+                        {PictureUploading ? (
+                            <span className="text-yellow-600 animate-pulse">Uploading <strong>{DocName}</strong>...</span>
+                        ) : (
+                            <span className={`${(UpdatedStatusMessage === "Please complete all required fields to update your profile!") || (UpdatedStatusMessage === "Upload all the Required Documents!") ? "text-red-500" : "text-green-800"} font-medium`}>{UpdatedStatusMessage}</span>
+                        )}
+                    </div>
+                </div>
+            </div>
 
 
             <form
-              
+
                 onSubmit={handleSubmit}
-         className="w-full p-2 flex flex-col justify-between overflow-y-auto h-full hide-scrollbar"
+                className="w-full p-2 flex flex-col justify-between overflow-y-auto h-full hide-scrollbar"
 
             >
-                <div   id='RegisrationForm'>
+                <div id='RegisrationForm'>
                     {currentStep === 0 && (
                         <div className="md:flex w-full justify-center gap-2">
                             <section className="md:w-1/2 bg-blue-50 pl-4 mt-2 p-2 rounded-xl shadow-md">
@@ -670,153 +683,153 @@ export default function HCAMobileView() {
 
                     {currentStep === 2 && (
                         <div className='md:flex  justify-center gap-2'>
-            <section className="md:w-1/2 bg-blue-50 p-2 rounded-xl shadow-md">
-              <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2 text-[#6366f1]"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-                Education & Professional Experience
-              </h3>
-              <div className="space-y-5">
-                <div>
-                  <input
-                    type="text"
-                    name="higherEducation"
-                    value={form.higherEducation}
-                    onChange={handleChange}
-                    placeholder="Higher Education (e.g., MBBS, MD)"
-                    className="input-field w-full mb-3 h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                    required
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <input
-                      type="number"
-                      name="higherEducationYearStart"
-                      value={form.higherEducationYearStart}
-                      onChange={handleChange}
-                      placeholder="Higher Ed. Year Start"
-                      className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                      required
-                    />
-                    <input
-                      type="number"
-                      name="higherEducationYearEnd"
-                      value={form.higherEducationYearEnd}
-                      onChange={handleChange}
-                      placeholder="Higher Ed. Year End"
-                      className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    name="professionalEducation"
-                    value={form.professionalEducation}
-                    onChange={handleChange}
-                    placeholder="Professional Education (e.g., Fellowship)"
-                    className="input-field w-full mb-3 border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                    required
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <input
-                      type="number"
-                      name="professionalEducationYearStart"
-                      value={form.professionalEducationYearStart}
-                      onChange={handleChange}
-                      placeholder="Professional Ed. Year Start"
-                      className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                      required
-                    />
-                    <input
-                      type="number"
-                      name="professionalEducationYearEnd"
-                      value={form.professionalEducationYearEnd}
-                      onChange={handleChange}
-                      placeholder="Professional Ed. Year End"
-                      className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                      required
-                    />
-                  </div>
-                </div>
-                <input
-                  type="text"
-                  name="registrationCouncil"
-                  value={form.registrationCouncil}
-                  onChange={handleChange}
-                  placeholder="Registration Council"
-                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
-                />
-                <input
-                  type="text"
-                  name="registrationNo"
-                  value={form.registrationNo}
-                  onChange={handleChange}
-                  placeholder="Registration No."
-                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
-                />
-                <textarea
-                  name="professionalSkill"
-                  value={form.professionalSkill}
-                  onChange={handleChange}
-                  placeholder="Professional Skill (e.g., Surgery, Diagnosis)"
-                  className="input-field resize-y h-18 w-full border border-gray-300 p-3  rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
-                />
-                <input
-                  type="text"
-                  name="certifiedBy"
-                  value={form.certifiedBy}
-                  onChange={handleChange}
-                  placeholder="Certified By (e.g., Medical Council of India)"
-                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
-                />
-                <input
-                  type="text"
-                  name="professionalWork1"
-                  value={form.professionalWork1}
-                  onChange={handleChange}
-                  placeholder="Professional Work 1 (e.g., Sr. Consultant, AIIMS)"
-                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
-                />
-                <input
-                  type="text"
-                  name="professionalWork2"
-                  value={form.professionalWork2}
-                  onChange={handleChange}
-                  placeholder="Professional Work 2 (Optional)"
-                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                />
-                <input
-                  type="number"
-                  name="experience"
-                  value={form.experience}
-                  onChange={handleChange}
-                  placeholder="Experience in Years"
-                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
-                />
-              </div>
-            </section>
+                            <section className="md:w-1/2 bg-blue-50 p-2 rounded-xl shadow-md">
+                                <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-6 w-6 mr-2 text-[#6366f1]"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                                        />
+                                    </svg>
+                                    Education & Professional Experience
+                                </h3>
+                                <div className="space-y-5">
+                                    <div>
+                                        <input
+                                            type="text"
+                                            name="higherEducation"
+                                            value={form.higherEducation}
+                                            onChange={handleChange}
+                                            placeholder="Higher Education (e.g., MBBS, MD)"
+                                            className="input-field w-full mb-3 h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                                            required
+                                        />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <input
+                                                type="number"
+                                                name="higherEducationYearStart"
+                                                value={form.higherEducationYearStart}
+                                                onChange={handleChange}
+                                                placeholder="Higher Ed. Year Start"
+                                                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                                                required
+                                            />
+                                            <input
+                                                type="number"
+                                                name="higherEducationYearEnd"
+                                                value={form.higherEducationYearEnd}
+                                                onChange={handleChange}
+                                                placeholder="Higher Ed. Year End"
+                                                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <input
+                                            type="text"
+                                            name="professionalEducation"
+                                            value={form.professionalEducation}
+                                            onChange={handleChange}
+                                            placeholder="Professional Education (e.g., Fellowship)"
+                                            className="input-field w-full mb-3 border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                                            required
+                                        />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            <input
+                                                type="number"
+                                                name="professionalEducationYearStart"
+                                                value={form.professionalEducationYearStart}
+                                                onChange={handleChange}
+                                                placeholder="Professional Ed. Year Start"
+                                                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                                                required
+                                            />
+                                            <input
+                                                type="number"
+                                                name="professionalEducationYearEnd"
+                                                value={form.professionalEducationYearEnd}
+                                                onChange={handleChange}
+                                                placeholder="Professional Ed. Year End"
+                                                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        name="registrationCouncil"
+                                        value={form.registrationCouncil}
+                                        onChange={handleChange}
+                                        placeholder="Registration Council"
+                                        className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        name="registrationNo"
+                                        value={form.registrationNo}
+                                        onChange={handleChange}
+                                        placeholder="Registration No."
+                                        className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                                        required
+                                    />
+                                    <textarea
+                                        name="professionalSkill"
+                                        value={form.professionalSkill}
+                                        onChange={handleChange}
+                                        placeholder="Professional Skill (e.g., Surgery, Diagnosis)"
+                                        className="input-field resize-y h-18 w-full border border-gray-300 p-3  rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        name="certifiedBy"
+                                        value={form.certifiedBy}
+                                        onChange={handleChange}
+                                        placeholder="Certified By (e.g., Medical Council of India)"
+                                        className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        name="professionalWork1"
+                                        value={form.professionalWork1}
+                                        onChange={handleChange}
+                                        placeholder="Professional Work 1 (e.g., Sr. Consultant, AIIMS)"
+                                        className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        name="professionalWork2"
+                                        value={form.professionalWork2}
+                                        onChange={handleChange}
+                                        placeholder="Professional Work 2 (Optional)"
+                                        className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                                    />
+                                    <input
+                                        type="number"
+                                        name="experience"
+                                        value={form.experience}
+                                        onChange={handleChange}
+                                        placeholder="Experience in Years"
+                                        className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                                        required
+                                    />
+                                </div>
+                            </section>
 
 
-          </div>
+                        </div>
                     )}
 
 
@@ -1312,7 +1325,7 @@ export default function HCAMobileView() {
                                             accept="image/*,application/pdf"
                                             onChange={handleImageChange}
                                             className="hidden"
-                                            
+
                                         />
                                     </div>
 
@@ -1336,7 +1349,7 @@ export default function HCAMobileView() {
                                             accept="image/*,application/pdf"
                                             onChange={handleImageChange}
                                             className="hidden"
-                                            
+
                                         />
                                     </div>
 
@@ -1360,7 +1373,7 @@ export default function HCAMobileView() {
                                             accept="image/*,application/pdf"
                                             onChange={handleImageChange}
                                             className="hidden"
-                                            
+
                                         />
                                     </div>
 
@@ -1384,7 +1397,7 @@ export default function HCAMobileView() {
                                             accept="image/*,application/pdf"
                                             onChange={handleImageChange}
                                             className="hidden"
-                                            
+
                                         />
                                     </div>
 
@@ -1408,7 +1421,7 @@ export default function HCAMobileView() {
                                             accept="image/*,application/pdf"
                                             onChange={handleImageChange}
                                             className="hidden"
-                                            
+
                                         />
                                     </div>
                                 </div>
@@ -1416,6 +1429,62 @@ export default function HCAMobileView() {
                         </div>
                     )}
 
+
+                    {currentStep === 9 && ( 
+                        <div className="md:flex justify-center gap-2">
+                            <section className="md:w-1/2 bg-blue-50 mt-2 p-2 rounded-xl shadow-md">
+                                <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-6 w-6 mr-2 text-[#6366f1]"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14m-5 3v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2h3a2 2 0 012 2z" />
+                                    </svg>
+                                    Video Upload & Terms
+                                </h3>
+                                <div className="grid grid-cols-1 gap-5 mb-5">
+                                    <div className="flex flex-col items-center justify-center p-4 border border-gray-300 rounded-lg bg-white">
+                                        <label htmlFor="Video" className="relative group w-full h-32 flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-blue-500 transition-all">
+                                            {Docs.VideoFile ? (
+                                                <video src={Docs.VideoFile} controls className="w-full h-full object-contain rounded-lg" />
+                                            ) : (
+                                                <div className="text-gray-500 text-center">
+                                                    <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L40 32" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                    <p className="mt-1 text-sm text-gray-600">Drag and drop or <span className="font-semibold text-blue-600">browse for a video</span></p>
+                                                    <p className="text-xs text-gray-500">(Max 50MB)</p>
+                                                </div>
+                                            )}
+                                            <input
+                                                id="Video"
+                                                name="VideoFile"
+                                                type="file"
+                                                accept="video/*"
+                                                onChange={handleImageChange}
+                                                className="hidden"
+                                                
+                                            />
+                                        </label>
+                                        {Docs.VideoFile && (
+                                            <p className="text-sm text-gray-600 mt-2">Video uploaded: <a href={Docs.VideoFile} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">View Video</a></p>
+                                        )}
+                                    </div>
+                                      <p className='text-center text-[10px] text-gray-500'>Read the Following Content While Reacording Video</p>
+                                    <div className="flex items-center mt-4">
+                                      
+                                        <p className="text-sm text-gray-700 font-semibold text-center w-full">
+                                            I hereby acknowledge that I have read, understood, and fully accept all the terms and conditions set forth by HCA. I agree to comply with these terms in their entirety.
+                                        </p>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    )}
 
                 </div>
                 <div className="flex justify-between items-end mt-8">

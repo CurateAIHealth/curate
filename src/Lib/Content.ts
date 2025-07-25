@@ -420,6 +420,44 @@ export const HYDERABAD_LOCATIONS = [
 // ];
 
 
+export const familyRelations = [
+  "Father",
+  "Mother",
+  "Son",
+  "Daughter",
+  "Brother",
+  "Sister",
+  "Husband",
+  "Wife",
+  "Grandfather (Paternal)",
+  "Grandmother (Paternal)",
+  "Grandfather (Maternal)",
+  "Grandmother (Maternal)",
+  "Uncle (Paternal)",
+  "Aunt (Paternal)",
+  "Uncle (Maternal)",
+  "Aunt (Maternal)",
+  "Cousin (Male)",
+  "Cousin (Female)",
+  "Nephew",
+  "Niece",
+  "Father-in-law",
+  "Mother-in-law",
+  "Brother-in-law",
+  "Sister-in-law",
+  "Son-in-law",
+  "Daughter-in-law",
+  "Stepfather",
+  "Stepmother",
+  "Stepson",
+  "Stepdaughter",
+  "Godfather",
+  "Godmother",
+  "Legal Guardian",
+  "Other"
+];
+
+
 export const All_Medical_Colleges_Names = [
 
   "Osmania Medical College, Telangana, MBBS, MD/MS, BPT, BSc Nursing, Medical Lab Technology, Allied Health Sciences, MPH",
