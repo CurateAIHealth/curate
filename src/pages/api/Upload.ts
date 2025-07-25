@@ -53,13 +53,14 @@ export default async function name(req: NextApiRequest, res: NextApiResponse) {
 
     const uploadedResponse = await cloudinary.uploader.upload(filePath, {
       folder: "uploads",
+      resource_type: "auto", 
     });
 
     fs.unlinkSync(filePath);
 
     return res.status(200).json({ url: uploadedResponse.secure_url });
   } catch (error: any) {
-    
+    console.log("Video Upload Error---",error)
     return res.status(500).json({ error: error.message || "Something went wrong" });
   }
 };

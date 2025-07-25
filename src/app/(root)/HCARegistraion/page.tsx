@@ -13,7 +13,6 @@ export default function DoctorProfileForm() {
   const [ProfileName, SetProfileName] = useState('');
   const [PictureUploading, setPictureUploading] = useState(false);
   const [UpdateingStatus, SetUpdateingStatus] = useState(true);
-  const [DocName, setDocName] = useState("")
   const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
   const [isChecking, setIsChecking] = useState(true);
   const [Docs, setDocs] = useState({
@@ -23,6 +22,7 @@ export default function DoctorProfileForm() {
     AccountPassBook: '',
     CertificatOne: '',
     CertificatTwo: '',
+    VideoFile:''
   });
   const [form, setForm] = useState({
     title: '',
@@ -255,41 +255,51 @@ export default function DoctorProfileForm() {
     Fetch();
   }, []);
 
-  const handleImageChange = useCallback(
+ const handleImageChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
-      setUpdatedStatusMessage("")
-      const file = e.target.files?.[0];
-      const InputName = e.target.name;
-      if (!file) return;
+        setUpdatedStatusMessage('');
+        const file = e.target.files?.[0];
+        const inputName = e.target.name;
+        if (!file) return;
 
-      if (file.size > 10 * 1024 * 1024) {
-        alert('File too large. Max allowed is 10MB.');
-        return;
-      }
+    
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File too large. Max allowed is 10MB.');
+            return;
+        }
 
-      const formData = new FormData();
-      formData.append('file', file);
+        
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Only image or video files are allowed.');
+            return;
+        }
 
-      try {
-        setDocName(InputName)
-        setPictureUploading(true);
-        const res = await axios.post('/api/Upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+        const formData = new FormData();
+        formData.append('file', file);
 
-        setDocs((prev) => ({ ...prev, [InputName]: res.data.url }));
-        setUpdatedStatusMessage(`${InputName} uploaded successfully!`);
-      } catch (error: any) {
-        console.error('Upload failed:', error.message);
-        setUpdatedStatusMessage('Document upload failed!');
-      } finally {
-        setPictureUploading(false);
-      }
+        try {
+        
+            setUpdatedStatusMessage(`Please Wait ${inputName} uploading....`)
+            setPictureUploading(true);
+
+            const res = await axios.post('/api/Upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            setDocs((prev) => ({ ...prev, [inputName]: res.data.url }));
+            setUpdatedStatusMessage(`${inputName} uploaded successfully!`);
+        } catch (error: any) {
+            console.error('Upload failed:', error.message);
+            setUpdatedStatusMessage('Document upload failed!');
+        } finally {
+            setPictureUploading(false);
+        }
     },
     []
-  );
+);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
@@ -308,11 +318,6 @@ export default function DoctorProfileForm() {
         return;
       }
 
-      if (Docs.ProfilePic === DEFAULT_PROFILE_PIC) {
-        setUpdatedStatusMessage('Please Update Your Profile Picture!');
-        SetUpdateingStatus(true);
-        return;
-      }
 
       if (completion !== 100) {
         alert('Please complete all required fields to update your profile!');
@@ -320,13 +325,13 @@ export default function DoctorProfileForm() {
         return;
       }
 
-      if (Object.values(Docs).some((each) => each === null)) {
-        alert("Upload all the Required Documents!")
+      if (Object.values(Docs).some((each) => each === '')) {
+        alert("Upload all the Required Documents along with Video!")
         SetUpdateingStatus(true);
         return
       }
-
-      const FinelForm = { ...form, Documents: Docs };
+      const localValue = localStorage.getItem('UserId');
+      const FinelForm = { ...form, Documents: Docs,UserId:localValue };
 
       setUpdatedStatusMessage('Successfully Updated Your Information.');
       SetUpdateingStatus(true);
@@ -342,6 +347,7 @@ export default function DoctorProfileForm() {
       </div>
     );
   }
+
   return (
     <div>
       <div className="hidden md:flex md:min-h-[86.5vh] md:h-[86.5vh] bg-white flex-col items-center justify-center overflow-hidden">
@@ -382,7 +388,7 @@ export default function DoctorProfileForm() {
             <p className="text-gray-600 text-center mb-8">
               Fill in the details below to keep your profile accurate and up-to-date.
             </p>
-            {PictureUploading && <p className="text-sm text-center font-semibold text-gray-800 mt-2">Please Wait Uploading {DocName}....</p>}
+             <p className={`text-sm text-center font-semibold ${UpdatedStatusMessage!=="Successfully Updated Your Information."?"text-green-800":"text-red-500"} mt-2`}>{UpdatedStatusMessage}</p>
           </div>
           <div className="flex flex-col  items-center justify-center text-center  ">
             <svg className="w-18 h-18 transform -rotate-90" viewBox="0 0 100 100">
@@ -1078,6 +1084,7 @@ export default function DoctorProfileForm() {
                   onChange={handleChange}
                   placeholder="Reference 2 Name"
                   className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
                 />
                 <input
                   type="text"
@@ -1086,6 +1093,7 @@ export default function DoctorProfileForm() {
                   onChange={handleChange}
                   placeholder="Reference 2 Aadhar No."
                   className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
                 />
                 <input
                   type="tel"
@@ -1094,6 +1102,7 @@ export default function DoctorProfileForm() {
                   onChange={handleChange}
                   placeholder="Reference 2 Mobile"
                   className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
                 />
                 <textarea
                   name="reference2Address"
@@ -1101,6 +1110,7 @@ export default function DoctorProfileForm() {
                   onChange={handleChange}
                   placeholder="Reference 2 Address"
                   className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
                 />
               </div>
             </section>
@@ -1360,6 +1370,60 @@ export default function DoctorProfileForm() {
             </div>
           </section>
 
+                        <div className="md:flex justify-center gap-2">
+                            <section className="md:w-1/2 bg-blue-50 mt-2 p-2 rounded-xl shadow-md">
+                                <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-6 w-6 mr-2 text-[#6366f1]"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14m-5 3v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2h3a2 2 0 012 2z" />
+                                    </svg>
+                                    Video Upload & Terms
+                                </h3>
+                                <div className="grid grid-cols-1 gap-5 mb-5">
+                                    <div className="flex flex-col items-center justify-center p-4 border border-gray-300 rounded-lg bg-white">
+                                        <label htmlFor="VideoFile" className="relative group w-full h-32 flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-blue-500 transition-all">
+                                            {Docs.VideoFile ? (
+                                                <video src={Docs.VideoFile} controls className="w-full h-full object-contain rounded-lg" />
+                                            ) : (
+                                                <div className="text-gray-500 text-center">
+                                                    <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L40 32" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                    <p className="mt-1 text-sm text-gray-600">Drag and drop or <span className="font-semibold text-blue-600">browse for a video</span></p>
+                                                    <p className="text-xs text-gray-500">(Max 50MB)</p>
+                                                </div>
+                                            )}
+                                            <input
+                                                id="VideoFile"
+                                                name="VideoFile"
+                                                type="file"
+                                                accept="video/*"
+                                                onChange={handleImageChange}
+                                                className="hidden"
+                                                
+                                            />
+                                        </label>
+                                        {Docs.VideoFile && (
+                                            <p className="text-sm text-gray-600 mt-2">Video uploaded: <a href={Docs.VideoFile} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">View Video</a></p>
+                                        )}
+                                    </div>
+                                      <p className='text-center text-[10px] text-gray-500'>Read the Following Content While Reacording Video</p>
+                                    <div className="flex items-center mt-4">
+                                      
+                                        <p className="text-sm text-gray-700 font-semibold text-center w-full">
+                                            I hereby acknowledge that I have read, understood, and fully accept all the terms and conditions set forth by HCA. I agree to comply with these terms in their entirety.
+                                        </p>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    
 
           <div className="flex justify-center mt-8">
             <button
@@ -1373,11 +1437,6 @@ export default function DoctorProfileForm() {
             </button>
           </div>
 
-          {UpdatedStatusMessage && (
-            <p className="text-center mt-4 text-sm font-medium text-green-600">
-              {UpdatedStatusMessage}
-            </p>
-          )}
         </form>
 
       </div>

@@ -22,13 +22,17 @@ export default function StaticInfoPage() {
       }
       try {
         const ProfileInformation = await GetUserInformation(localValue)
-        console.log("Test---",ProfileInformation)
+       
         if (ProfileInformation?.Email === "admin@curatehealth.in") {
           router.push("/AdminPage");
          return
         }
         if (ProfileInformation?.FinelVerification === false&&ProfileInformation?.userType==="healthcare-assistant") {
-          router.push("/Try")
+          router.push("/HCARegistraion")
+          return
+        }
+         if (ProfileInformation?.FinelVerification === false&&ProfileInformation?.userType==="patient") {
+          router.push("/PatientRegistration")
           return
         }
         if (ProfileInformation?.VerificationStatus === "Success") {
