@@ -8,9 +8,9 @@ export default function ModernFooter() {
      
         <section className="flex-1 flex flex-col justify-between">
           <div>
-            <img src="/curate-logo.png"
+            <img src="Icons/CurateOfficialLogo.png"
               alt="Brand Logo"
-              className="w-20 h-20 object-contain mb-2 rounded-xl bg-white/10 p-2"
+              className="w-20 h-20 md:w-40 md:h-40 object-contain mb-2 rounded-xl  p-2"
             />
             <h2 className="text-2xl font-bold mb-2 tracking-tight">Curate<span className="text-indigo-200">Health</span></h2>
             <p className="text-md text-teal-50 mb-8">
