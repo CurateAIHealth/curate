@@ -36,7 +36,7 @@ export default function RootLayout({
       try {
         const localValue = localStorage.getItem('UserId');
     if (!localValue) {
-    router.push("/sign-in");
+    router.push("/");
         return;
     };
 
@@ -51,7 +51,7 @@ export default function RootLayout({
 
   const handleLogout = () => {
     localStorage.removeItem('UserId');
-    router.push('/sign-in');
+    router.push('/');
   };
 
   return (
