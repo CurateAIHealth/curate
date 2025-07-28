@@ -1,9 +1,5 @@
-'use client';
-
-
-import { GetUserInformation } from '@/Lib/user.action';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+"use client";
+import { useState } from "react";
 import { cta, features, heroContent, pricing, testimonials } from "@/Lib/HomePageContent";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Star, Settings, User, LogIn, BriefcaseMedical, CircleEllipsis, Menu } from "lucide-react";
@@ -21,60 +17,13 @@ const mainMenu = [
     { label: "Ocuppational Health", icon: <User size={18} />, href: "/OcuppationalHealth" },
     { label: "Digital AI Health", icon: <User size={18} />, href: "/DigitalAIHealth" },
     { label: "About US", icon: <User size={18} />, href: "/AboutUS" },
-    { label: "Login", icon: <LogIn size={18} />, href: "/sign-in" },
+    { label: "Login", icon: <LogIn size={18} />, href: "/login" },
 ];
 
-
-export default function StaticInfoPage() {
-  const [isChecking, setIsChecking] = useState(true);
+export default function HomePage() {
     const [mobileOptsOpen, setMobileOptsOpen] = useState(false);
-  const router = useRouter();
 
-
-  useEffect(() => {
-    const Fetch = async () => {
-      const localValue = localStorage.getItem("UserId");
-      try {
-        const ProfileInformation = await GetUserInformation(localValue)
-       
-        if (ProfileInformation?.Email === "admin@curatehealth.in") {
-          router.push("/AdminPage");
-         return
-        }
-        if (ProfileInformation?.FinelVerification === false&&ProfileInformation?.userType==="healthcare-assistant") {
-          router.push("/HCARegistraion")
-          return
-        }
-         if (ProfileInformation?.FinelVerification === false&&ProfileInformation?.userType==="patient") {
-          router.push("/PatientRegistration")
-          return
-        }
-        if (ProfileInformation?.VerificationStatus === "Success") {
-          router.push("/HomePage")
-          return
-
-        } 
-
-        else {
-          setIsChecking(false);
-        }
-      } catch (err: any) {
-
-       
-      }
-    }
-    Fetch()
-  }, [router]);
-
-  if (isChecking) {
     return (
-      <div className='h-screen flex items-center justify-center font-bold'>
-        Loading....
-      </div>
-    );
-  }
-
-  return (
         <div className="font-sans min-h-screen bg-[#f7fafd]">
 
             <nav className="hidden md:flex justify-between items-center max-w-7xl mx-auto px-10 py-5">
@@ -365,32 +314,6 @@ export default function StaticInfoPage() {
                     {cta.button}
                 </motion.a>
             </section>
-
-          
-<div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-center">
-  <a
-    href="https://www.instagram.com/yourprofile"
-    target="_blank"
-    rel="noopener noreferrer"
-    className=" hover:bg-pink-600 text-white p-3 rounded-full shadow-lg transition"
-    aria-label="Instagram"
-  >
-    <img alt='Instagram' src="Icons/insta.svg"/>
-     
-    
-  </a>
-
-  <a
-    href="https://www.linkedin.com/in/yourprofile"
-    target="_blank"
-    rel="noopener noreferrer"
-    className=" hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition"
-    aria-label="LinkedIn"
-  >
-   <img alt='Instagram' src="Icons/Linkedin.png"/>
-  </a>
-</div>
-
             <Footer/>
         </div>
     );
