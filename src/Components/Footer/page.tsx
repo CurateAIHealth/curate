@@ -17,17 +17,7 @@ export default function ModernFooter() {
               Experience truly personal, at-home healthcare with our trusted professionals.
             </p>
           </div>
-          <form className="bg-white/10 py-3 px-5 rounded-xl flex items-center gap-2 mb-3 max-w-xs shadow-lg focus-within:ring-2 focus-within:ring-teal-200">
-            <input
-              className="bg-transparent flex-1 placeholder:text-teal-200 text-sm p-2 border-none outline-none"
-              type="email"
-              placeholder="Join our newsletter"
-            />
-            <button
-              type="submit"
-              className="bg-indigo-500 hover:bg-indigo-700 transition-colors px-4 py-2 rounded text-white text-xs font-bold"
-            >Subscribe</button>
-          </form>
+        
           <div className="flex items-center gap-4 mt-4">
             <a href="#"><Facebook size={22} className="hover:text-teal-200" /></a>
             <a href="#"><Twitter size={22} className="hover:text-teal-200" /></a>
