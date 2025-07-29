@@ -1,5 +1,13 @@
 
-
+import {
+  ShieldCheck, HeartPulse, HelpingHand,
+  Users, UserCheck, Award,
+  BriefcaseMedical,
+  User,
+  LogIn,
+  Sparkles,
+  Menu
+} from "lucide-react";
 export const heroContent = {
   title: 'A Complete Home Health Professional',
   subtitle: 'We care for you and your beloved. Supporting your health journey with compassionate homecare services.',
@@ -58,5 +66,76 @@ export const cta = {
   heading: 'Need Reliable Home Health Care?',
   subheading: 'Reach out to Curate Health Services today and experience compassionate support at your doorstep.',
   button: 'Contact Us Now',
+};
+
+export const services = [
+  {
+    title: 'Healthcare Assistants',
+    icon: '/Icons/healthcare-assistants.png',
+  },
+  {
+    title: 'Nurse At Home 24/7',
+    icon: '/Icons/nurse-at-home.jpeg',
+  },
+  {
+    title: 'Physio At Home',
+    icon: '/Icons/physio-at-home.jpeg',
+  },
+  {
+    title: 'Labs At Home',
+    icon: '/Icons/Lab-at-Home.png',
+  },
+  {
+    title: 'Medical Equipment',
+    icon: '/Icons/medical-equipment.png',
+  },
+];
+
+
+export const images = {
+  hero: "https://images.unsplash.com/photo-1515165562835-cd4ceaca1eac?auto=format&fit=crop&w=1200&q=80",
+  journey: [
+    {
+      label: "Wellness Programs",
+      img: "https://images.unsplash.com/photo-1454023492550-5696f8ff10e1?auto=format&fit=crop&w=900&q=80",
+      icon: ShieldCheck,
+      text: "Empower your team with nutrition plans, fitness workshops, and mental health resources—no one-size-fits-all solutions.",
+    },
+    {
+      label: "Rehabilitation",
+      img: "https://images.unsplash.com/photo-1477332552946-cfb384aeaf1c?auto=format&fit=crop&w=900&q=80",
+      icon: HelpingHand,
+      text: "Seamless return-to-work programs: onsite therapy, remote monitoring, and custom care pathways.",
+    },
+    {
+      label: "Health Screening",
+      img: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=900&q=80",
+      icon: HeartPulse,
+      text: "Pop-up clinics, smart diagnostics, and proactive risk assessment. Prevention meets convenience.",
+    },
+  ],
+  highlights: [
+    {
+      img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80",
+      icon: Users,
+      title: "Clients Served",
+      stat: "15,000+",
+      desc: "Professionals empowered nationwide",
+    },
+    {
+      img: "Icons/Recognisation.png",
+      icon: Award,
+      title: "Recognition",
+      stat: "2024",
+      desc: "Industry-voted Best Wellness Provider",
+    },
+    {
+      img: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80",
+      icon: UserCheck,
+      title: "Corporate Partnerships",
+      stat: "120+",
+      desc: "Trusted by global leaders",
+    },
+  ],
 };
 
