@@ -4,10 +4,12 @@
 import { GetUserInformation } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { cta, features, heroContent, pricing, testimonials } from "@/Lib/HomePageContent";
+import { cta, features, heroContent, pricing, services, testimonials } from "@/Lib/HomePageContent";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Star, Settings, User, LogIn, BriefcaseMedical, CircleEllipsis, Menu } from "lucide-react";
 import Footer from "@/Components/Footer/page";
+import FreeConsultationForm from '@/Components/Contactfill/page';
+import ContactSection from '@/Components/Contact/page';
 
 
 const pink = "#ff1493";
@@ -17,8 +19,8 @@ const green = "#50c896";
 
 const mainMenu = [
 
-    { label: "Home Health", icon: <BriefcaseMedical size={18} />, href: "/pricing" },
-    { label: "Ocuppational Health", icon: <User size={18} />, href: "/OcuppationalHealth" },
+    { label: "Home Health", icon: <BriefcaseMedical size={18} />, href: "/" },
+    { label: "Ocuppational Health", icon: <User size={18} />, href: "/occupational" },
     { label: "Digital AI Health", icon: <User size={18} />, href: "/DigitalAIHealth" },
     { label: "About US", icon: <User size={18} />, href: "/AboutUS" },
     { label: "Login", icon: <LogIn size={18} />, href: "/sign-in" },
@@ -28,6 +30,7 @@ const mainMenu = [
 export default function StaticInfoPage() {
   const [isChecking, setIsChecking] = useState(true);
     const [mobileOptsOpen, setMobileOptsOpen] = useState(false);
+    const [ShowPopUp,setShowPopUp]=useState(false)
   const router = useRouter();
 
 
@@ -57,6 +60,11 @@ export default function StaticInfoPage() {
 
         else {
           setIsChecking(false);
+            const Timer=setTimeout(()=>{
+setShowPopUp(true)
+            },3500)
+
+            return ()=>clearInterval(Timer)
         }
       } catch (err: any) {
 
@@ -87,7 +95,7 @@ export default function StaticInfoPage() {
                                   
                                   className="object-contain"
                                 />
-                    <span className="text-2xl font-black text-[#ff1493] tracking-wider">CURATE HEALTH</span>
+                    
                 </div>
                 <div className="flex gap-7 items-center">
                     {mainMenu.map((item) => (
@@ -226,7 +234,33 @@ export default function StaticInfoPage() {
                     </motion.div>
                 </div>
             </section>
+<section className="py-16 px-4 bg-white text-center">
+  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 slide-in-left">
+    Medical Services offered at Home
+  </h2>
+  <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-600 max-w-4xl mx-auto slide-in-right">
+    If you need assistance with medical services at home, a good option is to choose Curate Health Services to have Healthcare Professionals come into your home to assist you with your medical needs.
+  </p>
 
+  <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-10 justify-items-center">
+    {services.map((service, index) => (
+      <div
+        key={index}
+        className={`w-30 h-30 sm:w-30 sm:h-35 md:w-44 md:h-44 lg:w-48 lg:h-48 bg-white rounded-[54px] p-4 flex flex-col items-center justify-center border border-gray-100 shadow-md card-hover-scale pop-in pop-in-stagger-delay-${(index % 5) + 1}`}
+        style={{ boxShadow: '0 0 12px rgba(6, 208, 244, 1)' }}
+      >
+        <img
+          src={service.icon}
+          alt={service.title}
+          className="mb-3 object-contain md:h-30 h-18"
+        />
+        <p className="md:text-sm text-[8px] sm:text-base font-semibold text-gray-800 text-center">
+          {service.title}
+        </p>
+      </div>
+    ))}
+  </div>
+</section>
 
             <section className="bg-white py-20 border-t border-[#ecf3fb]">
                 <div className="max-w-6xl mx-auto px-6">
@@ -262,6 +296,7 @@ export default function StaticInfoPage() {
                     </div>
                 </div>
             </section>
+
 
 
             <section className="py-18 px-6 bg-[#f9fdfd] border-t border-[#efefff]">
@@ -311,6 +346,37 @@ export default function StaticInfoPage() {
                     </div>
                 </div>
             </section>
+            <AnimatePresence>
+  {ShowPopUp && (
+    <motion.div
+      key="popup"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", damping: 20, stiffness: 300 }}
+        className="relative bg-white rounded-xl shadow-2xl p-6 w-[90%] lg:w-[40%]  md:w-[60%]"
+        onClick={(e) => e.stopPropagation()}
+      >
+       
+        <button
+          className="absolute top-3 right-4 text-gray-500 hover:text-red-500 text-xl font-bold"
+          onClick={() => setShowPopUp(false)}
+        >
+          &times;
+        </button>
+
+        <FreeConsultationForm />
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
 
 
             <section className="py-16 bg-[#f6f9fd] border-t border-[#e5e7eb]">
@@ -336,35 +402,7 @@ export default function StaticInfoPage() {
                 </div>
             </section>
 
-
-            <section className="relative text-[#1392d3] text-center py-18 px-6 overflow-hidden bg-white border-t border-[#e5e7eb]">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.7 }}
-                    animate={{ opacity: 0.17, scale: 1.02 }}
-                    transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
-                    className="absolute -top-24 left-1/2 -translate-x-1/2 w-[660px] h-[310px] rounded-full blur-2xl pointer-events-none"
-                    style={{
-                        background: `radial-gradient(circle at 70% 70%, ${blue}22, ${green}11 100%)`,
-                    }}
-                />
-                <motion.h2
-                    initial={{ opacity: 0, y: 35 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.18 }}
-                    className="text-3xl md:text-4xl font-extrabold mb-6 drop-shadow"
-                >
-                    {cta.heading}
-                </motion.h2>
-                <p className="text-lg mb-10 max-w-2xl mx-auto">{cta.subheading}</p>
-                <motion.a
-                    whileHover={{ scale: 1.048 }}
-                    href="/contact"
-                    className="font-bold px-10 py-4 rounded-full shadow text-white transition text-lg"
-                    style={{ background: `linear-gradient(90deg, ${blue} 70%, ${green} 100%)` }}
-                >
-                    {cta.button}
-                </motion.a>
-            </section>
+<ContactSection/>
 
           
 <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-center">
@@ -390,6 +428,7 @@ export default function StaticInfoPage() {
    <img alt='Instagram' src="Icons/Linkedin.png"/>
   </a>
 </div>
+
 
             <Footer/>
         </div>

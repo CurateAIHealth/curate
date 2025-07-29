@@ -105,3 +105,82 @@ body {
   animation: popup-blink 1.2s ease-in-out infinite;
 }
 
+/* Animation Keyframes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animation Classes */
+.fade-in-up {
+  animation: fadeInUp 1s ease-out forwards;
+}
+
+.slide-in-left {
+  animation: slideInLeft 1s ease-out forwards;
+}
+
+.slide-in-right {
+  animation: slideInRight 1s ease-out forwards;
+}
+
+.pop-in {
+  animation: popIn 0.7s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  opacity: 0;
+}
+
+
+.pop-in-stagger-delay-1 { animation-delay: 0.6s; }
+.pop-in-stagger-delay-2 { animation-delay: 0.7s; }
+.pop-in-stagger-delay-3 { animation-delay: 0.5s; }
+.pop-in-stagger-delay-4 { animation-delay: 0.6s; }
+.pop-in-stagger-delay-5 { animation-delay: 0.7s; }
+
+/* Card Hover Effect */
+.card-hover-scale {
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.card-hover-scale:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 22px rgba(6, 208, 244, 0.6) !important;
+}
