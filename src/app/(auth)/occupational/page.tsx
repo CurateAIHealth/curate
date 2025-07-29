@@ -104,7 +104,7 @@ export default function OccupationalHealth() {
       <header className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto py-20 px-5 items-center md:items-start">
         <motion.div initial="hidden" animate="visible" className="flex-1 md:pt-7">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-[#ff1493] leading-snug">
-            Rethink <span className="text-[#1392d3]">Occupational Health</span>
+            CURATE <span className="text-[#1392d3]">Occupational Health</span>
           </h1>
           <p className="text-lg md:text-2xl mt-6 text-[#1392d3] max-w-xl">
             Not just checking boxes—transforming workforce wellness through journeys, not programs.
