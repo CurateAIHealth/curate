@@ -6,8 +6,12 @@ import {
   User,
   LogIn,
   Sparkles,
-  Menu
+  Menu,Activity, Heart, Thermometer, Mic, Apple,
+  BookOpen, Music, Hammer, Brain,
+  PersonStanding, 
 } from "lucide-react";
+
+
 export const heroContent = {
   title: 'A Complete Home Health Professional',
   subtitle: 'We care for you and your beloved. Supporting your health journey with compassionate homecare services.',
@@ -139,3 +143,55 @@ export const images = {
   ],
 };
 
+export const DigitalAiHealservices = [
+  {
+    title: "Ayurveda",
+    desc: "Ancient science meets digital intelligence—restoring balance and well-being through holistic traditions and modern insights.",
+    icon: Activity, image: "Icons/Ayurvedha.png"
+  },
+  {
+    title: "Modern Medicine",
+    desc: "Cutting-edge care enabled by AI, blending the latest evidence-based practice with a personalized, tech-empowered approach.",
+    icon: Heart, image: "Icons/medicine.png"
+  },
+  {
+    title: "Physiotherapy",
+    desc: "Movement and recovery guided by smart rehabilitation tools—supporting you on your journey towards optimal function.",
+    icon: Thermometer, image: "Icons/physio.png"
+  },
+  {
+    title: "Speech Therapy",
+    desc: "Connecting voices and unlocking communication with the support of integrated digital and traditional therapies.",
+    icon: Mic, image: "Icons/speech.png"
+  },
+  {
+    title: "Nutrition",
+    desc: "Personalized dietary guidance powered by expert knowledge and AI insights for lifelong wellness.",
+    icon: Apple, image: "Icons/nutrition.png"
+  },
+  {
+    title: "Yoga & Meditation",
+    desc: "Mind and body connectivity, bringing ancient healing into the digital age for greater balance and calm.",
+    icon: PersonStanding, image: "Icons/yoga.png"
+  },
+  {
+    title: "Behavior Therapy",
+    desc: "Empowering positive change through tech-enhanced behavioral strategies within a compassionate network.",
+    icon: BookOpen, image: "Icons/behavior.png"
+  },
+  {
+    title: "Music Therapy",
+    desc: "Harnessing the healing power of sound and rhythm—supported by innovative, tech-enabled care.",
+    icon: Music, image: "Icons/music.png"
+  },
+  {
+    title: "Occupational Therapy",
+    desc: "Fostering independence and daily skills with digital and personalized rehabilitation programs.",
+    icon: Hammer, image: "Icons/occupation.png"
+  },
+  {
+    title: "Psychology",
+    desc: "Promoting mental wellness and resilience, integrating modern psychology with digital advancement.",
+    icon: Brain, image: "Icons/psychology.png"
+  }
+];
