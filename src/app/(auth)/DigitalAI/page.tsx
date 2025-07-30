@@ -68,7 +68,7 @@ export default function HospitalDesign() {
 
     
       <section className="relative h-auto py-20 sm:py-24 md:py-2 flex items-center overflow-hidden bg-gradient-to-br from-blue-100 to-pink-100">
-        <img src="Icons/ModernHospitalCoridar.png" alt="Modern hospital corridor" className="absolute inset-0 w-full h-full object-cover object-center z-0" />
+
         <div className="absolute inset-0 bg-white/60" />
         <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.1 }} className="relative z-10 px-4 sm:px-6 max-w-full sm:max-w-xl md:max-w-4xl mx-auto text-center">
           <h1 className="text-md sm:text-md md:text-5xl font-extrabold text-[#ff1493] mb-4 leading-tight drop-shadow-md">CURATE Digital AI Health</h1>
