@@ -21,7 +21,7 @@ const mainMenu = [
 
     { label: "Home Health", icon: <BriefcaseMedical size={18} />, href: "/" },
     { label: "Ocuppational Health", icon: <User size={18} />, href: "/occupational" },
-    { label: "Digital AI Health", icon: <User size={18} />, href: "/DigitalAIHealth" },
+    { label: "Digital AI Health", icon: <User size={18} />, href: "/DigitalAI" },
     { label: "About US", icon: <User size={18} />, href: "/AboutUS" },
     { label: "Login", icon: <LogIn size={18} />, href: "/sign-in" },
 ];

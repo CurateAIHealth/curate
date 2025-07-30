@@ -17,7 +17,7 @@ import { images } from "@/Lib/HomePageContent";
 const mainMenu = [
   { label: "Home Health", icon: <BriefcaseMedical size={18} />, href: "/" },
   { label: "Occupational Health", icon: <User size={18} />, href: "/occupational" },
-  { label: "Digital AI Health", icon: <User size={18} />, href: "/DigitalAIHealth" },
+  { label: "Digital AI Health", icon: <User size={18} />, href: "/DigitalAI" },
   { label: "About Us", icon: <User size={18} />, href: "/AboutUS" },
   { label: "Login", icon: <LogIn size={18} />, href: "/sign-in" },
 ];
