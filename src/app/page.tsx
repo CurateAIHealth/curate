@@ -85,8 +85,9 @@ setShowPopUp(true)
   return (
         <div className="font-sans min-h-screen bg-[#f7fafd]">
 
-            <nav className="hidden md:flex justify-between items-center max-w-7xl mx-auto px-10 py-5">
+            <nav className="flex justify-between items-center max-w-7xl mx-auto px-10 py-5">
                 <div className="flex items-center gap-3">
+                    <a href='/'>
                       <img
                                   src="/Icons/Curate-logo.png"
                                   alt="Curate AI Health Logo"
@@ -95,9 +96,9 @@ setShowPopUp(true)
                                   
                                   className="object-contain"
                                 />
-                    
+                    </a>
                 </div>
-                <div className="flex gap-7 items-center">
+                <div className="hidden md:flex gap-7 items-center">
                     {mainMenu.map((item) => (
                         <a
                             key={item.href}
