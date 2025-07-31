@@ -103,7 +103,7 @@ export default function About() {
         <div className="max-w-7xl mx-auto flex justify-between items-center py-4 px-6">
           <a href="/">
             <img
-              src="/icons/curate-logo.png"
+              src="/Icons/Curate-logo.png"
               alt="Curate AI Health Logo"
               width={46}
               height={36}
