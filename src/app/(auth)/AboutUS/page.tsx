@@ -274,7 +274,7 @@ export default function About() {
           className="hover:bg-pink-600 text-white p-3 rounded-full shadow-lg transition"
           aria-label="Instagram"
         >
-          <img alt="Instagram" src="/icons/insta.svg" className="w-10 h-10" />
+          <img alt='Instagram' src="Icons/insta.svg" className="w-10 h-10" />
         </a>
         <a
           href="https://www.linkedin.com/in/yourprofile"
@@ -283,7 +283,7 @@ export default function About() {
           className="hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition"
           aria-label="LinkedIn"
         >
-          <img alt="LinkedIn" src="/icons/linkedin.png" className="w-10 h-10" />
+          <img alt='LinkedIn' src="Icons/Linkedin.png" className="w-10 h-10" />
         </a>
       </div>
 
