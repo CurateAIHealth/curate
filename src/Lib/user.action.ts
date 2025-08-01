@@ -507,3 +507,25 @@ export const UpdateUserVerificationstatus = async (UserId: string, UpdatedStatus
   }
 }
 
+
+export const UpdateUserEmailVerificationstatus = async (UserId: string, UpdatedStatus: string) => {
+  try {
+    const Cluster = await clientPromise
+    const Db = Cluster.db("CurateInformation")
+    const Collection = Db.collection("Registration")
+    const UpdateVerificationStatus = await Collection.updateOne(
+      { userId: UserId }, {
+      $set: {
+        EmailVerification: UpdatedStatus==="Verified"?true:false
+      }
+    }
+    )
+    if (UpdateVerificationStatus.modifiedCount === 0) {
+      return { success: false, message: 'Internal Error Try Again!' };
+    }
+
+    return { success: true, message: 'Verification Status updated successfully.' };
+  } catch (err: any) {
+    return err
+  }
+}

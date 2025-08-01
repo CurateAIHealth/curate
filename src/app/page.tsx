@@ -40,7 +40,7 @@ export default function StaticInfoPage() {
       try {
         const ProfileInformation = await GetUserInformation(localValue)
        
-        if (ProfileInformation?.Email === "admin@curatehealth.in") {
+        if ((ProfileInformation?.Email === "admin@curatehealth.in") ||(ProfileInformation?.Email ==="Info@curatehealth.in")) {
           router.push("/AdminPage");
          return
         }
