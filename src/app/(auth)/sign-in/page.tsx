@@ -38,6 +38,7 @@ export default function SignIn() {
       }
 
     } catch (err) {
+      setsigninStatus(true)
       setError('Something went wrong. Please try again.');
     }
   };

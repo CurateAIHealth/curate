@@ -42,7 +42,7 @@ export default function StaticInfoPage() {
 
        const email = ProfileInformation?.Email?.toLowerCase();
 
-if (email === "admin@curatehealth.in" || email === "info@curatehealth.in") {
+if (email === "admin@curatehealth.in" || email === "info@curatehealth.in" || email=== 'gouricurate@gmail.com') {
   router.push("/AdminPage");
   return;
 }
