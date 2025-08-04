@@ -41,7 +41,7 @@ export default function RegisterPage() {
             {userType === 'doctor' && <DoctorForm  />}
             {userType === 'nurse' && <NurseForm  />}
             {userType === 'patient' && <PatientForm  />}
-                {userType === 'Organisation' && <OrganizationForm/>}
+            {userType === 'Organisation' && <OrganizationForm/>}
             { userType ===  'Healthcare Assistant'&&<HealthcareAssistantForm/>}
           </div>
         </div>

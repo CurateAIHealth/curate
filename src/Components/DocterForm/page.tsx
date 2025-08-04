@@ -247,11 +247,11 @@ const EmailComponent = memo(({ UpdatedFilterUserId }: { UpdatedFilterUserId: str
       const htmlComponent = ReactDOMServer.renderToString(<EmailComponent UpdatedFilterUserId={uuidv4()} />);
 
       try {
-        await axios.post('/api/MailSend', {
-          to: formData.Email,
-          subject: 'Curate AI Digital Health Email Verification',
-          html: htmlComponent,
-        });
+        // await axios.post('/api/MailSend', {
+        //   to: formData.Email,
+        //   subject: 'Curate AI Digital Health Email Verification',
+        //   html: htmlComponent,
+        // });
         setStatusMesssage(Result.message);
 
         setFormData({
