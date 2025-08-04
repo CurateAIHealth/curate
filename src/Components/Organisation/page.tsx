@@ -145,11 +145,11 @@ setSubmissionRequest(false)
         </div>
       ));
             const htmlComponent = ReactDOMServer.renderToString(<EmailComponent UpdatedFilterUserId={uuidv4()} />);
-      await axios.post('/api/MailSend', {
-        to: formData.Email,
-        subject: 'Curate Digital AI Health Email Verification',
-        html: htmlComponent,
-      });
+      // await axios.post('/api/MailSend', {
+      //   to: formData.Email,
+      //   subject: 'Curate Digital AI Health Email Verification',
+      //   html: htmlComponent,
+      // });
 
       setStatusMessage(result.message);
       setFormData({

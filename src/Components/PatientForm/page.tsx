@@ -109,9 +109,7 @@ const updatedFamilyMembers = [...familyMembers];
   }
 
   if (name === 'Age') {
-    const digitsOnly = value.replace(/\D/g, '').slice(0, 3);
-    setFormData(prev => ({ ...prev, Age: digitsOnly }));
-    return;
+    setFormData(prev => ({ ...prev, [name]: value }));
   }
 
   if (name === 'dateofBirth') {
@@ -241,11 +239,11 @@ const updatedFamilyMembers = [...familyMembers];
         </div>
       ));
             const htmlComponent = ReactDOMServer.renderToString(<EmailComponent UpdatedFilterUserId={uuidv4()} />);
-      await axios.post('/api/MailSend', {
-        to: formData.Email,
-        subject: 'Curate Digital AI Health Email Verification',
-        html: htmlComponent,
-      });
+      // await axios.post('/api/MailSend', {
+      //   to: formData.Email,
+      //   subject: 'Curate Digital AI Health Email Verification',
+      //   html: htmlComponent,
+      // });
       setStatusMessage(result.message);
       setFormData({
         userType: 'patient',
@@ -329,7 +327,7 @@ const updatedFamilyMembers = [...familyMembers];
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs ">Date Of Birth</label>
-        <input type="date" className="input-style" name="dateofBirth" onChange={handleChange} required />
+        <input type="date" className="input-style" name="dateofBirth" onChange={handleChange}  />
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs ">Select Gender</label>
@@ -504,7 +502,7 @@ const updatedFamilyMembers = [...familyMembers];
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs ">Date Of Birth</label>
-                  <input type="date" className="input-style" name="dateofBirth" onChange={(e: any) => handleNewChange(index, e)} required />
+                  <input type="date" className="input-style" name="dateofBirth" onChange={(e: any) => handleNewChange(index, e)}  />
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs ">Select Gender</label>

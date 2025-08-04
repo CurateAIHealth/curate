@@ -63,7 +63,7 @@ const fields = [
   { label: "Phone No 1", icon: <Phone />, type: "tel", required: true },
   { label: "Phone No 2", icon: <Phone />, type: "tel", required: false },
   { label: "Patient Full Name", icon: <User />, type: "text", required: true },
-  { label: "Date of Birth", type: "date", required: true },
+  { label: "Date of Birth", type: "date",  },
   { label: "Age", type: "number", required: true },
   { label: "Address", icon: <MapPin />, type: "text", required: true },
   { label: "Landmark", icon: <Landmark />, type: "text", required: false },
@@ -292,13 +292,13 @@ const router=useRouter()
       isValid = false;
     }
 
-    if (!endDate) {
-      newErrors["Service end D/M/Y"] = "Service end date is required.";
-      isValid = false;
-    } else if (isNaN(new Date(endDate).getTime())) {
-      newErrors["Service end D/M/Y"] = "Invalid service end date.";
-      isValid = false;
-    }
+    // if (!endDate) {
+    //   newErrors["Service end D/M/Y"] = "Service end date is required.";
+    //   isValid = false;
+    // } else if (isNaN(new Date(endDate).getTime())) {
+    //   newErrors["Service end D/M/Y"] = "Invalid service end date.";
+    //   isValid = false;
+    // }
 
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
       newErrors["Service end D/M/Y"] = "End date cannot be before start date.";
