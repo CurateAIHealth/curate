@@ -70,9 +70,14 @@ export default function UserTableList() {
         const localValue = localStorage.getItem("UserId");
         const ProfileInformation = await GetUserInformation(localValue);
         setUserFirstName(ProfileInformation.FirstName)
-        if ((ProfileInformation?.Email !== "admin@curatehealth.in") &&(ProfileInformation?.Email !=="Info@curatehealth.in")) {
-          router.push("/");
-        }
+      
+    if (
+  ProfileInformation?.Email?.toLowerCase() !== "admin@curatehealth.in" &&
+  ProfileInformation?.Email?.toLowerCase() !== "info@curatehealth.in"
+) {
+  router.push("/");
+}
+
         const RegisterdUsersResult = await GetRegidterdUsers();
         setUsers(RegisterdUsersResult || []);
         setIsChecking(false);

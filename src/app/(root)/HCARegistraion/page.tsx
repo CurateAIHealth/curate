@@ -3,6 +3,8 @@
 import HCAMobileView from '@/Components/HCAMobileView/page';
 import { GetUserInformation, PostFullRegistration } from '@/Lib/user.action';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
+
 import { useCallback, useEffect, useState } from 'react';
 
 
@@ -15,6 +17,7 @@ export default function DoctorProfileForm() {
   const [UpdateingStatus, SetUpdateingStatus] = useState(true);
   const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
   const [isChecking, setIsChecking] = useState(true);
+  const router=useRouter()
   const [Docs, setDocs] = useState({
     ProfilePic: DEFAULT_PROFILE_PIC,
     PanCard: '',
@@ -22,7 +25,7 @@ export default function DoctorProfileForm() {
     AccountPassBook: '',
     CertificatOne: '',
     CertificatTwo: '',
-    VideoFile:''
+    VideoFile: ''
   });
   const [form, setForm] = useState({
     title: '',
@@ -163,7 +166,7 @@ export default function DoctorProfileForm() {
         const ProfileInformation = await GetUserInformation(localValue);
 
         SetProfileName(ProfileInformation.FirstName);
-          setIsChecking(false) 
+        setIsChecking(false)
 
         setDocs((prev) => ({
           ...prev,
@@ -255,51 +258,51 @@ export default function DoctorProfileForm() {
     Fetch();
   }, []);
 
- const handleImageChange = useCallback(
+  const handleImageChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
-        setUpdatedStatusMessage('');
-        const file = e.target.files?.[0];
-        const inputName = e.target.name;
-        if (!file) return;
+      setUpdatedStatusMessage('');
+      const file = e.target.files?.[0];
+      const inputName = e.target.name;
+      if (!file) return;
 
-    
-        if (file.size > 10 * 1024 * 1024) {
-            alert('File too large. Max allowed is 10MB.');
-            return;
-        }
 
-        
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg'];
-        if (!allowedTypes.includes(file.type)) {
-            alert('Only image or video files are allowed.');
-            return;
-        }
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File too large. Max allowed is 10MB.');
+        return;
+      }
 
-        const formData = new FormData();
-        formData.append('file', file);
 
-        try {
-        
-            setUpdatedStatusMessage(`Please Wait ${inputName} uploading....`)
-            setPictureUploading(true);
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Only image or video files are allowed.');
+        return;
+      }
 
-            const res = await axios.post('/api/Upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+      const formData = new FormData();
+      formData.append('file', file);
 
-            setDocs((prev) => ({ ...prev, [inputName]: res.data.url }));
-            setUpdatedStatusMessage(`${inputName} uploaded successfully!`);
-        } catch (error: any) {
-            console.error('Upload failed:', error.message);
-            setUpdatedStatusMessage('Document upload failed!');
-        } finally {
-            setPictureUploading(false);
-        }
+      try {
+
+        setUpdatedStatusMessage(`Please Wait ${inputName} uploading....`)
+        setPictureUploading(true);
+
+        const res = await axios.post('/api/Upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        setDocs((prev) => ({ ...prev, [inputName]: res.data.url }));
+        setUpdatedStatusMessage(`${inputName} uploaded successfully!`);
+      } catch (error: any) {
+        console.error('Upload failed:', error.message);
+        setUpdatedStatusMessage('Document upload failed!');
+      } finally {
+        setPictureUploading(false);
+      }
     },
     []
-);
+  );
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
@@ -324,26 +327,42 @@ export default function DoctorProfileForm() {
         SetUpdateingStatus(true);
         return;
       }
+      const requiredFields: (keyof typeof Docs)[] = [
+        'ProfilePic',
+        'PanCard',
+        'AdharCard',
+        'AccountPassBook',
+        'CertificatOne',
+        'CertificatTwo',
+      ];
 
-      if (Object.values(Docs).some((each) => each === '')) {
-        alert("Upload all the Required Documents along with Video!")
+      const isMissingRequired = requiredFields.some((key) => Docs[key] === '');
+
+
+      if (isMissingRequired) {
+        alert("Upload all the required documents. Video is optional.");
         SetUpdateingStatus(true);
-        return
+        return;
       }
       const localValue = localStorage.getItem('UserId');
-      const FinelForm = { ...form, Documents: Docs,UserId:localValue };
+      const FinelForm = { ...form, Documents: Docs, UserId: localValue };
 
       setUpdatedStatusMessage('Successfully Updated Your Information.');
+      
       SetUpdateingStatus(true);
       const PostResult = await PostFullRegistration(FinelForm)
       console.log("Result---", PostResult)
+      const Timer=setInterval(()=>{
+        router.push("/HomePage")
+      },1000)
+      return ()=>clearInterval(Timer)
     },
     [form, completion, Docs]
   );
- if (isChecking) {
+  if (isChecking) {
     return (
       <div className='h-screen flex items-center justify-center font-bold'>
-      Please wait while we load your profile...
+        Please wait while we load your profile...
       </div>
     );
   }
@@ -388,7 +407,7 @@ export default function DoctorProfileForm() {
             <p className="text-gray-600 text-center mb-8">
               Fill in the details below to keep your profile accurate and up-to-date.
             </p>
-             <p className={`text-sm text-center font-semibold ${UpdatedStatusMessage!=="Successfully Updated Your Information."?"text-green-800":"text-red-500"} mt-2`}>{UpdatedStatusMessage}</p>
+            <p className={`text-sm text-center font-semibold ${UpdatedStatusMessage !== "Successfully Updated Your Information." ? "text-green-800" : "text-red-500"} mt-2`}>{UpdatedStatusMessage}</p>
           </div>
           <div className="flex flex-col  items-center justify-center text-center  ">
             <svg className="w-18 h-18 transform -rotate-90" viewBox="0 0 100 100">
@@ -1370,7 +1389,7 @@ export default function DoctorProfileForm() {
             </div>
           </section>
 
-                        <div className="md:flex justify-center gap-2">
+          {/* <div className="md:flex justify-center gap-2">
                             <section className="md:w-1/2 bg-blue-50 mt-2 p-2 rounded-xl shadow-md">
                                 <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
                                     <svg
@@ -1423,7 +1442,7 @@ export default function DoctorProfileForm() {
                                 </div>
                             </section>
                         </div>
-                    
+                     */}
 
           <div className="flex justify-center mt-8">
             <button
