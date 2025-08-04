@@ -39,11 +39,13 @@ export default function StaticInfoPage() {
       const localValue = localStorage.getItem("UserId");
       try {
         const ProfileInformation = await GetUserInformation(localValue)
-       
-        if ((ProfileInformation?.Email === "admin@curatehealth.in") ||(ProfileInformation?.Email ==="Info@curatehealth.in")) {
-          router.push("/AdminPage");
-         return
-        }
+
+       const email = ProfileInformation?.Email?.toLowerCase();
+
+if (email === "admin@curatehealth.in" || email === "info@curatehealth.in") {
+  router.push("/AdminPage");
+  return;
+}
         if (ProfileInformation?.FinelVerification === false&&ProfileInformation?.userType==="healthcare-assistant") {
           router.push("/HCARegistraion")
           return

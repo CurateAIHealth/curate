@@ -13,6 +13,9 @@ import {
   CreditCard,
 } from "lucide-react";
 import axios from 'axios';
+import { useRouter } from "next/navigation";
+import { PostFullRegistration } from "@/Lib/user.action";
+
 
 const familyRelations = [
   "Father",
@@ -105,7 +108,7 @@ export default function PatientForm() {
   const [pictureUploading, setPictureUploading] = useState(false);
   const [docs, setDocs] = useState<{ [key: string]: string }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+const router=useRouter()
   const validateField = (label: string, value: string): string => {
     const fieldConfig = fields.find((f) => f.label === label);
     let error = "";
@@ -301,22 +304,28 @@ export default function PatientForm() {
       newErrors["Service end D/M/Y"] = "End date cannot be before start date.";
       isValid = false;
     }
-    if (!docs.videoUpload) {
-      setUpdatedStatusMessage("Please upload the required video file.");
-      isValid = false;
-    } else {
-      setUpdatedStatusMessage("");
-    }
+    // if (!docs.videoUpload) {
+    //   setUpdatedStatusMessage("Please upload the required video file.");
+    //   isValid = false;
+    // } else {
+    //   setUpdatedStatusMessage("");
+    // }
 
     setFormErrors(newErrors);
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit =async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
       console.log("Form Submitted:", { ...formData, uploadedDocs: docs });
-      alert("Form submitted successfully!");
+     
+const PostPatientData=await PostFullRegistration(formData)
+ alert("Form submitted successfully!");
+       const Timer=setInterval(()=>{
+        router.push("/HomePage")
+      },1000)
+      return ()=>clearInterval(Timer)
     } else {
       console.log("Form errors:", formErrors);
     }
@@ -460,7 +469,7 @@ export default function PatientForm() {
             return null;
           })}
 
-          {currentStep === steps.length - 1 && (
+          {/* {currentStep === steps.length - 1 && (
             <div className="mx-auto max-w-lg rounded-xl bg-white shadow p-6 my-8">
               <div
                 className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg transition p-8 cursor-pointer ${
@@ -526,7 +535,7 @@ export default function PatientForm() {
                 </div>
               )}
             </div>
-          )}
+          )} */}
           <div className="mt-8 flex justify-between">
             {currentStep > 0 && (
               <button
@@ -574,7 +583,7 @@ export default function PatientForm() {
           )}
 
           <div className="mx-auto max-w-lg rounded-xl bg-white shadow p-6 my-8">
-            <div
+            {/* <div
               className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg transition p-8 cursor-pointer ${
                 dragActive ? "bg-blue-50 border-blue-500" : "border-gray-300"
               }`}
@@ -630,7 +639,7 @@ export default function PatientForm() {
               I hereby acknowledge that I have read, understood, and fully accept
               all the terms and conditions set forth by HCA. I agree to comply with
               these terms in their entirety.
-            </div>
+            </div> */}
 
             {updatedStatusMessage && (
               <div className={`mt-2 text-xs ${updatedStatusMessage.includes('failed') || updatedStatusMessage.includes('too large') || updatedStatusMessage.includes('Only image or video files are allowed') ? 'text-red-600' : 'text-blue-600'}`}>
