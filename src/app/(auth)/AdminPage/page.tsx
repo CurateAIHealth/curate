@@ -73,7 +73,8 @@ export default function UserTableList() {
       
     if (
   ProfileInformation?.Email?.toLowerCase() !== "admin@curatehealth.in" &&
-  ProfileInformation?.Email?.toLowerCase() !== "info@curatehealth.in"
+  ProfileInformation?.Email?.toLowerCase() !== "info@curatehealth.in" &&
+    ProfileInformation?.Email?.toLowerCase() !== "gouricurate@gmail.com"
 ) {
   router.push("/");
 }
