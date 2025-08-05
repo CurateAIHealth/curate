@@ -572,7 +572,7 @@ const updatedFamilyMembers = [...familyMembers];
             setCheckBoxStatus(e.target.checked)
           }
         />
-        <p>Accept <a className='text-blue-600 cursor-pointer' href='/TermsAndConditions'>Terms&Condtions</a></p>
+        <p>Accept <a className='text-blue-600 cursor-pointer' href='/PatientTermsAndConditions'>Terms&Condtions</a></p>
       </div>
 
       <button
