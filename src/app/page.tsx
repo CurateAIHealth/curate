@@ -1,7 +1,7 @@
 'use client';
 
 
-import { GetUserInformation } from '@/Lib/user.action';
+import { GetUserCompliteInformation, GetUserInformation } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { cta, features, heroContent, pricing, services, testimonials } from "@/Lib/HomePageContent";
@@ -39,7 +39,8 @@ export default function StaticInfoPage() {
       const localValue = localStorage.getItem("UserId");
       try {
         const ProfileInformation = await GetUserInformation(localValue)
-
+ const FillInformation=await GetUserCompliteInformation(localValue)
+        console.log("Test Full Information----",FillInformation.HCAComplitInformation)
        const email = ProfileInformation?.Email?.toLowerCase();
 
 if (email === "admin@curatehealth.in" || email === "info@curatehealth.in" || email=== 'gouricurate@gmail.com') {

@@ -8,7 +8,8 @@ import {
 import {
   PostFullRegistration,
   GetUserInformation,
-  UpdateFinelVerification
+  UpdateFinelVerification,
+  GetUserCompliteInformation
 } from "@/Lib/user.action";
 
 const familyRelations: any[] = [
@@ -99,7 +100,10 @@ export default function PatientForm() {
       const userId = localStorage.getItem("UserId");
       if (!userId) return;
       try {
+        
         const data = await GetUserInformation(userId);
+        const FillInformation=await GetUserCompliteInformation(userId)
+        console.log("Test Full Information----",FillInformation)
         setForm((prev) => ({
           ...prev,
           patientFullName: data.FirstName || "",
@@ -242,9 +246,12 @@ const handleChange = useCallback((e: any) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
- console.log("Test----",form)
+
     const userId = localStorage.getItem("UserId");
-    await PostFullRegistration(form);
+  
+      const FinelForm = { ...form,  UserId: userId };
+       console.log("Test----",FinelForm)
+    await PostFullRegistration(FinelForm);
     await UpdateFinelVerification(userId);
     setstatusMessage("Patient Details Updated Successfully");
      const Timer=setInterval(()=>{

@@ -468,6 +468,28 @@ export const GetUserInformation = async (UserIdFromLocal: any) => {
   }
 }
 
+export const GetUserCompliteInformation = async (UserIdFromLocal: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("CompliteRegistrationInformation");
+
+    const UserInformation: any = await collection.findOne({
+      "HCAComplitInformation.UserId": UserIdFromLocal,
+    });
+
+    if (!UserInformation) return null;
+
+    return {
+      ...UserInformation,
+      _id: UserInformation._id?.toString() ?? null,
+    };
+  } catch (err: any) {
+    console.error("Error fetching user info:", err);
+    return null;
+  }
+};
+
 
 export const GetRegidterdUsers = async () => {
   try {
