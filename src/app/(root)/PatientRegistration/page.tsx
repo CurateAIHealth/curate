@@ -1,23 +1,17 @@
-"use client";
+'use client';
 
-import React, { useState, useRef, useCallback } from "react";
-import {
-  CalendarDays,
-  Phone,
-  User,
-  MapPin,
-  Landmark,
-  IndianRupee,
-  Mail,
-  Fingerprint,
-  CreditCard,
-} from "lucide-react";
-import axios from 'axios';
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { PostFullRegistration } from "@/Lib/user.action";
+import {
+  Phone, User, MapPin, Landmark, Mail, Fingerprint, CalendarDays
+} from "lucide-react";
+import {
+  PostFullRegistration,
+  GetUserInformation,
+  UpdateFinelVerification
+} from "@/Lib/user.action";
 
-
-const familyRelations = [
+const familyRelations: any[] = [
   "Father",
   "Mother",
   "Son",
@@ -54,774 +48,510 @@ const familyRelations = [
   "Other",
 ];
 
-const formatAadhar = (a: string) =>
-  a.replace(/\s/g, "").replace(/(\d{4})(?=\d)/g, "$1 ").trim();
-
-const isValidAadhar = (a: string) => /^\d{12}$/.test(a.replace(/\s/g, ""));
-
-const fields = [
-  { label: "Phone No 1", icon: <Phone />, type: "tel", required: true },
-  { label: "Phone No 2", icon: <Phone />, type: "tel", required: false },
-  { label: "Patient Full Name", icon: <User />, type: "text", required: true },
-  { label: "Date of Birth", type: "date",  },
-  { label: "Age", type: "number", required: true },
-  { label: "Address", icon: <MapPin />, type: "text", required: true },
-  { label: "Landmark", icon: <Landmark />, type: "text", required: false },
-  { label: "City", type: "text", required: true },
-  { label: "State", type: "text", required: true },
-  { label: "Pin Code", type: "text", required: true },
-  { label: "Email Id", icon: <Mail />, type: "email", required: false },
-  {
-    label: "Client Aadhar No",
-    icon: <Fingerprint />,
-    validateAadhar: true,
-    type: "text",
-    required: false,
-  },
-  { label: "Client relation to patient", type: "dropdown", required: false },
-  { label: "Alternative Client Contact", type: "tel", icon: <Phone />, required: false },
-  {
-    label: "Patient Aadhar Number",
-    type: "text",
-    icon: <Fingerprint />,
-    validateAadhar: true,
-    required: false,
-  },
-  { label: "Mode of Pay", icon: <CreditCard />, type: "text", required: true },
-  { label: "Registration Rs.", type: "number", icon: <IndianRupee />, required: true },
-  { label: "Advance paid Rs.", type: "number", icon: <IndianRupee />, required: false },
-  { label: "Service Type", type: "text", required: true },
-  { label: "Per day charge Rs", type: "number", icon: <IndianRupee />, required: true },
-  { label: "Invoice Cycle", type: "text", required: true },
-  { label: "Stay In", type: "text", required: true },
-  { label: "Long day", type: "text", required: true },
-  { label: "Long Night", type: "text", required: true },
-];
+function calculateAge(dobStr: string) {
+  if (!dobStr) return "";
+  const today = new Date();
+  const dob = new Date(dobStr);
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return age >= 0 ? age.toString() : "";
+}
 
 export default function PatientForm() {
-  const [formData, setFormData] = useState<{ [key: string]: string }>({});
-  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
-  const [currentStep, setCurrentStep] = useState(0);
-  const [dragActive, setDragActive] = useState(false);
-  const [accepted, setAccepted] = useState(false);
-  const [updatedStatusMessage, setUpdatedStatusMessage] = useState('');
-  const [pictureUploading, setPictureUploading] = useState(false);
-  const [docs, setDocs] = useState<{ [key: string]: string }>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
-const router=useRouter()
-  const validateField = (label: string, value: string): string => {
-    const fieldConfig = fields.find((f) => f.label === label);
-    let error = "";
+  const router = useRouter();
+  const [statusMessage, setstatusMessage] = useState("");
+  const [form, setForm] = useState({
+    phoneNo1: "",
+    patientFullName: "",
+    dateOfBirth: "",
+    age: "",
+    address: "",
+    landmark: "",
+    city: "",
+    state: "",
+    pinCode: "",
+    emailId: "",
+    clientAadharNo: "",
+    clientRelationToPatient: "",
+    alternativeClientContact: "",
+    modeOfPay: "",
+    registrationRs: "",
+    advancePaidRs: "",
+    serviceType: "",
+    perDayChargeRs: "",
+    invoiceCycle: "",
+    patientAadharNumber: "",
+    stayIn: false,
+    longDay: false,
+    longNight: false,
+    serviceStartDate: "",
+    serviceEndDate: "",
+  });
 
-    if (fieldConfig?.required && !value.trim()) {
-      return `${label} is required.`;
+  const [errors, setErrors] = useState<{ [k: string]: string }>({});
+  const [ageWarning, setAgeWarning] = useState("");
+
+  useEffect(() => {
+    async function fetchUserData() {
+      const userId = localStorage.getItem("UserId");
+      if (!userId) return;
+      try {
+        const data = await GetUserInformation(userId);
+        setForm((prev) => ({
+          ...prev,
+          patientFullName: data.FirstName || "",
+          dateOfBirth: data.dateofBirth || "",
+          phoneNo1: data.ContactNumber || "",
+          emailId: data.Email || "",
+          clientAadharNo: data.AadharNumber || "",
+          city: data.Location || "",
+        }));
+      } catch (e) {}
     }
+    fetchUserData();
+  }, []);
 
-    switch (label) {
-      case "Phone No 1":
-      case "Phone No 2":
-      case "Alternative Client Contact":
-        if (value.trim() && !/^\d{10}$/.test(value)) {
-          error = "Phone number must be 10 digits.";
-        }
+  useEffect(() => {
+    if (form.dateOfBirth) {
+      const calculatedAge = calculateAge(form.dateOfBirth);
+      setForm((prev) => ({ ...prev, age: calculatedAge }));
+      if (calculatedAge !== "" && Number(calculatedAge) < 18) {
+        setAgeWarning("Warning: Patient is under 18 years old.");
+      } else {
+        setAgeWarning("");
+      }
+    } else {
+      setForm((prev) => ({ ...prev, age: "" }));
+      setAgeWarning("");
+    }
+  }, [form.dateOfBirth]);
+
+const handleChange = useCallback((e: any) => {
+  const { name, value, type, checked } = e.target;
+
+  let updatedValue: any = value;
+  if (type === "checkbox") {
+    updatedValue = checked;
+  }
+
+
+  if (["stayIn", "longDay", "longNight"].includes(name)) {
+    setForm((prev) => ({
+      ...prev,
+      stayIn: false,
+      longDay: false,
+      longNight: false,
+      [name]: checked,
+    }));
+  } else {
+    setForm((prev) => ({ ...prev, [name]: updatedValue }));
+  }
+
+
+  setErrors((prevErrors) => {
+    const newErrors = { ...prevErrors };
+    switch (name) {
+      case "phoneNo1":
+        if (/^\d{10}$/.test(updatedValue)) delete newErrors.phoneNo1;
         break;
-      case "Patient Full Name":
-        if (value.trim() && !/^[a-zA-Z\s]+$/.test(value)) {
-          error = "Name can only contain letters and spaces.";
-        }
+      case "patientFullName":
+        if (updatedValue.trim()) delete newErrors.patientFullName;
         break;
-      case "Age":
-        if (value.trim() && (!/^\d+$/.test(value) || parseInt(value) <= 0)) {
-          error = "Age must be a positive number.";
-        }
+      case "city":
+        if (updatedValue.trim()) delete newErrors.city;
         break;
-      case "Date of Birth":
-        if (value.trim()) {
-          const dobDate = new Date(value);
-          if (isNaN(dobDate.getTime())) {
-            error = "Invalid date format.";
-          } else if (dobDate > new Date()) {
-            error = "Date of Birth cannot be in the future.";
-          }
-        } else if (fieldConfig?.required) {
-          error = `${label} is required.`;
-        }
+      case "pinCode":
+        if (/^\d{6}$/.test(updatedValue)) delete newErrors.pinCode;
         break;
-      case "Pin Code":
-        if (value.trim() && !/^\d{6}$/.test(value)) {
-          error = "Pin Code must be 6 digits.";
-        }
+      case "serviceType":
+        if (updatedValue) delete newErrors.serviceType;
         break;
-      case "Email Id":
-        if (value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          error = "Invalid email format.";
-        }
+      case "modeOfPay":
+        if (updatedValue) delete newErrors.modeOfPay;
         break;
-      case "Client Aadhar No":
-      case "Patient Aadhar Number":
-        if (value.trim() && !isValidAadhar(value)) {
-          error = `${label} must be a 12-digit number.`;
-        }
+      case "registrationRs":
+        if (updatedValue) delete newErrors.registrationRs;
         break;
-      case "Registration Rs.":
-      case "Advance paid Rs.":
-      case "Per day charge Rs":
-        if (value.trim() && (!/^\d+(\.\d+)?$/.test(value) || parseFloat(value) < 0)) {
-          error = `${label} must be a non-negative number.`;
-        }
+      case "advancePaidRs":
+        if (updatedValue) delete newErrors.advancePaidRs;
         break;
-      case "Service start D/M/Y":
-      case "Service end D/M/Y":
-        if (value.trim() && isNaN(new Date(value).getTime())) {
-          error = "Invalid date format.";
-        }
+         case "perDayChargeRs":
+        if (updatedValue) delete newErrors.invoiceCycle;
         break;
-      case "Client relation to patient":
-        if (fieldConfig?.required && !value.trim()) {
-          error = `${label} is required.`;
-        }
+      case "invoiceCycle":
+        if (updatedValue) delete newErrors.invoiceCycle;
+        break;
+      case "patientAadharNumber":
+        if (/^\d{12}$/.test(updatedValue)) delete newErrors.patientAadharNumber;
+        break;
+      case "clientAadharNo":
+        if (/^\d{12}$/.test(updatedValue)) delete newErrors.clientAadharNo;
+        break;
+      case "serviceStartDate":
+        if (updatedValue) delete newErrors.serviceStartDate;
         break;
       default:
-        if (fieldConfig?.required && !value.trim()) {
-          error = `${label} is required.`;
-        }
         break;
     }
-    return error;
-  };
 
-  const handleChange = (label: string, value: string) => {
-    if (label === "Client Aadhar No" || label === "Patient Aadhar Number") {
-      const formatted = formatAadhar(value);
-      setFormData((prev) => ({ ...prev, [label]: formatted }));
-      const error = validateField(label, formatted);
-      setFormErrors((prev) => ({ ...prev, [label]: error }));
-    } else if (label === "Date of Birth") {
-      setFormData((prev) => ({ ...prev, [label]: value }));
-      if (value) {
-        const dob = new Date(value);
-        const today = new Date();
-        let age = today.getFullYear() - dob.getFullYear();
-        const monthDiff = today.getMonth() - dob.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-          age--;
-        }
-        setFormData((prev) => ({ ...prev, Age: age.toString() }));
-        if (age < 18) {
-          setFormErrors((prev) => ({ ...prev, DateOfBirthWarning: "Warning: Patient is under 18 years old." }));
-        } else {
-          setFormErrors((prev) => {
-            const copy = { ...prev };
-            delete copy.DateOfBirthWarning;
-            return copy;
-          });
-        }
-        const error = validateField(label, value);
-        setFormErrors((prev) => ({ ...prev, [label]: error }));
+   
+    if (["stayIn", "longDay", "longNight"].includes(name)) {
+      if (name === "stayIn" && checked || name === "longDay" && checked || name === "longNight" && checked) {
+        delete newErrors.stayDuration;
       }
-    } else {
-      setFormData((prev) => ({ ...prev, [label]: value }));
-      const error = validateField(label, value);
-      setFormErrors((prev) => ({ ...prev, [label]: error }));
     }
-  };
 
-  const handleImageChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      setUpdatedStatusMessage('');
-      const file = e.target.files?.[0];
-      const inputName = e.target.name;
+    return newErrors;
+  });
 
-      if (!file) return;
+ 
+  setstatusMessage("");
+}, []);
 
-      if (file.size > 10 * 1024 * 1024) {
-        setUpdatedStatusMessage('File too large. Max allowed is 10MB.');
-        return;
-      }
-
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg'];
-      if (!allowedTypes.includes(file.type)) {
-        setUpdatedStatusMessage('Only image or video files are allowed.');
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append('file', file);
-
-      try {
-        setUpdatedStatusMessage(`Please wait, ${inputName} uploading....`);
-        setPictureUploading(true);
-
-        const res = await axios.post('/api/Upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        setDocs((prev) => ({ ...prev, [inputName]: res.data.url }));
-        setUpdatedStatusMessage(`${inputName} uploaded successfully!`);
-      } catch (error: any) {
-        console.error('Upload failed:', error.message);
-        setUpdatedStatusMessage('Document upload failed!');
-      } finally {
-        setPictureUploading(false);
-      }
-    },
-    []
-  );
 
   const validateForm = () => {
-    let newErrors: { [key: string]: string } = {};
-    let isValid = true;
-    fields.forEach((field) => {
-      const value = formData[field.label] || "";
-      const error = validateField(field.label, value);
-      if (error) {
-        newErrors[field.label] = error;
-        isValid = false;
-      }
-    });
-    const startDate = formData["Service start D/M/Y"] || "";
-    const endDate = formData["Service end D/M/Y"] || "";
+    const newErr: { [k: string]: string } = {};
+    if (!form.phoneNo1.match(/^\d{10}$/)) newErr.phoneNo1 = "Enter 10 digit phone number";
+    if (!form.patientFullName) newErr.patientFullName = "Enter name";
+    if (!form.city) newErr.city = "Required";
+    if (!form.pinCode.match(/^\d{6}$/)) newErr.pinCode = "6 digits";
+    if (!form.serviceType) newErr.serviceType = "Select service type";
+    if (!(form.stayIn || form.longDay || form.longNight)) newErr.stayDuration = "Select stay option";
+    if (!form.modeOfPay) newErr.modeOfPay = "Select mode of payment";
+    if (!form.registrationRs) newErr.registrationRs = "Enter registration fee";
+    if (!form.advancePaidRs) newErr.advancePaidRs = "Enter advance paid";
+    if (!form.invoiceCycle) newErr.invoiceCycle = "Select invoice cycle";
+    if (!form.patientAadharNumber.match(/^\d{12}$/)) newErr.patientAadharNumber = "Enter valid 12-digit Aadhar";
+    if (!form.clientAadharNo.match(/^\d{12}$/)) newErr.clientAadharNo = "Enter valid 12-digit Aadhar";
+    if (!form.serviceStartDate) newErr.serviceStartDate = "Start date required";
+    if (!form.perDayChargeRs) newErr.perDayChargeRs = "perDayChargeRs required";
+   
 
-    if (!startDate) {
-      newErrors["Service start D/M/Y"] = "Service start date is required.";
-      isValid = false;
-    } else if (isNaN(new Date(startDate).getTime())) {
-      newErrors["Service start D/M/Y"] = "Invalid service start date.";
-      isValid = false;
+    setErrors(newErr);
+    if (Object.keys(newErr).length > 0) {
+      setstatusMessage("Some Fields Missing or Invalid");
+      return false;
     }
-
-    // if (!endDate) {
-    //   newErrors["Service end D/M/Y"] = "Service end date is required.";
-    //   isValid = false;
-    // } else if (isNaN(new Date(endDate).getTime())) {
-    //   newErrors["Service end D/M/Y"] = "Invalid service end date.";
-    //   isValid = false;
-    // }
-
-    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      newErrors["Service end D/M/Y"] = "End date cannot be before start date.";
-      isValid = false;
-    }
-    // if (!docs.videoUpload) {
-    //   setUpdatedStatusMessage("Please upload the required video file.");
-    //   isValid = false;
-    // } else {
-    //   setUpdatedStatusMessage("");
-    // }
-
-    setFormErrors(newErrors);
-    return isValid;
+    setstatusMessage("");
+    return true;
   };
 
-  const handleSubmit =async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log("Form Submitted:", { ...formData, uploadedDocs: docs });
-     
-const PostPatientData=await PostFullRegistration(formData)
- alert("Form submitted successfully!");
-       const Timer=setInterval(()=>{
+    if (!validateForm()) return;
+
+    const userId = localStorage.getItem("UserId");
+    await PostFullRegistration(form);
+    await UpdateFinelVerification(userId);
+    setstatusMessage("Patient Details Updated Successfully");
+     const Timer=setInterval(()=>{
         router.push("/HomePage")
-      },1000)
+      },1200)
       return ()=>clearInterval(Timer)
-    } else {
-      console.log("Form errors:", formErrors);
-    }
   };
-  const steps = [
-    {
-      title: "Contact Information",
-      content: (
-        <FormGrid>
-          {fields.slice(0, 6).map((field, index) => (
-            <FloatingInput
-              key={index}
-              {...field}
-              value={formData[field.label] || ""}
-              onChange={handleChange}
-              error={formErrors[field.label]}
-              required={field.required}
-            />
-          ))}
-          {formErrors.DateOfBirthWarning && (
-            <p className="text-red-500 text-xs mt-1 ml-2">{formErrors.DateOfBirthWarning}</p>
-          )}
-        </FormGrid>
-      ),
-    },
-    {
-      title: "Personal Details",
-      content: (
-        <FormGrid>
-          {fields.slice(6, 14).map((field, index) => {
-            if (field.label === "Client relation to patient") {
-              return (
-                <DropdownInput
-                  key={index}
-                  label={field.label}
-                  options={familyRelations}
-                  value={formData[field.label] || ""}
-                  onChange={handleChange}
-                  error={formErrors[field.label]}
-                  required={field.required}
-                />
-              );
-            } else if (field.validateAadhar) {
-              return (
-                <AadharInput
-                  key={index}
-                  label={field.label}
-                  icon={field.icon}
-                  value={formData[field.label] || ""}
-                  onChange={handleChange}
-                  error={formErrors[field.label]}
-                  required={field.required}
-                />
-              );
-            }
-            return (
-              <FloatingInput
-                key={index}
-                {...field}
-                value={formData[field.label] || ""}
-                onChange={handleChange}
-                error={formErrors[field.label]}
-                required={field.required}
-              />
-            );
-          })}
-        </FormGrid>
-      ),
-    },
-    {
-      title: "Service Information",
-      content: (
-        <FormGrid>
-          <DateInput
-            label="Service start D/M/Y"
-            value={formData["Service start D/M/Y"] || ""}
-            onChange={handleChange}
-            error={formErrors["Service start D/M/Y"]}
-            required={true}
-          />
-          <DateInput
-            label="Service end D/M/Y"
-            value={formData["Service end D/M/Y"] || ""}
-            onChange={handleChange}
-            error={formErrors["Service end D/M/Y"]}
-            required={true}
-          />
-        </FormGrid>
-      ),
-    },
-    {
-      title: "Payment Details",
-      content: (
-        <FormGrid>
-          {fields.slice(14).map((field, index) => (
-            <FloatingInput
-              key={index}
-              {...field}
-              value={formData[field.label] || ""}
-              onChange={handleChange}
-              error={formErrors[field.label]}
-              required={field.required}
-            />
-          ))}
-        </FormGrid>
-      ),
-    },
-  ];
-
   return (
-    <div className="min-h-[86.5vh] flex items-center justify-center">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full bg-gradient-to-br from-[#f5faff] to-[#e3effb] dark:from-[#1c1c1e] dark:to-[#2c2c2e] rounded-3xl shadow-2xl px-2 sm:px-10 py-4 overflow-x-hidden hide-scrollbar"
-        noValidate
-      >
-        <h2 className="md:text-3xl text-xl md:text-4xl font-bold text-center text-[#ff1493] dark:text-white mb-2">
-          🧾 Patient Registration
-        </h2>
-        <p className="text-center">{updatedStatusMessage}</p>
+    <form
+      onSubmit={handleSubmit}
+      className="w-full max-w-7xl mx-auto bg-[#f6faff] rounded-[24px] shadow-lg px-6 md:px-12 pt-8 pb-12"
+      style={{ fontFamily: "inherit" }}
+      noValidate
+    >
+      <h2 className="text-4xl md:text-5xl font-extrabold text-center flex items-center justify-center gap-2 text-[#ff1493] mb-8">
+        <span role="img" aria-label="note">🧾</span>
+        Patient Registration
+      </h2>
 
-        <div className="block md:hidden">
-          <SectionTitle title={steps[currentStep].title} />
-          {steps[currentStep].content}
-          {Object.entries(formErrors).map(([key, errorMsg]) => {
-            if (!errorMsg) return null;
-            const currentStepChildren = React.Children.toArray(
-              steps[currentStep].content.props.children
-            );
-            const isFieldInCurrentStep = currentStepChildren.some(
-              (child: any) => child?.props?.label === key
-            );
+      <SectionTitle>Contact Information</SectionTitle>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        <FormBox icon={<Phone />} placeholder="Phone No 1 *" name="phoneNo1" value={form.phoneNo1}
+          onChange={handleChange} error={errors.phoneNo1} required />
+        <FormBox icon={<User />} placeholder="Patient Full Name *" name="patientFullName" value={form.patientFullName}
+          onChange={handleChange} error={errors.patientFullName} required />
+        <FormBox icon={<CalendarDays />} placeholder="Date of Birth" name="dateOfBirth" value={form.dateOfBirth}
+          onChange={handleChange} error={errors.dateOfBirth} type="date" label="Date of Birth" />
+        <div>
+          <input
+            className="w-full bg-white border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-300 font-medium text-gray-600 focus:outline-none placeholder-gray-400"
+            type="number"
+            name="age"
+            value={form.age}
+            disabled
+            placeholder="Age *"
+            aria-describedby="ageWarning"
+          />
+          {ageWarning && <p id="ageWarning" className="text-xs mt-1 text-yellow-600 font-semibold">{ageWarning}</p>}
+          {errors.age && <span className="text-xs text-red-500">{errors.age}</span>}
+        </div>
+        <FormBox icon={<MapPin />} placeholder="Address *" name="address" value={form.address}
+          onChange={handleChange} error={errors.address} required />
+      </div>
 
-            if (isFieldInCurrentStep) {
-              return (
-                <p key={key} className="text-red-600 text-sm mt-2 ml-2">
-                  {errorMsg}
-                </p>
-              );
-            }
-            return null;
-          })}
+      <SectionTitle>Personal Details</SectionTitle>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        <div>
+          <FormBox icon={<Landmark />} placeholder="Landmark" name="landmark" value={form.landmark}
+            onChange={handleChange} error={errors.landmark} />
+        </div>
+       
+        <FormBox placeholder="City *" name="city" value={form.city}
+          onChange={handleChange} error={errors.city} required />
+        <FormBox placeholder="Pin Code" name="pinCode" value={form.pinCode}
+          onChange={handleChange} error={errors.pinCode} />
+        <FormBox icon={<Mail />} placeholder="Email Id" name="emailId" value={form.emailId}
+          onChange={handleChange} error={errors.emailId} />
+        <FormBox icon={<Fingerprint />} placeholder="Client Aadhar No" name="clientAadharNo" value={form.clientAadharNo}
+          onChange={handleChange} error={errors.clientAadharNo} />
 
-          {/* {currentStep === steps.length - 1 && (
-            <div className="mx-auto max-w-lg rounded-xl bg-white shadow p-6 my-8">
-              <div
-                className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg transition p-8 cursor-pointer ${
-                  dragActive ? "bg-blue-50 border-blue-500" : "border-gray-300"
-                }`}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragActive(true);
-                }}
-                onDragLeave={() => setDragActive(false)}
-                onDrop={(e) => {
-                  setDragActive(false);
-                  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    const pseudoEvent = {
-                      target: { files: e.dataTransfer.files, name: 'videoUpload' } as HTMLInputElement
-                    } as React.ChangeEvent<HTMLInputElement>;
-                    handleImageChange(pseudoEvent);
-                  }
-                }}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="video/*"
-                  style={{ display: "none" }}
-                  onChange={handleImageChange}
-                  name="videoUpload"
-                />
-              {docs.videoUpload ? <video src={docs.videoUpload} controls className="w-full h-full object-contain rounded-lg" /> :
-                <div className="mb-2 text-gray-500 flex flex-col items-center">
-                  <div className="mb-2 text-4xl">🎬</div>
-                  <div>
-                    Drag and drop or{" "}
-                    <span
-                      className="text-blue-600 font-semibold underline cursor-pointer"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      browse for a video
-                    </span>
-                  </div>
-            
-                </div>}
-                {docs.videoUpload && (
-                  <div className="mt-2 text-green-700 text-sm font-medium">
-                    Selected: {docs.videoUpload.split('/').pop()}
-                  </div>
-                )}
-                {pictureUploading && <p className="text-blue-500">Uploading...</p>}
-              </div>
+        <div>
+          <select
+            className="w-full bg-white border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-300 font-medium text-gray-600 focus:outline-none"
+            name="clientRelationToPatient"
+            value={form.clientRelationToPatient}
+            onChange={handleChange}
+          >
+            <option value="">Select Client relation to patient</option>
+            {familyRelations.map(r => <option key={r}>{r}</option>)}
+          </select>
+          {errors.clientRelationToPatient && <span className="text-xs text-red-500">{errors.clientRelationToPatient}</span>}
+        </div>
+        <FormBox icon={<Phone />} placeholder="Alternative Client Contact" name="alternativeClientContact" value={form.alternativeClientContact}
+          onChange={handleChange} error={errors.alternativeClientContact} />
+      </div>
 
-              <div className="mt-6 text-xs text-gray-600 text-center">
-                Read the Following Content While Recording Video
-              </div>
-              <div className="mt-4 bg-gray-100 rounded p-3 text-center text-sm font-medium">
-                I hereby acknowledge that I have read, understood, and fully accept
-                all the terms and conditions set forth by HCA. I agree to comply with
-                these terms in their entirety.
-              </div>
-
-              {updatedStatusMessage && (
-                <div className={`mt-2 text-xs ${updatedStatusMessage.includes('failed') || updatedStatusMessage.includes('too large') || updatedStatusMessage.includes('Only image or video files are allowed') ? 'text-red-600' : 'text-blue-600'}`}>
-                  {updatedStatusMessage}
-                </div>
-              )}
-            </div>
-          )} */}
-          <div className="mt-8 flex justify-between">
-            {currentStep > 0 && (
-              <button
-                type="button"
-                onClick={() => setCurrentStep(currentStep - 1)}
-                className="text-white bg-gray-400 hover:bg-gray-500 px-4 py-2 rounded-lg"
-              >
-                Previous
-              </button>
-            )}
-            {currentStep < steps.length - 1 ? (
-              <button
-                type="button"
-                onClick={() => setCurrentStep(currentStep + 1)}
-                className="bg-[#50c896] hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                type="submit"
-                className="bg-[#50c896] hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
-              >
-                Submit
-              </button>
-            )}
-          </div>
+      <SectionTitle>Service Information</SectionTitle>
+      <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div>
+    
+          <select
+            className="w-full bg-white border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-300 font-medium text-gray-600 focus:outline-none"
+            name="serviceType"
+            value={form.serviceType}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Select Service Type</option>
+            <option value="Health care assistant">HCA</option>
+            <option value="Nurse">Nurse</option>
+            <option value='Physiotherapy'>Physiotherapy</option>
+          </select>
+          {errors.serviceType && <span className="text-xs text-red-500">{errors.serviceType}</span>}
+        </div>
+        <div >
+          <FormBox icon={<Fingerprint />} placeholder="Patient Aadhar Number" name="patientAadharNumber" value={form.patientAadharNumber}
+            onChange={handleChange} error={errors.patientAadharNumber} />
         </div>
 
-        <div className="hidden md:block">
-          {steps.map((step, idx) => (
-            <div key={idx}>
-              <SectionTitle title={step.title} />
-              {step.content}
-            </div>
-          ))}
-
-          {Object.entries(formErrors).map(
-            ([key, errorMsg]) =>
-              errorMsg && (
-                <p key={key} className="text-red-600 text-sm mt-2 ml-2">
-                  {errorMsg}
-                </p>
-              )
-          )}
-
-          <div className="mx-auto max-w-lg rounded-xl bg-white shadow p-6 my-8">
-            {/* <div
-              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg transition p-8 cursor-pointer ${
-                dragActive ? "bg-blue-50 border-blue-500" : "border-gray-300"
-              }`}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragActive(true);
-              }}
-              onDragLeave={() => setDragActive(false)}
-              onDrop={(e) => {
-                setDragActive(false);
-                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                  const pseudoEvent = {
-                    target: { files: e.dataTransfer.files, name: 'videoUpload' } as HTMLInputElement
-                  } as React.ChangeEvent<HTMLInputElement>;
-                  handleImageChange(pseudoEvent);
-                }
-              }}
-            >
+        <div>
+          <label className="mb-2 block font-semibold text-gray-700">Stay Duration (Select One) *</label>
+          <div className="flex flex-wrap gap-4 items-center">
+            <label className="flex items-center space-x-2">
               <input
-                ref={fileInputRef}
-                type="file"
-                accept="video/*"
-                style={{ display: "none" }}
-                onChange={handleImageChange}
-                name="videoUpload"
+                type="checkbox"
+                name="stayIn"
+                checked={form.stayIn}
+                onChange={handleChange}
               />
-              {docs.videoUpload ? <video src={docs.videoUpload} controls className="w-full h-full object-contain rounded-lg" /> :
-                <div className="mb-2 text-gray-500 flex flex-col items-center">
-                  <div className="mb-2 text-4xl">🎬</div>
-                  <div>
-                    Drag and drop or{" "}
-                    <span
-                      className="text-blue-600 font-semibold underline cursor-pointer"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      browse for a video
-                    </span>
-                  </div>
-            
-                </div>}
-              {docs.videoUpload && (
-                <div className="mt-2 text-green-700 text-sm font-medium">
-                  Selected: {docs.videoUpload.split('/').pop()}
-                </div>
-              )}
-              {pictureUploading && <p className="text-blue-500">Uploading...</p>}
-            </div>
-
-            <div className="mt-6 text-xs text-gray-600 text-center">
-              Read the Following Content While Recording Video
-            </div>
-            <div className="mt-4 bg-gray-100 rounded p-3 text-center text-sm font-medium">
-              I hereby acknowledge that I have read, understood, and fully accept
-              all the terms and conditions set forth by HCA. I agree to comply with
-              these terms in their entirety.
-            </div> */}
-
-            {updatedStatusMessage && (
-              <div className={`mt-2 text-xs ${updatedStatusMessage.includes('failed') || updatedStatusMessage.includes('too large') || updatedStatusMessage.includes('Only image or video files are allowed') ? 'text-red-600' : 'text-blue-600'}`}>
-                {updatedStatusMessage}
-              </div>
-            )}
-
-            <div className="mt-10 flex justify-center">
-              <button
-                type="submit"
-                className="bg-[#50c896] hover:bg-blue-700 text-white px-8 py-3 rounded-xl shadow-lg font-medium transition-all duration-300"
-              >
-                Submit Registration
-              </button>
-            </div>
+              <span>24HRS (Stay In)</span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                name="longDay"
+                checked={form.longDay}
+                onChange={handleChange}
+              />
+              <span>12hrs (Long Day)</span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                name="longNight"
+                checked={form.longNight}
+                onChange={handleChange}
+              />
+              <span>12hrs (Long Night)</span>
+            </label>
           </div>
+          {errors.stayDuration && <span className="text-xs text-red-500">{errors.stayDuration}</span>}
         </div>
-      </form>
-    </div>
+      </div>
+<SectionTitle>Service Information</SectionTitle>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+        <FormBox
+          icon={<CalendarDays />}
+          placeholder="Service Start Date *"
+          name="serviceStartDate"
+          value={form.serviceStartDate}
+          onChange={handleChange}
+          error={errors.serviceStartDate}
+          type="date"
+        />
+        <FormBox
+          icon={<CalendarDays />}
+          placeholder="Service End Date *"
+          name="serviceEndDate"
+          value={form.serviceEndDate}
+          onChange={handleChange}
+          error={errors.serviceEndDate}
+          type="date"
+        />
+      </div>
+      <SectionTitle>Payment Information</SectionTitle>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        <div>
+      
+          <select
+            className="w-full bg-white border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-300 font-medium text-gray-600 focus:outline-none"
+            name="modeOfPay"
+            value={form.modeOfPay}
+            onChange={handleChange}
+          >
+            <option value="">Select Payment Mode</option>
+            <option value="Cash">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="Card">Card</option>
+          </select>
+          {errors.modeOfPay && <span className="text-xs text-red-500">{errors.modeOfPay}</span>}
+        </div>
+
+        <FormBox
+          placeholder="Registration Fee (Rs)"
+          name="registrationRs"
+          value={form.registrationRs}
+          onChange={handleChange}
+          error={errors.registrationRs}
+          type="number"
+        />
+
+           <FormBox
+          placeholder="Per Day Charges"
+          name="perDayChargeRs"
+          value={form.perDayChargeRs}
+          onChange={handleChange}
+          error={errors.perDayChargeRs}
+          type="number"
+        />
+
+        <FormBox
+          placeholder="Advance Paid (Rs)"
+          name="advancePaidRs"
+          value={form.advancePaidRs}
+          onChange={handleChange}
+          error={errors.advancePaidRs}
+          type="number"
+        />
+
+        <div>
+ 
+          <select
+            className="w-full bg-white border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-300 font-medium text-gray-600 focus:outline-none"
+            name="invoiceCycle"
+            value={form.invoiceCycle}
+            onChange={handleChange}
+          >
+            <option value="">Select Invoice Cycle</option>
+            <option value="One Week">One Week</option>
+            <option value="15 Days">15 Days</option>
+            <option value="One Month">One Month</option>
+          </select>
+          {errors.invoiceCycle && <span className="text-xs text-red-500">{errors.invoiceCycle}</span>}
+        </div>
+      </div>
+
+      <p className={`${statusMessage==="Patient Details Updated Successfully"?"text-green-800":"text-red-500"} text-center font-bold`}>{statusMessage}</p>
+      <div className="text-center mt-6">
+        <button type="submit" className="bg-[#ff1493] py-3 px-10 text-white font-bold rounded-xl shadow-lg hover:bg-pink-400">
+          Submit Registration
+        </button>
+      </div>
+    </form>
   );
 }
 
-function SectionTitle({ title }: { title: string }) {
+function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-lg font-semibold text-[#1392d3] dark:text-gray-200 mt-10 mb-4 border-b border-gray-200 dark:border-gray-700 pb-1">
-      {title}
+    <h3 className="text-lg font-bold text-[#08a5ec] my-4 mb-3 pb-1">
+      {children}
     </h3>
   );
 }
 
-function FormGrid({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">{children}</div>
-  );
-}
-
-function FloatingInput({
-  label,
-  type = "text",
-  icon,
-  onChange,
-  value,
-  error,
-  required = false,
-}: {
-  label: string;
+function FormBox({ icon, placeholder, name, value, onChange, error, type = "text", required = false, label }: {
+  icon?: React.ReactNode;
+  placeholder?: string;
+  name: string;
+  value: string;
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
+  error?: string;
   type?: string;
-  icon?: React.ReactNode;
-  onChange: (label: string, value: string) => void;
-  value: string;
-  error?: string;
   required?: boolean;
+  label?: string;
 }) {
-  const id = label.toLowerCase().replace(/\s+/g, "-");
   return (
     <div className="relative">
-      {icon && (
-        <span className="absolute left-3 top-3.5 text-gray-400 dark:text-gray-500">{icon}</span>
-      )}
+      {icon && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>}
       <input
-        id={id}
+        className="w-full bg-white border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-300 font-medium text-gray-600 focus:outline-none placeholder-gray-400"
+        style={{ paddingLeft: icon ? "2.3rem" : undefined }}
         type={type}
-        placeholder=" "
+        name={name}
         value={value}
-        className={`peer w-full px-3 ${
-          icon ? "pl-10" : "pl-3"
-        } pt-5 pb-2 rounded-lg border ${
-          error ? "border-red-500" : "border-gray-300"
-        } dark:border-gray-600 bg-white dark:bg-[#2c2c2e] text-sm text-gray-800 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-        onChange={(e) => onChange(label, e.target.value)}
+        onChange={onChange}
+        placeholder={placeholder}
         required={required}
+        autoComplete="off"
       />
-      <label
-        htmlFor={id}
-        className={`absolute ${icon ? "left-10" : "left-3"} top-2 text-xs text-gray-500 dark:text-gray-400 peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-xs peer-focus:text-blue-600 dark:peer-focus:text-blue-400 transition-all`}
-      >
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      {error && <p className="text-red-600 text-xs mt-1 ml-2">{error}</p>}
+      {error && <span className="text-xs text-red-500">{error}</span>}
     </div>
   );
 }
+                
 
-function DropdownInput({
-  label,
-  options,
-  onChange,
-  value,
-  error,
-  required = false,
-}: {
-  label: string;
-  options: string[];
-  onChange: (label: string, value: string) => void;
-  value: string;
-  error?: string;
-  required?: boolean;
-}) {
-  return (
-    <div className="relative">
-      <select
-        className={`w-full px-3 pt-5 pb-2 rounded-lg border ${
-          error ? "border-red-500" : "border-gray-300"
-        } dark:border-gray-600 bg-white dark:bg-[#2c2c2e] text-sm text-gray-800 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-        onChange={(e) => onChange(label, e.target.value)}
-        value={value}
-        required={required}
-      >
-        <option value="">Select {label}</option>
-        {options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
-      <label className="absolute left-3 top-2 text-xs text-gray-500 dark:text-gray-400">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      {error && <p className="text-red-600 text-xs mt-1 ml-2">{error}</p>}
-    </div>
-  );
-}
 
-function DateInput({
-  label,
-  onChange,
-  value,
-  error,
-  required = false,
-}: {
-  label: string;
-  onChange: (label: string, value: string) => void;
-  value: string;
-  error?: string;
-  required?: boolean;
-}) {
-  const id = label.toLowerCase().replace(/\s+/g, "-");
-  return (
-    <div className="relative">
-      <CalendarDays className="absolute left-3 top-3.5 text-gray-400 dark:text-gray-500" />
-      <input
-        id={id}
-        type="date"
-        value={value}
-        className={`peer w-full pl-10 pt-5 pb-2 rounded-lg border ${
-          error ? "border-red-500" : "border-gray-300"
-        } dark:border-gray-600 bg-white dark:bg-[#2c2c2e] text-sm text-gray-800 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-        onChange={(e) => onChange(label, e.target.value)}
-        required={required}
-      />
-      <label htmlFor={id} className="absolute left-10 top-2 text-xs text-gray-500 dark:text-gray-400">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      {error && <p className="text-red-600 text-xs mt-1 ml-2">{error}</p>}
-    </div>
-  );
-}
 
-function AadharInput({
-  label,
-  icon,
-  value,
-  onChange,
-  error,
-  required = false,
-}: {
-  label: string;
-  icon?: React.ReactNode;
-  value: string;
-  onChange: (label: string, value: string) => void;
-  error?: string;
-  required?: boolean;
-}) {
-  return (
-    <FloatingInput
-      label={label}
-      type="text"
-      icon={icon}
-      value={value}
-      onChange={(l, val) => onChange(l, val)}
-      error={error}
-      required={required}
-    />
-  );
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

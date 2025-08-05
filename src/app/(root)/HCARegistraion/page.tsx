@@ -1,7 +1,7 @@
 'use client';
 
 import HCAMobileView from '@/Components/HCAMobileView/page';
-import { GetUserInformation, PostFullRegistration } from '@/Lib/user.action';
+import { GetUserInformation, PostFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
@@ -350,7 +350,9 @@ export default function DoctorProfileForm() {
       setUpdatedStatusMessage('Successfully Updated Your Information.');
       
       SetUpdateingStatus(true);
+      const userId = localStorage.getItem("UserId");
       const PostResult = await PostFullRegistration(FinelForm)
+      const Result=await UpdateFinelVerification(userId)
       console.log("Result---", PostResult)
       const Timer=setInterval(()=>{
         router.push("/HomePage")

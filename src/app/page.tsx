@@ -54,7 +54,7 @@ if (email === "admin@curatehealth.in" || email === "info@curatehealth.in" || ema
           router.push("/PatientRegistration")
           return
         }
-        if (ProfileInformation?.VerificationStatus === "Success") {
+        if (ProfileInformation?.VerificationStatus === "Success"||ProfileInformation?.FinelVerification) {
           router.push("/HomePage")
           return
 
