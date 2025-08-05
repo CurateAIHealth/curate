@@ -18,7 +18,7 @@ export default function UserTableList() {
   const [users, setUsers] = useState([]);
   const [isChecking, setIsChecking] = useState(true);
   const [UserFirstName,setUserFirstName]=useState("")
-
+const [UpdateduserType,setuserType]=useState("")
   const Status = ['Pending', 'Success', 'Block'];
   const EmailVerificationStatus = ['Verified', 'Pending'];
 
@@ -70,6 +70,15 @@ export default function UserTableList() {
         const localValue = localStorage.getItem("UserId");
         const ProfileInformation = await GetUserInformation(localValue);
         setUserFirstName(ProfileInformation.FirstName)
+
+
+        if( ProfileInformation?.Email?.toLowerCase() === "info@curatehealth.in"){
+          setuserType("patient")
+        }
+
+        if( ProfileInformation?.Email?.toLowerCase() === "gouricurate@gmail.com"){
+          setuserType("healthcare-assistant")
+        }
       
     if (
   ProfileInformation?.Email?.toLowerCase() !== "admin@curatehealth.in" &&
@@ -89,6 +98,9 @@ export default function UserTableList() {
     Fetch();
   }, [updatedStatusMsg]);
 
+  const FilterUserType=(e:any)=>{
+setuserType(e.target.value)
+  }
   const ShowDompleteInformation = (userId: any) => {
     const userDetails = users.find((each: any) => each.userId === userId);
     if (userDetails) {
@@ -100,6 +112,9 @@ export default function UserTableList() {
     localStorage.removeItem('UserId');
     router.push('/');
   };
+
+
+
   if (isChecking) {
     return (
       <div className="h-screen flex items-center justify-center font-bold">
@@ -107,54 +122,83 @@ export default function UserTableList() {
       </div>
     );
   }
+const UpdatedFilterUserType = Finel.filter((each) => {
+  return !UpdateduserType || each.userType === UpdateduserType;
+});
+ return (
+  <div className="min-h-screen w-full bg-gray-100 px-2 py-2 flex flex-col items-center">
+    <div className="bg-white rounded-full pl-1 shadow-md w-[70px] h-[70px] flex items-center justify-center">
+      <img
+        src="/Icons/Curate-logo.png"
+        alt="Curate AI Health Logo"
+        width={50}
+        height={50}
+        className="object-contain"
+      />
+    </div>
 
-  return (
-    <div className="min-h-screen w-full bg-gray-100 px-6 py-10 flex flex-col items-center">
-  
-      <Logo />
-      <button
-    className="absolute top-14 right-8 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md shadow"
-    onClick={handleLogout}
-  >
-    Logout
-  </button>
+    <button
+      className="absolute top-14 right-8 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md shadow"
+      onClick={handleLogout}
+    >
+      Logout
+    </button>
 
-      <div className='flex flex-col'>
-        <span className="text-[#ff1493] font-bold text-2xl">Curate</span>{' '}
-        <span className="text-teal-600 font-bold text-2xl">Digital AI</span>
-        
-      </div>
-      <h1 className="text-3xl font-bold text-gray-800 mb-8 mt-4"><span className='text-[#ff1493]'>Hi,{UserFirstName} </span>  Registered Users</h1>
+    <div className="flex">
+      <span className="text-[#ff1493] font-bold text-2xl mr-2">Curate</span>
+      <span className="text-teal-600 font-bold text-2xl">Digital AI</span>
+    </div>
 
-      <div className="w-full overflow-auto rounded-xl shadow-lg bg-white max-w-7xl">
-        {Finel.length > 0 ? (
-          <table className="w-full border border-gray-200 text-sm text-gray-700">
-            <thead className="bg-gradient-to-r from-teal-500 to-green-400 text-white text-left">
+    <h1 className="text-2xl font-bold text-gray-800 mb-2 mt-2">
+      <span className="text-[#ff1493]">Hi, {UserFirstName}</span> Here's the complete list of registered users.
+    </h1>
+
+    <div className="w-full max-w-7xl bg-white shadow-lg rounded-xl overflow-x-auto">
+      {UpdatedFilterUserType.length > 0 ? (
+        <div className="max-h-[500px] overflow-y-auto">
+          <table className="w-full text-sm text-gray-700 table-fixed">
+            <thead className="bg-gradient-to-r from-teal-500 to-green-400 text-white sticky top-0 z-10">
               <tr>
                 {tableHeaders.map((header) => (
-                  <th key={header} className="px-4 py-3 text-center capitalize border-r border-white">
+                  <th
+                    key={header}
+                    className="px-4 py-3 text-center capitalize border-r border-white"
+                  >
                     {header}
                   </th>
                 ))}
-                <th className="px-4 py-3 text-center capitalize border-r border-white">Email Verification</th>
-                <th className="px-4 py-3 text-center capitalize border-r border-white">Document Verification</th>
-                <th className="px-4 py-3 text-center capitalize border-r border-white">Details</th>
+                <th className="px-4 py-3 text-center capitalize border-r border-white">
+                  Email Verification
+                </th>
+                <th className="px-4 py-3 text-center capitalize border-r border-white">
+                  Document Verification
+                </th>
+                <th className="px-4 py-3 text-center capitalize border-r border-white">
+                  Details
+                </th>
               </tr>
             </thead>
             <tbody>
-              {Finel.map((user, index) => (
+              {UpdatedFilterUserType.map((user, index) => (
                 <tr key={index} className="bg-white hover:bg-gray-50">
                   {tableHeaders.map((field, idx) => (
-                    <td key={idx} className="px-4 py-3 border-t border-gray-200 text-center">
+                    <td
+                      key={idx}
+                      className="px-4 py-3 border-t border-gray-200 text-center break-words"
+                    >
                       {user[field as keyof typeof user]}
                     </td>
                   ))}
                   <td className="px-4 py-3 border-t border-gray-200 text-center">
                     <select
                       className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      defaultValue={user.EmailVerification  ? "Verified" : "Pending"}
+                      defaultValue={user.EmailVerification ? 'Verified' : 'Pending'}
                       onChange={(e) =>
-                        UpdateEmailVerificationStatus(user.FirstName, e.target.value, user.userId)
+                        UpdateEmailVerificationStatus(
+                          user.FirstName,
+                          e.target.value,
+                          user.userId
+                        )
                       }
                     >
                       {EmailVerificationStatus.map((status) => (
@@ -179,26 +223,30 @@ export default function UserTableList() {
                       ))}
                     </select>
                   </td>
-                  <td className="px-4 py-3 border-t border-gray-200 text-center cursor-pointer">
+                  <td className="px-12 py-3 border-t border-gray-200 text-center cursor-pointer">
                     <Eye onClick={() => ShowDompleteInformation(user.userId)} />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        ) : (
-          <p className="text-center py-10 text-gray-500">No users found.</p>
-        )}
-        {updatedStatusMsg && (
-          <p
-            className={`${
-              updatedStatusMsg.includes("Successfully") ? "text-green-800" : "text-gray-900"
-            } font-semibold text-center mt-4`}
-          >
-            {updatedStatusMsg}
-          </p>
-        )}
-      </div>
+        </div>
+      ) : (
+        <p className="text-center py-10 text-gray-500">No users found.</p>
+      )}
+      {updatedStatusMsg && (
+        <p
+          className={`${
+            updatedStatusMsg.includes('Successfully')
+              ? 'text-green-800'
+              : 'text-gray-900'
+          } font-semibold text-center mt-4`}
+        >
+          {updatedStatusMsg}
+        </p>
+      )}
     </div>
-  );
+  </div>
+);
+
 }
