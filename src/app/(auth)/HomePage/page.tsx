@@ -2,8 +2,14 @@
 
 import Logo from '@/Components/Logo/page';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export default function StaticInfoPage() {
+  const router = useRouter();
+   const handleLogout = () => {
+    localStorage.removeItem('UserId');
+    router.push('/');
+  };
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#D4FCF4] to-[#F0FFF4] px-6 py-12">
       <div className="max-w-3xl bg-white rounded-3xl shadow-xl p-10 text-center">
@@ -24,7 +30,14 @@ export default function StaticInfoPage() {
         <p className="text-gray-700 text-lg leading-relaxed">
           Our aim is to create classroom, outpatient, inpatient, daycare, home-based, and online therapy treatments for individuals.
         </p>
+          <button
+    className="mt-8 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md shadow"
+    onClick={handleLogout}
+  >
+    Logout
+  </button>
       </div>
+    
     </div>
   );
 }

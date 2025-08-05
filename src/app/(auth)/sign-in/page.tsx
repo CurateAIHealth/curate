@@ -1,44 +1,52 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { useSelector } from 'react-redux';
 import Logo from '@/Components/Logo/page';
 import { SignInRessult } from '@/Lib/user.action';
 
 export default function SignIn() {
   const router = useRouter();
-  const [signinStatus, setsigninStatus] = useState(true)
+  const [signinStatus, setsigninStatus] = useState(true);
   const [error, setError] = useState('');
-  const [loginInfo, setloginInfo] = useState({ Name: "Curate", Password: "Testing" })
+  const [loginInfo, setLoginInfo] = useState({
+    field_user: '',
+    field_pass: ''
+  });
+
+  // Clear inputs on initial load
+  useEffect(() => {
+    setLoginInfo({ field_user: '', field_pass: '' });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setsigninStatus(false)
+    setsigninStatus(false);
     try {
+      const Result: any = await SignInRessult({
+        Name: loginInfo.field_user,
+        Password: loginInfo.field_pass,
+      });
 
-      const Result:any = await SignInRessult(loginInfo)
-      console.log("Test result---",Result)
-      if(Result.success===false){
-        setsigninStatus(true)
-        setError(Result.message)
-        return
+      console.log("Test result---", Result);
+
+      if (Result.success === false) {
+        setsigninStatus(true);
+        setError(Result.message);
+        return;
       }
 
       if (Result !== null) {
-        
-        localStorage.setItem("UserId", Result)
-        setsigninStatus(true)
-        router.push("/")
+        localStorage.setItem("UserId", Result);
+        setsigninStatus(true);
+        router.push("/");
       } else {
-        setsigninStatus(true)
-        setError("Wrong Credentials..")
+        setsigninStatus(true);
+        setError("Wrong Credentials..");
       }
-
     } catch (err) {
-      setsigninStatus(true)
+      setsigninStatus(true);
       setError('Something went wrong. Please try again.');
     }
   };
@@ -48,58 +56,64 @@ export default function SignIn() {
   };
 
   const RestPassword = () => {
-    router.push("/SendUpdatePasswordMail")
-  }
+    router.push("/SendUpdatePasswordMail");
+  };
 
+  const UpdateLoginInfo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLoginInfo({ ...loginInfo, [e.target.name]: e.target.value });
+  };
 
-  const UpdateLoginInfo = (e: any) => {
-    setloginInfo({ ...loginInfo, [e.target.name]: e.target.value })
-  }
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-teal-100 p-4">
       <section className="w-full max-w-md bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl shadow-2xl p-6 text-center space-y-6 animate-fade-in">
         <Logo />
 
         <h1 className="text-3xl font-bold text-gray-800">
-          Sign in to <div>
-  <span style={{ color: '#50c896' }}>AI Digital</span>{' '}
-  <span style={{ color: '#50c896' }}>Health</span>
-</div>
-
+          Sign in to
+          <div>
+            <span style={{ color: '#50c896' }}>AI Digital</span>{' '}
+            <span style={{ color: '#50c896' }}>Health</span>
+          </div>
         </h1>
-        <form onSubmit={handleSubmit} className="space-y-4 text-left">
+
+        <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-left">
+          {/* Hidden dummy fields to prevent autofill */}
+          <input type="text" name="fakeusernameremembered" autoComplete="username" className="hidden" />
+          <input type="password" name="fakepasswordremembered" autoComplete="new-password" className="hidden" />
+
           <input
-            type="email"
+            type="text"
             placeholder="Email"
-            name='Name'
-            value={loginInfo.Name}
+            name="field_user"
+            value={loginInfo.field_user}
             onChange={UpdateLoginInfo}
+            autoComplete="off"
             required
             className="w-full text-center p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
           />
           <input
             type="password"
             placeholder="Password"
-            name='Password'
-            value={loginInfo.Password}
+            name="field_pass"
+            value={loginInfo.field_pass}
             onChange={UpdateLoginInfo}
+            autoComplete="new-password"
             required
             className="w-full p-2 text-center rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
           />
           {error && <p className="text-red-600 text-sm">{error}</p>}
-
 
           <button
             type="submit"
             className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 rounded-full shadow-lg transition duration-300"
           >
             {signinStatus ? "Sign In" : "Verifying your details. Please wait..."}
-
           </button>
         </form>
-        <div className='flex gap-4'>
+
+        <div className="flex gap-4">
           <div className="text-sm text-center text-gray-700 mt-4">
-            Forgot Your Password ?{' '}
+            Forgot Your Password?{' '}
             <button
               onClick={RestPassword}
               className="text-[#50c896] font-semibold hover:underline hover:cursor-pointer"
@@ -111,8 +125,7 @@ export default function SignIn() {
             Don't have an account?{' '}
             <button
               onClick={handleRegisterRedirect}
-className="text-[#50c896] font-semibold hover:underline hover:cursor-pointer"
-
+              className="text-[#50c896] font-semibold hover:underline hover:cursor-pointer"
             >
               Register here
             </button>
