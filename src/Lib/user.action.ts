@@ -529,3 +529,28 @@ export const UpdateUserEmailVerificationstatus = async (UserId: string, UpdatedS
     return err
   }
 }
+
+
+export const UpdateFinelVerification=async(inputUserId:any)=>{
+try{
+      const Clustor = await clientPromise
+    const Db = Clustor.db("CurateInformation")
+    const Collection = Db.collection("Registration")
+ 
+    const result = await Collection.updateOne(
+      { userId: inputUserId },
+      {
+        $set: {
+       FinelVerification:true
+        },
+      }
+    );
+        if (result.modifiedCount === 0) {
+      return { success: false, message: 'User not found or no changes made.' };
+    }
+
+    return { success: true, message: 'Password updated successfully.' };
+}catch(err:any){
+
+}
+}
