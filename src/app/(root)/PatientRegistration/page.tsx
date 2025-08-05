@@ -348,7 +348,7 @@ const handleChange = useCallback((e: any) => {
           </div>
       <h2 className="text-4xl md:text-5xl font-extrabold text-center flex items-center justify-center gap-2 text-[#ff1493] mb-8">
         <span role="img" aria-label="note">🧾</span>
-        Patient Registration
+        We Need a Bit More Info
       </h2>
 </div>
       <SectionTitle>Contact Information</SectionTitle>
