@@ -242,7 +242,7 @@ const handleChange = useCallback((e: any) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-
+ console.log("Test----",form)
     const userId = localStorage.getItem("UserId");
     await PostFullRegistration(form);
     await UpdateFinelVerification(userId);
@@ -252,6 +252,8 @@ const handleChange = useCallback((e: any) => {
       },1200)
       return ()=>clearInterval(Timer)
   };
+
+ 
   return (
     <form
       onSubmit={handleSubmit}
@@ -278,7 +280,7 @@ const handleChange = useCallback((e: any) => {
             type="number"
             name="age"
             value={form.age}
-            disabled
+            onChange={handleChange} 
             placeholder="Age *"
             aria-describedby="ageWarning"
           />
