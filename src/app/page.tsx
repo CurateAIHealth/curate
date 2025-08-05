@@ -39,8 +39,8 @@ export default function StaticInfoPage() {
       const localValue = localStorage.getItem("UserId");
       try {
         const ProfileInformation = await GetUserInformation(localValue)
- const FillInformation=await GetUserCompliteInformation(localValue)
-        console.log("Test Full Information----",FillInformation.HCAComplitInformation)
+        // const FillInformation=await GetUserCompliteInformation(localValue)
+        // console.log("Test Full Information----",FillInformation.HCAComplitInformation)
        const email = ProfileInformation?.Email?.toLowerCase();
 
 if (email === "admin@curatehealth.in" || email === "info@curatehealth.in" || email=== 'gouricurate@gmail.com') {
@@ -438,3 +438,6 @@ setShowPopUp(true)
         </div>
     );
 }
+
+
+
