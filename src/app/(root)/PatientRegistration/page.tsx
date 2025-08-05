@@ -11,6 +11,7 @@ import {
   UpdateFinelVerification,
   GetUserCompliteInformation
 } from "@/Lib/user.action";
+import axios from "axios";
 
 const familyRelations: any[] = [
   "Father",
@@ -64,6 +65,8 @@ function calculateAge(dobStr: string) {
 export default function PatientForm() {
   const router = useRouter();
   const [statusMessage, setstatusMessage] = useState("");
+    const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
+    const DEFAULT_PROFILE_PIC = '/Icons/DefaultProfileIcon.png';
   const [form, setForm] = useState({
     phoneNo1: "",
     patientFullName: "",
@@ -90,6 +93,7 @@ export default function PatientForm() {
     longNight: false,
     serviceStartDate: "",
     serviceEndDate: "",
+    ProfilePic:DEFAULT_PROFILE_PIC 
   });
 
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
@@ -259,6 +263,51 @@ const handleChange = useCallback((e: any) => {
       },1200)
       return ()=>clearInterval(Timer)
   };
+ const handleImageChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      setUpdatedStatusMessage('');
+      const file = e.target.files?.[0];
+      const inputName = e.target.name;
+      if (!file) return;
+
+
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File too large. Max allowed is 10MB.');
+        return;
+      }
+
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Only image or video files are allowed.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+
+        setUpdatedStatusMessage(`Please Wait ${inputName} uploading....`)
+        
+
+        const res = await axios.post('/api/Upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        setForm((prev) => ({ ...prev, [inputName]: res.data.url }));
+        setUpdatedStatusMessage(`${inputName} uploaded successfully!`);
+      } catch (error: any) {
+        console.error('Upload failed:', error.message);
+        setUpdatedStatusMessage('Document upload failed!');
+      } finally {
+      
+      }
+    },
+    []
+  );
 
  
   return (
@@ -268,11 +317,40 @@ const handleChange = useCallback((e: any) => {
       style={{ fontFamily: "inherit" }}
       noValidate
     >
+      <div className="flex">
+        <div className='flex flex-col  items-center justify-center text-center'>
+            <img
+              src={form.ProfilePic}
+              alt="Profile"
+              className="w-20 h-20 hover:w-40 hover:h-40 object-cover rounded-full border-4 border-white shadow-md"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = DEFAULT_PROFILE_PIC;
+              }}
+            />
+            <label
+              htmlFor="ProfilePic"
+              className="cursor-pointer mt-1 inline-block text-[10px] font-medium text-white bg-[#50c896] hover:bg-[#43a07c] px-5 py-2 rounded-full transition-colors duration-300 shadow"
+            >
+              {form.ProfilePic && form.ProfilePic !== DEFAULT_PROFILE_PIC
+                ? 'Update Profile Picture'
+                : 'Upload Profile Picture'}
+            </label>
+            <input
+              id="ProfilePic"
+              name="ProfilePic"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+              required
+            />
+                        <p className={`text-sm text-center font-semibold ${UpdatedStatusMessage !== "Successfully Updated Your Information." ? "text-green-800" : "text-red-500"} mt-2`}>{UpdatedStatusMessage}</p>
+          </div>
       <h2 className="text-4xl md:text-5xl font-extrabold text-center flex items-center justify-center gap-2 text-[#ff1493] mb-8">
         <span role="img" aria-label="note">🧾</span>
         Patient Registration
       </h2>
-
+</div>
       <SectionTitle>Contact Information</SectionTitle>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
         <FormBox icon={<Phone />} placeholder="Phone No 1 *" name="phoneNo1" value={form.phoneNo1}
