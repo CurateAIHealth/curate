@@ -2,6 +2,8 @@
 
 import { GetUserInformation, PostFullRegistration } from '@/Lib/user.action';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
+
 import { useCallback, useEffect, useState } from 'react';
 
 const DEFAULT_PROFILE_PIC = '/Icons/DefaultProfileIcon.png';
@@ -14,7 +16,8 @@ export default function HCAMobileView() {
     const [DocName, setDocName] = useState('');
     const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
     const [currentStep, setCurrentStep] = useState(0);
-
+    const router=useRouter()
+ const [Reason,setReason]=useState("")
     const formSections = [
         'Personal Information',
         'Identity & Address',
@@ -25,7 +28,7 @@ export default function HCAMobileView() {
         'Service & Payment Details',
         'Other Details',
         'Document Uploads',
-        'Video Upload'
+        // 'Video Upload'
     ];
 
     const [Docs, setDocs] = useState({
@@ -38,12 +41,12 @@ export default function HCAMobileView() {
         VideoFile:''
     });
     const [form, setForm] = useState({
-        title: '',
+        // title: '',
         firstName: '',
         surname: '',
         fatherName: '',
         motherName: '',
-        husbandName: '',
+        // husbandName: '',
         gender: '',
         dateOfBirth: '',
         maritalStatus: '',
@@ -52,8 +55,8 @@ export default function HCAMobileView() {
 
         aadharCardNo: '',
         panNumber: '',
-        voterIdNo: '',
-        rationCardNo: '',
+        // voterIdNo: '',
+        // rationCardNo: '',
         permanentAddress: '',
         currentAddress: '',
         cityPostcodePermanent: '',
@@ -114,7 +117,7 @@ export default function HCAMobileView() {
         languages: '',
         type: '',
         specialties: '',
-        website: '',
+        // website: '',
     });
 
     const { serviceHours12hrs, serviceHours24hrs, ...restForm } = form;
@@ -188,12 +191,12 @@ export default function HCAMobileView() {
 
                 setForm((prev) => ({
                     ...prev,
-                    title: ProfileInformation.Title || '',
+                    // title: ProfileInformation.Title || '',
                     firstName: ProfileInformation.FirstName,
                     surname: ProfileInformation.LastName,
                     fatherName: ProfileInformation.FatherName || '',
                     motherName: ProfileInformation.MotherName || '',
-                    husbandName: ProfileInformation.HusbandName || '',
+                    // husbandName: ProfileInformation.HusbandName || '',
                     gender: ProfileInformation.Gender,
                     dateOfBirth: ProfileInformation.DateOfBirth,
                     maritalStatus: ProfileInformation.MaritalStatus || '',
@@ -201,8 +204,8 @@ export default function HCAMobileView() {
                     mobileNumber: ProfileInformation.ContactNumber,
                     aadharCardNo: ProfileInformation.AadharNumber,
                     panNumber: ProfileInformation.PanNumber || '',
-                    voterIdNo: ProfileInformation.VoterIdNo || '',
-                    rationCardNo: ProfileInformation.RationCardNo || '',
+                    // voterIdNo: ProfileInformation.VoterIdNo || '',
+                    // rationCardNo: ProfileInformation.RationCardNo || '',
                     permanentAddress: ProfileInformation.PermanentAddress || '',
                     currentAddress: ProfileInformation.CurrentAddress || '',
                     cityPostcodePermanent: ProfileInformation.CityPostcodePermanent || '',
@@ -256,7 +259,7 @@ export default function HCAMobileView() {
                     languages: ProfileInformation.Languages || '',
                     type: ProfileInformation.Type || '',
                     specialties: ProfileInformation.Specialties || '',
-                    website: ProfileInformation.Website || '',
+                    // website: ProfileInformation.Website || '',
                 }));
             } catch (err: any) {
                 console.error('Error fetching user information:', err);
@@ -327,9 +330,20 @@ const handleImageChange = useCallback(
                 SetUpdatingStatus(true);
                 return;
             }
+ const requiredFields: (keyof typeof Docs)[] = [
+        'ProfilePic',
+        'PanCard',
+        'AdharCard',
+        'AccountPassBook',
+        'CertificatOne',
+        'CertificatTwo',
+      ];
 
-            if (Object.values(Docs).some((each) => each === '')) {
-                setUpdatedStatusMessage("Upload all the Required Documents along with Video!")
+      const isMissingRequired =( requiredFields.some((key) => Docs[key] === '')&&(Reason===""));
+
+
+      if (isMissingRequired) {
+                setUpdatedStatusMessage("Upload all the required documents. Or else Provide Reason to Submit Documents")
                 SetUpdatingStatus(true);
                 return
             }
@@ -340,14 +354,21 @@ const handleImageChange = useCallback(
                 SetUpdatingStatus(true);
                 return;
             }
+
+            setUpdatedStatusMessage("Submited")
             const localValue = localStorage.getItem('UserId');
-            const FinelForm = { ...form, Documents: Docs, UserId: localValue };
+            const FinelForm = { ...form, Documents: Docs, UserId: localValue,DocumentSkipReason:Reason };
 
 
             setUpdatedStatusMessage('Successfully Updated Your Information.');
             SetUpdatingStatus(true);
             const PostResult = await PostFullRegistration(FinelForm);
-            console.log('Result---', FinelForm);
+            console.log('Result---', { ...form, Documents: Docs,DocumentSkipReason:Reason });
+
+            const Timer=setInterval(()=>{
+                router.push("/HomePage")
+            },1200)
+            return ()=>clearInterval(Timer)
         },
         [form, completion, Docs]
     );
@@ -458,7 +479,7 @@ const handleImageChange = useCallback(
                                     Personal Information
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                    <input
+                                    {/* <input
                                         type="text"
                                         name="title"
                                         value={form.title}
@@ -466,7 +487,7 @@ const handleImageChange = useCallback(
                                         placeholder="Title (e.g., Dr., Mr.)"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                                         required
-                                    />
+                                    /> */}
                                     <input
                                         type="text"
                                         name="firstName"
@@ -503,14 +524,14 @@ const handleImageChange = useCallback(
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                                         required
                                     />
-                                    <input
+                                    {/* <input
                                         type="text"
                                         name="husbandName"
                                         value={form.husbandName}
                                         onChange={handleChange}
                                         placeholder="Husband's Name"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                                    />
+                                    /> */}
                                     <select
                                         name="gender"
                                         value={form.gender}
@@ -623,7 +644,7 @@ const handleImageChange = useCallback(
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                                         required
                                     />
-                                    <input
+                                    {/* <input
                                         type="text"
                                         name="voterIdNo"
                                         value={form.voterIdNo}
@@ -631,8 +652,8 @@ const handleImageChange = useCallback(
                                         placeholder="Voter ID No."
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                                         required
-                                    />
-                                    <input
+                                    /> */}
+                                    {/* <input
                                         type="text"
                                         name="rationCardNo"
                                         value={form.rationCardNo}
@@ -640,7 +661,7 @@ const handleImageChange = useCallback(
                                         placeholder="Ration Card No."
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                                         required
-                                    />
+                                    /> */}
                                 </div>
                                 <textarea
                                     name="permanentAddress"
@@ -1270,14 +1291,14 @@ const handleImageChange = useCallback(
                                         placeholder="Specialties (e.g., Cardiology, Pediatrics)"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                                     />
-                                    <input
+                                    {/* <input
                                         type="url"
                                         name="website"
                                         value={form.website}
                                         onChange={handleChange}
                                         placeholder="Website/Portfolio URL"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                                    />
+                                    /> */}
                                 </div>
                             </section>
                         </div>
@@ -1286,7 +1307,7 @@ const handleImageChange = useCallback(
 
                     {currentStep === 8 && (
                         <div className="md:flex justify-center gap-2">
-                            <section className="md:w-1/2 bg-blue-50 p-2 rounded-xl shadow-md">
+                            <section className="md:w-1/2 flex flex-col justify-center items-center bg-blue-50 p-2 rounded-xl shadow-md">
                                 <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -1425,12 +1446,25 @@ const handleImageChange = useCallback(
                                         />
                                     </div>
                                 </div>
+                                <div className='flex  flex-col items-center justify-center mt-4 gap-4 w-40 h-30 text-[12px]'>
+                                    <textarea
+                                        placeholder="Don’t have any of the listed documents? Please explain why."
+                                        name="field_message"
+                                        value={Reason}
+                                        onChange={(e:any)=>setReason(e.target.value)}
+
+                                        rows={4}
+                                        className="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
+                                    />
+
+
+                                </div>
                             </section>
                         </div>
                     )}
 
 
-                    {currentStep === 9 && ( 
+                    {/* {currentStep === 9 && ( 
                         <div className="md:flex justify-center gap-2">
                             <section className="md:w-1/2 bg-blue-50 mt-2 p-2 rounded-xl shadow-md">
                                 <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
@@ -1484,7 +1518,7 @@ const handleImageChange = useCallback(
                                 </div>
                             </section>
                         </div>
-                    )}
+                    )} */}
 
                 </div>
                 <div className="flex justify-between items-end mt-8">
@@ -1498,7 +1532,7 @@ const handleImageChange = useCallback(
                         </button>
                     )}
 
-                    {currentStep < formSections.length - 1 && (
+                    {currentStep < formSections.length-1 && (
                         <button
                             type="button"
                             onClick={handleNext}
@@ -1508,7 +1542,7 @@ const handleImageChange = useCallback(
                         </button>
                     )}
 
-                    {currentStep === formSections.length - 1 && (
+                    {currentStep === formSections.length-1 && (
                         <button
                             type="submit"
                             disabled={!UpdatingStatus || PictureUploading}

@@ -17,6 +17,7 @@ export default function DoctorProfileForm() {
   const [UpdateingStatus, SetUpdateingStatus] = useState(true);
   const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
   const [isChecking, setIsChecking] = useState(true);
+  const [Reason,setReason]=useState("")
   const router=useRouter()
   const [Docs, setDocs] = useState({
     ProfilePic: DEFAULT_PROFILE_PIC,
@@ -28,12 +29,12 @@ export default function DoctorProfileForm() {
     VideoFile: ''
   });
   const [form, setForm] = useState({
-    title: '',
+    // title: '',
     firstName: '',
     surname: '',
     fatherName: '',
     motherName: '',
-    husbandName: '',
+    // husbandName: '',
     gender: '',
     dateOfBirth: '',
     maritalStatus: '',
@@ -42,8 +43,8 @@ export default function DoctorProfileForm() {
 
     aadharCardNo: '',
     panNumber: '',
-    voterIdNo: '',
-    rationCardNo: '',
+    // voterIdNo: '',
+    // rationCardNo: '',
     permanentAddress: '',
     currentAddress: '',
     cityPostcodePermanent: '',
@@ -104,7 +105,7 @@ export default function DoctorProfileForm() {
     languages: '',
     type: '',
     specialties: '',
-    website: '',
+    // website: '',
   });
 
   const { serviceHours12hrs, serviceHours24hrs, ...restForm } = form;
@@ -180,12 +181,12 @@ export default function DoctorProfileForm() {
 
         setForm((prev) => ({
           ...prev,
-          title: ProfileInformation.Title || '',
+          // title: ProfileInformation.Title || '',
           firstName: ProfileInformation.FirstName,
           surname: ProfileInformation.LastName,
           fatherName: ProfileInformation.FatherName || '',
           motherName: ProfileInformation.MotherName || '',
-          husbandName: ProfileInformation.HusbandName || '',
+          // husbandName: ProfileInformation.HusbandName || '',
           gender: ProfileInformation.Gender,
           dateOfBirth: ProfileInformation.DateOfBirth,
           maritalStatus: ProfileInformation.MaritalStatus || '',
@@ -193,8 +194,8 @@ export default function DoctorProfileForm() {
           mobileNumber: ProfileInformation.ContactNumber,
           aadharCardNo: ProfileInformation.AadharNumber,
           panNumber: ProfileInformation.PanNumber || '',
-          voterIdNo: ProfileInformation.VoterIdNo || '',
-          rationCardNo: ProfileInformation.RationCardNo || '',
+          // voterIdNo: ProfileInformation.VoterIdNo || '',
+          // rationCardNo: ProfileInformation.RationCardNo || '',
           permanentAddress: ProfileInformation.PermanentAddress || '',
           currentAddress: ProfileInformation.CurrentAddress || '',
           cityPostcodePermanent: ProfileInformation.CityPostcodePermanent || '',
@@ -248,7 +249,7 @@ export default function DoctorProfileForm() {
           languages: ProfileInformation.Languages || '',
           type: ProfileInformation.Type || '',
           specialties: ProfileInformation.Specialties || '',
-          website: ProfileInformation.Website || '',
+          // website: ProfileInformation.Website || '',
         }));
       } catch (err: any) {
         setIsChecking(false)
@@ -307,7 +308,7 @@ export default function DoctorProfileForm() {
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      SetUpdateingStatus(false);
+      // SetUpdateingStatus(false);
 
       const dob = new Date(form.dateOfBirth);
       const today = new Date();
@@ -336,16 +337,17 @@ export default function DoctorProfileForm() {
         'CertificatTwo',
       ];
 
-      const isMissingRequired = requiredFields.some((key) => Docs[key] === '');
+      const isMissingRequired =( requiredFields.some((key) => Docs[key] === '')&&(Reason===""));
 
 
       if (isMissingRequired) {
-        alert("Upload all the required documents. Video is optional.");
+        alert("Upload all the required documents. Or else Provide Reason to Submit Documents");
         SetUpdateingStatus(true);
         return;
       }
+      
       const localValue = localStorage.getItem('UserId');
-      const FinelForm = { ...form, Documents: Docs, UserId: localValue };
+      const FinelForm = { ...form, Documents: Docs, UserId: localValue,DocumentSkipReason:Reason };
 
       setUpdatedStatusMessage('Successfully Updated Your Information.');
       
@@ -353,7 +355,7 @@ export default function DoctorProfileForm() {
       const userId = localStorage.getItem("UserId");
       const PostResult = await PostFullRegistration(FinelForm)
       const Result=await UpdateFinelVerification(userId)
-      console.log("Result---", PostResult)
+    
       const Timer=setInterval(()=>{
         router.push("/HomePage")
       },1000)
@@ -480,7 +482,7 @@ export default function DoctorProfileForm() {
                 Personal Information
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <input
+                {/* <input
                   type="text"
                   name="title"
                   value={form.title}
@@ -488,7 +490,7 @@ export default function DoctorProfileForm() {
                   placeholder="Title (e.g., Dr., Mr.)"
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
-                />
+                /> */}
                 <input
                   type="text"
                   name="firstName"
@@ -525,14 +527,14 @@ export default function DoctorProfileForm() {
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
                 />
-                <input
+                {/* <input
                   type="text"
                   name="husbandName"
                   value={form.husbandName}
                   onChange={handleChange}
                   placeholder="Husband's Name"
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                />
+                /> */}
                 <select
                   name="gender"
                   value={form.gender}
@@ -641,7 +643,7 @@ export default function DoctorProfileForm() {
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
                 />
-                <input
+                {/* <input
                   type="text"
                   name="voterIdNo"
                   value={form.voterIdNo}
@@ -649,8 +651,8 @@ export default function DoctorProfileForm() {
                   placeholder="Voter ID No."
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
-                />
-                <input
+                /> */}
+                {/* <input
                   type="text"
                   name="rationCardNo"
                   value={form.rationCardNo}
@@ -658,7 +660,7 @@ export default function DoctorProfileForm() {
                   placeholder="Ration Card No."
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
-                />
+                /> */}
               </div>
               <textarea
                 name="permanentAddress"
@@ -1323,14 +1325,14 @@ export default function DoctorProfileForm() {
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
                 />
-                <input
+                {/* <input
                   type="url"
                   name="website"
                   value={form.website}
                   onChange={handleChange}
                   placeholder="Personal Website/Portfolio URL (Optional)"
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                />
+                /> */}
               </div>
             </div>
             <div className=" w-1/2 ">
@@ -1387,7 +1389,22 @@ export default function DoctorProfileForm() {
                     />
                   </div>
                 ))}
+               
+               <div className='flex  flex-col gap-4 w-40 h-40 text-[12px]'>
+         <textarea
+  placeholder="Don’t have any of the listed documents? Please explain why."
+  name="field_message"
+  value={Reason}
+onChange={(e:any)=>setReason(e.target.value)}
+  
+  rows={4} 
+  className="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
+/>
+
+                <button  className="cursor-pointer text-center flex-shrink-0 text-[9px] text-white bg-teal-600 hover:bg-teal-400 px-3 py-1 rounded-full transition-colors duration-300">Submit Your Explanation</button>
+               </div>
               </div>
+              
             </div>
           </section>
 
