@@ -4,17 +4,19 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Logo from '@/Components/Logo/page';
 import { SignInRessult } from '@/Lib/user.action';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function SignIn() {
   const router = useRouter();
   const [signinStatus, setsigninStatus] = useState(true);
+  const [showPassword,setShowPassword]=useState(false)
   const [error, setError] = useState('');
   const [loginInfo, setLoginInfo] = useState({
     field_user: '',
     field_pass: ''
   });
 
-  // Clear inputs on initial load
+ 
   useEffect(() => {
     setLoginInfo({ field_user: '', field_pass: '' });
   }, []);
@@ -77,7 +79,7 @@ export default function SignIn() {
         </h1>
 
         <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-left">
-          {/* Hidden dummy fields to prevent autofill */}
+   
           <input type="text" name="fakeusernameremembered" autoComplete="username" className="hidden" />
           <input type="password" name="fakepasswordremembered" autoComplete="new-password" className="hidden" />
 
@@ -91,16 +93,25 @@ export default function SignIn() {
             required
             className="w-full text-center p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
           />
-          <input
-            type="password"
-            placeholder="Password"
-            name="field_pass"
-            value={loginInfo.field_pass}
-            onChange={UpdateLoginInfo}
-            autoComplete="new-password"
-            required
-            className="w-full p-2 text-center rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
-          />
+         <div className="relative w-full">
+  <input
+    type={showPassword ? "text" : "password"}
+    placeholder="Password"
+    name="field_pass"
+    value={loginInfo.field_pass}
+    onChange={UpdateLoginInfo}
+    autoComplete="new-password"
+    required
+    className="w-full p-2 pr-10 text-center rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
+  />
+  <div
+    className="absolute inset-y-0 right-2 flex items-center cursor-pointer"
+    onClick={() => setShowPassword(prev => !prev)}
+  >
+    {showPassword?<Eye />:<EyeOff />}
+  </div>
+</div>
+
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
           <button
