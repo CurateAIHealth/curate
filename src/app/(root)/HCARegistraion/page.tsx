@@ -347,7 +347,7 @@ export default function DoctorProfileForm() {
       }
       
       const localValue = localStorage.getItem('UserId');
-      const FinelForm = { ...form, Documents: Docs, UserId: localValue,DocumentSkipReason:Reason };
+      const FinelForm = { ...form, Documents: Docs, UserId:localValue,DocumentSkipReason:Reason,userType:"healthcare-assistant" };
 
       setUpdatedStatusMessage('Successfully Updated Your Information.');
       

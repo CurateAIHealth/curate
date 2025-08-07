@@ -106,8 +106,8 @@ export default function PatientForm() {
       try {
         
         const data = await GetUserInformation(userId);
-        const FillInformation=await GetUserCompliteInformation(userId)
-        console.log("Test Full Information----",FillInformation)
+        // const FillInformation=await GetUserCompliteInformation(userId)
+        // console.log("Test Full Information----",FillInformation)
         setForm((prev) => ({
           ...prev,
           patientFullName: data.FirstName || "",
@@ -253,7 +253,7 @@ const handleChange = useCallback((e: any) => {
 
     const userId = localStorage.getItem("UserId");
   
-      const FinelForm = { ...form,  UserId: userId };
+      const FinelForm = { ...form,  UserId:userId,userType:"patient" };
        console.log("Test----",FinelForm)
     await PostFullRegistration(FinelForm);
     await UpdateFinelVerification(userId);

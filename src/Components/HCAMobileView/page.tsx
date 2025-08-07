@@ -1,6 +1,6 @@
 'use client';
 
-import { GetUserInformation, PostFullRegistration } from '@/Lib/user.action';
+import { GetUserInformation, PostFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
@@ -363,6 +363,7 @@ const handleImageChange = useCallback(
             setUpdatedStatusMessage('Successfully Updated Your Information.');
             SetUpdatingStatus(true);
             const PostResult = await PostFullRegistration(FinelForm);
+                const Result=await UpdateFinelVerification(localValue)
             console.log('Result---', { ...form, Documents: Docs,DocumentSkipReason:Reason });
 
             const Timer=setInterval(()=>{

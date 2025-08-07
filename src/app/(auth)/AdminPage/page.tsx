@@ -10,7 +10,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Eye } from 'lucide-react';
-import { UpdateUserInformation } from '@/Redux/action';
+import { UpdateClient, UpdateUserInformation } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
 
 export default function UserTableList() {
@@ -101,10 +101,11 @@ const [UpdateduserType,setuserType]=useState("")
   const FilterUserType=(e:any)=>{
 setuserType(e.target.value)
   }
-  const ShowDompleteInformation = (userId: any) => {
-    const userDetails = users.find((each: any) => each.userId === userId);
-    if (userDetails) {
-      dispatch(UpdateUserInformation(userDetails));
+  const ShowDompleteInformation = (userId: any,ClientName:any) => {
+    // const userDetails = users.find((each: any) => each.userId === userId);
+    if (userId) {
+dispatch(UpdateClient(ClientName))
+      dispatch(UpdateUserInformation(userId));
       router.push("/UserInformation");
     }
   };
@@ -224,7 +225,7 @@ const UpdatedFilterUserType = Finel.filter((each) => {
                     </select>
                   </td>
                   <td className="px-12 py-3 border-t border-gray-200 text-center cursor-pointer">
-                    <Eye onClick={() => ShowDompleteInformation(user.userId)} />
+                    <Eye onClick={() => ShowDompleteInformation(user.userId,user.FirstName)} />
                   </td>
                 </tr>
               ))}
