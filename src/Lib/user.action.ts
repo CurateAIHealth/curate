@@ -490,6 +490,32 @@ export const GetUserCompliteInformation = async (UserIdFromLocal: any) => {
   }
 };
 
+export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, newHCAData: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("CompliteRegistrationInformation");
+
+    const result = await collection.updateOne(
+      { "HCAComplitInformation.UserId": UserIdFromLocal },
+      {
+        $set: {
+          HCAComplitInformation: newHCAData,
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      console.warn("No matching document found for the given UserId.");
+      return null;
+    }
+
+    return result;
+  } catch (err: any) {
+    console.error("Error replacing HCAComplitInformation:", err);
+    return null;
+  }
+};
 
 export const GetRegidterdUsers = async () => {
   try {

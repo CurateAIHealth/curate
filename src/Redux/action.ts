@@ -18,3 +18,11 @@ export const UpdateUserInformation = (A: any) => {
         payload: A
     }
 }
+
+
+export const UpdateClient=(ClientName:any)=>{
+    return{
+        type:'CurrentUser',
+        payload:ClientName
+    }
+}
