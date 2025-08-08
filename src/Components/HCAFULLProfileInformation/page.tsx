@@ -24,6 +24,7 @@ type UserData = {
   currentAddress: string;
   permanentAddress: string;
   maritalStatus: string;
+
   height: string;
   weight: string;
   complexion: string;
@@ -48,6 +49,8 @@ type UserData = {
   panNumber: string;
   rationCardNo: string;
   DocumentSkipReason:string;
+  paymentService:string
+
 };
 
 const UserDetail = () => {
@@ -84,7 +87,8 @@ const NameoftheClient=useSelector((state:any)=>state.ClientName)
     paymentBankName: "Union Bank",
     paymentBankAccountNumber: "004810100064801",
     ifscCode: "UBIN0800481",
-    
+    paymentService:"",
+
     Documents: {
       ProfilePic: "/Icons/DefaultProfileIcon.png",
       AdharCard: "https://res.cloudinary.com/dxhf9ysx4/image/upload/v1754297394/uploads/rn0qso7w5mjf47jmijwz.jpg",
@@ -113,7 +117,7 @@ useEffect(()=>{
     surname: FilterValue.surname||"",
 
     gender: FilterValue.gender||"",
-    dateOfBirth:new Date( FilterValue.dateOfBirth).toLocaleDateString("en-IN")||"",
+    dateOfBirth:FilterValue.dateOfBirth||"",
     emailId: FilterValue.emailId||"",
     mobileNumber: FilterValue.mobileNumber||"",
     currentAddress: FilterValue.currentAddress||"",
@@ -141,6 +145,7 @@ useEffect(()=>{
     aadharCardNo: FilterValue.aadharCardNo||"",
     panNumber: FilterValue.panNumber||"",
     rationCardNo: FilterValue.rationCardNo||"",
+    paymentService:FilterValue.paymentService||'',
     
 DocumentSkipReason:FilterValue.DocumentSkipReason||"",
 
@@ -175,6 +180,7 @@ DocumentSkipReason:FilterValue.DocumentSkipReason||"",
 
  const handleImageChange = useCallback(
   async (e: React.ChangeEvent<HTMLInputElement>, key: DocumentKeys) => {
+  
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -198,7 +204,7 @@ DocumentSkipReason:FilterValue.DocumentSkipReason||"",
       const res = await axios.post('/api/Upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-console.log("NeW iMAGE----", res.data.url)
+  console.log("NeW iMAGE----", res.data.url)
       setUser(prevUser => ({
         ...prevUser,
         Documents: {
@@ -273,6 +279,8 @@ setSubmitstatusMessage("Profile Updated Succesfully")
           <TextInput label="Branch City" name="Branchcity" value={user.Branchcity} onChange={handleChange} />
           <TextInput label="Branch State" name="Branchstate" value={user.Branchstate} onChange={handleChange} />
           <TextInput label="Branch Pincode" name="Branchpincode" value={user.Branchpincode} onChange={handleChange} />
+          <TextInput label="paymentService" name="paymentService" value={user.paymentService} onChange={handleChange} />
+          
         </div>
       );
     case 'Documents':
@@ -330,7 +338,7 @@ setSubmitstatusMessage("Profile Updated Succesfully")
         <div className="grid md:grid-cols-2 gap-4">
           <TextInput label="Aadhar No" name="aadharCardNo" value={user.aadharCardNo} onChange={handleChange} />
           <TextInput label="PAN No" name="panNumber" value={user.panNumber} onChange={handleChange} />
-          <TextInput label="Ration Card No" name="rationCardNo" value={user.rationCardNo} onChange={handleChange} />
+
         </div>
       );
     default:
@@ -338,7 +346,7 @@ setSubmitstatusMessage("Profile Updated Succesfully")
   }
 };
 
-
+console.log("Data of Birth---",user.dateOfBirth)
   return (
     <div className="min-h-screen p-4 md:p-4 bg-gray-100">
          <div className='flex justify-end items-end  cursor-pointer   rounded-full  ' >

@@ -357,7 +357,7 @@ const handleImageChange = useCallback(
 
             setUpdatedStatusMessage("Submited")
             const localValue = localStorage.getItem('UserId');
-            const FinelForm = { ...form, Documents: Docs, UserId: localValue,DocumentSkipReason:Reason };
+            const FinelForm = { ...form, Documents: Docs, UserId: localValue,DocumentSkipReason:Reason,userType:"HCA" };
 
 
             setUpdatedStatusMessage('Successfully Updated Your Information.');
