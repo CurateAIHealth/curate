@@ -344,6 +344,7 @@ export default function DoctorProfileForm() {
           SetUpdateingStatus(true);
           return;
         }
+        setUpdatedStatusMessage("Please Wait Updating.....")
         const localValue = localStorage.getItem('UserId');
         const FinelForm = { ...form, Documents: Docs, UserId: localValue, DocumentSkipReason: ReasonValue, userType: "HCA" };
              
@@ -353,7 +354,7 @@ export default function DoctorProfileForm() {
         SetUpdateingStatus(true);
 
         console.log("Submited---", FinelForm)
-        alert("Submited")
+       
         const Timer = setInterval(() => {
           router.push("/HomePage")
         }, 1000)

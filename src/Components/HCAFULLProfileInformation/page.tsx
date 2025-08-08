@@ -50,7 +50,7 @@ type UserData = {
   rationCardNo: string;
   DocumentSkipReason:string;
   paymentService:string
-
+preferredService:string
 };
 
 const UserDetail = () => {
@@ -88,7 +88,7 @@ const NameoftheClient=useSelector((state:any)=>state.ClientName)
     paymentBankAccountNumber: "004810100064801",
     ifscCode: "UBIN0800481",
     paymentService:"",
-
+preferredService:"",
     Documents: {
       ProfilePic: "/Icons/DefaultProfileIcon.png",
       AdharCard: "https://res.cloudinary.com/dxhf9ysx4/image/upload/v1754297394/uploads/rn0qso7w5mjf47jmijwz.jpg",
@@ -146,7 +146,7 @@ useEffect(()=>{
     panNumber: FilterValue.panNumber||"",
     rationCardNo: FilterValue.rationCardNo||"",
     paymentService:FilterValue.paymentService||'',
-    
+    preferredService:FilterValue.preferredService||"",
 DocumentSkipReason:FilterValue.DocumentSkipReason||"",
 
     Documents: {
@@ -267,6 +267,8 @@ setSubmitstatusMessage("Profile Updated Succesfully")
           <TextInput label="Languages" name="languages" value={user.languages} onChange={handleChange} />
           <TextInput label="Mole/Body Mark 1" name="moleBodyMark1" value={user.moleBodyMark1} onChange={handleChange} />
           <TextInput label="Mole/Body Mark 2" name="moleBodyMark2" value={user.moleBodyMark2} onChange={handleChange} />
+          <TextInput label="PreferredService" name="preferredService" value={user.preferredService} onChange={handleChange} />
+          
         </div>
       );
     case 'Bank Details':
