@@ -143,6 +143,9 @@ const Router=useRouter()
     perDayChargeRs: '',
     invoiceCycle: '',
     patientAadharNumber: '',
+    
+
+
     stayIn: false,
     longDay: false,
     longNight: false,
@@ -182,6 +185,7 @@ console.log("Fetch Data---",FilterValue)
           age: FilterValue.age || FilterValue["Age"]||'',
           emailId: FilterValue.emailId || FilterValue["Email Id"]||'',
           clientAadharNo: FilterValue.clientAadharNo || FilterValue["Client Aadhar No"]||'',
+          patientAadharNumber:FilterValue.patientAadharNumber||FilterValue["patientAadharNumber"]||"",
           clientRelationToPatient: FilterValue.clientRelationToPatient || FilterValue["Client relation to patient"]||'',
           alternativeClientContact: FilterValue.alternativeClientContact ||FilterValue[""]||'',
           address: FilterValue.address || FilterValue["Address"]||'',
@@ -231,7 +235,7 @@ console.log("Fetch Data---",FilterValue)
     setStatusMessage((prev)=>({...prev,message:`Please Wait ${NameoftheClient} Updating Profile...`,type:""})); 
     try {
       
-      const FinelData = { ...formData, UserId: ImportedUserId };
+      const FinelData = { ...formData, UserId: ImportedUserId, };
       const Result= await UpdateHCAComplitInformation(ImportedUserId, FinelData);
       console.log('Updated Patient Data:', FinelData);
       setStatusMessage({ message: 'Changes submitted successfully!', type: 'success' });
@@ -378,6 +382,7 @@ console.log("Test Profile Pic---",formData.ProfilePic)
 
               <FormInput name="emailId" label="Email Address" value={formData.emailId} onChange={handleChange} />
               <FormInput name="clientAadharNo" label="Client Aadhar Number" value={formData.clientAadharNo} onChange={handleChange} />
+              <FormInput name="patientAadharNumber" label="Patient Aadhar Number" value={formData.patientAadharNumber} onChange={handleChange} />
               <FormSelect
                 name="clientRelationToPatient"
                 label="Relation to Patient"

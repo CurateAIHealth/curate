@@ -21,6 +21,7 @@ const UserDetailInfo = () => {
         const result = await GetUserCompliteInformation(userId);
 
         const userInfo = result?.HCAComplitInformation;
+        console.log("Test Uset Type---",userInfo)
         if (userInfo?.userType) {
           setUserType(userInfo.userType);
         } else {
