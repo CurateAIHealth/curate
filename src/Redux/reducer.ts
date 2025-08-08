@@ -16,7 +16,7 @@ export const UserIdValue = (state: any = "", action: any) => {
     }
 }
 
-export const UserInformation=(state:any="9b5f06c4-d05c-4a1f-8af1-8e5aa7e79c0e",action:any)=>{
+export const UserInformation=(state:any="f7ec237b-12db-4779-aced-b006974a17d9",action:any)=>{
 switch(action.type){
 case "UpdateUserInformation":
     return action.payload;

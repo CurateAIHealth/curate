@@ -8,7 +8,7 @@ export default function StaticInfoPage() {
   const router = useRouter();
    const handleLogout = () => {
     localStorage.removeItem('UserId');
-    router.push('/');
+    router.push('/sign-in');
   };
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#D4FCF4] to-[#F0FFF4] px-6 py-12">

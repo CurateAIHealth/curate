@@ -47,6 +47,7 @@ type UserData = {
   aadharCardNo: string;
   panNumber: string;
   rationCardNo: string;
+  DocumentSkipReason:string;
 };
 
 const UserDetail = () => {
@@ -83,6 +84,7 @@ const NameoftheClient=useSelector((state:any)=>state.ClientName)
     paymentBankName: "Union Bank",
     paymentBankAccountNumber: "004810100064801",
     ifscCode: "UBIN0800481",
+    
     Documents: {
       ProfilePic: "/Icons/DefaultProfileIcon.png",
       AdharCard: "https://res.cloudinary.com/dxhf9ysx4/image/upload/v1754297394/uploads/rn0qso7w5mjf47jmijwz.jpg",
@@ -97,7 +99,9 @@ const NameoftheClient=useSelector((state:any)=>state.ClientName)
     professionalEducation: "DMLT(Lab Technician",
     aadharCardNo: "378278869737",
     panNumber: "CYGPN6926A",
-    rationCardNo: "10042011284"
+    rationCardNo: "10042011284",
+
+    DocumentSkipReason:""
   });
 
 useEffect(()=>{
@@ -137,6 +141,8 @@ useEffect(()=>{
     aadharCardNo: FilterValue.aadharCardNo||"",
     panNumber: FilterValue.panNumber||"",
     rationCardNo: FilterValue.rationCardNo||"",
+    
+DocumentSkipReason:FilterValue.DocumentSkipReason||"",
 
     Documents: {
           ...prev.Documents,
@@ -216,7 +222,7 @@ console.log("NeW iMAGE----", res.data.url)
 const UpdatewithNewData=async()=>{
     setSubmitstatusMessage("Please Wait Updating Profile....")
 try{
-    const FinelData={...user,UserId:ImportedUserId}
+    const FinelData={...user,UserId:ImportedUserId,userType:"HCA"}
 const UpdatedResult= await UpdateHCAComplitInformation(ImportedUserId,FinelData)
 console.log("Result---",UpdatedResult)
 setSubmitstatusMessage("Profile Updated Succesfully")
@@ -271,7 +277,13 @@ setSubmitstatusMessage("Profile Updated Succesfully")
       );
     case 'Documents':
       return (
+        <div>       
+             <div className='flex flex-col justify-center items-center gap-2 mb-4'>
+          <h1 className='text-[#ff1493] font-bold'>Missing Documents Explanation</h1>
+          <input placeholder="ReasonDocumentSkip" name="DocumentSkipReason" className='border bg-gray-200 p-2 rounded-md text-center h-[40px] w-[600px]' value={user.DocumentSkipReason} onChange={handleChange} />
+        </div>
         <div className="grid md:grid-cols-3 gap-10">
+          
           {Object.entries(user.Documents).map(([key, value]) => (
             <div key={key} className="flex flex-col gap-2 items-center justify-center">
               <div className="w-full h-40 flex items-center justify-center rounded">
@@ -299,7 +311,10 @@ setSubmitstatusMessage("Profile Updated Succesfully")
               />
             </div>
           ))}
+        
         </div>
+        </div>
+
       );
     case 'Work Experience':
       return (
@@ -342,7 +357,7 @@ setSubmitstatusMessage("Profile Updated Succesfully")
       className="rounded-full border object-cover"
     />
     <div>
-      <h2 className="text-xl font-bold text-gray-800">
+      <h2 className="text-xl font-bold text-[#ff1493]">
         {user.title} {user.firstName} {user.surname}
       </h2>
       <p className="text-gray-500 text-sm">{user.emailId}</p>
