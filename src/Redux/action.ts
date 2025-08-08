@@ -19,6 +19,13 @@ export const UpdateUserInformation = (A: any) => {
     }
 }
 
+export const UpdateDocmentSkipReason = (UpdatedValue: any) => {
+    return {
+        type: "UpdateActionReason",
+        payload: UpdatedValue
+    }
+}
+
 
 export const UpdateClient=(ClientName:any)=>{
     return{

@@ -5,10 +5,8 @@ import { GetUserInformation, PostFullRegistration, UpdateFinelVerification } fro
 import { UpdateDocmentSkipReason } from '@/Redux/action';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-
 
 const DEFAULT_PROFILE_PIC = '/Icons/DefaultProfileIcon.png';
 const DEFAULT_DOCUMENT_ICON = '/Icons/DefaultDocumentIcon.png';
@@ -20,9 +18,9 @@ export default function DoctorProfileForm() {
   const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
   const [isChecking, setIsChecking] = useState(true);
 
-  const router=useRouter()
-  const ReasonValue=useSelector((state:any)=>state.DocumentReson)
-   const distpatch=useDispatch()
+  const router = useRouter();
+  const ReasonValue = useSelector((state: any) => state.DocumentReson)
+  const distpatch = useDispatch();
   const [Docs, setDocs] = useState({
     ProfilePic: DEFAULT_PROFILE_PIC,
     PanCard: '',
@@ -33,27 +31,21 @@ export default function DoctorProfileForm() {
     VideoFile: ''
   });
   const [form, setForm] = useState({
-    // title: '',
     firstName: '',
     surname: '',
     fatherName: '',
     motherName: '',
-    // husbandName: '',
     gender: '',
     dateOfBirth: '',
     maritalStatus: '',
     emailId: '',
     mobileNumber: '',
-
     aadharCardNo: '',
     panNumber: '',
-    // voterIdNo: '',
-    // rationCardNo: '',
     permanentAddress: '',
     currentAddress: '',
     cityPostcodePermanent: '',
     cityPostcodeCurrent: '',
-
     higherEducation: '',
     higherEducationYearStart: '',
     higherEducationYearEnd: '',
@@ -67,7 +59,6 @@ export default function DoctorProfileForm() {
     professionalWork1: '',
     professionalWork2: '',
     experience: '',
-
     height: '',
     weight: '',
     hairColour: '',
@@ -76,10 +67,8 @@ export default function DoctorProfileForm() {
     anyDeformity: '',
     moleBodyMark1: '',
     moleBodyMark2: '',
-
     reportPreviousHealthProblems: '',
     reportCurrentHealthProblems: '',
-
     sourceOfReferral: '',
     dateOfReferral: '',
     reference1Name: '',
@@ -91,7 +80,6 @@ export default function DoctorProfileForm() {
     reference2Aadhar: '',
     reference2Mobile: '',
     reference2Address: '',
-
     serviceHours12hrs: false,
     serviceHours24hrs: false,
     preferredService: '',
@@ -100,38 +88,30 @@ export default function DoctorProfileForm() {
     paymentBankAccountNumber: '',
     ifscCode: '',
     bankBranchAddress: '',
-
     Bankbranchname: '',
     Branchcity: '',
     Branchstate: '',
     Branchpincode: '',
-
     languages: '',
     type: '',
     specialties: '',
-    // website: '',
   });
 
   const { serviceHours12hrs, serviceHours24hrs, ...restForm } = form;
-
   const flatFields = Object.values(restForm).flat();
   let filled = flatFields.filter((f) => {
     if (typeof f === 'string') return f && f.trim() !== '';
     return typeof f === 'boolean' ? f : false;
   }).length;
-
   if (serviceHours12hrs || serviceHours24hrs) {
     filled += 1;
   }
-
   const totalFields = flatFields.length + 1;
-
   const completion = Math.round((filled / totalFields) * 100);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       const { name, value, type } = e.target;
-
       if (type === 'checkbox') {
         if (name === 'serviceHours12hrs' && (e.target as HTMLInputElement).checked) {
           setForm((prev) => ({ ...prev, serviceHours12hrs: true, serviceHours24hrs: false }));
@@ -142,7 +122,6 @@ export default function DoctorProfileForm() {
         }
       } else {
         setForm((prev) => ({ ...prev, [name]: value }));
-
         if (name === 'dateOfBirth') {
           setForm((prev) => ({ ...prev, [name]: value }));
           const dob = new Date(value);
@@ -164,15 +143,11 @@ export default function DoctorProfileForm() {
       try {
         const localValue = localStorage.getItem('UserId');
         if (!localValue) {
-          console.warn('No UserId found in localStorage.');
           return;
         }
-
         const ProfileInformation = await GetUserInformation(localValue);
-
         SetProfileName(ProfileInformation.FirstName);
         setIsChecking(false)
-
         setDocs((prev) => ({
           ...prev,
           ProfilePic: ProfileInformation.ProfilePic || DEFAULT_PROFILE_PIC,
@@ -182,15 +157,12 @@ export default function DoctorProfileForm() {
           CertificatOne: ProfileInformation.CertificatOne || '',
           CertificatTwo: ProfileInformation.CertificatTwo || '',
         }));
-
         setForm((prev) => ({
           ...prev,
-          // title: ProfileInformation.Title || '',
           firstName: ProfileInformation.FirstName,
           surname: ProfileInformation.LastName,
           fatherName: ProfileInformation.FatherName || '',
           motherName: ProfileInformation.MotherName || '',
-          // husbandName: ProfileInformation.HusbandName || '',
           gender: ProfileInformation.Gender,
           dateOfBirth: ProfileInformation.DateOfBirth,
           maritalStatus: ProfileInformation.MaritalStatus || '',
@@ -198,8 +170,6 @@ export default function DoctorProfileForm() {
           mobileNumber: ProfileInformation.ContactNumber,
           aadharCardNo: ProfileInformation.AadharNumber,
           panNumber: ProfileInformation.PanNumber || '',
-          // voterIdNo: ProfileInformation.VoterIdNo || '',
-          // rationCardNo: ProfileInformation.RationCardNo || '',
           permanentAddress: ProfileInformation.PermanentAddress || '',
           currentAddress: ProfileInformation.CurrentAddress || '',
           cityPostcodePermanent: ProfileInformation.CityPostcodePermanent || '',
@@ -253,11 +223,9 @@ export default function DoctorProfileForm() {
           languages: ProfileInformation.Languages || '',
           type: ProfileInformation.Type || '',
           specialties: ProfileInformation.Specialties || '',
-          // website: ProfileInformation.Website || '',
         }));
       } catch (err: any) {
         setIsChecking(false)
-        console.error('Error fetching user information:', err);
       }
     };
     Fetch();
@@ -269,38 +237,28 @@ export default function DoctorProfileForm() {
       const file = e.target.files?.[0];
       const inputName = e.target.name;
       if (!file) return;
-
-
       if (file.size > 10 * 1024 * 1024) {
         alert('File too large. Max allowed is 10MB.');
         return;
       }
-
-
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg'];
       if (!allowedTypes.includes(file.type)) {
         alert('Only image or video files are allowed.');
         return;
       }
-
       const formData = new FormData();
       formData.append('file', file);
-
       try {
-
         setUpdatedStatusMessage(`Please Wait ${inputName} uploading....`)
         setPictureUploading(true);
-
         const res = await axios.post('/api/Upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
-
         setDocs((prev) => ({ ...prev, [inputName]: res.data.url }));
         setUpdatedStatusMessage(`${inputName} uploaded successfully!`);
       } catch (error: any) {
-        console.error('Upload failed:', error.message);
         setUpdatedStatusMessage('Document upload failed!');
       } finally {
         setPictureUploading(false);
@@ -309,7 +267,7 @@ export default function DoctorProfileForm() {
     []
   );
 
-   const handleSubmit = useCallback(
+  const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       setTimeout(async() => {
@@ -362,6 +320,7 @@ export default function DoctorProfileForm() {
     },
     [form, completion, Docs, ReasonValue, router]
   );
+
   if (isChecking) {
     return (
       <div className='h-screen flex items-center justify-center font-bold'>
@@ -374,8 +333,6 @@ export default function DoctorProfileForm() {
     <div>
       <div className="hidden md:flex md:min-h-[86.5vh] md:h-[86.5vh] bg-white flex-col items-center justify-center overflow-hidden">
         <div className="md:w-full bg-[#50c896] text-white flex gap-6 justify-between items-center p-2">
-
-
           <div className='flex flex-col  items-center justify-center text-center'>
             <img
               src={Docs.ProfilePic}
@@ -406,7 +363,6 @@ export default function DoctorProfileForm() {
 
           <div>
             <h2 className="text-4xl font-extrabold text-white bg-[#50c896]  mb-6 text-center">{ProfileName}'s Profile</h2>
-
             <p className="text-gray-600 text-center mb-8">
               Fill in the details below to keep your profile accurate and up-to-date.
             </p>
@@ -450,19 +406,14 @@ export default function DoctorProfileForm() {
             </svg>
             <p className="text-sm text-gray-700 mt-2">Profile Completion</p>
           </div>
-
-
         </div>
-
 
         <form
           onSubmit={handleSubmit}
           className="md:w-full p-8 space-y-8 overflow-y-auto custom-scrollbar h-full"
         >
-
           <div className='md:flex  justify-center gap-2'>
             <section className="md:w-1/2 bg-blue-50 pl-4 mt-2 p-2 rounded-xl shadow-md">
-
               <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -481,15 +432,6 @@ export default function DoctorProfileForm() {
                 Personal Information
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {/* <input
-                  type="text"
-                  name="title"
-                  value={form.title}
-                  onChange={handleChange}
-                  placeholder="Title (e.g., Dr., Mr.)"
-                  className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
-                /> */}
                 <input
                   type="text"
                   name="firstName"
@@ -526,14 +468,6 @@ export default function DoctorProfileForm() {
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
                 />
-                {/* <input
-                  type="text"
-                  name="husbandName"
-                  value={form.husbandName}
-                  onChange={handleChange}
-                  placeholder="Husband's Name"
-                  className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                /> */}
                 <select
                   name="gender"
                   value={form.gender}
@@ -604,7 +538,6 @@ export default function DoctorProfileForm() {
               </div>
             </section>
 
-
             <section className="md:w-1/2 bg-blue-50 mt-2 p-2 rounded-xl shadow-md">
               <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
                 <svg
@@ -642,24 +575,6 @@ export default function DoctorProfileForm() {
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
                 />
-                {/* <input
-                  type="text"
-                  name="voterIdNo"
-                  value={form.voterIdNo}
-                  onChange={handleChange}
-                  placeholder="Voter ID No."
-                  className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
-                /> */}
-                {/* <input
-                  type="text"
-                  name="rationCardNo"
-                  value={form.rationCardNo}
-                  onChange={handleChange}
-                  placeholder="Ration Card No."
-                  className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
-                /> */}
               </div>
               <textarea
                 name="permanentAddress"
@@ -696,7 +611,6 @@ export default function DoctorProfileForm() {
                 required
               />
             </section>
-
           </div>
           <div className='md:flex  justify-center gap-2'>
             <section className="md:w-1/2 bg-blue-50 p-2 rounded-xl shadow-md">
@@ -844,7 +758,6 @@ export default function DoctorProfileForm() {
               </div>
             </section>
 
-
             <section className="md:w-1/2 bg-blue-50 p-2 rounded-xl shadow-md">
               <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
                 <svg
@@ -933,7 +846,6 @@ export default function DoctorProfileForm() {
                   placeholder="Mole/Body Mark 2 (Optional)"
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 />
-
               </div>
               <h3 className="text-md font-semibold text-[#ff1493] mb-5 mt-2  pb-3 border-b border-blue-200 flex items-center">
                 <svg
@@ -971,47 +883,8 @@ export default function DoctorProfileForm() {
                 />
               </div>
             </section>
-
           </div>
-          {/* <section className="bg-blue-50 p-3 rounded-xl shadow-md">
-            <h3 className="text-md font-semibold text-[#ff1493] mb-5 pb-3 border-b border-blue-200 flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 mr-2 text-[#6366f1]"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                />
-              </svg>
-              Health Information
-            </h3>
-            <div className="space-y-5">
-              <textarea
-                name="reportPreviousHealthProblems"
-                value={form.reportPreviousHealthProblems}
-                onChange={handleChange}
-                placeholder="Report Previous Health Problems"
-                className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
-              />
-              <textarea
-                name="reportCurrentHealthProblems"
-                value={form.reportCurrentHealthProblems}
-                onChange={handleChange}
-                placeholder="Report Current Health Problems"
-                className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
-              />
-            </div>
-          </section> */}
           <div className='md:flex  justify-center gap-4'>
-
             <section className=" md:w-1/2 bg-blue-50 p-3 rounded-xl shadow-md">
               <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
                 <svg
@@ -1136,7 +1009,6 @@ export default function DoctorProfileForm() {
                 />
               </div>
             </section>
-
 
             <section className="md:w-1/2 bg-blue-50 p-3 rounded-xl shadow-md">
               <h3 className="text-2md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
@@ -1275,7 +1147,6 @@ export default function DoctorProfileForm() {
                 />
               </div>
             </section>
-
           </div>
           <section className="md:flex  justify-center gap-2 bg-blue-50 p-3 rounded-xl shadow-md">
             <div className='w-1/2'>
@@ -1324,19 +1195,10 @@ export default function DoctorProfileForm() {
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
                 />
-                {/* <input
-                  type="url"
-                  name="website"
-                  value={form.website}
-                  onChange={handleChange}
-                  placeholder="Personal Website/Portfolio URL (Optional)"
-                  className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                /> */}
               </div>
             </div>
             <div className=" w-1/2 ">
               <h3 className="text-xl font-semibold text-[#ff1493] mb-4 border-b border-blue-300 pb-2" >Your Documents </h3>
-
               <div className="flex flex-wrap sm:grid-cols-2 gap-2">
                 {['AdharCard', 'PanCard', 'CertificatOne', 'CertificatTwo', 'AccountPassBook'].map((docKey) => (
                   <div
@@ -1384,83 +1246,25 @@ export default function DoctorProfileForm() {
                       accept="image/*"
                       onChange={handleImageChange}
                       className="hidden"
-
                     />
                   </div>
                 ))}
-               
-               <div className='flex  flex-col gap-4 w-40 h-40 text-[12px]'>
-         <textarea
-  placeholder="Don’t have any of the listed documents? Please explain why."
-  name="field_message"
-  value={ReasonValue}
-onChange={(e:any)=>distpatch(UpdateDocmentSkipReason(e.target.value))}
-  
-  rows={4} 
-  className="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
-/>
-
-                <button  className="cursor-pointer text-center flex-shrink-0 text-[9px] text-white bg-teal-600 hover:bg-teal-400 px-3 py-1 rounded-full transition-colors duration-300">Submit Your Explanation</button>
-               </div>
+                <div className='flex  flex-col gap-4 w-40 h-40 text-[12px]'>
+                  <textarea
+                    placeholder="Don’t have any of the listed documents? Please explain why."
+                    name="field_message"
+                    value={ReasonValue}
+                    onChange={(e: any) => distpatch(UpdateDocmentSkipReason(e.target.value))}
+                    rows={4}
+                    className="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
+                  />
+                  <button className="cursor-pointer text-center flex-shrink-0 text-[9px] text-white bg-teal-600 hover:bg-teal-400 px-3 py-1 rounded-full transition-colors duration-300">
+                    Submit Your Explanation
+                  </button>
+                </div>
               </div>
-              
             </div>
           </section>
-
-          {/* <div className="md:flex justify-center gap-2">
-                            <section className="md:w-1/2 bg-blue-50 mt-2 p-2 rounded-xl shadow-md">
-                                <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-6 w-6 mr-2 text-[#6366f1]"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        strokeWidth={2}
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14m-5 3v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2h3a2 2 0 012 2z" />
-                                    </svg>
-                                    Video Upload & Terms
-                                </h3>
-                                <div className="grid grid-cols-1 gap-5 mb-5">
-                                    <div className="flex flex-col items-center justify-center p-4 border border-gray-300 rounded-lg bg-white">
-                                        <label htmlFor="VideoFile" className="relative group w-full h-32 flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-blue-500 transition-all">
-                                            {Docs.VideoFile ? (
-                                                <video src={Docs.VideoFile} controls className="w-full h-full object-contain rounded-lg" />
-                                            ) : (
-                                                <div className="text-gray-500 text-center">
-                                                    <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L40 32" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                    </svg>
-                                                    <p className="mt-1 text-sm text-gray-600">Drag and drop or <span className="font-semibold text-blue-600">browse for a video</span></p>
-                                                    <p className="text-xs text-gray-500">(Max 50MB)</p>
-                                                </div>
-                                            )}
-                                            <input
-                                                id="VideoFile"
-                                                name="VideoFile"
-                                                type="file"
-                                                accept="video/*"
-                                                onChange={handleImageChange}
-                                                className="hidden"
-                                                
-                                            />
-                                        </label>
-                                        {Docs.VideoFile && (
-                                            <p className="text-sm text-gray-600 mt-2">Video uploaded: <a href={Docs.VideoFile} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">View Video</a></p>
-                                        )}
-                                    </div>
-                                      <p className='text-center text-[10px] text-gray-500'>Read the Following Content While Reacording Video</p>
-                                    <div className="flex items-center mt-4">
-                                      
-                                        <p className="text-sm text-gray-700 font-semibold text-center w-full">
-                                            I hereby acknowledge that I have read, understood, and fully accept all the terms and conditions set forth by HCA. I agree to comply with these terms in their entirety.
-                                        </p>
-                                    </div>
-                                </div>
-                            </section>
-                        </div>
-                     */}
 
           <div className="flex justify-center mt-8">
             <button
@@ -1473,9 +1277,7 @@ onChange={(e:any)=>distpatch(UpdateDocmentSkipReason(e.target.value))}
               {UpdateingStatus ? 'Update Profile' : 'Updating...'}
             </button>
           </div>
-
         </form>
-
       </div>
       <HCAMobileView />
     </div>

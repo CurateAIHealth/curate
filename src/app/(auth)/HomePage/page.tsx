@@ -6,10 +6,13 @@ import { useRouter } from 'next/navigation';
 
 export default function StaticInfoPage() {
   const router = useRouter();
-   const handleLogout = () => {
+  const handleLogout = () => {
+  if (typeof window !== 'undefined') {
     localStorage.removeItem('UserId');
-    router.push('/sign-in');
-  };
+    window.location.href = '/'; 
+  }
+};
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#D4FCF4] to-[#F0FFF4] px-6 py-12">
       <div className="max-w-3xl bg-white rounded-3xl shadow-xl p-10 text-center">

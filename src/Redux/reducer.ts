@@ -34,3 +34,13 @@ case "CurrentUser":
         return state
     }
 }
+
+
+export const DocReason=(state:any="",action:any)=>{
+switch(action.type){
+    case "UpdateActionReason":
+        return action.payload;
+        default :
+        return state
+}
+}
