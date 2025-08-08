@@ -2,6 +2,7 @@
 
 import { GetUserCompliteInformation, UpdateHCAComplitInformation } from '@/Lib/user.action';
 import axios from 'axios';
+import { Filter } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, ChangeEvent, useEffect, memo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
@@ -152,7 +153,7 @@ const Router=useRouter()
     serviceStartDate: '',
     serviceCloseDate: '',
     serviceEndDate: '',
-    userType: '',
+    userType: 'patient',
     UserId: '',
     ProfilePic:'/Icons/PatientDefault.png'
   };
@@ -177,7 +178,7 @@ console.log("Fetch Data---",FilterValue)
 
         setFormData(prev => ({
           ...prev,
-          ProfilePic:FilterValue.ProfilePic ||FilterValue["ProfilePic"] ||'',
+          ProfilePic:FilterValue.ProfilePic ||FilterValue["ProfilePic"] ||'/Icons/PatientDefault.png',
           phoneNo1: FilterValue.phoneNo1 ||FilterValue["Phone No 1"] ||'',
           phoneNo2: FilterValue.phoneNo2 ||FilterValue["Phone No 2"]||'',
           dateOfBirth: formatDate(FilterValue.dateOfBirth)||formatDate(FilterValue["dateOfBirth"])||'',
@@ -205,7 +206,8 @@ console.log("Fetch Data---",FilterValue)
           longDay: FilterValue.longDay || FilterValue["Long day"]||'',
           longNight: FilterValue.longNight || FilterValue["Long Night"]||'',
           userType: FilterValue.userType ||FilterValue["userType"]||'',
-          UserId: FilterValue.UserId ||FilterValue["UserId"]||''
+          UserId: FilterValue.UserId ||FilterValue["UserId"]||'',
+          
         }));
         setIsChecking(false)
       } catch (err) {
