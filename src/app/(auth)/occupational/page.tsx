@@ -26,14 +26,20 @@ export default function OccupationalHealth() {
   const [mobileOptsOpen, setMobileOptsOpen] = useState(false);
 
   return (
-    <section className="w-full min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-50 font-sans">
+    <section className="w-full min-h-screen bg-white font-sans">
       <nav className="flex justify-between items-center max-w-7xl mx-auto px-6 py-5">
-        <div className="flex items-center gap-3">
-
-          <a href="/">
-          <img src="/Icons/Curate-logo.png" alt="Curate Logo" width={35} height={35} className="object-contain" />
-          </a>
-        </div>
+       <div className="flex items-center gap-3">
+                    <a href='/'>
+                      <img
+                                  src="/Icons/HomeIcon.png"
+                                  alt="Curate AI Health Logo"
+                                  width={120}
+                                  height={35}
+                                  
+                                  className="object-contain"
+                                />
+                    </a>
+                </div>
         <div className="hidden md:flex gap-7 items-center">
           {mainMenu.map((item, idx) => (
             <motion.a

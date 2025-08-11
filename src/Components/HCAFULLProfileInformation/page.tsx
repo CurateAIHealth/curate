@@ -151,12 +151,12 @@ DocumentSkipReason:FilterValue.DocumentSkipReason||"",
 
     Documents: {
           ...prev.Documents,
-      ProfilePic: FilterValue.Documents.ProfilePic,
-      AdharCard:FilterValue.Documents.AdharCard,
-      PanCard: FilterValue.Documents.PanCard,
-      AccountPassBook:FilterValue.Documents. AccountPassBook,
-      CertificatOne:FilterValue.Documents.CertificatOne,
-      CertificatTwo: FilterValue.Documents.CertificatTwo
+      ProfilePic: FilterValue.Documents.ProfilePic||'/Icons/PatientDefault.png',
+      AdharCard:FilterValue.Documents.AdharCard||'/Icons/PatientDefault.png',
+      PanCard: FilterValue.Documents.PanCard||'/Icons/PatientDefault.png',
+      AccountPassBook:FilterValue.Documents. AccountPassBook||'/Icons/PatientDefault.png',
+      CertificatOne:FilterValue.Documents.CertificatOne||'/Icons/PatientDefault.png',
+      CertificatTwo: FilterValue.Documents.CertificatTwo||'/Icons/PatientDefault.png'
 
         },
 

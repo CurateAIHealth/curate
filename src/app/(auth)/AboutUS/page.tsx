@@ -101,15 +101,18 @@ export default function About() {
    
       <nav className="w-full bg-white/80 dark:bg-slate-950 sticky top-0 z-20 shadow-sm">
         <div className="max-w-7xl mx-auto flex justify-between items-center py-4 px-6">
-          <a href="/">
-            <img
-              src="/Icons/Curate-logo.png"
-              alt="Curate AI Health Logo"
-              width={46}
-              height={36}
-              className="object-contain"
-            />
-          </a>
+           <div className="flex items-center gap-3">
+                    <a href='/'>
+                      <img
+                                  src="/Icons/HomeIcon.png"
+                                  alt="Curate AI Health Logo"
+                                  width={120}
+                                  height={35}
+                                  
+                                  className="object-contain"
+                                />
+                    </a>
+                </div>
           <div className="hidden md:flex gap-6 items-center">
             {mainMenu.map((item) => (
               <a
