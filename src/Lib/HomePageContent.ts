@@ -51,7 +51,14 @@ export const pricing = [
     highlighted: true,
   },
 ];
-
+export  const steps = [
+    "Attending the Home Health Service Request by Our Operations Manager",
+    "Finding Suitable Healthcare Professional for your request & requirements",
+    "Entering the Client Service Agreement with our background-verified & qualified healthcare professionals",
+    "Dedicated Placement Officer and Healthcare Assistant Coordinator for seamless operations and service",
+    "Continuous quality visits and feedback collection for updating service changes as per patient or senior requirement"
+  ];
+  
 export const testimonials = [
   {
     quote: 'My grandmother was bedridden post hip surgery. The caretaker Ms. Madhuri showed great patience and care. Thanks, Curate!',

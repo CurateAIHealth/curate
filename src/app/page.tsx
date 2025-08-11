@@ -4,7 +4,7 @@
 import { GetUserCompliteInformation, GetUserInformation } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { cta, features, heroContent, pricing, services, testimonials } from "@/Lib/HomePageContent";
+import { cta, features, heroContent, pricing, services, steps, testimonials } from "@/Lib/HomePageContent";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Star, Settings, User, LogIn, BriefcaseMedical, CircleEllipsis, Menu } from "lucide-react";
 import Footer from "@/Components/Footer/page";
@@ -92,10 +92,10 @@ setShowPopUp(true)
                 <div className="flex items-center gap-3">
                     <a href='/'>
                       <img
-                                  src="/Icons/Curate-logo.png"
+                                  src="/Icons/HomeIcon.png"
                                   alt="Curate AI Health Logo"
-                                  width={30}
-                                  height={30}
+                                  width={120}
+                                  height={35}
                                   
                                   className="object-contain"
                                 />
@@ -190,8 +190,8 @@ setShowPopUp(true)
                             transition={{ delay: 0.05, type: "spring", damping: 26, stiffness: 105 }}
                             className="text-4xl md:text-6xl font-extrabold mb-5 tracking-tight text-[#11354b] drop-shadow"
                         >
-                            <Sparkles size={44} color={blue} className="inline animate-pulse mb-1" />
-                             <span className="ml-3 ">CURATE HEALTH</span>
+                            {/* <Sparkles size={44} color={blue} className="inline animate-pulse mb-1" />
+                             <span className="ml-3 ">CURATE HEALTH</span> */}
                             
                         </motion.h1>
                         <span className="text-xl md:text-5xl font-extrabold mb-5 tracking-tight text-[#11354b] drop-shadow">{heroContent.title}</span>
@@ -232,7 +232,9 @@ setShowPopUp(true)
                     >
 
                              
-                            <img src="Icons/HomePageLogo.png" alt="Curate Logo" className="rounded-lg"/>
+                            {/* <img src="Icons/HomePageLogo.png" alt="Curate Logo" className="rounded-lg"/> */}
+                             <img src="Icons/CurateNewLogo.jpg" alt="Curate Logo" className="rounded-lg"/>
+
                             
                     
                     </motion.div>
@@ -240,10 +242,13 @@ setShowPopUp(true)
             </section>
 <section className="py-16 px-4 bg-white text-center">
   <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 slide-in-left">
-    Medical Services offered at Home
+  Home Health Services Offered by CURATE
   </h2>
-  <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-600 max-w-4xl mx-auto slide-in-right">
+  {/* <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-600 max-w-4xl mx-auto slide-in-right">
     If you need assistance with medical services at home, a good option is to choose Curate Health Services to have Healthcare Professionals come into your home to assist you with your medical needs.
+  </p> */}
+  <p className="mt-4 text-base sm:text-lg md:text-xl text-gray-600 max-w-4xl mx-auto slide-in-right">
+If you or a loved one needs medical support at home, Curate Health Services is here to help—our caring healthcare professionals come to you, making home care comfortable and stress-free
   </p>
 
   <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-10 justify-items-center">
@@ -265,41 +270,142 @@ setShowPopUp(true)
     ))}
   </div>
 </section>
+ <section className="bg-white py-16 border-t border-[#ecf3fb]">
+      <div className="max-w-5xl mx-auto px-6">
+    
+        <motion.h2
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="text-3xl md:text-4xl font-bold text-center mb-12"
+        >
+          Our <span className="text-[#ff1493]">Seamless</span> Service Workflow
+        </motion.h2>
 
-            <section className="bg-white py-20 border-t border-[#ecf3fb]">
-                <div className="max-w-6xl mx-auto px-6">
-                    <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center text-[#ff1493] flex justify-center items-center gap-2">
-                        <Star size={30} color={green} className="animate-wiggle" />
-                       Curate Values
-                    </h2>
-                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                        {features.map((f, idx) => (
-                            <motion.div
-                                key={idx}
-                                initial={{ scale: 0.94, opacity: 0 }}
-                                whileInView={{ scale: 1, opacity: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: 0.02 + idx * 0.10 }}
-                                className="rounded-2xl group relative bg-white/90 border border-[#e0eff5] shadow-sm hover:shadow-2xl p-8 transition-all hover:border-[#50c896] overflow-hidden"
-                            >
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    whileHover={{ opacity: 0.25 }}
-                                    className="absolute inset-0 pointer-events-none blur-xl transition"
-                                    style={{
-                                        background: `linear-gradient(93deg, ${green}1c 30%, ${blue}1a 80%, ${pink}08 100%)`,
-                                    }}
-                                />
-                                <div className="relative z-10 flex flex-col items-center text-center">
-                                    <Star size={30} color={green} className="mb-2 animate-wiggle" />
-                                    <h3 className="font-semibold text-lg text-[#1392d3] mb-1 ">{f.title}</h3>
-                                    <p className="text-[#6b8193]">{f.desc}</p>
-                                </div>
-                            </motion.div>
-                        ))}
+    
+        <div className="space-y-8">
+          {steps.map((text, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.15 }}
+              viewport={{ once: true }}
+              className="flex items-start gap-4"
+            >
+            
+              <motion.span
+                initial={{ scale: 0 }}
+                whileInView={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 12, delay: index * 0.15 }}
+                viewport={{ once: true }}
+                className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-[#1392d3] text-white font-bold rounded-full shadow-md"
+              >
+                {index + 1}
+              </motion.span>
+
+            
+              <p className="text-lg text-[#333] leading-relaxed">{text}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+
+           {/* <section className="bg-white py-20 border-t border-[#ecf3fb]">
+    <div className="max-w-6xl mx-auto px-6">
+        <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center flex justify-center items-center gap-2">
+            <Star size={30} color={green} className="animate-wiggle" />
+            <span className="text-[#ff1493]">Our </span>
+            <span className="text-[#1392d3] font-extrabold">CURATE</span>
+            <span className="text-[#ff1493]"> Values</span>
+        </h2>
+
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {[
+                { title: "Care your beloved", desc: "We put love and compassion first in every interaction." },
+                { title: "Understand your requirements", desc: "Listening closely to tailor care to your unique needs." },
+                { title: "Reciprocate with quality service", desc: "Delivering top-notch care with dedication." },
+                { title: "Advice with expertise professionals", desc: "Guidance from trained and skilled experts." },
+                { title: "Train the health care professionals", desc: "Equipping professionals with advanced training." },
+                { title: "Empathize the senior & patient families with 24/7 availability", desc: "Always available to offer understanding and support." }
+            ].map((f, idx) => (
+                <motion.div
+                    key={idx}
+                    initial={{ scale: 0.94, opacity: 0 }}
+                    whileInView={{ scale: 1, opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.02 + idx * 0.10 }}
+                    className="rounded-2xl group relative bg-white/90 border border-[#e0eff5] shadow-sm hover:shadow-2xl p-8 transition-all hover:border-[#50c896] overflow-hidden"
+                >
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        whileHover={{ opacity: 0.25 }}
+                        className="absolute inset-0 pointer-events-none blur-xl transition"
+                        style={{
+                            background: `linear-gradient(93deg, ${green}1c 30%, ${blue}1a 80%, ${pink}08 100%)`,
+                        }}
+                    />
+                    <div className="relative z-10 flex flex-col items-center text-center">
+                        <Star size={30} color={green} className="mb-2 animate-wiggle" />
+                        <h3 className="font-semibold text-lg text-[#1392d3] mb-1">
+                            <a className='text-[#ff1493]'>{f.title[0]}</a>{f.title.slice(1,f.title.length)}</h3>
+                        <p className="text-[#6b8193]">{f.desc}</p>
                     </div>
-                </div>
-            </section>
+                </motion.div>
+            ))}
+        </div>
+    </div>
+</section> */}
+
+
+<section className="bg-gradient-to-b from-white to-[#f8fbff] py-20">
+  <div className="max-w-5xl mx-auto px-6">
+  
+    <h2 className="text-3xl md:text-4xl font-bold mb-16 text-center">
+      <span className="text-[#ff1493]">Our </span>
+    <span className="text-[#1392d3] font-extrabold">CURATE</span>
+      <span className="text-[#ff1493]"> Values</span>
+    </h2>
+
+ 
+    <div className="relative border-l-4 border-[#50c896] ml-6">
+      {[
+        { title: "Care your beloved", desc: "We put love and compassion first in every interaction." },
+        { title: "Understand your requirements", desc: "Listening closely to tailor care to your unique needs." },
+        { title: "Reciprocate with quality service", desc: "Delivering top-notch care with dedication." },
+        { title: "Advice with expertise professionals", desc: "Guidance from trained and skilled experts." },
+        { title: "Train the health care professionals", desc: "Equipping professionals with advanced training." },
+        { title: "Empathize the senior & patient families with 24/7 availability", desc: "Always available to offer understanding and support." }
+      ].map((f, idx) => (
+        <motion.div
+          key={idx}
+          initial={{ x: -30, opacity: 0 }}
+          whileInView={{ x: 0, opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: idx * 0.1, duration: 0.6 }}
+          className="mb-12 ml-6 relative"
+        >
+         
+          <span className="absolute -left-10 flex items-center justify-center w-8 h-8 bg-[#50c896] rounded-full ring-4 ring-white">
+            <Star size={18} color="white" />
+          </span>
+
+     
+          <h3 className="text-xl font-semibold text-[#1392d3] mb-2">
+            <span className="text-[#ff1493]">{f.title[0]}</span>
+            {f.title.slice(1)}
+          </h3>
+          <p className="text-[#6b8193] leading-relaxed">{f.desc}</p>
+        </motion.div>
+      ))}
+    </div>
+  </div>
+</section>
+
+
 
 
 

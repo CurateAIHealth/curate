@@ -144,17 +144,23 @@ const UpdatedFilterUserType = Finel.filter((each) => {
     >
       Logout
     </button>
+     {/* <input
+    className="border bg-white rounded-md text-[10px] p-2"
+    placeholder="Search User with Email/Phone"
+  /> */}
 
     <div className="flex">
       <span className="text-[#ff1493] font-bold text-2xl mr-2">Curate</span>
       <span className="text-teal-600 font-bold text-2xl">Digital AI</span>
+
     </div>
 
     <h1 className="text-2xl font-bold text-gray-800 mb-2 mt-2">
       <span className="text-[#ff1493]">Hi, {UserFirstName}</span> Here's the complete list of registered users.
     </h1>
+  
 
-    <div className="w-full max-w-7xl bg-white shadow-lg rounded-xl overflow-x-auto">
+    <div className="w-full pl-2  pr-2 bg-white shadow-lg rounded-xl overflow-x-auto">
       {UpdatedFilterUserType.length > 0 ? (
         <div className="max-h-[500px] overflow-y-auto">
           <table className="w-full text-sm text-gray-700 table-fixed">

@@ -29,11 +29,18 @@ export default function HospitalDesign() {
     <main className="min-h-screen overflow-x-hidden bg-gradient-to-br from-blue-50 via-white to-pink-50 text-gray-900 font-sans">
      
       <nav className="flex justify-between items-center max-w-7xl mx-auto px-6 py-5">
-        <div className="flex items-center gap-3">
-              <a href='/'>
-          <img src="/Icons/Curate-logo.png" alt="Curate AI Health Logo" width={36} height={36} className="object-contain" />
-          </a>
-        </div>
+         <div className="flex items-center gap-3">
+                    <a href='/'>
+                      <img
+                                  src="/Icons/HomeIcon.png"
+                                  alt="Curate AI Health Logo"
+                                  width={120}
+                                  height={35}
+                                  
+                                  className="object-contain"
+                                />
+                    </a>
+                </div>
         <div className="hidden md:flex flex gap-6 items-center">
           {mainMenu.map((item) => (
             <a key={item.href} href={item.href} className="px-2 py-1 text-lg font-medium text-[#275f72] relative inline-block after:block after:h-[2px] after:bg-[#ff1493] after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300 after:origin-left">
