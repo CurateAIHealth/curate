@@ -533,6 +533,24 @@ export const GetRegidterdUsers = async () => {
   }
 }
 
+
+
+export const GetUsersFullInfo = async () => {
+  try {
+    const Cluster = await clientPromise
+    const Db = Cluster.db("CurateInformation")
+    const Collection = Db.collection("CompliteRegistrationInformation")
+    const RegistrationResult = await Collection.find().toArray()
+    const safeUsers = RegistrationResult.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+    return safeUsers
+  } catch (err: any) {
+    return err
+  }
+}
+
 export const UpdateUserVerificationstatus = async (UserId: string, UpdatedStatus: string) => {
   try {
     const Cluster = await clientPromise
@@ -564,7 +582,31 @@ export const UpdateUserEmailVerificationstatus = async (UserId: string, UpdatedS
     const UpdateVerificationStatus = await Collection.updateOne(
       { userId: UserId }, {
       $set: {
-        EmailVerification: UpdatedStatus==="Verified"?true:false
+        EmailVerification: UpdatedStatus==="Verified"?true:false,
+        
+      }
+    }
+    )
+    if (UpdateVerificationStatus.modifiedCount === 0) {
+      return { success: false, message: 'Internal Error Try Again!' };
+    }
+
+    return { success: true, message: 'Verification Status updated successfully.' };
+  } catch (err: any) {
+    return err
+  }
+}
+
+export const UpdateUserContactVerificationstatus = async (UserId: string,ContactStatus:String) => {
+  try {
+    const Cluster = await clientPromise
+    const Db = Cluster.db("CurateInformation")
+    const Collection = Db.collection("Registration")
+    const UpdateVerificationStatus = await Collection.updateOne(
+      { userId: UserId }, {
+      $set: {
+        
+ClientStatus:ContactStatus
       }
     }
     )

@@ -26,7 +26,7 @@ export default function HealthcareAssistantForm() {
     VerificationStatus: 'Success',
     TermsAndConditions: 'Accepted',
     FinelVerification:false,
-        EmailVerification:false
+    EmailVerification:false
   });
 
   const [CheckBoxStatus, setCheckBoxStatus] = useState(false);

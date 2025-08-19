@@ -1,44 +1,60 @@
-'use client'; 
+'use client';
 
 import Logo from '@/Components/Logo/page';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function StaticInfoPage() {
-  const router = useRouter();
+
+
+
   const handleLogout = () => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('UserId');
-    window.location.href = '/'; 
-  }
-};
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('UserId');
+      window.location.href = '/'; 
+    }
+  };
+
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#D4FCF4] to-[#F0FFF4] px-6 py-12">
-      <div className="max-w-3xl bg-white rounded-3xl shadow-xl p-10 text-center">
-       <Logo />
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-4">
-          <span className="text-black">Welcome to </span>
-          <span className="text-pink-500">Curate </span>
-          <span className="text-teal-600">Digital AI Health</span>
-        </h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-2 font-inter antialiased">
+      <div className="w-full max-w-4xl mx-auto rounded-3xl shadow-2xl overflow-hidden bg-white p-2 md:p-6">
+        <div className="flex flex-col md:flex-row items-center justify-between space-y-8 md:space-y-0 md:space-x-12">
+          
+          
+          <div className="w-full hidden md:flex md:w-1/2 flex items-center justify-center">
+       
+          <img src='Icons/HomePageImage.png' className='rounded-full'/>
+          </div>
 
-        <p className="text-gray-700 text-lg leading-relaxed mb-6">
-          We are building a network to make a difference in healthcare and rehab communities to get a holistic approach for medical & rehab treatments.
-          This includes Modern Medicine, Ayurveda, Physiotherapy, Speech & Language Therapy, Behavior Therapy, Occupational Therapy, Nutrition, Yoga & Meditation, Music Therapy, and Psychology.
-        </p>
+     
+          <div className="w-full md:w-1/2 text-left space-y-6">
+            <div className="flex items-center space-x-4 mb-4">
+              <Logo />
+              <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+                <span className="text-[#ff1493]">Curate</span> <span className="text-[#50c896]">Digital AI Health</span>
+              </h1>
+            </div>
 
-        <p className="text-teal-600 font-semibold text-xl mb-2">#connecting rehab love ❤</p>
+            <p className="text-gray-700 text-lg leading-relaxed">
+Thank you for registering with <a className="text-[#ff1493]">Curate.</a> We truly appreciate your interest in our services. Our team is reviewing your details and will be reaching out to you shortly to assist you with the next steps. We look forward to connecting with you soon.
+            </p>
 
-        <p className="text-gray-700 text-lg leading-relaxed">
-          Our aim is to create classroom, outpatient, inpatient, daycare, home-based, and online therapy treatments for individuals.
-        </p>
-          <button
-    className="mt-8 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md shadow"
-    onClick={handleLogout}
-  >
-    Logout
-  </button>
+            <div className="text-[#1392d3] font-bold text-xl leading-snug">
+              #connecting rehab love ❤
+            </div>
+
+            <p className="text-gray-600 text-base leading-relaxed">
+              Our mission is to provide comprehensive, personalized therapy treatments across various settings, from classroom and outpatient care to home-based and online solutions. We are excited to partner with you on your journey to better health.
+            </p>
+
+            <button
+              className="mt-6 w-full md:w-auto px-6 py-3 bg-red-600 text-white font-semibold rounded-xl shadow-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 transition duration-300 transform hover:-translate-y-1"
+              onClick={handleLogout}
+            >
+              Log out
+            </button>
+          </div>
+        </div>
       </div>
     
     </div>

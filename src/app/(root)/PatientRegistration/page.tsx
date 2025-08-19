@@ -12,6 +12,7 @@ import {
   GetUserCompliteInformation
 } from "@/Lib/user.action";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 const familyRelations: any[] = [
   "Father",
@@ -66,6 +67,7 @@ export default function PatientForm() {
   const router = useRouter();
   const [statusMessage, setstatusMessage] = useState("");
     const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
+      const userId = useSelector((state: any) => state?.UserDetails);
     const DEFAULT_PROFILE_PIC = '/Icons/DefaultProfileIcon.png';
   const [form, setForm] = useState({
     phoneNo1: "",
@@ -101,7 +103,7 @@ export default function PatientForm() {
 
   useEffect(() => {
     async function fetchUserData() {
-      const userId = localStorage.getItem("UserId");
+
       if (!userId) return;
       try {
         
@@ -246,20 +248,22 @@ const handleChange = useCallback((e: any) => {
     setstatusMessage("");
     return true;
   };
-
+const Revert = () => {
+        router.push("/AdminPage")
+    }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    const userId = localStorage.getItem("UserId");
   
       const FinelForm = { ...form,  UserId:userId,userType:"patient" };
        console.log("Test----",FinelForm)
     await PostFullRegistration(FinelForm);
-    await UpdateFinelVerification(userId);
+    const VerificationStatus=await UpdateFinelVerification(userId);
+    console.log('Verification Status----',VerificationStatus)
     setstatusMessage("Patient Details Updated Successfully");
      const Timer=setInterval(()=>{
-        router.push("/HomePage")
+        router.push("/SuccessfullyRegisterd")
       },1200)
       return ()=>clearInterval(Timer)
   };
@@ -346,10 +350,14 @@ const handleChange = useCallback((e: any) => {
             />
                         <p className={`text-sm text-center font-semibold ${UpdatedStatusMessage !== "Successfully Updated Your Information." ? "text-green-800" : "text-red-500"} mt-2`}>{UpdatedStatusMessage}</p>
           </div>
+          
       <h2 className="text-4xl md:text-5xl font-extrabold text-center flex items-center justify-center gap-2 text-[#ff1493] mb-8">
         <span role="img" aria-label="note">🧾</span>
         We Need a Bit More Info
       </h2>
+      <div className='flex ml-60 items-start  cursor-pointer   rounded-full  ' >
+                   <p onClick={Revert} className='bg-blue-400 text-white p-2 text-[12px] rounded-md mb-1'> Back to Admin Page </p>
+                </div>
 </div>
       <SectionTitle>Contact Information</SectionTitle>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
