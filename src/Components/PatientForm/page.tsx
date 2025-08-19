@@ -15,19 +15,21 @@ export default function PatientForm() {
     FirstName: '',
     LastName: '',
     AadharNumber: '',
+    PANNumber: '',
     Age: '',
     dateofBirth: '',
     ContactNumber: '',
     Email: '',
-    Gender:'',
+    Gender: '',
     Password: '',
     ConfirmPassword: '',
     Location: '',
     VerificationStatus: 'Pending',
     TermsAndConditions: "Accepted",
-    EmailVerification:false,
-     FinelVerification:false,
-    
+    EmailVerification: false,
+    FinelVerification: false,
+    ClientStatus: "Client Enquiry"
+
   });
   const [CheckBoxStatus, setCheckBoxStatus] = useState(false)
   const [showPassword, setShowPassword] = useState(false);
@@ -35,6 +37,8 @@ export default function PatientForm() {
   const [statusMessage, setStatusMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [SubmissionRequest, setSubmissionRequest] = useState(true);
+  const [DocumentAvailability, setDocumentAvailability] = useState(false)
+  const [FirstDocumentAvailability, setFirstDocumentAvailability] = useState(true)
   const [familyMembers, setFamilyMembers] = useState<
     { FullName: any; Email: any; Age: any; AadharNumber: any; ContactNumber: any, dateofBirth: any, Gender: any }[]
   >([]);
@@ -60,81 +64,89 @@ export default function PatientForm() {
     setFamilyMembers(updated);
   }
 
+  const UpdateDocumentValue = (e: any) => {
+    if (e.target.checked) {
+      setDocumentAvailability(!DocumentAvailability)
+      setFirstDocumentAvailability(!FirstDocumentAvailability)
+    }
+
+  }
+
   const handleNewChange = (In: any, e: any) => {
     const { name, value } = e.target
- if (name === 'dateofBirth') {
-    const birthDate = new Date(value);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
+    if (name === 'dateofBirth') {
+      const birthDate = new Date(value);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
 
-    if (age < 18) {
-      alert("You must be at least 18 years old to register.");
-    }
+      if (age < 18) {
+        alert("You must be at least 18 years old to register.");
+      }
 
-const updatedFamilyMembers = [...familyMembers];
-    updatedFamilyMembers[In] = {
-      ...updatedFamilyMembers[In],
-      dateofBirth: value,
-      Age: age.toString(),
-    };
-    setFamilyMembers(updatedFamilyMembers);
-    return;
-  }
+      const updatedFamilyMembers = [...familyMembers];
+      updatedFamilyMembers[In] = {
+        ...updatedFamilyMembers[In],
+        dateofBirth: value,
+        Age: age.toString(),
+      };
+      setFamilyMembers(updatedFamilyMembers);
+      return;
+    }
     const NewResult: any = [...familyMembers]
     NewResult[In][name] = value;
     setFamilyMembers(NewResult)
 
   }
   const handleChange = (
-  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-) => {
-  setStatusMessage('');
-  const { name, value } = e.target;
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    setStatusMessage('');
+    const { name, value } = e.target;
 
-  if (name === 'AadharNumber') {
-    const digitsOnly = value.replace(/\D/g, '').slice(0, 12);
-    const formatted = digitsOnly.replace(/(.{4})/g, '$1 ').trim();
-    setFormData(prev => ({ ...prev, AadharNumber: formatted }));
-    return;
-  }
+    if (name === 'AadharNumber') {
+      const digitsOnly = value.replace(/\D/g, '').slice(0, 12);
+      const formatted = digitsOnly.replace(/(.{4})/g, '$1 ').trim();
+      setFormData(prev => ({ ...prev, AadharNumber: formatted }));
+      return;
+    }
 
-  if (name === 'ContactNumber') {
-    const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
-    setFormData(prev => ({ ...prev, ContactNumber: digitsOnly }));
-    return;
-  }
+    if (name === 'ContactNumber') {
+      const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+      setFormData(prev => ({ ...prev, ContactNumber: digitsOnly }));
+      return;
+    }
 
-  if (name === 'Age') {
+    if (name === 'Age') {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+
+    if (name === 'dateofBirth') {
+      const birthDate = new Date(value);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+
+      if (age < 18) {
+        alert("You must be at least 18 years old to register.");
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        dateofBirth: value,
+        Age: age.toString(),
+      }));
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
-  }
-
-  if (name === 'dateofBirth') {
-    const birthDate = new Date(value);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-
-    if (age < 18) {
-      alert("You must be at least 18 years old to register.");
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      dateofBirth: value,
-      Age: age.toString(),
-    }));
-    return;
-  }
-
-  setFormData(prev => ({ ...prev, [name]: value }));
-};
+  };
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -169,22 +181,22 @@ const updatedFamilyMembers = [...familyMembers];
     }
 
     try {
-         const generatedUserId = uuidv4();
+      const generatedUserId = uuidv4();
       const payload = {
         ...formData,
         AadharNumber: formData.AadharNumber.replace(/\s/g, ''),
         userId: generatedUserId,
-        FamilyMembars:familyMembers
+        FamilyMembars: familyMembers
       };
-
+      console.log("Form Data---", payload)
       const result = await UpdatePatientInformation(payload);
       if (!result.success) {
-       setSubmissionRequest(true);
+        setSubmissionRequest(true);
         setStatusMessage(result.message);
-        
+
         return;
       }
-   const EmailComponent = memo(({ UpdatedFilterUserId }: { UpdatedFilterUserId: string }) => (
+      const EmailComponent = memo(({ UpdatedFilterUserId }: { UpdatedFilterUserId: string }) => (
         <div
           style={{
             maxWidth: '400px',
@@ -195,7 +207,7 @@ const updatedFamilyMembers = [...familyMembers];
             padding: '32px',
             boxSizing: 'border-box',
             textAlign: 'center',
-            margin: '0 auto', 
+            margin: '0 auto',
             fontFamily: 'Arial, sans-serif',
           }}
         >
@@ -216,10 +228,10 @@ const updatedFamilyMembers = [...familyMembers];
             >
               Verify With {' '}
               <span style={{ color: '#ec4899' }}>Curate</span>{' '}
-              <span style={{ color: '#0d9488' }}>Digital AI</span> 
+              <span style={{ color: '#0d9488' }}>Digital AI</span>
             </h2>
           </div>
-      
+
           <a
             href={`${process.env.NEXT_PUBLIC_BASE_URL}/VerifyEmail?token=${generatedUserId}`}
             style={{
@@ -230,15 +242,15 @@ const updatedFamilyMembers = [...familyMembers];
               fontWeight: 600,
               borderRadius: '8px',
               fontSize: '16px',
-              textDecoration: 'none', 
+              textDecoration: 'none',
               marginTop: '10px',
             }}
           >
-          Verify Your Email
+            Verify Your Email
           </a>
         </div>
       ));
-            const htmlComponent = ReactDOMServer.renderToString(<EmailComponent UpdatedFilterUserId={uuidv4()} />);
+      const htmlComponent = ReactDOMServer.renderToString(<EmailComponent UpdatedFilterUserId={uuidv4()} />);
       // await axios.post('/api/MailSend', {
       //   to: formData.Email,
       //   subject: 'Curate Digital AI Health Email Verification',
@@ -250,9 +262,10 @@ const updatedFamilyMembers = [...familyMembers];
         FirstName: '',
         LastName: '',
         AadharNumber: '',
+        PANNumber: "",
         Age: '',
-         dateofBirth: '',
-         Gender:'',
+        dateofBirth: '',
+        Gender: '',
         ContactNumber: '',
         Email: '',
         Password: '',
@@ -260,10 +273,11 @@ const updatedFamilyMembers = [...familyMembers];
         Location: '',
         VerificationStatus: '',
         TermsAndConditions: "Accepted",
-         EmailVerification:false,
-          FinelVerification:false,
+        EmailVerification: false,
+        FinelVerification: false,
+        ClientStatus: "Client Enquiry"
       });
-        setSubmissionRequest(true)
+      setSubmissionRequest(true)
       router.push('/SuccessfulRegistration');
     } catch {
       setStatusMessage('Unexpected error. Please try again.');
@@ -327,7 +341,7 @@ const updatedFamilyMembers = [...familyMembers];
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs ">Date Of Birth</label>
-        <input type="date" className="input-style" name="dateofBirth" onChange={handleChange}  />
+        <input type="date" className="input-style" name="dateofBirth" onChange={handleChange} />
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs ">Select Gender</label>
@@ -349,22 +363,68 @@ const updatedFamilyMembers = [...familyMembers];
           required
         />
       </div>
+      <div className="flex flex-col gap-2">
+        <p>Identity Document Available?</p>
+        <div className="flex  gap-2">
+          <div className="flex items-center gap-2">
+            <input
+              id="DocumentAvailabilityYes"
+              name="DocumentAvailability"
+              type="radio"
+              checked={DocumentAvailability}
+              onChange={UpdateDocumentValue}
+            />
+            <label htmlFor="DocumentAvailabilityYes">Yes</label>
+          </div>
 
-      <div className="flex flex-col gap-1 md:col-span-2">
-        <label className="text-xs ">Aadhaar Number</label>
-        <input
-          type="text"
-          name="AadharNumber"
-          value={formData.AadharNumber}
-          onChange={handleChange}
-          maxLength={14}
-          className="input-style"
-          required
-        />
-        {digitCount > 0 && digitCount < 12 && (
-          <p className="text-sm text-red-500">Aadhaar number must be 12 digits</p>
-        )}
+          <div className="flex items-center gap-2">
+            <input
+              id="DocumentAvailabilityNo"
+              name="DocumentAvailability"
+              type="radio"
+              checked={FirstDocumentAvailability}
+              onChange={UpdateDocumentValue}
+            />
+            <label htmlFor="DocumentAvailabilityNo">No</label>
+          </div>
+        </div>
+        <div>
+          {DocumentAvailability &&
+            <div>
+              <div className="flex flex-col gap-1 md:col-span-2">
+                <label className="text-xs ">Aadhaar Number</label>
+                <input
+                  type="text"
+                  name="AadharNumber"
+                  value={formData.AadharNumber}
+                  onChange={handleChange}
+                  maxLength={14}
+                  className="input-style"
+
+                />
+                {digitCount > 0 && digitCount < 12 && (
+                  <p className="text-sm text-red-500">Aadhaar number must be 12 digits</p>
+                )}
+              </div>
+              <p className='text-center mt-2 mb-2'>or</p>
+              <div className="flex flex-col gap-1 md:col-span-2">
+                <label className="text-xs ">PAN Number</label>
+                <input
+                  type="text"
+                  name="PANNumber"
+                  value={formData.PANNumber.toUpperCase()}
+                  onChange={handleChange}
+                  maxLength={14}
+                  className="input-style"
+
+                />
+              </div>
+            </div>
+          }
+        </div>
       </div>
+
+
 
       <div className="flex flex-col gap-1 md:col-span-2">
         <label className="text-xs ">Contact Number</label>
@@ -502,7 +562,7 @@ const updatedFamilyMembers = [...familyMembers];
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs ">Date Of Birth</label>
-                  <input type="date" className="input-style" name="dateofBirth" onChange={(e: any) => handleNewChange(index, e)}  />
+                  <input type="date" className="input-style" name="dateofBirth" onChange={(e: any) => handleNewChange(index, e)} />
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs ">Select Gender</label>

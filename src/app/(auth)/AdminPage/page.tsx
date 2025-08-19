@@ -1,34 +1,40 @@
 'use client';
 
-import Logo from '@/Components/Logo/page';
 import {
   GetRegidterdUsers,
+  GetUserCompliteInformation,
   GetUserInformation,
+  GetUsersFullInfo,
+  UpdateUserContactVerificationstatus,
   UpdateUserEmailVerificationstatus,
   UpdateUserVerificationstatus
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Eye } from 'lucide-react';
+import {  LogOut } from 'lucide-react';
 import { UpdateClient, UpdateUserInformation } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
 
 export default function UserTableList() {
   const [updatedStatusMsg, setUpdatedStatusMsg] = useState('');
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [isChecking, setIsChecking] = useState(true);
-  const [UserFirstName,setUserFirstName]=useState("")
-const [UpdateduserType,setuserType]=useState("")
-  const Status = ['Pending', 'Success', 'Block'];
-  const EmailVerificationStatus = ['Verified', 'Pending'];
+  const [UserFirstName, setUserFirstName] = useState("");
+  const [UpdateduserType, setuserType] = useState("");
+  const [search, setSearch] = useState('');
+  const [LoginEmail, setLoginEmail] = useState("");
 
+
+  const Status = ['Client Enquiry', 'Procceing', 'Converted', 'Waiting List', 'Lost'];
+  const EmailVerificationStatus = ['Verified', 'Pending'];
+  const [UserFullInfo, setFullInfo] = useState([])
   const router = useRouter();
   const dispatch = useDispatch();
 
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
-    setUpdatedStatusMsg(`Updating ${first} Verification Status....`);
+    setUpdatedStatusMsg(`Updating ${first} Contact Status....`);
     try {
-      const res = await UpdateUserVerificationstatus(UserId, e);
+      const res = await UpdateUserContactVerificationstatus(UserId, e);
       if (res?.success === true) {
         setUpdatedStatusMsg(`${first} Verification Status Updated Successfully`);
       }
@@ -50,6 +56,7 @@ const [UpdateduserType,setuserType]=useState("")
   };
 
   const Finel = users.map((each: any) => ({
+    id: each.userId,
     FirstName: each.FirstName,
     AadharNumber: each.AadharNumber,
     Age: each.Age,
@@ -59,36 +66,39 @@ const [UpdateduserType,setuserType]=useState("")
     Contact: each.ContactNumber,
     userId: each.userId,
     VerificationStatus: each.VerificationStatus,
-    EmailVerification: each.EmailVerification
+    DetailedVerification:each.FinelVerification,
+    EmailVerification: each.EmailVerification,
+    ClientStatus:each.ClientStatus
+    
   }));
-
-  const tableHeaders = Finel.length > 0 ? Object.keys(Finel[0]).filter((each) => !['userId', 'VerificationStatus', 'EmailVerification'].includes(each)) : [];
 
   useEffect(() => {
     const Fetch = async () => {
       try {
         const localValue = localStorage.getItem("UserId");
         const ProfileInformation = await GetUserInformation(localValue);
-        setUserFirstName(ProfileInformation.FirstName)
+        setUserFirstName(ProfileInformation.FirstName);
+        setLoginEmail(ProfileInformation.Email);
 
-
-        if( ProfileInformation?.Email?.toLowerCase() === "info@curatehealth.in"){
-          setuserType("patient")
+        if (ProfileInformation?.Email?.toLowerCase() === "info@curatehealth.in") {
+          setuserType("patient");
+        }
+        if (ProfileInformation?.Email?.toLowerCase() === "gouricurate@gmail.com") {
+          setuserType("healthcare-assistant");
         }
 
-        if( ProfileInformation?.Email?.toLowerCase() === "gouricurate@gmail.com"){
-          setuserType("healthcare-assistant")
+        if (
+          ProfileInformation?.Email?.toLowerCase() !== "admin@curatehealth.in" &&
+          ProfileInformation?.Email?.toLowerCase() !== "info@curatehealth.in" &&
+          ProfileInformation?.Email?.toLowerCase() !== "gouricurate@gmail.com"
+        ) {
+          router.push("/");
         }
-      
-    if (
-  ProfileInformation?.Email?.toLowerCase() !== "admin@curatehealth.in" &&
-  ProfileInformation?.Email?.toLowerCase() !== "info@curatehealth.in" &&
-    ProfileInformation?.Email?.toLowerCase() !== "gouricurate@gmail.com"
-) {
-  router.push("/");
-}
 
         const RegisterdUsersResult = await GetRegidterdUsers();
+        const FullInfo = await GetUsersFullInfo()
+        setFullInfo(FullInfo)
+
         setUsers(RegisterdUsersResult || []);
         setIsChecking(false);
       } catch (err: any) {
@@ -98,162 +108,177 @@ const [UpdateduserType,setuserType]=useState("")
     Fetch();
   }, [updatedStatusMsg]);
 
-  const FilterUserType=(e:any)=>{
-setuserType(e.target.value)
-  }
-  const ShowDompleteInformation = (userId: any,ClientName:any) => {
-    // const userDetails = users.find((each: any) => each.userId === userId);
+  const FilterUserType = (e: any) => {
+    setuserType(e.target.value);
+  };
+
+  const ShowDompleteInformation = (userId: any, ClientName: any) => {
     if (userId) {
-dispatch(UpdateClient(ClientName))
+      dispatch(UpdateClient(ClientName));
       dispatch(UpdateUserInformation(userId));
       router.push("/UserInformation");
     }
   };
- const handleLogout = () => {
+
+  const handleLogout = () => {
     localStorage.removeItem('UserId');
     router.push('/');
   };
 
-
-
   if (isChecking) {
     return (
-      <div className="h-screen flex items-center justify-center font-bold">
+      <div className="h-screen flex items-center justify-center font-bold text-gray-700 bg-gradient-to-tr from-[#ECF2FF] to-[#FBFAF5]">
         User Information Loading....
       </div>
     );
   }
-const UpdatedFilterUserType = Finel.filter((each) => {
-  return !UpdateduserType || each.userType === UpdateduserType;
-});
- return (
-  <div className="min-h-screen w-full bg-gray-100 px-2 py-2 flex flex-col items-center">
-    <div className="bg-white rounded-full pl-1 shadow-md w-[70px] h-[70px] flex items-center justify-center">
-      <img
-        src="/Icons/Curate-logo.png"
-        alt="Curate AI Health Logo"
-        width={50}
-        height={50}
-        className="object-contain"
-      />
-    </div>
 
-    <button
-      className="absolute top-14 right-8 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md shadow"
-      onClick={handleLogout}
-    >
-      Logout
-    </button>
-     {/* <input
-    className="border bg-white rounded-md text-[10px] p-2"
-    placeholder="Search User with Email/Phone"
-  /> */}
+  const UpdatedFilterUserType = Finel.filter((each) => {
+    const matchesType = !UpdateduserType || each.userType === UpdateduserType;
+    const matchesSearch =
+      each.FirstName.toLowerCase().includes(search.toLowerCase()) ||
+      each.Email.toLowerCase().includes(search.toLowerCase()) ||
+      each.Contact.toLowerCase().includes(search.toLowerCase());
+    return matchesType && matchesSearch;
+  });
+  const FilterProfilePic: any = UserFullInfo.map((each: any) => { return each?.HCAComplitInformation })
+console.log("User Verification Status-----",Finel)
 
-    <div className="flex">
-      <span className="text-[#ff1493] font-bold text-2xl mr-2">Curate</span>
-      <span className="text-teal-600 font-bold text-2xl">Digital AI</span>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#f7fafc] via-[#e3f6f5] to-[#f9f9ff] text-gray-900 p-2">
 
-    </div>
 
-    <h1 className="text-2xl font-bold text-gray-800 mb-2 mt-2">
-      <span className="text-[#ff1493]">Hi, {UserFirstName}</span> Here's the complete list of registered users.
-    </h1>
-  
+      <div className="sticky top-0 z-50 bg-opacity-90 backdrop-blur-lg  mb-2">
+        <div className="flex justify-between items-center mb-0 bg-white/90 rounded-xl p-2 shadow-2xl border border-gray-100">
+          <div className="flex items-center gap-3">
+            <img src="/Icons/Curate-logo.png" alt="Logo" className="w-12 h-12 rounded-xl" />
+            <h1 className="text-2xl font-extrabold text-[#007B7F] tracking-tight leading-tight">
+              Hi, <span className="text-[#ff1493]">{UserFirstName}</span>
+            </h1>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+          >
+            <LogOut size={22} /> Logout
+          </button>
+        </div>
 
-    <div className="w-full pl-2  pr-2 bg-white shadow-lg rounded-xl overflow-x-auto">
+        <div className="flex flex-col md:flex-row gap-4  mt-2">
+          <input
+            type="text"
+            placeholder="Search by name, email or contact"
+            className="flex-grow p-2 text-center rounded-xl bg-white shadow border border-gray-200 outline-none text-base focus:border-[#62e0d9] focus:ring-2 focus:ring-[#caf0f8]"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          {LoginEmail.toLowerCase() === "admin@curatehealth.in" &&
+            <select
+              value={UpdateduserType}
+              onChange={FilterUserType}
+              className="p-2 rounded-xl bg-white shadow border border-gray-200 text-base font-medium focus:border-[#62e0d9] focus:ring-2 focus:ring-[#caf0f8]"
+            >
+              <option value="">All Roles</option>
+              <option value="patient">Patient</option>
+              <option value="healthcare-assistant">Healthcare Assistant</option>
+              <option value="doctor">Doctor</option>
+            </select>
+          }
+        </div>
+      </div>
+
+
       {UpdatedFilterUserType.length > 0 ? (
-        <div className="max-h-[500px] overflow-y-auto">
-          <table className="w-full text-sm text-gray-700 table-fixed">
-            <thead className="bg-gradient-to-r from-teal-500 to-green-400 text-white sticky top-0 z-10">
+        <div className=" bg-white/90 rounded-2xl shadow-2xl border border-gray-100">
+           <div className="max-h-[540px] overflow-y-auto overflow-x-hidden scrollbar-hide">
+
+          <table className="min-w-full   text-[13px] text-left text-gray-700">
+            <thead className="bg-[#f5faff] p-0 sticky top-0 z-10 ">
               <tr>
-                {tableHeaders.map((header) => (
-                  <th
-                    key={header}
-                    className="px-4 py-3 text-center capitalize border-r border-white"
-                  >
-                    {header}
-                  </th>
-                ))}
-                <th className="px-4 py-3 text-center capitalize border-r border-white">
-                  Email Verification
-                </th>
-                <th className="px-4 py-3 text-center capitalize border-r border-white">
-                  Document Verification
-                </th>
-                <th className="px-4 py-3 text-center capitalize border-r border-white">
-                  Details
-                </th>
+
+                <th className="px-14 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Name</th>
+                <th className="px-14 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Email</th>
+                <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Contact</th>
+                <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Role</th>
+                <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Aadhar</th>
+                <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Location</th>
+                <th className="px-5 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Email Verification</th>
+                {LoginEmail.toLowerCase() !== "gouricurate@gmail.com" && <th className="px-8 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Client Status</th>}
+
+                <th className="px-8 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Action</th>
               </tr>
             </thead>
-            <tbody>
+         
+
+            <tbody >
               {UpdatedFilterUserType.map((user, index) => (
-                <tr key={index} className="bg-white hover:bg-gray-50">
-                  {tableHeaders.map((field, idx) => (
-                    <td
-                      key={idx}
-                      className="px-4 py-3 border-t border-gray-200 text-center break-words"
-                    >
-                      {user[field as keyof typeof user]}
-                    </td>
-                  ))}
-                  <td className="px-4 py-3 border-t border-gray-200 text-center">
+
+                <tr key={index} className="border-b  border-gray-100 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors">
+                  <td className="px-2 py-3 font-semibold text-[#007B7F] flex items-center gap-2">
+
+                    <img src={FilterProfilePic.filter((each: any) => each.UserId === user.id)[0]?.Documents?.ProfilePic||FilterProfilePic.filter((each: any) => each.UserId === user.id)[0]?.ProfilePic||"Icons/DefaultProfileIcon.png"} className='rounded-full h-10 w-10' />
+                    {user.FirstName}
+                  </td>
+                  <td className="px-2 py-3">{user.Email}</td>
+                  <td className="px-2 py-3">{user.Contact}</td>
+                  <td className="px-2 py-3"><span className="inline-block px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-xs shadow-sm">{user.userType === "healthcare-assistant" ? "HCA" : user.userType}</span></td>
+                  <td className="px-2 py-3">{user.AadharNumber}</td>
+                  <td className="px-2 py-3">{user.Location}</td>
+                  <td className="px-2 py-3">
                     <select
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-[150px] text-center px-3 py-2 rounded-lg bg-[#f9fdfa] border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]"
                       defaultValue={user.EmailVerification ? 'Verified' : 'Pending'}
                       onChange={(e) =>
-                        UpdateEmailVerificationStatus(
-                          user.FirstName,
-                          e.target.value,
-                          user.userId
-                        )
+                        UpdateEmailVerificationStatus(user.FirstName, e.target.value, user.userId)
                       }
                     >
                       {EmailVerificationStatus.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
+                        <option key={status} value={status}>{status}</option>
                       ))}
                     </select>
                   </td>
-                  <td className="px-4 py-3 border-t border-gray-200 text-center">
-                    <select
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      defaultValue={user.VerificationStatus}
-                      onChange={(e) =>
-                        UpdateStatus(user.FirstName, e.target.value, user.userId)
-                      }
+                  {LoginEmail.toLowerCase() !== "gouricurate@gmail.com" &&
+                    <td className="px-2 py-3">
+
+                      <select
+                        className={(user.ClientStatus==="Lost"&&"w-[150px] text-center px-3 py-2 rounded-lg bg-red-600 text-white border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")||(user.ClientStatus==="Converted"&&"w-[150px] text-center text-white px-3 py-2 rounded-lg bg-green-600 border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")||("w-[150px] text-center px-3 py-2 rounded-lg bg-yellow-500 text-white border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")}
+                        defaultValue={user.ClientStatus}
+                        onChange={(e) =>
+                          UpdateStatus(user.FirstName, e.target.value, user.userId)
+                        }
+                      >
+                        {Status.map((status) => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+
+                    </td>}
+                  <td className="px-2 py-3">
+                    <button
+                      className="group w-[100px] text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition-all duration-150 flex items-center justify-center"
+                      title="View Details"
+                      onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
                     >
-                      {Status.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-12 py-3 border-t border-gray-200 text-center cursor-pointer">
-                    <Eye onClick={() => ShowDompleteInformation(user.userId,user.FirstName)} />
+                      {user.DetailedVerification ? "Update" : "Fill"}
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
+        
           </table>
+              </div>
         </div>
       ) : (
-        <p className="text-center py-10 text-gray-500">No users found.</p>
+        <p className="text-center py-10 text-gray-400 text-lg">No users found.</p>
       )}
+
       {updatedStatusMsg && (
-        <p
-          className={`${
-            updatedStatusMsg.includes('Successfully')
-              ? 'text-green-800'
-              : 'text-gray-900'
-          } font-semibold text-center mt-4`}
-        >
+        <div className="fixed bottom-6 left-126 bg-gradient-to-br from-[#00A9A5] to-[#005f61] border border-gray-200 text-white px-6 py-4 rounded-xl shadow-2xl font-semibold">
           {updatedStatusMsg}
-        </p>
+        </div>
       )}
     </div>
-  </div>
-);
-
+  );
 }

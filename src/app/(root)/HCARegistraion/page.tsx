@@ -356,7 +356,7 @@ export default function DoctorProfileForm() {
         console.log("Submited---", FinelForm)
        
         const Timer = setInterval(() => {
-          router.push("/HomePage")
+          router.push("/SuccessfullyRegisterd")
         }, 1000)
         return () => clearInterval(Timer)
       }, 0);

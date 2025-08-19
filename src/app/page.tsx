@@ -34,48 +34,52 @@ export default function StaticInfoPage() {
   const router = useRouter();
 
 
-  useEffect(() => {
-    const Fetch = async () => {
-      const localValue = localStorage.getItem("UserId");
-      try {
-        const ProfileInformation = await GetUserInformation(localValue)
-        // const FillInformation=await GetUserCompliteInformation(localValue)
-        // console.log("Test Full Information----",FillInformation.HCAComplitInformation)
-       const email = ProfileInformation?.Email?.toLowerCase();
+ useEffect(() => {
+  const Fetch = async () => {
+    const localValue = typeof window !== "undefined" ? localStorage.getItem("UserId") : null;
+    try {
+      const ProfileInformation = await GetUserInformation(localValue);
+      console.log("Profile Status----", ProfileInformation);
 
-if (email === "admin@curatehealth.in" || email === "info@curatehealth.in" || email=== 'gouricurate@gmail.com') {
-  router.push("/AdminPage");
-  return;
-}
-        if (ProfileInformation?.FinelVerification === false&&ProfileInformation?.userType==="healthcare-assistant") {
-          router.push("/HCARegistraion")
-          return
-        }
-         if (ProfileInformation?.FinelVerification === false&&ProfileInformation?.userType==="patient") {
-          router.push("/PatientRegistration")
-          return
-        }
-        if (ProfileInformation?.FinelVerification===true) {
-          router.push("/HomePage")
-          return
-
-        } 
-
-        else {
-          setIsChecking(false);
-            const Timer=setTimeout(()=>{
-setShowPopUp(true)
-            },3500)
-
-            return ()=>clearInterval(Timer)
-        }
-      } catch (err: any) {
-
-       
+      const email = ProfileInformation?.Email?.toLowerCase();
+      if (["admin@curatehealth.in", "info@curatehealth.in", "gouricurate@gmail.com"].includes(email)) {
+        router.push("/AdminPage");
+        return;
       }
+
+      if (ProfileInformation?.FinelVerification === false) {
+        if (ProfileInformation?.userType === "healthcare-assistant") {
+          router.push("/HCARegistraion");
+          return;
+        }else{
+            router.push("/HomePage");
+        return;
+        }
+       
+      
+      }
+
+      if (ProfileInformation?.FinelVerification === true) {
+        router.push("/SuccessfullyRegisterd");
+        return;
+      }
+
+      if (ProfileInformation === null) {
+        setIsChecking(false);
+      } else {
+        setIsChecking(false);
+        const Timer = setTimeout(() => {
+          setShowPopUp(true);
+        }, 3500);
+        return () => clearTimeout(Timer);
+      }
+    } catch (err) {
+      console.error(err);
     }
-    Fetch()
-  }, [router]);
+  };
+  Fetch();
+}, [router]);
+
 
   if (isChecking) {
     return (
