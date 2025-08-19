@@ -238,9 +238,10 @@ console.log("User Verification Status-----",Finel)
                       ))}
                     </select>
                   </td>
-                  {LoginEmail.toLowerCase() !== "gouricurate@gmail.com" &&
+                 
+                  {(LoginEmail.toLowerCase() !== "gouricurate@gmail.com") &&
                     <td className="px-2 py-3">
-
+{user.userType === "patient"?
                       <select
                         className={(user.ClientStatus==="Lost"&&"w-[150px] text-center px-3 py-2 rounded-lg bg-red-600 text-white border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")||(user.ClientStatus==="Converted"&&"w-[150px] text-center text-white px-3 py-2 rounded-lg bg-green-600 border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")||("w-[150px] text-center px-3 py-2 rounded-lg bg-yellow-500 text-white border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")}
                         defaultValue={user.ClientStatus}
@@ -251,7 +252,7 @@ console.log("User Verification Status-----",Finel)
                         {Status.map((status) => (
                           <option key={status} value={status}>{status}</option>
                         ))}
-                      </select>
+                      </select>:<p className='text-center bg-gray-300 p-2 rounded-md'>Only for Patients</p>}
 
                     </td>}
                   <td className="px-2 py-3">
