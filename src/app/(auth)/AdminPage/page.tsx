@@ -227,7 +227,7 @@ console.log("User Verification Status-----",Finel)
                   <td className="px-2 py-3">{user.Location}</td>
                   <td className="px-2 py-3">
                     <select
-                      className="w-[150px] text-center px-3 py-2 rounded-lg bg-[#f9fdfa] border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]"
+                      className="w-[150px] cursor-pointer text-center px-3 py-2 rounded-lg bg-[#f9fdfa] border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]"
                       defaultValue={user.EmailVerification ? 'Verified' : 'Pending'}
                       onChange={(e) =>
                         UpdateEmailVerificationStatus(user.FirstName, e.target.value, user.userId)
@@ -243,7 +243,7 @@ console.log("User Verification Status-----",Finel)
                     <td className="px-2 py-3">
 {user.userType === "patient"?
                       <select
-                        className={(user.ClientStatus==="Lost"&&"w-[150px] text-center px-3 py-2 rounded-lg bg-red-600 text-white border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")||(user.ClientStatus==="Converted"&&"w-[150px] text-center text-white px-3 py-2 rounded-lg bg-green-600 border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")||("w-[150px] text-center px-3 py-2 rounded-lg bg-yellow-500 text-white border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")}
+                        className={(user.ClientStatus==="Lost"&&"w-[150px] text-center cursor-pointer px-3 py-2 rounded-lg bg-red-600 text-white border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")||(user.ClientStatus==="Converted"&&"w-[150px] cursor-pointer text-center text-white px-3 py-2 rounded-lg bg-green-600 border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")||("w-[150px] text-center px-3 py-2 rounded-lg bg-yellow-500 text-white border cursor-pointer border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")}
                         defaultValue={user.ClientStatus}
                         onChange={(e) =>
                           UpdateStatus(user.FirstName, e.target.value, user.userId)
@@ -257,7 +257,7 @@ console.log("User Verification Status-----",Finel)
                     </td>}
                   <td className="px-2 py-3">
                     <button
-                      className="group w-[100px] text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition-all duration-150 flex items-center justify-center"
+                      className="group w-[100px] text-white bg-gradient-to-br cursor-pointer from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition-all duration-150 flex items-center justify-center"
                       title="View Details"
                       onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
                     >
