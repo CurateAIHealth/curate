@@ -11,7 +11,7 @@ import {
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import {  LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { UpdateClient, UpdateUserInformation } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
 
@@ -20,7 +20,7 @@ export default function UserTableList() {
   const [users, setUsers] = useState<any[]>([]);
   const [isChecking, setIsChecking] = useState(true);
   const [UserFirstName, setUserFirstName] = useState("");
-  const [UpdateduserType, setuserType] = useState("");
+  const [UpdateduserType, setuserType] = useState("patient");
   const [search, setSearch] = useState('');
   const [LoginEmail, setLoginEmail] = useState("");
 
@@ -66,10 +66,10 @@ export default function UserTableList() {
     Contact: each.ContactNumber,
     userId: each.userId,
     VerificationStatus: each.VerificationStatus,
-    DetailedVerification:each.FinelVerification,
+    DetailedVerification: each.FinelVerification,
     EmailVerification: each.EmailVerification,
-    ClientStatus:each.ClientStatus
-    
+    ClientStatus: each.ClientStatus
+
   }));
 
   useEffect(() => {
@@ -136,13 +136,14 @@ export default function UserTableList() {
   const UpdatedFilterUserType = Finel.filter((each) => {
     const matchesType = !UpdateduserType || each.userType === UpdateduserType;
     const matchesSearch =
+      !search ||
       each.FirstName.toLowerCase().includes(search.toLowerCase()) ||
       each.Email.toLowerCase().includes(search.toLowerCase()) ||
       each.Contact.toLowerCase().includes(search.toLowerCase());
     return matchesType && matchesSearch;
   });
   const FilterProfilePic: any = UserFullInfo.map((each: any) => { return each?.HCAComplitInformation })
-console.log("User Verification Status-----",Finel)
+  console.log("User Verification Status-----", UpdatedFilterUserType)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f7fafc] via-[#e3f6f5] to-[#f9f9ff] text-gray-900 p-2">
@@ -177,11 +178,11 @@ console.log("User Verification Status-----",Finel)
             <select
               value={UpdateduserType}
               onChange={FilterUserType}
-              className="p-2 rounded-xl bg-white shadow border border-gray-200 text-base font-medium focus:border-[#62e0d9] focus:ring-2 focus:ring-[#caf0f8]"
+              className="p-2 w-[120px] text-center  rounded-xl bg-white shadow border border-gray-800 text-base font-medium focus:border-[#62e0d9] focus:ring-2 focus:ring-[#caf0f8]"
             >
-              <option value="">All Roles</option>
+         
               <option value="patient">Patient</option>
-              <option value="healthcare-assistant">Healthcare Assistant</option>
+              <option value="healthcare-assistant">HCA</option>
               <option value="doctor">Doctor</option>
             </select>
           }
@@ -191,85 +192,91 @@ console.log("User Verification Status-----",Finel)
 
       {UpdatedFilterUserType.length > 0 ? (
         <div className=" bg-white/90 rounded-2xl shadow-2xl border border-gray-100">
-           <div className="max-h-[540px] overflow-y-auto overflow-x-hidden scrollbar-hide">
+          <div className="max-h-[540px] overflow-y-auto overflow-x-hidden scrollbar-hide">
 
-          <table className="min-w-full   text-[13px] text-left text-gray-700">
-            <thead className="bg-[#f5faff] p-0 sticky top-0 z-10 ">
-              <tr>
+            <table className="min-w-full   text-[13px] text-left text-gray-700">
+              <thead className="bg-[#f5faff] p-0 sticky top-0 z-10 ">
+                <tr>
 
-                <th className="px-14 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Name</th>
-                <th className="px-14 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Email</th>
-                <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Contact</th>
-                <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Role</th>
-                <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Aadhar</th>
-                <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Location</th>
-                <th className="px-5 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Email Verification</th>
-                {LoginEmail.toLowerCase() !== "gouricurate@gmail.com" && <th className="px-8 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Client Status</th>}
+                  <th className="px-14 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Name</th>
+                  <th className="px-14 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Email</th>
+                  <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Contact</th>
+                  <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Role</th>
+                  <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Aadhar</th>
+                  <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Location</th>
+                  <th className="px-5 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Email Verification</th>
+                  {LoginEmail.toLowerCase() !== "gouricurate@gmail.com" && (
+                    <th className="px-8 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">
+                      Client Status
+                    </th>
+                  )}
+                  <th className="px-8 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">
+                    Action
+                  </th>
 
-                <th className="px-8 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Action</th>
-              </tr>
-            </thead>
-         
+                </tr>
+              </thead>
 
-            <tbody >
-              {UpdatedFilterUserType.map((user, index) => (
 
-                <tr key={index} className="border-b  border-gray-100 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors">
-                  <td className="px-2 py-3 font-semibold text-[#007B7F] flex items-center gap-2">
+              <tbody >
+                {UpdatedFilterUserType.map((user, index) => (
 
-                    <img src={FilterProfilePic.filter((each: any) => each.UserId === user.id)[0]?.Documents?.ProfilePic||FilterProfilePic.filter((each: any) => each.UserId === user.id)[0]?.ProfilePic||"Icons/DefaultProfileIcon.png"} className='rounded-full h-10 w-10' />
-                    {user.FirstName}
-                  </td>
-                  <td className="px-2 py-3">{user.Email}</td>
-                  <td className="px-2 py-3">{user.Contact}</td>
-                  <td className="px-2 py-3"><span className="inline-block px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-xs shadow-sm">{user.userType === "healthcare-assistant" ? "HCA" : user.userType}</span></td>
-                  <td className="px-2 py-3">{user.AadharNumber}</td>
-                  <td className="px-2 py-3">{user.Location}</td>
-                  <td className="px-2 py-3">
-                    <select
-                      className="w-[150px] cursor-pointer text-center px-3 py-2 rounded-lg bg-[#f9fdfa] border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]"
-                      defaultValue={user.EmailVerification ? 'Verified' : 'Pending'}
-                      onChange={(e) =>
-                        UpdateEmailVerificationStatus(user.FirstName, e.target.value, user.userId)
-                      }
-                    >
-                      {EmailVerificationStatus.map((status) => (
-                        <option key={status} value={status}>{status}</option>
-                      ))}
-                    </select>
-                  </td>
-                 
-                  {(LoginEmail.toLowerCase() !== "gouricurate@gmail.com") &&
+                  <tr key={index} className="border-b  border-gray-100 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors">
+                    <td className="px-2 py-3 font-semibold text-[#007B7F] flex items-center gap-2">
+
+                      <img src={FilterProfilePic.filter((each: any) => each.UserId === user.id)[0]?.Documents?.ProfilePic || FilterProfilePic.filter((each: any) => each.UserId === user.id)[0]?.ProfilePic || "Icons/DefaultProfileIcon.png"} className='rounded-full h-10 w-10' />
+                      {user.FirstName}
+                    </td>
+                    <td className="px-2 py-3">{user.Email}</td>
+                    <td className="px-2 py-3">{user.Contact}</td>
+                    <td className="px-2 py-3"><span className="inline-block px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-xs shadow-sm">{user.userType === "healthcare-assistant" ? "HCA" : user.userType}</span></td>
+                    <td className="px-2 py-3">{user.AadharNumber}</td>
+                    <td className="px-2 py-3">{user.Location}</td>
                     <td className="px-2 py-3">
-{user.userType === "patient"?
                       <select
-                        className={(user.ClientStatus==="Lost"&&"w-[150px] text-center cursor-pointer px-3 py-2 rounded-lg bg-red-600 text-white border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")||(user.ClientStatus==="Converted"&&"w-[150px] cursor-pointer text-center text-white px-3 py-2 rounded-lg bg-green-600 border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")||("w-[150px] text-center px-3 py-2 rounded-lg bg-yellow-500 text-white border cursor-pointer border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")}
-                        defaultValue={user.ClientStatus}
+                        className="w-[150px] cursor-pointer text-center px-3 py-2 rounded-lg bg-[#f9fdfa] border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]"
+                        defaultValue={user.EmailVerification ? 'Verified' : 'Pending'}
                         onChange={(e) =>
-                          UpdateStatus(user.FirstName, e.target.value, user.userId)
+                          UpdateEmailVerificationStatus(user.FirstName, e.target.value, user.userId)
                         }
                       >
-                        {Status.map((status) => (
+                        {EmailVerificationStatus.map((status) => (
                           <option key={status} value={status}>{status}</option>
                         ))}
-                      </select>:<p className='text-center bg-gray-300 p-2 rounded-md'>Only for Patients</p>}
+                      </select>
+                    </td>
 
-                    </td>}
-                  <td className="px-2 py-3">
-                    <button
-                      className="group w-[100px] text-white bg-gradient-to-br cursor-pointer from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition-all duration-150 flex items-center justify-center"
-                      title="View Details"
-                      onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
-                    >
-                      {user.DetailedVerification ? "Update" : "Fill"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-        
-          </table>
-              </div>
+                    {(LoginEmail.toLowerCase() !== "gouricurate@gmail.com") &&
+                      <td className="px-2 py-3">
+                        {user.userType === "patient" ?
+                          <select
+                            className={(user.ClientStatus === "Lost" && "w-[150px] text-center cursor-pointer px-3 py-2 rounded-lg bg-red-600 text-white border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]") || (user.ClientStatus === "Converted" && "w-[150px] cursor-pointer text-center text-white px-3 py-2 rounded-lg bg-green-600 border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]") || ("w-[150px] text-center px-3 py-2 rounded-lg bg-yellow-500 text-white border cursor-pointer border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")}
+                            defaultValue={user.ClientStatus}
+                            onChange={(e) =>
+                              UpdateStatus(user.FirstName, e.target.value, user.userId)
+                            }
+                          >
+                            {Status.map((status) => (
+                              <option key={status} value={status}>{status}</option>
+                            ))}
+                          </select> : <p className='text-center bg-gray-300 p-2 rounded-md'>Only for Patients</p>}
+
+                      </td>}
+                    <td className="px-2 py-3">
+                      <button
+                        className="group w-[100px] text-white bg-gradient-to-br cursor-pointer from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition-all duration-150 flex items-center justify-center"
+                        title="View Details"
+                        onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
+                      >
+                        {user.DetailedVerification ? "Update" : "Fill"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+
+            </table>
+          </div>
         </div>
       ) : (
         <p className="text-center py-10 text-gray-400 text-lg">No users found.</p>
