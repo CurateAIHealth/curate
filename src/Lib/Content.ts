@@ -1,3 +1,5 @@
+import { title } from "process";
+
 export const medicalSpecialties = [
 
   "General Physician",
@@ -419,7 +421,14 @@ export const HYDERABAD_LOCATIONS = [
 //   "Sri Balaji Medical College, Andhra Pradesh, MBBS, MD/MS, BSc Nursing"
 // ];
 
-
+export const Filters=['Client Enquiry', 'Processing', 'Converted', 'Waiting List', 'Lost']
+export const filterColors: Record<string, string> = {
+  "Client Enquiry": "bg-blue-300 hover:bg-blue-600 text-white",
+  "Processing": "bg-yellow-500 hover:bg-yellow-600 text-white",
+  "Waiting List": "bg-gray-500 hover:bg-purple-600 text-white",
+  "Converted": "bg-green-500 hover:bg-green-600 text-white",
+  "Lost": "bg-red-500 hover:bg-red-600 text-white",
+};
 export const familyRelations = [
   "Father",
   "Mother",

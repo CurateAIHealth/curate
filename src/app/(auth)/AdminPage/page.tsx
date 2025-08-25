@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { LogOut } from 'lucide-react';
 import { UpdateClient, UpdateUserInformation } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
+import { filterColors, Filters } from '@/Lib/Content';
 
 export default function UserTableList() {
   const [updatedStatusMsg, setUpdatedStatusMsg] = useState('');
@@ -25,7 +26,7 @@ export default function UserTableList() {
   const [LoginEmail, setLoginEmail] = useState("");
 
 
-  const Status = ['Client Enquiry', 'Procceing', 'Converted', 'Waiting List', 'Lost'];
+  const Status = ['Client Enquiry', 'Processing', 'Converted', 'Waiting List', 'Lost'];
   const EmailVerificationStatus = ['Verified', 'Pending'];
   const [UserFullInfo, setFullInfo] = useState([])
   const router = useRouter();
@@ -111,7 +112,9 @@ export default function UserTableList() {
   const FilterUserType = (e: any) => {
     setuserType(e.target.value);
   };
-
+const UpdateFilterValue=(UpdatedValue:any)=>{
+setSearch(UpdatedValue)
+}
   const ShowDompleteInformation = (userId: any, ClientName: any) => {
     if (userId) {
       dispatch(UpdateClient(ClientName));
@@ -135,15 +138,11 @@ export default function UserTableList() {
 
   const UpdatedFilterUserType = Finel.filter((each) => {
     const matchesType = !UpdateduserType || each.userType === UpdateduserType;
-    const matchesSearch =
-      !search ||
-      each.FirstName.toLowerCase().includes(search.toLowerCase()) ||
-      each.Email.toLowerCase().includes(search.toLowerCase()) ||
-      each.Contact.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch =!search ||each.ClientStatus===search
     return matchesType && matchesSearch;
   });
   const FilterProfilePic: any = UserFullInfo.map((each: any) => { return each?.HCAComplitInformation })
-  console.log("User Verification Status-----", UpdatedFilterUserType)
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f7fafc] via-[#e3f6f5] to-[#f9f9ff] text-gray-900 p-2">
@@ -165,28 +164,34 @@ export default function UserTableList() {
           </button>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4  mt-2">
-          <input
-            type="text"
-            placeholder="Search by name, email or contact"
-            className="flex-grow p-2 text-center rounded-xl bg-white shadow border border-gray-200 outline-none text-base focus:border-[#62e0d9] focus:ring-2 focus:ring-[#caf0f8]"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+       <div className="flex flex-col md:flex-row gap-4 justify-between mt-2">
+  {UpdateduserType === "patient" && (
+    <div className="flex gap-3 flex-wrap">
+      {Filters.map((each, index) => (
+        <button
+          key={index}
+          onClick={() => UpdateFilterValue(each)}
+          className={`px-4 py-2 w-[200px] ${search===each&&"border-3"} rounded-xl  shadow-md font-medium transition-all duration-200 ${filterColors[each]}`}
+        >
+          {each}
+        </button>
+      ))}
+    </div>
+  )}
 
-          {LoginEmail.toLowerCase() === "admin@curatehealth.in" &&
-            <select
-              value={UpdateduserType}
-              onChange={FilterUserType}
-              className="p-2 w-[120px] text-center  rounded-xl bg-white shadow border border-gray-800 text-base font-medium focus:border-[#62e0d9] focus:ring-2 focus:ring-[#caf0f8]"
-            >
-         
-              <option value="patient">Patient</option>
-              <option value="healthcare-assistant">HCA</option>
-              <option value="doctor">Doctor</option>
-            </select>
-          }
-        </div>
+
+    <select
+      value={UpdateduserType}
+      onChange={FilterUserType}
+      className="p-2 w-[120px] text-center rounded-xl bg-white shadow border border-gray-800 text-base font-medium focus:border-[#62e0d9] focus:ring-2 focus:ring-[#caf0f8] ml-auto"
+    >
+      <option value="patient">Patient</option>
+      <option value="healthcare-assistant">HCA</option>
+      <option value="doctor">Doctor</option>
+    </select>
+  
+</div>
+
       </div>
 
 
@@ -205,7 +210,7 @@ export default function UserTableList() {
                   <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Aadhar</th>
                   <th className="px-2 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Location</th>
                   <th className="px-5 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">Email Verification</th>
-                  {LoginEmail.toLowerCase() !== "gouricurate@gmail.com" && (
+                  { UpdateduserType!=="healthcare-assistant" && (
                     <th className="px-8 py-3 font-semibold tracking-wide text-xs text-gray-500 uppercase border-b border-gray-200">
                       Client Status
                     </th>
@@ -246,12 +251,12 @@ export default function UserTableList() {
                       </select>
                     </td>
 
-                    {(LoginEmail.toLowerCase() !== "gouricurate@gmail.com") &&
+                    { user.userType === "patient" &&
                       <td className="px-2 py-3">
-                        {user.userType === "patient" ?
+                       
                           <select
-                            className={(user.ClientStatus === "Lost" && "w-[150px] text-center cursor-pointer px-3 py-2 rounded-lg bg-red-600 text-white border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]") || (user.ClientStatus === "Converted" && "w-[150px] cursor-pointer text-center text-white px-3 py-2 rounded-lg bg-green-600 border border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]") || ("w-[150px] text-center px-3 py-2 rounded-lg bg-yellow-500 text-white border cursor-pointer border-gray-200 outline-none focus:border-[#00A9A5] focus:ring-1 focus:ring-[#62e0d9]")}
-                            defaultValue={user.ClientStatus}
+      className={`px-4 py-2 w-[200px] border-2px rounded-xl text-center shadow-md font-medium transition-all duration-200 ${filterColors[user.ClientStatus]}`}
+                            value={user.ClientStatus}
                             onChange={(e) =>
                               UpdateStatus(user.FirstName, e.target.value, user.userId)
                             }
@@ -259,7 +264,7 @@ export default function UserTableList() {
                             {Status.map((status) => (
                               <option key={status} value={status}>{status}</option>
                             ))}
-                          </select> : <p className='text-center bg-gray-300 p-2 rounded-md'>Only for Patients</p>}
+                          </select> 
 
                       </td>}
                     <td className="px-2 py-3">
@@ -268,7 +273,7 @@ export default function UserTableList() {
                         title="View Details"
                         onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
                       >
-                        {user.DetailedVerification ? "Update" : "Fill"}
+                        {user.DetailedVerification ? "View" : "Fill"}
                       </button>
                     </td>
                   </tr>

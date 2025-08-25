@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, ChangeEvent } from "react";
+import React, { useState, useEffect, useCallback, ChangeEvent } from "react";
 import {
   User, Phone, Mail, MapPin, Landmark, Fingerprint, CalendarDays,
   CreditCard, ClipboardPlus, ArrowRight, ArrowLeft
@@ -8,6 +8,8 @@ import axios from "axios";
 import { GetUserInformation, PostFullRegistration, UpdateFinelVerification } from "@/Lib/user.action";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
+
+// --- Type Definitions ---
 
 interface PatientFormState {
   phoneNo1: string;
@@ -38,15 +40,6 @@ interface PatientFormState {
   ProfilePic: string;
 }
 
-interface UserInformationResponse {
-  FirstName?: string;
-  dateofBirth?: string;
-  ContactNumber?: string;
-  Email?: string;
-  AadharNumber?: string;
-  Location?: string;
-}
-
 interface CustomInputProps {
   icon?: React.ReactNode;
   label: string;
@@ -57,6 +50,7 @@ interface CustomInputProps {
   type?: string;
   min?: number;
   max?: number;
+  helper?: React.ReactNode;
 }
 
 interface CustomSelectProps {
@@ -126,6 +120,7 @@ export default function PatientForm() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [ageWarning, setAgeWarning] = useState<string>("");
+  const [locationLoading, setLocationLoading] = useState(false);
 
   const Router = useRouter();
   const userId = useSelector((state: any) => state?.UserDetails);
@@ -134,7 +129,7 @@ export default function PatientForm() {
     if (!userId) return;
     (async () => {
       try {
-        setUploadMessage('Please Wait Fetching  Data..')
+        setUploadMessage('Please Wait Fetching  Data..');
         const data = await GetUserInformation(userId);
         setForm(prev => ({
           ...prev,
@@ -145,7 +140,7 @@ export default function PatientForm() {
           clientAadharNo: data.AadharNumber || "",
           city: data.Location || "",
         }));
-        setUploadMessage('Successfully Fetched,Update with  required Information')
+        setUploadMessage('Successfully Fetched,Update with  required Information');
       } catch (err) {
         console.error("Failed to fetch user data:", err);
       }
@@ -205,6 +200,46 @@ export default function PatientForm() {
     setStatusMessage("");
   }, [form]);
 
+ 
+  const handleLocationClick = async () => {
+    setLocationLoading(true);
+    setStatusMessage('');
+    if (!window.navigator.geolocation) {
+      setStatusMessage("Geolocation is not supported by your browser.");
+      setLocationLoading(false);
+      return;
+    }
+    window.navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`;
+          const response = await fetch(url, {
+            headers: { "Accept": "application/json", "User-Agent": "yourcompany-medical-app/1.0" }
+          });
+          const data = await response.json();
+          const address = data.display_name || "";
+          if (address) {
+            setForm((prev) => ({ ...prev, address }));
+            setErrors((prev) => ({ ...prev, address: "" }));
+          } else {
+            setStatusMessage("Unable to fetch address from location.");
+          }
+        } catch (err) {
+          setStatusMessage("Failed to obtain address.");
+        } finally {
+          setLocationLoading(false);
+        }
+      },
+      () => {
+        setStatusMessage("Could not get current location.");
+        setLocationLoading(false);
+      }
+    );
+  };
+
+  
+
   const validateStep = (step: number): boolean => {
     const newErr: Record<string, string> = {};
     if (step === 0) {
@@ -250,11 +285,10 @@ export default function PatientForm() {
     }
     const finalForm = { ...form, UserId: userId, userType: "patient" };
     try {
-      const PostResult = await PostFullRegistration(finalForm)
-            const Result=await UpdateFinelVerification(userId)
-    
+      const PostResult = await PostFullRegistration(finalForm);
+      const Result=await UpdateFinelVerification(userId);
       setStatusMessage("Patient Details Updated Successfully");
-      setTimeout(() => { console.log("Redirecting to /SuccessfullyRegisterd..."); }, 1200);
+      setTimeout(() => { Router.push("/SuccessfullyRegisterd"); }, 1200);
     } catch (err) {
       setStatusMessage("Submission failed. Please try again.");
     }
@@ -386,7 +420,22 @@ export default function PatientForm() {
               <CustomInput label="Client Aadhar No *" icon={<Fingerprint />} name="clientAadharNo" value={form.clientAadharNo} onChange={handleChange} error={errors.clientAadharNo} />
               <CustomInput label="Alternative Client Contact" icon={<Phone />} name="alternativeClientContact" value={form.alternativeClientContact} onChange={handleChange} error={errors.alternativeClientContact} />
               <CustomSelect label="Client Relation to Patient" name="clientRelationToPatient" value={form.clientRelationToPatient} onChange={handleChange} options={familyRelations} error={errors.clientRelationToPatient} />
-              <CustomInput label="Address *" icon={<MapPin />} name="address" value={form.address} onChange={handleChange} error={errors.address} />
+              <CustomInput
+                label="Address *"
+                icon={<MapPin />}
+                name="address"
+                value={form.address}
+                onChange={handleChange}
+                error={errors.address}
+               
+              />
+                <span
+                    onClick={handleLocationClick}
+                    className="text-blue-500 underline cursor-pointer"
+                    tabIndex={0}
+                  >
+                    {locationLoading ? "Locating..." : "Use Correct Location"}
+                  </span>
               <CustomInput label="Landmark" icon={<Landmark />} name="landmark" value={form.landmark} onChange={handleChange} error={errors.landmark} />
               <CustomInput label="City *" name="city" value={form.city} onChange={handleChange} error={errors.city} />
               <CustomInput label="Pin Code *" name="pinCode" value={form.pinCode} onChange={handleChange} error={errors.pinCode} />
@@ -490,6 +539,7 @@ export default function PatientForm() {
   );
 }
 
+// --- Updated CustomInput supporting helper label ---
 function CustomInput({
   icon,
   label,
@@ -499,7 +549,8 @@ function CustomInput({
   error,
   type = "text",
   min,
-  max
+  max,
+  helper
 }: CustomInputProps) {
   return (
     <div className="relative group">
@@ -526,10 +577,16 @@ function CustomInput({
         {label}
       </label>
       {icon && <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 peer-focus:text-teal-600 transition-colors duration-300">{icon}</div>}
+      {helper && (
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-xs font-medium text-blue-500 hover:underline select-none" tabIndex={0}>
+          {helper}
+        </span>
+      )}
       {error && <p className="text-red-500 text-xs mt-1 font-medium">{error}</p>}
     </div>
   );
 }
+
 
 function CustomSelect({
   label,
