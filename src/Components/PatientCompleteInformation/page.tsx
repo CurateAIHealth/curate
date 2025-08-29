@@ -1,11 +1,12 @@
 'use client';
 
-import { GetUserCompliteInformation, UpdateHCAComplitInformation } from '@/Lib/user.action';
+import { GetUserCompliteInformation, GetUserInformation, UpdateHCAComplitInformation } from '@/Lib/user.action';
 import axios from 'axios';
 import { Filter } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, ChangeEvent, useEffect, memo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import Timesheet from '../TimeSheet/page';
 
 
 
@@ -159,13 +160,16 @@ const Router=useRouter()
   };
 
   const [formData, setFormData] = useState(initialFormData);
-
+ const [LoginEmail, setLoginEmail] = useState("");
   useEffect(() => {
     const Fetch = async () => {
       try {
         const Result = await GetUserCompliteInformation(ImportedUserId);
         const FilterValue = Result?.HCAComplitInformation || {};
-console.log("Fetch Data---",FilterValue)
+  const localValue = localStorage.getItem("UserId");
+        const ProfileInformation = await GetUserInformation(localValue);
+        
+        setLoginEmail(ProfileInformation.Email);
         const formatDate = (dateString: string | undefined): string => {
           if (!dateString) return '';
           try {
@@ -234,9 +238,14 @@ console.log("Fetch Data---",FilterValue)
   };
 
   const handleSubmit = async () => {
+
     setStatusMessage((prev)=>({...prev,message:`Please Wait ${NameoftheClient} Updating Profile...`,type:""})); 
     try {
-      
+
+      if (LoginEmail.toLowerCase() !== "admin@curatehealth.in") {
+        setStatusMessage((prev) => ({ ...prev, message: "Only Admin Can Update the Information", type: "" }))
+        return
+      }
       const FinelData = { ...formData, UserId: ImportedUserId, };
       const Result= await UpdateHCAComplitInformation(ImportedUserId, FinelData);
       console.log('Updated Patient Data:', FinelData);
@@ -247,7 +256,7 @@ console.log("Fetch Data---",FilterValue)
     }
   };
 
-  const tabs: string[] = ['Personal Information', 'Address Details', 'Service & Billing'];
+  const tabs: string[] = ['Personal Information', 'Address Details', 'Service & Billing','Time Sheet'];
   const blueColor = '#1392d3';
   const Revert = () => {
         Router.push("/AdminPage")
@@ -300,7 +309,7 @@ console.log("Fetch Data---",FilterValue)
         []
       );
 
-console.log("Test Profile Pic---",formData.ProfilePic)
+
     if (isChecking) {
     return (
       <div className="h-screen flex items-center justify-center font-bold">
@@ -311,7 +320,7 @@ console.log("Test Profile Pic---",formData.ProfilePic)
     );
   }
   return (
-    <div className="min-h-screen bg-gray-50 px-4 sm:px-8 py-10 font-sans">
+    <div className="min-h-screen bg-gray-50 px-4 sm:px-8 py-2 font-sans">
       <div className="max-w-5xl mx-auto bg-white p-6 md:p-10 rounded-lg">
     <div className="flex items-center justify-between">
          <div className="flex items-center gap-6">
@@ -339,7 +348,7 @@ console.log("Test Profile Pic---",formData.ProfilePic)
              
               />
 
-    <p className={ `${statusMessage.message==="Profile Updated Succesfully"?"text-green-800":"text-black"} text-center font-semibold ml-15 mt-10`}>{statusMessage.message}</p>
+
     </div>
   </div>
         <header className="mb-8">
@@ -353,7 +362,7 @@ console.log("Test Profile Pic---",formData.ProfilePic)
                 </div>
 </div>
         
-        <div className="flex border-b border-gray-200 mb-6">
+        <div className="flex border-b border-gray-200 mb-0">
           {tabs.map(tab => (
             <button
               key={tab}
@@ -368,13 +377,13 @@ console.log("Test Profile Pic---",formData.ProfilePic)
         
       
         {statusMessage && (
-          <div className={`p-4 mb-4 rounded-md text-sm ${statusMessage.type === 'success' && 'bg-green-100 text-green-700' }`}>
+          <div className={`p-4 mb-4 rounded-md text-sm ${statusMessage.type === 'success' && 'bg-green-100 text-green-700'}${statusMessage.message==="Only Admin Can Update the Information"&&'bg-red-600 font-semibold text-[16px] text-red-600 ' }`}>
             {statusMessage.message}
           </div>
         )}
 
 
-        <div className="space-y-6">
+        <div>
           {activeTab === 'Personal Information' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <FormInput name="patientFullName" label="Full Name" value={formData.patientFullName} onChange={handleChange} />
@@ -442,16 +451,19 @@ console.log("Test Profile Pic---",formData.ProfilePic)
               />
             </div>
           )}
+
+          {activeTab==="Time Sheet"&&<Timesheet/>}
         </div>
 
-        <div className="flex justify-end mt-10">
+        <div className="flex justify-end mt-3">
           <button
             onClick={handleSubmit}
-            className="px-8 py-2 rounded-md font-medium text-white bg-[#50c896] shadow-md transition hover:bg-blue-700"
-            
+            className="px-8 py-2 cursor-pointer rounded-md font-medium text-white bg-[#50c896] shadow-md transition hover:bg-blue-700"
+      
           >
             Save Changes
           </button>
+      
         </div>
       </div>
     </div>
