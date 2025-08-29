@@ -420,15 +420,53 @@ export const HYDERABAD_LOCATIONS = [
 //   "Dr. Pinnamaneni Siddhartha Institute of Medical Sciences, Andhra Pradesh, MBBS, MD/MS, BSc Nursing",
 //   "Sri Balaji Medical College, Andhra Pradesh, MBBS, MD/MS, BSc Nursing"
 // ];
+export const Main_Filters = ["Client Enquiry", "Placements", "Timesheet", "Referral Pay", "Payments"];
 
-export const Filters=['Client Enquiry', 'Processing', 'Converted', 'Waiting List', 'Lost']
+export const ClientEnquiry_Filters = ["Processing", "Converted", "Waiting List", "Lost"];
+
+export const Placements_Filters = ["On Service", "Replacements", "Termination"];
+
+export const Timesheet_Filters = ["Provider Staff", "Co-provider", "Curate"];
+
+export const ReferralPay_Filters = ["Lead Referral", "Institute Referral", "Staff Referral"];
+
+export const Payments_Filters = ["Invoice Pending", "Collections", "Expenses"];
+
 export const filterColors: Record<string, string> = {
-  "Client Enquiry": "bg-blue-300 hover:bg-blue-600 text-white",
-  "Processing": "bg-yellow-500 hover:bg-yellow-600 text-white",
-  "Waiting List": "bg-gray-500 hover:bg-purple-600 text-white",
-  "Converted": "bg-green-500 hover:bg-green-600 text-white",
-  "Lost": "bg-red-500 hover:bg-red-600 text-white",
+
+  "Client Enquiry": "bg-blue-200 hover:bg-blue-400 text-gray-800",
+  "Placements": "bg-pink-200 hover:bg-pink-400 text-gray-800",
+  "Timesheet": "bg-indigo-200 hover:bg-indigo-400 text-gray-800",
+  "Referral Pay": "bg-teal-200 hover:bg-teal-400 text-gray-800",
+  "Payments": "bg-orange-200 hover:bg-orange-400 text-gray-800",
+
+
+  "Processing": "bg-yellow-200 hover:bg-yellow-400 text-gray-800",
+  "Waiting List": "bg-purple-200 hover:bg-purple-400 text-gray-800",
+  "Converted": "bg-green-200 hover:bg-green-400 text-gray-800",
+  "Lost": "bg-red-200 hover:bg-red-400 text-gray-800",
+
+
+  "On Service": "bg-sky-200 hover:bg-sky-400 text-gray-800",
+  "Replacements": "bg-pink-200 hover:bg-pink-400 text-gray-800",
+  "Termination": "bg-rose-200 hover:bg-rose-400 text-gray-800",
+
+ 
+  "Provider Staff": "bg-indigo-200 hover:bg-indigo-400 text-gray-800",
+  "Co-provider": "bg-cyan-200 hover:bg-cyan-400 text-gray-800",
+  "Curate": "bg-violet-200 hover:bg-violet-400 text-gray-800",
+
+  "Lead Referral": "bg-emerald-200 hover:bg-emerald-400 text-gray-800",
+  "Institute Referral": "bg-lime-200 hover:bg-lime-400 text-gray-800",
+  "Staff Referral": "bg-green-200 hover:bg-green-400 text-gray-800",
+
+
+  "Invoice Pending": "bg-orange-200 hover:bg-orange-400 text-gray-800",
+  "Collections": "bg-amber-200 hover:bg-amber-400 text-gray-800",
+  "Expenses": "bg-red-200 hover:bg-red-400 text-gray-800",
 };
+
+
 export const familyRelations = [
   "Father",
   "Mother",

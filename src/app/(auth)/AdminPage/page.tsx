@@ -12,7 +12,8 @@ import { useEffect, useState } from 'react';
 import { LogOut } from 'lucide-react';
 import { UpdateClient, UpdateUserInformation } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
-import { filterColors, Filters } from '@/Lib/Content';
+import { ClientEnquiry_Filters, filterColors, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
+import WorkingOn from '@/Components/CurrentlyWoring/page';
 
 export default function UserTableList() {
   const [updatedStatusMsg, setUpdatedStatusMsg] = useState('');
@@ -22,7 +23,7 @@ export default function UserTableList() {
   const [UpdateduserType, setuserType] = useState("patient");
   const [search, setSearch] = useState('');
   const [LoginEmail, setLoginEmail] = useState("");
-
+const [UpdateMainFilter,SetUpdateMainFilter]=useState("Client Enquiry")
   const Status = ['Client Enquiry', 'Processing', 'Converted', 'Waiting List', 'Lost'];
   const EmailVerificationStatus = ['Verified', 'Pending'];
   const [UserFullInfo, setFullInfo] = useState([])
@@ -48,6 +49,12 @@ export default function UserTableList() {
       if (res?.success === true) {
         setUpdatedStatusMsg(`${first} Email Verification Status Updated Successfully`);
       }
+      const Timer=setInterval(()=>{
+    setUpdatedStatusMsg("");
+
+      },1000)
+
+      return ()=>clearInterval(Timer)
     } catch (err: any) {
       console.error(err);
     }
@@ -117,6 +124,141 @@ export default function UserTableList() {
     setSearch(UpdatedValue)
   };
 
+  const UpdateMainFilterValue=(Z:any)=>{
+
+    SetUpdateMainFilter(Z)
+  }
+useEffect(() => {
+  if (UpdateMainFilter === "Client Enquiry") {
+    setSearch(""); 
+  }
+}, [UpdateMainFilter]);
+
+  const UpdateMainFilterValues = () => {
+    switch (UpdateMainFilter) {
+      case "Client Enquiry":
+              
+        return ClientEnquiry_Filters;
+      case "Placements":
+        return Placements_Filters;
+      case "Timesheet":
+        return Timesheet_Filters
+      case "Referral Pay":
+        return ReferralPay_Filters;
+      case "Payments":
+        return Payments_Filters;
+      default:
+        return []
+
+    }
+  }
+  const ContetUserInterface=()=>{
+      switch (UpdateMainFilter) {
+      case "Client Enquiry":
+        return ClientEnquiryUserInterFace()
+      case "Placements":
+        return <WorkingOn ServiceName="Placements"/>
+      case "Timesheet":
+        return <WorkingOn ServiceName="Timesheet"/>
+      case "Referral Pay":
+        return <WorkingOn ServiceName="Referral Pay"/>
+      case "Payments":
+        return <WorkingOn ServiceName="Payments"/>
+      default:
+        return null
+
+    }
+  }
+const  ClientEnquiryUserInterFace=()=>{
+  return(
+    <div>
+      {UpdatedFilterUserType.length > 0 ? (
+        <div className="bg-white/90 rounded-2xl shadow-2xl border border-gray-100">
+          <div className="max-h-[540px] overflow-y-auto overflow-x-auto md:overflow-x-hidden scrollbar-hide">
+            <table className="min-w-full text-[11px] sm:text-[13px] text-left text-gray-700">
+              <thead className="bg-[#f5faff] sticky top-0 z-10">
+                <tr>
+                  <th className="px-2 py-2 sm:px-6 sm:py-3">Name</th>
+                  <th className="px-2 py-2 sm:px-12 sm:py-3">Email</th>
+                  <th className="px-2 py-2">Contact</th>
+                  <th className="px-5 py-2">Role</th>
+                  <th className="px-2 py-2">Aadhar</th>
+                  <th className="px-2 py-2">Location</th>
+                  <th className="px-2 sm:px-4 py-2">Email Verification</th>
+                  {UpdateduserType !== "healthcare-assistant" && (
+                    <th className="px-2 sm:px-14 py-2">Client Status</th>
+                  )}
+                  <th className="px-2 sm:px-4 py-2">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {UpdatedFilterUserType.map((user, index) => (
+                  <tr key={index} className="border-b border-gray-100 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors">
+                    <td className="px-2 py-2 flex items-center gap-2">
+                      <img
+                        src={FilterProfilePic.filter((each: any) => each.UserId === user.id)[0]?.Documents?.ProfilePic || "Icons/DefaultProfileIcon.png"}
+                        className="rounded-full h-7 w-7 sm:h-10 sm:w-10"
+                      />
+                      <span className="font-semibold text-[#007B7F]">{user.FirstName}</span>
+                    </td>
+                    <td className="sm:px-10 py-2 break-words max-w-[120px] sm:max-w-none">{user.Email}</td>
+                    <td className="px-2 py-2">{user.Contact}</td>
+                    <td className="px-2 py-2"><span className="px-2 sm:px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-[9px] sm:text-xs">{user.userType === "healthcare-assistant" ? "HCA" : user.userType}</span></td>
+                    <td className="px-2 py-2">{user.AadharNumber}</td>
+                    <td className="px-2 py-2">{user.Location}</td>
+                    <td className="px-2 py-2">
+                      <select
+                        className="w-full cursor-pointer sm:w-[150px] text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200"
+                        defaultValue={user.EmailVerification ? 'Verified' : 'Pending'}
+                        onChange={(e) =>
+                          UpdateEmailVerificationStatus(user.FirstName, e.target.value, user.userId)
+                        }
+                      >
+                        {EmailVerificationStatus.map((status) => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                    </td>
+                    {user.userType === "patient" &&
+                      <td className="px-2 py-2">
+                        <select
+                          className={`w-full cursor-pointer sm:w-[130px] px-2 py-2 rounded-xl text-center shadow-md font-medium transition-all duration-200 ${filterColors[user.ClientStatus]}`}
+                          value={user.ClientStatus}
+                          onChange={(e) =>
+                            UpdateStatus(user.FirstName, e.target.value, user.userId)
+                          }
+                        >
+                          {Status.map((status) => (
+                            <option key={status} value={status}>{status}</option>
+                          ))}
+                        </select>
+                      </td>}
+                    <td className="px-2 py-2">
+                      <button
+                        className="w-full cursor-pointer sm:w-[60px] text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition"
+                        onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
+                      >
+                        {user.DetailedVerification ? "View" : "Fill"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <p className="text-center py-10 text-gray-400 text-base sm:text-lg">No users found.</p>
+      )}
+
+      {updatedStatusMsg && (
+        <div className="fixed bottom-4 sm:bottom-6 left-3 sm:left-10 bg-gradient-to-br from-[#00A9A5] to-[#005f61] text-white px-3 sm:px-6 py-2 sm:py-4 rounded-xl shadow-2xl font-semibold text-xs sm:text-base">
+          {updatedStatusMsg}
+        </div>
+      )}
+      </div>
+  )
+}
   const ShowDompleteInformation = (userId: any, ClientName: any) => {
     if (userId) {
       dispatch(UpdateClient(ClientName));
@@ -143,11 +285,11 @@ export default function UserTableList() {
     const matchesSearch = !search || each.ClientStatus === search;
     return matchesType && matchesSearch;
   });
-
+console.log("Test---",UpdatedFilterUserType.filter((Try)=>Try.ClientStatus==="Procceing"))
   const FilterProfilePic: any = UserFullInfo.map((each: any) => { return each?.HCAComplitInformation });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f7fafc] via-[#e3f6f5] to-[#f9f9ff] text-gray-900 p-2 md:p-5">
+    <div className="min-h-screen bg-gradient-to-br from-[#f7fafc] via-[#e3f6f5] to-[#f9f9ff] text-gray-900 p-2 ">
 
     
       <div className="sticky top-0 z-50 bg-opacity-90 backdrop-blur-lg mb-3">
@@ -160,7 +302,7 @@ export default function UserTableList() {
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+            className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
           >
             <LogOut size={20} /> Logout
           </button>
@@ -168,117 +310,85 @@ export default function UserTableList() {
 
        
        <div className="flex flex-col md:flex-row gap-4 justify-between mt-2">
-          {UpdateduserType === "patient" && (
+          {/* {UpdateduserType === "patient" && (
             <div className="flex gap-2 flex-wrap w-full sm:w-auto">
               {Filters.map((each, index) => (
                 <button
                   key={index}
                   onClick={() => UpdateFilterValue(each)}
-                  className={`px-3 py-2 text-sm sm:text-base flex-1 sm:flex-none sm:min-w-[160px] ${search === each && "border-3"} rounded-xl shadow-md font-medium transition-all duration-200 ${filterColors[each]}`}
+                  className={` cursor-pointer px-3 py-2 text-sm sm:text-base flex-1 sm:flex-none sm:min-w-[160px] ${search === each && "border-3"} rounded-xl shadow-md font-medium transition-all duration-200 ${filterColors[each]}`}
                 >
                   {each}
                 </button>
               ))}
             </div>
-          )}
+          )} */}
+<div className="flex  flex-col gap-2 flex-wrap w-full sm:w-auto">
+ <div className="flex gap-3 flex-wrap w-full sm:w-auto">
+  {Main_Filters.map((each, index) => {
 
-          <select
+
+    return (
+      <button
+        key={index}
+        onClick={() => UpdateMainFilterValue(each)}
+        className={`px-4 py-2 rounded-xl shadow-md font-medium text-sm sm:text-base 
+          transition-all duration-200 flex-1 sm:flex-none sm:min-w-[160px]
+          ${
+            each===UpdateMainFilter
+ ? "bg-[#50c896] text-white border border-white-700 scale-105"
+ 
+    : "bg-gray-100 text-gray-800 border border-gray-300 hover:bg-gray-200 hover:scale-105"
+          }
+        `}
+      >
+        {each === "Client Enquiry"
+          ? `${each} (${Finel.filter((item) => item.userType === "patient").length})`
+          : each}
+      </button>
+    );
+  })}
+</div>
+
+
+           
+                <div className="flex gap-2 flex-wrap w-full sm:w-auto">
+              {UpdateMainFilterValues().map((each:any, index:any) => (
+                <button
+                  key={index}
+                  onClick={() => UpdateFilterValue(each)}
+                  className={`cursor-pointer px-1 py-1 text-xs  flex-1 sm:flex-none sm:min-w-[100px] ${search === each && "border-3"} rounded-xl shadow-md font-medium transition-all duration-200 ${filterColors[each]}`}
+                >
+              
+                {UpdateMainFilter==="Client Enquiry"?`${each} (${UpdatedFilterUserType.filter((Try)=>Try.ClientStatus===each).length})`:each}
+                </button>
+              ))}
+            </div>
+             
+            </div>
+          {/* <select
             value={UpdateduserType}
             onChange={FilterUserType}
-      className="p-2 w-[120px] text-center rounded-xl bg-white shadow border border-gray-800 text-base font-medium focus:border-[#62e0d9] focus:ring-2 focus:ring-[#caf0f8] ml-auto"
+      className="p-2 w-[120px] cursor-pointer text-center rounded-xl bg-white shadow border border-gray-800 text-base font-medium focus:border-[#62e0d9] focus:ring-2 focus:ring-[#caf0f8] ml-auto"
           >
             <option value="patient">Patient</option>
             <option value="healthcare-assistant">HCA</option>
             <option value="doctor">Doctor</option>
-          </select>
+          </select> */}
         </div>
       </div>
 
-      
-      {UpdatedFilterUserType.length > 0 ? (
-        <div className="bg-white/90 rounded-2xl shadow-2xl border border-gray-100">
-          <div className="max-h-[540px] overflow-y-auto overflow-x-auto md:overflow-x-hidden scrollbar-hide">
-            <table className="min-w-full text-[11px] sm:text-[13px] text-left text-gray-700">
-              <thead className="bg-[#f5faff] sticky top-0 z-10">
-                <tr>
-                  <th className="px-2 py-2 sm:px-6 sm:py-3">Name</th>
-                  <th className="px-2 py-2 sm:px-6 sm:py-3">Email</th>
-                  <th className="px-2 py-2">Contact</th>
-                  <th className="px-2 py-2">Role</th>
-                  <th className="px-2 py-2">Aadhar</th>
-                  <th className="px-2 py-2">Location</th>
-                  <th className="px-2 sm:px-4 py-2">Email Verification</th>
-                  {UpdateduserType !== "healthcare-assistant" && (
-                    <th className="px-2 sm:px-4 py-2">Client Status</th>
-                  )}
-                  <th className="px-2 sm:px-4 py-2">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {UpdatedFilterUserType.map((user, index) => (
-                  <tr key={index} className="border-b border-gray-100 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors">
-                    <td className="px-2 py-2 flex items-center gap-2">
-                      <img
-                        src={FilterProfilePic.filter((each: any) => each.UserId === user.id)[0]?.Documents?.ProfilePic || "Icons/DefaultProfileIcon.png"}
-                        className="rounded-full h-7 w-7 sm:h-10 sm:w-10"
-                      />
-                      <span className="font-semibold text-[#007B7F]">{user.FirstName}</span>
-                    </td>
-                    <td className="px-2 py-2 break-words max-w-[120px] sm:max-w-none">{user.Email}</td>
-                    <td className="px-2 py-2">{user.Contact}</td>
-                    <td className="px-2 py-2"><span className="px-2 sm:px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-[9px] sm:text-xs">{user.userType === "healthcare-assistant" ? "HCA" : user.userType}</span></td>
-                    <td className="px-2 py-2">{user.AadharNumber}</td>
-                    <td className="px-2 py-2">{user.Location}</td>
-                    <td className="px-2 py-2">
-                      <select
-                        className="w-full sm:w-[150px] text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200"
-                        defaultValue={user.EmailVerification ? 'Verified' : 'Pending'}
-                        onChange={(e) =>
-                          UpdateEmailVerificationStatus(user.FirstName, e.target.value, user.userId)
-                        }
-                      >
-                        {EmailVerificationStatus.map((status) => (
-                          <option key={status} value={status}>{status}</option>
-                        ))}
-                      </select>
-                    </td>
-                    {user.userType === "patient" &&
-                      <td className="px-2 py-2">
-                        <select
-                          className={`w-full sm:w-[200px] px-2 py-2 rounded-xl text-center shadow-md font-medium transition-all duration-200 ${filterColors[user.ClientStatus]}`}
-                          value={user.ClientStatus}
-                          onChange={(e) =>
-                            UpdateStatus(user.FirstName, e.target.value, user.userId)
-                          }
-                        >
-                          {Status.map((status) => (
-                            <option key={status} value={status}>{status}</option>
-                          ))}
-                        </select>
-                      </td>}
-                    <td className="px-2 py-2">
-                      <button
-                        className="w-full sm:w-[100px] text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition"
-                        onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
-                      >
-                        {user.DetailedVerification ? "View" : "Fill"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : (
-        <p className="text-center py-10 text-gray-400 text-base sm:text-lg">No users found.</p>
-      )}
 
-      {updatedStatusMsg && (
-        <div className="fixed bottom-4 sm:bottom-6 left-3 sm:left-10 bg-gradient-to-br from-[#00A9A5] to-[#005f61] text-white px-3 sm:px-6 py-2 sm:py-4 rounded-xl shadow-2xl font-semibold text-xs sm:text-base">
-          {updatedStatusMsg}
-        </div>
-      )}
+
+{ContetUserInterface()}
+
+
+
+
     </div>
   );
 }
+function each(value: { id: any; FirstName: any; AadharNumber: any; Age: any; userType: any; Location: any; Email: any; Contact: any; userId: any; VerificationStatus: any; DetailedVerification: any; EmailVerification: any; ClientStatus: any; }, index: number, array: { id: any; FirstName: any; AadharNumber: any; Age: any; userType: any; Location: any; Email: any; Contact: any; userId: any; VerificationStatus: any; DetailedVerification: any; EmailVerification: any; ClientStatus: any; }[]): value is { id: any; FirstName: any; AadharNumber: any; Age: any; userType: any; Location: any; Email: any; Contact: any; userId: any; VerificationStatus: any; DetailedVerification: any; EmailVerification: any; ClientStatus: any; } {
+  throw new Error('Function not implemented.');
+}
+
