@@ -4,15 +4,21 @@ import {
   GetRegidterdUsers,
   GetUserInformation,
   GetUsersFullInfo,
+  InserTimeSheet,
+  UpdateHCAnstatus,
   UpdateUserContactVerificationstatus,
   UpdateUserEmailVerificationstatus
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LogOut } from 'lucide-react';
-import { UpdateClient, UpdateUserInformation } from '@/Redux/action';
+import { CircleCheckBig, LogOut } from 'lucide-react';
+import {  UpdateClient, UpdateUserInformation } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
 import { ClientEnquiry_Filters, filterColors, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
+
+import { select, tr } from 'framer-motion/client';
+import ClientTable from '@/Components/Placements/page';
+import { HCAList } from '@/Redux/reducer';
 import WorkingOn from '@/Components/CurrentlyWoring/page';
 
 export default function UserTableList() {
@@ -22,9 +28,10 @@ export default function UserTableList() {
   const [UserFirstName, setUserFirstName] = useState("");
   const [UpdateduserType, setuserType] = useState("patient");
   const [search, setSearch] = useState('');
+  const [AsignStatus,setAsignStatus]=useState("")
   const [LoginEmail, setLoginEmail] = useState("");
 const [UpdateMainFilter,SetUpdateMainFilter]=useState("Client Enquiry")
-  const Status = ['Client Enquiry', 'Processing', 'Converted', 'Waiting List', 'Lost'];
+  const Status = ['Placced','Client Enquiry', 'Processing', 'Converted', 'Waiting List', 'Lost'];
   const EmailVerificationStatus = ['Verified', 'Pending'];
   const [UserFullInfo, setFullInfo] = useState([])
   const router = useRouter();
@@ -49,12 +56,7 @@ const [UpdateMainFilter,SetUpdateMainFilter]=useState("Client Enquiry")
       if (res?.success === true) {
         setUpdatedStatusMsg(`${first} Email Verification Status Updated Successfully`);
       }
-      const Timer=setInterval(()=>{
-    setUpdatedStatusMsg("");
-
-      },1000)
-
-      return ()=>clearInterval(Timer)
+      
     } catch (err: any) {
       console.error(err);
     }
@@ -73,7 +75,8 @@ const [UpdateMainFilter,SetUpdateMainFilter]=useState("Client Enquiry")
     VerificationStatus: each.VerificationStatus,
     DetailedVerification: each.FinelVerification,
     EmailVerification: each.EmailVerification,
-    ClientStatus: each.ClientStatus
+    ClientStatus: each.ClientStatus,
+    Status:each.Status
   }));
 
   useEffect(() => {
@@ -152,12 +155,18 @@ useEffect(() => {
 
     }
   }
+
+
+  const UpdateFilterHCA=(e:any)=>{
+setAsignStatus(e.target.value)
+  }
+  
   const ContetUserInterface=()=>{
       switch (UpdateMainFilter) {
       case "Client Enquiry":
         return ClientEnquiryUserInterFace()
       case "Placements":
-        return <WorkingOn ServiceName="Placements"/>
+        return <ClientTable/>
       case "Timesheet":
         return <WorkingOn ServiceName="Timesheet"/>
       case "Referral Pay":
@@ -169,6 +178,40 @@ useEffect(() => {
 
     }
   }
+
+
+  const UpdateAssignHca = async (UserIDClient: any, UserIdHCA: any, ClientName: any, ClientEmail: any, ClientContact: any,Adress:any, HCAName: any, HCAContact: any) => {
+    setUpdatedStatusMsg("Please Wait Assigning HCA...")
+    try {
+      const today = new Date();
+      const attendanceRecord = {
+        date: today.toLocaleDateString('EN-In'),
+        checkIn: today.toLocaleTimeString(),
+        status: "Present",
+      };
+
+      console.log("Test Details----", UserIDClient, UserIdHCA, ClientName, ClientEmail, ClientContact,Adress, HCAName, HCAContact)
+      const TimeSheetData: any[] = [];
+      TimeSheetData.push(attendanceRecord)
+      const UpdateStatus=await UpdateUserContactVerificationstatus(UserIDClient,"Placced")
+      const UpdateHcaStatus= await UpdateHCAnstatus(UserIdHCA,"Assigned")
+      const PostTimeSheet:any = await InserTimeSheet(UserIDClient, UserIdHCA, ClientName, ClientEmail, ClientContact,Adress, HCAName, HCAContact, TimeSheetData)
+      if(PostTimeSheet.success=== true){
+setUpdatedStatusMsg("HCA Assigned Successfully, For More Information Check in TimeSheet")
+
+const Timer=setInterval(()=>{
+SetUpdateMainFilter("Placements")
+},1200)
+
+return ()=>clearInterval(Timer)
+      }
+      
+    } catch (err: any) {
+setUpdatedStatusMsg(err)
+    }
+  }
+
+
 const  ClientEnquiryUserInterFace=()=>{
   return(
     <div>
@@ -180,14 +223,18 @@ const  ClientEnquiryUserInterFace=()=>{
                 <tr>
                   <th className="px-2 py-2 sm:px-6 sm:py-3">Name</th>
                   <th className="px-2 py-2 sm:px-12 sm:py-3">Email</th>
-                  <th className="px-2 py-2">Contact</th>
+                  <th className="px-5 py-2">Contact</th>
                   <th className="px-5 py-2">Role</th>
                   <th className="px-2 py-2">Aadhar</th>
                   <th className="px-2 py-2">Location</th>
                   <th className="px-2 sm:px-4 py-2">Email Verification</th>
                   {UpdateduserType !== "healthcare-assistant" && (
-                    <th className="px-2 sm:px-14 py-2">Client Status</th>
+                    <th className="px-4  py-2">Client Status</th>
                   )}
+
+                  {
+                     (UpdateMainFilter==="Client Enquiry"&&search=="Converted")&&<th className="px-4 py-2">Designate</th>
+                  }
                   <th className="px-2 sm:px-4 py-2">Action</th>
                 </tr>
               </thead>
@@ -208,7 +255,7 @@ const  ClientEnquiryUserInterFace=()=>{
                     <td className="px-2 py-2">{user.Location}</td>
                     <td className="px-2 py-2">
                       <select
-                        className="w-full cursor-pointer sm:w-[150px] text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200"
+                        className="w-full cursor-pointer sm:w-[100px] text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200"
                         defaultValue={user.EmailVerification ? 'Verified' : 'Pending'}
                         onChange={(e) =>
                           UpdateEmailVerificationStatus(user.FirstName, e.target.value, user.userId)
@@ -221,18 +268,37 @@ const  ClientEnquiryUserInterFace=()=>{
                     </td>
                     {user.userType === "patient" &&
                       <td className="px-2 py-2">
-                        <select
-                          className={`w-full cursor-pointer sm:w-[130px] px-2 py-2 rounded-xl text-center shadow-md font-medium transition-all duration-200 ${filterColors[user.ClientStatus]}`}
+                      <select
+                          className={`w-full cursor-pointer sm:w-[110px] px-2 py-2 ${user.ClientStatus==="Placced"?"text-[13px] font-bold shadow-lg":"shadow-md"} rounded-xl text-center  font-medium transition-all duration-200 ${filterColors[user.ClientStatus]}`}
                           value={user.ClientStatus}
                           onChange={(e) =>
                             UpdateStatus(user.FirstName, e.target.value, user.userId)
                           }
                         >
                           {Status.map((status) => (
-                            <option key={status} value={status}>{status}</option>
+                            <option key={status} value={status}>{status === "Placced" ? "Placced ✅" : status}</option>
+
                           ))}
                         </select>
+                        
                       </td>}
+                    {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
+                     
+                        <th className="px-2 py-2">
+                          <select onChange={(e:any)=>{ 
+                            const selectedHCA = Filter_HCA.find(
+          (each) => each.FirstName === e.target.value
+        );
+        UpdateAssignHca(user.id,selectedHCA?.id,user.FirstName,user.Email,user.Contact,user.Location,selectedHCA?.FirstName,selectedHCA?.Contact)}}  className="w-full cursor-pointer sm:w-[120px] text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200">
+                            <option >Align HCA</option>
+                          
+                            {Filter_HCA.map((each)=><option key={each.FirstName} >{each.FirstName}</option>)}
+                            </select>
+                        </th>
+                      
+                    )}
+
+                       
                     <td className="px-2 py-2">
                       <button
                         className="w-full cursor-pointer sm:w-[60px] text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition"
@@ -285,7 +351,21 @@ const  ClientEnquiryUserInterFace=()=>{
     const matchesSearch = !search || each.ClientStatus === search;
     return matchesType && matchesSearch;
   });
-console.log("Test---",UpdatedFilterUserType.filter((Try)=>Try.ClientStatus==="Procceing"))
+
+const Filter_HCA = Finel.filter((each:any) => {
+  const isHCA = each.userType === "healthcare-assistant"; 
+  const isAvailable = each.Status !== "Assigned";         
+  const matchesName =
+    !AsignStatus || each.FirstName.toLowerCase().includes(AsignStatus.toLowerCase()); 
+
+  return isHCA && isAvailable && matchesName;
+});
+
+
+
+
+
+
   const FilterProfilePic: any = UserFullInfo.map((each: any) => { return each?.HCAComplitInformation });
 
   return (
@@ -323,7 +403,7 @@ console.log("Test---",UpdatedFilterUserType.filter((Try)=>Try.ClientStatus==="Pr
               ))}
             </div>
           )} */}
-<div className="flex  flex-col gap-2 flex-wrap w-full sm:w-auto">
+<div className="flex  flex-col gap-2 flex-wrap w-full ">
  <div className="flex gap-3 flex-wrap w-full sm:w-auto">
   {Main_Filters.map((each, index) => {
 
@@ -350,20 +430,40 @@ console.log("Test---",UpdatedFilterUserType.filter((Try)=>Try.ClientStatus==="Pr
   })}
 </div>
 
+           <div className="flex gap-2 flex-wrap w-full items-center">
 
-           
-                <div className="flex gap-2 flex-wrap w-full sm:w-auto">
-              {UpdateMainFilterValues().map((each:any, index:any) => (
-                <button
-                  key={index}
-                  onClick={() => UpdateFilterValue(each)}
-                  className={`cursor-pointer px-1 py-1 text-xs  flex-1 sm:flex-none sm:min-w-[100px] ${search === each && "border-3"} rounded-xl shadow-md font-medium transition-all duration-200 ${filterColors[each]}`}
-                >
-              
-                {UpdateMainFilter==="Client Enquiry"?`${each} (${UpdatedFilterUserType.filter((Try)=>Try.ClientStatus===each).length})`:each}
-                </button>
-              ))}
-            </div>
+  <div className="flex gap-2 flex-wrap">
+    {UpdateMainFilterValues().map((each: any, index: any) => (
+      <button
+        key={index}
+        onClick={() => UpdateFilterValue(each)}
+        className={`cursor-pointer px-1 py-1 text-xs flex-1 sm:flex-none sm:min-w-[100px] ${
+          search === each && "border-3"
+        } rounded-xl shadow-md font-medium transition-all duration-200 ${
+          filterColors[each]
+        }`}
+      >
+        {UpdateMainFilter === "Client Enquiry"
+          ? `${each} (${
+              UpdatedFilterUserType.filter(
+                (Try) => Try.ClientStatus === each
+              ).length
+            })`
+          : each}
+      </button>
+    ))}
+  </div>
+
+  
+  {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
+    <input
+      placeholder="Search HCA..."
+      className="text-center border-2 rounded-md w-[150px] ml-auto"
+      onChange={UpdateFilterHCA}
+    />
+  )}
+</div>
+
              
             </div>
           {/* <select

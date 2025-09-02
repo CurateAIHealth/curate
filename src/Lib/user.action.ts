@@ -23,6 +23,7 @@ export const UpdateDocterInformation = async (doctorInfo: {
   TermsAndConditions: any,
   EmailVerification: any,
    FinelVerification:any,
+   
 }) => {
   try {
     const cluster = await clientPromise;
@@ -449,6 +450,47 @@ try{
 
 }
 }
+export const InserTimeSheet=async(ClientUserId:any,HCAUserId:any,Name:any,Email:any,Contact:any,ClientAdress:any,NameHCA:any,Contacthca:any,TimeSheetArray:any)=>{
+  try{
+const cluster=await clientPromise
+const db=cluster.db("CurateInformation")
+const collection=db.collection("TimeSheet")
+const TimeSheetDataInsert=await collection.insertOne({
+  ClientId:ClientUserId,
+  HCAiD:HCAUserId,
+  ClientName:Name,
+  ClientEmail:Email,
+  ClientContact:Contact,
+  Adress:ClientAdress,
+  HCAName:NameHCA,
+  HCAContact:Contacthca,
+  Attendence:TimeSheetArray
+})
+return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedId: TimeSheetDataInsert.insertedId.toString(),
+    };
+  }catch(e){
+
+  }
+}
+export const GetTimeSheetInfo=async()=>{
+  try{
+const cluster=await clientPromise
+const db=cluster.db("CurateInformation")
+const collection=db.collection("TimeSheet")
+const TimeSheetInfoData=await collection.find().toArray()
+
+const safeUsers = TimeSheetInfoData.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+return safeUsers
+  }catch(e){
+
+  }
+}
 export const GetUserInformation = async (UserIdFromLocal: any) => {
   try {
     const cluster = await clientPromise;
@@ -597,6 +639,8 @@ export const UpdateUserEmailVerificationstatus = async (UserId: string, UpdatedS
   }
 }
 
+
+
 export const UpdateUserContactVerificationstatus = async (UserId: string,ContactStatus:String) => {
   try {
     const Cluster = await clientPromise
@@ -607,6 +651,28 @@ export const UpdateUserContactVerificationstatus = async (UserId: string,Contact
       $set: {
         
 ClientStatus:ContactStatus
+      }
+    }
+    )
+    if (UpdateVerificationStatus.modifiedCount === 0) {
+      return { success: false, message: 'Internal Error Try Again!' };
+    }
+
+    return { success: true, message: 'Verification Status updated successfully.' };
+  } catch (err: any) {
+    return err
+  }
+}
+export const UpdateHCAnstatus = async (UserId: string,AvailableStatus:String) => {
+  try {
+    const Cluster = await clientPromise
+    const Db = Cluster.db("CurateInformation")
+    const Collection = Db.collection("Registration")
+    const UpdateVerificationStatus = await Collection.updateOne(
+      { userId: UserId }, {
+      $set: {
+        
+Status:AvailableStatus
       }
     }
     )

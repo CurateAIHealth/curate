@@ -7,9 +7,11 @@ import { useEffect, useState } from 'react';
 import { cta, features, heroContent, pricing, services, steps, testimonials } from "@/Lib/HomePageContent";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Star, Settings, User, LogIn, BriefcaseMedical, CircleEllipsis, Menu } from "lucide-react";
-import Footer from "@/Components/Footer/page";
 import FreeConsultationForm from '@/Components/Contactfill/page';
 import ContactSection from '@/Components/Contact/page';
+import ModernFooter from '@/Components/Footer/page';
+
+
 
 
 const pink = "#ff1493";
@@ -544,7 +546,7 @@ If you or a loved one needs medical support at home, Curate Health Services is h
 </div>
 
 
-            <Footer/>
+            <ModernFooter/>
         </div>
     );
 }

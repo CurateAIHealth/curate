@@ -123,6 +123,7 @@ export default function PatientForm() {
     if (name === 'Age') {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
+    
 
     if (name === 'dateofBirth') {
       const birthDate = new Date(value);

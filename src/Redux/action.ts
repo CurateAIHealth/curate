@@ -33,3 +33,10 @@ export const UpdateClient=(ClientName:any)=>{
         payload:ClientName
     }
 }
+
+export const CurrentHCAList=(List:any)=>{
+    return{
+        type:"UpdateHCAList",
+        payload:List
+    }
+}

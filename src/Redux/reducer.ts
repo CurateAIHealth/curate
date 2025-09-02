@@ -44,3 +44,13 @@ switch(action.type){
         return state
 }
 }
+
+
+export const HCAList=(state:any=[],action:any)=>{
+switch(action.type){
+    case "UpdateHCAList":
+        return action.payload;
+        default :
+        return state
+}
+}

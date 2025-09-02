@@ -440,7 +440,7 @@ export const filterColors: Record<string, string> = {
   "Referral Pay": "bg-teal-200 hover:bg-teal-400 text-gray-800",
   "Payments": "bg-orange-200 hover:bg-orange-400 text-gray-800",
 
-
+"Placced":" text-emerald-600",
   "Processing": "bg-yellow-200 hover:bg-yellow-400 text-gray-800",
   "Waiting List": "bg-purple-200 hover:bg-purple-400 text-gray-800",
   "Converted": "bg-green-200 hover:bg-green-400 text-gray-800",
