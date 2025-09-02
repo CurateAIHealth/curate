@@ -330,7 +330,7 @@ export default function PatientForm() {
     { title: "Client & Address", icon: <MapPin /> },
     { title: "Service & Payment", icon: <CreditCard /> },
   ];
-
+// const EmptyInput=form.patientAadharNumber===""||form .pinCode===''||form.city===""||form.phoneNo1===""||form.clientAadharNo===""||form.clientAadharNo==""||form.address===""||form.advancePaidRs===""||form.invoiceCycle===""||form.modeOfPay===""||form.perDayChargeRs===""||form.registrationRs===""||form.serviceStartDate===""||form.serviceType===""||(!form.longDay&&!form.longNight &&!form.stayIn)
   return (
     <div className="w-full bg-white rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] p-4 md:p-4 space-y-12">
       <div className="flex justify-between items-center mb-6 relative">
@@ -515,7 +515,8 @@ export default function PatientForm() {
         {currentStep === steps.length - 1 && (
           <button
             onClick={handleSubmit}
-            className="w-[50%] bg-teal-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-teal-700 transition transform hover:scale-105 shadow-lg"
+           
+            className={`w-[50%] ${statusMessage.includes("Please fill out all required fields.")?"bg-teal-200 hover:cursor-not-allowed":"bg-teal-600"} text-white py-4 rounded-xl font-bold text-lg  transition transform hover:scale-105 shadow-lg`}
           >
             Submit Registration
           </button>
