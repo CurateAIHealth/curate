@@ -12,6 +12,7 @@ import FreeConsultationForm from '@/Components/Contactfill/page';
 import ContactSection from '@/Components/Contact/page';
 
 
+
 const pink = "#ff1493";
 const blue = "#1392d3";
 const green = "#50c896";
