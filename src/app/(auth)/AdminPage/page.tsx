@@ -12,7 +12,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CircleCheckBig, LogOut } from 'lucide-react';
-import {  UpdateClient, UpdateUserInformation } from '@/Redux/action';
+import {  UpdateClient, UpdateSubHeading, UpdateUserInformation } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
 import { ClientEnquiry_Filters, filterColors, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
 
@@ -20,6 +20,8 @@ import { select, tr } from 'framer-motion/client';
 import ClientTable from '@/Components/Placements/page';
 import { HCAList } from '@/Redux/reducer';
 import WorkingOn from '@/Components/CurrentlyWoring/page';
+import axios from 'axios';
+import { setTimeout } from 'timers/promises';
 
 export default function UserTableList() {
   const [updatedStatusMsg, setUpdatedStatusMsg] = useState('');
@@ -125,6 +127,7 @@ const [UpdateMainFilter,SetUpdateMainFilter]=useState("Client Enquiry")
 
   const UpdateFilterValue = (UpdatedValue: any) => {
     setSearch(UpdatedValue)
+    dispatch(UpdateSubHeading(UpdatedValue))
   };
 
   const UpdateMainFilterValue=(Z:any)=>{
@@ -178,6 +181,15 @@ setAsignStatus(e.target.value)
 
     }
   }
+const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
+  const res = await axios.post("/api/send-whatsapp", {
+    clientNumber,
+    hcaNumber,
+  });
+
+  console.log("WhatsApp Response:", res.data);
+};
+
 
 
   const UpdateAssignHca = async (UserIDClient: any, UserIdHCA: any, ClientName: any, ClientEmail: any, ClientContact: any,Adress:any, HCAName: any, HCAContact: any) => {
@@ -199,11 +211,11 @@ setAsignStatus(e.target.value)
       if(PostTimeSheet.success=== true){
 setUpdatedStatusMsg("HCA Assigned Successfully, For More Information Check in TimeSheet")
 
-const Timer=setInterval(()=>{
-SetUpdateMainFilter("Placements")
-},1200)
+sendWhatsApp("+919347877159","+919347877159"); 
 
-return ()=>clearInterval(Timer)
+
+
+
       }
       
     } catch (err: any) {
@@ -243,7 +255,7 @@ const  ClientEnquiryUserInterFace=()=>{
                   <tr key={index} className="border-b border-gray-100 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors">
                     <td className="px-2 py-2 flex items-center gap-2">
                       <img
-                        src={FilterProfilePic.filter((each: any) => each.UserId === user.id)[0]?.Documents?.ProfilePic || "Icons/DefaultProfileIcon.png"}
+                        src={FilterProfilePic.filter((each: any) => each.UserId === user.id)[0]?.Documents?.ProfilePic ||FilterProfilePic.filter((each: any) => each.UserId === user.id)[0]?.ProfilePic|| "Icons/DefaultProfileIcon.png"}
                         className="rounded-full h-7 w-7 sm:h-10 sm:w-10"
                       />
                       <span className="font-semibold text-[#007B7F]">{user.FirstName}</span>
@@ -367,6 +379,7 @@ const Filter_HCA = Finel.filter((each:any) => {
 
 
   const FilterProfilePic: any = UserFullInfo.map((each: any) => { return each?.HCAComplitInformation });
+  console.log('Test Profile Picture---',FilterProfilePic)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f7fafc] via-[#e3f6f5] to-[#f9f9ff] text-gray-900 p-2 ">

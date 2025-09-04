@@ -40,3 +40,10 @@ export const CurrentHCAList=(List:any)=>{
         payload:List
     }
 }
+
+export const UpdateSubHeading=(SubHeadingValue:any)=>{
+    return{
+        type:'UpdateSuHeading',
+        payload:SubHeadingValue
+    }
+}
