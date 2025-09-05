@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Trash } from "lucide-react";
-import { GetRegidterdUsers, GetTimeSheetInfo } from "@/Lib/user.action";
+import { DeleteTimeSheet, GetRegidterdUsers, GetTimeSheetInfo, InserTerminationData, InserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateSubHeading } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -24,7 +24,8 @@ const ClientTable = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [showDeletePopup, setShowDeletePopup] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] =  useState<any>();
+  const [ActionStatusMessage,SetActionStatusMessage]= useState<any>();
 
   const SubHeading = useSelector((state: any) => state.SubHeadinList);
   const dispatch = useDispatch();
@@ -39,7 +40,7 @@ const ClientTable = () => {
       setIsChecking(false);
     };
     Fetch();
-  }, []);
+  }, [ActionStatusMessage]);
 
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
     const normalizedAttendance =
@@ -55,9 +56,11 @@ const ClientTable = () => {
       name: each.ClientName,
       email: each.ClientEmail,
       contact: each.ClientContact,
+      HCAContact:each.HCAContact,
       role: each.HCAName,
       location: each.Adress,
       TimeSheet: normalizedAttendance,
+
     };
   });
 
@@ -123,17 +126,24 @@ const ClientTable = () => {
     setClientsInformation([...ClientsInformation]);
   };
 
-  const handleDeleteClick = (clientId: string) => {
+  const handleDeleteClick = (clientId: any) => {
     setDeleteTargetId(clientId);
     setShowDeletePopup(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async() => {
     if (deleteTargetId) {
-      // Example delete logic (you can replace with API call)
-      setClientsInformation((prev) =>
-        prev.filter((c) => c.ClientId !== deleteTargetId)
-      );
+        SetActionStatusMessage("Please Wait Deleting Placement...")
+
+           const UpdateHcaStatus= await UpdateHCAnstatus(deleteTargetId?.HCA_Id,"Available")
+         const UpdateStatus=await UpdateUserContactVerificationstatus(deleteTargetId.Client_Id,"Converted")
+           const DeleteTimeSheetData=await DeleteTimeSheet(deleteTargetId.Client_Id)
+           const PostTimeSheet:any = await InserTerminationData(deleteTargetId.Client_Id, deleteTargetId?.HCA_Id, deleteTargetId.name, deleteTargetId.email, deleteTargetId.contact,deleteTargetId.location, deleteTargetId.role, deleteTargetId.HCAContact, deleteTargetId.TimeSheet)
+                console.log("Compare Data--",DeleteTimeSheetData)
+                if(DeleteTimeSheetData.success===true){
+SetActionStatusMessage("Seccessfully Deleted Placement")
+                }
+           
     }
     setShowDeletePopup(false);
     setDeleteTargetId(null);
@@ -143,11 +153,23 @@ const ClientTable = () => {
     return (
       <div className="overflow-x-auto">
         {ClientsInformation.length === 0 ? (
-          <p className="flex items-center justify-center h-[80vh] font-semibold">
-            Sorry to Inform You, Currently No Placements
-          </p>
+            <div className="flex flex-col items-center justify-center gap-6 h-[50vh] mt-10 
+                 backdrop-blur-md rounded-3xl  border border-gray-100 p-10">
+  
+  <p className="text-xl font-semibold text-gray-900 text-center tracking-wide">
+    ✨ Sorry to Inform You, <span className="text-emerald-600">No Placements Available</span>
+  </p>
+  
+  <p className="bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-800 
+                px-6 py-3 rounded-full shadow-md text-sm font-medium tracking-wide">
+    🔎 Check <span className="font-semibold text-emerald-900">Terminations</span> for Previous Placements
+  </p>
+  
+</div>
+
         ) : (
           <div className="h-[500px] overflow-y-auto rounded-lg shadow">
+          
             <table className="w-full text-sm text-left border-collapse">
               <thead className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white uppercase text-xs font-semibold sticky top-0 z-10 shadow">
                 <tr>
@@ -206,7 +228,7 @@ const ClientTable = () => {
                     <td className="px-6 py-4 text-center">
                       <button
                         className="px-5 py-2 text-xs cursor-pointer font-medium text-gray-800 rounded-lg shadow-md transition"
-                        onClick={() => handleDeleteClick(c.Client_Id)}
+                        onClick={() => handleDeleteClick(c)}
                       >
                         <Trash />
                       </button>
@@ -239,6 +261,16 @@ const ClientTable = () => {
                   No
                 </button>
               </div>
+                {ActionStatusMessage&&   
+         <div className="flex flex-col items-center justify-center gap-4 mt-2
+                  bg-white/60 backdrop-blur-md rounded-3xl shadow-2xl 
+                  border border-gray-100 px-4 py-4">
+    
+    <div className="w-4 h-4 border-4 border-emerald-500 border-t-transparent 
+                    rounded-full animate-spin"></div>
+    
+    <p className="text-center text-red-500 font-semibold">{ActionStatusMessage}</p>
+  </div>}
             </div>
           </div>
         )}
@@ -341,9 +373,20 @@ const ClientTable = () => {
 
   if (isChecking) {
     return (
-      <div className="h-screen flex items-center justify-center font-bold">
-        Loading....
-      </div>
+     <div className="h-[50vh] mt-20 flex items-center justify-center">
+  <div className="flex flex-col items-center justify-center gap-4 
+                  bg-white/60 backdrop-blur-md rounded-3xl shadow-2xl 
+                  border border-gray-100 px-10 py-8">
+    
+    <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent 
+                    rounded-full animate-spin"></div>
+    
+    <p className="text-lg font-semibold text-gray-900 tracking-wide">
+      Loading <span className="text-emerald-600">Please Wait...</span>
+    </p>
+  </div>
+</div>
+
     );
   }
 

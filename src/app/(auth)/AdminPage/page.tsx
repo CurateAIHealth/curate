@@ -209,7 +209,7 @@ const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
       const UpdateHcaStatus= await UpdateHCAnstatus(UserIdHCA,"Assigned")
       const PostTimeSheet:any = await InserTimeSheet(UserIDClient, UserIdHCA, ClientName, ClientEmail, ClientContact,Adress, HCAName, HCAContact, TimeSheetData)
       if(PostTimeSheet.success=== true){
-setUpdatedStatusMsg("HCA Assigned Successfully, For More Information Check in TimeSheet")
+setUpdatedStatusMsg("HCA Assigned Successfully, For More Information Check in Placemets")
 
 sendWhatsApp("+919347877159","+919347877159"); 
 
@@ -302,7 +302,7 @@ const  ClientEnquiryUserInterFace=()=>{
           (each) => each.FirstName === e.target.value
         );
         UpdateAssignHca(user.id,selectedHCA?.id,user.FirstName,user.Email,user.Contact,user.Location,selectedHCA?.FirstName,selectedHCA?.Contact)}}  className="w-full cursor-pointer sm:w-[120px] text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200">
-                            <option >Align HCA</option>
+                            <option >Assign HCA</option>
                           
                             {Filter_HCA.map((each)=><option key={each.FirstName} >{each.FirstName}</option>)}
                             </select>

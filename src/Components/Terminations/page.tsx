@@ -1,6 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Stethoscope, Shirt, CircleX } from "lucide-react";
+import { GetTerminationInfo } from "@/Lib/user.action";
 
 interface TerminationData {
   id: string;
@@ -12,116 +13,54 @@ interface TerminationData {
 }
 
 const TerminationTable: React.FC = () => {
-  const [placements, setPlacements] = useState<TerminationData[]>([
+  const [placements, setPlacements] = useState<any[]>([]);
+const [isChecking, setIsChecking] = useState(true);
+  useEffect(()=>{
+    const Fetch=async()=>{
+try{
+   const FetchData=await GetTerminationInfo()
+   console.log("Test Time Sheet---",FetchData)
+   const Result:any=FetchData?.map((each:any)=>(
     {
-      id: "1",
-      clientName: "Iqbalunnisa",
-      contact: "9989190986",
-      location: "165, CSK Villas, Rallaguda",
-      hcaName: "Siddu",
+      clientName: each.ClientName,
+      contact: each.HCAContact,
+      location: each.Adress,
+      hcaName: each.HCAName,
+      TimeSheetAttendence:each.Attendence,
       status: "Terminated",
-    },
-    {
-      id: "2",
-      clientName: "Jayaprada",
-      contact: "8297838522",
-      location: "2-37/4, STREET 3, Habsiguda",
-      hcaName: "Gouri",
-      status: "Terminated",
-    },
-    // repeating rows for scroll test
-    {
-      id: "3",
-      clientName: "Jayaprada",
-      contact: "8297838522",
-      location: "2-37/4, STREET 3, Habsiguda",
-      hcaName: "Gouri",
-      status: "Terminated",
-    },
-    {
-      id: "4",
-      clientName: "Jayaprada",
-      contact: "8297838522",
-      location: "2-37/4, STREET 3, Habsiguda",
-      hcaName: "Gouri",
-      status: "Terminated",
-    },{
-      id: "4",
-      clientName: "Jayaprada",
-      contact: "8297838522",
-      location: "2-37/4, STREET 3, Habsiguda",
-      hcaName: "Gouri",
-      status: "Terminated",
-    },{
-      id: "4",
-      clientName: "Jayaprada",
-      contact: "8297838522",
-      location: "2-37/4, STREET 3, Habsiguda",
-      hcaName: "Gouri",
-      status: "Terminated",
-    },{
-      id: "4",
-      clientName: "Jayaprada",
-      contact: "8297838522",
-      location: "2-37/4, STREET 3, Habsiguda",
-      hcaName: "Gouri",
-      status: "Terminated",
-    },{
-      id: "4",
-      clientName: "Jayaprada",
-      contact: "8297838522",
-      location: "2-37/4, STREET 3, Habsiguda",
-      hcaName: "Gouri",
-      status: "Terminated",
-    },{
-      id: "4",
-      clientName: "Jayaprada",
-      contact: "8297838522",
-      location: "2-37/4, STREET 3, Habsiguda",
-      hcaName: "Gouri",
-      status: "Terminated",
-    },{
-      id: "4",
-      clientName: "Jayaprada",
-      contact: "8297838522",
-      location: "2-37/4, STREET 3, Habsiguda",
-      hcaName: "Gouri",
-      status: "Terminated",
-    },{
-      id: "4",
-      clientName: "Jayaprada",
-      contact: "8297838522",
-      location: "2-37/4, STREET 3, Habsiguda",
-      hcaName: "Gouri",
-      status: "Terminated",
-    },{
-      id: "4",
-      clientName: "Jayaprada",
-      contact: "8297838522",
-      location: "2-37/4, STREET 3, Habsiguda",
-      hcaName: "Gouri",
-      status: "Terminated",
-    },{
-      id: "4",
-      clientName: "Jayaprada",
-      contact: "8297838522",
-      location: "2-37/4, STREET 3, Habsiguda",
-      hcaName: "Gouri",
-      status: "Terminated",
-    },{
-      id: "4",
-      clientName: "Jayaprada",
-      contact: "8297838522",
-      location: "2-37/4, STREET 3, Habsiguda",
-      hcaName: "Gouri",
-      status: "Terminated",
-    },
-  ]);
+   }
+   ))
+   setIsChecking(false)
+    setPlacements(Result)
+}catch(err:any){
+
+}
+    }
+
+    Fetch()
+  },[])
 
   const handleDelete = (id: string) => {
     setPlacements((prev) => prev.filter((placement) => placement.id !== id));
   };
+  if (isChecking) {
+    return (
+    <div className="h-[50vh] mt-20 flex items-center justify-center">
+  <div className="flex flex-col items-center justify-center gap-4 
+                  bg-white/60 backdrop-blur-md rounded-3xl shadow-2xl 
+                  border border-gray-100 px-10 py-8">
+    
+    <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent 
+                    rounded-full animate-spin"></div>
+    
+    <p className="text-lg font-semibold text-gray-900 tracking-wide">
+      Loading <span className="text-emerald-600">Please Wait...</span>
+    </p>
+  </div>
+</div>
 
+    );
+  }
   return (
     <div className="p-2 bg-gray-50">
       <div className="flex items-center justify-end mb-2">
@@ -147,7 +86,7 @@ const TerminationTable: React.FC = () => {
             <tbody>
               {placements.map((placement, idx) => (
                 <tr
-                  key={placement.id}
+                  key={placement.clientName}
                   className={`transition ${
                     idx % 2 === 0 ? "bg-gray-50" : "bg-white"
                   } hover:bg-emerald-50`}
@@ -175,7 +114,7 @@ const TerminationTable: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-3 text-center">
-                    <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-1 rounded-lg shadow-md transition font-medium">
+                    <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-1 rounded-lg shadow-md transition font-medium" onClick={()=>console.log("Console TimeSheet---",placement.TimeSheetAttendence)}>
                       View
                     </button>
                   </td>
