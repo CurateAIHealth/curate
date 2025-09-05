@@ -475,11 +475,79 @@ return {
 
   }
 }
+export const DeleteTimeSheet=async(clientId:any)=>{
+
+  try{
+const Cluster= await clientPromise
+const db=Cluster.db("CurateInformation")
+const collection=db.collection("TimeSheet")
+const DeleteResult=await collection.deleteMany({ClientId:clientId})
+   if (DeleteResult.deletedCount > 0) {
+      return {
+        success: true,
+        message: `${DeleteResult.deletedCount} timesheet(s) deleted successfully.`,
+      };
+    } else {
+      return {
+        success: false,
+        message: "No timesheets found with the given ClientId.",
+      };
+    }
+  }catch(err:any){
+  console.error("DeleteTimeSheetByClientId Error:", err);
+    return {
+      success: false,
+      message: "An error occurred while deleting the timesheet(s).",
+    };
+  }
+
+}
+export const InserTerminationData=async(ClientUserId:any,HCAUserId:any,Name:any,Email:any,Contact:any,ClientAdress:any,NameHCA:any,Contacthca:any,TimeSheetArray:any)=>{
+  try{
+const cluster=await clientPromise
+const db=cluster.db("CurateInformation")
+const collection=db.collection("Termination")
+const TimeSheetDataInsert=await collection.insertOne({
+  ClientId:ClientUserId,
+  HCAiD:HCAUserId,
+  ClientName:Name,
+  ClientEmail:Email,
+  ClientContact:Contact,
+  Adress:ClientAdress,
+  HCAName:NameHCA,
+  HCAContact:Contacthca,
+  Attendence:TimeSheetArray
+})
+return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedId: TimeSheetDataInsert.insertedId.toString(),
+    };
+  }catch(e){
+
+  }
+}
 export const GetTimeSheetInfo=async()=>{
   try{
 const cluster=await clientPromise
 const db=cluster.db("CurateInformation")
 const collection=db.collection("TimeSheet")
+const TimeSheetInfoData=await collection.find().toArray()
+
+const safeUsers = TimeSheetInfoData.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+return safeUsers
+  }catch(e){
+
+  }
+}
+export const GetTerminationInfo=async()=>{
+  try{
+const cluster=await clientPromise
+const db=cluster.db("CurateInformation")
+const collection=db.collection("Termination")
 const TimeSheetInfoData=await collection.find().toArray()
 
 const safeUsers = TimeSheetInfoData.map((user: any) => ({

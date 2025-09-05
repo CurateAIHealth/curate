@@ -54,3 +54,13 @@ switch(action.type){
         return state
 }
 }
+
+
+export const SUbHeadings=(state:any="On Service",action:any)=>{
+    switch(action.type){
+case "UpdateSuHeading":
+    return action.payload;
+    default:
+        return state
+    }
+}
