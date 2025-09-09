@@ -66,7 +66,7 @@ const EmailComponent = memo(({ UpdatedFilterUserId }: { UpdatedFilterUserId: str
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
-  const [mailStatusMessage, setMailStatusMessage] = useState('Eand Email');
+  const [mailStatusMessage, setMailStatusMessage] = useState('Send Email');
   const router = useRouter();
 
   const handleSubmit = useCallback(
@@ -92,7 +92,7 @@ export default function ForgotPassword() {
         setMailStatusMessage('Email sent successfully!');
         // router.push('/sign-in');
       } catch (error) {
-  ;
+
         setMailStatusMessage('Error sending email. Please try again later.');
       }
     },

@@ -44,7 +44,7 @@ export default function FreeConsultationForm({ onClose }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      console.log('Form Data:', formData);
+    
       alert('Form submitted successfully!');
     }
   };

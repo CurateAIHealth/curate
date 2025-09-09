@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Logo from '@/Components/Logo/page';
 import { SignInRessult } from '@/Lib/user.action';
 import { Eye, EyeOff } from 'lucide-react';
+import { hashValue, verifySHA256 } from '@/Lib/Actions';
 
 export default function SignIn() {
   const router = useRouter();
@@ -26,12 +27,15 @@ export default function SignIn() {
     setError('');
     setsigninStatus(false);
     try {
+const hashed = hashValue( loginInfo.field_pass);
+
+ 
       const Result: any = await SignInRessult({
         Name: loginInfo.field_user,
         Password: loginInfo.field_pass,
       });
 
-      console.log("Test result---", Result);
+    
 
       if (Result.success === false) {
         setsigninStatus(true);
@@ -39,8 +43,8 @@ export default function SignIn() {
         return;
       }
 
-      if (Result !== null) {
-        localStorage.setItem("UserId", Result);
+      if (Result.success===true) {
+        localStorage.setItem("UserId", Result.userId);
         setsigninStatus(true);
         router.push("/");
       } else {

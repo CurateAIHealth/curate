@@ -168,7 +168,7 @@ const Router=useRouter()
         const FilterValue = Result?.HCAComplitInformation || {};
   const localValue = localStorage.getItem("UserId");
         const ProfileInformation = await GetUserInformation(localValue);
-        
+        console.log("Test Filter User----",FilterValue)
         setLoginEmail(ProfileInformation.Email);
         const formatDate = (dateString: string | undefined): string => {
           if (!dateString) return '';
@@ -185,14 +185,14 @@ const Router=useRouter()
           ProfilePic:FilterValue.ProfilePic ||FilterValue["ProfilePic"] ||'/Icons/PatientDefault.png',
           phoneNo1: FilterValue.phoneNo1 ||FilterValue["Phone No 1"] ||'',
           phoneNo2: FilterValue.phoneNo2 ||FilterValue["Phone No 2"]||'',
-          dateOfBirth: formatDate(FilterValue.dateOfBirth)||formatDate(FilterValue["dateOfBirth"])||'',
+          dateOfBirth: formatDate(FilterValue.dateOfBirth)||formatDate(FilterValue["Date of Birth"])||'',
           patientFullName: FilterValue.patientFullName ||FilterValue["Patient Full Name"]||'',
           age: FilterValue.age || FilterValue["Age"]||'',
           emailId: FilterValue.emailId || FilterValue["Email Id"]||'',
           clientAadharNo: FilterValue.clientAadharNo || FilterValue["Client Aadhar No"]||'',
           patientAadharNumber:FilterValue.patientAadharNumber||FilterValue["patientAadharNumber"]||"",
           clientRelationToPatient: FilterValue.clientRelationToPatient || FilterValue["Client relation to patient"]||'',
-          alternativeClientContact: FilterValue.alternativeClientContact ||FilterValue[""]||'',
+          alternativeClientContact: FilterValue.alternativeClientContact ||FilterValue["Alternative Client Contact"]||'',
           address: FilterValue.address || FilterValue["Address"]||'',
           landmark: FilterValue.landmark || FilterValue["Landmark"]||'',
           city: FilterValue.city || FilterValue["City"]||'',
@@ -296,7 +296,7 @@ const Router=useRouter()
                 'Content-Type': 'multipart/form-data',
               },
             });
-    console.log("Profile Result---",res.data.url)
+    
             setFormData((prev) => ({ ...prev, [inputName]: res.data.url }));
             setStatusMessage((prev)=>({...prev,message:`${inputName} uploaded successfully!`}));
           } catch (error: any) {

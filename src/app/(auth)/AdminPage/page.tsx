@@ -22,6 +22,7 @@ import { HCAList } from '@/Redux/reducer';
 import WorkingOn from '@/Components/CurrentlyWoring/page';
 import axios from 'axios';
 import { setTimeout } from 'timers/promises';
+import { decrypt, encrypt } from '@/Lib/Actions';
 
 export default function UserTableList() {
   const [updatedStatusMsg, setUpdatedStatusMsg] = useState('');
@@ -86,6 +87,7 @@ const [UpdateMainFilter,SetUpdateMainFilter]=useState("Client Enquiry")
       try {
         const localValue = localStorage.getItem("UserId");
         const ProfileInformation = await GetUserInformation(localValue);
+       
         setUserFirstName(ProfileInformation.FirstName);
         setLoginEmail(ProfileInformation.Email);
 
@@ -105,10 +107,11 @@ const [UpdateMainFilter,SetUpdateMainFilter]=useState("Client Enquiry")
         }
 
         const RegisterdUsersResult = await GetRegidterdUsers();
-        const FullInfo = await GetUsersFullInfo();
+       console.log("Testing User----",RegisterdUsersResult)
+        const FullInfo:any = await GetUsersFullInfo();
         setFullInfo(FullInfo);
 
-        setUsers(RegisterdUsersResult || []);
+        setUsers(RegisterdUsersResult.reverse() || []);
         setIsChecking(false);
       } catch (err: any) {
         console.error(err);
@@ -187,7 +190,7 @@ const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
     hcaNumber,
   });
 
-  console.log("WhatsApp Response:", res.data);
+
 };
 
 
@@ -202,7 +205,7 @@ const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
         status: "Present",
       };
 
-      console.log("Test Details----", UserIDClient, UserIdHCA, ClientName, ClientEmail, ClientContact,Adress, HCAName, HCAContact)
+    
       const TimeSheetData: any[] = [];
       TimeSheetData.push(attendanceRecord)
       const UpdateStatus=await UpdateUserContactVerificationstatus(UserIDClient,"Placced")
@@ -222,7 +225,6 @@ sendWhatsApp("+919347877159","+919347877159");
 setUpdatedStatusMsg(err)
     }
   }
-
 
 const  ClientEnquiryUserInterFace=()=>{
   return(
@@ -280,6 +282,7 @@ const  ClientEnquiryUserInterFace=()=>{
                     </td>
                     {user.userType === "patient" &&
                       <td className="px-2 py-2">
+                       
                       <select
                           className={`w-full cursor-pointer sm:w-[110px] px-2 py-2 ${user.ClientStatus==="Placced"?"text-[13px] font-bold shadow-lg":"shadow-md"} rounded-xl text-center  font-medium transition-all duration-200 ${filterColors[user.ClientStatus]}`}
                           value={user.ClientStatus}
@@ -379,7 +382,8 @@ const Filter_HCA = Finel.filter((each:any) => {
 
 
   const FilterProfilePic: any = UserFullInfo.map((each: any) => { return each?.HCAComplitInformation });
-  console.log('Test Profile Picture---',FilterProfilePic)
+console.log('Test Registerd Userss---',users)
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f7fafc] via-[#e3f6f5] to-[#f9f9ff] text-gray-900 p-2 ">
@@ -416,6 +420,7 @@ const Filter_HCA = Finel.filter((each:any) => {
               ))}
             </div>
           )} */}
+          {UpdateduserType==="patient"&&
 <div className="flex  flex-col gap-2 flex-wrap w-full ">
  <div className="flex gap-3 flex-wrap w-full sm:w-auto">
   {Main_Filters.map((each, index) => {
@@ -478,16 +483,16 @@ const Filter_HCA = Finel.filter((each:any) => {
 </div>
 
              
-            </div>
-          {/* <select
+            </div>}
+          <select
             value={UpdateduserType}
             onChange={FilterUserType}
-      className="p-2 w-[120px] cursor-pointer text-center rounded-xl bg-white shadow border border-gray-800 text-base font-medium focus:border-[#62e0d9] focus:ring-2 focus:ring-[#caf0f8] ml-auto"
+      className={`p-2 h-10 w-[120px] ${UpdateduserType==="patient"?"mt-6":"mt-0"} cursor-pointer text-center rounded-xl bg-white shadow border border-gray-800 text-base font-medium focus:border-[#62e0d9] focus:ring-2 focus:ring-[#caf0f8] ml-auto`}
           >
             <option value="patient">Patient</option>
             <option value="healthcare-assistant">HCA</option>
             <option value="doctor">Doctor</option>
-          </select> */}
+          </select>
         </div>
       </div>
 
@@ -504,4 +509,6 @@ const Filter_HCA = Finel.filter((each:any) => {
 function each(value: { id: any; FirstName: any; AadharNumber: any; Age: any; userType: any; Location: any; Email: any; Contact: any; userId: any; VerificationStatus: any; DetailedVerification: any; EmailVerification: any; ClientStatus: any; }, index: number, array: { id: any; FirstName: any; AadharNumber: any; Age: any; userType: any; Location: any; Email: any; Contact: any; userId: any; VerificationStatus: any; DetailedVerification: any; EmailVerification: any; ClientStatus: any; }[]): value is { id: any; FirstName: any; AadharNumber: any; Age: any; userType: any; Location: any; Email: any; Contact: any; userId: any; VerificationStatus: any; DetailedVerification: any; EmailVerification: any; ClientStatus: any; } {
   throw new Error('Function not implemented.');
 }
+
+
 

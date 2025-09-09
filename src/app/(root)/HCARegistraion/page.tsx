@@ -353,7 +353,6 @@ export default function DoctorProfileForm() {
         setUpdatedStatusMessage('Successfully Updated Your Information.');
         SetUpdateingStatus(true);
 
-        console.log("Submited---", FinelForm)
        
         const Timer = setInterval(() => {
           router.push("/SuccessfullyRegisterd")
