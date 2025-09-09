@@ -496,7 +496,7 @@ export const PostFullRegistration = async (Info: any) => {
 
     const encryptedInfo = {
       "Phone No 1": encrypt(Info.phoneNo1),
-      "Phone No 2": encrypt(Info.phoneNo2) ,
+      "Phone No 2":Info.phoneNo2? encrypt(Info.phoneNo2):null ,
       "Patient Full Name":encrypt(Info.patientFullName) ,
       "Date of Birth": Info.dateOfBirth,
       "Age": Number(Info.age),

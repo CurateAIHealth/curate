@@ -288,9 +288,13 @@ export default function PatientForm() {
 
     try {
       const PostResult = await PostFullRegistration(finalForm);
-      const Result=await UpdateFinelVerification(userId);
-      setStatusMessage("Patient Details Updated Successfully");
-      setTimeout(() => { Router.push("/SuccessfullyRegisterd"); }, 1200);
+   
+      if(PostResult.success===true){
+           const Result=await UpdateFinelVerification(userId);
+setStatusMessage("Patient Details Updated Successfully");
+      }
+      
+      setTimeout(() => { Router.push("/AdminPage"); }, 1500);
     } catch (err) {
       setStatusMessage("Submission failed. Please try again.");
     }

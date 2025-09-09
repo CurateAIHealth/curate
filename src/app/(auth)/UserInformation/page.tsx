@@ -21,7 +21,7 @@ const Router=useRouter()
          
         const IntialValues=await GetUserInformation(userId);
      
-    
+    console.log("Check-----",IntialValues)
      
         if(IntialValues.userType==="patient"&&!IntialValues.FinelVerification){
           Router.push("/PatientRegistration")
@@ -31,7 +31,7 @@ const Router=useRouter()
           Router.push("/HCARegistraion")
           return
         }
-            const result = await GetUserCompliteInformation(userId);
+        const result = await GetUserCompliteInformation(userId);
         
     
        
