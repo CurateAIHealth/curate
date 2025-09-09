@@ -190,7 +190,7 @@ const Router=useRouter()
           age: FilterValue.age || FilterValue["Age"]||'',
           emailId: FilterValue.emailId || FilterValue["Email Id"]||'',
           clientAadharNo: FilterValue.clientAadharNo || FilterValue["Client Aadhar No"]||'',
-          patientAadharNumber:FilterValue.patientAadharNumber||FilterValue["patientAadharNumber"]||"",
+          patientAadharNumber:FilterValue.patientAadharNumber||FilterValue["Patient Aadhar Number"]||"",
           clientRelationToPatient: FilterValue.clientRelationToPatient || FilterValue["Client relation to patient"]||'',
           alternativeClientContact: FilterValue.alternativeClientContact ||FilterValue["Alternative Client Contact"]||'',
           address: FilterValue.address || FilterValue["Address"]||'',

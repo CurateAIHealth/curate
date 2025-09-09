@@ -734,7 +734,7 @@ export const GetUserCompliteInformation = async (UserIdFromLocal: any) => {
       "Phone No 2": safeDecrypt(info["Phone No 2"]),
       "Email Id": safeDecrypt(info["EmailId"]),
       "Client Aadhar No": safeDecrypt(info["Client Aadhar No"]),
-      "Patient Aadhar Number": safeDecrypt(info["Patient Aadhar Number"]),
+      "PatientAadharNumber": safeDecrypt(info["Patient Aadhar Number"]),
       "Alternative Client Contact": safeDecrypt(info["Alternative Client Contact"]),
     };
 
