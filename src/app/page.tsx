@@ -39,9 +39,10 @@ export default function StaticInfoPage() {
  useEffect(() => {
   const Fetch = async () => {
     const localValue = typeof window !== "undefined" ? localStorage.getItem("UserId") : null;
+   
     try {
       const ProfileInformation = await GetUserInformation(localValue);
-      console.log("Profile Status----", ProfileInformation);
+   
 
       const email = ProfileInformation?.Email?.toLowerCase();
       if (["admin@curatehealth.in", "info@curatehealth.in", "gouricurate@gmail.com"].includes(email)) {
@@ -239,7 +240,7 @@ export default function StaticInfoPage() {
 
                              
                             {/* <img src="Icons/HomePageLogo.png" alt="Curate Logo" className="rounded-lg"/> */}
-                             <img src="Icons/CurateNewLogo.jpg" alt="Curate Logo" className="rounded-lg"/>
+                             <img src="Icons/CurateNewLogo.png" alt="Curate Logo" className="rounded-lg"/>
 
                             
                     

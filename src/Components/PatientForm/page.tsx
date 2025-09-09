@@ -26,7 +26,7 @@ export default function PatientForm() {
     Location: '',
     VerificationStatus: 'Pending',
     TermsAndConditions: "Accepted",
-    EmailVerification: false,
+    EmailVerification: true,
     FinelVerification: false,
     ClientStatus: "Client Enquiry"
 
@@ -155,7 +155,7 @@ export default function PatientForm() {
     setIsSubmitting(true);
     setSubmissionRequest(false)
 
-    if (!isValidAadhar(formData.AadharNumber)) {
+    if (!isValidAadhar(formData.AadharNumber)&&(!formData.PANNumber)) {
       setStatusMessage('Please enter a valid 12‑digit Aadhaar number.');
       setIsSubmitting(false);
       return;
@@ -280,8 +280,9 @@ export default function PatientForm() {
       });
       setSubmissionRequest(true)
       router.push('/SuccessfulRegistration');
-    } catch {
+    } catch(errr:any) {
       setStatusMessage('Unexpected error. Please try again.');
+      console.log("Registration Error----",errr)
     } finally {
       setIsSubmitting(false);
     }

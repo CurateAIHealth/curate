@@ -18,10 +18,12 @@ const Router=useRouter()
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const result = await GetUserCompliteInformation(userId);
-       const IntialValues=await GetUserInformation(userId);
-        const userInfo = result?.HCAComplitInformation;
-        if(IntialValues.userType=== "patient"&&!IntialValues.FinelVerification){
+         
+        const IntialValues=await GetUserInformation(userId);
+     
+    
+     
+        if(IntialValues.userType==="patient"&&!IntialValues.FinelVerification){
           Router.push("/PatientRegistration")
           return
         }
@@ -29,6 +31,11 @@ const Router=useRouter()
           Router.push("/HCARegistraion")
           return
         }
+            const result = await GetUserCompliteInformation(userId);
+        
+    
+       
+        const userInfo = result.HCAComplitInformation;
         if (userInfo?.userType) {
           setUserType(userInfo.userType);
         } else {

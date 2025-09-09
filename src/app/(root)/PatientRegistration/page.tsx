@@ -283,7 +283,9 @@ export default function PatientForm() {
       setStatusMessage("Please fill out all required fields.");
       return;
     }
+    setStatusMessage("Please Wait...")
     const finalForm = { ...form, UserId: userId, userType: "patient" };
+
     try {
       const PostResult = await PostFullRegistration(finalForm);
       const Result=await UpdateFinelVerification(userId);
