@@ -1,3 +1,4 @@
+  "use client"; 
   import crypto from "crypto";
   import bcrypt from "bcryptjs";
   export const getPasswordStrength = (password: string) => {
