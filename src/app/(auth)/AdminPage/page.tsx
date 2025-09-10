@@ -107,7 +107,7 @@ const [UpdateMainFilter,SetUpdateMainFilter]=useState("Client Enquiry")
         }
 
         const RegisterdUsersResult = await GetRegidterdUsers();
-       console.log("Testing User----",RegisterdUsersResult)
+
         const FullInfo:any = await GetUsersFullInfo();
         setFullInfo(FullInfo);
 

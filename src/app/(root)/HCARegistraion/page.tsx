@@ -1,7 +1,7 @@
 'use client';
 
 import HCAMobileView from '@/Components/HCAMobileView/page';
-import { GetUserInformation, PostFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
+import { GetUserInformation, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
 import { UpdateDocmentSkipReason } from '@/Redux/action';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
@@ -347,8 +347,8 @@ export default function DoctorProfileForm() {
         setUpdatedStatusMessage("Please Wait Updating.....")
         const localValue = localStorage.getItem('UserId');
         const FinelForm = { ...form, Documents: Docs, UserId: localValue, DocumentSkipReason: ReasonValue, userType: "HCA" };
-             
-      const PostResult = await PostFullRegistration(FinelForm)
+             console.log("Test Finel HCA FinelForm---",FinelForm)
+      const PostResult = await PostHCAFullRegistration(FinelForm)
       const Result=await UpdateFinelVerification(localValue)
         setUpdatedStatusMessage('Successfully Updated Your Information.');
         SetUpdateingStatus(true);
@@ -636,7 +636,7 @@ export default function DoctorProfileForm() {
                 <input
                   type="text"
                   name="panNumber"
-                  value={form.panNumber}
+                  value={form.panNumber.toUpperCase()}
                   onChange={handleChange}
                   placeholder="PAN Number"
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1223,7 +1223,7 @@ export default function DoctorProfileForm() {
                 <input
                   type="text"
                   name="ifscCode"
-                  value={form.ifscCode}
+                  value={form.ifscCode.toUpperCase()}
                   onChange={handleChange}
                   placeholder="IFSC Code"
                   className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"

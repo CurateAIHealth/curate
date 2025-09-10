@@ -14,14 +14,14 @@ const UserDetailInfo = () => {
   const NameoftheClient=useSelector((state:any)=>state.ClientName)
 const Router=useRouter()
   const userId = useSelector((state: any) => state?.UserDetails);
-
+console.log("Current UserId----",userId)
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
          
         const IntialValues=await GetUserInformation(userId);
      
-    console.log("Check-----",IntialValues)
+
      
         if(IntialValues.userType==="patient"&&!IntialValues.FinelVerification){
           Router.push("/PatientRegistration")
@@ -36,6 +36,7 @@ const Router=useRouter()
     
        
         const userInfo = result.HCAComplitInformation;
+        console.log("Test UserType---",userInfo)
         if (userInfo?.userType) {
           setUserType(userInfo.userType);
         } else {

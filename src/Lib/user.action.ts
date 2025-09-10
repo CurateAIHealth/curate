@@ -430,52 +430,86 @@ export const UpdateOrganisation = async (Organisation: {
 
 
 }
-export const HCARegistration = async (HCA: {
-  userType: any,
-  FirstName: any,
-  LastName: any,
-  Gender: any,
-  DateOfBirth: any,
-  MaritalStatus: any,
-  Nationality: any,
-  AadharNumber: any,
-  Age: any,
-  ContactNumber: any
-  Email: any,
-  Password: any,
-  ConfirmPassword: any,
-  Location: any,
-  VerificationStatus: any,
-  TermsAndConditions: any,
-  userId: any,
-  FinelVerification: any,
-  EmailVerification: any
-}) => {
+
+
+export interface HCAInfo {
+  userType: any;
+  FirstName: any;
+  LastName: any;
+  Gender: any;
+  DateOfBirth: any;
+  MaritalStatus: any;
+  Nationality: any;
+  AadharNumber: any;
+  Age: any;
+  ContactNumber: any;
+  Email: any;
+  Password: any;
+  ConfirmPassword?: any;
+  Location: any;
+  VerificationStatus: any;
+  TermsAndConditions: any;
+  userId: any;
+  FinelVerification: any;
+  EmailVerification: any;
+}
+
+export const HCARegistration = async (HCA: HCAInfo) => {
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
 
-
-    const existingDoctor = await collection.findOne({
+    const existingHCA = await collection.findOne({
       $or: [
-        { Email: HCA.Email },
-        { RegistrationNumber: HCA.ContactNumber },
-        { AadharNumber: HCA.AadharNumber, }
+        { emailHash: hashValue(HCA.Email.toLowerCase()) },
+        { phoneHash: hashValue(HCA.ContactNumber) },
+        { aadharHash: hashValue(HCA.AadharNumber) },
       ],
     });
 
-    if (existingDoctor) {
+    if (existingHCA) {
       return {
         success: false,
         message: "An account with these details already exists.",
       };
     }
 
-    const result = await collection.insertOne({
-      ...HCA,
-      createdAt: new Date().toISOString(),
-    });
+    
+    const encryptedData = {
+   
+      userType: HCA.userType,
+      FirstName:HCA.FirstName? encrypt(HCA.FirstName):'',
+      LastName:HCA.LastName? encrypt(HCA.LastName):"",
+      Gender: encrypt(HCA.Gender),
+      DateOfBirth: encrypt(HCA.DateOfBirth),
+      MaritalStatus: HCA.MaritalStatus,
+      Nationality: HCA.Nationality,
+      AadharNumber:HCA.AadharNumber? encrypt(HCA.AadharNumber):"",
+      Age: HCA.Age,
+      ContactNumber: encrypt(HCA.ContactNumber),
+      Email: encrypt(HCA.Email),
+      Location:HCA.Location,
+
+
+      emailHash: hashValue(HCA.Email.toLowerCase()),
+      phoneHash: hashValue(HCA.ContactNumber),
+      aadharHash: hashValue(HCA.AadharNumber),
+
+    
+      Password: hashValue(HCA.Password),
+
+      userId: HCA.userId,
+      VerificationStatus: HCA.VerificationStatus,
+      TermsAndConditions: HCA.TermsAndConditions,
+      FinelVerification: HCA.FinelVerification,
+      EmailVerification: HCA.EmailVerification,
+
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const result = await collection.insertOne(encryptedData);
 
     return {
       success: true,
@@ -483,9 +517,11 @@ export const HCARegistration = async (HCA: {
       insertedId: result.insertedId.toString(),
     };
   } catch (err: any) {
-
+    console.error("Error in HCARegistration:", err);
+    throw err;
   }
-}
+};
+
 
 export const PostFullRegistration = async (Info: any) => {
   try {
@@ -523,7 +559,7 @@ export const PostFullRegistration = async (Info: any) => {
       "ProfilePic": Info.ProfilePic,
       "userType": Info.userType,
       "UserId": Info.UserId,
-      "patientAadharNumber":Info.patientAadharNumber
+      "patientAadharNumber":encrypt(Info.patientAadharNumber)
     };
 
  
@@ -545,6 +581,135 @@ export const PostFullRegistration = async (Info: any) => {
     };
   }
 };
+
+
+export const PostHCAFullRegistration = async (Info: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("CompliteRegistrationInformation");
+
+    const encryptedInfo = {
+   
+      "Title": Info.title,
+      "First Name": encrypt(Info.firstName),
+      "Surname": encrypt(Info.surname),
+      "Father Name":Info.fatherName? encrypt(Info.fatherName):null,
+      "Mother Name":Info.motherName? encrypt(Info.motherName):null,
+      "Husband Name": Info.husbandName ? encrypt(Info.husbandName) : null,
+      "Gender": Info.gender,
+      "Date of Birth": Info.dateOfBirth,
+      "Marital Status": Info.maritalStatus,
+
+    
+      "EmailId": encrypt(Info.emailId),
+      "Mobile Number": encrypt(Info.mobileNumber),
+      "Aadhar Card No": encrypt(Info.aadharCardNo),
+      "PAN Number": Info.panNumber ? encrypt(Info.panNumber) : null,
+      "Voter ID No": Info.voterIdNo ? encrypt(Info.voterIdNo) : null,
+      "Ration Card No": Info.rationCardNo ? encrypt(Info.rationCardNo) : null,
+
+      
+      "Permanent Address": Info.permanentAddress,
+      "Current Address": Info.currentAddress,
+      "City/Postcode Permanent": Info.cityPostcodePermanent,
+      "City/Postcode Current": Info.cityPostcodeCurrent,
+
+    
+      "Higher Education": Info.higherEducation,
+      "Higher Education Year Start": Info.higherEducationYearStart,
+      "Higher Education Year End": Info.higherEducationYearEnd,
+      "Professional Education": Info.professionalEducation,
+      "Professional Education Year Start": Info.professionalEducationYearStart,
+      "Professional Education Year End": Info.professionalEducationYearEnd,
+
+    
+      "Registration Council": Info.registrationCouncil,
+      "Registration No": Info.registrationNo,
+      "Professional Skill": Info.professionalSkill,
+      "Certified By": Info.certifiedBy,
+      "Professional Work 1": Info.professionalWork1,
+      "Professional Work 2": Info.professionalWork2,
+      "Experience": Info.experience,
+
+      "Height": Info.height,
+      "Weight": Info.weight,
+      "Hair Colour": Info.hairColour,
+      "Eye Colour": Info.eyeColour,
+      "Complexion": Info.complexion,
+      "Any Deformity": Info.anyDeformity,
+      "Mole/Body Mark 1": Info.moleBodyMark1,
+      "Mole/Body Mark 2": Info.moleBodyMark2,
+
+   
+      "Report Previous Health Problems": Info.reportPreviousHealthProblems,
+      "Report Current Health Problems": Info.reportCurrentHealthProblems,
+
+   
+      "Source of Referral": Info.sourceOfReferral,
+      "Date of Referral": Info.dateOfReferral,
+
+  
+      "Reference 1 Name": Info.reference1Name,
+      "Reference 1 Aadhar":Info.reference1Aadhar? encrypt(Info.reference1Aadhar):null,
+      "Reference 1 Mobile":Info.reference1Mobile? encrypt(Info.reference1Mobile):null,
+      "Reference 1 Address": Info.reference1Address,
+      "Reference 1 Relationship": Info.reference1Relationship,
+
+      "Reference 2 Name": Info.reference2Name,
+      "Reference 2 Aadhar":Info.reference2Aadhar? encrypt(Info.reference2Aadhar):null,
+      "Reference 2 Mobile":Info.reference2Mobile? encrypt(Info.reference2Mobile):null,
+      "Reference 2 Address": Info.reference2Address,
+
+  
+      "Service Hours 12hrs": Info.serviceHours12hrs || false,
+      "Service Hours 24hrs": Info.serviceHours24hrs || false,
+      "Preferred Service": Info.preferredService,
+
+   
+      "Payment Service": Info.paymentService,
+      "Payment Bank Name":  encrypt(Info.paymentBankName),
+      "Payment Bank Account Number": encrypt(Info.paymentBankAccountNumber),
+      "IFSC Code": encrypt( Info.ifscCode),
+      "Bank Branch Address": Info.bankBranchAddress,
+      "Bank Branch Name": Info.Bankbranchname,
+      "Branch City": Info.Branchcity,
+      "Branch State": Info.Branchstate,
+      "Branch Pincode": Info.Branchpincode,
+
+     
+      "Languages": Info.languages,
+      "Type": Info.type,
+      "Specialties": Info.specialties,
+
+ 
+      "userType": Info.userType,
+      "UserId": Info.UserId,
+      "DocumentSkipReason":Info.DocumentSkipReason,
+      "ProfilePic": Info.Documents.ProfilePic || null,
+      "Documents":Info. Documents,
+    };
+
+    
+    const FinelResult = await collection.insertOne({
+      HCAComplitInformation: encryptedInfo,
+    });
+
+    return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedId: FinelResult.insertedId.toString(),
+    };
+  } catch (err: any) {
+    console.error("Error in PostFullRegistration:", err);
+    return {
+      success: false,
+      message: "Registration failed",
+      error: err.message,
+    };
+  }
+};
+
 
 export const InserTimeSheet=async(ClientUserId:any,HCAUserId:any,Name:any,Email:any,Contact:any,ClientAdress:any,NameHCA:any,Contacthca:any,TimeSheetArray:any)=>{
   try{
@@ -734,7 +899,7 @@ export const GetUserCompliteInformation = async (UserIdFromLocal: any) => {
       "Phone No 2": safeDecrypt(info["Phone No 2"]),
       "Email Id": safeDecrypt(info["EmailId"]),
       "Client Aadhar No": safeDecrypt(info["Client Aadhar No"]),
-      "PatientAadharNumber": safeDecrypt(info["Patient Aadhar Number"]),
+      "PatientAadharNumber": safeDecrypt(info["patientAadharNumber"]),
       "Alternative Client Contact": safeDecrypt(info["Alternative Client Contact"]),
     };
 
@@ -749,8 +914,158 @@ export const GetUserCompliteInformation = async (UserIdFromLocal: any) => {
   }
 };
 
+export const GetHCACompliteInformation = async (UserIdFromLocal: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("CompliteRegistrationInformation");
 
-export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: any) => {
+    const userId = String(UserIdFromLocal).trim();
+
+    const UserInformation: any = await collection.findOne({
+      "HCAComplitInformation.UserId": userId,
+    });
+
+    if (!UserInformation) return null;
+
+    const info = UserInformation.HCAComplitInformation;
+
+    
+    const safeDecrypt = (field: any) => {
+      if (!field) return null;
+
+    
+      if (typeof field === "object" && field.iv && field.content) {
+        try {
+          return decrypt(field);
+        } catch (err) {
+          console.warn("Failed to decrypt field:", field, err);
+          return null;
+        }
+      }
+
+   
+      return field;
+    };
+
+  
+    const decryptedInfo = {
+      ...info,
+
+     
+      "Title": info["Title"],
+      "First Name": safeDecrypt(info["First Name"]),
+      "Surname": safeDecrypt(info["Surname"]),
+      "Father Name": safeDecrypt(info["Father Name"]),
+      "Mother Name": safeDecrypt(info["Mother Name"]),
+      "Husband Name": safeDecrypt(info["Husband Name"]),
+      "Gender": info["Gender"],
+      "Date of Birth": info["Date of Birth"],
+      "Marital Status": info["Marital Status"],
+
+   
+      "EmailId": safeDecrypt(info["EmailId"]),
+      "Mobile Number": safeDecrypt(info["Mobile Number"]),
+      "Aadhar Card No": safeDecrypt(info["Aadhar Card No"]),
+      "PAN Number": safeDecrypt(info["PAN Number"]),
+      "Voter ID No": safeDecrypt(info["Voter ID No"]),
+      "Ration Card No": safeDecrypt(info["Ration Card No"]),
+
+    
+      "Permanent Address": info["Permanent Address"],
+      "Current Address": info["Current Address"],
+      "City/Postcode Permanent": info["City/Postcode Permanent"],
+      "City/Postcode Current": info["City/Postcode Current"],
+
+   
+      "Higher Education": info["Higher Education"],
+      "Higher Education Year Start": info["Higher Education Year Start"],
+      "Higher Education Year End": info["Higher Education Year End"],
+      "Professional Education": info["Professional Education"],
+      "Professional Education Year Start": info["Professional Education Year Start"],
+      "Professional Education Year End": info["Professional Education Year End"],
+
+      
+      "Registration Council": info["Registration Council"],
+      "Registration No": info["Registration No"],
+      "Professional Skill": info["Professional Skill"],
+      "Certified By": info["Certified By"],
+      "Professional Work 1": info["Professional Work 1"],
+      "Professional Work 2": info["Professional Work 2"],
+      "Experience": info["Experience"],
+
+
+      "Height": info["Height"],
+      "Weight": info["Weight"],
+      "Hair Colour": info["Hair Colour"],
+      "Eye Colour": info["Eye Colour"],
+      "Complexion": info["Complexion"],
+      "Any Deformity": info["Any Deformity"],
+      "Mole/Body Mark 1": info["Mole/Body Mark 1"],
+      "Mole/Body Mark 2": info["Mole/Body Mark 2"],
+
+
+      "Report Previous Health Problems": info["Report Previous Health Problems"],
+      "Report Current Health Problems": info["Report Current Health Problems"],
+
+ 
+      "Source of Referral": info["Source of Referral"],
+      "Date of Referral": info["Date of Referral"],
+
+  
+      "Reference 1 Name": info["Reference 1 Name"],
+      "Reference 1 Aadhar": safeDecrypt(info["Reference 1 Aadhar"]),
+      "Reference 1 Mobile": safeDecrypt(info["Reference 1 Mobile"]),
+      "Reference 1 Address": info["Reference 1 Address"],
+      "Reference 1 Relationship": info["Reference 1 Relationship"],
+
+      "Reference 2 Name": info["Reference 2 Name"],
+      "Reference 2 Aadhar": safeDecrypt(info["Reference 2 Aadhar"]),
+      "Reference 2 Mobile": safeDecrypt(info["Reference 2 Mobile"]),
+      "Reference 2 Address": info["Reference 2 Address"],
+
+      
+      "Service Hours 12hrs": info["Service Hours 12hrs"],
+      "Service Hours 24hrs": info["Service Hours 24hrs"],
+      "Preferred Service": info["Preferred Service"],
+
+      
+      "Payment Service": info["Payment Service"],
+      "Payment Bank Name": safeDecrypt(info["Payment Bank Name"]),
+      "Payment Bank Account Number": safeDecrypt(info["Payment Bank Account Number"]),
+      "IFSC Code": safeDecrypt(info["IFSC Code"]),
+      "Bank Branch Address": info["Bank Branch Address"],
+      "Bank Branch Name": info["Bank Branch Name"],
+      "Branch City": info["Branch City"],
+      "Branch State": info["Branch State"],
+      "Branch Pincode": info["Branch Pincode"],
+
+    
+      "Languages": info["Languages"],
+      "Type": info["Type"],
+      "Specialties": info["Specialties"],
+
+      
+      "UserType": info["UserType"],
+      "UserId": info["UserId"],
+      "DocumentSkipReason": info["DocumentSkipReason"],
+      "ProfilePic": info["ProfilePic"],
+      "Documents": info["Documents"],
+    };
+
+    return {
+      _id: UserInformation._id?.toString() ?? null,
+      HCAComplitInformation: decryptedInfo,
+    };
+  } catch (err: any) {
+    console.error("Error fetching user info:", err);
+    return null;
+  }
+};
+
+
+
+export const UpdateClientComplitInformation = async (UserIdFromLocal: any, Info: any) => {
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
@@ -787,6 +1102,129 @@ export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: an
       "patientAadharNumber":Info.patientAadharNumber,
       
     };
+    const result = await collection.updateOne(
+      { "HCAComplitInformation.UserId": UserIdFromLocal },
+      {
+        $set: {
+          HCAComplitInformation: encryptedInfo,
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      console.warn("No matching document found for the given UserId.");
+      return null;
+    }
+
+    return result;
+  } catch (err: any) {
+    console.error("Error replacing HCAComplitInformation:", err);
+    return null;
+  }
+};
+
+export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("CompliteRegistrationInformation");
+ const encryptedInfo = { 
+  
+  "Title": Info.title || null,
+  "First Name": Info.firstName ? encrypt(Info.firstName) : null,
+  "Surname": Info.surname ? encrypt(Info.surname) : null,
+  "Gender": Info.gender || null,
+  "Date of Birth": Info.dateOfBirth || null,
+  "Marital Status": Info.maritalStatus || null,
+
+  
+  "EmailId": Info.emailId ? encrypt(Info.emailId) : null,
+  "Mobile Number": Info.mobileNumber ? encrypt(Info.mobileNumber) : null,
+
+  
+  "Aadhar Card No": Info.aadharCardNo ? encrypt(Info.aadharCardNo) : null,
+  "PAN Number": Info.panNumber ? encrypt(Info.panNumber) : null,
+  "Ration Card No": Info.rationCardNo ? encrypt(Info.rationCardNo) : null,
+  "Voter ID No": Info.voterIdNo ? encrypt(Info.voterIdNo) : null,
+
+
+  "Permanent Address": Info.permanentAddress || null,
+  "Current Address": Info.currentAddress || null,
+  "City/Postcode Permanent": Info.cityPostcodePermanent || null,
+  "City/Postcode Current": Info.cityPostcodeCurrent || null,
+
+
+  "Height": Info.height || null,
+  "Weight": Info.weight || null,
+  "Hair Colour": Info.hairColour || null,
+  "Eye Colour": Info.eyeColour || null,
+  "Complexion": Info.complexion || null,
+  "Mole/Body Mark 1": Info.moleBodyMark1 || null,
+  "Mole/Body Mark 2": Info.moleBodyMark2 || null,
+  "Any Deformity": Info.anyDeformity || null,
+
+
+  "Experience": Info.experience || null,
+  "Professional Work 1": Info.professionalWork1 || null,
+  "Professional Work 2": Info.professionalWork2 || null,
+  "Professional Education": Info.professionalEducation || null,
+  "Higher Education": Info.higherEducation || null,
+  "Higher Education Year Start": Info.higherEducationYearStart || null,
+  "Higher Education Year End": Info.higherEducationYearEnd || null,
+  "Professional Education Year Start": Info.professionalEducationYearStart || null,
+  "Professional Education Year End": Info.professionalEducationYearEnd || null,
+  "Registration Council": Info.registrationCouncil || null,
+  "Registration No": Info.registrationNo || null,
+  "Professional Skill": Info.professionalSkill || null,
+  "Certified By": Info.certifiedBy || null,
+
+  
+  "Report Previous Health Problems": Info.reportPreviousHealthProblems || null,
+  "Report Current Health Problems": Info.reportCurrentHealthProblems || null,
+
+
+  "Reference 1 Name": Info.reference1Name || null,
+  "Reference 1 Aadhar": Info.reference1Aadhar ? encrypt(Info.reference1Aadhar) : null,
+  "Reference 1 Mobile": Info.reference1Mobile ? encrypt(Info.reference1Mobile) : null,
+  "Reference 1 Address": Info.reference1Address || null,
+  "Reference 1 Relationship": Info.reference1Relationship || null,
+
+  "Reference 2 Name": Info.reference2Name || null,
+  "Reference 2 Aadhar": Info.reference2Aadhar ? encrypt(Info.reference2Aadhar) : null,
+  "Reference 2 Mobile": Info.reference2Mobile ? encrypt(Info.reference2Mobile) : null,
+  "Reference 2 Address": Info.reference2Address || null,
+
+ 
+  "Service Hours 12hrs": Info.serviceHours12hrs || false,
+  "Service Hours 24hrs": Info.serviceHours24hrs || false,
+  "Preferred Service": Info.preferredService || null,
+
+  
+  "Payment Service": Info.paymentService || null,
+  "Payment Bank Name": Info.paymentBankName ? encrypt(Info.paymentBankName) : null,
+  "Payment Bank Account Number": Info.paymentBankAccountNumber ? encrypt(Info.paymentBankAccountNumber) : null,
+  "IFSC Code": Info.ifscCode ? encrypt(Info.ifscCode) : null,
+  "Bank Branch Name": Info.Bankbranchname || null,
+  "Bank Branch Address": Info.bankBranchAddress || null,
+  "Branch City": Info.Branchcity || null,
+  "Branch State": Info.Branchstate || null,
+  "Branch Pincode": Info.Branchpincode || null,
+
+
+  "Languages": Info.languages || null,
+  "Type": Info.type || null,
+  "Specialties": Info.specialties || null,
+
+
+  "userType": Info.userType || null,
+  "UserId": Info.UserId || null,
+  "DocumentSkipReason": Info.DocumentSkipReason || null,
+
+
+  "ProfilePic": Info.Documents?.ProfilePic || null,
+  "Documents": Info.Documents || {},
+};
+
     const result = await collection.updateOne(
       { "HCAComplitInformation.UserId": UserIdFromLocal },
       {
