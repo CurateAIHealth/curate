@@ -26,7 +26,7 @@ export default function PatientForm() {
     Location: '',
     VerificationStatus: 'Pending',
     TermsAndConditions: "Accepted",
-    EmailVerification: true,
+    EmailVerification: false,
     FinelVerification: false,
     ClientStatus: "Client Enquiry"
 
@@ -68,6 +68,7 @@ export default function PatientForm() {
     if (e.target.checked) {
       setDocumentAvailability(!DocumentAvailability)
       setFirstDocumentAvailability(!FirstDocumentAvailability)
+      setStatusMessage("")
     }
 
   }
@@ -155,11 +156,16 @@ export default function PatientForm() {
     setIsSubmitting(true);
     setSubmissionRequest(false)
 
-    if (!isValidAadhar(formData.AadharNumber)&&(!formData.PANNumber)) {
-      setStatusMessage('Please enter a valid 12‑digit Aadhaar number.');
-      setIsSubmitting(false);
-      return;
-    }
+    if (
+  DocumentAvailability &&
+  (!formData.PANNumber && !isValidAadhar(formData.AadharNumber))
+) {
+  setStatusMessage('Please enter either a valid 12-digit Aadhaar number or a PAN.');
+  setIsSubmitting(false);
+  setSubmissionRequest(true)
+  return;
+}
+
 
     const pwOk =
       formData.Password.length >= 8 &&

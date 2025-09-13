@@ -12,8 +12,8 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CircleCheckBig, LogOut } from 'lucide-react';
-import {  UpdateClient, UpdateSubHeading, UpdateUserInformation } from '@/Redux/action';
-import { useDispatch } from 'react-redux';
+import {  Update_Main_Filter_Status, UpdateClient, UpdateSubHeading, UpdateUserInformation } from '@/Redux/action';
+import { useDispatch, useSelector } from 'react-redux';
 import { ClientEnquiry_Filters, filterColors, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
 
 import { select, tr } from 'framer-motion/client';
@@ -33,13 +33,13 @@ export default function UserTableList() {
   const [search, setSearch] = useState('');
   const [AsignStatus,setAsignStatus]=useState("")
   const [LoginEmail, setLoginEmail] = useState("");
-const [UpdateMainFilter,SetUpdateMainFilter]=useState("Client Enquiry")
+
   const Status = ['Placced','Client Enquiry', 'Processing', 'Converted', 'Waiting List', 'Lost'];
   const EmailVerificationStatus = ['Verified', 'Pending'];
   const [UserFullInfo, setFullInfo] = useState([])
   const router = useRouter();
   const dispatch = useDispatch();
-
+const UpdateMainFilter=useSelector((state:any)=>state.Main_Filter)  
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
     setUpdatedStatusMsg(`Updating ${first} Contact Status....`);
     try {
@@ -135,7 +135,8 @@ const [UpdateMainFilter,SetUpdateMainFilter]=useState("Client Enquiry")
 
   const UpdateMainFilterValue=(Z:any)=>{
 
-    SetUpdateMainFilter(Z)
+    // SetUpdateMainFilter(Z)
+    dispatch(Update_Main_Filter_Status(Z))
   }
 useEffect(() => {
   if (UpdateMainFilter === "Client Enquiry") {
@@ -265,7 +266,7 @@ const  ClientEnquiryUserInterFace=()=>{
                     <td className="sm:px-10 py-2 break-words max-w-[120px] sm:max-w-none">{user.Email}</td>
                     <td className="px-2 py-2">{user.Contact}</td>
                     <td className="px-2 py-2"><span className="px-2 sm:px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-[9px] sm:text-xs">{user.userType === "healthcare-assistant" ? "HCA" : user.userType}</span></td>
-                    <td className="px-2 py-2">{user.AadharNumber}</td>
+                    <td className="px-2 py-2">{user.AadharNumber?user.AadharNumber:"Aadhaar Pending"}</td>
                     <td className="px-2 py-2">{user.Location}</td>
                     <td className="px-2 py-2">
                       <select
@@ -356,7 +357,7 @@ const  ClientEnquiryUserInterFace=()=>{
   if (isChecking) {
     return (
       <div className="h-screen flex items-center justify-center font-bold text-gray-700 bg-gradient-to-tr from-[#ECF2FF] to-[#FBFAF5]">
-        User Information Loading....
+         {UpdateMainFilter} Information Loading....
       </div>
     );
   }
@@ -422,7 +423,7 @@ console.log('Test Registerd Userss---',users)
           )} */}
           {UpdateduserType==="patient"&&
 <div className="flex  flex-col gap-2 flex-wrap w-full ">
- <div className="flex gap-3 flex-wrap w-full sm:w-auto">
+ {/* <div className="flex gap-3 flex-wrap w-full sm:w-auto">
   {Main_Filters.map((each, index) => {
 
 
@@ -446,7 +447,7 @@ console.log('Test Registerd Userss---',users)
       </button>
     );
   })}
-</div>
+</div> */}
 
            <div className="flex gap-2 flex-wrap w-full items-center">
 

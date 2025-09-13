@@ -1,6 +1,6 @@
 'use client';
 
-import { GetUserCompliteInformation, GetUserInformation, UpdateClientComplitInformation } from '@/Lib/user.action';
+import { GetUserCompliteInformation, GetUserInformation, UpdateClientComplitInformation, UpdatePatientRegisterCollection } from '@/Lib/user.action';
 import axios from 'axios';
 import { Filter } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -248,6 +248,7 @@ const Router=useRouter()
       }
       const FinelData = { ...formData, UserId: ImportedUserId, };
       const Result= await UpdateClientComplitInformation(ImportedUserId, FinelData);
+      const RgistrationUpdate=await UpdatePatientRegisterCollection(ImportedUserId, FinelData)
       console.log('Updated Patient Data:', FinelData);
       setStatusMessage({ message: 'Changes submitted successfully!', type: 'success' });
     } catch (err: any) {

@@ -370,6 +370,44 @@ export const UpdatePatientInformation = async (Patient: {
   }
 };
 
+export const UpdatePatientRegisterCollection=async(UserIdFromLocal: any, Info: any)=>{
+try{
+   const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+   const encryptedData = {
+      
+      FirstName: encrypt(Info.patientFullName),
+      Location: Info.city,
+      AadharNumber: encrypt(Info.clientAadharNo),
+      Email: encrypt(Info.emailId),
+      ContactNumber: encrypt(Info.phoneNo1),
+    };
+  const result = await collection.updateOne(
+      {userId: UserIdFromLocal },
+      {
+        $set: {
+          FirstName: encryptedData.FirstName,
+          Location:encryptedData.Location,
+          AadharNumber:encryptedData.AadharNumber,
+          Email:encryptedData.Email,
+          ContactNumber:encryptedData.ContactNumber
+
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      console.warn("No matching document found for the given UserId.");
+      return null;
+    }
+
+    return result;
+}catch(err:any){
+
+}
+}
+
 
 
 
