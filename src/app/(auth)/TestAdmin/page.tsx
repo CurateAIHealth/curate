@@ -36,7 +36,7 @@ import { Update_Main_Filter_Status } from "@/Redux/action";
 
 const tabs = [
   { name: "Client Enquiry", count: 35, icon: Users, growth: "+17%", color: "from-blue-400 to-blue-600" },
-  { name: "Placements", count: 55, icon: User, growth: "+5%", color: "from-teal-400 to-teal-600" },
+  { name: "Deployment", count: 55, icon: User, growth: "+5%", color: "from-teal-400 to-teal-600" },
   { name: "Timesheet", count: 45, icon: Clock, growth: "-8%", color: "from-pink-400 to-pink-600" },
   { name: "Referral Pay", count: 28, icon: IndianRupee , growth: "+12%", color: "from-purple-400 to-purple-600" },
 ];
@@ -72,7 +72,9 @@ const RoutToAdminPage=(A:any)=>{
 router.push("/AdminPage");
  dispatch(Update_Main_Filter_Status(A))
 }
-
+const UpdateNewLead=()=>{
+    router.push("/NewLead")
+  }
  const handleLogout = () => {
     localStorage.removeItem('UserId');
     router.push('/');
@@ -93,7 +95,7 @@ router.push("/AdminPage");
                 className="w-8 h-8 rounded-full"
               />
               <span className="hidden md:inline text-sm font-medium">
-                Welcome, Admin
+              Hi Admin – Welcome to Admin Dashboard
               </span>
             </div>
           <div className="flex items-center gap-6">
@@ -127,8 +129,8 @@ router.push("/AdminPage");
               {tabs.map((tab) => (
                 <div
                   key={tab.name}
-                  className={`bg-gradient-to-r ${tab.color} text-white p-6 rounded-xl shadow-lg flex flex-col`}
-                  onClick={()=>RoutToAdminPage(tab.name)}
+                  className={`bg-gradient-to-r ${tab.color}  text-white p-6 rounded-xl shadow-lg flex flex-col`}
+                 
                 >
                   <div className="flex justify-between items-center mb-2">
                     <tab.icon size={28} />
@@ -137,7 +139,10 @@ router.push("/AdminPage");
                     </span>
                   </div>
                   <h2 className="text-2xl font-bold">{tab.count.toLocaleString()}</h2>
-                  <p className="text-sm opacity-80">{tab.name}</p>
+                  <div className="flex items-center ">  
+                  <p className="text-sm opacity-80 cursor-pointer hover:underline"  onClick={()=>RoutToAdminPage(tab.name)}>{tab.name}</p>
+                  {tab.name==="Client Enquiry"&&<p className='rounded-md text-sm text-center ml-1 bg-green-800 p-1 cursor-pointer' onClick={UpdateNewLead}>New Lead + </p>}
+                   </div>
                 </div>
               ))}
             </div>
