@@ -184,3 +184,26 @@ body {
   transform: scale(1.05);
   box-shadow: 0 10px 22px rgba(6, 208, 244, 0.6) !important;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out;
+}
+@layer components {
+  .input-green {
+    @apply border border-green-500 rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-green-400;
+  }
+}
+
+.input-modern {
+  @apply block w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 placeholder-transparent;
+}
+
+.floating-label {
+  @apply absolute left-4 top-2 text-gray-500 bg-white px-1 text-base pointer-events-none transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:-top-3 peer-focus:text-xs peer-focus:text-green-600;
+}
+

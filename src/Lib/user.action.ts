@@ -369,6 +369,101 @@ export const UpdatePatientInformation = async (Patient: {
     throw error;
   }
 };
+export const UpdateNewLeadInformation = async (Patient: {
+  userType:any
+  clientName: string;
+  clientPhone: string;
+  clientEmail: string;
+  patientName: string;
+  patientPhone: string;
+  MainpointforPatient: string;
+  MainpointforPatientInfo: string;
+  Source: string;
+  patientAge: string;
+  patientGender: string[];
+  patientWeight: string;
+  patientHeight: string;
+  comfortableLanguages: string[];
+  patientType: string[];
+  patientCurrentLocation: string[];
+  serviceLocation: string;
+  patientHomeAssistance: string[];
+  patientHomeNeeds: string[];
+  patientDrNeeds: string[];
+  patientHealthCard: string[];
+  hcpType: string[];
+  serviceCharges: string;
+  AdditionalComments: string;
+  VerificationStatus: string;
+  TermsAndConditions: string;
+  EmailVerification: boolean;
+  FinelVerification: boolean;
+  ClientStatus: string;
+  userId: string;
+
+}) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+ 
+
+
+    const encryptedData = {
+      userType: Patient.userType,
+      FirstName:Patient.clientName? encrypt(Patient.clientName):null,
+      ContactNumber:Patient.clientPhone? encrypt(Patient.clientPhone):null,
+      Email:Patient.clientEmail? encrypt(Patient.clientEmail):null,
+      patientName:Patient.patientName? encrypt(Patient.patientName):null,
+      patientPhone:Patient.patientPhone? encrypt(Patient.patientPhone):null,
+      MainpointforPatient: Patient.MainpointforPatient,
+      MainpointforPatientInfo:Patient.MainpointforPatientInfo? encrypt(Patient.MainpointforPatientInfo):null,
+      Source:Patient.Source? encrypt(Patient.Source):null,
+      patientAge: Patient.patientAge,
+      patientGender: Patient.patientGender,
+      patientWeight: Patient.patientWeight,
+      patientHeight: Patient.patientHeight,
+      comfortableLanguages: Patient.comfortableLanguages,
+      patientType: Patient.patientType,
+      patientCurrentLocation: Patient.patientCurrentLocation,
+      Location:Patient.serviceLocation? encrypt(Patient.serviceLocation):null,
+      patientHomeAssistance: Patient.patientHomeAssistance,
+      patientHomeNeeds: Patient.patientHomeNeeds,
+      patientDrNeeds: Patient.patientDrNeeds,
+      patientHealthCard: Patient.patientHealthCard,
+      hcpType: Patient.hcpType,
+      serviceCharges: Patient.serviceCharges,
+      AdditionalComments: Patient.AdditionalComments,
+
+
+   
+   
+
+
+      VerificationStatus: Patient.VerificationStatus,
+      TermsAndConditions: Patient.TermsAndConditions,
+      EmailVerification: Patient.EmailVerification,
+      FinelVerification: Patient.FinelVerification,
+      ClientStatus: Patient.ClientStatus,
+
+      userId: Patient.userId,
+
+      createdAt: new Date().toISOString(),
+    };
+
+    const result = await collection.insertOne(encryptedData);
+
+    return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedId: result.insertedId.toString(),
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
 
 export const UpdatePatientRegisterCollection=async(UserIdFromLocal: any, Info: any)=>{
 try{
