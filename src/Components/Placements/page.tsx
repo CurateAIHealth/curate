@@ -180,7 +180,7 @@ SetActionStatusMessage("Seccessfully Deleted Placement")
                   <th className="px-9 py-4">Status</th>
                   <th className="px-8 py-4">Replacement</th>
                   <th className="px-6 py-4 text-center">Time Sheet</th>
-                  <th className="px-6 py-4 text-center">Delete Placcement</th>
+                  <th className="px-6 py-4 text-center">Terminate</th>
                 </tr>
               </thead>
               <tbody>

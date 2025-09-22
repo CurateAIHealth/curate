@@ -47,3 +47,11 @@ export const UpdateSubHeading=(SubHeadingValue:any)=>{
         payload:SubHeadingValue
     }
 }
+
+
+export const Update_Main_Filter_Status=(Updated_Main_Filter_Value:any)=>{
+    return{
+        type:"Update_Main_Filter",
+        payload:Updated_Main_Filter_Value
+    }
+}

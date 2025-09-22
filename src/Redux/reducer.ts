@@ -64,3 +64,13 @@ case "UpdateSuHeading":
         return state
     }
 }
+
+
+export const Admin_Main_Filter = (state: any = "Client Enquiry", action: any) => {
+    switch (action.type) {
+        case "Update_Main_Filter":
+            return action.payload;
+        default:
+            return state
+    }
+}

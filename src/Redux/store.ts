@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { DocReason, HCAList, LoadingClient, SUbHeadings, TaskOne, UserIdValue, UserInformation } from "./reducer";
+import { Admin_Main_Filter, DocReason, HCAList, LoadingClient, SUbHeadings, TaskOne, UserIdValue, UserInformation } from "./reducer";
 
 export const store = configureStore({
     reducer: {
@@ -9,6 +9,7 @@ export const store = configureStore({
         ClientName: LoadingClient,
         DocumentReson: DocReason,
         ListOfHCA:HCAList,
-        SubHeadinList:SUbHeadings
+        SubHeadinList:SUbHeadings,
+        Main_Filter:Admin_Main_Filter
     }
 })

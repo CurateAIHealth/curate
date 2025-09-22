@@ -9,7 +9,7 @@ import { GetUserInformation, PostFullRegistration, UpdateFinelVerification } fro
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 
-// --- Type Definitions ---
+
 
 interface PatientFormState {
   phoneNo1: string;

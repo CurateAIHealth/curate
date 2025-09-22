@@ -1,6 +1,6 @@
 'use client';
 
-import { GetUserCompliteInformation, GetUserInformation, UpdateHCAComplitInformation } from '@/Lib/user.action';
+import { GetUserCompliteInformation, GetUserInformation, UpdateClientComplitInformation, UpdatePatientRegisterCollection } from '@/Lib/user.action';
 import axios from 'axios';
 import { Filter } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -168,7 +168,7 @@ const Router=useRouter()
         const FilterValue = Result?.HCAComplitInformation || {};
   const localValue = localStorage.getItem("UserId");
         const ProfileInformation = await GetUserInformation(localValue);
-        console.log("Test Filter User----",FilterValue)
+    console.log("Test Adhar----",FilterValue)
         setLoginEmail(ProfileInformation.Email);
         const formatDate = (dateString: string | undefined): string => {
           if (!dateString) return '';
@@ -190,7 +190,7 @@ const Router=useRouter()
           age: FilterValue.age || FilterValue["Age"]||'',
           emailId: FilterValue.emailId || FilterValue["Email Id"]||'',
           clientAadharNo: FilterValue.clientAadharNo || FilterValue["Client Aadhar No"]||'',
-          patientAadharNumber:FilterValue.patientAadharNumber||FilterValue["Patient Aadhar Number"]||"",
+          patientAadharNumber:FilterValue["PatientAadharNumber"]||"",
           clientRelationToPatient: FilterValue.clientRelationToPatient || FilterValue["Client relation to patient"]||'',
           alternativeClientContact: FilterValue.alternativeClientContact ||FilterValue["Alternative Client Contact"]||'',
           address: FilterValue.address || FilterValue["Address"]||'',
@@ -247,7 +247,8 @@ const Router=useRouter()
         return
       }
       const FinelData = { ...formData, UserId: ImportedUserId, };
-      const Result= await UpdateHCAComplitInformation(ImportedUserId, FinelData);
+      const Result= await UpdateClientComplitInformation(ImportedUserId, FinelData);
+      const RgistrationUpdate=await UpdatePatientRegisterCollection(ImportedUserId, FinelData)
       console.log('Updated Patient Data:', FinelData);
       setStatusMessage({ message: 'Changes submitted successfully!', type: 'success' });
     } catch (err: any) {

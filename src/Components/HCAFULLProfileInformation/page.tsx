@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, } from 'react';
 import Image from 'next/image';
 import axios from 'axios';
-import { GetUserCompliteInformation, GetUserInformation, UpdateHCAComplitInformation } from '@/Lib/user.action';
+import { GetHCACompliteInformation, GetUserCompliteInformation, GetUserInformation, UpdateClientComplitInformation, UpdateHCAComplitInformation } from '@/Lib/user.action';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
@@ -111,44 +111,44 @@ preferredService:"",
 useEffect(()=>{
     const Fetch = async () => {
     try {
-      const Result = await GetUserCompliteInformation(ImportedUserId);
+      const Result:any = await GetHCACompliteInformation(ImportedUserId);
       const FilterValue=Result.HCAComplitInformation
-      setUser(prev=>({...prev,firstName:FilterValue.firstName||"",
-    surname: FilterValue.surname||"",
-
-    gender: FilterValue.gender||"",
-    dateOfBirth:FilterValue.dateOfBirth||"",
-    emailId: FilterValue.emailId||"",
-    mobileNumber: FilterValue.mobileNumber||"",
-    currentAddress: FilterValue.currentAddress||"",
-    permanentAddress: FilterValue.permanentAddress||"",
-    maritalStatus:FilterValue.maritalStatus||"",
-    height: FilterValue.height||"",
-    weight: FilterValue.weight||"",
-    complexion: FilterValue.complexion||"",
-    eyeColour: FilterValue.eyeColour||"",
-    hairColour: FilterValue.hairColour||"",
-    languages:FilterValue.languages||"",
-    moleBodyMark1: FilterValue.moleBodyMark1||"",
-    moleBodyMark2: FilterValue.moleBodyMark2||"",
-    Bankbranchname: FilterValue.Bankbranchname||"",
-    Branchcity: FilterValue.Branchcity||"",
-    Branchpincode:FilterValue.Branchpincode||"",
-    Branchstate:FilterValue.Branchstate||"",
-    paymentBankName: FilterValue.paymentBankName||"",
-    paymentBankAccountNumber: FilterValue.paymentBankAccountNumber||"",
-    ifscCode: FilterValue.ifscCode||"",
-     experience: FilterValue.experience||"",
-    professionalWork1:FilterValue.professionalWork1||"",
-    professionalWork2: FilterValue.professionalWork2||"",
-    professionalEducation:FilterValue.professionalEducation||"",
-    aadharCardNo: FilterValue.aadharCardNo||"",
-    panNumber: FilterValue.panNumber||"",
-    rationCardNo: FilterValue.rationCardNo||"",
-    paymentService:FilterValue.paymentService||'',
-    preferredService:FilterValue.preferredService||"",
-DocumentSkipReason:FilterValue.DocumentSkipReason||"",
-
+      console.log("Test Complite HCA Information---",FilterValue)
+      setUser(prev=>({...prev,
+    firstName: FilterValue["First Name"] || "",
+  surname: FilterValue["Surname"] || "",
+  gender: FilterValue["Gender"] || "",
+  dateOfBirth: FilterValue["Date of Birth"] || "",
+  emailId: FilterValue["EmailId"] || "",
+  mobileNumber: FilterValue["Mobile Number"] || "",
+  currentAddress: FilterValue["Current Address"] || "",
+  permanentAddress: FilterValue["Permanent Address"] || "",
+  maritalStatus: FilterValue["Marital Status"] || "",
+  height: FilterValue["Height"] || "",
+  weight: FilterValue["Weight"] || "",
+  complexion: FilterValue["Complexion"] || "",
+  eyeColour: FilterValue["Eye Colour"] || "",
+  hairColour: FilterValue["Hair Colour"] || "",
+  languages: FilterValue["Languages"] || "",
+  moleBodyMark1: FilterValue["Mole/Body Mark 1"] || "",
+  moleBodyMark2: FilterValue["Mole/Body Mark 2"] || "",
+  Bankbranchname: FilterValue["Bank Branch Name"] || "",
+  Branchcity: FilterValue["Branch City"] || "",
+  Branchpincode: FilterValue["Branch Pincode"] || "",
+  Branchstate: FilterValue["Branch State"] || "",
+  paymentBankName: FilterValue["Payment Bank Name"] || "",
+  paymentBankAccountNumber: FilterValue["Payment Bank Account Number"] || "",
+  ifscCode: FilterValue["IFSC Code"] || "",
+  experience: FilterValue["Experience"] || "",
+  professionalWork1: FilterValue["Professional Work 1"] || "",
+  professionalWork2: FilterValue["Professional Work 2"] || "",
+  professionalEducation: FilterValue["Professional Education"] || "",
+  aadharCardNo: FilterValue["Aadhar Card No"] || "",
+  panNumber: FilterValue["PAN Number"] || "",
+  rationCardNo: FilterValue["Ration Card No"] || "",
+  paymentService: FilterValue["Payment Service"] || "",
+  preferredService: FilterValue["Preferred Service"] || "",
+  DocumentSkipReason: FilterValue["DocumentSkipReason"] || "",
     Documents: {
           ...prev.Documents,
       ProfilePic: FilterValue.Documents.ProfilePic||'/Icons/PatientDefault.png',

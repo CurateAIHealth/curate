@@ -46,7 +46,7 @@ export default function StaticInfoPage() {
 
       const email = ProfileInformation?.Email?.toLowerCase();
       if (["admin@curatehealth.in", "info@curatehealth.in", "gouricurate@gmail.com"].includes(email)) {
-        router.push("/AdminPage");
+        router.push("/TestAdmin");
         return;
       }
 
@@ -240,7 +240,7 @@ export default function StaticInfoPage() {
 
                              
                             {/* <img src="Icons/HomePageLogo.png" alt="Curate Logo" className="rounded-lg"/> */}
-                             <img src="Icons/CurateNewLogo.png" alt="Curate Logo" className="rounded-lg"/>
+                             <img src="Icons/CurateNewLogo.jpeg" alt="Curate Logo" className="rounded-lg"/>
 
                             
                     
@@ -530,7 +530,7 @@ If you or a loved one needs medical support at home, Curate Health Services is h
     className=" hover:bg-pink-600 text-white p-3 rounded-full shadow-lg transition"
     aria-label="Instagram"
   >
-    <img alt='Instagram' src="Icons/insta.svg"/>
+    <img alt='Instagram' src="Icons/Insta.gif"/>
      
     
   </a>
@@ -542,7 +542,7 @@ If you or a loved one needs medical support at home, Curate Health Services is h
     className=" hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition"
     aria-label="LinkedIn"
   >
-   <img alt='Instagram' src="Icons/Linkedin.png"/>
+   <img alt='Instagram' src="Icons/Linkedin.gif"/>
   </a>
 </div>
 
