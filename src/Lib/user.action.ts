@@ -392,6 +392,9 @@ export const UpdateNewLeadInformation = async (Patient: {
   patientDrNeeds: string[];
   patientHealthCard: string[];
   hcpType: string[];
+    PhysiotherapySpecialisation:any,
+     MedicalDrSpecialisation:any,
+     RelationtoPatient:any,
   serviceCharges: string;
   AdditionalComments: string;
   VerificationStatus: string;
@@ -426,7 +429,10 @@ export const UpdateNewLeadInformation = async (Patient: {
       patientHeight: Patient.patientHeight,
       comfortableLanguages: Patient.comfortableLanguages,
       patientType: Patient.patientType,
+      PhysiotherapySpecialisation:Patient.PhysiotherapySpecialisation,
+      MedicalDrSpecialisation:Patient.MedicalDrSpecialisation,
       patientCurrentLocation: Patient.patientCurrentLocation,
+      RelationtoPatient:Patient.RelationtoPatient,
       Location:Patient.serviceLocation? encrypt(Patient.serviceLocation):null,
       patientHomeAssistance: Patient.patientHomeAssistance,
       patientHomeNeeds: Patient.patientHomeNeeds,
@@ -456,7 +462,7 @@ export const UpdateNewLeadInformation = async (Patient: {
 
     return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "Your Lead Registration Completed",
       insertedId: result.insertedId.toString(),
     };
   } catch (error) {

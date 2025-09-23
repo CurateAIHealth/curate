@@ -55,3 +55,11 @@ export const Update_Main_Filter_Status=(Updated_Main_Filter_Value:any)=>{
         payload:Updated_Main_Filter_Value
     }
 }
+
+
+export const UpdatePreviewStatus=(Updated_Preview_Status:any)=>{
+    return{
+        type:'CurrentPrevievStatus',
+        payload:Updated_Preview_Status
+    }
+}

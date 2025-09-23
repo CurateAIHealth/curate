@@ -1,6 +1,9 @@
 'use client';
 
+import { UpdatePreviewStatus } from '@/Redux/action';
+import { SquarePen } from 'lucide-react';
 import React from 'react';
+import { useDispatch } from 'react-redux';
 
 interface Medication {
   medicationName: string;
@@ -40,6 +43,7 @@ interface PreviewData {
   foodAllergy: string;
   hobbies: string;
   hospitalVisits: string;
+  FallTimes:String,
   hydrationDisease: string;
   hydrationStatus: string;
   mobility: string;
@@ -76,11 +80,15 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 );
 
 const PreviewComponent: React.FC<PreviewProps> = ({ data }) => {
+    const dispatch=useDispatch()
+    const UpdateEdit=()=>{
+    dispatch(UpdatePreviewStatus(true))
+}
   return (
     <div className="p-6 max-w-3xl mx-auto bg-gradient-to-b from-gray-50 to-white shadow-xl rounded-xl border border-gray-200 font-sans">
       <div className="text-center border-b border-dashed border-gray-400 pb-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 tracking-widest">PATIENT RECEIPT</h1>
-        <p className="text-xs text-gray-500 mt-1">Generated Preview</p>
+        <h1 className="text-2xl font-bold text-gray-900 tracking-widest"> Patient Daily Routine (PDR) Preview </h1>
+        
       </div>
 
       <Section title="Patient Information">
@@ -101,6 +109,7 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data }) => {
           <InfoItem label="Hand Wash" value={data['Hand Wash']} />
           <InfoItem label="Hearing Loss" value={data['Hearing Loss']} />
           <InfoItem label="History of Fall" value={data['History of Fall']} />
+          <InfoItem label="Fall Times" value={data["FallTimes"]}/>
           <InfoItem label="Mouth Care" value={data['Mouth Care']} />
           <InfoItem label="Nail Care" value={data['Nail Care']} />
           <InfoItem label="Room Hygiene" value={data['Room Hygiene']} />
@@ -160,10 +169,18 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data }) => {
           <InfoItem label="Additional Remarks" value={data.remarks} />
         </div>
       </Section>
+     <div className='flex justify-between'>
+<button 
+  type="button"
+  onClick={UpdateEdit}
+  className="flex items-center gap-2 p-2 bg-pink-600 rounded-md text-white hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-400 cursor-pointer"
+>
+  <SquarePen className="w-4 h-4" />
+  <span>Edit</span>
+</button>
 
-      <div className="text-center mt-8 pt-4 border-t border-dashed border-gray-400 text-sm text-gray-500 tracking-wider">
-        ~ Thank You · End of Receipt ~
-      </div>
+<button className='p-1 bg-teal-600 rounded-md text-white cursor-pointer'>Submit</button>
+</div>
     </div>
   );
 };

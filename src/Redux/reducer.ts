@@ -74,3 +74,15 @@ export const Admin_Main_Filter = (state: any = "Client Enquiry", action: any) =>
             return state
     }
 }
+
+
+export const PreviedComponent = (state: any = true, action: any) => {
+    switch (action.type) {
+
+        case "CurrentPrevievStatus":
+            return action.payload;
+        default:
+            return state
+
+    }
+}

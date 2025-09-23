@@ -7,6 +7,8 @@ import {
 import Preview from '@/Components/Preview/page'
 import PreviewComponent from '@/Components/Preview/page'
 import name from '@/pages/api/Upload'
+import { useDispatch, useSelector } from 'react-redux'
+import { UpdatePreviewStatus } from '@/Redux/action'
 
 const specialityOptions = [
   'Neurological', 'Cardiological', 'Respiratory', 'Gastro', 'Surgery', 'Other'
@@ -46,7 +48,7 @@ const washroomAccessories = [
 
 const administerBy = ["Family", "HCP", "Independent", "Other"]
 
-const sampleData = {
+const sampleData :any= {
   Balance: "No",
   Bathing: "Independent",
   Bedding: "Independent",
@@ -108,15 +110,17 @@ export default function DataCollectionForm() {
 
   const [form, setForm] = useState<StringMap>({});
   const [otherInputs, setOtherInputs] = useState<StringMap>({});
-  const [ShowPreviewData, setShowPrevieData] = useState(true)
+
   const [FinelPrewData, setFinelPrewData] = useState(sampleData)
   const [formData, setformData] = useState()
   const [medications, setMedications] = useState([
     { medicationName: '', dose: '', quantity: '', route: '', administerBy: '', medTime: '', reviewDate: '' }
   ]);
-
+const dispatch=useDispatch()
+  const ShowPreviewData=useSelector((state:any)=>state.CurrentPreview)
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target
+  
     setForm((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
@@ -140,7 +144,7 @@ export default function DataCollectionForm() {
     const PreviewData: any = { ...form, Inputs: { ...otherInputs }, Medications: medications }
     setFinelPrewData(PreviewData)
     console.log("Submitted Data----", PreviewData.administerBy)
-    setShowPrevieData(false)
+   dispatch(UpdatePreviewStatus(false))
   }
   const addMedication = () => {
     setMedications(prev => [...prev, { medicationName: '', dose: '', quantity: '', route: '', administerBy: '', medTime: '', reviewDate: '' }]);
@@ -164,7 +168,7 @@ export default function DataCollectionForm() {
 
       )}
 
-      <button type="button" onClick={() => toggleRemark(section)} className="px-2  h-8 text-center py-1 bg-green-600 text-white rounded">
+      <button type="button" onClick={() => toggleRemark(section)} className="px-2 cursor-pointer  h-8 text-center py-1 bg-green-600 text-white rounded">
         Add Remark
       </button>
     </div>
@@ -203,7 +207,7 @@ export default function DataCollectionForm() {
       ) : null}
     </div>
   )
-  console.log("Test Form Data----", form)
+  console.log("Test Form Data----", otherInputs)
   return (
     <div>{ShowPreviewData ?
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -240,6 +244,8 @@ export default function DataCollectionForm() {
               <label className="floating-label">Relation to Patient</label>
             </div>
             {renderAddRemark("personalFamily")}
+            
+            <p className=' p-2  shadow-lg rounded-md text-center'>{otherInputs["personalFamilyRemark"]}</p>
           </section>
 
           <section className="bg-white/80 rounded-2xl shadow-lg ring-1 ring-cyan-300 flex flex-col gap-6 p-4 sm:p-6 md:p-8">
@@ -256,6 +262,8 @@ export default function DataCollectionForm() {
               {renderRadioOptions("speciality", specialityOptions)}
             </div>
             {renderAddRemark("presentHealth")}
+            
+            <p className=' p-2  shadow-lg rounded-md text-center'>{otherInputs["presentHealthRemark"]}</p>
           </section>
 
           <section className="bg-white/80 rounded-2xl shadow-lg ring-1 ring-pink-300 flex flex-col gap-6 p-4 sm:p-6 md:p-8">
@@ -272,6 +280,7 @@ export default function DataCollectionForm() {
               <label className="floating-label">Hospital Visits</label>
             </div>
             {renderAddRemark("treatment")}
+            <p className=' p-2  shadow-lg rounded-md text-center'>{otherInputs["treatmentRemark"]}</p>
           </section>
 
           <section className="bg-white/80 rounded-2xl shadow-lg ring-1 ring-teal-300 flex flex-col gap-6 p-4 sm:p-6 md:p-8">
@@ -336,6 +345,7 @@ export default function DataCollectionForm() {
               {renderRadioOptions("mobilityAid", mobilityAids)}
             </div>
             {renderAddRemark("functionalAssessment")}
+            <p className=' p-2  shadow-lg rounded-md text-center'>{otherInputs["functionalAssessmentRemark"]}</p>
           </section>
 
           <section className="bg-white/80 rounded-2xl shadow-lg ring-1 ring-yellow-300 flex flex-col gap-6 p-4 sm:p-6 md:p-8">
@@ -348,6 +358,7 @@ export default function DataCollectionForm() {
               {renderRadioOptions("breathingEquipment", breathingEquipments)}
             </div>
             {renderAddRemark("equipmentUse")}
+            <p className=' p-2  shadow-lg rounded-md text-center'>{otherInputs["equipmentUseRemark"]}</p>
           </section>
 
           <section className="bg-white/80 rounded-2xl shadow-lg ring-1 ring-rose-300 flex flex-col gap-6 p-4 sm:p-6 md:p-8">
@@ -376,6 +387,7 @@ export default function DataCollectionForm() {
               <label className="floating-label">Hydration Related Disease</label>
             </div>
             {renderAddRemark("nutritionHydration")}
+              <p className=' p-2  shadow-lg rounded-md text-center'>{otherInputs["nutritionHydrationRemark"]}</p>
           </section>
 
           <section className="bg-white/80 rounded-2xl shadow-lg ring-1 ring-green-300 flex flex-col gap-6 p-4 sm:p-6 md:p-8">
@@ -406,6 +418,8 @@ export default function DataCollectionForm() {
               <label className="floating-label">Remarks</label>
             </div>
             {renderAddRemark("hygieneElimination")}
+                <p className=' p-2  shadow-lg rounded-md text-center'>{otherInputs["hygieneEliminationRemark"]}</p>
+            
           </section>
 
           <section className="bg-white/80 rounded-2xl shadow-lg ring-1 ring-gray-300 flex flex-col gap-6 p-4 sm:p-6 md:p-8">
@@ -434,6 +448,7 @@ export default function DataCollectionForm() {
               {renderRadioOptions("washroomAccessory", washroomAccessories)}
             </div>
             {renderAddRemark("bedFloorWashroom")}
+            <p className=' p-2  shadow-lg rounded-md text-center'>{otherInputs["bedFloorWashroomRemark"]}</p>
           </section>
 
           <section className="bg-white/80 rounded-2xl shadow-lg ring-1 ring-indigo-300 flex flex-col gap-6 p-4 sm:p-6 md:p-8">
@@ -470,17 +485,18 @@ export default function DataCollectionForm() {
             </div>
             <div>
               <label className="font-semibold">Time</label>
-              <input type="time" name="medTime" className="input-modern" value={new Date().toTimeString().slice(0, 5)} onChange={handleChange} />
+              <input type="time" name="medTime" className="input-modern" value={new Date().toTimeString().slice(0, 5)?? ""} onChange={handleChange} />
             </div>
             <div>
               <label className="font-semibold">Review Date</label>
-              <input type="text" name="reviewDate" className="input-modern" value={new Date().toLocaleDateString("en-IN")} onChange={handleChange} />
+              <input type="text" name="reviewDate" className="input-modern" value={new Date().toLocaleDateString("en-IN")?? ""} onChange={handleChange} />
             </div>
             {renderAddRemark("medicationList")}
+            <p className=' p-2  shadow-lg rounded-md text-center'>{otherInputs["medicationListRemark"]}</p>
           </section>
 
           <div className="flex justify-center mt-6">
-            <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded">Preview & Submit</button>
+            <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded cursor-pointer">Preview & Submit</button>
           </div>
         </form>
       </div> : <PreviewComponent data={FinelPrewData} />
