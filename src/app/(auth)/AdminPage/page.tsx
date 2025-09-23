@@ -227,106 +227,139 @@ setUpdatedStatusMsg(err)
     }
   }
 
-const  ClientEnquiryUserInterFace=()=>{
-  return(
-    <div>
+const ClientEnquiryUserInterFace = () => {
+  return (
+    <div className="w-full">
       {UpdatedFilterUserType.length > 0 ? (
         <div className="bg-white/90 rounded-2xl shadow-2xl border border-gray-100">
-          <div className="max-h-[540px] overflow-y-auto overflow-x-auto md:overflow-x-hidden scrollbar-hide">
-            <table className="min-w-full text-[11px] sm:text-[13px] text-left text-gray-700">
-              <thead className="bg-[#f5faff] sticky top-0 z-10">
-                <tr>
-                  <th className="px-2 py-2 sm:px-6 sm:py-3">Name</th>
-                  <th className="px-2 py-2 sm:px-12 sm:py-3">Email</th>
-                  <th className="px-5 py-2">Contact</th>
-                  <th className="px-5 py-2">Role</th>
-                  <th className="px-2 py-2">Aadhar</th>
-                  <th className="px-2 py-2">Location</th>
-                  <th className="px-2 sm:px-4 py-2">Email Verification</th>
-                  {UpdateduserType !== "healthcare-assistant" && (
-                    <th className="px-4  py-2">Client Status</th>
-                  )}
-
-                  {
-                     (UpdateMainFilter==="Client Enquiry"&&search=="Converted")&&<th className="px-4 py-2">Designate</th>
-                  }
-                  <th className="px-2 sm:px-4 py-2">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {UpdatedFilterUserType.map((user, index) => (
-                  <tr key={index} className="border-b border-gray-100 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors">
-                    <td className="px-2 py-2 flex items-center gap-2">
-                      <img
-                        src={FilterProfilePic.filter((each: any) => each.UserId === user.id)[0]?.Documents?.ProfilePic ||FilterProfilePic.filter((each: any) => each.UserId === user.id)[0]?.ProfilePic|| "Icons/DefaultProfileIcon.png"}
-                        className="rounded-full h-7 w-7 sm:h-10 sm:w-10"
-                      />
-                      <span className="font-semibold text-[#007B7F]">{user.FirstName}</span>
-                    </td>
-                    <td className="sm:px-10 py-2 break-words max-w-[120px] sm:max-w-none">{user.Email}</td>
-                    <td className="px-2 py-2">{user.Contact}</td>
-                    <td className="px-2 py-2"><span className="px-2 sm:px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-[9px] sm:text-xs">{user.userType === "healthcare-assistant" ? "HCA" : user.userType}</span></td>
-                    <td className="px-2 py-2">{user.AadharNumber?user.AadharNumber:"Aadhaar Pending"}</td>
-                    <td className="px-2 py-2">{user.Location}</td>
-                    <td className="px-2 py-2">
-                      <select
-                        className="w-full cursor-pointer sm:w-[100px] text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200"
-                        defaultValue={user.EmailVerification ? 'Verified' : 'Pending'}
-                        onChange={(e) =>
-                          UpdateEmailVerificationStatus(user.FirstName, e.target.value, user.userId)
-                        }
-                      >
-                        {EmailVerificationStatus.map((status) => (
-                          <option key={status} value={status}>{status}</option>
-                        ))}
-                      </select>
-                    </td>
-                    {user.userType === "patient" &&
+          <div className="max-h-[540px] overflow-y-auto">
+            {/* ✅ Scrollable container only for mobile */}
+            <div className="w-full overflow-x-auto sm:overflow-x-hidden">
+              <table className="table-fixed w-full min-w-[800px] text-[11px] sm:text-[13px] text-left text-gray-700 border-collapse">
+                <thead className="bg-[#f5faff] sticky top-0 z-10">
+                  <tr>
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Name</th>
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 w-[18%]">Email</th>
+                    <th className="px-2 py-2 w-[12%]">Contact</th>
+                    <th className="px-2 py-2 w-[10%]">Role</th>
+                    <th className="px-2 py-2 w-[12%]">Aadhar</th>
+                    <th className="px-2 py-2 w-[12%]">Location</th>
+                    <th className="px-2 py-2 w-[14%]">Email Verification</th>
+                    {UpdateduserType !== "healthcare-assistant" && (
+                      <th className="px-2 py-2 w-[14%]">Client Status</th>
+                    )}
+                    {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
+                      <th className="px-2 py-2 w-[14%]">Designate</th>
+                    )}
+                    <th className="px-2 py-2 w-[10%]">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {UpdatedFilterUserType.map((user, index) => (
+                    <tr
+                      key={index}
+                      className="border-b border-gray-100 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors"
+                    >
+                      <td className="px-2 py-2 truncate">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={
+                              FilterProfilePic.filter((each:any) => each.UserId === user.id)[0]?.Documents?.ProfilePic ||
+                              FilterProfilePic.filter((each:any) => each.UserId === user.id)[0]?.ProfilePic ||
+                              "Icons/DefaultProfileIcon.png"
+                            }
+                            className="rounded-full h-7 w-7 sm:h-10 sm:w-10 object-cover"
+                          />
+                          <span className="font-semibold text-[#007B7F] truncate">
+                            {user.FirstName}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-2 py-2 break-words">{user.Email}</td>
+                      <td className="px-2 py-2">{user.Contact}</td>
                       <td className="px-2 py-2">
-                       
-                      <select
-                          className={`w-full cursor-pointer sm:w-[110px] px-2 py-2 ${user.ClientStatus==="Placced"?"text-[13px] font-bold shadow-lg":"shadow-md"} rounded-xl text-center  font-medium transition-all duration-200 ${filterColors[user.ClientStatus]}`}
-                          value={user.ClientStatus}
+                        <span className="px-2 sm:px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-[9px] sm:text-xs">
+                          {user.userType === "healthcare-assistant" ? "HCA" : user.userType}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2">
+                        {user.AadharNumber ? user.AadharNumber : "Aadhaar Pending"}
+                      </td>
+                      <td className="px-2 py-2 break-words">{user.Location}</td>
+                      <td className="px-2 py-2">
+                        <select
+                          className="w-full text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200 cursor-pointer text-xs sm:text-sm"
+                          defaultValue={user.EmailVerification ? "Verified" : "Pending"}
                           onChange={(e) =>
-                            UpdateStatus(user.FirstName, e.target.value, user.userId)
+                            UpdateEmailVerificationStatus(user.FirstName, e.target.value, user.userId)
                           }
                         >
-                          {Status.map((status) => (
-                            <option key={status} value={status}>{status === "Placced" ? "Placced ✅" : status}</option>
-
+                          {EmailVerificationStatus.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
                           ))}
                         </select>
-                        
-                      </td>}
-                    {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
-                     
-                        <th className="px-2 py-2">
-                          <select onChange={(e:any)=>{ 
-                            const selectedHCA = Filter_HCA.find(
-          (each) => each.FirstName === e.target.value
-        );
-        UpdateAssignHca(user.id,selectedHCA?.id,user.FirstName,user.Email,user.Contact,user.Location,selectedHCA?.FirstName,selectedHCA?.Contact)}}  className="w-full cursor-pointer sm:w-[120px] text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200">
-                            <option >Assign HCA</option>
-                          
-                            {Filter_HCA.map((each)=><option key={each.FirstName} >{each.FirstName}</option>)}
-                            </select>
-                        </th>
-                      
-                    )}
-
-                       
-                    <td className="px-2 py-2">
-                      <button
-                        className="w-full cursor-pointer sm:w-[60px] text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition"
-                        onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
-                      >
-                        {user.DetailedVerification ? "View" : "Fill"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+                      {user.userType === "patient" && (
+                        <td className="px-2 py-2">
+                          <select
+                            className={`w-full px-2 py-2 rounded-xl text-center font-medium transition-all duration-200 cursor-pointer ${
+                              user.ClientStatus === "Placced"
+                                ? "text-[13px] font-bold shadow-lg"
+                                : "shadow-md"
+                            } ${filterColors[user.ClientStatus]}`}
+                            value={user.ClientStatus}
+                            onChange={(e) => UpdateStatus(user.FirstName, e.target.value, user.userId)}
+                          >
+                            {Status.map((status) => (
+                              <option key={status} value={status}>
+                                {status === "Placced" ? "Placced ✅" : status}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                      )}
+                      {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
+                        <td className="px-2 py-2">
+                          <select
+                            onChange={(e) => {
+                              const selectedHCA = Filter_HCA.find(
+                                (each) => each.FirstName === e.target.value
+                              );
+                              UpdateAssignHca(
+                                user.id,
+                                selectedHCA?.id,
+                                user.FirstName,
+                                user.Email,
+                                user.Contact,
+                                user.Location,
+                                selectedHCA?.FirstName,
+                                selectedHCA?.Contact
+                              );
+                            }}
+                            className="w-full text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200 cursor-pointer text-xs sm:text-sm"
+                          >
+                            <option>Assign HCA</option>
+                            {Filter_HCA.map((each) => (
+                              <option key={each.FirstName}>{each.FirstName}</option>
+                            ))}
+                          </select>
+                        </td>
+                      )}
+                      <td className="px-2 py-2">
+                        <button
+                          className="w-full text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition cursor-pointer text-xs sm:text-sm"
+                          onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
+                        >
+                          {user.DetailedVerification ? "View" : "Fill"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       ) : (
@@ -334,13 +367,16 @@ const  ClientEnquiryUserInterFace=()=>{
       )}
 
       {updatedStatusMsg && (
-        <div className="fixed bottom-4 sm:bottom-6 left-3 sm:left-10 bg-gradient-to-br from-[#00A9A5] to-[#005f61] text-white px-3 sm:px-6 py-2 sm:py-4 rounded-xl shadow-2xl font-semibold text-xs sm:text-base">
+        <div className="fixed bottom-4 sm:bottom-6 left-3 sm:left-10 bg-gradient-to-br from-[#00A9A5] to-[#005f61] text-white px-3 sm:px-6 py-2 sm:py-4 rounded-xl shadow-2xl font-semibold text-xs sm:text-base z-50 max-w-[90vw] sm:max-w-xs">
           {updatedStatusMsg}
         </div>
       )}
-      </div>
-  )
-}
+    </div>
+  );
+};
+
+
+
   const ShowDompleteInformation = (userId: any, ClientName: any) => {
     if (userId) {
       dispatch(UpdateClient(ClientName));

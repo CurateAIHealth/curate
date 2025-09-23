@@ -1,11 +1,12 @@
 "use client";
 
-import { ClientEnquiry_Filters, filterColors, Main_Filters } from "@/Lib/Content";
+import { ClientEnquiry_Filters, filterColors, Headings, indianFamilyRelations, LeadSources, Main_Filters, medicalSpecializations, physioSpecializations } from "@/Lib/Content";
 import { UpdateNewLeadInformation } from "@/Lib/user.action";
 import { ListFilter, PhoneCall, X } from "lucide-react";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-const Headings=["Client Card – ID","Patient Card – ID","Patient Details","Home Assistance","Home Needs","Doctor Needs","Health Card",]
+
+
 export default function CallEnquiryForm() {
   const [formData, setFormData] = useState<any>({
     userType: "patient",
@@ -14,6 +15,7 @@ export default function CallEnquiryForm() {
     clientEmail: "",
     patientName: "",
     patientPhone: "",
+    RelationtoPatient:"",
     MainpointforPatient: "",
     MainpointforPatientInfo: "",
     Source: "",
@@ -30,13 +32,15 @@ export default function CallEnquiryForm() {
     patientDrNeeds: [],
     patientHealthCard: [],
     hcpType: [],
+    PhysiotherapySpecialisation:'',
+     MedicalDrSpecialisation:"",
     serviceCharges: "",
     AdditionalComments: "",
     VerificationStatus: "Pending",
     TermsAndConditions: "Accepted",
     EmailVerification: true,
     FinelVerification: false,
-    ClientStatus: "Processing",
+    ClientStatus: "",
   });
 const [visible, setVisible] = useState(true);
   const [WarningMessage, setWarningMessage] = useState("");
@@ -44,7 +48,7 @@ const [visible, setVisible] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
   const [addedheight, setaddedheight] = useState();
   const [Options,setOptions]=useState(false)
-
+console.log('Test Data----',formData)
   const handleChange = (field: string, value: string) => {
     setFormData((prev: any) => {
       const updated = { ...prev, [field]: value };
@@ -84,6 +88,10 @@ const UpdatePreview = (A: string) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if(formData.ClientStatus===""){
+      setStatusMessage("Please Select Client Status")
+      return
+    }
     setStatusMessage("Please Wait...");
     const generatedUserId = uuidv4();
     const FinelData = { ...formData, userId: generatedUserId };
@@ -174,6 +182,7 @@ className="overflow-hidden h-[95%]"
                 </label>
               ))}
             </div>
+        
             {String(formData.MainpointforPatient) === "No" && (
               <input
                 type="text"
@@ -183,16 +192,19 @@ className="overflow-hidden h-[95%]"
               />
             )}
           </div>
+              <p>Relation to Patient</p>
+         
+          <select   className="w-full border rounded-lg p-2"  onChange={(e) => handleChange("RelationtoPatient", e.target.value)}>
+            <option>Choose Relation</option>
+            {indianFamilyRelations.map((each:any)=><option key={each}>{each}</option>)}
+          </select>
           <div>
             <p>Lead Source :</p>
-            <input
-              value={formData.Source}
-              type="text"
-              className="w-full border rounded-md text-center"
-              placeholder="Enter Source Name"
-              name="Source"
-              onChange={(e) => handleChange("Source", e.target.value)}
-            />
+         
+            <select className="w-full border rounded-md text-center"  onChange={(e) => handleChange("Source", e.target.value)}>
+              <option>Choose Lead</option>
+              {LeadSources.map((each:any)=><option key={each}>{each}</option>)}
+            </select>
           </div>
         </div>
 
@@ -204,6 +216,7 @@ className="overflow-hidden h-[95%]"
             className="w-full border rounded-lg p-2"
             value={formData.patientName}
             onChange={(e) => handleChange("patientName", e.target.value)}
+            
           />
           <input
             type="text"
@@ -511,6 +524,16 @@ className="overflow-hidden h-[95%]"
                 {opt}
               </label>
             ))}
+            {section.title === "Doctor Needs" && <div className="flex flex-col gap-2">   {formData.patientDrNeeds.map((each: any) => (each === "Medical Dr." && <select className="w-full border rounded-lg p-2"   onChange={(e) => handleChange("MedicalDrSpecialisation", e.target.value)}
+            >
+               <option>Choose Medical Dr specialization</option>
+              {medicalSpecializations.map((each:any,index:any) => <option key={index} className="text-[10px] m-10">{each}</option>)}
+            </select>)
+              || each === "Physio" && <select className="w-full border rounded-lg p-2"   onChange={(e) => handleChange("PhysiotherapySpecialisation", e.target.value)}>
+                <option>Choose Physiotherapy specialization</option>
+                {physioSpecializations.map((each:any,index:any)=><option key={index} className="text-[10px]">{each}</option>)}
+              </select>)}</div>}
+         
           </div>
         ))}
 
@@ -569,6 +592,7 @@ className="overflow-hidden h-[95%]"
               } h-7 md:h-10 rounded-md shadow cursor-pointer ${
                 filterColors[each] || "bg-gray-200 text-gray-800"
               }`}
+              onClick={()=>handleChange("ClientStatus",each)}
             >
               {each}
             </p>
@@ -579,10 +603,13 @@ className="overflow-hidden h-[95%]"
       <div className="text-center">
         <p
           className={`${
-            statusMessage === "You registered successfully with Curate Digital AI"
-              ? "text-green-800"
-              : "text-gray-600"
-          }`}
+  statusMessage === "Your Lead Registration Completed"
+    ? "text-green-800"
+    : statusMessage === "Please Select Client Status"
+    ? "text-red-600"
+    : "text-gray-600"
+}`}
+
         >
           {statusMessage}
         </p>

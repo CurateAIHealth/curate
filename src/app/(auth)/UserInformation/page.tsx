@@ -24,7 +24,8 @@ console.log("Current UserId----",userId)
 
      
         if(IntialValues.userType==="patient"&&!IntialValues.FinelVerification){
-          Router.push("/PatientRegistration")
+          Router.push("/PatientInformation")
+          // Router.push("/PatientRegistration")
           return
         }
          if(IntialValues.userType=== "healthcare-assistant"&&!IntialValues.FinelVerification){

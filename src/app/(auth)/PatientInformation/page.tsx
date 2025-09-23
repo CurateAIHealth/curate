@@ -11,6 +11,7 @@ import {
   Pencil,
   X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const Headings = [
   "Client Card – ID",
@@ -48,6 +49,7 @@ export default function ProUserDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [editMode, setEditMode] = useState<{ [key: string]: boolean }>({});
+  const route=useRouter()
 const [visible, setVisible] = useState(true);
   useEffect(() => {
     setTimeout(() => setUserData(mockUser), 500);
@@ -82,6 +84,10 @@ const [visible, setVisible] = useState(true);
     console.log(`Updated ${section}:`, userData);
     toggleEdit(section);
   };
+
+  const NavigatetoPGR=()=>{
+    route.push("/PDR")
+  }
 
   return (
     <div className="flex w-full min-h-screen font-sans bg-gray-100">
@@ -219,7 +225,7 @@ const [visible, setVisible] = useState(true);
               </div>
             )}
           </section>
- {visible&&
+ {/* {visible&&
 <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50">
   <div className="flex flex-col h-auto w-[90%] max-w-md bg-gray-200 rounded-xl shadow-lg p-4">
 
@@ -237,7 +243,7 @@ const [visible, setVisible] = useState(true);
 
       <p className="text-center text-[14px]">For reliable identification, kindly provide details exactly as on your Aadhaar card.</p>
     </div>
-    </div>}
+    </div>} */}
           <section
             id="Patient Card – ID"
             className="bg-white p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all"
@@ -449,6 +455,9 @@ const [visible, setVisible] = useState(true);
               </div>
             )}
           </section>
+          <div className="flex justify-end">
+          <button className="bg-pink-600 p-2 text-white rounded-md w-[120px] cursor-pointer hover:rounded-full hover:shadow-lg" onClick={NavigatetoPGR}>Add PDR</button>
+          </div>
         </main>
       </div>
     </div>

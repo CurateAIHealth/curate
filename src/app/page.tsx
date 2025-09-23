@@ -46,7 +46,7 @@ export default function StaticInfoPage() {
 
       const email = ProfileInformation?.Email?.toLowerCase();
       if (["admin@curatehealth.in", "info@curatehealth.in", "gouricurate@gmail.com"].includes(email)) {
-        router.push("/TestAdmin");
+        router.push("/DashBoard");
         return;
       }
 
