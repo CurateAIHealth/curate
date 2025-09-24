@@ -10,8 +10,12 @@ import {
   Minimize,
   Pencil,
   X,
+  LogOut,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import { GetUserInformation } from "@/Lib/user.action";
+import { label } from "framer-motion/client";
 
 const Headings = [
   "Client Card – ID",
@@ -45,15 +49,75 @@ const mockUser = {
 };
 
 export default function ProUserDashboard() {
-  const [userData, setUserData] = useState<typeof mockUser | null>(null);
+  
+  const [userData, setUserData] = useState({
+  AdditionalComments: "No Additional Comments",
+  ClientStatus: "",
+  ContactNumber: "",
+  Email: "",
+  EmailVerification: true,
+  FinelVerification: false,
+  FirstName: "",
+  Location: "",
+  MainpointforPatient: ["Yes"],
+  MainpointforPatientInfo: null,
+  Source: "Instagram",
+  TermsAndConditions: "Accepted",
+  VerificationStatus: "Pending",
+  comfortableLanguages: ["Telugu", "English", "Other:kanada"],
+  createdAt: "2025-09-17T07:13:51.993Z",
+  hcpType: ["HCA", "HCN", "Dr.Physio", "SLT", "BT", "OT", "Medical Equipment"],
+  patientAge: "21",
+  patientCurrentLocation: ["Home"],
+  patientDrNeeds: ["Medical Dr.", "SLT", "Physio", "BT", "OT"],
+  patientGender: ["Male"],
+  patientHealthCard: [
+    "Diabetic",
+    "Blood Pressure",
+    "Surgery – Hip, Knee, Shoulder etc",
+    "Dementia",
+    "Paralysis",
+  ],
+  patientHeight: "5.5",
+  patientHomeAssistance: ["Diaper", "Bathing", "Bedding", "Brushing"],
+  patientHomeNeeds: ["Water Bed", "Sugar Monitor", "BP Monitor"],
+  patientName: "Curate",
+  patientPhone: "9696969696",
+  patientType: ["Bed Ridden", "Semi Bed Ridden", "Wheel Chair", "Full Mobile", "Post Operative"],
+  patientWeight: "53",
+  serviceCharges: "850",
+  userId: "993ec9c5-6134-41dc-afab-84efc0980535",
+  userType: "patient",
+});
+const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [editMode, setEditMode] = useState<{ [key: string]: boolean }>({});
   const route=useRouter()
 const [visible, setVisible] = useState(true);
+
+
+  const userId = useSelector((state: any) => state?.UserDetails);
+
   useEffect(() => {
-    setTimeout(() => setUserData(mockUser), 500);
-  }, []);
+    if (!userId) return;
+    (async () => {
+      try {
+   
+        const data = await GetUserInformation(userId);
+
+         setUserData((prev) => ({
+        ...prev,
+        ...data,
+      }));
+     setLoading(false)
+     console.log("Get the Registration Data----",data)
+      } catch (err) {
+        console.error("Failed to fetch user data:", err);
+      }
+    })();
+  }, [userId]);
+
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -79,6 +143,10 @@ const [visible, setVisible] = useState(true);
   const toggleEdit = (section: string) => {
     setEditMode((prev) => ({ ...prev, [section]: !prev[section] }));
   };
+const handleLogout = () => {
+ 
+    route.push('/AdminPage');
+  };
 
   const handleUpdate = (section: string) => {
     console.log(`Updated ${section}:`, userData);
@@ -88,7 +156,23 @@ const [visible, setVisible] = useState(true);
   const NavigatetoPGR=()=>{
     route.push("/PDR")
   }
+  if (loading) {
+    return (
+     <div className="w-full  max-w-md mx-auto p-6 bg-white rounded-2xl shadow-lg">
+  <div className="animate-pulse flex flex-col space-y-4">
+  
+    <div className="h-12 w-12 rounded-full bg-gray-300 mx-auto"></div>
 
+ 
+    <div className="h-4 bg-gray-300 rounded w-3/4 mx-auto"></div>
+    <div className="h-4 bg-gray-300 rounded w-2/3 mx-auto"></div>
+    <div className="h-4 bg-gray-300 rounded w-1/2 mx-auto"></div>
+  </div>
+  <p className="text-center text-gray-500 text-sm mt-4">Loading user data...</p>
+</div>
+
+    );
+  }
   return (
     <div className="flex w-full min-h-screen font-sans bg-gray-100">
       <aside
@@ -141,7 +225,15 @@ const [visible, setVisible] = useState(true);
               />
             </h1>
           </div>
+          <div className="flex flex-col items-center justify-center">
+           <button
+            onClick={handleLogout}
+            className="flex cursor-pointer items-center gap-2 text-[11px] w-full sm:w-auto justify-center px-2 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+          >
+            <LogOut size={13} /> Admin Table
+          </button>
           <p className="text-[10px] flex items-end">*Use Aadhaar card details for accuracy</p>
+          </div>
         </header>
 
         <main className="p-6 md:p-10 flex flex-col gap-10">
@@ -166,11 +258,11 @@ const [visible, setVisible] = useState(true);
                 {editMode["Client Card – ID"] ? (
                   <input
                     className="border rounded px-2 py-1 w-full"
-                    value={userData.clientName}
+                    value={userData.FirstName}
                     onChange={(e) => handleChange("clientName", e.target.value)}
                   />
                 ) : (
-                  userData.clientName
+                  userData.FirstName
                 )}
               </p>
               <p>
@@ -178,13 +270,13 @@ const [visible, setVisible] = useState(true);
                 {editMode["Client Card – ID"] ? (
                   <input
                     className="border rounded px-2 py-1 w-full"
-                    value={userData.clientPhone}
+                    value={userData.ContactNumber}
                     onChange={(e) =>
                       handleChange("clientPhone", e.target.value)
                     }
                   />
                 ) : (
-                  userData.clientPhone
+                  userData.ContactNumber
                 )}
               </p>
               <p>
@@ -192,13 +284,13 @@ const [visible, setVisible] = useState(true);
                 {editMode["Client Card – ID"] ? (
                   <input
                     className="border rounded px-2 py-1 w-full"
-                    value={userData.clientEmail}
+                    value={userData.Email}
                     onChange={(e) =>
                       handleChange("clientEmail", e.target.value)
                     }
                   />
                 ) : (
-                  userData.clientEmail
+                  userData.Email
                 )}
               </p>
               <p>
@@ -264,6 +356,7 @@ const [visible, setVisible] = useState(true);
                 { label: "Name", field: "patientName" },
                 { label: "Phone", field: "patientPhone" },
                 { label: "Age", field: "patientAge" },
+                {label:"Languages",field:"comfortableLanguages"},
                 { label: "Main Point Info", field: "MainpointforPatientInfo" },
                 { label: "Service Location", field: "serviceLocation" },
               ].map((item) => (

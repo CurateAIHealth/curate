@@ -12,7 +12,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CircleCheckBig, LogOut } from 'lucide-react';
-import {  Update_Main_Filter_Status, UpdateClient, UpdateSubHeading, UpdateUserInformation } from '@/Redux/action';
+import {  Update_Main_Filter_Status, UpdateClient, UpdateClientSuggetion, UpdateSubHeading, UpdateUserInformation } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
 import { ClientEnquiry_Filters, filterColors, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
 
@@ -39,7 +39,8 @@ export default function UserTableList() {
   const [UserFullInfo, setFullInfo] = useState([])
   const router = useRouter();
   const dispatch = useDispatch();
-const UpdateMainFilter=useSelector((state:any)=>state.Main_Filter)  
+const UpdateMainFilter=useSelector((state:any)=>state.Main_Filter)
+const CurrentClientStatus=useSelector((state:any)=>state.Submitted_Current_Status)
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
     setUpdatedStatusMsg(`Updating ${first} Contact Status....`);
     try {
@@ -110,7 +111,7 @@ const UpdateMainFilter=useSelector((state:any)=>state.Main_Filter)
 
         const FullInfo:any = await GetUsersFullInfo();
         setFullInfo(FullInfo);
-
+setSearch(CurrentClientStatus)
         setUsers(RegisterdUsersResult.reverse() || []);
         setIsChecking(false);
       } catch (err: any) {
@@ -252,6 +253,7 @@ const ClientEnquiryUserInterFace = () => {
                       <th className="px-2 py-2 w-[14%]">Designate</th>
                     )}
                     <th className="px-2 py-2 w-[10%]">Action</th>
+                       <th className="px-2 py-2 w-[10%]">Suggestion</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -352,8 +354,17 @@ const ClientEnquiryUserInterFace = () => {
                           className="w-full text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition cursor-pointer text-xs sm:text-sm"
                           onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
                         >
-                          {user.DetailedVerification ? "View" : "Fill"}
+                          {user.DetailedVerification ? "View" : "Preview"}
                         </button>
+                      </td>
+                      <td>
+                         <button
+onClick={()=>UpdateNavigattosuggetions(user.userId)}
+            className="flex   cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-2 py-2 bg-gradient-to-br from-[#10b981] to-[#065f46] hover:from-[#34d399] hover:to-[#064e3b]
+ text-white rounded-xl  hover:shadow-lg hover:rounded-full h-8 text-[9px] transition-all duration-150"
+          >
+             Suitable HCP 
+          </button>
                       </td>
                     </tr>
                   ))}
@@ -388,8 +399,8 @@ const ClientEnquiryUserInterFace = () => {
   
 
   const handleLogout = () => {
-    localStorage.removeItem('UserId');
-    router.push('/');
+ 
+    router.push('/DashBoard');
   };
 
   if (isChecking) {
@@ -416,7 +427,10 @@ const Filter_HCA = Finel.filter((each:any) => {
 });
 
 
-
+const UpdateNavigattosuggetions=(D:any)=>{
+  router.push("/Clientsuggetions")
+  dispatch(UpdateClientSuggetion(D))
+}
 
 
 
@@ -436,11 +450,12 @@ console.log('Test Registerd Userss---',users)
               Hi, <span className="text-[#ff1493]">{UserFirstName}</span>
             </h1>
           </div>
+         
           <button
             onClick={handleLogout}
             className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
           >
-            <LogOut size={20} /> Logout
+            <LogOut size={20} /> DashBoard
           </button>
         </div>
 
@@ -524,6 +539,13 @@ console.log('Test Registerd Userss---',users)
 
              
             </div>}
+          {/* <button
+onClick={()=>UpdateNavigattosuggetions()}
+            className="flex mt-7 cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-2 py-2 bg-gradient-to-br from-[#10b981] to-[#065f46] hover:from-[#34d399] hover:to-[#064e3b]
+ text-white rounded-xl  hover:shadow-lg hover:rounded-full h-8 text-[9px] transition-all duration-150"
+          >
+            Show Placement Suggetions
+          </button> */}
           <select
             value={UpdateduserType}
             onChange={FilterUserType}

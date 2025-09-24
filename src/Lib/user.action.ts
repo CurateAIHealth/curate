@@ -1,4 +1,5 @@
 "use server";
+import { Info } from "lucide-react";
 import { decrypt, encrypt, hashValue, verifySHA256 } from "./Actions";
 
 import clientPromise from "./db";
@@ -1452,23 +1453,29 @@ export const GetUsersFullInfo = async () => {
       }
     };
 
-    const safeUsers = RegistrationResult.map((user: any) => {
-      const info = user.HCAComplitInformation || {};
 
-      return {
-        ...user,
-        _id: user._id.toString(),
-        HCAComplitInformation: {
-          ...info,
-          "Phone No 1": safeDecrypt(info["Phone No 1"]),
-          "Phone No 2": safeDecrypt(info["Phone No 2"]),
-          "Email Id": safeDecrypt(info["Email Id"]),
-          "Client Aadhar No": safeDecrypt(info["Client Aadhar No"]),
-          "Patient Aadhar Number": safeDecrypt(info["Patient Aadhar Number"]),
-          "Alternative Client Contact": safeDecrypt(info["Alternative Client Contact"]),
-        },
-      };
-    });
+    const safeUsers: any = RegistrationResult.map((user: any) => {
+  const info: any = user.HCAComplitInformation || {};
+
+  return {
+    ...user,
+    _id: user._id.toString(),
+    HCAComplitInformation: {
+      ...info,
+      "HCPFirstName":safeDecrypt(info["First Name"]),
+      "HCPEmail":safeDecrypt(info["EmailId"]),
+      "HCPSurName":safeDecrypt(info["Surname"]),
+      "HCPAdharNumber": safeDecrypt(info["Aadhar Card No"]),
+      "Phone No 1": safeDecrypt(info["Phone No 1"]),
+      "Phone No 2": safeDecrypt(info["Phone No 2"]),
+      "Email Id": safeDecrypt(info["Email Id"]),
+      "Client Aadhar No": safeDecrypt(info["Client Aadhar No"]),
+      "Patient Aadhar Number": safeDecrypt(info["Patient Aadhar Number"]),
+      "Alternative Client Contact": safeDecrypt(info["Alternative Client Contact"]),
+    },
+  };
+});
+
 
     return safeUsers;
   } catch (err: any) {
