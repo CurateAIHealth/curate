@@ -86,3 +86,26 @@ export const PreviedComponent = (state: any = true, action: any) => {
 
     }
 }
+
+
+export const Suitable_HCP=(state:any="",action:any)=>{
+    switch(action.type){
+        case "CurrrentClient":
+            return action.payload;
+            default:
+                return state
+
+    }
+}
+
+
+export const Submmision_Client_Status = (state: any = "", action: any) => {
+
+    switch (action.type) {
+        case "CurrentClientStatus":
+            return action.payload;
+        default:
+            return state
+    }
+
+}

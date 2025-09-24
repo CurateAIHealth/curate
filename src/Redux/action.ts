@@ -63,3 +63,18 @@ export const UpdatePreviewStatus=(Updated_Preview_Status:any)=>{
         payload:Updated_Preview_Status
     }
 }
+
+export const UpdateClientSuggetion=(Suggetion:any)=>{
+    return{
+        type:'CurrrentClient',
+        payload:Suggetion
+    }
+}
+
+
+export const Update_Current_Client_Status=(Current_Result:any)=>{
+    return{
+        type:"CurrentClientStatus",
+        payload:Current_Result
+    }
+}

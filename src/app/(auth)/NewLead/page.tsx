@@ -2,8 +2,11 @@
 
 import { ClientEnquiry_Filters, filterColors, Headings, indianFamilyRelations, LeadSources, Main_Filters, medicalSpecializations, physioSpecializations } from "@/Lib/Content";
 import { UpdateNewLeadInformation } from "@/Lib/user.action";
-import { ListFilter, PhoneCall, X } from "lucide-react";
+import { Update_Current_Client_Status } from "@/Redux/action";
+import { ListFilter, LogOut, PhoneCall, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 
 
@@ -48,6 +51,8 @@ const [visible, setVisible] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
   const [addedheight, setaddedheight] = useState();
   const [Options,setOptions]=useState(false)
+  const dispatch=useDispatch()
+    const router=useRouter()
 console.log('Test Data----',formData)
   const handleChange = (field: string, value: string) => {
     setFormData((prev: any) => {
@@ -85,6 +90,10 @@ const UpdatePreview = (A: string) => {
     window.scrollTo({ top: y, behavior: "smooth" });
   }
 };
+  const handleLogout = () => {
+ 
+    router.push('/DashBoard');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +106,13 @@ const UpdatePreview = (A: string) => {
     const FinelData = { ...formData, userId: generatedUserId };
     const PostResult = await UpdateNewLeadInformation(FinelData);
     if (PostResult.success) {
-      setStatusMessage(PostResult.message);
+      setStatusMessage(`${PostResult.message},Riderecting to Admin Page...`);
+      dispatch(Update_Current_Client_Status(formData.ClientStatus))
+      const Timer=setInterval(()=>{
+router.push("/AdminPage")
+      },1200)
+
+      return ()=> clearInterval(Timer)
     }
   };
 
@@ -122,6 +137,13 @@ const UpdatePreview = (A: string) => {
       <PhoneCall />
     </span>
   </h1>
+   
+          <button
+            onClick={handleLogout}
+            className="flex justify-end ml-100 cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+          >
+            <LogOut size={20} /> DashBoard
+          </button>
 </div>
 {Options && (
         <div className="fixed inset-0 bg-white w-[180px] z-40 flex justify-start items-start  overflow-auto">
@@ -325,7 +347,7 @@ className="overflow-hidden h-[95%]"
         <div id="Patient Details" className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-2">
           <h2 className="text-lg font-semibold text-purple-600">Weight</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-            {["40", "50", "60", "70", "80", "90", "100", "110", "120", "120+"].map((w) => (
+            {["<40","40", "50", "60", "70", "80", "90", "100", "110", "120", "120+"].map((w) => (
               <label key={w} className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
                 <input
                   type="radio"
@@ -508,7 +530,7 @@ className="overflow-hidden h-[95%]"
           {
             title: "HCP Type",
             field: "hcpType",
-            options: ["HCA", "HCN", "Dr.Physio", "SLT", "BT", "OT", "Medical Equipment"],
+            options: ["HCA", "HCN", "Physio", "SLT", "BT", "OT", "Medical Equipment"],
           },
         ].map((section) => (
           <div key={section.field} id={section.title} className="bg-white rounded-lg shadow p-4 space-y-2">
@@ -603,7 +625,7 @@ className="overflow-hidden h-[95%]"
       <div className="text-center">
         <p
           className={`${
-  statusMessage === "Your Lead Registration Completed"
+  statusMessage === "Your Lead Registration Completed,Riderecting to Admin Page..."
     ? "text-green-800"
     : statusMessage === "Please Select Client Status"
     ? "text-red-600"

@@ -50,7 +50,8 @@ type UserData = {
   rationCardNo: string;
   DocumentSkipReason:string;
   paymentService:string
-preferredService:string
+preferredService:string,
+ProfetionSkill:any
 };
 
 const UserDetail = () => {
@@ -104,7 +105,7 @@ preferredService:"",
     aadharCardNo: "378278869737",
     panNumber: "CYGPN6926A",
     rationCardNo: "10042011284",
-
+ProfetionSkill:[],
     DocumentSkipReason:""
   });
 
@@ -149,6 +150,8 @@ useEffect(()=>{
   paymentService: FilterValue["Payment Service"] || "",
   preferredService: FilterValue["Preferred Service"] || "",
   DocumentSkipReason: FilterValue["DocumentSkipReason"] || "",
+  ProfetionSkill:FilterValue.ProfessionalSkills,
+
     Documents: {
           ...prev.Documents,
       ProfilePic: FilterValue.Documents.ProfilePic||'/Icons/PatientDefault.png',
@@ -268,7 +271,22 @@ setSubmitstatusMessage("Profile Updated Succesfully")
           <TextInput label="Mole/Body Mark 1" name="moleBodyMark1" value={user.moleBodyMark1} onChange={handleChange} />
           <TextInput label="Mole/Body Mark 2" name="moleBodyMark2" value={user.moleBodyMark2} onChange={handleChange} />
           <TextInput label="PreferredService" name="preferredService" value={user.preferredService} onChange={handleChange} />
-          
+        <div className="p-4 bg-white rounded-2xl shadow-md border border-gray-200">
+  <label className="block text-gray-700 font-semibold mb-2 text-lg">
+    Profession Skills:
+  </label>
+  <div className="flex flex-wrap gap-2">
+    {user.ProfetionSkill?.map((each: any, index: any) => (
+      <span
+        key={index}
+        className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full shadow-sm hover:bg-blue-200 transition"
+      >
+        {each}
+      </span>
+    ))}
+  </div>
+</div>
+
         </div>
       );
     case 'Bank Details':
@@ -371,6 +389,14 @@ console.log("Data of Birth---",user.dateOfBirth)
         {user.title} {user.firstName} {user.surname}
       </h2>
       <p className="text-gray-500 text-sm">{user.emailId}</p>
+    <button className="relative inline-flex items-center px-2 m-2 py-2 bg-[#ff1493] text-white text-[10px] font-semi-bold 
+               border cursor-pointer rounded-lg shadow-sm 
+               hover:bg-[#50c896] hover:text-white 
+               transition-colors duration-300 ease-in-out 
+               focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50">
+  Assign Placement
+</button>
+
     </div>
     <p className={ `${SubmitstatusMessage==="Profile Updated Succesfully"?"text-green-800":"text-black"} text-center font-semibold ml-15 mt-10`}>{SubmitstatusMessage}</p>
   </div>
