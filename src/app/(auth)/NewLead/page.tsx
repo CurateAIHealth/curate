@@ -22,6 +22,7 @@ export default function CallEnquiryForm() {
     MainpointforPatient: "",
     MainpointforPatientInfo: "",
     Source: "",
+    NewLead:"",
     patientAge: "",
     patientGender: [],
     patientWeight: "",
@@ -140,7 +141,7 @@ router.push("/AdminPage")
    
           <button
             onClick={handleLogout}
-            className="flex justify-end ml-100 cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+            className="flex justify-end md:ml-100 hidden md:flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
           >
             <LogOut size={20} /> DashBoard
           </button>
@@ -160,7 +161,12 @@ router.push("/AdminPage")
           </div>
         </div>
       )}
-
+<button
+            onClick={handleLogout}
+            className="flex items-center ml-25 justify-center text-center md:hidden cursor-pointer items-center gap-2 w-[170px]  px-1 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+          >
+            <LogOut size={20} /> DashBoard
+          </button>
 <form
 className="overflow-hidden h-[95%]"
       onSubmit={handleSubmit}>  
@@ -224,9 +230,16 @@ className="overflow-hidden h-[95%]"
             <p>Lead Source :</p>
          
             <select className="w-full border rounded-md text-center"  onChange={(e) => handleChange("Source", e.target.value)}>
-              <option>Choose Lead</option>
+              <option className="bg-gray-400">Choose Lead</option>
               {LeadSources.map((each:any)=><option key={each}>{each}</option>)}
             </select>
+            {formData.Source==="Other"&& <input
+              type="text"
+              placeholder="Enter New Lead Name"
+              className="w-[300px] border rounded-lg p-2 m-2"
+              value={formData.NewLead}
+              onChange={(e) => handleChange("NewLead", e.target.value)}
+            />}
           </div>
         </div>
 
@@ -355,7 +368,9 @@ className="overflow-hidden h-[95%]"
                   value={w}
                   checked={
                     Number(formData.patientWeight) === Number(w) ||
-                    Number(formData.patientWeight) === Number(w) + Number(addingWeight)
+                    Number(formData.patientWeight) === Number(w) + Number(addingWeight)||
+                   formData.patientWeight === w
+                
                   }
                   onChange={() => handleChange("patientWeight", w)}
                   className="mr-2 accent-purple-600"
@@ -364,6 +379,7 @@ className="overflow-hidden h-[95%]"
               </label>
             ))}
           </div>
+          {formData.patientWeight !== '<40' && formData.patientWeight !== '120+' &&
           <div className="flex flex-wrap gap-2 items-center justify-center">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((each: any) => (
               <button
@@ -379,12 +395,15 @@ className="overflow-hidden h-[95%]"
                 + {each} kg
               </button>
             ))}
-            {formData.patientWeight && (
-              <p className="mt-3 bg-pink-400 p-2 text-white rounded-md text-xs sm:text-sm">
+         
+          </div>}
+             {formData.patientWeight && (
+              <div className="flex justify-center">
+              <p className="mt-3 w-[200px] text-center bg-pink-400  p-2 text-white rounded-md text-xs sm:text-sm">
                 {formData.patientWeight}kg Patient Weight
               </p>
+              </div>
             )}
-          </div>
         </div>
 
         <div id="Height" className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-2">
@@ -549,11 +568,11 @@ className="overflow-hidden h-[95%]"
             {section.title === "Doctor Needs" && <div className="flex flex-col gap-2">   {formData.patientDrNeeds.map((each: any) => (each === "Medical Dr." && <select className="w-full border rounded-lg p-2"   onChange={(e) => handleChange("MedicalDrSpecialisation", e.target.value)}
             >
                <option>Choose Medical Dr specialization</option>
-              {medicalSpecializations.map((each:any,index:any) => <option key={index} className="text-[10px] m-10">{each}</option>)}
+              {medicalSpecializations.map((each:any,index:any) => <option key={each} className="text-[10px] m-10">{each}</option>)}
             </select>)
               || each === "Physio" && <select className="w-full border rounded-lg p-2"   onChange={(e) => handleChange("PhysiotherapySpecialisation", e.target.value)}>
                 <option>Choose Physiotherapy specialization</option>
-                {physioSpecializations.map((each:any,index:any)=><option key={index} className="text-[10px]">{each}</option>)}
+                {physioSpecializations.map((each:any,index:any)=><option key={each} className="text-[10px]">{each}</option>)}
               </select>)}</div>}
          
           </div>

@@ -1,10 +1,15 @@
 'use client'
 
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { Eye } from 'lucide-react';
 import { UpdateClient, UpdateUserInformation } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
+import puppeteer from 'puppeteer';
+import { renderToString } from 'react-dom/server';
+import { GetInformedUsers, PostConfirmationInfo } from '@/Lib/user.action';
+
 
 type ClientType = {
     Email: any;
@@ -14,6 +19,7 @@ type ClientType = {
 };
 
 type HcpType = {
+    HCPEmail(HCPFirstName: string, HCPSurName: string, HCPEmail: any, ProfessionalSkills: string[], ProfilePic: string | undefined): void;
     UserId(UserId: any, HCPFirstName: string): void;
     HCPFirstName: string;
     HCPSurName: string;
@@ -30,9 +36,14 @@ type Props = {
 const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
     const [selectedClientIndex, setSelectedClientIndex] = useState<number>(0);
     const [search, setSearch] = useState<string>('');
+    const [whatsappString, setwhatsappString] = useState()
+    const [ExsitingInformedUsers,setExsitingInformedUsers]=useState([])
+    const [StatusMessage,setStatusMessage]=useState("")
+    const [CurrentUserId,setCurrentUserId]= useState<any>('')
+    const [loading,setloading]=useState(true)
     const dispatch = useDispatch();
     const router = useRouter();
-
+  const cardRef = useRef<HTMLDivElement>(null);
     const filteredClients = clients.filter((client) =>
         `${client.FirstName} ${client.patientName}`.toLowerCase().includes(search.toLowerCase())
     );
@@ -44,6 +55,16 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
             selectedClient.patientHomeAssistance.includes(skill)
         )
     );
+
+
+    useEffect(() => {
+        const Fetch = async () => {
+            const InformedUsers:any = await GetInformedUsers()
+            setExsitingInformedUsers(InformedUsers)
+          setloading(false)
+        }
+        Fetch()
+    }, [])
 
     const ShowDompleteInformation = (userId: any, ClientName: any) => {
         if (userId) {
@@ -57,9 +78,164 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
         router.push("/AdminPage");
     };
 
+
+
+    const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
+        const res = await axios.post("/api/send-whatsapp", {
+            clientNumber,
+            hcaNumber,
+        });
+
+
+    };
+
+const UpdateConfirmation=async(HCPContact:any,ClientConatct:any,ConfirmationId:any)=>{
+    setCurrentUserId(ConfirmationId)
+    setStatusMessage("Please Wait...")
+    sendWhatsApp(HCPContact,ClientConatct)
+
+    const PostResult= await PostConfirmationInfo(ConfirmationId)
+    setStatusMessage("Confirmation Send")
+
+}
+    const Send_HCP_Information = (
+        HCPFirstName: any,
+        HCPSurName: any,
+        HCPEmail: any,
+        ProfessionalSkills: any,
+        ProfilePic: any
+    ) => {
+        return (
+            <div
+                style={{
+                    width: '300px',
+                    backgroundColor: '#fff',
+                    borderRadius: '16px',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+                    padding: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '12px',
+                    border: '1px solid #e2e8f0',
+                    fontFamily: 'Arial, sans-serif',
+                }}
+            >
+                <div
+                    style={{
+                        width: '96px',
+                        height: '96px',
+                        borderRadius: '50%',
+                        overflow: 'hidden',
+                        border: '2px solid #22c55e',
+                    }}
+                >
+                    <img
+                        src={ProfilePic || '/Icons/DefaultProfileIcon.png'}
+                        alt={`${HCPFirstName} ${HCPSurName}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                </div>
+
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        width: '100%',
+                    }}
+                >
+                    <span
+                        style={{
+                            fontSize: '18px',
+                            fontWeight: 600,
+                            color: '#1f2937',
+                        }}
+                    >
+                        {HCPFirstName} {HCPSurName}
+                    </span>
+                </div>
+
+                <p style={{ fontSize: '14px', color: '#4b5563' }}>{HCPEmail}</p>
+
+                <div
+                    style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        justifyContent: 'center',
+                        gap: '6px',
+                    }}
+                >
+                    {ProfessionalSkills.map((skill: any, idx: any) => (
+                        <span
+                            key={idx}
+                            style={{
+                                backgroundColor: '#dcfce7',
+                                color: '#166534',
+                                fontSize: '12px',
+                                fontWeight: 500,
+                                padding: '4px 8px',
+                                borderRadius: '12px',
+                            }}
+                        >
+                            {skill}
+                        </span>
+                    ))}
+                </div>
+
+
+            </div>
+        );
+    };
+const Try=ExsitingInformedUsers.filter((each:any)=>each.InformedHCPID==='4e9da3f1-0816-4166-b935-c3f0a332d903')
+  console.log("Test Exusted Users---", ExsitingInformedUsers)
+//  const handleGenerateImage = async () => {
+//     if (!cardRef.current) return;
+
+//     try {
+    
+//       const dataUrl = await htmlToImage.toPng(cardRef.current);
+
+ 
+//       const blob = await (await fetch(dataUrl)).blob();
+
+    
+//       const formData = new FormData();
+//       formData.append('file', blob, 'hcp-card.png');
+
+   
+//       const res = await axios.post('/api/Upload', formData, {
+//         headers: { 'Content-Type': 'multipart/form-data' },
+//       });
+
+//       console.log('Cloudinary URL:', res.data.url); 
+//       alert(`HCP Card uploaded! URL: ${res.data.url}`);
+//     } catch (err) {
+//       console.error(err);
+//       alert('Failed to generate/upload image');
+//     }
+//   };
+   if (loading) {
     return (
+     <div className="w-full  max-w-md mx-auto p-6 bg-white rounded-2xl shadow-lg">
+  <div className="animate-pulse flex flex-col space-y-4">
+  
+    <div className="h-12 w-12 rounded-full bg-gray-300 mx-auto"></div>
+
+ 
+    <div className="h-4 bg-gray-300 rounded w-3/4 mx-auto"></div>
+    <div className="h-4 bg-gray-300 rounded w-2/3 mx-auto"></div>
+    <div className="h-4 bg-gray-300 rounded w-1/2 mx-auto"></div>
+  </div>
+  <p className="text-center text-gray-500 text-sm mt-4">Loading ...</p>
+</div>
+
+    );
+  }
+       
+return (
         <div className="p-6 max-w-[1400px] mx-auto">
-         
+
             <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
                 <h1 className="text-4xl text-[#ff1493]">
                     Client & HCP Matching
@@ -73,9 +249,9 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
                 </button>
             </div>
 
-      
+
             <div className="flex flex-col lg:flex-row gap-8">
-              
+
                 <div className="lg:w-1/3 flex flex-col">
                     {/* <input
                         type="text"
@@ -91,9 +267,9 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
                                 onClick={() => setSelectedClientIndex(clients.indexOf(client))}
                                 className={`p-4 rounded-xl cursor-pointer transition transform 
                                             ${selectedClientIndex === clients.indexOf(client)
-                                                ? 'bg-indigo-100 border-2 border-[#50c896]'
-                                                : 'bg-white'
-                                            }`}
+                                        ? 'bg-indigo-100 border-2 border-[#50c896]'
+                                        : 'bg-white'
+                                    }`}
                             >
                                 <h2 className="font-bold text-lg text-[#50c896]">Client: {client.FirstName}</h2>
                                 <p className="text-gray-700">Email: {client.Email}</p>
@@ -105,7 +281,7 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
                     </div>
                 </div>
 
-          
+
                 <div className="lg:w-2/3 flex flex-col">
                     <h2 className="text-2xl font-bold mb-4 text-[#50c896]">Suitable HCPs</h2>
                     {suitableHcps.length === 0 ? (
@@ -118,12 +294,12 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
                                     className="relative bg-white rounded-2xl shadow-xl p-5 flex flex-col items-center text-center
                                                hover:scale-105 hover:shadow-2xl transition-transform"
                                 >
-                                
+
                                     <div className="absolute top-3 right-3 text-gray-400 hover:text-indigo-500 cursor-pointer">
                                         <Eye size={20} onClick={() => ShowDompleteInformation(hcp.UserId, hcp.HCPFirstName)} />
                                     </div>
 
-                                    
+
                                     <img
                                         src={hcp.ProfilePic || '/Icons/DefaultProfileIcon.png'}
                                         alt={hcp.HCPFirstName}
@@ -132,7 +308,7 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
 
                                     <h3 className="font-bold text-lg mb-1 text-[#1392d3]">{hcp.HCPFirstName} {hcp.HCPSurName}</h3>
 
-                                 
+
                                     <div className="flex flex-wrap justify-center gap-2 mt-2">
                                         {hcp.ProfessionalSkills.map((skill, idx) => (
                                             <span
@@ -143,11 +319,22 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
                                             </span>
                                         ))}
                                     </div>
-                                    <p className='bg-[#50c896] p-2 rounded-md text-[10px] cursor-pointer m-2'>Send Confirmation</p>
+
+                                    <button
+                                        onClick={() => UpdateConfirmation("+919666827059","+919347877159",hcp.UserId)}
+                                        className={`px-2 py-2 ${ExsitingInformedUsers.filter((each:any)=>each.InformedHCPID===hcp.UserId).length>0?"bg-red-500 cursor-none":"bg-teal-500 cursor-pointer"} text-white rounded-lg text-[10px] m-2 hover:rounded-full hover:shadow-lg transition-colors`}
+                                        disabled={ExsitingInformedUsers.filter((each:any)=>each.InformedHCPID===hcp.UserId).length>0}
+                                    >
+                                        
+                                        {ExsitingInformedUsers.filter((each:any)=>each.InformedHCPID===hcp.UserId).length>0?"Already Informed":"Send Confirmation"}
+                                    </button>
+                                  {CurrentUserId===hcp.UserId &&<p className={`${StatusMessage==="Confirmation Send"?"text-green-600":"text-gray-400"} text-center`}>{StatusMessage}</p>}
                                 </div>
+
                             ))}
                         </div>
                     )}
+
                 </div>
             </div>
         </div>

@@ -1427,6 +1427,38 @@ export const GetRegidterdUsers = async () => {
 };
 
 
+export const PostConfirmationInfo=async(HCPUserid:any)=>{
+try{
+  const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Confimations");
+    const PostResult=await Collection.insertOne({InformedHCPID:HCPUserid})
+    return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedId: PostResult.insertedId.toString(),
+    };
+}catch(err:any){
+
+}
+}
+
+
+export const GetInformedUsers=async()=>{
+  try{
+    const Cluster=await clientPromise
+   const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Confimations");
+     const RegistrationResult = await Collection.find().toArray();
+     const plainHCPs = RegistrationResult.map(hcp => ({
+  ...hcp,
+  _id: hcp._id.toString(),
+}));
+     return plainHCPs
+  }catch(err:any){
+
+  }
+}
 
 export const GetUsersFullInfo = async () => {
   try {

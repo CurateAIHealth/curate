@@ -1,6 +1,7 @@
 
   import crypto from "crypto";
   import bcrypt from "bcryptjs";
+  
   export const getPasswordStrength = (password: string) => {
     let strength = 0;
     if (password.length >= 8) strength++;
@@ -57,3 +58,10 @@ export function hashValue(value: any) {
 export function verifySHA256(password: any, hashed: any) {
   return hashValue(password) === hashed;
 }
+
+
+
+
+
+
+
