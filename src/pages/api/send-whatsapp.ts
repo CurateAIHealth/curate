@@ -51,6 +51,8 @@ const mediaUrl = "https://curatehealthservices.com/wp-content/uploads/2024/10/cr
       client: clientRes.data,
       hca: hcaRes.data,
     });
+
+    
   } catch (error: any) {
     console.error("Twilio Error:", error.response?.data || error.message);
     return res.status(500).json({
