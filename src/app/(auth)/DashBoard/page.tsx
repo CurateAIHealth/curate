@@ -9,6 +9,13 @@ import {
   Search,
   Calendar,
   IndianRupee,
+  Briefcase,
+  FileText,
+  Settings,
+  UserPlus,
+  Users,
+  UserX,
+  Eye,
 } from "lucide-react";
 import {
   LineChart,
@@ -29,10 +36,58 @@ import { useDispatch } from "react-redux";
 import { Update_Main_Filter_Status } from "@/Redux/action";
 
 const tabs = [
-  { name: "Client Enquiry", count: 120, growth: "+15%", icon: Bell, color: "bg-gradient-to-tr from-blue-500 to-indigo-500" },
-  { name: "Deployment", count: 42, growth: "-3%", icon: Calendar, color: "bg-gradient-to-tr from-pink-500 to-rose-500" },
-  { name: "Timesheet", count: 18, growth: "+5%", icon: User, color: "bg-gradient-to-tr from-teal-500 to-green-500" },
-  { name: "Referral Pay", count: 76, growth: "+9%", icon: IndianRupee, color: "bg-gradient-to-tr from-amber-500 to-orange-500" },
+  { 
+    name: "Client Enquiry", 
+    count: 120, 
+    growth: "+15%", 
+    icon: Bell, 
+    color: "bg-gradient-to-tr from-blue-500 to-indigo-500" 
+  },
+  { 
+    name: "Deployment", 
+    count: 42, 
+    growth: "-3%", 
+    icon: Calendar, 
+    color: "bg-gradient-to-tr from-pink-500 to-rose-500" 
+  },
+  { 
+    name: "Timesheet", 
+    count: 18, 
+    growth: "+5%", 
+    icon: User, 
+    color: "bg-gradient-to-tr from-teal-500 to-green-500" 
+  },
+  { 
+    name: "Referral Pay", 
+    count: 76, 
+    growth: "+9%", 
+    icon: IndianRupee, 
+    color: "bg-gradient-to-tr from-amber-500 to-orange-500" 
+  },
+
+
+  { 
+    name: "Bench List", 
+    count: 22, 
+    growth: "-2%", 
+    icon: Users,   
+    color: "bg-gradient-to-tr from-indigo-500 to-violet-500" 
+  },
+  { 
+    name: "Terminations", 
+    count: 5, 
+    growth: "+1%", 
+    icon: UserX,   
+    color: "bg-gradient-to-tr from-red-500 to-rose-600" 
+  },
+  { 
+    name: "Replacements", 
+    count: 12, 
+    growth: "+4%", 
+    icon: UserPlus, 
+    color: "bg-gradient-to-tr from-sky-500 to-cyan-600" 
+  },
+
 ];
 
 const lineData = [
@@ -83,7 +138,7 @@ export default function Dashboard() {
             <img
               src="/Icons/Curate-logo.png"
               alt="user"
-              className="w-8 h-8 rounded-full flex-shrink-0"
+              className="w-8 h-8 "
             />
             <span className="inline text-[15px] uppercase truncate">
               Hi Admin – Welcome to Admin Dashboard
@@ -138,7 +193,9 @@ export default function Dashboard() {
 
                   <p
                     className="mt-2 sm:mt-3 text-xs sm:text-sm hover:underline font-semibold cursor-pointer text-gray-900 text-center"
-                    onClick={() => RoutToAdminPage(tab.name)}
+                    onClick={tab.name === "Client Enquiry" ? () => RoutToAdminPage(tab.name) : undefined}
+                    
+                    
                   >
                     {tab.name}
                   </p>
@@ -173,7 +230,7 @@ export default function Dashboard() {
 
          
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+              {/* <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
                 <h2 className="text-base sm:text-lg font-semibold text-gray-700 mb-3">
                   Enquiries Over Time
                 </h2>
@@ -186,9 +243,9 @@ export default function Dashboard() {
                     <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} />
                   </LineChart>
                 </ResponsiveContainer>
-              </div>
+              </div> */}
 
-              <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+              {/* <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
                 <h2 className="text-base sm:text-lg font-semibold text-gray-700 mb-3">
                   Stats Overview
                 </h2>
@@ -201,13 +258,13 @@ export default function Dashboard() {
                     <Bar dataKey="value" fill="#067852ff" radius={[8, 8, 0, 0]} barSize={40} />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
+              </div> */}
             </div>
           </div>
 
      
           <div className="lg:col-span-4 space-y-4">
-            <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            {/* <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
               <h2 className="text-base sm:text-lg font-semibold mb-3 text-gray-700">
                 Payment Status
               </h2>
@@ -229,11 +286,11 @@ export default function Dashboard() {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
-            </div>
+            </div> */}
 
             <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
               <h2 className="text-base sm:text-lg font-semibold mb-3 text-gray-700">
-                New Users
+Bench List
               </h2>
               <ul className="space-y-3 sm:space-y-4">
                 {[
@@ -248,7 +305,7 @@ export default function Dashboard() {
                     <div className="flex items-center gap-3 min-w-0">
                       <img
                         src="Icons/Curate-logoq.png"
-                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0"
+                        className="w-8 h-8 sm:w-10 sm:h-10"
                       />
                       <div className="min-w-0">
                         <p className="font-medium text-sm truncate">{user.name}</p>
@@ -256,7 +313,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <button className="px-2 sm:px-3 py-1 text-xs bg-green-100 text-green-600 rounded-lg whitespace-nowrap">
-                      SIGNUP
+                    <Eye/>
                     </button>
                   </li>
                 ))}
