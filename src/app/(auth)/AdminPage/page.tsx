@@ -242,18 +242,18 @@ const ClientEnquiryUserInterFace = () => {
                     <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Name</th>
                     <th className="px-2 py-2 sm:px-4 sm:py-3 w-[18%]">Email</th>
                     <th className="px-2 py-2 w-[12%]">Contact</th>
-                    <th className="px-2 py-2 w-[10%]">Role</th>
-                    <th className="px-2 py-2 w-[12%]">Aadhar</th>
+                    {/* <th className="px-2 py-2 w-[10%]">Role</th>
+                    <th className="px-2 py-2 w-[12%]">Aadhar</th> */}
                     <th className="px-2 py-2 w-[12%]">Location</th>
                     <th className="px-2 py-2 w-[14%]">Email Verification</th>
                     {UpdateduserType !== "healthcare-assistant" && (
-                      <th className="px-2 py-2 w-[14%]">Client Status</th>
+                      <th className="px-4 py-2 w-[14%]">Client Status</th>
                     )}
                     {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
                       <th className="px-2 py-2 w-[14%]">Designate</th>
                     )}
-                    <th className="px-2 py-2 w-[10%]">Action</th>
-                       <th className="px-2 py-2 w-[10%]">Suggestion</th>
+                    <th className="px-4 py-2 w-[10%]">Action</th>
+                       <th className="px-2 py-2 w-[10%]">Suitable HCP</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -264,29 +264,29 @@ const ClientEnquiryUserInterFace = () => {
                     >
                       <td className="px-2 py-2 truncate">
                         <div className="flex items-center gap-2">
-                          <img
+                          {/* <img
                             src={
                               FilterProfilePic.filter((each:any) => each.UserId === user.id)[0]?.Documents?.ProfilePic ||
                               FilterProfilePic.filter((each:any) => each.UserId === user.id)[0]?.ProfilePic ||
                               "Icons/DefaultProfileIcon.png"
                             }
                             className="rounded-full h-7 w-7 sm:h-10 sm:w-10 object-cover"
-                          />
+                          /> */}
                           <span className="font-semibold text-[#007B7F] truncate">
                             {user.FirstName}
                           </span>
                         </div>
                       </td>
                       <td className="px-2 py-2 break-words">{user.Email}</td>
-                      <td className="px-2 py-2">{user.Contact}</td>
-                      <td className="px-2 py-2">
+                      <td className="px-2 py-2">+91{user.Contact}</td>
+                      {/* <td className="px-2 py-2">
                         <span className="px-2 sm:px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-[9px] sm:text-xs">
                           {user.userType === "healthcare-assistant" ? "HCA" : user.userType}
                         </span>
                       </td>
                       <td className="px-2 py-2">
                         {user.AadharNumber ? user.AadharNumber : "Aadhaar Pending"}
-                      </td>
+                      </td> */}
                       <td className="px-2 py-2 break-words">{user.Location}</td>
                       <td className="px-2 py-2">
                         <select
@@ -357,13 +357,13 @@ const ClientEnquiryUserInterFace = () => {
                           {user.DetailedVerification ? "View" : "Preview"}
                         </button>
                       </td>
-                      <td>
+                      <td className="px-6 py-2">
                          <button
 onClick={()=>UpdateNavigattosuggetions(user.userId)}
-            className="flex   cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-2 py-2 bg-gradient-to-br from-[#10b981] to-[#065f46] hover:from-[#34d399] hover:to-[#064e3b]
- text-white rounded-xl  hover:shadow-lg hover:rounded-full h-8 text-[9px] transition-all duration-150"
+            className="flex   cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-2 py-2 bg-gray-200 
+ text-white   shadow-lg rounded-full h-8 text-[9px] transition-all duration-150"
           >
-             Suitable HCP 
+            <img src="Icons/HCP.png" className='h-7 w-7'/>
           </button>
                       </td>
                     </tr>
