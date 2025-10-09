@@ -174,7 +174,7 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <main className="p-4 sm:p-6 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <main className="p-4 sm:p-2 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
               {tabs.map((tab, index) => (
@@ -254,7 +254,7 @@ export default function Dashboard() {
               </h2>
               {BenchList.length === 0 ? <p>Benck List Loading...</p> :
                 <ul className="space-y-3 sm:space-y-4">
-                  {BenchList.slice(0, 6).map((user: any) => (
+                  {BenchList.slice(0, 9).map((user: any) => (
                     <li
                       key={user.ContactNumber}
                       className="flex items-center justify-between gap-3"
