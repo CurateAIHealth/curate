@@ -217,7 +217,27 @@ export const SignInRessult = async (SignInfor: { Name: any; Password: any }) => 
   }
 };
 
+export const IntrestedHCP = async (inputUserId: any, HCPid: any) => {
+  try {
+    const Cluster = await clientPromise
+    const db = Cluster.db("CurateInformation")
+    const collection = db.collection("Registration")
+    const result = await collection.updateOne(
+      { userId: inputUserId }, {
+      $set: {
+        SuitableHCP: HCPid
+      }
+    }
+    )
+    if (result.modifiedCount === 0) {
+      return { success: false, message: 'User not found or no changes made.' };
+    }
 
+    return { success: true, message: 'Password updated successfully.' };
+  } catch (err: any) {
+
+  }
+}
 
 export const UpdatePassword = async (UpdatedData: { UpdatedUserid: any, NewUpdatedPassword: any, NewConfirmUpdatedPassword: any }) => {
   try {
@@ -396,12 +416,15 @@ export const UpdateNewLeadInformation = async (Patient: {
     PhysiotherapySpecialisation:any,
      MedicalDrSpecialisation:any,
      RelationtoPatient:any,
+     RemainderTime:any,
+     RemainderDate:any,
   serviceCharges: string;
   AdditionalComments: string;
   VerificationStatus: string;
   TermsAndConditions: string;
   EmailVerification: boolean;
   FinelVerification: boolean;
+  SuitableHCP:string;
   ClientStatus: string;
   userId: string;
 
@@ -441,8 +464,10 @@ export const UpdateNewLeadInformation = async (Patient: {
       patientHealthCard: Patient.patientHealthCard,
       hcpType: Patient.hcpType,
       serviceCharges: Patient.serviceCharges,
+       RemainderTime:Patient.RemainderTime,
+     RemainderDate:Patient.RemainderDate,
       AdditionalComments: Patient.AdditionalComments,
-
+SuitableHCP:Patient.SuitableHCP,
 
    
    
@@ -1427,12 +1452,16 @@ export const GetRegidterdUsers = async () => {
 };
 
 
-export const PostConfirmationInfo=async(HCPUserid:any)=>{
+export const PostConfirmationInfo=async(HCPUserid:any,ClientId:any)=>{
 try{
   const Cluster = await clientPromise;
     const Db = Cluster.db("CurateInformation");
     const Collection = Db.collection("Confimations");
-    const PostResult=await Collection.insertOne({InformedHCPID:HCPUserid})
+    const PostResult=await Collection.insertOne({
+      InformedHCPID:HCPUserid,
+      InformedClientID:ClientId
+
+    })
     return {
       success: true,
       message: "You registered successfully with Curate Digital AI",
@@ -1495,6 +1524,7 @@ export const GetUsersFullInfo = async () => {
     HCAComplitInformation: {
       ...info,
       "HCPFirstName":safeDecrypt(info["First Name"]),
+      "HCPContactNumber":safeDecrypt(info["Mobile Number"]),
       "HCPEmail":safeDecrypt(info["EmailId"]),
       "HCPSurName":safeDecrypt(info["Surname"]),
       "HCPAdharNumber": safeDecrypt(info["Aadhar Card No"]),
@@ -1610,6 +1640,26 @@ Status:AvailableStatus
   }
 }
 
+export const UpdateHCAnstatusInFullInformation = async (Userid: string,) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const collection = Db.collection("CompliteRegistrationInformation");
+const Try:any="Assigned"
+    const UpdateVerificationStatus = await collection.updateOne(
+      { "HCAComplitInformation.UserId": Userid },
+      { $push: {  "HCAComplitInformation.Status":Try  } }
+    );
+
+    if (UpdateVerificationStatus.matchedCount === 0) {
+      return { success: false, message: 'User not found!' };
+    }
+
+    return { success: true, message: 'Verification Status updated successfully.' };
+  } catch (err: any) {
+    return { success: false, message: err.message || 'Internal Error' };
+  }
+};
 
 export const UpdateFinelVerification=async(inputUserId:any)=>{
 try{
@@ -1633,4 +1683,30 @@ try{
 }catch(err:any){
 
 }
+}
+
+
+export const UpdateRemainderTimer = async (UserId: any, NewTime: string, NewDate: any) => {
+  try {
+    const Clustor = await clientPromise
+    const Db = Clustor.db("CurateInformation")
+    const Collection = Db.collection("Registration")
+    const UpdateTime = await Collection.updateOne(
+      { userId: UserId },
+      {
+        $set: {
+          RemainderTime: NewTime,
+          RemainderDate: NewDate
+        },
+      }
+    )
+    if (UpdateTime.modifiedCount === 0) {
+      return { success: false, message: 'User not found or no changes made.' };
+    }
+
+    return { success: true, message: 'Password updated successfully.' };
+  } catch (err: any) {
+
+  }
+
 }

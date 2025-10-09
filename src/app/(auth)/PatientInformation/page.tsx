@@ -235,7 +235,25 @@ const handleLogout = () => {
           <p className="text-[10px] flex items-end">*Use Aadhaar card details for accuracy</p>
           </div>
         </header>
+{visible&&
+<div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50">
+  <div className="flex flex-col h-auto w-[90%] max-w-md bg-gray-200 rounded-xl shadow-lg p-4">
 
+      <button
+       onClick={() => setVisible(false)}
+        aria-label="Close"
+        className="absolute top-2 right-2 cursor-pointer rounded-md p-1 bg-slate-100 mr-10 mt-20"
+      >
+        <X className="h-4 w-4 text-slate-600" />
+      </button>
+<img src="Icons/Adhar_Example.png"/>
+      <h1 className=" flex items-center justify-center text-sm text-[20px] text-teal-800">
+        Use Aadhaar card details for accuracy
+      </h1>
+
+      <p className="text-center text-[14px]">For reliable identification, kindly provide details exactly as on your Aadhaar card.</p>
+    </div>
+    </div>}
         <main className="p-6 md:p-10 flex flex-col gap-10">
           <section
             id="Client Card – ID"

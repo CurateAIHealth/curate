@@ -14,7 +14,20 @@
   export const isValidAadhar = (a: string) => /^\d{12}$/.test(a.replace(/\s/g, ''))
 
 
-
+export function calculateAgeIndianFormat(dob:any) {
+  // dob is "DD/MM/YYYY"
+  const [day, month, year] = dob.split('/');
+  // Rearrange to "YYYY-MM-DD" which is standard
+  const dobISO = `${year}-${month}-${day}`;
+  const birthDate = new Date(dobISO);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
 
 
 

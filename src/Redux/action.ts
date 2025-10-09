@@ -78,3 +78,17 @@ export const Update_Current_Client_Status=(Current_Result:any)=>{
         payload:Current_Result
     }
 }
+
+export const UpdateRefresh=(Refresh:any)=>{
+    return{
+        type:"CurrentRefresh",
+        payload:Refresh
+    }
+}
+
+export const UpdateUserType=(CurrentUser:any)=>{
+    return{
+        type:"CurrentUserType",
+        payload:CurrentUser
+    }
+}

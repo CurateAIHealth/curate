@@ -109,3 +109,26 @@ export const Submmision_Client_Status = (state: any = "", action: any) => {
     }
 
 }
+
+export const RefreshCount = (state: any = 0, action: any) => {
+    switch (action.type) {
+
+        case "CurrentRefresh":
+            return state+action.payload;
+        default:
+            return state
+
+    }
+}
+
+
+export const FullHCPList=(state:any="patient",action:any)=>{
+switch(action.type){
+
+    case "CurrentUserType":
+        return action.payload;
+        default:
+            return state
+
+}
+}

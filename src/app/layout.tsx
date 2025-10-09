@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import WrapProvider from "./Provider";
+import { NotificationProvider } from "./NotificationProvider";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -22,9 +23,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={poppins.variable}>
+     <html lang="en" className={poppins.variable}>
       <body className="antialiased">
-        <WrapProvider>{children}</WrapProvider>
+        <WrapProvider>
+          <NotificationProvider>
+            {children}
+          </NotificationProvider>
+        </WrapProvider>
       </body>
     </html>
   );

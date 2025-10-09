@@ -1,5 +1,6 @@
 'use client';
 
+import { PROFESSIONAL_SKILL_OPTIONS } from '@/Lib/Content';
 import { GetUserInformation, PostFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
@@ -8,6 +9,85 @@ import { useCallback, useEffect, useState } from 'react';
 
 const DEFAULT_PROFILE_PIC = '/Icons/DefaultProfileIcon.png';
 const DEFAULT_DOCUMENT_ICON = '/Icons/DefaultDocumentIcon.png';
+interface FormState {
+  title?: string;
+  firstName: string;
+  surname: string;
+  fatherName: string;
+  motherName: string;
+  husbandName?: string;
+  gender: string;
+  dateOfBirth: string;
+  maritalStatus: string;
+  emailId: string;
+  mobileNumber: string;
+
+  aadharCardNo: string;
+  panNumber: string;
+  voterIdNo?: string;
+  rationCardNo?: string;
+  permanentAddress: string;
+  currentAddress: string;
+  cityPostcodePermanent: string;
+  cityPostcodeCurrent: string;
+
+  higherEducation: string;
+  higherEducationYearStart: string;
+  higherEducationYearEnd: string;
+  professionalEducation: string;
+  professionalEducationYearStart: string;
+  professionalEducationYearEnd: string;
+  registrationCouncil: string;
+  registrationNo: string;
+  professionalSkill: string[];
+  certifiedBy: string;
+  professionalWork1: string;
+  professionalWork2: string;
+  experience: string;
+
+  height: string;
+  weight: string;
+  hairColour: string;
+  eyeColour: string;
+  complexion: string;
+  anyDeformity: string;
+  moleBodyMark1: string;
+  moleBodyMark2: string;
+
+  reportPreviousHealthProblems: string;
+  reportCurrentHealthProblems: string;
+
+  sourceOfReferral: string;
+  dateOfReferral: string;
+  reference1Name: string;
+  reference1Aadhar: string;
+  reference1Mobile: string;
+  reference1Address: string;
+  reference1Relationship: string;
+  reference2Name: string;
+  reference2Aadhar: string;
+  reference2Mobile: string;
+  reference2Address: string;
+
+  serviceHours12hrs: boolean;
+  serviceHours24hrs: boolean;
+  preferredService: string;
+  paymentService: string;
+  paymentBankName: string;
+  paymentBankAccountNumber: string;
+  ifscCode: string;
+  bankBranchAddress: string;
+
+  Bankbranchname: string;
+  Branchcity: string;
+  Branchstate: string;
+  Branchpincode: string;
+
+  languages: string;
+  type: string;
+  specialties: string;
+  website?: string;
+}
 
 export default function HCAMobileView() {
     const [ProfileName, SetProfileName] = useState('');
@@ -40,7 +120,7 @@ export default function HCAMobileView() {
         CertificatTwo: '',
         VideoFile:''
     });
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<FormState>({
         // title: '',
         firstName: '',
         surname: '',
@@ -70,7 +150,7 @@ export default function HCAMobileView() {
         professionalEducationYearEnd: '',
         registrationCouncil: '',
         registrationNo: '',
-        professionalSkill: '',
+        professionalSkill: [],
         certifiedBy: '',
         professionalWork1: '',
         professionalWork2: '',
@@ -165,7 +245,14 @@ export default function HCAMobileView() {
         },
         []
     );
-
+  const handleSkillChange = (skill:any) => {
+    setForm((prev:any) => {
+      const skills:any = prev.professionalSkill || [];
+      return skills.includes(skill)
+        ? { ...prev, professionalSkill: skills.filter((s:any) => s !== skill) }
+        : { ...prev, professionalSkill: [...skills, skill] };
+    });
+  };
     useEffect(() => {
         const Fetch = async () => {
             try {
@@ -218,7 +305,7 @@ export default function HCAMobileView() {
                     professionalEducationYearEnd: ProfileInformation.ProfessionalEducationYearEnd || '',
                     registrationCouncil: ProfileInformation.RegistrationCouncil || '',
                     registrationNo: ProfileInformation.RegistrationNo || '',
-                    professionalSkill: ProfileInformation.ProfessionalSkill || '',
+                    professionalSkill: ProfileInformation.ProfessionalSkill || [],
                     certifiedBy: ProfileInformation.CertifiedBy || '',
                     professionalWork1: ProfileInformation.ProfessionalWork1 || '',
                     professionalWork2: ProfileInformation.ProfessionalWork2 || '',
@@ -492,7 +579,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="firstName"
-                                        value={form.firstName}
+                                        value={form.firstName||''}
                                         onChange={handleChange}
                                         placeholder="First Name"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -501,7 +588,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="surname"
-                                        value={form.surname}
+                                        value={form.surname||''}
                                         onChange={handleChange}
                                         placeholder="Surname"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -510,7 +597,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="fatherName"
-                                        value={form.fatherName}
+                                        value={form.fatherName||''}
                                         onChange={handleChange}
                                         placeholder="Father's Name"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -519,7 +606,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="motherName"
-                                        value={form.motherName}
+                                        value={form.motherName||''}
                                         onChange={handleChange}
                                         placeholder="Mother's Name"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -535,7 +622,7 @@ const handleImageChange = useCallback(
                                     /> */}
                                     <select
                                         name="gender"
-                                        value={form.gender}
+                                        value={form.gender||''}
                                         onChange={handleChange}
                                         className="input-field border h-8 border-gray-300 pl-2 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all appearance-none bg-white pr-8"
                                         required
@@ -549,7 +636,7 @@ const handleImageChange = useCallback(
                                         <input
                                             type="date"
                                             name="dateOfBirth"
-                                            value={form.dateOfBirth}
+                                            value={form.dateOfBirth||''}
                                             onChange={handleChange}
                                             className="input-field border p-3 h-8 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                                             required
@@ -571,7 +658,7 @@ const handleImageChange = useCallback(
                                     </div>
                                     <select
                                         name="maritalStatus"
-                                        value={form.maritalStatus}
+                                        value={form.maritalStatus||''}
                                         onChange={handleChange}
                                         className="input-field border border-gray-300 h-8 pl-2 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all appearance-none bg-white pr-8"
                                         required
@@ -585,7 +672,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="email"
                                         name="emailId"
-                                        value={form.emailId}
+                                        value={form.emailId||''}
                                         onChange={handleChange}
                                         placeholder="Email ID"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -594,7 +681,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="tel"
                                         name="mobileNumber"
-                                        value={form.mobileNumber}
+                                        value={form.mobileNumber||''}
                                         onChange={handleChange}
                                         placeholder="Mobile Number"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -630,7 +717,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="aadharCardNo"
-                                        value={form.aadharCardNo}
+                                        value={form.aadharCardNo||''}
                                         onChange={handleChange}
                                         placeholder="Aadhar Card No."
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -639,7 +726,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="panNumber"
-                                        value={form.panNumber}
+                                        value={form.panNumber||''}
                                         onChange={handleChange}
                                         placeholder="PAN Number"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -666,7 +753,7 @@ const handleImageChange = useCallback(
                                 </div>
                                 <textarea
                                     name="permanentAddress"
-                                    value={form.permanentAddress}
+                                    value={form.permanentAddress||''}
                                     onChange={handleChange}
                                     placeholder="Permanent Address (Per GOVT ID)"
                                     className="input-field resize-y h-18 border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
@@ -675,7 +762,7 @@ const handleImageChange = useCallback(
                                 <input
                                     type="text"
                                     name="cityPostcodePermanent"
-                                    value={form.cityPostcodePermanent}
+                                    value={form.cityPostcodePermanent||''}
                                     onChange={handleChange}
                                     placeholder="City & Postcode (Permanent)"
                                     className="input-field border border-gray-300 p-3 h-8 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
@@ -683,7 +770,7 @@ const handleImageChange = useCallback(
                                 />
                                 <textarea
                                     name="currentAddress"
-                                    value={form.currentAddress}
+                                    value={form.currentAddress||''}
                                     onChange={handleChange}
                                     placeholder="Current Address"
                                     className="input-field resize-y h-18 border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
@@ -692,7 +779,7 @@ const handleImageChange = useCallback(
                                 <input
                                     type="text"
                                     name="cityPostcodeCurrent"
-                                    value={form.cityPostcodeCurrent}
+                                    value={form.cityPostcodeCurrent||''}
                                     onChange={handleChange}
                                     placeholder="City & Postcode (Current)"
                                     className="input-field border border-gray-300 p-3 h-8 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -728,7 +815,7 @@ const handleImageChange = useCallback(
                                         <input
                                             type="text"
                                             name="higherEducation"
-                                            value={form.higherEducation}
+                                            value={form.higherEducation||''}
                                             onChange={handleChange}
                                             placeholder="Higher Education (e.g., MBBS, MD)"
                                             className="input-field w-full mb-3 h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -738,7 +825,7 @@ const handleImageChange = useCallback(
                                             <input
                                                 type="number"
                                                 name="higherEducationYearStart"
-                                                value={form.higherEducationYearStart}
+                                                value={form.higherEducationYearStart||''}
                                                 onChange={handleChange}
                                                 placeholder="Higher Ed. Year Start"
                                                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -747,7 +834,7 @@ const handleImageChange = useCallback(
                                             <input
                                                 type="number"
                                                 name="higherEducationYearEnd"
-                                                value={form.higherEducationYearEnd}
+                                                value={form.higherEducationYearEnd||''}
                                                 onChange={handleChange}
                                                 placeholder="Higher Ed. Year End"
                                                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -759,7 +846,7 @@ const handleImageChange = useCallback(
                                         <input
                                             type="text"
                                             name="professionalEducation"
-                                            value={form.professionalEducation}
+                                            value={form.professionalEducation||''}
                                             onChange={handleChange}
                                             placeholder="Professional Education (e.g., Fellowship)"
                                             className="input-field w-full mb-3 border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -769,7 +856,7 @@ const handleImageChange = useCallback(
                                             <input
                                                 type="number"
                                                 name="professionalEducationYearStart"
-                                                value={form.professionalEducationYearStart}
+                                                value={form.professionalEducationYearStart||''}
                                                 onChange={handleChange}
                                                 placeholder="Professional Ed. Year Start"
                                                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -778,7 +865,7 @@ const handleImageChange = useCallback(
                                             <input
                                                 type="number"
                                                 name="professionalEducationYearEnd"
-                                                value={form.professionalEducationYearEnd}
+                                                value={form.professionalEducationYearEnd||''}
                                                 onChange={handleChange}
                                                 placeholder="Professional Ed. Year End"
                                                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -789,7 +876,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="registrationCouncil"
-                                        value={form.registrationCouncil}
+                                        value={form.registrationCouncil||''}
                                         onChange={handleChange}
                                         placeholder="Registration Council"
                                         className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -798,24 +885,17 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="registrationNo"
-                                        value={form.registrationNo}
+                                        value={form.registrationNo||''}
                                         onChange={handleChange}
                                         placeholder="Registration No."
                                         className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                                         required
                                     />
-                                    <textarea
-                                        name="professionalSkill"
-                                        value={form.professionalSkill}
-                                        onChange={handleChange}
-                                        placeholder="Professional Skill (e.g., Surgery, Diagnosis)"
-                                        className="input-field resize-y h-18 w-full border border-gray-300 p-3  rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                                        required
-                                    />
+                                  
                                     <input
                                         type="text"
                                         name="certifiedBy"
-                                        value={form.certifiedBy}
+                                        value={form.certifiedBy||''}
                                         onChange={handleChange}
                                         placeholder="Certified By (e.g., Medical Council of India)"
                                         className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -824,7 +904,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="professionalWork1"
-                                        value={form.professionalWork1}
+                                        value={form.professionalWork1||''}
                                         onChange={handleChange}
                                         placeholder="Professional Work 1 (e.g., Sr. Consultant, AIIMS)"
                                         className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -833,7 +913,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="professionalWork2"
-                                        value={form.professionalWork2}
+                                        value={form.professionalWork2||''}
                                         onChange={handleChange}
                                         placeholder="Professional Work 2 (Optional)"
                                         className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -841,7 +921,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="number"
                                         name="experience"
-                                        value={form.experience}
+                                        value={form.experience||''}
                                         onChange={handleChange}
                                         placeholder="Experience in Years"
                                         className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -879,7 +959,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="height"
-                                        value={form.height}
+                                        value={form.height||''}
                                         onChange={handleChange}
                                         placeholder="Height (e.g., 5'10&quot; or 178cm)"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -888,7 +968,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="weight"
-                                        value={form.weight}
+                                        value={form.weight||''}
                                         onChange={handleChange}
                                         placeholder="Weight (e.g., 70kg or 154lbs)"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -897,7 +977,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="hairColour"
-                                        value={form.hairColour}
+                                        value={form.hairColour||''}
                                         onChange={handleChange}
                                         placeholder="Hair Colour"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -906,7 +986,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="eyeColour"
-                                        value={form.eyeColour}
+                                        value={form.eyeColour||''}
                                         onChange={handleChange}
                                         placeholder="Eye Colour"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -915,7 +995,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="complexion"
-                                        value={form.complexion}
+                                        value={form.complexion||''}
                                         onChange={handleChange}
                                         placeholder="Complexion"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -924,21 +1004,21 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="anyDeformity"
-                                        value={form.anyDeformity}
+                                        value={form.anyDeformity||''}
                                         onChange={handleChange}
                                         placeholder="Any Deformity (if any)"
                                         className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                                     />
                                     <textarea
                                         name="moleBodyMark1"
-                                        value={form.moleBodyMark1}
+                                        value={form.moleBodyMark1||''}
                                         onChange={handleChange}
                                         placeholder="Mole/Body Mark 1"
                                         className="input-field resize-y h-18 border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                                     />
                                     <textarea
                                         name="moleBodyMark2"
-                                        value={form.moleBodyMark2}
+                                        value={form.moleBodyMark2||''}
                                         onChange={handleChange}
                                         placeholder="Mole/Body Mark 2"
                                         className="input-field resize-y h-18 border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -972,7 +1052,7 @@ const handleImageChange = useCallback(
                                 <div className="space-y-5">
                                     <textarea
                                         name="reportPreviousHealthProblems"
-                                        value={form.reportPreviousHealthProblems}
+                                        value={form.reportPreviousHealthProblems||''}
                                         onChange={handleChange}
                                         placeholder="Report Previous Health Problems"
                                         className="input-field resize-y h-18 border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -980,12 +1060,29 @@ const handleImageChange = useCallback(
                                     />
                                     <textarea
                                         name="reportCurrentHealthProblems"
-                                        value={form.reportCurrentHealthProblems}
+                                        value={form.reportCurrentHealthProblems||''}
                                         onChange={handleChange}
                                         placeholder="Report Current Health Problems"
                                         className="input-field resize-y h-18 border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                                         required
                                     />
+                                      <section>
+                                              <h3 className="text-md font-semibold mb-3">Professional Skills</h3>
+                                            <div className="space-y-2">
+                                      {PROFESSIONAL_SKILL_OPTIONS.map((skill) => (
+                                        <label key={skill} className="flex items-center text-sm">
+                                          <input
+                                            type="checkbox"
+                                            className="mr-2 accent-purple-600"
+                                            checked={form.professionalSkill.includes(skill)||false}
+                                            onChange={() => handleSkillChange(skill)}
+                                          />
+                                          {skill}
+                                        </label>
+                                      ))}
+                                    </div>
+                                    
+                                            </section>
                                 </div>
                             </section>
                         </div>
@@ -1016,7 +1113,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="sourceOfReferral"
-                                        value={form.sourceOfReferral}
+                                        value={form.sourceOfReferral||''}
                                         onChange={handleChange}
                                         placeholder="Source of Referral"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1024,7 +1121,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="date"
                                         name="dateOfReferral"
-                                        value={form.dateOfReferral}
+                                        value={form.dateOfReferral||''}
                                         onChange={handleChange}
                                         placeholder="Date of Referral"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1033,7 +1130,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="reference1Name"
-                                        value={form.reference1Name}
+                                        value={form.reference1Name||''}
                                         onChange={handleChange}
                                         placeholder="Name"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1041,7 +1138,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="reference1Aadhar"
-                                        value={form.reference1Aadhar}
+                                        value={form.reference1Aadhar||''}
                                         onChange={handleChange}
                                         placeholder="Aadhar"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1049,14 +1146,14 @@ const handleImageChange = useCallback(
                                     <input
                                         type="tel"
                                         name="reference1Mobile"
-                                        value={form.reference1Mobile}
+                                        value={form.reference1Mobile||''}
                                         onChange={handleChange}
                                         placeholder="Mobile"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                                     />
                                     <textarea
                                         name="reference1Address"
-                                        value={form.reference1Address}
+                                        value={form.reference1Address||''}
                                         onChange={handleChange}
                                         placeholder="Address"
                                         className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1064,7 +1161,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="reference1Relationship"
-                                        value={form.reference1Relationship}
+                                        value={form.reference1Relationship||''}
                                         onChange={handleChange}
                                         placeholder="Relationship"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1073,7 +1170,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="reference2Name"
-                                        value={form.reference2Name}
+                                        value={form.reference2Name||''}
                                         onChange={handleChange}
                                         placeholder="Name"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1081,7 +1178,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="reference2Aadhar"
-                                        value={form.reference2Aadhar}
+                                        value={form.reference2Aadhar||''}
                                         onChange={handleChange}
                                         placeholder="Aadhar"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1089,14 +1186,14 @@ const handleImageChange = useCallback(
                                     <input
                                         type="tel"
                                         name="reference2Mobile"
-                                        value={form.reference2Mobile}
+                                        value={form.reference2Mobile||''}
                                         onChange={handleChange}
                                         placeholder="Mobile"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                                     />
                                     <textarea
                                         name="reference2Address"
-                                        value={form.reference2Address}
+                                        value={form.reference2Address||''}
                                         onChange={handleChange}
                                         placeholder="Address"
                                         className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1134,7 +1231,7 @@ const handleImageChange = useCallback(
                                                 type="checkbox"
                                                 id="serviceHours12hrs"
                                                 name="serviceHours12hrs"
-                                                checked={form.serviceHours12hrs}
+                                                checked={form.serviceHours12hrs||false}
                                                 onChange={handleChange}
                                                 className="form-checkbox h-5 w-5 text-blue-600 rounded"
                                             />
@@ -1145,7 +1242,7 @@ const handleImageChange = useCallback(
                                                 type="checkbox"
                                                 id="serviceHours24hrs"
                                                 name="serviceHours24hrs"
-                                                checked={form.serviceHours24hrs}
+                                                checked={form.serviceHours24hrs||false}
                                                 onChange={handleChange}
                                                 className="form-checkbox h-5 w-5 text-blue-600 rounded"
                                             />
@@ -1155,7 +1252,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="preferredService"
-                                        value={form.preferredService}
+                                        value={form.preferredService||''}
                                         onChange={handleChange}
                                         placeholder="Preferred Service"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1164,7 +1261,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="paymentService"
-                                        value={form.paymentService}
+                                        value={form.paymentService||''}
                                         onChange={handleChange}
                                         placeholder="Payment Service (e.g., Bank Transfer, UPI)"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1173,7 +1270,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="paymentBankName"
-                                        value={form.paymentBankName}
+                                        value={form.paymentBankName||''}
                                         onChange={handleChange}
                                         placeholder="Bank Name"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1182,7 +1279,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="paymentBankAccountNumber"
-                                        value={form.paymentBankAccountNumber}
+                                        value={form.paymentBankAccountNumber||''}
                                         onChange={handleChange}
                                         placeholder="Bank Account Number"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1191,7 +1288,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="ifscCode"
-                                        value={form.ifscCode}
+                                        value={form.ifscCode||''}
                                         onChange={handleChange}
                                         placeholder="IFSC Code"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1199,7 +1296,7 @@ const handleImageChange = useCallback(
                                     />
                                     <textarea
                                         name="bankBranchAddress"
-                                        value={form.bankBranchAddress}
+                                        value={form.bankBranchAddress||''}
                                         onChange={handleChange}
                                         placeholder="Bank Branch Address"
                                         className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1208,7 +1305,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="Bankbranchname"
-                                        value={form.Bankbranchname}
+                                        value={form.Bankbranchname||''}
                                         onChange={handleChange}
                                         placeholder="Bank Branch Name"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1217,7 +1314,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="Branchcity"
-                                        value={form.Branchcity}
+                                        value={form.Branchcity||''}
                                         onChange={handleChange}
                                         placeholder="Branch City"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1226,7 +1323,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="Branchstate"
-                                        value={form.Branchstate}
+                                        value={form.Branchstate||''}
                                         onChange={handleChange}
                                         placeholder="Branch State"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1235,7 +1332,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="Branchpincode"
-                                        value={form.Branchpincode}
+                                        value={form.Branchpincode||''}
                                         onChange={handleChange}
                                         placeholder="Branch Pincode"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1271,7 +1368,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="languages"
-                                        value={form.languages}
+                                        value={form.languages||''}
                                         onChange={handleChange}
                                         placeholder="Languages Known (comma-separated)"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1279,7 +1376,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="type"
-                                        value={form.type}
+                                        value={form.type||''}
                                         onChange={handleChange}
                                         placeholder="Type (e.g., General Physician, Specialist)"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1287,7 +1384,7 @@ const handleImageChange = useCallback(
                                     <input
                                         type="text"
                                         name="specialties"
-                                        value={form.specialties}
+                                        value={form.specialties||''}
                                         onChange={handleChange}
                                         placeholder="Specialties (e.g., Cardiology, Pediatrics)"
                                         className="input-field w-full h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
@@ -1451,7 +1548,7 @@ const handleImageChange = useCallback(
                                     <textarea
                                         placeholder="Don’t have any of the listed documents? Please explain why."
                                         name="field_message"
-                                        value={Reason}
+                                        value={Reason||''}
                                         onChange={(e:any)=>setReason(e.target.value)}
 
                                         rows={4}

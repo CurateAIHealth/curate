@@ -2,6 +2,7 @@
 
 import SuitableHcpList from "@/Components/HCPSugetions/page"
 import { GetRegidterdUsers, GetUsersFullInfo } from "@/Lib/user.action"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 
@@ -10,9 +11,15 @@ const ClientSuggetions = () => {
     const [HCP, setHCP] = useState([])
     const [loading, setLoading] = useState(true);
     const Curennt_Client_Userid=useSelector((state:any)=>state.Suggested_HCP)
+    const Router=useRouter()
     console.log("Test Userid----",Curennt_Client_Userid)
+    const updatedRefresh=useSelector((afterEach:any)=>afterEach.updatedCount)
     useEffect(() => {
         const Fetch = async () => {
+
+          if(Curennt_Client_Userid===''){
+            Router.push("/AdminPage")
+          }
             const RegisterdUsersResult = await GetRegidterdUsers();
 
             const FullInfo: any = await GetUsersFullInfo();
@@ -30,7 +37,7 @@ const ClientSuggetions = () => {
         }
 
         Fetch()
-    }, [])
+    }, [updatedRefresh])
     if (loading) {
     return (
      <div className="w-full  max-w-md mx-auto p-6 bg-white rounded-2xl shadow-lg">
@@ -49,7 +56,7 @@ const ClientSuggetions = () => {
     );
   }
     return (
-        <div>
+        <div >
             <SuitableHcpList clients={clientList} hcps={HCP} />;
 </div>
     )
