@@ -252,10 +252,29 @@ setSubmitstatusMessage("Profile Updated Succesfully")
   switch (activeTab) {
     case 'Personal Info':
       return (
+        <div>
+            <div className="p-4 mb-2 bg-white rounded-2xl shadow-md border border-gray-200">
+            <label className="block text-gray-700 font-semibold mb-2 text-lg">
+              Profession Skills:
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {user.ProfetionSkill?.map((each: any, index: any) => (
+                <span
+                  key={index}
+                  className="px-3 py-1 bg-blue-100 h-7 text-blue-700 text-sm font-medium rounded-full shadow-sm hover:bg-blue-200 transition"
+                >
+                  {each}
+                </span>
+              ))}
+            </div>
+          </div>
+       
         <div className="grid md:grid-cols-2 gap-4">
+        
           <TextInput label="First Name" name="firstName" value={user.firstName} onChange={handleChange} />
                     <TextInput label="SurName" name="surname" value={user.surname} onChange={handleChange} />
           <TextInput label="Gender" name="gender" value={user.gender} onChange={handleChange} />
+          
           <TextInput label="Date of Birth" name="dateOfBirth" type="date" value={user.dateOfBirth} onChange={handleChange} />
           <TextInput label="Email" name="emailId" type="email" value={user.emailId} onChange={handleChange} />
           <TextInput label="Mobile Number" name="mobileNumber" type="tel" value={user.mobileNumber} onChange={handleChange} />
@@ -271,23 +290,10 @@ setSubmitstatusMessage("Profile Updated Succesfully")
           <TextInput label="Mole/Body Mark 1" name="moleBodyMark1" value={user.moleBodyMark1} onChange={handleChange} />
           <TextInput label="Mole/Body Mark 2" name="moleBodyMark2" value={user.moleBodyMark2} onChange={handleChange} />
           <TextInput label="PreferredService" name="preferredService" value={user.preferredService} onChange={handleChange} />
-        <div className="p-4 bg-white rounded-2xl shadow-md border border-gray-200">
-  <label className="block text-gray-700 font-semibold mb-2 text-lg">
-    Profession Skills:
-  </label>
-  <div className="flex flex-wrap gap-2">
-    {user.ProfetionSkill?.map((each: any, index: any) => (
-      <span
-        key={index}
-        className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full shadow-sm hover:bg-blue-200 transition"
-      >
-        {each}
-      </span>
-    ))}
-  </div>
-</div>
+     
 
         </div>
+         </div>
       );
     case 'Bank Details':
       return (

@@ -223,3 +223,23 @@ body {
   @apply absolute left-4 top-2 text-gray-500 bg-white px-1 text-base pointer-events-none transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:-top-3 peer-focus:text-xs peer-focus:text-green-600;
 }
 
+/* Flip Card Perspective */
+.perspective {
+  perspective: 1000px;
+}
+
+/* Preserve 3D for flipping */
+.transform-style-preserve-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.5s; /* Optional smooth transition */
+}
+
+/* Hide back face when flipped */
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* Rotate the element 180 degrees on Y-axis */
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}

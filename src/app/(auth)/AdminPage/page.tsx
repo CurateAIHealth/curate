@@ -41,6 +41,7 @@ export default function UserTableList() {
   const dispatch = useDispatch();
 const UpdateMainFilter=useSelector((state:any)=>state.Main_Filter)
 const CurrentClientStatus=useSelector((state:any)=>state.Submitted_Current_Status)
+const UserTypeFromGlobelState=useSelector((state:any)=>state.ViewHCPList)
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
     setUpdatedStatusMsg(`Updating ${first} Contact Status....`);
     try {
@@ -108,7 +109,7 @@ const CurrentClientStatus=useSelector((state:any)=>state.Submitted_Current_Statu
         }
 
         const RegisterdUsersResult = await GetRegidterdUsers();
-
+        setuserType(UserTypeFromGlobelState)
         const FullInfo:any = await GetUsersFullInfo();
         setFullInfo(FullInfo);
 setSearch(CurrentClientStatus)
@@ -139,7 +140,7 @@ setSearch(CurrentClientStatus)
     // SetUpdateMainFilter(Z)
     dispatch(Update_Main_Filter_Status(Z))
   }
-useEffect(() => {
+useEffect(() => {UpdateAssignHca
   if (UpdateMainFilter === "Client Enquiry") {
     setSearch(""); 
   }
@@ -150,7 +151,7 @@ useEffect(() => {
       case "Client Enquiry":
               
         return ClientEnquiry_Filters;
-      case "Placements":
+      case "Deployment":
         return Placements_Filters;
       case "Timesheet":
         return Timesheet_Filters
@@ -173,7 +174,7 @@ setAsignStatus(e.target.value)
       switch (UpdateMainFilter) {
       case "Client Enquiry":
         return ClientEnquiryUserInterFace()
-      case "Placements":
+      case "Deployment":
         return <ClientTable/>
       case "Timesheet":
         return <WorkingOn ServiceName="Timesheet"/>
@@ -253,7 +254,8 @@ const ClientEnquiryUserInterFace = () => {
                       <th className="px-2 py-2 w-[14%]">Designate</th>
                     )}
                     <th className="px-4 py-2 w-[10%]">Action</th>
-                       <th className="px-2 py-2 w-[10%]">Suitable HCP</th>
+                    {UpdateduserType==='patient'&&<th className="px-2 py-2 w-[10%]">Suitable HCP</th>}
+                       
                   </tr>
                 </thead>
                 <tbody>
@@ -357,15 +359,17 @@ const ClientEnquiryUserInterFace = () => {
                           {user.DetailedVerification ? "View" : "Preview"}
                         </button>
                       </td>
-                      <td className="px-6 py-2">
+                         {UpdateduserType==='patient'&&
+                      <td className="md:px-8 md:py-2">
+                     
                          <button
 onClick={()=>UpdateNavigattosuggetions(user.userId)}
-            className="flex   cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-2 py-2 bg-gray-200 
- text-white   shadow-lg rounded-full h-8 text-[9px] transition-all duration-150"
+            className="flex   cursor-pointer items-center gap-2 w-full sm:w-auto justify-center  py-2
+ text-white   shadow-lg rounded-full h-10 text-[9px] transition-all duration-150"
           >
-            <img src="Icons/HCP.png" className='h-7 w-7'/>
+            <img src="Icons/HCP.png" className='h-10 w-10 rounded-full'/>
           </button>
-                      </td>
+                      </td>}
                     </tr>
                   ))}
                 </tbody>
@@ -401,6 +405,7 @@ onClick={()=>UpdateNavigattosuggetions(user.userId)}
   const handleLogout = () => {
  
     router.push('/DashBoard');
+     
   };
 
   if (isChecking) {

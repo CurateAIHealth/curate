@@ -104,7 +104,7 @@ const UpdatePreview = (A: string) => {
     }
     setStatusMessage("Please Wait...");
     const generatedUserId = uuidv4();
-    const FinelData = { ...formData, userId: generatedUserId };
+    const FinelData = { ...formData, userId: generatedUserId,SuitableHCP:"" };
     const PostResult = await UpdateNewLeadInformation(FinelData);
     if (PostResult.success) {
       setStatusMessage(`${PostResult.message},Riderecting to Admin Page...`);
@@ -338,25 +338,7 @@ className="overflow-hidden h-[95%]"
             />
           </div>
         </div>
-{visible&&
-<div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50">
-  <div className="flex flex-col h-auto w-[90%] max-w-md bg-gray-200 rounded-xl shadow-lg p-4">
 
-      <button
-       onClick={() => setVisible(false)}
-        aria-label="Close"
-        className="absolute top-2 right-2 cursor-pointer rounded-md p-1 bg-slate-100 mr-10 mt-20"
-      >
-        <X className="h-4 w-4 text-slate-600" />
-      </button>
-<img src="Icons/Adhar_Example.png"/>
-      <h1 className=" flex items-center justify-center text-sm text-[20px] text-teal-800">
-        Use Aadhaar card details for accuracy
-      </h1>
-
-      <p className="text-center text-[14px]">For reliable identification, kindly provide details exactly as on your Aadhaar card.</p>
-    </div>
-    </div>}
         <div id="Patient Details" className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-2">
           <h2 className="text-lg font-semibold text-purple-600">Weight</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
@@ -615,6 +597,8 @@ className="overflow-hidden h-[95%]"
         </div>
 
         <div id="Additional Comments" className="flex flex-col md:ml-2  md:w-[400px] ">
+          
+
           <label className="font-bold mb-2">Additional Comments</label>
           <textarea
             onChange={(e) => handleChange("AdditionalComments", e.target.value)}
@@ -624,7 +608,28 @@ className="overflow-hidden h-[95%]"
           />
         </div>
 
+<div className="flex flex-col flex-wrap items-center justify-center">
+<div className="w-full md:w-[330px] mr-[20px] max-w-sm mx-auto p-6  rounded-2xl shadow-lg flex flex-col items-center gap-4 sm:max-w-md md:max-w-lg">
+  <p className="text-lg font-semibold text-gray-800 tracking-tight">Add CallBack Reminder</p>
+
+  <div className="flex flex-col sm:flex-row w-full gap-4">
+    <input
+      type="time"
+       onChange={(e) => handleChange("RemainderTime", e.target.value)}
+      className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-700 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+    />
+
+    <input
+      type="date"
+       onChange={(e) => handleChange("RemainderDate", e.target.value)}
+      className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-700 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+    />
+  </div>
+</div>
+
+     <p className="text-lg md:ml-40 text-center font-semibold text-gray-800 m-2 flex">Update Client Status</p>
         <div className="flex flex-wrap justify-start md:justify-end items-end gap-2 md:gap-4  md:w-[600px] m-2">
+       
           {ClientEnquiry_Filters.map((each: string, i: number) => (
             <p
               key={i}
@@ -638,6 +643,7 @@ className="overflow-hidden h-[95%]"
               {each}
             </p>
           ))}
+        </div>
         </div>
       </div>
 

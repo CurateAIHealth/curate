@@ -151,210 +151,191 @@ SetActionStatusMessage("Seccessfully Deleted Placement")
 
   const OmServiceView = () => {
     return (
-      <div className="overflow-x-auto">
-        {ClientsInformation.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-6 h-[50vh] mt-10 
-                 backdrop-blur-md rounded-3xl  border border-gray-100 p-10">
-  
-  <p className="text-xl font-semibold text-gray-900 text-center tracking-wide">
-    ✨ Sorry to Inform You, <span className="text-emerald-600">No Placements Available</span>
-  </p>
-  
-  <p className="bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-800 
-                px-6 py-3 rounded-full shadow-md text-sm font-medium tracking-wide">
-    🔎 Check <span className="font-semibold text-emerald-900">Terminations</span> for Previous Placements
-  </p>
-  
-</div>
+      <div className="w-full flex flex-col gap-8 p-6 bg-gray-50">
 
-        ) : (
-          <div className="h-[500px] overflow-y-auto rounded-lg shadow">
-          
-            <table className="w-full text-sm text-left border-collapse">
-              <thead className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white uppercase text-xs font-semibold sticky top-0 z-10 shadow">
-                <tr>
-                  <th className="px-6 py-4">Client Name</th>
-                  <th className="px-6 py-4">Contact</th>
-                  <th className="px-6 py-4">Location</th>
-                  <th className="px-8 py-4">HCA Name</th>
-                  <th className="px-9 py-4">Status</th>
-                  <th className="px-8 py-4">Replacement</th>
-                  <th className="px-6 py-4 text-center">Time Sheet</th>
-                  <th className="px-6 py-4 text-center">Terminate</th>
-                </tr>
-              </thead>
-              <tbody>
-                {FinelTimeSheet.map((c, i) => (
-                  <tr
-                    key={i}
-                    className="hover:bg-teal-50/50 transition-all border-b border-gray-100"
-                  >
-                    <td className="px-6 py-4 font-semibold text-gray-900">
-                      {c.name}
-                    </td>
-                    <td className="px-6 py-4 text-gray-700">{c.contact}</td>
-                    <td className="px-6 py-4 text-gray-600 truncate max-w-[200px]">
-                      {c.location}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 text-xs rounded-md font-medium shadow-sm">
-                        🩺 {c.role} 👚
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 shadow-sm">
-                        <CircleCheckBig className="w-4 h-4 text-emerald-600" />
-                        <p className="text-xs font-medium text-emerald-700">
-                          Active
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <select className="p-2 text-sm border cursor-pointer rounded-lg focus:ring-2 focus:ring-teal-300 outline-none transition w-[150px] bg-white/70 shadow-sm">
-                        <option>Assign New HCA</option>
-                        {HCA_List.map((each: any) => (
-                          <option key={each.FirstName}>{each.FirstName}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button
-                        className="px-5 py-2 text-xs cursor-pointer font-medium bg-gradient-to-r from-teal-600 to-emerald-500 hover:from-teal-700 hover:to-emerald-600 text-white rounded-lg shadow-md transition"
-                        onClick={() => UpdateClient_UserId(c.Client_Id)}
-                      >
-                        View
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button
-                        className="px-5 py-2 text-xs cursor-pointer font-medium text-gray-800 rounded-lg shadow-md transition"
-                        onClick={() => handleDeleteClick(c)}
-                      >
-                        <Trash />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+  {/* No Placements Message */}
+  {ClientsInformation.length === 0 && (
+    <div className="flex flex-col items-center justify-center gap-6 h-[60vh] mt-10 rounded-3xl bg-white/60 backdrop-blur-lg border border-gray-200 shadow-2xl p-12">
+      <p className="text-3xl font-extrabold text-gray-900 text-center">
+        ✨ Sorry to Inform You, <span className="text-emerald-600">No Placements Available</span>
+      </p>
+      <p className="bg-gradient-to-r from-emerald-200 to-teal-200 text-emerald-900 px-8 py-3 rounded-full shadow-lg font-semibold text-sm tracking-wide">
+        🔎 Check <span className="font-bold text-emerald-800">Terminations</span> for Previous Placements
+      </p>
+    </div>
+  )}
 
-
-        {showDeletePopup && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-lg p-6 w-[400px] text-center">
-              <h2 className="text-lg font-semibold mb-4">
-                Are you Sure Want to Delete Placement ?
-              </h2>
-              <div className="flex justify-center gap-4 mt-6">
-                <button
-                  onClick={confirmDelete}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition"
-                >
-                  Yes
-                </button>
-                <button
-                  onClick={() => setShowDeletePopup(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg shadow hover:bg-gray-400 transition"
-                >
-                  No
-                </button>
-              </div>
-                {ActionStatusMessage&&   
-         <div className="flex flex-col items-center justify-center gap-4 mt-2
-                  bg-white/60 backdrop-blur-md rounded-3xl shadow-2xl 
-                  border border-gray-100 px-4 py-4">
-    
-    <div className="w-4 h-4 border-4 border-emerald-500 border-t-transparent 
-                    rounded-full animate-spin"></div>
-    
-    <p className="text-center text-red-500 font-semibold">{ActionStatusMessage}</p>
-  </div>}
-            </div>
-          </div>
-        )}
-
-      
-        {showTimeSheet && TimeSheet_Info && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-lg p-6 w-[750px] max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">
-                  📅 Attendance - {monthNames[selectedMonth]} {selectedYear}
-                </h2>
-                <div className="flex gap-3">
-                  <select
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                    className="border p-2 rounded-md"
-                  >
-                    {monthNames.map((m, i) => (
-                      <option key={i} value={i}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    className="border p-2 rounded-md"
-                  >
-                    {Array.from({ length: 5 }).map((_, i) => {
-                      const year = new Date().getFullYear() - 2 + i;
-                      return (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      );
-                    })}
-                  </select>
+  {/* Client Table Redesigned */}
+  {ClientsInformation.length > 0 && (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse rounded-2xl shadow-xl overflow-hidden bg-white">
+        <thead className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white uppercase text-xs font-semibold sticky top-0 shadow-md">
+          <tr>
+            <th className="px-6 py-4 text-left">Client Name</th>
+            <th className="px-6 py-4 text-left">Contact</th>
+            <th className="px-6 py-4 text-left">Location</th>
+            <th className="px-8 py-4 text-left">HCA Name</th>
+            <th className="px-9 py-4 text-left">Status</th>
+            <th className="px-8 py-4 text-left">Replacement</th>
+            <th className="px-6 py-4 text-center">Time Sheet</th>
+            <th className="px-6 py-4 text-center">Terminate</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-100">
+          {FinelTimeSheet.reverse().map((c, i) => (
+            <tr
+              key={i}
+              className="hover:bg-teal-50/30 transition-all border-b border-gray-100"
+            >
+              <td className="px-6 py-4 font-semibold text-gray-900">{c.name}</td>
+              <td className="px-6 py-4 text-gray-700">{c.contact}</td>
+              <td className="px-6 py-4 text-gray-600 truncate max-w-[200px]">{c.location}</td>
+              <td className="px-6 py-4">
+                <span className="px-3 py-1 text-xs rounded-md font-medium shadow-sm bg-white/70 border border-gray-200 flex items-center gap-1">
+                  🩺 {c.role} 👚
+                </span>
+              </td>
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-2 rounded-full bg-green-100/50 px-3 py-1 shadow-sm">
+                  <CircleCheckBig className="w-4 h-4 text-emerald-600" />
+                  <p className="text-xs font-medium text-emerald-700">Active</p>
                 </div>
-              </div>
-              <div className="grid grid-cols-7 gap-3 text-center">
-                {Array.from({ length: daysInMonth }).map((_, dayIndex) => {
-                  const day = dayIndex + 1;
-                  const record = TimeSheet_Info.TimeSheet?.find((t: any) => {
-                    const parsed = parseEnInDate(t.date);
-                    return (
-                      parsed.getDate() === day &&
-                      parsed.getMonth() === selectedMonth &&
-                      parsed.getFullYear() === selectedYear
-                    );
-                  });
-                  const status: AttendanceStatus = record?.status || "Absent";
-                  const statusColor =
-                    status === "Present"
-                      ? "bg-green-100 text-green-700 border-green-300"
-                      : status === "Absent"
-                      ? "bg-red-100 text-red-700 border-red-300"
-                      : status === "Leave"
-                      ? "bg-yellow-100 text-yellow-700 border-yellow-300"
-                      : "bg-blue-100 text-blue-700 border-blue-300";
-                  return (
-                    <div
-                      key={day}
-                      onClick={() => handleStatusClick(day)}
-                      className={`p-3 border rounded-lg flex flex-col items-center justify-center cursor-pointer ${statusColor}`}
-                    >
-                      <span className="text-sm font-semibold">{day}</span>
-                      <span className="text-xs">{status}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="mt-5 text-right">
+              </td>
+              <td className="px-6 py-4">
+                <select className="p-2 text-sm border cursor-pointer rounded-lg focus:ring-2 focus:ring-teal-300 outline-none transition w-[150px] bg-white/70 shadow-sm">
+                  <option>Assign New HCA</option>
+                  {HCA_List.map((each: any) => (
+                    <option key={each.FirstName}>{each.FirstName}</option>
+                  ))}
+                </select>
+              </td>
+              <td className="px-6 py-4 text-center">
                 <button
-                  onClick={() => setShowTimeSheet(false)}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition"
+                  className="px-5 py-2 text-xs font-medium bg-gradient-to-r from-teal-600 to-emerald-500 hover:from-teal-700 hover:to-emerald-600 text-white rounded-lg shadow-md transition"
+                  onClick={() => UpdateClient_UserId(c.Client_Id)}
                 >
-                  Close
+                  View
                 </button>
-              </div>
-            </div>
+              </td>
+              <td className="px-6 py-4 text-center">
+                <button
+                  className="px-5 py-2 text-xs font-medium text-gray-800 rounded-lg shadow-md hover:bg-gray-100 transition"
+                  onClick={() => handleDeleteClick(c)}
+                >
+                  <Trash />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+
+  {/* Delete Popup Redesigned */}
+  {showDeletePopup && (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-3xl shadow-2xl p-8 w-[400px] text-center backdrop-blur-md border border-gray-200">
+        <h2 className="text-xl font-bold mb-5">Confirm Delete Placement</h2>
+        <div className="flex justify-center gap-5 mt-6">
+          <button
+            onClick={confirmDelete}
+            className="px-5 py-2 bg-red-500 text-white rounded-xl shadow hover:bg-red-600 transition"
+          >
+            Yes
+          </button>
+          <button
+            onClick={() => setShowDeletePopup(false)}
+            className="px-5 py-2 bg-gray-200 text-gray-800 rounded-xl shadow hover:bg-gray-300 transition"
+          >
+            No
+          </button>
+        </div>
+        {ActionStatusMessage && (
+          <div className="flex flex-col items-center justify-center gap-4 mt-4 bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 px-4 py-4">
+            <div className="w-5 h-5 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-center text-red-500 font-semibold">{ActionStatusMessage}</p>
           </div>
         )}
       </div>
+    </div>
+  )}
+
+  {/* TimeSheet Popup Redesigned */}
+  {showTimeSheet && TimeSheet_Info && (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-3xl shadow-2xl p-6 w-[750px] max-h-[90vh] overflow-y-auto backdrop-blur-md border border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold">
+            📅 Attendance - {monthNames[selectedMonth]} {selectedYear}
+          </h2>
+          <div className="flex gap-3">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              className="border p-2 rounded-md"
+            >
+              {monthNames.map((m, i) => (
+                <option key={i} value={i}>{m}</option>
+              ))}
+            </select>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="border p-2 rounded-md"
+            >
+              {Array.from({ length: 5 }).map((_, i) => {
+                const year = new Date().getFullYear() - 2 + i;
+                return <option key={year} value={year}>{year}</option>;
+              })}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-7 gap-3 text-center">
+          {Array.from({ length: daysInMonth }).map((_, dayIndex) => {
+            const day = dayIndex + 1;
+            const record = TimeSheet_Info.TimeSheet?.find((t: any) => {
+              const parsed = parseEnInDate(t.date);
+              return parsed.getDate() === day &&
+                     parsed.getMonth() === selectedMonth &&
+                     parsed.getFullYear() === selectedYear;
+            });
+            const status: AttendanceStatus = record?.status || "Absent";
+            const statusColor =
+              status === "Present"
+                ? "bg-green-100 text-green-700 border-green-300"
+                : status === "Absent"
+                ? "bg-red-100 text-red-700 border-red-300"
+                : status === "Leave"
+                ? "bg-yellow-100 text-yellow-700 border-yellow-300"
+                : "bg-blue-100 text-blue-700 border-blue-300";
+            return (
+              <div
+                key={day}
+                onClick={() => handleStatusClick(day)}
+                className={`p-3 border rounded-lg flex flex-col items-center justify-center cursor-pointer ${statusColor} hover:scale-105 transition-transform`}
+              >
+                <span className="text-sm font-semibold">{day}</span>
+                <span className="text-xs">{status}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-5 text-right">
+          <button
+            onClick={() => setShowTimeSheet(false)}
+            className="px-4 py-2 bg-red-500 text-white rounded-xl shadow hover:bg-red-600 transition"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
+
     );
   };
 
