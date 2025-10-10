@@ -47,14 +47,24 @@ const ClientSuggetions = () => {
 
   
 
- const Filter_Data: any = cachedRegisteredUsers.filter((each:any) => each.userType === "patient" && each?.patientHomeAssistance&&each.userId===currentClientUserId)
-      setClients(Filter_Data);
+const Filter_Data: any = (cachedRegisteredUsers || []).filter(
+  (each: any) =>
+    each && 
+    each.userType === "patient" &&
+    each.patientHomeAssistance &&
+    each.userId === currentClientUserId
+);
+
 
     
-      const filterProfilePic = cachedFullInfo.map((each: any) => each?.HCAComplitInformation ?? {});
+  const filterProfilePic = (cachedFullInfo || []).map(
+  (each: any) => each?.HCAComplitInformation ?? {}
+);
+
 const filterHCP = filterProfilePic.filter(
   (each: any) => each && each.userType === "HCA" && each.ProfessionalSkills
 );
+
 
       setHCP(filterHCP);
 
