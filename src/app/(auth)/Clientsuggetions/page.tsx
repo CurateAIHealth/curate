@@ -46,18 +46,22 @@ const ClientSuggetions = () => {
        
 
   
-      const filterData = cachedRegisteredUsers.filter(
-        (each: any) =>
-          each.userType === "patient" &&
-          each.patientHomeAssistance &&
-          each.userId === currentClientUserId
-      );
+     const filterData = cachedRegisteredUsers.filter(
+  (each: any) =>
+    each &&
+    each.userType === "patient" &&
+    each.patientHomeAssistance &&
+    each.userId === currentClientUserId
+);
+
       setClients(filterData);
 
-      const filterProfilePic = cachedFullInfo.map((each: any) => each?.HCAComplitInformation);
-      const filterHCP = filterProfilePic.filter(
-        (each: any) => each.userType === "HCA" && each.ProfessionalSkills
-      );
+    
+      const filterProfilePic = cachedFullInfo.map((each: any) => each?.HCAComplitInformation ?? {});
+const filterHCP = filterProfilePic.filter(
+  (each: any) => each && each.userType === "HCA" && each.ProfessionalSkills
+);
+
       setHCP(filterHCP);
 
       setLoading(false);
