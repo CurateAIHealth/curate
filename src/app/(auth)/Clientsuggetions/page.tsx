@@ -7,60 +7,64 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
 const ClientSuggetions = () => {
-  const [clientList, setClients] = useState<any[]>([]);
-  const [HCP, setHCP] = useState<any[]>([]);
+  const [clientList, setClients] = useState([]);
+  const [HCP, setHCP] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const currentClientUserId = useSelector((state: any) => state.Suggested_HCP);
   const updatedRefresh = useSelector((state: any) => state.updatedCount);
   const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
-
       if (!currentClientUserId) {
         router.push("/AdminPage");
         return;
       }
 
-      try {
-      
-       const cachedRegisteredUsers = sessionStorage.getItem("registeredUsers");
-const cachedFullInfo = sessionStorage.getItem("fullInfo");
+      setLoading(true);
 
-const [registeredUsers, fullInfo] = await Promise.all([
-  cachedRegisteredUsers ? Promise.resolve(JSON.parse(cachedRegisteredUsers)) : GetRegidterdUsers(),
-  cachedFullInfo ? Promise.resolve(JSON.parse(cachedFullInfo)) : GetUsersFullInfo(),
-]);
+     
+      let cachedRegisteredUsers = null;
+      let cachedFullInfo = null;
 
-
-if (!cachedRegisteredUsers) sessionStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
-if (!cachedFullInfo) sessionStorage.setItem("fullInfo", JSON.stringify(fullInfo));
-
-
-      
-        const filteredClients = registeredUsers.filter(
-          (each: any) =>
-            each.userType === "patient" &&
-            each.patientHomeAssistance &&
-            each.userId === currentClientUserId
-        );
-        setClients(filteredClients);
-
-      
-        const HCPList = fullInfo
-          .map((each: any) => each?.HCAComplitInformation)
-          .filter(
-            (each: any) =>
-              each && each.userType === "HCA" && each.ProfessionalSkills
-          );
-        setHCP(HCPList);
-
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching client suggestions:", err);
-        setLoading(false);
+      if (typeof window !== "undefined") {
+        cachedRegisteredUsers = sessionStorage.getItem("registeredUsers");
+        cachedFullInfo = sessionStorage.getItem("fullInfo");
       }
+
+      const [registeredUsers, fullInfo] = await Promise.all([
+        cachedRegisteredUsers
+          ? Promise.resolve(JSON.parse(cachedRegisteredUsers))
+          : GetRegidterdUsers(),
+        cachedFullInfo
+          ? Promise.resolve(JSON.parse(cachedFullInfo))
+          : GetUsersFullInfo(),
+      ]);
+
+     
+      if (typeof window !== "undefined") {
+        if (!cachedRegisteredUsers)
+          sessionStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
+        if (!cachedFullInfo)
+          sessionStorage.setItem("fullInfo", JSON.stringify(fullInfo));
+      }
+
+     
+      const filterData = registeredUsers.filter(
+        (each: any) =>
+          each.userType === "patient" &&
+          each.patientHomeAssistance &&
+          each.userId === currentClientUserId
+      );
+      setClients(filterData);
+
+      const filterProfilePic = fullInfo.map((each: any) => each?.HCAComplitInformation);
+      const filterHCP = filterProfilePic.filter(
+        (each: any) => each.userType === "HCA" && each.ProfessionalSkills
+      );
+      setHCP(filterHCP);
+
+      setLoading(false);
     };
 
     fetchData();
