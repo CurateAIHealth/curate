@@ -51,11 +51,11 @@ const Filter_Data: any = (cachedRegisteredUsers || []).filter(
   (each: any) =>
     each && 
     each.userType === "patient" &&
-    each.patientHomeAssistance &&
+   ( each.patientHomeAssistance||'') &&
     each.userId === currentClientUserId
 );
 
-
+setClients(Filter_Data)
     
   const filterProfilePic = (cachedFullInfo || []).map(
   (each: any) => each?.HCAComplitInformation ?? {}
