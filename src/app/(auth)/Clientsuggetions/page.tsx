@@ -6,8 +6,9 @@ import { useSelector } from 'react-redux';
 import SuitableHcpList from '@/Components/HCPSugetions/page';
 import { GetRegidterdUsers, GetUsersFullInfo } from '@/Lib/user.action';
 
-      let cachedRegisteredUsers:any = [];
-      let cachedFullInfo:any = [];
+let cachedRegisteredUsers: any = null;
+let cachedFullInfo: any = null;
+
 const ClientSuggetions = () => {
   const [clientList, setClients] = useState([]);
   const [HCP, setHCP] = useState([]);
@@ -37,15 +38,15 @@ const ClientSuggetions = () => {
           : GetUsersFullInfo(),
       ]);
 
-    
+     console.log("Test Trick----",cachedRegisteredUsers)
         
       if (!cachedRegisteredUsers) cachedRegisteredUsers=registeredUsers
         
-      if (!cachedFullInfo)cachedFullInfo=fullInfo
+      if (!cachedFullInfo) cachedFullInfo=fullInfo
        
 
-   
-      const filterData = registeredUsers.filter(
+  
+      const filterData = cachedRegisteredUsers.filter(
         (each: any) =>
           each.userType === "patient" &&
           each.patientHomeAssistance &&
@@ -53,7 +54,7 @@ const ClientSuggetions = () => {
       );
       setClients(filterData);
 
-      const filterProfilePic = fullInfo.map((each: any) => each?.HCAComplitInformation);
+      const filterProfilePic = cachedFullInfo.map((each: any) => each?.HCAComplitInformation);
       const filterHCP = filterProfilePic.filter(
         (each: any) => each.userType === "HCA" && each.ProfessionalSkills
       );
