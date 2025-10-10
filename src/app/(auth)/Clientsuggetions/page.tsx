@@ -6,6 +6,8 @@ import { useSelector } from 'react-redux';
 import SuitableHcpList from '@/Components/HCPSugetions/page';
 import { GetRegidterdUsers, GetUsersFullInfo } from '@/Lib/user.action';
 
+      let cachedRegisteredUsers:any = [];
+      let cachedFullInfo:any = [];
 const ClientSuggetions = () => {
   const [clientList, setClients] = useState([]);
   const [HCP, setHCP] = useState([]);
@@ -25,8 +27,6 @@ const ClientSuggetions = () => {
       setLoading(true);
 
   
-      const cachedRegisteredUsers = sessionStorage.getItem("registeredUsers");
-      const cachedFullInfo = sessionStorage.getItem("fullInfo");
 
       const [registeredUsers, fullInfo] = await Promise.all([
         cachedRegisteredUsers
@@ -38,10 +38,11 @@ const ClientSuggetions = () => {
       ]);
 
     
-      if (!cachedRegisteredUsers)
-        sessionStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
-      if (!cachedFullInfo)
-        sessionStorage.setItem("fullInfo", JSON.stringify(fullInfo));
+        
+      if (!cachedRegisteredUsers) cachedRegisteredUsers=registeredUsers
+        
+      if (!cachedFullInfo)cachedFullInfo=fullInfo
+       
 
    
       const filterData = registeredUsers.filter(
