@@ -24,18 +24,18 @@ const ClientSuggetions = () => {
       }
 
       try {
+      
+       const cachedRegisteredUsers = sessionStorage.getItem("registeredUsers");
+const cachedFullInfo = sessionStorage.getItem("fullInfo");
 
-        const cachedRegisteredUsers = sessionStorage.getItem("registeredUsers");
-        const cachedFullInfo = sessionStorage.getItem("fullInfo");
-
-        const [registeredUsers, fullInfo] = await Promise.all([
-          cachedRegisteredUsers ? Promise.resolve(JSON.parse(cachedRegisteredUsers)) : GetRegidterdUsers(),
-          cachedFullInfo ? Promise.resolve(JSON.parse(cachedFullInfo)) : GetUsersFullInfo(),
-        ]);
+const [registeredUsers, fullInfo] = await Promise.all([
+  cachedRegisteredUsers ? Promise.resolve(JSON.parse(cachedRegisteredUsers)) : GetRegidterdUsers(),
+  cachedFullInfo ? Promise.resolve(JSON.parse(cachedFullInfo)) : GetUsersFullInfo(),
+]);
 
 
-        if (!cachedRegisteredUsers) sessionStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
-        if (!cachedFullInfo) sessionStorage.setItem("fullInfo", JSON.stringify(fullInfo));
+if (!cachedRegisteredUsers) sessionStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
+if (!cachedFullInfo) sessionStorage.setItem("fullInfo", JSON.stringify(fullInfo));
 
 
       
