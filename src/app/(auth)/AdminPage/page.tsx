@@ -23,7 +23,9 @@ import WorkingOn from '@/Components/CurrentlyWoring/page';
 import axios from 'axios';
 import { setTimeout } from 'timers/promises';
 import { decrypt, encrypt } from '@/Lib/Actions';
-
+let cachedUserInfo: any = null;
+let cachedRegisteredUsers: any[] | null = null;
+let cachedFullInfo: any[] | null = null;
 export default function UserTableList() {
   const [updatedStatusMsg, setUpdatedStatusMsg] = useState('');
   const [users, setUsers] = useState<any[]>([]);
@@ -84,43 +86,46 @@ const UserTypeFromGlobelState=useSelector((state:any)=>state.ViewHCPList)
     Status:each.Status
   }));
 
-  useEffect(() => {
-    const Fetch = async () => {
-      try {
-        const localValue = localStorage.getItem("UserId");
-        const ProfileInformation = await GetUserInformation(localValue);
-       
-        setUserFirstName(ProfileInformation.FirstName);
-        setLoginEmail(ProfileInformation.Email);
-
-        if (ProfileInformation?.Email?.toLowerCase() === "info@curatehealth.in") {
-          setuserType("patient");
-        }
-        if (ProfileInformation?.Email?.toLowerCase() === "gouricurate@gmail.com") {
-          setuserType("healthcare-assistant");
-        }
-
-        if (
-          ProfileInformation?.Email?.toLowerCase() !== "admin@curatehealth.in" &&
-          ProfileInformation?.Email?.toLowerCase() !== "info@curatehealth.in" &&
-          ProfileInformation?.Email?.toLowerCase() !== "gouricurate@gmail.com"
-        ) {
-          router.push("/");
-        }
-
-        const RegisterdUsersResult = await GetRegidterdUsers();
-        setuserType(UserTypeFromGlobelState)
-        const FullInfo:any = await GetUsersFullInfo();
-        setFullInfo(FullInfo);
-setSearch(CurrentClientStatus)
-        setUsers(RegisterdUsersResult.reverse() || []);
-        setIsChecking(false);
-      } catch (err: any) {
-        console.error(err);
-      }
-    };
-    Fetch();
-  }, [updatedStatusMsg]);
+ useEffect(() => {
+     const Fetch = async () => {
+       try {
+         const localValue = localStorage.getItem('UserId');
+ 
+         const [profile, registeredUsers, fullInfo] = await Promise.all([
+           cachedUserInfo ? Promise.resolve(cachedUserInfo) : GetUserInformation(localValue),
+           cachedRegisteredUsers ? Promise.resolve(cachedRegisteredUsers) : GetRegidterdUsers(),
+           cachedFullInfo ? Promise.resolve(cachedFullInfo) : GetUsersFullInfo()
+         ]);
+ 
+         if (!cachedUserInfo) cachedUserInfo = profile;
+         if (!cachedRegisteredUsers) cachedRegisteredUsers = registeredUsers;
+         if (!cachedFullInfo) cachedFullInfo = fullInfo;
+ 
+         setUserFirstName(profile.FirstName);
+         setLoginEmail(profile.Email);
+ 
+         if (profile?.Email?.toLowerCase() === 'info@curatehealth.in') setuserType('patient');
+         if (profile?.Email?.toLowerCase() === 'gouricurate@gmail.com') setuserType('healthcare-assistant');
+ 
+         if (
+           profile?.Email?.toLowerCase() !== 'admin@curatehealth.in' &&
+           profile?.Email?.toLowerCase() !== 'info@curatehealth.in' &&
+           profile?.Email?.toLowerCase() !== 'gouricurate@gmail.com'
+         ) {
+           router.push('/');
+         }
+ 
+         setuserType(UserTypeFromGlobelState);
+         setFullInfo(fullInfo);
+         setSearch(CurrentClientStatus);
+         setUsers((registeredUsers || []).reverse());
+         setIsChecking(false);
+       } catch (err: any) {
+         console.error(err);
+       }
+     };
+     Fetch();
+   }, [updatedStatusMsg, UserTypeFromGlobelState, CurrentClientStatus]);
 
   const FilterUserType = (e: any) => {
     if(e.target.value!=="patient"){
