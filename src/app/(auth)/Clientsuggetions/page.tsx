@@ -30,10 +30,10 @@ const ClientSuggetions = () => {
 
       const [registeredUsers, fullInfo] = await Promise.all([
         cachedRegisteredUsers
-          ? Promise.resolve(JSON.parse(cachedRegisteredUsers))
+          ? Promise.resolve(cachedRegisteredUsers)
           : GetRegidterdUsers(),
         cachedFullInfo
-          ? Promise.resolve(JSON.parse(cachedFullInfo))
+          ? Promise.resolve(cachedFullInfo)
           : GetUsersFullInfo(),
       ]);
 
