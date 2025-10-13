@@ -200,7 +200,7 @@ setStatusMessage("Now You Can Assign")
 
 const suitableHcps = hcps.filter((hcp: any) => {
   const client = clients[selectedClientIndex];
-  if (!client) return false; 
+    if (!client || loading) return [];
 
   const hasDiaperSkill = hcp.ProfessionalSkills?.some((each: string) => each === "Diaper");
   const available = !hcp.Status?.some((each: string) => each === "Assigned");
@@ -211,7 +211,7 @@ const suitableHcps = hcps.filter((hcp: any) => {
   return hasDiaperSkill && matchesClientAssistance && available;
 });
 
-console.log("Test Client id----",hcps)
+console.log("Test Client id----",clients)
   if (loading) {
     return (
       <div className="w-full max-w-md mx-auto p-6 bg-white rounded-2xl shadow-lg">
@@ -245,7 +245,7 @@ console.log("Test Client id----",hcps)
     className="w-full sm:w-auto px-3 py-2 bg-[#1392d3] cursor-pointer text-white font-medium rounded-lg shadow hover:bg-[#107fb8] hover:shadow-md transition-all duration-300 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#1392d3]/30"
   >
     <span className="text-md">🔙</span>
-    to Admin...
+    to Admin
   </button>
 </div>
 
