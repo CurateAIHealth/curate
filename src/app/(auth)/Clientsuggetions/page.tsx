@@ -38,7 +38,7 @@ const ClientSuggetions = () => {
           : GetUsersFullInfo(),
       ]);
 
-     console.log("Test Trick----",cachedRegisteredUsers)
+   
         
       if (!cachedRegisteredUsers) cachedRegisteredUsers=registeredUsers
         
@@ -49,12 +49,12 @@ const ClientSuggetions = () => {
 
 const Filter_Data: any = (cachedRegisteredUsers || []).filter(
   (each: any) =>
-    each && 
-    each.userType === "patient" &&
-   ( each.patientHomeAssistance||'') &&
-    each.userId === currentClientUserId
+    each?.userType === "patient" &&
+    (each?.patientHomeAssistance || '') &&
+    each?.userId === currentClientUserId
 );
 
+  console.log("Test Trick----",Filter_Data)
 setClients(Filter_Data)
     
   const filterProfilePic = (cachedFullInfo || []).map(

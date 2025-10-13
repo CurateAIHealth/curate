@@ -38,7 +38,25 @@ export default function CallEnquiryForm() {
     hcpType: [],
     PhysiotherapySpecialisation:'',
      MedicalDrSpecialisation:"",
+     PatientBathRoomCleaning:'',
+     HydrationWaterLevel:'',
+     DocterAdvisedHydrationWaterLevel:"",
+     Juice:'',
+     Doabatic:'',
+     DoabaticPlan:'',
+     FoodPreparation:"",
+     Allergies:'',
+     FoodItem:'',
+     PatientBathing:'',
+     PatientClothes:'',
+     HairWash:'',
+     NailCare:'',
+     Dressing_Grooming:'',
+     Assisting_in_suctioning:"",
     serviceCharges: "",
+    PatientRoomCleaning:'',
+    Brushing_FaceFash:"",
+    BedMaking:'',
     AdditionalComments: "",
     VerificationStatus: "Pending",
     TermsAndConditions: "Accepted",
@@ -122,30 +140,37 @@ router.push("/AdminPage")
      
       className="w-full   bg-gradient-to-br from-purple-50 to-white rounded-xl shadow-xl flex flex-col gap-6"
     >
-      <div className="sticky top-0 z-50 bg-gray-50 flex flex-row sm:flex-row items-center w-full gap-2 sm:gap-4 p-2 ">
-      
-  <ListFilter className="cursor-pointer" onClick={()=>setOptions(prev=>!prev)} />
-        
+   <div className="sticky top-0 z-50 bg-gray-50 flex items-center w-full gap-2 sm:gap-4 p-2">
 
-  <img
-    src="/Icons/Curate-logo.png"
-    alt="Logo"
-    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white text-rose-500 rounded-full p-2 shadow-sm"
-  />
-  <h1 className="text-base sm:text-lg md:text-xl font-medium  text-center text-[#ff1493] tracking-wide leading-snug flex items-center justify-center gap-2">
-    Call Enquiry & Firsthand Info
-    <span className="bg-white text-teal-500 rounded-full p-2 shadow-sm text-lg flex items-center justify-center">
-      <PhoneCall />
-    </span>
-  </h1>
-   
-          <button
-            onClick={handleLogout}
-            className="flex justify-end md:ml-100 hidden md:flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
-          >
-            <LogOut size={20} /> DashBoard
-          </button>
+  <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+    <ListFilter className="cursor-pointer" onClick={() => setOptions(prev => !prev)} />
+
+    <img
+      src="/Icons/Curate-logo.png"
+      alt="Logo"
+      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white text-rose-500 p-2 shadow-sm"
+    />
+
+    <h1 className="text-base sm:text-lg md:text-xl font-medium text-[#ff1493] tracking-wide leading-snug flex items-center justify-center gap-2">
+      Call Enquiry & Firsthand Info
+      <span className="bg-white text-teal-500 rounded-full p-2 shadow-sm text-lg flex items-center justify-center">
+        <PhoneCall />
+      </span>
+    </h1>
+  </div>
+
+  
+  <div className="flex-grow" />
+
+
+  <button
+    onClick={handleLogout}
+    className="hidden md:flex items-center cursor-pointer gap-2 px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+  >
+    <LogOut size={20} /> DashBoard
+  </button>
 </div>
+
 {Options && (
         <div className="fixed inset-0 bg-white w-[180px] z-40 flex justify-start items-start  overflow-auto">
           <div className=" shadow-lg rounded-lg pt-16 p-2  h-screen w-64 max-h-full overflow-y-auto">
@@ -287,7 +312,7 @@ className="overflow-hidden h-[95%]"
         </div>
 
         <div  className="bg-white rounded-lg shadow p-4 space-y-3">
-          <h2 className="text-lg font-semibold text-purple-600">Patient Details</h2>
+          <h2 className="text-lg font-semibold text-teal-600">Patient Details</h2>
           <div>
             <h3 className="font-medium text-sm">Patient Type</h3>
             <div className="flex flex-col gap-1">
@@ -338,9 +363,705 @@ className="overflow-hidden h-[95%]"
             />
           </div>
         </div>
+      <div
+  id="Patient Details"
+  className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-3"
+>
+  <h2 className="text-lg font-semibold text-teal-600">Hygiene</h2>
+
+  <div className="flex flex-col md:flex-row md:flex-wrap md:justify-between md:gap-0 gap-2 md:h-[320px] w-full">
+
+ 
+
+    <div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+        Oral Care (Brushing & Face Fash)
+      </h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Yes", "No"].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData.Brushing_FaceFash === g}
+              onChange={() =>
+                setFormData((prev: any) => ({ ...prev, Brushing_FaceFash: g }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+    </div>
+
+
+    <div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+        Bed Making (Machine Wash)
+      </h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Daily", "As Needed", "Alternate day"].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData.BedMaking === g}
+              onChange={() =>
+                setFormData((prev: any) => ({ ...prev, BedMaking: g }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+    </div>
+
+
+    <div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+        Patient Clothes (Machine Wash)
+      </h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Daily", "As Needed", "Alternate day"].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData.PatientClothes === g}
+              onChange={() =>
+                setFormData((prev: any) => ({ ...prev, PatientClothes: g }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+    </div>
+
+    
+    <div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+        Patient Room (Cleaning)
+      </h3>
+      <div className="flex flex-col md:flex-row md:justify-center gap-2">
+        {["Yes", "No"].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData.PatientRoomCleaning === g}
+              onChange={() =>
+                setFormData((prev: any) => ({
+                  ...prev,
+                  PatientRoomCleaning: g,
+                }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+    </div>
+
+   
+    <div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+        Patient BathRoom (Cleaning)
+      </h3>
+      <div className="flex flex-col md:flex-row md:justify-center gap-2">
+        {["Yes", "No"].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData.PatientBathRoomCleaning === g}
+              onChange={() =>
+                setFormData((prev: any) => ({
+                  ...prev,
+                  PatientBathRoomCleaning: g,
+                }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+    </div>
+
+
+    <div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+        Patient Bathing
+      </h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Bed Bath", "Sponge Bath", "Water Bathing"].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData.PatientBathing === g}
+              onChange={() =>
+                setFormData((prev: any) => ({ ...prev, PatientBathing: g }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+    </div>
+
+   
+    <div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+        Hair Wash
+      </h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Weekly Once", "Weekly Twice", "Alternate Day", "Daily"].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData.HairWash === g}
+              onChange={() =>
+                setFormData((prev: any) => ({ ...prev, HairWash: g }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+    </div>
+
+    
+    <div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+        Dressing & Grooming
+      </h3>
+      <div className="flex flex-col md:flex-row md:justify-center gap-2">
+        {["Yes", "No"].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData.Dressing_Grooming === g}
+              onChange={() =>
+                setFormData((prev: any) => ({
+                  ...prev,
+                  Dressing_Grooming: g,
+                }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+    </div>
+
+ 
+    <div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+        Nail Care
+      </h3>
+      <div className="flex flex-col md:flex-row md:justify-center gap-2">
+        {["Yes", "No"].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData.NailCare === g}
+              onChange={() =>
+                setFormData((prev: any) => ({ ...prev, NailCare: g }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+    </div>
+
+  
+    <div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+        Assisting in suctioning
+      </h3>
+      <div className="flex flex-col md:flex-row md:justify-center gap-2">
+        {["Yes", "No"].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData.Assisting_in_suctioning === g}
+              onChange={() =>
+                setFormData((prev: any) => ({
+                  ...prev,
+                  Assisting_in_suctioning: g,
+                }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+   <div className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-3">
+<h2 className="text-lg font-semibold text-teal-600">Nutrition & Hydration</h2>
+ <div className="flex flex-col md:flex-row md:flex-wrap md:justify-between md:gap-0 gap-2 md:h-[120px] w-full">
+<div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+        Hydration
+      </h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["1Ltr", "2Ltr",'3Ltr','4Ltr','Other'].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData.HydrationWaterLevel === g}
+              onChange={() =>
+                setFormData((prev: any) => ({ ...prev, HydrationWaterLevel: g }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+        {formData.HydrationWaterLevel==="Other"&& <input
+              type="text"
+              placeholder="As per Doctor advise"
+              className="w-[300px] border rounded-lg p-2 m-2"
+              value={formData.DocterAdvisedHydrationWaterLevel||''}
+              onChange={(e) => handleChange("DocterAdvisedHydrationWaterLevel", e.target.value)}
+            />}
+    </div>
+<div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+        Juice
+      </h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["1Ltr", "2Ltr",'3Ltr','4Ltr'].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData.Juice === g}
+              onChange={() =>
+                setFormData((prev: any) => ({ ...prev, Juice: g }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+       </div>
+       <div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+      Food Preparation
+      </h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Yes","No"].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData. FoodPreparation === g}
+              onChange={() =>
+                setFormData((prev: any) => ({ ...prev, FoodPreparation: g }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+        {formData.FoodPreparation==="Yes"&& <textarea
+              rows={5}
+              placeholder='Breif Food Preparation'
+              className=" p-2 border-2"
+              value={formData.FoodPreparationInputs||''}
+              onChange={(e) => handleChange("FoodPreparationInputs", e.target.value)}
+            />}
+       </div>
+       <div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+   Allergies
+      </h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Yes","No"].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData. Allergies === g}
+              onChange={() =>
+                setFormData((prev: any) => ({ ...prev, Allergies: g }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+        {formData.Allergies === "Yes" && (
+    <select
+      value={formData.AllergyOption || ""}
+      onChange={(e) =>
+        setFormData((prev: any) => ({ ...prev, AllergyOption: e.target.value }))
+      }
+      className="border-2 border-gray-300 rounded p-2 mt-2 text-sm w-48 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+    >
+      <option value="">Select Allergy Type</option>
+      <option value="Vegan">Vegan</option>
+      <option value="Egg">Egg</option>
+      <option value="Dairy">Dairy</option>
+      <option value="Citrus">Citrus</option>
+      <option value="Nuts">Nuts</option>
+      <option value="Gluten">Gluten</option>
+    </select>
+  )}
+       </div>
+        <div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+   Food Preparation List
+      </h3>
+      
+      
+   <select
+  value={formData.FoodItem || ""}
+  onChange={(e) =>
+    setFormData((prev: any) => ({ ...prev, FoodItem: e.target.value }))
+  }
+  className="border-2 border-gray-300 rounded p-2 mt-2 text-sm w-48 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+>
+  <option value="">Select Food Item</option>
+  <option value="Tea">Tea</option>
+  <option value="Coffee">Coffee</option>
+  <option value="Hot Water">Hot Water</option>
+  <option value="Boiled Egg (1)">Boiled Egg (1)</option>
+  <option value="Boiled Egg (2)">Boiled Egg (2)</option>
+  <option value="Sabudana">Sabudana</option>
+  <option value="Kichidi">Kichidi</option>
+  <option value="Maggie">Maggie</option>
+  <option value="Chapathi">Chapathi</option>
+  <option value="Rice">Rice</option>
+  <option value="Curry">Curry</option>
+    <option value="Other">Other</option>
+</select>
+
+{formData.FoodItem==="Other"&& <input
+              type="text"
+              placeholder="Enter Yout Prefer Food Item"
+              className="w-[200px] border rounded-lg p-2 mt-2"
+              value={formData.SpecialFoodItem||''}
+              onChange={(e) => handleChange("SpecialFoodItem", e.target.value)}
+            />}
+
+  
+       </div>
+ </div>
+<div className="flex flex-col w-full md:w-[15%] md:h-[100px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+   Doabatic
+      </h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Yes","No"].map((g) => (
+          <label
+            key={g}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              checked={formData. Doabatic === g}
+              onChange={() =>
+                setFormData((prev: any) => ({ ...prev, Doabatic: g }))
+              }
+              className="mr-2 accent-purple-600"
+            />
+            {g}
+          </label>
+        ))}
+      </div>
+        {formData.Doabatic === "Yes" && (
+    <select
+      value={formData.DoabaticPlan || ""}
+      onChange={(e) =>
+        setFormData((prev: any) => ({ ...prev, DoabaticPlan: e.target.value }))
+      }
+      className="border-2 border-gray-300 rounded p-2 mt-2 text-sm w-48 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+    >
+                  <option value="">Choose Diet Plan</option>
+                  <option value="Before Food">Before Food</option>
+                  <option value="Breakfast">Breakfast</option>
+                  <option value="Mid Morning">Mid Morning</option>
+                  <option value="Lunch">Lunch</option>
+                  <option value="Dinner">Dinner</option>
+                  <option value="After Food">After Food</option>
+  
+    </select>
+  )}
+       </div>
+</div>
+<div className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-3">
+  <h2 className="text-lg font-semibold text-teal-600">Vitals Monitoring</h2>
+  <div className="flex flex-col md:flex-row md:flex-wrap md:justify-between md:gap-0 gap-2 md:h-[170px] w-full">
+    
+    {["Temperature", "Pulse", "Oxygen Saturation", "Blood Pressure"].map((vital) => (
+      <div key={vital} className="flex flex-col w-full md:w-[20%] md:h-[120px]">
+        <h3 className="font-medium text-sm mb-2 md:text-center text-left">
+          {vital}
+        </h3>
+        <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+          {["As Required", "Morning", "Afternoon", "Evening", "Specify Time"].map((option) => (
+            <label
+              key={option}
+              className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+            >
+              <input
+                  type="checkbox"
+                name={vital} 
+                checked={formData[vital] === option}
+                onChange={() => {
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    [vital]: option,
+                  }));
+                }}
+                className="mr-2 accent-purple-600"
+              />
+              {option}
+            </label>
+          ))}
+        </div>
+    
+        {formData[vital] === "Specify Time" && (
+          <input
+            type="time"
+            placeholder="Specify time"
+            className="w-[150px] border rounded-lg p-2 mt-2"
+            value={formData[`${vital}Time`] || ""}
+            onChange={(e) => handleChange(`${vital}Time`, e.target.value)}
+          />
+        )}
+      </div>
+    ))}
+
+  </div>
+</div>
+
+<div className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-3">
+  <h2 className="text-lg font-semibold text-teal-600">Elimination</h2>
+  <div className="flex flex-col md:flex-row md:flex-wrap md:justify-between md:gap-0 gap-2 md:h-[80px] w-full">
+
+
+    <div className="flex flex-col w-full md:w-[30%] md:h-[120px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">Comode</h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Indian", "Western"].map((option) => (
+          <label
+            key={option}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              name="Comode"
+              checked={formData.Comode === option}
+              onChange={() => setFormData((prev: any) => ({ ...prev, Comode: option }))}
+              className="mr-2 accent-purple-600"
+            />
+            {option}
+          </label>
+        ))}
+      </div>
+    </div>
+
+
+    <div className="flex flex-col w-full md:w-[30%] md:h-[120px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">Diaper</h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Yes", "No"].map((option) => (
+          <label
+            key={option}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+             type="checkbox"
+              name="Diaper"
+              checked={formData.Diaper === option}
+              onChange={() => setFormData((prev: any) => ({ ...prev, Diaper: option }))}
+              className="mr-2 accent-purple-600"
+            />
+            {option}
+          </label>
+        ))}
+      </div>
+    </div>
+
+
+    <div className="flex flex-col w-full md:w-[30%] md:h-[120px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">Urine</h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Bottle Collection", "Catheter", "Diaper"].map((option) => (
+          <label
+            key={option}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+              type="checkbox"
+              name="Urine"
+              checked={formData.Urine === option}
+              onChange={() => setFormData((prev: any) => ({ ...prev, Urine: option }))}
+              className="mr-2 accent-purple-600"
+            />
+            {option}
+          </label>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-3">
+  <h2 className="text-lg font-semibold text-teal-600">Mobility</h2>
+  <div className="flex flex-col md:flex-row md:flex-wrap md:justify-between md:gap-0 gap-2 md:h-[180px] w-full">
+
+
+    <div className="flex flex-col w-full md:w-[30%] md:h-[120px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">Passive Exercises</h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Repeat", "Hold each time", "Sets"].map((option) => (
+          <label
+            key={option}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+                    type="checkbox"
+              name="PassiveExercises"
+              checked={formData.PassiveExercises === option}
+              onChange={() => setFormData((prev: any) => ({ ...prev, PassiveExercises: option }))}
+              className="mr-2 accent-purple-600"
+            />
+            {option}
+          </label>
+        ))}
+      </div>
+    </div>
+
+  
+    <div className="flex flex-col w-full md:w-[30%] md:h-[120px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">Active Exercises</h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Repeat", "Hold each time", "Sets"].map((option) => (
+          <label
+            key={option}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+                    type="checkbox"
+              name="ActiveExercises"
+              checked={formData.ActiveExercises === option}
+              onChange={() => setFormData((prev: any) => ({ ...prev, ActiveExercises: option }))}
+              className="mr-2 accent-purple-600"
+            />
+            {option}
+          </label>
+        ))}
+      </div>
+    </div>
+
+   
+    <div className="flex flex-col w-full md:w-[30%] md:h-[120px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">Resisted Exercises</h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Repeat", "Hold each time", "Sets"].map((option) => (
+          <label
+            key={option}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+                 type="checkbox"
+              name="ResistedExercises"
+              checked={formData.ResistedExercises === option}
+              onChange={() => setFormData((prev: any) => ({ ...prev, ResistedExercises: option }))}
+              className="mr-2 accent-purple-600"
+            />
+            {option}
+          </label>
+        ))}
+      </div>
+    </div>
+
+  
+    <div className="flex flex-col w-full md:w-[30%] md:h-[120px]">
+      <h3 className="font-medium text-sm mb-2 md:text-center text-left">Walking</h3>
+      <div className="flex flex-col md:flex-row md:flex-wrap md:justify-center gap-2">
+        {["Yes", "No"].map((option) => (
+          <label
+            key={option}
+            className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded md:justify-center"
+          >
+            <input
+                  type="checkbox"
+              name="Walking"
+              checked={formData.Walking === option}
+              onChange={() => setFormData((prev: any) => ({ ...prev, Walking: option }))}
+              className="mr-2 accent-purple-600"
+            />
+            {option}
+          </label>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</div>
+
 
         <div id="Patient Details" className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-2">
-          <h2 className="text-lg font-semibold text-purple-600">Weight</h2>
+          <h2 className="text-lg font-semibold text-teal-600">Weight</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
             {["<40","40", "50", "60", "70", "80", "90", "100", "110", "120", "120+"].map((w) => (
               <label key={w} className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
@@ -389,7 +1110,7 @@ className="overflow-hidden h-[95%]"
         </div>
 
         <div id="Height" className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-2">
-          <h2 className="text-lg font-semibold text-purple-600">Height</h2>
+          <h2 className="text-lg font-semibold text-teal-600">Height</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
             {["4.0", "5.0", "6.0"].map((h) => (
               <label key={h} className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
@@ -432,7 +1153,7 @@ className="overflow-hidden h-[95%]"
         </div>
 
         <div id="Comfortable Languages" className="bg-white rounded-lg shadow p-4 space-y-3">
-          <h2 className="text-lg font-semibold text-purple-600">Comfortable Languages</h2>
+          <h2 className="text-lg font-semibold text-teal-600">Comfortable Languages</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {["Telugu", "Hindi", "English", "Other"].map((lang) => (
               <div key={lang} className="flex flex-col">
@@ -535,7 +1256,7 @@ className="overflow-hidden h-[95%]"
           },
         ].map((section) => (
           <div key={section.field} id={section.title} className="bg-white rounded-lg shadow p-4 space-y-2">
-            <h2 className="text-lg font-semibold text-purple-600">{section.title}</h2>
+            <h2 className="text-lg font-semibold text-teal-600">{section.title}</h2>
             {section.options.map((opt) => (
               <label key={opt} className="flex items-center text-sm">
                 <input
@@ -561,7 +1282,7 @@ className="overflow-hidden h-[95%]"
         ))}
 
         <div id="Charges" className="bg-white rounded-lg shadow p-4 space-y-2">
-          <h2 className="text-lg font-semibold text-purple-600">Charges</h2>
+          <h2 className="text-lg font-semibold text-teal-600">Charges</h2>
           {["₹1200", "₹1000", "₹900", "Other"].map((charge) => (
             <div key={charge} className="flex flex-col">
               <label className="flex items-center text-sm">
@@ -599,7 +1320,7 @@ className="overflow-hidden h-[95%]"
         <div id="Additional Comments" className="flex flex-col md:ml-2  md:w-[400px] ">
           
 
-          <label className="font-bold mb-2">Additional Comments</label>
+          <label className="font-bold mb-2 text-teal-600">Additional Comments</label>
           <textarea
             onChange={(e) => handleChange("AdditionalComments", e.target.value)}
             className="border-2 border-gray-400 rounded-md p-2 "
