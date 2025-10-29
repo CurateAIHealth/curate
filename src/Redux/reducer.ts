@@ -99,6 +99,16 @@ export const Suitable_HCP=(state:any="",action:any)=>{
 }
 
 
+export const UserType=(state:any=null,action:any)=>{
+switch(action.type){
+    case "UpdateRegisterdUserType":
+        return action.payload;
+        default:
+            return state
+
+}
+}
+
 export const Submmision_Client_Status = (state: any = "", action: any) => {
 
     switch (action.type) {
@@ -131,4 +141,24 @@ switch(action.type){
             return state
 
 }
+}
+
+
+export const Medication=(state:any=null,action:any)=>{
+switch(action.type){
+    case "CurrentMedicationValue":
+        return action.payload;
+        default:
+          return  state
+}
+}
+
+export const FullInfo=(state:any=[],action:any)=>{
+    switch(action.type){
+case "UpdateFullInfo" :
+    return action.payload;
+    default:
+        return state
+
+    }
 }

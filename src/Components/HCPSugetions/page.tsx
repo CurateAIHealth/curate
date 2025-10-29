@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Eye } from 'lucide-react';
+import { Eye, Search } from 'lucide-react';
 import { Update_Main_Filter_Status, UpdateClient, UpdateRefresh, UpdateUserInformation } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
@@ -9,10 +9,11 @@ import * as htmlToImage from 'html-to-image';
 import { GetInformedUsers, InserTimeSheet, IntrestedHCP, PostConfirmationInfo, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateUserContactVerificationstatus } from '@/Lib/user.action';
 import axios from 'axios';
 import { calculateAgeIndianFormat } from '@/Lib/Actions';
-import { TestData } from '@/Lib/Content';
+import { PROFESSIONAL_SKILL_OPTIONS, TestData } from '@/Lib/Content';
 const allProfessionalSkills = ["Diaper", "Bathing", "Bedding", "Brushing"];
 
 type ClientType = {
+  patientType: any;
   Location: any;
   ContactNumber: any;
   userId: any;
@@ -43,6 +44,8 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
   const [ExsitingInformedUsers, setExsitingInformedUsers] = useState<any[]>([]);
   const [StatusMessage, setStatusMessage] = useState('Test StatusMessage');
   const [CurrentUserId, setCurrentUserId] = useState<any>('');
+  const [SearchFilter,setSearchFilter]=useState("")
+  const [SearchOptions,setSearchOptions]=useState(false)
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
   const router = useRouter();
@@ -198,20 +201,22 @@ setStatusMessage("Now You Can Assign")
     }
   };
 
+  const UpdateNewSearchItem=(A:any)=>{
+    setSearchFilter(A)
+  }
+
 const suitableHcps = hcps.filter((hcp: any) => {
   const client = clients[selectedClientIndex];
     if (!client || loading) return [];
 
-  const hasDiaperSkill = hcp.ProfessionalSkills?.some((each: string) => each === "Diaper");
+  const hasDiaperSkill = hcp.HomeAssistance?.some((each: string) => each === "Diaper")
   const available = !hcp.Status?.some((each: string) => each === "Assigned");
-  const matchesClientAssistance = hcp.ProfessionalSkills?.some((skill: string) =>
-    client.patientHomeAssistance?.includes(skill)
-  );
-
+  // const matchesClientAssistance = hcp.HandledSkills
+const matchesClientAssistance = hcp.HandledSkills?.some((skill: string) => client.patientType?.includes(skill) );
   return hasDiaperSkill && matchesClientAssistance && available;
 });
 
-console.log("Test Client id----",clients)
+console.log("Test Client id----",suitableHcps)
   if (loading) {
     return (
       <div className="w-full max-w-md mx-auto p-6 bg-white rounded-2xl shadow-lg">
@@ -245,7 +250,7 @@ console.log("Test Client id----",clients)
     className="w-full sm:w-auto px-3 py-2 bg-[#1392d3] cursor-pointer text-white font-medium rounded-lg shadow hover:bg-[#107fb8] hover:shadow-md transition-all duration-300 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#1392d3]/30"
   >
     <span className="text-md">🔙</span>
-    to Admin,.,
+    to Admin
   </button>
 </div>
 
@@ -258,7 +263,7 @@ console.log("Test Client id----",clients)
   </h2>
   
 
-  <div className="overflow-y-auto max-h-[260px] space-y-3 pr-1 scrollbar-thin scrollbar-thumb-[#b7e4c7] scrollbar-track-transparent">
+  <div className="overflow-y-auto  space-y-3 pr-1 scrollbar-thin scrollbar-thumb-[#b7e4c7] scrollbar-track-transparent">
     {clients.map((client, index) => (
       <div
         key={index}
@@ -294,9 +299,31 @@ console.log("Test Client id----",clients)
             {client.patientHomeAssistance.join(", ")}
           </span>
         </p>
+         <p className="mt-2 text-sm leading-relaxed text-[#00695c] bg-[#f1faf8] px-3 py-2 rounded-xl">
+           Patient Type:{" "}
+          <span className="font-medium">
+            {client.patientType}
+          </span>
+        </p>
        <p className="text-sm font-medium mt-2 text-grey-600 border border-grey-600 px-3 py-1 rounded-lg inline-block cursor-pointer hover:bg-green-900 hover:text-white transition-all duration-200">
   Assign HCP&Nurse
 </p>
+<button className={`flex items-center gap-2 px-2 ${SearchOptions&&"bg-green-800 text-white"} py-2 mt-2 border border-grey-600 text-pink font-semibold rounded-xl shadow-md hover:cursor-pointer active:scale-95 transition-all duration-200`} onClick={()=>{setSearchOptions(!SearchOptions);setSearchFilter("")}}>
+  <Search className="w-4 h-4" />
+Find More About HCP
+</button>
+{SearchOptions&&
+<div className="flex flex-wrap gap-3 mt-2">
+  {["Experience", "Education", "Location"].map((each) => (
+    <p
+      key={each}
+      className="px-2 py-2 text-sm font-semibold text-gray-700 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:bg-gray-50 hover:text-green-700 cursor-pointer transition-all duration-200"
+      onClick={()=>UpdateNewSearchItem(each)}
+    >
+      {each}
+    </p>
+  ))}
+</div>}
 
       </div>
     ))}
@@ -365,13 +392,15 @@ console.log("Test Client id----",clients)
                       </div>
 
                       <h4 className="text-[9px] font-semibold text-gray-700 uppercase mt-1">Skills</h4>
-                      <div className="flex flex-wrap justify-center gap-[2px] mt-1">
-                        {allProfessionalSkills.map((skill: string, sidx: number) => {
+       
+
+                        <div className="flex flex-wrap justify-center gap-[1px] mt-1">
+                        {PROFESSIONAL_SKILL_OPTIONS.map((skill: string, sidx: number) => {
                           const hasSkill = hcp.ProfessionalSkills.includes(skill);
                           return (
                             <span
                               key={sidx}
-                              className={`text-[8px] px-2 py-1 rounded-full border ${hasSkill
+                              className={`text-[8px] px-1 py-1 rounded-full border ${hasSkill
                                 ? "bg-green-50 border-green-200 text-green-700"
                                 : "bg-red-50 border-red-200 text-red-600"
                                 }`}
@@ -381,6 +410,43 @@ console.log("Test Client id----",clients)
                           );
                         })}
                       </div>
+                      {SearchFilter==="Experience"&&
+                      <div>
+                                <h4 className="text-[9px] font-semibold text-gray-700 uppercase mt-1">Experiance</h4>
+                                   <div className="flex  flex-wrap justify-center gap-[4px] mt-1">
+  {["Bed Ridden", "Semi Bed Ridden", "Wheel Chair", "Full Mobile", "Post Operative"].map(
+    (skill: string, sidx: number) => {
+      const hasSkill = hcp.HandledSkills.includes(skill);
+      return (
+        <span
+          key={sidx}
+          className={`flex items-center gap-[2px] text-[8px] px-1 py-[2px] rounded-full border backdrop-blur-sm shadow-sm transition-all duration-300 
+            ${hasSkill
+              ? "bg-gradient-to-r from-green-50 to-green-100 border-green-200 text-green-700 hover:scale-105 hover:shadow-md"
+              : "bg-gradient-to-r from-red-50 to-red-100 border-red-200 text-red-700 hover:scale-105 hover:shadow-md"
+            }`}
+        >
+         
+          {skill}
+          <span
+            className={`ml-[1px] font-bold ${
+              hasSkill ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {hasSkill ? "✓" : "✖"}
+          </span>
+        </span>
+      );
+    }
+  )}
+</div> </div> }
+
+ {SearchFilter==="Location"&&
+ <p className='text-[10px] mt-2'>{hcp["Current Address"]}</p>
+ }
+
+  {SearchFilter==="Education"&&
+  <p className='text-[12px] mt-2'>{hcp["Professional Education"]}</p>}
                       <div className="mt-2 flex justify-center gap-2 flex-wrap">
                         {clients[0]?.SuitableHCP === hcp.UserId ? (
                           <button className="bg-green-600 text-white cursor-pointer px-3 py-1 rounded-full text-[10px] font-medium shadow-sm hover:bg-green-700 transition-colors" onClick={() => UpdateAssignHca(

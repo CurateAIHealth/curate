@@ -1387,3 +1387,83 @@ export const physioSpecializations = [
   "Balance and Vestibular Rehabilitation",
   "Pelvic Floor Physiotherapy"
 ];
+export const PDRspecialityOptions = [
+  'Neurological', 'Cardiological', 'Respiratory', 'Gastro', 'Surgery','Orthopedics', 'Other'
+]
+
+export  const treatmentOptions = [
+  'Medication', 'Hospital Visit', 'Physiotherapy', 'Nursing', 'Other'
+]
+
+
+export const mobilityAids = [
+  'Crutches', 'Wheelchair', 'Frame', 'Eye Glasses', 'Footwear', 'Hearing Aids', 'Call bell','Walking stick'
+]
+
+export const breathingEquipments = [
+  'CPAP', 'BIPAP', 'Home Oxygen', 'Nebuliser', 'Inhalers'
+]
+
+export const nutritionFeeds = [
+  'Independent', 'Prompt', 'PEG Feed', 'NG Feed', 'AO1', 'Swallowing Issue', 'Diabetic'
+]
+
+export const hygieneOptions = [
+  'Assistance Required', 'Independent', 'Supervised', 'Partially Dependent'
+]
+
+export const bedTypes = [
+  'Functional', 'Normal', 'Side rails', 'Air Mattress', 'Movable', 'Lifted', 'Any other special'
+]
+
+export const floorTypes = [
+  'Stone', 'Tiles', 'Wood', 'Carpet', 'Rubber', 'Polished/Slippery'
+]
+
+export const washroomAccessories = [
+  'Bell', 'Side Rails', 'Door Open Locking', 'Grab Bars', 'Anti-skid Mat', 'Shower Chair'
+]
+
+export const administerBy = ["Family", "HCP", "Independent", "Other"]
+
+export const  Allergiesoptions = [
+  "Vegan",
+  "Egg",
+  "Dairy",
+  "Citrus",
+  "Nuts",
+  "Gluten"
+];
+
+export const mealTimings = [
+  "Before Food",
+  "Breakfast",
+  "Mid Morning",
+  "Lunch",
+  "Dinner",
+  "After Food"
+];
+  export const DiabeticSpecifications=[
+  "Type 1 Diabetes",
+  "Type 2 Diabetes",
+  "Gestational Diabetes",
+  "Prediabetes",
+  "Monogenic Diabetes (MODY / Neonatal)",
+  "Secondary Diabetes"
+]
+
+export const FootItems=["Tea", "Coffee", "Hot Water", "Boiled Egg", "Sabudana", "Kichidi", "Maggie", "Chapathi", "Rice", "Curry", "OtherItem"]
+
+export const HygineOptions=["Daily", "As Needed", "Alternate day"]
+
+export const Vitals_Options=["As Required", "Morning", "Afternoon", "Evening", "Specify Time"]
+
+export const Mobility_excercise_Options=["Repeat", "Hold each time", "Sets"]
+
+export const Relations = [
+  "Father",
+  "Mother",
+  "Brother",
+  "Sister",
+  "Grandfather"
+];

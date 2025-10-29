@@ -75,7 +75,7 @@ const UserTypeFromGlobelState=useSelector((state:any)=>state.ViewHCPList)
     AadharNumber: each.AadharNumber,
     Age: each.Age,
     userType: each.userType,
-    Location: each.Location,
+    Location: each.Location||each.serviceLocation,
     Email: each.Email,
     Contact: each.ContactNumber,
     userId: each.userId,
@@ -85,7 +85,7 @@ const UserTypeFromGlobelState=useSelector((state:any)=>state.ViewHCPList)
     ClientStatus: each.ClientStatus,
     Status:each.Status
   }));
-
+console.log("Current Test Data-----",Finel)
  useEffect(() => {
      const Fetch = async () => {
        try {
@@ -132,6 +132,7 @@ const UserTypeFromGlobelState=useSelector((state:any)=>state.ViewHCPList)
        setuserType(e.target.value);
        setSearch("")
     }
+   
     setuserType(e.target.value);
   };
 
@@ -407,11 +408,11 @@ onClick={()=>UpdateNavigattosuggetions(user.userId)}
 
   
 
-  const handleLogout = () => {
- 
-    router.push('/DashBoard');
-     
-  };
+const handleLogout = () => {
+  router.push('/DashBoard'); 
+       
+};
+
 
   if (isChecking) {
     return (

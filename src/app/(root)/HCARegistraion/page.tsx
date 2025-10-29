@@ -1,9 +1,9 @@
 'use client';
 
 import HCAMobileView from '@/Components/HCAMobileView/page';
-import { PROFESSIONAL_SKILL_OPTIONS } from '@/Lib/Content';
-
-import { GetUserInformation, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
+import { PROFESSIONAL_SKILL_OPTIONS, Relations } from '@/Lib/Content';
+import { v4 as uuidv4 } from 'uuid';
+import { GetUserInformation, HCARegistration, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
 import { UpdateDocmentSkipReason } from '@/Redux/action';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
@@ -21,8 +21,22 @@ export default function DoctorProfileForm() {
   const [PictureUploading, setPictureUploading] = useState(false);
   const [UpdateingStatus, SetUpdateingStatus] = useState(true);
   const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
+    const [addedheight, setaddedheight] = useState();
+      const [addingWeight, setaddingWeight] = useState("");
   const [isChecking, setIsChecking] = useState(true);
+    const [siblings, setSiblings] = useState([
+    { relation: "Elder Brother", count: 0 },
+    { relation: "Younger Brother", count: 0 },
+    { relation: "Elder Sister", count: 0 },
+    { relation: "Younger Sister", count: 0 },
+    { relation: "Twin Sibling", count: 0 },
+  ]);
+
+
+    const userId = useSelector((state: any) => state?.UserDetails);
+  const CurrentUserType=useSelector((state:any)=>state.RegisteredUserType)
 interface FormState {
+  HomeAssistance: any;
   // title: any;
   firstName: any;
   surname: string;
@@ -34,8 +48,9 @@ interface FormState {
   maritalStatus: string;
   emailId: string;
   mobileNumber: string;
-
+earningSource:string,
   aadharCardNo: string;
+  OngoingStudy:string,
   panNumber: string;
   // voterIdNo?: string;
   // rationCardNo?: string;
@@ -43,7 +58,7 @@ interface FormState {
   currentAddress: string;
   cityPostcodePermanent: string;
   cityPostcodeCurrent: string;
-
+SiblingsInfo:any,
   higherEducation: string;
   higherEducationYearStart: string;
   higherEducationYearEnd: string;
@@ -52,7 +67,7 @@ interface FormState {
   professionalEducationYearEnd: string;
   registrationCouncil: string;
   registrationNo: string;
-  professionalSkill: string[];
+  professionalSkill: any;
   certifiedBy: string;
   professionalWork1: string;
   professionalWork2: string;
@@ -66,7 +81,7 @@ interface FormState {
   anyDeformity: string;
   moleBodyMark1: string;
   moleBodyMark2: string;
-
+HandledSkills:any,
   reportPreviousHealthProblems: string;
   reportCurrentHealthProblems: string;
 
@@ -112,87 +127,86 @@ interface FormState {
     AccountPassBook: '',
     CertificatOne: '',
     CertificatTwo: '',
-    VideoFile: ''
+    VideoFile: '',
+    BVR:''
   });
-  const [form, setForm] = useState<FormState>({
-    // title: '',
-    firstName: '',
-    surname: '',
-    fatherName: '',
-    motherName: '',
-    // husbandName: '',
-    gender: '',
-    dateOfBirth: '',
-    maritalStatus: '',
-    emailId: '',
-    mobileNumber: '',
+ const [form, setForm] = useState<FormState>({
+  firstName: 'Siddharth',
+  surname: 'Tiwari',
+  fatherName: 'Rajesh Tiwari',
+  motherName: 'Sunita Tiwari',
+  gender: 'Male',
+  dateOfBirth: '1995-08-12',
+  maritalStatus: 'Single',
+  emailId: 'siddharth.tiwari@example.com',
+  mobileNumber: '9876543210',
+  HomeAssistance: '',
+  earningSource: 'Father',
+  aadharCardNo: '1234-5678-9012',
+  panNumber: 'ABCDE1234F',
+  permanentAddress: '123, Green Park Colony, Indore, Madhya Pradesh',
+  currentAddress: '45, Sunrise Apartments, Bhopal, Madhya Pradesh',
+  cityPostcodePermanent: '452001',
+  cityPostcodeCurrent: '462001',
 
-    aadharCardNo: '',
-    panNumber: '',
-    // voterIdNo: '',
-    // rationCardNo: '',
-    permanentAddress: '',
-    currentAddress: '',
-    cityPostcodePermanent: '',
-    cityPostcodeCurrent: '',
+  higherEducation: 'B.Sc Nursing',
+  higherEducationYearStart: '2012',
+  higherEducationYearEnd: '2015',
+  professionalEducation: 'GNM Nursing',
+  professionalEducationYearStart: '2016',
+  professionalEducationYearEnd: '2019',
+  registrationCouncil: 'Madhya Pradesh Nursing Council',
+  registrationNo: 'MPNC2023N12345',
+  professionalSkill:"",
+  HandledSkills:'',
+  certifiedBy: 'All India Nursing Board',
+  professionalWork1: 'Apollo Hospitals, Indore',
+  professionalWork2: 'Fortis Healthcare, Bhopal',
+  experience: '5 Years',
 
-    higherEducation: '',
-    higherEducationYearStart: '',
-    higherEducationYearEnd: '',
-    professionalEducation: '',
-    professionalEducationYearStart: '',
-    professionalEducationYearEnd: '',
-    registrationCouncil: '',
-    registrationNo: '',
-      professionalSkill: [],
-    certifiedBy: '',
-    professionalWork1: '',
-    professionalWork2: '',
-    experience: '',
+  height: '',
+  weight: '',
+  hairColour: 'Black',
+  eyeColour: 'Brown',
+  complexion: 'Wheatish',
+  anyDeformity: 'None',
+  moleBodyMark1: 'Small mole on right cheek',
+  moleBodyMark2: 'Birthmark on left arm',
+  SiblingsInfo:siblings,
+  OngoingStudy: 'B.Sc (Nursing)',
+  reportPreviousHealthProblems: 'None',
+  reportCurrentHealthProblems: 'None',
 
-    height: '',
-    weight: '',
-    hairColour: '',
-    eyeColour: '',
-    complexion: '',
-    anyDeformity: '',
-    moleBodyMark1: '',
-    moleBodyMark2: '',
+  sourceOfReferral: 'Friend',
+  dateOfReferral: '2024-05-22',
+  reference1Name: 'Ankit Sharma',
+  reference1Aadhar: '1111-2222-3333',
+  reference1Mobile: '9988776655',
+  reference1Address: '15, Shivaji Nagar, Bhopal',
+  reference1Relationship: 'Colleague',
+  reference2Name: 'Neha Verma',
+  reference2Aadhar: '4444-5555-6666',
+  reference2Mobile: '8877665544',
+  reference2Address: '22, MG Road, Indore',
 
-    reportPreviousHealthProblems: '',
-    reportCurrentHealthProblems: '',
+  serviceHours12hrs: true,
+  serviceHours24hrs: false,
+  preferredService: 'Elderly Care',
+  paymentService: 'Monthly',
+  paymentBankName: 'State Bank of India',
+  paymentBankAccountNumber: '123456789012',
+  ifscCode: 'SBIN0000456',
+  bankBranchAddress: 'SBI Main Branch, Bhopal',
 
-    sourceOfReferral: '',
-    dateOfReferral: '',
-    reference1Name: '',
-    reference1Aadhar: '',
-    reference1Mobile: '',
-    reference1Address: '',
-    reference1Relationship: '',
-    reference2Name: '',
-    reference2Aadhar: '',
-    reference2Mobile: '',
-    reference2Address: '',
+  Bankbranchname: 'Main Branch',
+  Branchcity: 'Bhopal',
+  Branchstate: 'Madhya Pradesh',
+  Branchpincode: '462001',
 
-    serviceHours12hrs: false,
-    serviceHours24hrs: false,
-    preferredService: '',
-    paymentService: '',
-    paymentBankName: '',
-    paymentBankAccountNumber: '',
-    ifscCode: '',
-    bankBranchAddress: '',
-
-    Bankbranchname: '',
-    Branchcity: '',
-    Branchstate: '',
-    Branchpincode: '',
-
-    languages: '',
-    type: '',
-    specialties: '',
-    // website: '',
-  });
+  languages: 'Hindi, English',
+  type: 'HCA',
+  specialties: 'Geriatric Care',
+});
 
   const { serviceHours12hrs, serviceHours24hrs, ...restForm } = form;
 
@@ -240,19 +254,30 @@ interface FormState {
     },
     []
   );
-
+  const handleUpdteSiblings = (index:any, value:any) => {
+    const updated = [...siblings];
+    updated[index].count = Number(value);
+    setSiblings(updated);
+  };
   useEffect(() => {
     const Fetch = async () => {
       try {
-        const localValue = localStorage.getItem('UserId');
+       
+        const localValue = userId?userId:localStorage.getItem('UserId');
+          console.log("Test Currnent UserId-----",userId)
         if (!localValue) {
           console.warn('No UserId found in localStorage.');
           return;
         }
 
         const ProfileInformation = await GetUserInformation(localValue);
-
-        SetProfileName(ProfileInformation.FirstName);
+   
+      if ((!ProfileInformation&&CurrentUserType)||(ProfileInformation&&CurrentUserType)) {
+        console.warn("No user profile found for ID:", localValue);
+        setIsChecking(false);
+        return;
+      }
+        SetProfileName(ProfileInformation.FirstName||'');
         setIsChecking(false)
 
         setDocs((prev) => ({
@@ -268,8 +293,8 @@ interface FormState {
         setForm((prev) => ({
           ...prev,
           // title: ProfileInformation.Title || '',
-          firstName: ProfileInformation.FirstName,
-          surname: ProfileInformation.LastName,
+          firstName: ProfileInformation.FirstName|| '',
+          surname: ProfileInformation.LastName|| '',
           fatherName: ProfileInformation.FatherName || '',
           motherName: ProfileInformation.MotherName || '',
           // husbandName: ProfileInformation.HusbandName || '',
@@ -344,7 +369,32 @@ interface FormState {
     };
     Fetch();
   }, []);
+   const handleHeightChange = (field: string, value: string) => {
+    setForm((prev: any) => {
+      const updated = { ...prev, [field]: value };
+      
+      return updated;
+    });
+  }
   const handleSkillChange = (skill:any) => {
+    setForm((prev:any) => {
+      const skills:any = prev.HomeAssistance || [];
+      return skills.includes(skill)
+        ? { ...prev, HomeAssistance: skills.filter((s:any) => s !== skill) }
+        : { ...prev, HomeAssistance: [...skills, skill] };
+    });
+  };
+
+ 
+ const UpdateHandledSkills= (skill:any) => {
+    setForm((prev:any) => {
+      const skills:any = prev.HandledSkills || [];
+      return skills.includes(skill)
+        ? { ...prev, HandledSkills: skills.filter((s:any) => s !== skill) }
+        : { ...prev, HandledSkills: [...skills, skill] };
+    });
+  };
+  const handleprofessionalSkillChange = (skill:any) => {
     setForm((prev:any) => {
       const skills:any = prev.professionalSkill || [];
       return skills.includes(skill)
@@ -398,10 +448,26 @@ interface FormState {
     },
     []
   );
+ const AgeValue = () => {
+  if (!form.dateOfBirth) return ""; 
 
+  const dob = new Date(form.dateOfBirth);
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+
+  return age;
+};
    const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      if(CurrentUserType===null){
+        alert("UserType Not Selected")
+      }
       setTimeout(async() => {
         const dob = new Date(form.dateOfBirth);
         const today = new Date();
@@ -413,11 +479,11 @@ interface FormState {
           SetUpdateingStatus(true);
           return;
         }
-        if (completion !== 100) {
-          alert('Please complete all required fields to update your profile!');
-          SetUpdateingStatus(true);
-          return;
-        }
+        // if (completion !== 100) {
+        //   alert('Please complete all required fields to update your profile!');
+        //   SetUpdateingStatus(true);
+        //   return;
+        // }
         const requiredFields: (keyof typeof Docs)[] = [
           'ProfilePic',
           'PanCard',
@@ -435,8 +501,39 @@ interface FormState {
           return;
         }
         setUpdatedStatusMessage("Please Wait Updating.....")
-        const localValue = localStorage.getItem('UserId');
-        const FinelForm = { ...form, Documents: Docs, UserId: localValue, DocumentSkipReason: ReasonValue, userType: "HCA" };
+        const generatedUserId = uuidv4();
+        const localValue = userId?userId:localStorage.getItem('UserId');
+    
+   const UpdateUserType=CurrentUserType==="HCA"?"healthcare-assistant":CurrentUserType
+if (CurrentUserType) {
+ 
+  const payload: any = {
+    userType: UpdateUserType,
+    FirstName: form.firstName || "",
+    LastName: form.surname || "",
+    Gender: form.gender || "",
+    DateOfBirth: form.dateOfBirth || "",
+    MaritalStatus: form.maritalStatus || "",
+    Nationality: "Indian",
+    AadharNumber: form.aadharCardNo ? form.aadharCardNo.replace(/\s/g, "") : "",
+    Age: AgeValue() || "",
+    ContactNumber: form.mobileNumber || "",
+    Email: form.emailId || "",
+    Location: form.currentAddress || "",
+    Password: "",
+    userId: generatedUserId,
+    VerificationStatus: "Pending",
+    TermsAndConditions: true,
+    FinelVerification: true,
+    EmailVerification: false,
+  };
+const result: any = await HCARegistration(payload);
+if(result.success){
+console.log("Posting Data------------------------********8")
+}
+}
+
+        const FinelForm = { ...form, Documents: Docs, UserId: generatedUserId, DocumentSkipReason: ReasonValue, userType: CurrentUserType==="HCA"?"healthcare-assistant":CurrentUserType };
              console.log("Test Finel HCA FinelForm---",FinelForm)
       const PostResult = await PostHCAFullRegistration(FinelForm)
       const Result=await UpdateFinelVerification(localValue)
@@ -445,7 +542,7 @@ interface FormState {
 
        
         const Timer = setInterval(() => {
-          router.push("/SuccessfullyRegisterd")
+          router.push("/AdminPage")
         }, 1000)
         return () => clearInterval(Timer)
       }, 0);
@@ -495,7 +592,7 @@ interface FormState {
           </div>
 
           <div>
-            <h2 className="text-4xl font-extrabold text-white bg-[#50c896]  mb-6 text-center">{ProfileName}'s Profile</h2>
+            <h2 className="text-4xl font-extrabold text-white bg-[#50c896]  mb-6 text-center">{form.firstName}'s Profile</h2>
 
             <p className="text-gray-600 text-center mb-8">
               Fill in the details below to keep your profile accurate and up-to-date.
@@ -692,6 +789,82 @@ interface FormState {
                   required
                 />
               </div>
+            <h3 className="text-md font-semibold text-[#ff1493] mt-3 pb-3 border-b border-blue-200 flex items-center">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-6 w-6 mr-2 text-[#6366f1]"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-3.31 0-6 2.02-6 4.5V21h12v-2.5c0-2.48-2.69-4.5-6-4.5z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M19 21v-2a3 3 0 00-3-3h-.5M5 21v-2a3 3 0 013-3h.5"
+    />
+  </svg>
+  Family Background
+</h3>
+<div className="  rounded-2xl border border-gray-100">
+  <h3 className="flex justify-start text-grey-400 mb-2 text-center">
+    Earning Source
+  </h3>
+
+  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+    {Relations.map((each) => (
+      <div
+        key={each}
+        className="flex  items-center space-x-2 bg-white border hover:bg-indigo-100 p-2 rounded-lg transition-all duration-200"
+      >
+        <input
+          type="radio"
+          name="earningSource"
+          id={each}
+          value={each}
+          className="w-5 h-5 accent-indigo-600 cursor-pointer"
+          onChange={handleChange}
+        />
+        <label
+          htmlFor={each}
+          className="text-gray-700 font-medium text-[13px] cursor-pointer "
+        >
+          {each}
+        </label>
+      </div>
+    ))}
+  </div>
+  
+</div>
+<div className="mt-2  rounded-2xl border border-gray-100">
+  <h3 className="flex justify-start text-grey-400 mb-2 text-center">
+     Siblings
+  </h3>
+
+  <div className="space-y-3">
+    {siblings.map((each,index) => (
+      <div
+        key={index}
+        className="flex justify-between items-center border bg-gray-50 hover:bg-indigo-50 transition rounded-xl p-2"
+      >
+        <p className="text-gray-700 font-medium">{each.relation}</p>
+        <input
+          type="number"
+          placeholder="Count"
+          value={each.count}
+          onChange={(e)=>handleUpdteSiblings(index,e.target.value)}
+          className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        />
+      </div>
+    ))}
+  </div>
+</div>
+
             </section>
 
 
@@ -807,6 +980,42 @@ interface FormState {
                 </svg>
                 Education & Professional Experience
               </h3>
+           
+              {CurrentUserType==="HCA"?<div className="space-y-5">
+              
+             
+                <input
+                  type="text"
+                  name="registrationCouncil"
+                value={form.higherEducation||''}
+                  onChange={handleChange}
+                  placeholder="Higher Education ex:Tenth,inter"
+                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
+                />
+                <input
+                  type="text"
+                  name="registrationNo"
+                   value={form.professionalEducation||''}
+                  onChange={handleChange}
+                  placeholder="Profetional Qualification ex:GDA, ANM Etc....."
+                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
+                />
+              
+                <input
+                  type="text"
+                  name="certifiedBy"
+                  value={form.OngoingStudy||''}
+                  onChange={handleChange}
+                  placeholder="Ongoing Study Ex:ANM, GNM, BSC(Nurseig)"
+                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
+                />
+            
+               
+              
+              </div>:
               <div className="space-y-5">
                 <div>
                   <input
@@ -924,7 +1133,7 @@ interface FormState {
                   className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
                 />
-              </div>
+              </div>}
             </section>
 
 
@@ -947,24 +1156,101 @@ interface FormState {
                 Physical Attributes
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+           <div id="Patient Details" className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-3">
+          <h2 className="text-lg font-semibold text-teal-600">Height</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+            {["4.0", "5.0", "6.0"].map((h) => (
+              <label key={h} className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
                 <input
-                  type="text"
-                  name="height"
-                  value={form.height||''}
-                  onChange={handleChange}
-                  placeholder="Height (e.g., 5'8&quot; or 173cm)"
-                  className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
+                  type="radio"
+                  name="patientHeight"
+                  value={h}
+                  checked={
+                    Number(form.height) === Number(h) ||
+                    Number(form.height) === Number(h) + Number(addedheight)
+                  }
+                  onChange={ ()=>handleHeightChange("height", h)}
+                  className="mr-2 accent-purple-600"
                 />
+                {h} ft
+              </label>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 items-center justify-center">
+            {[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9].map((each: any) => (
+              <button
+                type="button"
+                key={each}
+                onClick={() => {
+                  setaddedheight(each);
+                  const current = parseFloat(form.height || "0") || 0;
+                  handleHeightChange("height", (current + each).toFixed(1));
+                }}
+                className="mt-3 px-2 py-1 bg-gray-500 text-white rounded-md text-[10px] sm:text-xs"
+              >
+                +{each} ft
+              </button>
+            ))}
+            {form.height&& (
+              <p className="mt-3 bg-pink-400 p-2 text-white rounded-md text-xs sm:text-sm">
+                {form.height}ft {CurrentUserType} Height
+              </p>
+            )}
+          </div>
+
+        
+        </div>
+        <p>{CurrentUserType}</p>
+              <div id="Patient Details" className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-3">
+          <h2 className="text-lg font-semibold text-teal-600">Weight</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+            {["<40","40", "50", "60", "70", "80", "90", "100", "110", "120", "120+"].map((w) => (
+              <label key={w} className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
                 <input
-                  type="text"
-                  name="weight"
-                  value={form.weight||''}
-                  onChange={handleChange}
-                  placeholder="Weight (e.g., 70kg)"
-                  className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
+                  type="radio"
+                  name="patientWeight"
+                  value={w}
+                  checked={
+                    Number(form.weight) === Number(w) ||
+                    Number(form.weight) === Number(w) + Number(addingWeight)||
+                   form.weight === w
+                
+                  }
+                  onChange={() => handleHeightChange("weight", w)}
+                
+                  className="mr-2 accent-purple-600"
                 />
+                {w} kg
+              </label>
+            ))}
+          </div>
+          {form.weight !== '<40' && form.weight !== '120+' &&
+          <div className="flex flex-wrap gap-2 items-center justify-center">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((each: any) => (
+              <button
+                type="button"
+                key={each}
+                onClick={() => {
+                  setaddingWeight(each);
+                  const current = parseInt(form.weight || "0", 10) || 0;
+                  handleHeightChange("weight", String(current + each));
+                }}
+                className="mt-3 px-2 py-1 bg-gray-400 text-white rounded-md text-[10px] sm:text-xs"
+              >
+                + {each} kg
+              </button>
+            ))}
+         
+          </div>}
+             {form.weight && (
+              <div className="flex justify-center">
+              <p className="mt-3 w-[200px] text-center bg-pink-400  p-2 text-white rounded-md text-xs sm:text-sm">
+                {form.weight}kg {CurrentUserType} Weight
+              </p>
+              </div>
+            )}
+       
+        </div>
                 <input
                   type="text"
                   name="hairColour"
@@ -1053,7 +1339,8 @@ interface FormState {
                   required
                 />
               </div>
-                    <section>
+                    <section className='flex items-center justify-between p-6 '>
+                      <div className='flex flex-col items-center justify-center'>
           <h3 className="text-md font-semibold mb-3">Professional Skills</h3>
         <div className="space-y-2">
   {PROFESSIONAL_SKILL_OPTIONS.map((skill) => (
@@ -1062,13 +1349,45 @@ interface FormState {
         type="checkbox"
         className="mr-2 accent-purple-600"
         checked={form.professionalSkill.includes(skill)||false}
+        onChange={() => handleprofessionalSkillChange(skill)}
+      />
+      {skill}
+    </label>
+  ))}
+</div>
+</div>
+ <div className='flex flex-col items-center justify-center'>
+   <h3 className="text-md font-semibold mb-3">Home Assistance</h3>
+        <div className="space-y-2">
+  {["Diaper", "Bathing", "Bedding", "Brushing"].map((skill) => (
+    <label key={skill} className="flex items-center text-sm">
+      <input
+        type="checkbox"
+        className="mr-2 accent-purple-600"
+        checked={form.HomeAssistance.includes(skill)||false}
         onChange={() => handleSkillChange(skill)}
       />
       {skill}
     </label>
   ))}
 </div>
-
+</div>
+ <div className='flex flex-col items-center justify-center'>
+   <h3 className="text-md font-semibold mb-3">Patient Types You Handled</h3>
+        <div className="space-y-2">
+  {["Bed Ridden", "Semi Bed Ridden", "Wheel Chair", "Full Mobile", "Post Operative"].map((skill) => (
+    <label key={skill} className="flex items-center text-sm">
+      <input
+        type="checkbox"
+        className="mr-2 accent-purple-600"
+        checked={form.HandledSkills.includes(skill)||false}
+        onChange={() => UpdateHandledSkills(skill)}
+      />
+      {skill}
+    </label>
+  ))}
+</div>
+</div>
         </section>
   
             </section>
@@ -1439,72 +1758,93 @@ interface FormState {
             <div className=" w-1/2 ">
               <h3 className="text-xl font-semibold text-[#ff1493] mb-4 border-b border-blue-300 pb-2" >Your Documents </h3>
 
-              <div className="flex flex-wrap sm:grid-cols-2 gap-2">
-                {['AdharCard', 'PanCard', 'CertificatOne', 'CertificatTwo', 'AccountPassBook'].map((docKey) => (
-                  <div
-                    key={docKey}
-                    className="flex flex-col items-center justify-between p-2 border border-blue-300 rounded-md bg-white bg-opacity-10 w-40 h-40"
-                  >
-                    {Docs[docKey as keyof typeof Docs] ? (
-                      <img
-                        src={Docs[docKey as keyof typeof Docs]}
-                        alt={docKey}
-                        className="w-24 h-24 object-cover rounded-md shadow-sm mb-2"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = DEFAULT_DOCUMENT_ICON;
-                        }}
-                      />
-                    ) : (
-                      <div className="w-24 h-24 bg-white bg-opacity-20 rounded-md flex items-center justify-center text-white text-opacity-70 mb-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-12 w-12"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                          />
-                        </svg>
-                      </div>
-                    )}
-                    <label
-                      htmlFor={docKey}
-                      className="cursor-pointer text-center flex-shrink-0 text-[9px] text-white bg-teal-600 hover:bg-teal-400 px-3 py-1 rounded-full transition-colors duration-300"
-                    >
-                      {Docs[docKey as keyof typeof Docs] ? 'Update' : 'Upload'}{' '}
-                      {docKey.replace(/([A-Z])/g, ' $1').replace('Card', ' Card').replace('Book', ' Book').trim()}
-                    </label>
-                    <input
-                      id={docKey}
-                      name={docKey}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-
-                    />
-                  </div>
-                ))}
-               
-               <div className='flex  flex-col gap-4 w-40 h-40 text-[12px]'>
-         <textarea
-  placeholder="Don’t have any of the listed documents? Please explain why."
-  name="field_message"
-  value={ReasonValue||''}
-onChange={(e:any)=>distpatch(UpdateDocmentSkipReason(e.target.value))}
+          <div className="flex flex-wrap sm:grid-cols-2 gap-2">
+  {['AdharCard', 'PanCard', 'CertificatOne', 'CertificatTwo', 'AccountPassBook', 'BVR'].map((docKey) => (
+    <div
+      key={docKey}
+      className="flex flex-col items-center justify-between p-2 border border-blue-300 rounded-md bg-white bg-opacity-10 w-40 h-40"
+    >
+ 
+      {Docs[docKey as keyof typeof Docs] ? (
+        docKey === 'BVR' ? (
   
-  rows={4} 
-  className="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
-/>
+          <div className="w-24 h-24 flex items-center justify-center bg-gray-100 rounded-md shadow-sm mb-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              className="w-12 h-12 text-red-500"
+            >
+              <path d="M12 0C8.686 0 6 2.686 6 6v12c0 3.314 2.686 6 6 6s6-2.686 6-6V6c0-3.314-2.686-6-6-6zm3 18h-6v-2h6v2zm0-4h-6v-2h6v2zm0-4h-6V8h6v2z" />
+            </svg>
+          </div>
+        ) : (
+          // For others → show image
+          <img
+            src={Docs[docKey as keyof typeof Docs]}
+            alt={docKey}
+            className="w-24 h-24 object-cover rounded-md shadow-sm mb-2"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = DEFAULT_DOCUMENT_ICON;
+            }}
+          />
+        )
+      ) : (
+        // Placeholder if no file uploaded yet
+        <div className="w-24 h-24 bg-white bg-opacity-20 rounded-md flex items-center justify-center text-white text-opacity-70 mb-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-12 w-12"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+            />
+          </svg>
+        </div>
+      )}
 
-                <button  className="cursor-pointer text-center flex-shrink-0 text-[9px] text-white bg-teal-600 hover:bg-teal-400 px-3 py-1 rounded-full transition-colors duration-300">Submit Your Explanation</button>
-               </div>
-              </div>
+ 
+      <label
+        htmlFor={docKey}
+        className="cursor-pointer text-center flex-shrink-0 text-[9px] text-white bg-teal-600 hover:bg-teal-400 px-3 py-1 rounded-full transition-colors duration-300"
+      >
+        {Docs[docKey as keyof typeof Docs] ? 'Update' : 'Upload'}{' '}
+        {docKey.replace(/([A-Z])/g, ' $1').replace('Card', ' Card').replace('Book', ' Book').trim()}
+      </label>
+
+
+      <input
+        id={docKey}
+        name={docKey}
+        type="file"
+        accept={docKey === 'BVR' ? 'application/pdf' : 'image/*'} // 👈 Only allow PDFs for BVR
+        onChange={handleImageChange}
+        className="hidden"
+      />
+    </div>
+  ))}
+
+  <div className="flex flex-col gap-4 w-40 h-40 text-[12px]">
+    <textarea
+      placeholder="Don’t have any of the listed documents? Please explain why."
+      name="field_message"
+      value={ReasonValue || ''}
+      onChange={(e: any) => distpatch(UpdateDocmentSkipReason(e.target.value))}
+      rows={4}
+      className="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
+    />
+    <button className="cursor-pointer text-center flex-shrink-0 text-[9px] text-white bg-teal-600 hover:bg-teal-400 px-3 py-1 rounded-full transition-colors duration-300">
+      Submit Your Explanation
+    </button>
+  </div>
+</div>
+
               
             </div>
           </section>

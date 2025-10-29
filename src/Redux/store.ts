@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import {RefreshCount,FullHCPList, Admin_Main_Filter, DocReason, HCAList, LoadingClient, PreviedComponent, SUbHeadings, Submmision_Client_Status, Suitable_HCP, TaskOne, UserIdValue, UserInformation } from "./reducer";
+import {UserType,RefreshCount,FullHCPList, Admin_Main_Filter, DocReason, HCAList, LoadingClient, PreviedComponent, SUbHeadings, Submmision_Client_Status, Suitable_HCP, TaskOne, UserIdValue, UserInformation, Medication, FullInfo } from "./reducer";
 
 export const store = configureStore({
     reducer: {
@@ -15,6 +15,9 @@ export const store = configureStore({
         Suggested_HCP:Suitable_HCP,
         Submitted_Current_Status:Submmision_Client_Status,
         updatedCount:RefreshCount,
-        ViewHCPList:FullHCPList
+        ViewHCPList:FullHCPList,
+        MedicationInfo:Medication,
+        RegisterdUsersFullInformation:FullInfo,
+        RegisteredUserType:UserType
     }
 })

@@ -19,9 +19,12 @@ console.log("Current UserId----",userId)
     const fetchUserInfo = async () => {
       try {
          
-        const IntialValues=await GetUserInformation(userId);
+       
      
-
+  const [IntialValues, result] = await Promise.all([
+        GetUserInformation(userId),
+        GetUserCompliteInformation(userId),
+      ]);
      
         if(IntialValues.userType==="patient"&&!IntialValues.FinelVerification){
           Router.push("/PatientInformation")
@@ -32,12 +35,13 @@ console.log("Current UserId----",userId)
           Router.push("/HCARegistraion")
           return
         }
-        const result = await GetUserCompliteInformation(userId);
         
+     
+          console.log("Test UserType---",result)
     
        
         const userInfo = result.HCAComplitInformation;
-        console.log("Test UserType---",userInfo)
+      
         if (userInfo?.userType) {
           setUserType(userInfo.userType);
         } else {
@@ -65,6 +69,7 @@ console.log("Current UserId----",userId)
   const renderUserComponent = () => {
     switch (userType) {
       case "HCA":
+        case "healthcare-assistant":
         return <UserDetail />;
       case "patient":
         return <AdminDashboard/>

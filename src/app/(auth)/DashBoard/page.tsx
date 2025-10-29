@@ -13,6 +13,10 @@ import {
   UserX,
   Eye,
   Wallet,
+  Building2,
+  FileCheck,
+  FileText,
+  GraduationCap,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
@@ -29,6 +33,7 @@ const fetcher = async () => {
   const data = await GetRegidterdUsers();
   return data;
 };
+
 
 const tabs = [
   {
@@ -80,7 +85,38 @@ const tabs = [
     icon: UserPlus,
     color: "bg-gradient-to-tr from-sky-500 to-cyan-600",
   },
+
+  
+  {
+    name: "Vendors",
+    count: 24,
+    growth: "+6%",
+    icon: Building2,
+    color: "bg-gradient-to-tr from-purple-500 to-indigo-600",
+  },
+  {
+    name: "Training",
+    count: 14,
+    growth: "+10%",
+    icon: GraduationCap,
+    color: "bg-gradient-to-tr from-emerald-500 to-teal-600",
+  },
+  {
+    name: "Document Compliance",
+    count: 8,
+    growth: "+3%",
+    icon: FileCheck,
+    color: "bg-gradient-to-tr from-yellow-500 to-orange-600",
+  },
+  {
+    name: "Registration",
+    count: 19,
+    growth: "+7%",
+    icon: FileText,
+    color: "bg-gradient-to-tr from-fuchsia-500 to-pink-600",
+  },
 ];
+
 
 export default function Dashboard() {
   const router = useRouter();
@@ -115,7 +151,17 @@ export default function Dashboard() {
      router.prefetch("/AdminPage");
     router.push("/AdminPage");
   };
-
+  const Switching = (A: any) => {
+    switch (A) {
+      case "Client Enquiry":
+      case "Deployment":
+        return RoutToAdminPage(A)
+      case "Registration":
+        return router.push('/UserTypeRegistration');
+      default:
+        return null
+    }
+  }
   const UpdateNewLead = async () => {
      router.prefetch("/NewLead");
     router.push("/NewLead");
@@ -180,10 +226,10 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Main Section */}
+    
         <main className="p-4 sm:p-2 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 space-y-6">
-            {/* Dashboard Tabs */}
+       
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
               {tabs.map((tab, index) => (
                 <motion.div
@@ -203,16 +249,13 @@ export default function Dashboard() {
                   <p
                     className="mt-2 sm:mt-3 text-xs sm:text-sm hover:underline font-semibold cursor-pointer text-gray-900 text-center"
                     onClick={
-                      tab.name === "Client Enquiry" ||
-                      tab.name === "Deployment"
-                        ? () => RoutToAdminPage(tab.name)
-                        : undefined
+                     ()=>Switching(tab.name)
                     }
                   >
                     {tab.name}
                   </p>
 
-                  {/* Count Tooltip */}
+             
                   <div className="relative group inline-block">
                     <h2 className="text-base sm:text-lg font-bold text-gray-700 mt-1 cursor-pointer">
                       {tab.count.toLocaleString()}
