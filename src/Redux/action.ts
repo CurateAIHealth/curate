@@ -92,3 +92,25 @@ export const UpdateUserType=(CurrentUser:any)=>{
         payload:CurrentUser
     }
 }
+
+
+export const UpdateMedication=(UpdatedMedicatioValue:any)=>{
+    return{
+        type:"CurrentMedicationValue",
+        payload:UpdatedMedicatioValue
+    }
+}
+
+export const UpdateFetchedInformation=(UpdatedFetchedInfo:any)=>{
+    return{
+        type:"UpdateFullInfo",
+        payload:UpdatedFetchedInfo
+    }
+}
+
+export const UpdateRegisterdType=(CurrentUserType:any)=>{
+    return{
+        type:"UpdateRegisterdUserType",
+        payload:CurrentUserType
+    }
+}

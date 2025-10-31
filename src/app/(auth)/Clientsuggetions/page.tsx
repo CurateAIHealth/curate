@@ -62,9 +62,11 @@ setClients(Filter_Data)
 );
 
 const filterHCP = filterProfilePic.filter(
-  (each: any) => each && each.userType === "HCA" && each.ProfessionalSkills
+  (each: any) => each && each.userType === "HCA"||each.userType === "healthcare-assistant" && each.ProfessionalSkills||each['Professional Skill']
 );
 
+
+console.log('Curret Test Stagwe----',filterHCP)
 
       setHCP(filterHCP);
 

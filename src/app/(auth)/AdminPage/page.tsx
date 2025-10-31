@@ -44,6 +44,7 @@ export default function UserTableList() {
 const UpdateMainFilter=useSelector((state:any)=>state.Main_Filter)
 const CurrentClientStatus=useSelector((state:any)=>state.Submitted_Current_Status)
 const UserTypeFromGlobelState=useSelector((state:any)=>state.ViewHCPList)
+const CurrentCount=useSelector((state:any)=>state.updatedCount)
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
     setUpdatedStatusMsg(`Updating ${first} Contact Status....`);
     try {
@@ -75,7 +76,7 @@ const UserTypeFromGlobelState=useSelector((state:any)=>state.ViewHCPList)
     AadharNumber: each.AadharNumber,
     Age: each.Age,
     userType: each.userType,
-    Location: each.Location,
+    Location: each.Location||each.serviceLocation,
     Email: each.Email,
     Contact: each.ContactNumber,
     userId: each.userId,
@@ -85,7 +86,7 @@ const UserTypeFromGlobelState=useSelector((state:any)=>state.ViewHCPList)
     ClientStatus: each.ClientStatus,
     Status:each.Status
   }));
-
+console.log("Current Test Data-----",Finel)
  useEffect(() => {
      const Fetch = async () => {
        try {
@@ -132,6 +133,7 @@ const UserTypeFromGlobelState=useSelector((state:any)=>state.ViewHCPList)
        setuserType(e.target.value);
        setSearch("")
     }
+   
     setuserType(e.target.value);
   };
 
@@ -149,7 +151,7 @@ useEffect(() => {UpdateAssignHca
   if (UpdateMainFilter === "Client Enquiry") {
     setSearch(""); 
   }
-}, [UpdateMainFilter]);
+}, [UpdateMainFilter,CurrentCount]);
 
   const UpdateMainFilterValues = () => {
     switch (UpdateMainFilter) {
@@ -407,11 +409,11 @@ onClick={()=>UpdateNavigattosuggetions(user.userId)}
 
   
 
-  const handleLogout = () => {
- 
-    router.push('/DashBoard');
-     
-  };
+const handleLogout = () => {
+  router.push('/DashBoard'); 
+       
+};
+
 
   if (isChecking) {
     return (

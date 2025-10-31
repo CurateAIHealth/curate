@@ -390,97 +390,136 @@ export const UpdatePatientInformation = async (Patient: {
     throw error;
   }
 };
-export const UpdateNewLeadInformation = async (Patient: {
-  userType:any
-  clientName: string;
-  clientPhone: string;
-  clientEmail: string;
-  patientName: string;
-  patientPhone: string;
-  MainpointforPatient: string;
-  MainpointforPatientInfo: string;
-  Source: string;
-  patientAge: string;
-  patientGender: string[];
-  patientWeight: string;
-  patientHeight: string;
-  comfortableLanguages: string[];
-  patientType: string[];
-  patientCurrentLocation: string[];
-  serviceLocation: string;
-  patientHomeAssistance: string[];
-  patientHomeNeeds: string[];
-  patientDrNeeds: string[];
-  patientHealthCard: string[];
-  hcpType: string[];
-    PhysiotherapySpecialisation:any,
-     MedicalDrSpecialisation:any,
-     RelationtoPatient:any,
-     RemainderTime:any,
-     RemainderDate:any,
-  serviceCharges: string;
-  AdditionalComments: string;
-  VerificationStatus: string;
-  TermsAndConditions: string;
-  EmailVerification: boolean;
-  FinelVerification: boolean;
-  SuitableHCP:string;
-  ClientStatus: string;
-  userId: string;
-
-}) => {
+export const UpdateNewLeadInformation = async (FinelPostingData: any) => {
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
-
- 
-
-
+ const encryptIfExists = (value: string | undefined | null) =>
+      value ? encrypt(value) : null;
     const encryptedData = {
-      userType: Patient.userType,
-      FirstName:Patient.clientName? encrypt(Patient.clientName):null,
-      ContactNumber:Patient.clientPhone? encrypt(Patient.clientPhone):null,
-      Email:Patient.clientEmail? encrypt(Patient.clientEmail):null,
-      patientName:Patient.patientName? encrypt(Patient.patientName):null,
-      patientPhone:Patient.patientPhone? encrypt(Patient.patientPhone):null,
-      MainpointforPatient: Patient.MainpointforPatient,
-      MainpointforPatientInfo:Patient.MainpointforPatientInfo? encrypt(Patient.MainpointforPatientInfo):null,
-      Source:Patient.Source? encrypt(Patient.Source):null,
-      patientAge: Patient.patientAge,
-      patientGender: Patient.patientGender,
-      patientWeight: Patient.patientWeight,
-      patientHeight: Patient.patientHeight,
-      comfortableLanguages: Patient.comfortableLanguages,
-      patientType: Patient.patientType,
-      PhysiotherapySpecialisation:Patient.PhysiotherapySpecialisation,
-      MedicalDrSpecialisation:Patient.MedicalDrSpecialisation,
-      patientCurrentLocation: Patient.patientCurrentLocation,
-      RelationtoPatient:Patient.RelationtoPatient,
-      Location:Patient.serviceLocation? encrypt(Patient.serviceLocation):null,
-      patientHomeAssistance: Patient.patientHomeAssistance,
-      patientHomeNeeds: Patient.patientHomeNeeds,
-      patientDrNeeds: Patient.patientDrNeeds,
-      patientHealthCard: Patient.patientHealthCard,
-      hcpType: Patient.hcpType,
-      serviceCharges: Patient.serviceCharges,
-       RemainderTime:Patient.RemainderTime,
-     RemainderDate:Patient.RemainderDate,
-      AdditionalComments: Patient.AdditionalComments,
-SuitableHCP:Patient.SuitableHCP,
-
-   
-   
-
-
-      VerificationStatus: Patient.VerificationStatus,
-      TermsAndConditions: Patient.TermsAndConditions,
-      EmailVerification: Patient.EmailVerification,
-      FinelVerification: Patient.FinelVerification,
-      ClientStatus: Patient.ClientStatus,
-
-      userId: Patient.userId,
-
+      userType: FinelPostingData.userType,
+      FirstName: encryptIfExists(FinelPostingData.clientName),
+      ContactNumber: encryptIfExists(FinelPostingData.clientPhone),
+      Email: encryptIfExists(FinelPostingData.clientEmail),
+      patientName: encryptIfExists(FinelPostingData.patientName),
+      patientPhone: encryptIfExists(FinelPostingData.patientPhone),
+      AbhaId: FinelPostingData.AbhaId,
+      RelationtoPatient: FinelPostingData.RelationtoPatient,
+      MainpointforPatient: FinelPostingData.MainpointforPatient,
+      MainpointforPatientInfo: encryptIfExists(FinelPostingData.MainpointforPatientInfo),
+      Source: encryptIfExists(FinelPostingData.Source),
+      NewLead: FinelPostingData.NewLead,
+      patientAge: FinelPostingData.patientAge,
+      patientGender: FinelPostingData.patientGender,
+      patientWeight: FinelPostingData.patientWeight,
+      patientHeight: FinelPostingData.patientHeight,
+      comfortableLanguages: FinelPostingData.comfortableLanguages,
+      patientType: FinelPostingData.patientType,
+      patientCurrentLocation: FinelPostingData.patientCurrentLocation,
+      serviceLocation: encryptIfExists(FinelPostingData.serviceLocation),
+      patientHomeAssistance: FinelPostingData.patientHomeAssistance,
+      Gloves_Availability: FinelPostingData.Gloves_Availability,
+      patientHomeNeeds: FinelPostingData.patientHomeNeeds,
+      patientDrNeeds: FinelPostingData.patientDrNeeds,
+      patientHealthCard: FinelPostingData.patientHealthCard,
+      hcpType: FinelPostingData.hcpType,
+      PhysiotherapySpecialisation: FinelPostingData.PhysiotherapySpecialisation,
+      MedicalDrSpecialisation: FinelPostingData.MedicalDrSpecialisation,
+      PatientBathRoomCleaning: FinelPostingData.PatientBathRoomCleaning,
+      HydrationWaterLevel: FinelPostingData.HydrationWaterLevel,
+      DocterAdvisedHydrationWaterLevel: FinelPostingData.DocterAdvisedHydrationWaterLevel,
+      Patient_Indipendent_Elimination: FinelPostingData.Patient_Indipendent_Elimination,
+      Comode: FinelPostingData.Comode,
+      Diaper: FinelPostingData.Diaper,
+      Urine: FinelPostingData.Urine,
+      Juice: FinelPostingData.Juice,
+      Doabatic: FinelPostingData.Doabatic,
+      DoabaticPlan: FinelPostingData.DoabaticPlan,
+      DiabeticSpecification: FinelPostingData.DiabeticSpecification,
+      FoodPreparation: FinelPostingData.FoodPreparation,
+      FoodPreparationInputs: FinelPostingData.FoodPreparationInputs,
+      Allergies: FinelPostingData.Allergies,
+      AllergyOption: FinelPostingData.AllergyOption,
+      FoodItem: FinelPostingData.FoodItem,
+      SpecialFoodItem: FinelPostingData.SpecialFoodItem,
+      PatientBathing: FinelPostingData.PatientBathing,
+      PatientClothes: FinelPostingData.PatientClothes,
+      HairWash: FinelPostingData.HairWash,
+      NailCare: FinelPostingData.NailCare,
+      Dressing_Grooming: FinelPostingData.Dressing_Grooming,
+      Assisting_in_suctioning: FinelPostingData.Assisting_in_suctioning,
+      PassiveExercises: FinelPostingData.PassiveExercises,
+      ActiveExercises: FinelPostingData.ActiveExercises,
+      ResistedExercises: FinelPostingData.ResistedExercises,
+      Walking: FinelPostingData.Walking,
+      AssistanceRequire: FinelPostingData.AssistanceRequire,
+      HIV: FinelPostingData.HIV,
+      serviceCharges: FinelPostingData.serviceCharges,
+      PatientRoomCleaning: FinelPostingData.PatientRoomCleaning,
+      Brushing_FaceFash: FinelPostingData.Brushing_FaceFash,
+      BedMaking: FinelPostingData.BedMaking,
+      AdditionalComments: FinelPostingData.AdditionalComments,
+      Hygiene: FinelPostingData.Hygiene,
+      Nutrition: FinelPostingData.Nutrition,
+      Vitals: FinelPostingData.Vitals,
+      Elimination: FinelPostingData.Elimination,
+      Mobility: FinelPostingData.Mobility,
+      Medication: FinelPostingData.Medication,
+      RemainderTime: FinelPostingData.RemainderTime,
+      RemainderDate: FinelPostingData.RemainderDate,
+      ClientCardRemarks: FinelPostingData.ClientCardRemarks,
+      PatientCardCardRemarks: FinelPostingData.PatientCardCardRemarks,
+      PatientDetailsCardRemarks: FinelPostingData.PatientDetailsCardRemarks,
+      Hygieneremarks: FinelPostingData.Hygieneremarks,
+      Nutritionremarks: FinelPostingData.Nutritionremarks,
+      Vitalsremarks: FinelPostingData.Vitalsremarks,
+      Eliminationremarks: FinelPostingData.Eliminationremarks,
+      Mobilityremarks: FinelPostingData.Mobilityremarks,
+      WeightRemarks: FinelPostingData.WeightRemarks,
+      HeightRemarks: FinelPostingData.HeightRemarks,
+      patientHomeAssistanceRemarks: FinelPostingData.patientHomeAssistanceRemarks,
+      patientHomeNeedsRemarks: FinelPostingData.patientHomeNeedsRemarks,
+      patientDrNeedsRemarks: FinelPostingData.patientDrNeedsRemarks,
+      patientHealthCardRemarks: FinelPostingData.patientHealthCardRemarks,
+      hcpTypeRemarks: FinelPostingData.hcpTypeRemarks,
+      Current_Previous_Occupation: FinelPostingData.Current_Previous_Occupation,
+      Hobbies: FinelPostingData.Hobbies,
+      Present_Illness: FinelPostingData.Present_Illness,
+      Speciality_Areas: FinelPostingData.Speciality_Areas,
+      OnGoing_Treatment: FinelPostingData.OnGoing_Treatment,
+      Balance: FinelPostingData.Balance,
+      FunctionalAssessmentsRemarks:FinelPostingData.FunctionalAssessmentsRemarks,
+      EquipmentRemark:FinelPostingData.EquipmentRemark,
+      History_of_Fall: FinelPostingData.History_of_Fall,
+      Hearing_Loss: FinelPostingData.Hearing_Loss,
+      Visual_Impairment: FinelPostingData.Visual_Impairment,
+      Depression: FinelPostingData.Depression,
+      Temperature:FinelPostingData.Temperature,
+     Pulse:FinelPostingData.Pulse,
+     OxygenSaturation:FinelPostingData.OxygenSaturation, 
+    BloodPressure:FinelPostingData.BloodPressure,
+      Confusion: FinelPostingData.Confusion,
+      Frequent_Urination: FinelPostingData.Frequent_Urination,
+      Sleep_Issues: FinelPostingData.Sleep_Issues,
+      Anxiety: FinelPostingData.Anxiety,
+      Mobility_Aids: FinelPostingData.Mobility_Aids,
+      Breathing_Equipment: FinelPostingData.Breathing_Equipment,
+      Feeding_Method: FinelPostingData.Feeding_Method,
+      Floor_Type: FinelPostingData.Floor_Type,
+      Washroom_Accessories: FinelPostingData.Washroom_Accessories,
+      PhysioScore: FinelPostingData.PhysioScore,
+PresentHealthRemarks:FinelPostingData.PresentHealthRemarks,
+TreatmentRemarks:FinelPostingData.TreatmentRemarks,
+      VerificationStatus: FinelPostingData.VerificationStatus,
+      TermsAndConditions: FinelPostingData.TermsAndConditions,
+      EmailVerification: FinelPostingData.EmailVerification,
+      FinelVerification: FinelPostingData.FinelVerification,
+      ClientStatus: FinelPostingData.ClientStatus,
+      Medications: FinelPostingData.Medications,
+      userId: FinelPostingData.userId,
+      SuitableHCP: FinelPostingData.SuitableHCP,
+      TimeStampInfo: FinelPostingData.TimeStamp,
       createdAt: new Date().toISOString(),
     };
 
@@ -488,13 +527,16 @@ SuitableHCP:Patient.SuitableHCP,
 
     return {
       success: true,
-      message: "Your Lead Registration Completed",
+      message: "Lead Registration Completed Successfully ✅",
       insertedId: result.insertedId.toString(),
     };
   } catch (error) {
-    throw error;
+    console.error("Error inserting patient data:", error);
+    throw new Error("Failed to register lead information.");
   }
 };
+
+
 
 
 export const UpdatePatientRegisterCollection=async(UserIdFromLocal: any, Info: any)=>{
@@ -765,6 +807,9 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "Gender": Info.gender,
       "Date of Birth": Info.dateOfBirth,
       "Marital Status": Info.maritalStatus,
+      
+      'SiblingsInfo':Info.SiblingsInfo,
+      'earningSource':Info.earningSource,
 
     
       "EmailId": encrypt(Info.emailId),
@@ -788,10 +833,11 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "Professional Education Year Start": Info.professionalEducationYearStart,
       "Professional Education Year End": Info.professionalEducationYearEnd,
 
-    
+      "HomeAssistance":Info.HomeAssistance,
       "Registration Council": Info.registrationCouncil,
       "Registration No": Info.registrationNo,
-      "Professional Skill": Info.professionalSkill,
+      "ProfessionalSkills": Info.professionalSkill,
+      "HandledSkills":Info.HandledSkills,
       "Certified By": Info.certifiedBy,
       "Professional Work 1": Info.professionalWork1,
       "Professional Work 2": Info.professionalWork2,
@@ -1289,6 +1335,7 @@ export const UpdateClientComplitInformation = async (UserIdFromLocal: any, Info:
 };
 
 export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: any) => {
+
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
@@ -1340,7 +1387,7 @@ export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: an
   "Professional Education Year End": Info.professionalEducationYearEnd || null,
   "Registration Council": Info.registrationCouncil || null,
   "Registration No": Info.registrationNo || null,
-  "Professional Skill": Info.professionalSkill || null,
+  "Professional Skill": Info.ProfetionSkill || null,
   "Certified By": Info.certifiedBy || null,
 
   
@@ -1710,3 +1757,18 @@ export const UpdateRemainderTimer = async (UserId: any, NewTime: string, NewDate
   }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

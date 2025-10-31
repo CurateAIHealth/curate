@@ -6,7 +6,8 @@ import axios from 'axios';
 import { GetHCACompliteInformation, GetUserCompliteInformation, GetUserInformation, UpdateClientComplitInformation, UpdateHCAComplitInformation } from '@/Lib/user.action';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import { X } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
+import { PROFESSIONAL_SKILL_OPTIONS } from '@/Lib/Content';
 
 
 const TABS = ['Personal Info', 'Bank Details', 'Documents', 'Work Experience', 'Identifiers'];
@@ -59,6 +60,7 @@ const UserDetail = () => {
 const [loadingDocs, setLoadingDocs] = useState<Record<string, boolean>>({});
 const [SubmitstatusMessage,setSubmitstatusMessage]=useState("")
   const [isChecking, setIsChecking] = useState(true);
+  const [ProfetionlSkillsEdit,setProfetionlSkillsEdit]=useState(false)
 const Router=useRouter()
 const ImportedUserId=useSelector((state:any)=>state.UserDetails)
 const NameoftheClient=useSelector((state:any)=>state.ClientName)
@@ -150,7 +152,7 @@ useEffect(()=>{
   paymentService: FilterValue["Payment Service"] || "",
   preferredService: FilterValue["Preferred Service"] || "",
   DocumentSkipReason: FilterValue["DocumentSkipReason"] || "",
-  ProfetionSkill:FilterValue.ProfessionalSkills,
+  ProfetionSkill:FilterValue['Professional Skill']||FilterValue.ProfessionalSkills||'',
 
     Documents: {
           ...prev.Documents,
@@ -248,15 +250,44 @@ setSubmitstatusMessage("Profile Updated Succesfully")
       </div>
     );
   }
+  const handleprofessionalSkillChange = (skill:any) => {
+    setUser((prev:any) => {
+      const skills:any = prev.ProfetionSkill || [];
+      return skills.includes(skill)
+        ? { ...prev, ProfetionSkill: skills.filter((s:any) => s !== skill) }
+        : { ...prev, ProfetionSkill: [...skills, skill] };
+    });
+  };
+
   const renderTabContent = () => {
   switch (activeTab) {
     case 'Personal Info':
       return (
         <div>
             <div className="p-4 mb-2 bg-white rounded-2xl shadow-md border border-gray-200">
-            <label className="block text-gray-700 font-semibold mb-2 text-lg">
+              <div className='flex justify-between'>
+  <label className="block text-gray-700 font-semibold mb-2 text-lg">
               Profession Skills:
             </label>
+
+            {ProfetionlSkillsEdit?<p onClick={()=>setProfetionlSkillsEdit(!ProfetionlSkillsEdit)} className='border p-1 text-green-800 cursor-pointer h-8 shadow-lg rounded-md'>Save</p>: <Pencil className='cursor-pointer h-5 w-5' onClick={()=>setProfetionlSkillsEdit(!ProfetionlSkillsEdit)}/>}
+          
+              </div>
+          
+          {ProfetionlSkillsEdit?<div className="flex flex-wrap gap-2">
+               {PROFESSIONAL_SKILL_OPTIONS.map((skill) => (
+                 <label key={skill} className="flex items-center text-sm">
+                   <input
+                     type="checkbox"
+                     className="mr-2 accent-purple-600"
+                     checked={user.ProfetionSkill.includes(skill)||false}
+                     onChange={() => handleprofessionalSkillChange(skill)}
+                   />
+                   {skill}
+                 </label>
+               ))}
+             
+            </div>:
             <div className="flex flex-wrap gap-2">
               {user.ProfetionSkill?.map((each: any, index: any) => (
                 <span
@@ -266,7 +297,8 @@ setSubmitstatusMessage("Profile Updated Succesfully")
                   {each}
                 </span>
               ))}
-            </div>
+             
+            </div>}
           </div>
        
         <div className="grid md:grid-cols-2 gap-4">
@@ -408,7 +440,7 @@ console.log("Data of Birth---",user.dateOfBirth)
   </div>
 
  
-  <button className="bg-teal-600 p-2 text-white rounded-md" onClick={UpdatewithNewData}>
+  <button className="bg-teal-600 p-2 text-white rounded-md cursor-pointer" onClick={UpdatewithNewData}>
     Update Profile
   </button>
 </div>
