@@ -733,12 +733,12 @@ function FieldItem({
   onChange,
   multiple = false,
 }: {
-  label: string;
-  options: string[];
+  label: any;
+  options: any[];
   selected: any;
-  editable: boolean;
+  editable: any;
   onChange: (val: any) => void;
-  multiple?: boolean;
+  multiple?: any;
 })=> {
   const [otherValue, setOtherValue] = useState("");
 
