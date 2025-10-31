@@ -725,7 +725,7 @@ function FieldItem({
 
 
 
- function CheckboxGroup({
+ const CheckboxGroup= ({
   label,
   options,
   selected,
@@ -739,7 +739,7 @@ function FieldItem({
   editable: boolean;
   onChange: (val: any) => void;
   multiple?: boolean;
-}) {
+})=> {
   const [otherValue, setOtherValue] = useState("");
 
   // Initialize otherValue if selected contains a custom value
