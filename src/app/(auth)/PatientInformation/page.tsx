@@ -725,7 +725,7 @@ function FieldItem({
 
 
 
-export function CheckboxGroup({
+ function CheckboxGroup({
   label,
   options,
   selected,
