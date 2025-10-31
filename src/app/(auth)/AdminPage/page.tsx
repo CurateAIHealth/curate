@@ -44,6 +44,7 @@ export default function UserTableList() {
 const UpdateMainFilter=useSelector((state:any)=>state.Main_Filter)
 const CurrentClientStatus=useSelector((state:any)=>state.Submitted_Current_Status)
 const UserTypeFromGlobelState=useSelector((state:any)=>state.ViewHCPList)
+const CurrentCount=useSelector((state:any)=>state.updatedCount)
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
     setUpdatedStatusMsg(`Updating ${first} Contact Status....`);
     try {
@@ -150,7 +151,7 @@ useEffect(() => {UpdateAssignHca
   if (UpdateMainFilter === "Client Enquiry") {
     setSearch(""); 
   }
-}, [UpdateMainFilter]);
+}, [UpdateMainFilter,CurrentCount]);
 
   const UpdateMainFilterValues = () => {
     switch (UpdateMainFilter) {

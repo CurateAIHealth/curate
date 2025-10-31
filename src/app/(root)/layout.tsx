@@ -146,7 +146,7 @@ export default function RootLayout({
         </header>
 
       
-        <main className="flex-1 overflow-y-auto px-2 py-3 bg-white">
+        <main className="flex-1 overflow-y-auto px-0 py-3 bg-white">
           {children}
         </main>
       </div>

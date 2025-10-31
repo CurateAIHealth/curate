@@ -16,7 +16,7 @@ import PreviewComponent from '@/Components/Preview/page'
 import name from '@/pages/api/Upload'
 import { useDispatch, useSelector } from 'react-redux'
 import { UpdatePreviewStatus } from '@/Redux/action'
-import { indianFamilyRelations, LeadSources, medicalSpecializations, physioSpecializations, ClientEnquiry_Filters, PDRspecialityOptions, treatmentOptions, mobilityAids, breathingEquipments, nutritionFeeds, Allergiesoptions, mealTimings, DiabeticSpecifications, FootItems, HygineOptions, floorTypes, washroomAccessories, Vitals_Options, Mobility_excercise_Options } from '@/Lib/Content'
+import { indianFamilyRelations, LeadSources, medicalSpecializations, physioSpecializations, ClientEnquiry_Filters, PDRspecialityOptions, treatmentOptions, mobilityAids, breathingEquipments, nutritionFeeds, Allergiesoptions, mealTimings, DiabeticSpecifications, FootItems, HygineOptions, floorTypes, washroomAccessories, Vitals_Options, Mobility_excercise_Options, sampleData } from '@/Lib/Content'
 import MobileMedicationSchedule from '@/Components/MedicationMobileView/page'
 import MedicationSchedule from '@/Components/Medications/page'
 type EditingKeys = 'PatientCardEditing' | 'ClientCardEditing'|'PatientDetails'|'AdditionalInformation'|'OtherInformation'|'EquipmentDetails'|'Hygiene'|'Medication';
@@ -24,60 +24,7 @@ type EditingKeys = 'PatientCardEditing' | 'ClientCardEditing'|'PatientDetails'|'
 
 
 
-const sampleData :any= {
-  Balance: "No",
-  Bathing: "Independent",
-  Bedding: "Independent",
-  Depression: "No",
-  "Frequent Urination": "Yes",
-  Grooming: "Independent",
-  "Hand Wash": "Independent",
-  "Hearing Loss": "Yes",
-  "History of Fall": "No",
-  "Mouth Care": "Assistance Required",
-  "Nail Care": "Independent",
-  "Room Hygiene": "Independent",
-  "Sleep Issues": "Yes",
-  Toileting: "Independent",
-  "Visual Impairment": "No",
-  administerBy: "Family",
-  bedAssistance: "Yes",
-  bedType: "Functional",
-  breathingEquipment: "BIPAP",
-  catheterDueDate: "2025-09-02",
-  constipated: "No",
-  dietType: "High Protein",
-  eliminationSupport: "Bedpan",
-  feedingMethod: "NG Feed",
-  floorFallRisk: "Yes",
-  floorType: "Stone",
-  foodAllergy: "Test Food Allergy",
-  hobbies: "Test Hobbies",
-  hospitalVisits: "Test Hospital Visits",
-  hydrationDisease: "Test Hydration",
-  hydrationStatus: "Limit",
-  mobility: "Independent",
-  mobilityAid: "Crutches",
-  occupation: "Test CurrentOccupation",
-  presentIllness: "Test Illness",
-  relation: "Test Relation",
-  remarks: "ssdsd",
-  speciality: "Cardiological",
-  treatment: "Medication",
-  washroomAccessory: "Bell",
-  Medications: [
-    {
-      medicationName: "Test Medication",
-      dose: "Test Dose",
-      quantity: "5",
-      route: "Test Route",
-      administerBy: "",
-    },
-  ],
-  Inputs: {
-    personalFamilyRemark: "Test Remarks",
-  },
-};
+
 
 type StringMap = Record<string, string>;
 export default function DataCollectionForm() {

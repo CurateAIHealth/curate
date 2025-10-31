@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import UserDetail from '@/Components/HCAFULLProfileInformation/page';
@@ -11,82 +11,84 @@ import AdminDashboard from '@/Components/PatientCompleteInformation/page';
 const UserDetailInfo = () => {
   const [userType, setUserType] = useState('');
   const [loading, setLoading] = useState(true);
-  const NameoftheClient=useSelector((state:any)=>state.ClientName)
-const Router=useRouter()
+  
+  const router = useRouter();
+
+  // ✅ Memoized Redux selectors to prevent unnecessary re-renders
   const userId = useSelector((state: any) => state?.UserDetails);
-console.log("Current UserId----",userId)
+  const clientName = useSelector((state: any) => state?.ClientName);
+
   useEffect(() => {
+    if (!userId) {
+      console.warn('User ID not available');
+      setLoading(false);
+      return;
+    }
+
     const fetchUserInfo = async () => {
       try {
-         
-       
-     
-  const [IntialValues, result] = await Promise.all([
-        GetUserInformation(userId),
-        GetUserCompliteInformation(userId),
-      ]);
-     
-        if(IntialValues.userType==="patient"&&!IntialValues.FinelVerification){
-          Router.push("/PatientInformation")
-          // Router.push("/PatientRegistration")
-          return
+        const [initialValues, result] = await Promise.all([
+          GetUserInformation(userId),
+          GetUserCompliteInformation(userId),
+        ]);
+
+        // Handle user redirections efficiently
+        const userType = initialValues?.userType;
+        const isVerified = initialValues?.FinelVerification;
+
+        if (userType === 'patient' && !isVerified) {
+          router.replace('/PatientInformation');
+          return;
         }
-         if(IntialValues.userType=== "healthcare-assistant"&&!IntialValues.FinelVerification){
-          Router.push("/HCARegistraion")
-          return
+
+        if (userType === 'healthcare-assistant' && !isVerified) {
+          router.replace('/HCARegistraion');
+          return;
         }
-        
-     
-          console.log("Test UserType---",result)
-    
-       
-        const userInfo = result.HCAComplitInformation;
-      
+
+        const userInfo = result?.HCAComplitInformation;
         if (userInfo?.userType) {
           setUserType(userInfo.userType);
         } else {
-        setLoading(false);
+          setUserType('');
         }
-      } catch (err) {
-        console.error("Failed to fetch user info:", err);
-        setUserType("");
+      } catch (error) {
+        console.error('Failed to fetch user info:', error);
+        setUserType('');
       } finally {
         setLoading(false);
       }
     };
 
-    if (userId) fetchUserInfo();
-    else {
-      console.warn("User ID not available");
-      setLoading(false);
+    fetchUserInfo();
+  }, [userId, router]);
+
+  // ✅ Memoized render logic to prevent unnecessary recalculations
+  const renderUserComponent = useMemo(() => {
+    switch (userType) {
+      case 'HCA':
+      case 'healthcare-assistant':
+        return <UserDetail />;
+      case 'patient':
+        return <AdminDashboard />;
+      default:
+        return (
+          <p className="h-screen flex items-center justify-center font-bold">
+            Loading {clientName} information...
+          </p>
+        );
     }
-  }, [userId]);
+  }, [userType, clientName]);
 
   if (loading) {
-    return <p  className="h-screen flex items-center justify-center font-bold">Loading  {NameoftheClient} information...</p>;
+    return (
+      <p className="h-screen flex items-center justify-center font-bold">
+        Loading {clientName} information...
+      </p>
+    );
   }
 
-  const renderUserComponent = () => {
-    switch (userType) {
-      case "HCA":
-        case "healthcare-assistant":
-        return <UserDetail />;
-      case "patient":
-        return <AdminDashboard/>
-      case "":
-        return <p  className="h-screen flex items-center justify-center font-bold">Loading  {NameoftheClient} information...</p>;
-
-    }
-  };
-
-  return <div>{renderUserComponent()}</div>;
+  return <div>{renderUserComponent}</div>;
 };
 
 export default UserDetailInfo;
-
-
-
-
-
-
-
