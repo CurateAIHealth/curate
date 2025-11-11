@@ -17,16 +17,19 @@ import {
   FileCheck,
   FileText,
   GraduationCap,
+  Users,
+  FileClock,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Update_Main_Filter_Status,
   UpdateClient,
+  UpdateTimeStamp,
   UpdateUserInformation,
   UpdateUserType,
 } from "@/Redux/action";
-import { GetRegidterdUsers } from "@/Lib/user.action";
+import { GetRegidterdUsers, GetUserInformation } from "@/Lib/user.action";
 import useSWR from "swr";
 
 const fetcher = async () => {
@@ -72,17 +75,17 @@ const tabs = [
     color: "bg-gradient-to-tr from-indigo-500 to-violet-500",
   },
   {
-    name: "Terminations",
+    name: "HCP List",
     count: 5,
     growth: "+1%",
-    icon: UserX,
+    icon: Users,
     color: "bg-gradient-to-tr from-red-500 to-rose-600",
   },
   {
-    name: "Replacements",
+    name: "Pending PDR",
     count: 12,
     growth: "+4%",
-    icon: UserPlus,
+    icon: FileClock,
     color: "bg-gradient-to-tr from-sky-500 to-cyan-600",
   },
 
@@ -125,6 +128,7 @@ export default function Dashboard() {
 
   
   useEffect(() => {
+     
     router.prefetch("/AdminPage");
     router.prefetch("/NewLead");
     router.prefetch("/UserInformation");
@@ -138,6 +142,7 @@ export default function Dashboard() {
       revalidateOnFocus: false,
     }
   );
+
 
 
   useEffect(() => {
@@ -155,9 +160,15 @@ export default function Dashboard() {
     switch (A) {
       case "Client Enquiry":
       case "Deployment":
+        case 'Timesheet':
         return RoutToAdminPage(A)
       case "Registration":
         return router.push('/UserTypeRegistration');
+        case "HCP List":
+        return NavigatetoFullHCPlIST();
+        case "Pending PDR":
+          return router.push("/PDRView")
+
       default:
         return null
     }
@@ -183,9 +194,8 @@ export default function Dashboard() {
     }
   };
 
-  const NavigatetoFullHCPlIST = async () => {
+  const NavigatetoFullHCPlIST =  () => {
     dispatch(UpdateUserType("healthcare-assistant"));
-    await router.prefetch("/AdminPage");
     router.push("/AdminPage");
   };
 
@@ -304,7 +314,7 @@ export default function Dashboard() {
           <div className="lg:col-span-4 space-y-4">
             <div className="bg-white flex flex-col p-2 sm:p-4 rounded-xl shadow-md">
               <h2 className="text-base sm:text-lg font-semibold mb-3 text-gray-700">
-                Bench List
+               Active Bench List
               </h2>
               {isLoading ? (
                 <p>Bench List Loading...</p>

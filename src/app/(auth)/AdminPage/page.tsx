@@ -7,12 +7,13 @@ import {
   InserTimeSheet,
   UpdateHCAnstatus,
   UpdateUserContactVerificationstatus,
+  UpdateUserCurrentstatus,
   UpdateUserEmailVerificationstatus
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CircleCheckBig, LogOut } from 'lucide-react';
-import {  Update_Main_Filter_Status, UpdateClient, UpdateClientSuggetion, UpdateSubHeading, UpdateUserInformation } from '@/Redux/action';
+import {  Update_Main_Filter_Status, UpdateClient, UpdateClientSuggetion, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
 import { ClientEnquiry_Filters, filterColors, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
 
@@ -23,6 +24,7 @@ import WorkingOn from '@/Components/CurrentlyWoring/page';
 import axios from 'axios';
 import { setTimeout } from 'timers/promises';
 import { decrypt, encrypt } from '@/Lib/Actions';
+import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 let cachedUserInfo: any = null;
 let cachedRegisteredUsers: any[] | null = null;
 let cachedFullInfo: any[] | null = null;
@@ -31,19 +33,21 @@ export default function UserTableList() {
   const [users, setUsers] = useState<any[]>([]);
   const [isChecking, setIsChecking] = useState(true);
   const [UserFirstName, setUserFirstName] = useState("");
-  const [UpdateduserType, setuserType] = useState("patient");
+
   const [search, setSearch] = useState('');
   const [AsignStatus,setAsignStatus]=useState("")
   const [LoginEmail, setLoginEmail] = useState("");
 
-  const Status = ['Placced','Client Enquiry', 'Processing', 'Converted', 'Waiting List', 'Lost'];
+  const Status = ['Deployed', 'Processing', 'Converted', 'Waiting List', 'Lost'];
   const EmailVerificationStatus = ['Verified', 'Pending'];
+  const CurrentStatusOptions = ["Active", "Sick", "Leave", "Terminated"];
+
   const [UserFullInfo, setFullInfo] = useState([])
   const router = useRouter();
   const dispatch = useDispatch();
 const UpdateMainFilter=useSelector((state:any)=>state.Main_Filter)
 const CurrentClientStatus=useSelector((state:any)=>state.Submitted_Current_Status)
-const UserTypeFromGlobelState=useSelector((state:any)=>state.ViewHCPList)
+const UpdateduserType=useSelector((state:any)=>state.ViewHCPList)
 const CurrentCount=useSelector((state:any)=>state.updatedCount)
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
     setUpdatedStatusMsg(`Updating ${first} Contact Status....`);
@@ -69,6 +73,18 @@ const CurrentCount=useSelector((state:any)=>state.updatedCount)
       console.error(err);
     }
   };
+   const UpdateCurrentstatus = async (first: string, e: string, UserId: any) => {
+    setUpdatedStatusMsg(`Updating ${first} Current Status....`);
+    try {
+      const res = await UpdateUserCurrentstatus(UserId, e);
+      if (res?.success === true) {
+        setUpdatedStatusMsg(`${first} Current Status Updated Successfully`);
+      }
+      
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
 
   const Finel = users.map((each: any) => ({
     id: each.userId,
@@ -76,7 +92,7 @@ const CurrentCount=useSelector((state:any)=>state.updatedCount)
     AadharNumber: each.AadharNumber,
     Age: each.Age,
     userType: each.userType,
-    Location: each.Location||each.serviceLocation,
+    Location: each.Location||each.serviceLocation||'Not Provided',
     Email: each.Email,
     Contact: each.ContactNumber,
     userId: each.userId,
@@ -84,62 +100,86 @@ const CurrentCount=useSelector((state:any)=>state.updatedCount)
     DetailedVerification: each.FinelVerification,
     EmailVerification: each.EmailVerification,
     ClientStatus: each.ClientStatus,
-    Status:each.Status
+    Status:each.Status,
+    CurrentStatus:each.CurrentStatus
   }));
-console.log("Current Test Data-----",Finel)
- useEffect(() => {
-     const Fetch = async () => {
-       try {
-         const localValue = localStorage.getItem('UserId');
- 
-         const [profile, registeredUsers, fullInfo] = await Promise.all([
-           cachedUserInfo ? Promise.resolve(cachedUserInfo) : GetUserInformation(localValue),
-           cachedRegisteredUsers ? Promise.resolve(cachedRegisteredUsers) : GetRegidterdUsers(),
-           cachedFullInfo ? Promise.resolve(cachedFullInfo) : GetUsersFullInfo()
-         ]);
- 
-         if (!cachedUserInfo) cachedUserInfo = profile;
-         if (!cachedRegisteredUsers) cachedRegisteredUsers = registeredUsers;
-         if (!cachedFullInfo) cachedFullInfo = fullInfo;
- 
-         setUserFirstName(profile.FirstName);
-         setLoginEmail(profile.Email);
- 
-         if (profile?.Email?.toLowerCase() === 'info@curatehealth.in') setuserType('patient');
-         if (profile?.Email?.toLowerCase() === 'gouricurate@gmail.com') setuserType('healthcare-assistant');
- 
-         if (
-           profile?.Email?.toLowerCase() !== 'admin@curatehealth.in' &&
-           profile?.Email?.toLowerCase() !== 'info@curatehealth.in' &&
-           profile?.Email?.toLowerCase() !== 'gouricurate@gmail.com'
-         ) {
-           router.push('/');
-         }
- 
-         setuserType(UserTypeFromGlobelState);
-         setFullInfo(fullInfo);
-         setSearch(CurrentClientStatus);
-         setUsers((registeredUsers || []).reverse());
-         setIsChecking(false);
-       } catch (err: any) {
-         console.error(err);
-       }
-     };
-     Fetch();
-   }, [updatedStatusMsg, UserTypeFromGlobelState, CurrentClientStatus]);
 
-  const FilterUserType = (e: any) => {
-    if(e.target.value!=="patient"){
-       setuserType(e.target.value);
-       setSearch("")
+const UpdatedFilterUserType = useMemo(() => {
+  return Finel.filter((each) => {
+    const matchesType = !UpdateduserType || each.userType === UpdateduserType;
+    const matchesSearch = !search || each.ClientStatus === search;
+    return matchesType && matchesSearch;
+  });
+}, [Finel, UpdateduserType, search]);
+
+
+useEffect(() => {
+  const Fetch = async () => {
+    try {
+      const localValue = localStorage.getItem('UserId');
+
+
+      if (UpdateduserType) {
+        cachedUserInfo = null;
+        cachedRegisteredUsers = null;
+        cachedFullInfo = null;
+      }
+
+      const [profile, registeredUsers, fullInfo] = await Promise.all([
+        cachedUserInfo ? Promise.resolve(cachedUserInfo) : GetUserInformation(localValue),
+        cachedRegisteredUsers ? Promise.resolve(cachedRegisteredUsers) : GetRegidterdUsers(),
+        cachedFullInfo ? Promise.resolve(cachedFullInfo) : GetUsersFullInfo(),
+      ]);
+
+      if (!cachedUserInfo) cachedUserInfo = profile;
+      if (!cachedRegisteredUsers) cachedRegisteredUsers = registeredUsers;
+      if (!cachedFullInfo) cachedFullInfo = fullInfo;
+
+      setUserFirstName(profile.FirstName);
+      setLoginEmail(profile.Email);
+
+
+      if (profile?.Email?.toLowerCase() === 'info@curatehealth.in') {
+        dispatch(UpdateUserType('patient'));
+      } else if (profile?.Email?.toLowerCase() === 'gouricurate@gmail.com') {
+        dispatch(UpdateUserType('healthcare-assistant'));
+      }
+
+      if (
+        profile?.Email?.toLowerCase() !== 'admin@curatehealth.in' &&
+        profile?.Email?.toLowerCase() !== 'info@curatehealth.in' &&
+        profile?.Email?.toLowerCase() !== 'gouricurate@gmail.com'
+      ) {
+        router.push('/');
+      }
+
+      setFullInfo(fullInfo);
+      setSearch(CurrentClientStatus);
+      setUsers((registeredUsers || []).reverse());
+      console.log("Get User Id------",)
+      setIsChecking(false);
+    } catch (err: any) {
+      console.error('Error fetching data:', err);
+      setIsChecking(false);
     }
-   
-    setuserType(e.target.value);
   };
+
+  Fetch();
+}, [updatedStatusMsg, CurrentClientStatus, UpdateduserType]);
+
+
+ const FilterUserType = (e: any) => {
+  if (e.target.value !== "patient") {
+    setSearch("");
+  }
+  dispatch(UpdateUserType(e.target.value));
+};
+
 
   const UpdateFilterValue = (UpdatedValue: any) => {
     setSearch(UpdatedValue)
     dispatch(UpdateSubHeading(UpdatedValue))
+    dispatch(Update_Main_Filter_Status(UpdatedValue))
   };
 
   const UpdateMainFilterValue=(Z:any)=>{
@@ -161,7 +201,7 @@ useEffect(() => {UpdateAssignHca
       case "Deployment":
         return Placements_Filters;
       case "Timesheet":
-        return Timesheet_Filters
+        return []
       case "Referral Pay":
         return ReferralPay_Filters;
       case "Payments":
@@ -184,7 +224,7 @@ setAsignStatus(e.target.value)
       case "Deployment":
         return <ClientTable/>
       case "Timesheet":
-        return <WorkingOn ServiceName="Timesheet"/>
+        return <InvoiceMedicalTable/>
       case "Referral Pay":
         return <WorkingOn ServiceName="Referral Pay"/>
       case "Payments":
@@ -242,7 +282,6 @@ const ClientEnquiryUserInterFace = () => {
       {UpdatedFilterUserType.length > 0 ? (
         <div className="bg-white/90 rounded-2xl shadow-2xl border border-gray-100">
           <div className="max-h-[540px] overflow-y-auto">
-            {/* ✅ Scrollable container only for mobile */}
             <div className="w-full overflow-x-auto sm:overflow-x-hidden">
               <table className="table-fixed w-full min-w-[800px] text-[11px] sm:text-[13px] text-left text-gray-700 border-collapse">
                 <thead className="bg-[#f5faff] sticky top-0 z-10">
@@ -256,6 +295,9 @@ const ClientEnquiryUserInterFace = () => {
                     <th className="px-2 py-2 w-[14%]">Email Verification</th>
                     {UpdateduserType !== "healthcare-assistant" && (
                       <th className="px-4 py-2 w-[14%]">Client Status</th>
+                    )}
+                    {UpdateduserType === "healthcare-assistant" && (
+                      <th className="px-4 py-2 w-[14%]">Current Status</th>
                     )}
                     {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
                       <th className="px-2 py-2 w-[14%]">Designate</th>
@@ -325,7 +367,7 @@ const ClientEnquiryUserInterFace = () => {
                           >
                             {Status.map((status) => (
                               <option key={status} value={status}>
-                                {status === "Placced" ? "Placced ✅" : status}
+                                {status === "Deployed" ? "Deployed ✅" : status}
                               </option>
                             ))}
                           </select>
@@ -358,6 +400,36 @@ const ClientEnquiryUserInterFace = () => {
                           </select>
                         </td>
                       )}
+                      {UpdateduserType === "healthcare-assistant" && (
+        <td className="px-8 py-2 w-[14%]">
+  <select
+    className={` text-center px-2 py-1 rounded-lg border cursor-pointer text-xs sm:text-sm transition-all duration-200 font-semibold
+      ${
+        user.CurrentStatus === "Active"
+          ? "bg-green-100 border-green-300 text-green-800"
+          : user.CurrentStatus === "Sick"
+          ? "bg-yellow-100 border-yellow-300 text-yellow-800"
+          : user.CurrentStatus === "Leave"
+          ? "bg-blue-100 border-blue-300 text-blue-800"
+          : user.CurrentStatus === "Terminated"
+          ? "bg-red-100 border-red-300 text-red-800"
+          : "bg-gray-100 border-gray-300 text-gray-800"
+      }
+    `}
+    value={user.CurrentStatus}
+    onChange={(e) =>
+      UpdateCurrentstatus(user.FirstName, e.target.value, user.userId)
+    }
+  >
+    <option value="Active">🟢 Active</option>
+    <option value="Sick">🟡 Sick</option>
+    <option value="Leave">🔵 Leave</option>
+    <option value="Terminated">🔴 Terminated</option>
+  </select>
+</td>
+
+
+                    )}
                       <td className="px-2 py-2">
                         <button
                           className="w-full text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition cursor-pointer text-xs sm:text-sm"
@@ -410,6 +482,7 @@ onClick={()=>UpdateNavigattosuggetions(user.userId)}
   
 
 const handleLogout = () => {
+  dispatch(Update_Main_Filter_Status(""))
   router.push('/DashBoard'); 
        
 };
@@ -423,12 +496,9 @@ const handleLogout = () => {
     );
   }
 
-  const UpdatedFilterUserType = Finel.filter((each) => {
-    const matchesType = !UpdateduserType || each.userType === UpdateduserType;
-    const matchesSearch = !search || each.ClientStatus === search;
-    return matchesType && matchesSearch;
-  });
 
+
+console.log("Test Cases---",UpdatedFilterUserType)
 const Filter_HCA = Finel.filter((each:any) => {
   const isHCA = each.userType === "healthcare-assistant"; 
   const isAvailable = each.Status !== "Assigned";         
@@ -459,7 +529,7 @@ console.log('Test Registerd Userss---',users)
           <div className="flex items-center gap-3">
             <img src="/Icons/Curate-logo.png" alt="Logo" className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl" />
             <h1 className="text-lg sm:text-2xl font-extrabold text-[#007B7F] tracking-tight leading-tight">
-              Hi, <span className="text-[#ff1493]">{UserFirstName}</span>
+              Hi, <span className="text-[#ff1493]">{UpdateduserType}</span>
             </h1>
           </div>
          
@@ -558,6 +628,7 @@ onClick={()=>UpdateNavigattosuggetions()}
           >
             Show Placement Suggetions
           </button> */}
+          {(UpdateMainFilter!=="Deployment")&&(UpdateMainFilter!=="Timesheet") &&
           <select
             value={UpdateduserType}
             onChange={FilterUserType}
@@ -566,7 +637,7 @@ onClick={()=>UpdateNavigattosuggetions()}
             <option value="patient">Patient</option>
             <option value="healthcare-assistant">HCA</option>
             <option value="doctor">Doctor</option>
-          </select>
+          </select>}
         </div>
       </div>
 

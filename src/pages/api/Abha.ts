@@ -1,59 +1,36 @@
-import axios, { AxiosResponse } from "axios";
-import { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiRequest, NextApiResponse } from "next";
+import axios from "axios";
 
-interface SessionResponse {
-  accessToken: string;
-  expiresIn: number;
-  tokenType: string;
-}
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-interface AbhaUserResponse {
-
-  abhaNumber: string;
-  name: string;
-  gender?: string;
-  dateOfBirth?: string;
-  [key: string]: any;
-}
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const abhaNumber = req.query.abhaNumber as string;
-
-  if (!abhaNumber) {
-    return res.status(400).json({ error: "ABHA number is required" });
-  }
+  const { abhaNumber } = req.body;
+  if (!abhaNumber) return res.status(400).json({ error: "ABHA number is required" });
 
   try {
- 
-    const tokenResponse: AxiosResponse<SessionResponse> = await axios.post(
-      "https://dev.abdm.gov.in/gateway/v0.5/sessions",
+    // 1️⃣ Get session token from ABDM Gateway (sandbox)
+    const tokenResp = await axios.post("https://dev.abdm.gov.in/gateway/v0.5/sessions", {
+      clientId: process.env.ABHA_CLIENT_ID || "SBXID_010773",
+      clientSecret: process.env.ABHA_CLIENT_SECRET || "b9ff1d0e-53d8-4219-b7e0-7d111bd555c4",
+    });
+
+    const accessToken = tokenResp.data?.accessToken;
+    if (!accessToken) throw new Error("No access token received from gateway");
+
+    // 2️⃣ Call ABHA profile endpoint via the gateway
+    const response = await axios.get(
+      `https://dev.abdm.gov.in/gateway/v0.5/healthid/account/profile/${abhaNumber}`,
       {
-        clientId: process.env.ABDM_CLIENT_ID,
-        clientSecret: process.env.ABDM_CLIENT_SECRET,
+        headers: { Authorization: `Bearer ${accessToken}` },
       }
     );
 
-    const accessToken = tokenResponse.data.accessToken;
-
-
-    const abhaResponse: AxiosResponse<AbhaUserResponse> = await axios.get(
-      `${process.env.ABDM_BASE_URL}/users/${abhaNumber}`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    res.status(200).json(abhaResponse.data);
-  } catch (error: any) {
-    console.error(error.response?.data || error.message);
-    res.status(500).json({
+    return res.status(200).json(response.data);
+  } catch (err: any) {
+    console.error("ABHA Fetch Error:", err.response?.data || err.message);
+    return res.status(500).json({
       error: "Failed to fetch ABHA details",
-      message: error.response?.data || error.message,
+      message: err.response?.data || err.message,
     });
   }
 }

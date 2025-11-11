@@ -12,13 +12,17 @@ export default function Home() {
   const [abhaNumber, setAbhaNumber] = useState("");
   const [details, setDetails] = useState(null);
 
-  const fetchDetails = async () => {
-    const response:any = await axios.get<AbhaUser>(
-        `/api/getAbhaUser?abhaNumber=${abhaNumber}`
-      );
+const fetchDetails = async () => {
+  try {
+    const response: any = await axios.post(`/api/Abha`, {
+      abhaNumber: abhaNumber,
+    });
 
-    setDetails(response);
-  };
+    setDetails(response.data);
+  } catch (error: any) {
+    console.error("Error fetching ABHA details:", error);
+  }
+};
 
   return (
     <div className="p-10">

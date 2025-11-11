@@ -41,15 +41,6 @@ interface UserInformation {
   hobbies?: string[];
   [key: string]: any;
 }
-
-export default function UserInformation() {
-  const [userInfo, setUserInfo] = useState<UserInformation | null>(null);
-  const [formData, setFormData] = useState<UserInformation>({});
-  const [isEditing, setIsEditing] = useState({PatientCardEditing:false,ClientCardEditing:false,PatientDetails:false,AdditionalInformation:false,OtherInformation:false});
-  const [isLoading, setIsLoading] = useState(true);
-    const userId = useSelector((state: any) => state?.UserDetails)
-    const dispatch=useDispatch()
-
     function FieldItem({
   label,
   value,
@@ -78,6 +69,15 @@ export default function UserInformation() {
     </div>
   );
 }
+export default function UserInformation() {
+  const [userInfo, setUserInfo] = useState<UserInformation | null>(null);
+  const [formData, setFormData] = useState<UserInformation>({});
+  const [isEditing, setIsEditing] = useState({PatientCardEditing:false,ClientCardEditing:false,PatientDetails:false,AdditionalInformation:false,OtherInformation:false});
+  const [isLoading, setIsLoading] = useState(true);
+    const userId = useSelector((state: any) => state?.UserDetails)
+    const dispatch=useDispatch()
+
+
 
 
 const router=useRouter()
@@ -637,12 +637,12 @@ const handleLogout = () => {
   </div>
 
 
-  <button
+  {/* <button
     onClick={() => router.push("/PDR")}
     className="w-full sm:w-auto px-6 py-3 cursor-pointer bg-green-800 hover:bg-green-600 active:bg-green-700 text-white text-sm sm:text-base rounded-lg font-medium transition-all duration-200 ease-in-out"
   >
     Add PDR
-  </button>
+  </button> */}
 </div>
 
   </main>

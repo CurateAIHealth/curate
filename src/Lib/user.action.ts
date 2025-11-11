@@ -3,6 +3,8 @@ import { Info } from "lucide-react";
 import { decrypt, encrypt, hashValue, verifySHA256 } from "./Actions";
 
 import clientPromise from "./db";
+import { TimeStamp } from "@/Redux/reducer";
+import { data } from "framer-motion/client";
 
 export const UpdateDocterInformation = async (doctorInfo: {
   userType: any,
@@ -659,6 +661,8 @@ export interface HCAInfo {
   userId: any;
   FinelVerification: any;
   EmailVerification: any;
+  CurrentStatus:any,
+  StaffType:any
 }
 
 export const HCARegistration = async (HCA: HCAInfo) => {
@@ -697,7 +701,8 @@ export const HCARegistration = async (HCA: HCAInfo) => {
       ContactNumber: encrypt(HCA.ContactNumber),
       Email: encrypt(HCA.Email),
       Location:HCA.Location,
-
+CurrentStatus:HCA.CurrentStatus,
+StaffType:HCA.StaffType,
 
       emailHash: hashValue(HCA.Email.toLowerCase()),
       phoneHash: hashValue(HCA.ContactNumber),
@@ -924,6 +929,7 @@ export const PostHCAFullRegistration = async (Info: any) => {
 
 export const InserTimeSheet=async(ClientUserId:any,HCAUserId:any,Name:any,Email:any,Contact:any,ClientAdress:any,NameHCA:any,Contacthca:any,TimeSheetArray:any)=>{
   try{
+        console.log("Checking With Fucntion Adress----", ClientAdress)
 const cluster=await clientPromise
 const db=cluster.db("CurateInformation")
 const collection=db.collection("TimeSheet")
@@ -947,6 +953,139 @@ return {
 
   }
 }
+
+
+
+export const TestInserTimeSheet = async (
+  StartDate: any,
+  EndDate: any,
+  Status: any,
+  location: any,
+  clientPhone: any,
+  clientName: any,
+  patientName: any,
+  patientPhone: any,
+  referralName: any,
+  hcpId: any,
+  ClientId: any,
+  hcpName: any,
+  hcpPhone: any,
+  hcpSource: any,
+  provider: any,
+  payTerms: any,
+  cTotal: any,
+  cPay: any,
+  hcpTotal: any,
+  hcpPay: any,
+  Month: any,
+  TimeSheetArray: any,
+  UpdatedBy: any,
+  invoice:any,
+  Type:any
+) => {
+  try {
+    console.log("🟢 Upserting Timesheet for Client:", TimeStamp);
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("TimeSheet");
+
+    const TimeSheetData = {
+      StartDate:StartDate,
+      EndDate:EndDate,
+      Status:Status,
+      ClientId:ClientId,
+      HCAId: hcpId,
+      ClientName: clientName,
+      patientName:patientName,
+      patientPhone:patientPhone,
+      ClientContact: clientPhone,
+      Address: location,
+      HCAName: hcpName,
+      HCAContact: hcpPhone,
+      referralName:referralName,
+      hcpSource:hcpSource,
+      provider:provider,
+      payTerms:payTerms,
+      cTotal:cTotal,
+      cPay:cPay,
+      hcpTotal:hcpTotal,
+      hcpPay:hcpPay,
+      Month:Month,
+      Attendance: TimeSheetArray,
+      UpdatedAt: new Date(),
+      UpdatedBy: UpdatedBy,
+      invoice:invoice,
+      Type:Type
+    };
+
+  const TimeSheetDataInsert=await collection.insertOne(TimeSheetData)
+
+return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedId: TimeSheetDataInsert.insertedId.toString(),
+    };
+  } catch (error: any) {
+    console.error("❌ Error inserting/updating timesheet:", error.message);
+    return {
+      success: false,
+      message: "Error inserting/updating timesheet: " + error.message,
+    };
+  }
+};
+
+
+export const UpdateTimeSheet = async (
+ 
+  hcpId: any,
+  Month: any,
+  Status: any,      
+  UpdatedBy: any
+) => {
+  try {
+    console.log("🟢 Updating TimeSheet status for Client:", hcpId);
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("TimeSheet");
+
+
+
+ 
+    const result = await collection.updateOne(
+      {  HCAId: hcpId, Month: Month },
+      {
+        $push: { Attendance: Status },
+        $set: {
+          UpdatedAt: new Date(),
+          UpdatedBy: UpdatedBy,
+        },
+      }
+    );
+
+    if (result.modifiedCount > 0) {
+      return {
+        success: true,
+        message: `✅ Your attendance status “${Status}” has been added to the timesheet for ${new Date().toLocaleDateString('In-en')}!`,
+
+        
+      };
+    } else {
+      return {
+        success: false,
+        message: "⚠️ No changes were made to the TimeSheet.",
+      };
+    }
+  } catch (error: any) {
+    console.error("❌ Error updating timesheet status:", error.message);
+    return {
+      success: false,
+      message: "Error updating timesheet status: " + error.message,
+    };
+  }
+};
+
 export const DeleteTimeSheet=async(clientId:any)=>{
 
   try{
@@ -1628,6 +1767,27 @@ export const UpdateUserEmailVerificationstatus = async (UserId: string, UpdatedS
         EmailVerification: UpdatedStatus==="Verified"?true:false,
         
       }
+    }
+    )
+    if (UpdateVerificationStatus.modifiedCount === 0) {
+      return { success: false, message: 'Internal Error Try Again!' };
+    }
+
+    return { success: true, message: 'Verification Status updated successfully.' };
+  } catch (err: any) {
+    return err
+  }
+}
+export const UpdateUserCurrentstatus = async (UserId: string, UpdatedStatus: string) => {
+  try {
+    const Cluster = await clientPromise
+    const Db = Cluster.db("CurateInformation")
+    const Collection = Db.collection("Registration")
+    const UpdateVerificationStatus = await Collection.updateOne(
+      { userId: UserId }, {
+      $set: {
+        CurrentStatus:UpdatedStatus,
+        }
     }
     )
     if (UpdateVerificationStatus.modifiedCount === 0) {

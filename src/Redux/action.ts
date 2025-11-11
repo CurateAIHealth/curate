@@ -114,3 +114,10 @@ export const UpdateRegisterdType=(CurrentUserType:any)=>{
         payload:CurrentUserType
     }
 }
+
+export const UpdateTimeStamp=(CurrentTimeStampValue:any)=>{
+    return{
+        type:"UpdateTimeStampInfo",
+        payload:CurrentTimeStampValue,
+    }
+}

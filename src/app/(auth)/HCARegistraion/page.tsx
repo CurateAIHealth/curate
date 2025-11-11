@@ -11,6 +11,7 @@ import { stringify } from 'querystring';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { LogOut } from 'lucide-react';
 
 
 const DEFAULT_PROFILE_PIC = '/Icons/DefaultProfileIcon.png';
@@ -273,7 +274,7 @@ console.log("Document-----",Docs)
         }
 
         const ProfileInformation = await GetUserInformation(localValue);
-   
+   console.log("Get Values----",localValue)
       if ((!ProfileInformation&&CurrentUserType)||(ProfileInformation&&CurrentUserType)) {
         console.warn("No user profile found for ID:", localValue);
         setIsChecking(false);
@@ -559,6 +560,12 @@ console.log("Posting Data------------------------********8")
     },
     [form, completion, Docs, ReasonValue, router]
   );
+    const handleLogout = async () => {
+    localStorage.removeItem("UserId");
+    await router.prefetch("/");
+    router.push("/");
+  };
+
   if (isChecking) {
     return (
       <div className='h-screen flex items-center justify-center font-bold'>
@@ -634,7 +641,13 @@ console.log("Posting Data------------------------********8")
           Ensure that all details are accurate to facilitate faster verification and onboarding.
         </p>
 
-        
+         <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-lg sm:rounded-xl font-semibold shadow-lg transition-all duration-150 text-sm sm:text-base"
+            >
+              <LogOut size={18} className="flex-shrink-0" />
+              <span className="hidden xs:inline">Logout</span>
+            </button>
 
         {UpdatedStatusMessage && (
           <div
@@ -801,81 +814,90 @@ console.log("Posting Data------------------------********8")
                   required
                 />
               </div>
-            <h3 className="text-md font-semibold text-[#ff1493] mt-3 pb-3 border-b border-blue-200 flex items-center">
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-6 w-6 mr-2 text-[#6366f1]"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-3.31 0-6 2.02-6 4.5V21h12v-2.5c0-2.48-2.69-4.5-6-4.5z"
-    />
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M19 21v-2a3 3 0 00-3-3h-.5M5 21v-2a3 3 0 013-3h.5"
-    />
-  </svg>
-  Family Background
-</h3>
-<div className="  rounded-2xl border border-gray-100">
-  <h3 className="flex justify-start text-grey-400 mb-2 text-center">
-    Earning Source
-  </h3>
-
-  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-    {Relations.map((each) => (
-      <div
-        key={each}
-        className="flex  items-center space-x-2 bg-white border hover:bg-indigo-100 p-2 rounded-lg transition-all duration-200"
+       {((CurrentUserType === "HCA") || (CurrentUserType === "HCN")) && (
+  <div>
+    {/* Family Background */}
+    <h3 className="text-md font-semibold text-[#ff1493] mt-3 pb-3 border-b border-blue-200 flex items-center">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-6 w-6 mr-2 text-[#6366f1]"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
       >
-        <input
-          type="radio"
-          name="earningSource"
-          id={each}
-          value={each}
-          className="w-5 h-5 accent-indigo-600 cursor-pointer"
-          onChange={handleChange}
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-3.31 0-6 2.02-6 4.5V21h12v-2.5c0-2.48-2.69-4.5-6-4.5z"
         />
-        <label
-          htmlFor={each}
-          className="text-gray-700 font-medium text-[13px] cursor-pointer "
-        >
-          {each}
-        </label>
-      </div>
-    ))}
-  </div>
-  
-</div>
-<div className="mt-2  rounded-2xl border border-gray-100">
-  <h3 className="flex justify-start text-grey-400 mb-2 text-center">
-     Siblings
-  </h3>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M19 21v-2a3 3 0 00-3-3h-.5M5 21v-2a3 3 0 013-3h.5"
+        />
+      </svg>
+      Family Background
+    </h3>
 
-  <div className="space-y-3">
-    {siblings.map((each,index) => (
-      <div
-        key={index}
-        className="flex justify-between items-center border bg-gray-50 hover:bg-indigo-50 transition rounded-xl p-2"
-      >
-        <p className="text-gray-700 font-medium">{each.relation}</p>
-        <input
-          type="number"
-          placeholder="Count"
-          value={each.count}
-          onChange={(e)=>handleUpdteSiblings(index,e.target.value)}
-          className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-indigo-400"
-        />
+    {/* Earning Source Section */}
+    <div className="rounded-2xl border border-gray-100">
+      <h3 className="flex justify-start text-grey-400 mb-2 text-center">
+        Earning Source
+      </h3>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {Relations.map((each) => (
+          <div
+            key={each}
+            className="flex items-center space-x-2 bg-white border hover:bg-indigo-100 p-2 rounded-lg transition-all duration-200"
+          >
+            <input
+              type="radio"
+              name="earningSource"
+              id={each}
+              value={each}
+              className="w-5 h-5 accent-indigo-600 cursor-pointer"
+              onChange={handleChange}
+            />
+            <label
+              htmlFor={each}
+              className="text-gray-700 font-medium text-[13px] cursor-pointer"
+            >
+              {each}
+            </label>
+          </div>
+        ))}
       </div>
-    ))}
+    </div>
+
+    {/* Siblings Section */}
+    <div className="mt-2 rounded-2xl border border-gray-100">
+      <h3 className="flex justify-start text-grey-400 mb-2 text-center">
+        Siblings
+      </h3>
+
+      <div className="space-y-3">
+        {siblings.map((each, index) => (
+          <div
+            key={index}
+            className="flex justify-between items-center border bg-gray-50 hover:bg-indigo-50 transition rounded-xl p-2"
+          >
+            <p className="text-gray-700 font-medium">{each.relation}</p>
+            <input
+              type="number"
+              placeholder="Count"
+              value={each.count}
+              onChange={(e) => handleUpdteSiblings(index, e.target.value)}
+              className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
   </div>
-</div>
+)}
+
 
             </section>
 

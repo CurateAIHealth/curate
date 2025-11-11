@@ -162,3 +162,12 @@ case "UpdateFullInfo" :
 
     }
 }
+
+export const TimeStamp=(state:any='',action:any)=>{
+    switch(action.type){
+case "UpdateTimeStampInfo":
+    return action.payload;
+    default:
+        return state
+    }
+}
