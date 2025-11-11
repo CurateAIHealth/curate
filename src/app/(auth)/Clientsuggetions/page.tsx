@@ -1,10 +1,11 @@
-'use client'; 
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import SuitableHcpList from '@/Components/HCPSugetions/page';
-import { GetRegidterdUsers, GetUsersFullInfo } from '@/Lib/user.action';
+import { GetRegidterdUsers, GetUserInformation, GetUsersFullInfo } from '@/Lib/user.action';
+import { UpdateTimeStamp } from '@/Redux/action';
 
 let cachedRegisteredUsers: any = null;
 let cachedFullInfo: any = null;
@@ -17,7 +18,17 @@ const ClientSuggetions = () => {
   const currentClientUserId = useSelector((state: any) => state.Suggested_HCP);
   const updatedRefresh = useSelector((state: any) => state.updatedCount);
   const router = useRouter();
+  const dispatch = useDispatch()
+  useEffect(() => {
+    const Fetch = async () => {
+      const localValue = localStorage.getItem('UserId');
 
+      const Sign_in_UserInfo = await GetUserInformation(localValue)
+
+      dispatch(UpdateTimeStamp(`${Sign_in_UserInfo.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`))
+    }
+    Fetch()
+  }, [])
   useEffect(() => {
     if (!currentClientUserId) {
       router.push("/AdminPage");
@@ -27,47 +38,46 @@ const ClientSuggetions = () => {
     const fetchData = async () => {
       setLoading(true);
 
-  
+
+      if (updatedRefresh > 0) {
+        cachedRegisteredUsers = null;
+        cachedFullInfo = null;
+      }
 
       const [registeredUsers, fullInfo] = await Promise.all([
-        cachedRegisteredUsers
-          ? Promise.resolve(cachedRegisteredUsers)
-          : GetRegidterdUsers(),
-        cachedFullInfo
-          ? Promise.resolve(cachedFullInfo)
-          : GetUsersFullInfo(),
+        cachedRegisteredUsers ?? GetRegidterdUsers(),
+        cachedFullInfo ?? GetUsersFullInfo(),
       ]);
 
-   
-        
-      if (!cachedRegisteredUsers) cachedRegisteredUsers=registeredUsers
-        
-      if (!cachedFullInfo) cachedFullInfo=fullInfo
-       
 
-  
-
-const Filter_Data: any = (cachedRegisteredUsers || []).filter(
-  (each: any) =>
-    each?.userType === "patient" &&
-    (each?.patientHomeAssistance || '') &&
-    each?.userId === currentClientUserId
-);
-
-  console.log("Test Trick----",Filter_Data)
-setClients(Filter_Data)
-    
-  const filterProfilePic = (cachedFullInfo || []).map(
-  (each: any) => each?.HCAComplitInformation ?? {}
-);
-
-const filterHCP = filterProfilePic.filter(
-  (each: any) => each && each.userType === "HCA"||each.userType === "healthcare-assistant" && each.ProfessionalSkills||each['Professional Skill']
-);
+      if (!cachedRegisteredUsers) cachedRegisteredUsers = registeredUsers;
+      if (!cachedFullInfo) cachedFullInfo = fullInfo;
 
 
-console.log('Curret Test Stagwe----',filterHCP)
+      const Filter_Data: any = (registeredUsers || []).filter(
+        (each: any) =>
+          each?.userType === "patient" &&
+          (each?.patientHomeAssistance || "") &&
+          each?.userId === currentClientUserId
+      );
 
+      console.log("Filtered Patient Data:", Filter_Data);
+      setClients(Filter_Data);
+
+
+      const filterProfilePic = (fullInfo || []).map(
+        (each: any) => each?.HCAComplitInformation ?? {}
+      );
+
+      const filterHCP = filterProfilePic.filter(
+        (each: any) =>
+          each &&
+          (each.userType === "HCA" ||
+            each.userType === "healthcare-assistant") &&
+          (each.ProfessionalSkills || each["Professional Skill"])
+      );
+
+      console.log("Filtered HCP Data:", filterHCP);
       setHCP(filterHCP);
 
       setLoading(false);
@@ -75,6 +85,7 @@ console.log('Curret Test Stagwe----',filterHCP)
 
     fetchData();
   }, [currentClientUserId, updatedRefresh, router]);
+
 
   if (loading) {
     return (
@@ -107,4 +118,3 @@ export default ClientSuggetions;
 
 
 
-           

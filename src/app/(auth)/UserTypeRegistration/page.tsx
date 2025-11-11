@@ -10,8 +10,9 @@ export default function UserTypeSelector() {
     const [UpdateStatus, SetUpdateStatus] = useState(true)
     const router = useRouter();
     const dispatch = useDispatch()
+
 useEffect(() => {
-  const redirectTypes = ["HCA", "HCP", "HCN"];
+  const redirectTypes = ["HCA", "HCP", "HCN","HCP Vendor","Business Vendor","Institute","Individual Vendor","Other"];
   if (UpdateStatus === false && redirectTypes.includes(selected)) {
     dispatch(UpdateRegisterdType(selected))
    
@@ -37,12 +38,12 @@ const userTypes = [
     info: "Healthcare Professionals including doctors, physiotherapists, and specialists.",
   },
   {
-    label: "Staff Vendor",
+    label: "HCP Vendor",
     icon: <Building2 className="w-6 h-6 text-indigo-600" />,
     info: "Vendors providing staffing services or contract-based healthcare staff.",
   },
   {
-    label: "Client Vendor",
+    label: "Business Vendor",
     icon: <FileText className="w-6 h-6 text-indigo-600" />,
     info: "Vendors associated with client-side operations and project execution.",
   },

@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { HCARegistration, UpdatePatientInformation } from '@/Lib/user.action';
 import ReactDOMServer from 'react-dom/server';
 import axios from 'axios';
-
+const StaffType=["HCA", "HCP", "HCN","HCP Vendor","Business Vendor","Institute","Individual Vendor","Other"]
 export default function HealthcareAssistantForm() {
   const [formData, setFormData] = useState({
     userType: 'healthcare-assistant',
@@ -26,7 +26,9 @@ export default function HealthcareAssistantForm() {
     VerificationStatus: 'Success',
     TermsAndConditions: 'Accepted',
     FinelVerification:false,
-    EmailVerification:false
+    EmailVerification:false,
+    CurrentStatus:"Active",
+    StaffType:""
   });
 
   const [CheckBoxStatus, setCheckBoxStatus] = useState(false);
@@ -205,7 +207,9 @@ export default function HealthcareAssistantForm() {
         VerificationStatus: 'Pending',
         TermsAndConditions: 'Accepted',
         FinelVerification:false,
-        EmailVerification:false
+        EmailVerification:false,
+        CurrentStatus:"Active",
+        StaffType:""
       });
 
       router.push('/SuccessfulRegistration');
@@ -224,30 +228,43 @@ export default function HealthcareAssistantForm() {
 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <input name="FirstName" value={formData.FirstName} onChange={handleChange} placeholder="First Name" className="input-style" required />
-      <input name="LastName" value={formData.LastName} onChange={handleChange} placeholder="Last Name" className="input-style" required />
-      <select name="Gender" className="input-style" value={formData.Gender} onChange={handleChange} required>
+      <input name="FirstName" value={formData.FirstName||""} onChange={handleChange} placeholder="First Name" className="input-style" required />
+      <input name="LastName" value={formData.LastName||""} onChange={handleChange} placeholder="Last Name" className="input-style" required />
+      <select name="Gender" className="input-style" value={formData.Gender||""} onChange={handleChange} required>
         <option value="">Select Gender</option>
         <option value="Male">Male</option>
         <option value="Female">Female</option>
         <option value="Other">Other</option>
       </select>
-      <input type="date" className="input-style" name="DateOfBirth" value={formData.DateOfBirth} onChange={handleChange} required />
+      <input type="date" className="input-style" name="DateOfBirth" value={formData.DateOfBirth||""} onChange={handleChange} required />
 
-      <input name="AadharNumber" className="input-style" value={formData.AadharNumber} onChange={handleChange} maxLength={14} required placeholder="Aadhaar Number" />
+      <input name="AadharNumber" className="input-style" value={formData.AadharNumber||""} onChange={handleChange} maxLength={14} required placeholder="Aadhaar Number" />
       {digitCount > 0 && digitCount < 12 && <p className="text-red-500 text-sm">Aadhaar number must be 12 digits</p>}
-      <input name="Age" className="input-style" value={formData.Age} onChange={handleChange} type="number" placeholder="Age" required />
-      <input name="ContactNumber" className="input-style" value={formData.ContactNumber} onChange={handleChange} maxLength={10} placeholder="Contact Number" required />
+      <input name="Age" className="input-style" value={formData.Age||""} onChange={handleChange} type="number" placeholder="Age" required />
+      <input name="ContactNumber" className="input-style" value={formData.ContactNumber||""} onChange={handleChange} maxLength={10} placeholder="Contact Number" required />
       {phoneDigits > 0 && phoneDigits < 10 && <p className="text-red-500 text-sm">Contact number must be 10 digits</p>}
-      <input name="Email" className="input-style" value={formData.Email} onChange={handleChange} type="email" placeholder="Email" required />
-      <input name="Location" className="input-style" value={formData.Location} onChange={handleChange} placeholder="Location" required />
+      <input name="Email" className="input-style" value={formData.Email||""} onChange={handleChange} type="email" placeholder="Email" required />
+      <input name="Location" className="input-style" value={formData.Location||""} onChange={handleChange} placeholder="Location" required />
+     <select
+     onChange={handleChange}
+     name='StaffType'
+     value={formData.StaffType||""}
+  className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 ease-in-out cursor-pointer"
+>
+  {StaffType.map((each, index) => (
+    <option key={index} className="text-gray-700">
+      {each}
+    </option>
+  ))}
+</select>
+
       <div className="relative">
-        <input name="Password" className="input-style" type={showPassword ? 'text' : 'password'} value={formData.Password} onChange={handleChange} placeholder="Password" required />
+        <input name="Password" className="input-style" type={showPassword ? 'text' : 'password'} value={formData.Password||""} onChange={handleChange} placeholder="Password" required />
         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-2">{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>
         <p className={`text-sm ${strengthColor[passwordStrength - 1]}`}>Strength: {strengthLabel[passwordStrength - 1] || 'Too Short'}</p>
       </div>
       <div className="relative">
-        <input name="ConfirmPassword" className="input-style" type={showConfirmPassword ? 'text' : 'password'} value={formData.ConfirmPassword} onChange={handleChange} placeholder="Confirm Password" required />
+        <input name="ConfirmPassword" className="input-style" type={showConfirmPassword ? 'text' : 'password'} value={formData.ConfirmPassword||""} onChange={handleChange} placeholder="Confirm Password" required />
         <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-2 top-2">{showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>
         {formData.ConfirmPassword && formData.Password !== formData.ConfirmPassword && <p className="text-red-500 text-sm">Passwords do not match</p>}
       </div>

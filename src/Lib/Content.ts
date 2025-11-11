@@ -422,7 +422,7 @@ export const HYDERABAD_LOCATIONS = [
 // ];
 export const Main_Filters = ["Client Enquiry", "Placements", "Timesheet", "Referral Pay", "Payments"];
 
-export const ClientEnquiry_Filters = ["Processing", "Converted", "Waiting List", "Lost"];
+export const ClientEnquiry_Filters = ["Processing", "Converted", "Waiting List", "Lost",'Deployment'];
 
 export const Placements_Filters = ["On Service", "Replacements", "Termination"];
 

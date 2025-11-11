@@ -1,54 +1,51 @@
-import clientPromise from '@/Lib/db';
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextResponse } from "next/server";
+import axios from "axios";
 
-export default async function handler(req:NextApiRequest, res:NextApiResponse) {
- 
-  res.setHeader('Access-Control-Allow-Origin', 'https://curatehealthservices.com');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const abhaNumber = searchParams.get("abhaNumber");
 
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
+  if (!abhaNumber) {
+    return NextResponse.json(
+      { error: "Missing ABHA Number" },
+      { status: 400 }
+    );
   }
 
-  if (req.method === 'POST') {
-    try {
-      const {
-        companyName,
-        representative,
-        location,
-        industry,
-        requestedService,
-        description,
-        contact,
-        email,
-      } = req.body;
+  try {
 
-      if (!companyName || !email) {
-        return res.status(400).json({ success: false, error: 'Missing required fields' });
+    const tokenResponse = await axios.post(
+      "https://healthidsbx.abdm.gov.in/api/v1/auth/token",
+      {
+        clientId: 'SBXID_010773',
+        clientSecret: 'b9ff1d0e-53d8-4219-b7e0-7d111bd555c4',
+      },
+      {
+        headers: { "Content-Type": "application/json" },
       }
+    );
 
-      const db = (await clientPromise).db('CurateInformation');
-      const result = await db.collection('Contacts').insertOne({
-        companyName,
-        representative,
-        location,
-        industry,
-        requestedService,
-        description,
-        contact,
-        email,
-        createdAt: new Date(),
-      });
-
-      return res.status(201).json({ success: true, id: result.insertedId });
-    } catch (error:any) {
-     
-      return res.status(500).json({ success: false, error: error.message || 'Internal error' });
+    const accessToken = tokenResponse.data?.accessToken;
+    if (!accessToken) {
+      throw new Error("Failed to retrieve access token from ABHA API");
     }
+
+    const abhaResponse = await axios.get(
+      `https://healthidsbx.abdm.gov.in/api/v1/account/profile/${abhaNumber}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+   
+    return NextResponse.json(abhaResponse.data, { status: 200 });
+  } catch (error: any) {
+    console.error("Error fetching ABHA user:", error.response?.data || error);
+    return NextResponse.json(
+      { error: "Failed to fetch ABHA user details" },
+      { status: 500 }
+    );
   }
-
-
-  res.setHeader('Allow', ['POST', 'OPTIONS']);
-  return res.status(405).json({ success: false, error: 'Method Not Allowed' });
 }

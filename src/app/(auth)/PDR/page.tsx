@@ -174,6 +174,7 @@ const handleChange = (key: string, value: any) => {
              </div>
        
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+     
                 <FieldItem
                  label="Current/Previous Occupation"
                  value={formData.Current_Previous_Occupation}
