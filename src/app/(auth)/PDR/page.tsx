@@ -144,7 +144,7 @@ const handleChange = (key: string, value: any) => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="relative text-sm sm:text-base md:text-xl font-medium text-center text-[#ff1493] tracking-wide leading-snug flex flex-wrap items-center justify-center gap-2 m-2">
           <img src="/Icons/Curate-logo.png" alt="Logo" className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-white text-rose-500 rounded-full p-2 shadow-sm" />
-          Patient Daily Routine (PDR) Assessment
+          {formData.FirstName}'s Patient Daily Routine (PDR) Assessment
           <div className="relative group hidden md:flex">
             <img src="Icons/info.png" className="h-4 w-4 cursor-pointer" alt="Info" />
             <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-60 sm:w-72 md:w-96 p-3 text-[8px] sm:text-[8px] bg-white text-gray-700 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50">
