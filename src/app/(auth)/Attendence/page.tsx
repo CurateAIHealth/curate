@@ -55,7 +55,7 @@ export default function UpdateAttendance() {
           🩺 Update Your Attendance
         </h2>
 
-        {/* Status Selection */}
+       
         <div className="flex items-center justify-between bg-blue-50 rounded-xl p-4 shadow-inner">
           <button
             onClick={() => setStatus("P")}
@@ -96,7 +96,7 @@ export default function UpdateAttendance() {
           disabled={loading || !status}
           className="mt-6 w-full py-3 bg-blue-600 cursor-pointer text-white font-semibold rounded-xl hover:bg-blue-700 transition-all duration-300 disabled:bg-blue-300"
         >
-          {loading ? "Updating..." : "Update Attendance"}
+          {loading ? " Please Wait Updating..." : "Update Attendance"}
         </button>
 
    
