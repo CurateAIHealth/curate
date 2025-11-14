@@ -4,6 +4,12 @@ import { User, Building2, GraduationCap, FileText, ClipboardList, CircleHelp, Ho
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { UpdateRegisterdType } from "@/Redux/action";
+import CommonSection from "@/Components/StaffRegistration/page";
+import CommonFormSection from "@/Components/StaffRegistration/page";
+import CommonMedicalSection from "@/Components/StaffRegistration/page";
+import { VendorScreens } from "@/Lib/Content";
+
+
 
 export default function UserTypeSelector() {
     const [selected, setSelected] = useState("");
@@ -12,7 +18,7 @@ export default function UserTypeSelector() {
     const dispatch = useDispatch()
 
 useEffect(() => {
-  const redirectTypes = ["HCA", "HCP", "HCN","HCP Vendor","Business Vendor","Institute","Individual Vendor","Other"];
+  const redirectTypes = ["HCA", "HCP", "HCN"];
   if (UpdateStatus === false && redirectTypes.includes(selected)) {
     dispatch(UpdateRegisterdType(selected))
    
@@ -76,22 +82,20 @@ const userTypes = [
   };
 
 
-   const UpdateView = () => {
-    switch (selected) {
-      case "Staff Vendor":
-      case "Client Vendor":
-      case "Institute":
-      case "Individual Vendor":
-      case "Other":
-        return <p className="text-xl font-semibold text-gray-700 flex items-center justify-center gap-2 animate-pulse mt-6">
-  <span className="text-[#0077b6] font-bold">⏳</span>
-  Working on it <span className="text-[#0096c7]">({selected})</span>...
-</p>
+const UpdateView = () => {
+  if (!selected) return null;
 
-      default:
-        return null;
-    }
-  };
+  const screenData = VendorScreens[selected];
+
+  if (!screenData) return null;
+
+  return (
+    <CommonMedicalSection
+      mainTitle={screenData.mainTitle}
+      sections={screenData.sections}
+    />
+  );
+};
 
   return (
 <div>

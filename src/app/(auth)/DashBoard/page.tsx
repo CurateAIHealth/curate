@@ -167,7 +167,9 @@ export default function Dashboard() {
         case "HCP List":
         return NavigatetoFullHCPlIST();
         case "Pending PDR":
-          return router.push("/PDRView")
+          return router.push("/PDRView");
+          case 'Vendors':
+            return router.push('/VendorsPanel')
 
       default:
         return null

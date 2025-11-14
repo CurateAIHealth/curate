@@ -5,6 +5,7 @@ import { decrypt, encrypt, hashValue, verifySHA256 } from "./Actions";
 import clientPromise from "./db";
 import { TimeStamp } from "@/Redux/reducer";
 import { data } from "framer-motion/client";
+import { VendorFieldMap } from "./Content";
 
 export const UpdateDocterInformation = async (doctorInfo: {
   userType: any,
@@ -299,6 +300,113 @@ export const UpdateEmailVerification=async (UpdatedUserid:any) => {
   }
 }
 
+
+ const normalizeVendorInput = (formData: any) => {
+  const normalized: any = {};
+
+  Object.keys(formData).forEach((label) => {
+    const backendKey = VendorFieldMap[label];
+
+    if (backendKey) {
+      normalized[backendKey] = formData[label];
+    }
+  });
+
+  return normalized;
+};
+
+export const UpdateVendorInformation = async (Patient: any) => {
+  try {
+    
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const orConditions: any[] = [];
+
+    if (Patient.Email)
+      orConditions.push({ emailHash: hashValue(Patient.Email.toLowerCase()) });
+
+    if (Patient.ContactNumber)
+      orConditions.push({ phoneHash: hashValue(Patient.ContactNumber) });
+
+    if (Patient.AadharNumber)
+      orConditions.push({ aadharHash: hashValue(Patient.AadharNumber) });
+
+    let existing = null;
+    if (orConditions.length > 0)
+      existing = await collection.findOne({ $or: orConditions });
+
+    if (existing) {
+      return {
+        success: false,
+        message: "An account with these details already exists.",
+      };
+    }
+
+
+    const sensitiveFields = [
+      "VendorName",
+      "CompanyName",
+      "InstituteName",
+
+      "Email",
+      "ContactNumber",
+      "PANNumber",
+      "AadharNumber",
+
+      "BankName",
+      "BankAccount",
+      "IFSC",
+      "BankBranch",
+
+      "Password",
+      "City",
+      "State",
+    ];
+
+
+    const encryptedData: any = {
+      createdAt: new Date().toISOString(),
+    };
+
+    Object.keys(Patient).forEach((key) => {
+      if (sensitiveFields.includes(key)) {
+        encryptedData[key] = encrypt(Patient[key]); 
+      } else {
+        encryptedData[key] = Patient[key]; 
+      }
+    });
+
+
+    if (Patient.Email)
+      encryptedData.emailHash = hashValue(Patient.Email.toLowerCase());
+
+    if (Patient.ContactNumber)
+      encryptedData.phoneHash = hashValue(Patient.ContactNumber);
+
+    if (Patient.AadharNumber)
+      encryptedData.aadharHash = hashValue(Patient.AadharNumber);
+
+    if (Patient.Password) {
+      encryptedData.PasswordValue = encrypt(Patient.Password);
+      encryptedData.Password = hashValue(Patient.Password);
+    }
+
+
+    const result = await collection.insertOne(encryptedData);
+
+    return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedId: result.insertedId.toString(),
+    };
+
+  } catch (error) {
+    console.error("ERROR:", error);
+    throw error;
+  }
+};
 
 
 

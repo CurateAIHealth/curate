@@ -171,3 +171,13 @@ case "UpdateTimeStampInfo":
         return state
     }
 }
+
+export const CurrentRegisterUser = (state: any = "", action: any) => {
+    switch (action.type) {
+        case "UpdateCurrentRegisterdUserType":
+            return action.payload;
+        default:
+            return state
+
+    }
+}
