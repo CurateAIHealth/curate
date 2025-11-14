@@ -12,9 +12,17 @@ import PatientFamilyForm from '@/Components/PatientFamilyForm/page';
 import UserTypeSelector from '@/Components/UserTypeSelector/page';
 import HealthcareAssistantForm from '@/Components/HCA/page';
 import OrganizationForm from '@/Components/Organisation/page';
+import { useDispatch, useSelector } from 'react-redux';
+import { Updateformregisterdusertype } from '@/Redux/action';
 
 export default function RegisterPage() {
-  const [userType, setUserType] = useState<string>('');
+  
+const disptach=useDispatch()
+const userType=useSelector((state:any)=>state.CurrentRegisteredUserType)
+
+const setUserType=(Z:any)=>{
+disptach(Updateformregisterdusertype(Z))
+}
 
 
 

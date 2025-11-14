@@ -121,3 +121,10 @@ export const UpdateTimeStamp=(CurrentTimeStampValue:any)=>{
         payload:CurrentTimeStampValue,
     }
 }
+
+export const Updateformregisterdusertype=(M:any)=>{
+    return{
+        type:'UpdateCurrentRegisterdUserType',
+        payload:M
+    }
+}
