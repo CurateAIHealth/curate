@@ -433,7 +433,8 @@ export const UpdatePatientInformation = async (Patient: {
   FamilyMembars: any,
   EmailVerification: any,
   FinelVerification: any,
-  ClientStatus:any
+  ClientStatus:any,
+  ReferdVendorId:any
 }) => {
   try {
     const cluster = await clientPromise;
@@ -463,6 +464,7 @@ export const UpdatePatientInformation = async (Patient: {
       Age: Patient.Age,
       Gender: encrypt(Patient.Gender),
       userId: Patient.userId,
+      ReferdVendorId:Patient.ReferdVendorId,
 
       Location: encrypt(Patient.Location),
       dateofBirth: encrypt(Patient.dateofBirth),
@@ -770,7 +772,8 @@ export interface HCAInfo {
   FinelVerification: any;
   EmailVerification: any;
   CurrentStatus:any,
-  StaffType:any
+  StaffType:any,
+  ReferdVedorId:any
 }
 
 export const HCARegistration = async (HCA: HCAInfo) => {
@@ -820,6 +823,7 @@ StaffType:HCA.StaffType,
       Password: hashValue(HCA.Password),
 
       userId: HCA.userId,
+      ReferdVedorId:HCA.ReferdVedorId,
       VerificationStatus: HCA.VerificationStatus,
       TermsAndConditions: HCA.TermsAndConditions,
       FinelVerification: HCA.FinelVerification,

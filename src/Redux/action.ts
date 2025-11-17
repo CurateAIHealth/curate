@@ -128,3 +128,19 @@ export const Updateformregisterdusertype=(M:any)=>{
         payload:M
     }
 }
+
+
+export const UpdateVendorPopUpStatus=(PopUpStatus:any)=>{
+return{
+    type:"UpdateVendorPopUpStatus",
+    payload:PopUpStatus
+}
+}
+
+
+export const CurrentReferdVendorId=(CyrrentVedorId:any)=>{
+    return{
+        type:"CurrentReferdVendorId",
+        payload:CyrrentVedorId
+    }
+}

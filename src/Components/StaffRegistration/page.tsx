@@ -2,7 +2,7 @@
 
 import { VendorFieldMap } from "@/Lib/Content";
 import {  UpdateVendorInformation } from "@/Lib/user.action";
-import { Updateformregisterdusertype } from "@/Redux/action";
+import { CurrentReferdVendorId, Updateformregisterdusertype, UpdateVendorPopUpStatus } from "@/Redux/action";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -128,25 +128,25 @@ const payload = {
   EmailVerification: false,
   FinelVerification: false,
 };
+ 
 const Argu = mainTitle=== "Business Vendor Form" ?  "Healthcare Assistant":"patient" ;
+ console.log('Posted Data----',payload);
    const result = await UpdateVendorInformation(payload);
       if (result.success===true) {
  
         setStatusMessage(result.message);
 
         if ((mainTitle === "Business Vendor Form") || (mainTitle === "HCP vendor Form")) {
+          dispatch(CurrentReferdVendorId(payload.userId))
           dispatch(Updateformregisterdusertype(Argu));
-          const Timer = setInterval(() => {
-            setStatusMessage("Please Wait Routing to Registration Page, Register Your Referd Candidate");
-            Router.push("/register");
-          }, 1500)
+        
+            dispatch(UpdateVendorPopUpStatus(true))
 
-          return () => clearInterval(Timer)
         }
 
         return;
       }
-  console.log('Posted Data----',payload);
+
 
  
 };
@@ -239,12 +239,12 @@ const Argu = mainTitle=== "Business Vendor Form" ?  "Healthcare Assistant":"pati
 
                   <input
                     type={getInputType(label)}
-                    className="
+                    className={`
                       px-4 py-3 bg-white/70 border border-[#d7e7ff]
                       rounded-2xl shadow-sm 
                       focus:ring-2 focus:ring-[#75aaff] 
-                      focus:border-[#75aaff] transition
-                    "
+                      focus:border-[#75aaff] transition ${label.includes("PAN") ? "uppercase" : ""}
+                    `}
                     value={InputFormData[label] || ""}
                     onChange={(e) => handleChange(label, e.target.value)}
                   />
