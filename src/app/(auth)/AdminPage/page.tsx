@@ -25,6 +25,7 @@ import axios from 'axios';
 import { setTimeout } from 'timers/promises';
 import { decrypt, encrypt } from '@/Lib/Actions';
 import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
+import { LoadingData } from '@/Components/Loading/page';
 let cachedUserInfo: any = null;
 let cachedRegisteredUsers: any[] | null = null;
 let cachedFullInfo: any[] | null = null;
@@ -489,11 +490,7 @@ const handleLogout = () => {
 
 
   if (isChecking) {
-    return (
-      <div className="h-screen flex items-center justify-center font-bold text-gray-700 bg-gradient-to-tr from-[#ECF2FF] to-[#FBFAF5]">
-         {UpdateMainFilter} Information Loading....
-      </div>
-    );
+     <LoadingData/>
   }
 
 

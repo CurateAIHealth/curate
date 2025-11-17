@@ -12,6 +12,7 @@ import { stringify } from 'querystring';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { LogOut } from 'lucide-react';
+import { LoadingData } from '@/Components/Loading/page';
 
 
 const DEFAULT_PROFILE_PIC = '/Icons/DefaultProfileIcon.png';
@@ -568,9 +569,7 @@ console.log("Posting Data------------------------********8")
 
   if (isChecking) {
     return (
-      <div className='h-screen flex items-center justify-center font-bold'>
-        Please wait while we load your profile...
-      </div>
+        <LoadingData/>
     );
   }
 
