@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { Pencil, X } from 'lucide-react';
 import { PROFESSIONAL_SKILL_OPTIONS } from '@/Lib/Content';
+import { LoadingData } from '../Loading/page';
 
 
 const TABS = ['Personal Info', 'Bank Details', 'Documents', 'Work Experience', 'Identifiers'];
@@ -243,11 +244,7 @@ setSubmitstatusMessage("Profile Updated Succesfully")
 }
   if (isChecking) {
     return (
-      <div className="h-screen flex items-center justify-center font-bold">
-      
-      Here's the Full Scoop on {NameoftheClient}...
-      
-      </div>
+        <LoadingData/>
     );
   }
   const handleprofessionalSkillChange = (skill:any) => {

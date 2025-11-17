@@ -12,6 +12,7 @@ import ContactSection from '@/Components/Contact/page';
 import ModernFooter from '@/Components/Footer/page';
 import { UpdateTimeStamp } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
+import { LoadingData } from '@/Components/Loading/page';
 
 
 
@@ -88,9 +89,7 @@ export default function StaticInfoPage() {
 
   if (isChecking) {
     return (
-      <div className='h-screen flex items-center justify-center font-bold'>
-        Loading....
-      </div>
+      <LoadingData/>
     );
   }
 

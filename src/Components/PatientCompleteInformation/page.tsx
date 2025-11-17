@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useState, ChangeEvent, useEffect, memo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import Timesheet from '../TimeSheet/page';
+import { LoadingData } from '../Loading/page';
 
 
 
@@ -313,11 +314,7 @@ const Router=useRouter()
 
     if (isChecking) {
     return (
-      <div className="h-screen flex items-center justify-center font-bold">
-      
-      Here's the Full Scoop on {NameoftheClient}...
-      
-      </div>
+        <LoadingData/>
     );
   }
   return (

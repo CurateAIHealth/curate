@@ -5,6 +5,7 @@ import { DeleteTimeSheet, GetRegidterdUsers, GetTimeSheetInfo, InserTerminationD
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateSubHeading } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
+import { LoadingData } from "../Loading/page";
 
 type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday";
 const statusCycle: AttendanceStatus[] = ["Present", "Absent", "Leave", "Holiday"];
@@ -673,19 +674,7 @@ setFineldate({...Fineldate,
 
   if (isChecking) {
     return (
-     <div className="h-[50vh] mt-20 flex items-center justify-center">
-  <div className="flex flex-col items-center justify-center gap-4 
-                  bg-white/60 backdrop-blur-md rounded-3xl shadow-2xl 
-                  border border-gray-100 px-10 py-8">
-    
-    <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent 
-                    rounded-full animate-spin"></div>
-    
-    <p className="text-lg font-semibold text-gray-900 tracking-wide">
-      Loading <span className="text-emerald-600">Please Wait...</span>
-    </p>
-  </div>
-</div>
+  <LoadingData/>
 
     );
   }
