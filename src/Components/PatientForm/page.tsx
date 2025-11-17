@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { UpdatePatientInformation } from '@/Lib/user.action';
 import ReactDOMServer from 'react-dom/server';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
 
 export default function PatientForm() {
   const [formData, setFormData] = useState({
@@ -39,6 +40,7 @@ export default function PatientForm() {
   const [SubmissionRequest, setSubmissionRequest] = useState(true);
   const [DocumentAvailability, setDocumentAvailability] = useState(false)
   const [FirstDocumentAvailability, setFirstDocumentAvailability] = useState(true)
+  const VendorId=useSelector((state:any)=>state.ReferdUserId)
   const [familyMembers, setFamilyMembers] = useState<
     { FullName: any; Email: any; Age: any; AadharNumber: any; ContactNumber: any, dateofBirth: any, Gender: any }[]
   >([]);
@@ -193,7 +195,9 @@ export default function PatientForm() {
         ...formData,
         AadharNumber: formData.AadharNumber.replace(/\s/g, ''),
         userId: generatedUserId,
-        FamilyMembars: familyMembers
+        FamilyMembars: familyMembers,
+        ReferdVendorId:VendorId
+
       };
       console.log("Form Data---", payload)
       const result = await UpdatePatientInformation(payload);

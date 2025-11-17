@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import {UserType,RefreshCount,FullHCPList, Admin_Main_Filter, DocReason, HCAList, LoadingClient, PreviedComponent, SUbHeadings, Submmision_Client_Status, Suitable_HCP, TaskOne, UserIdValue, UserInformation, Medication, FullInfo, TimeStamp, CurrentRegisterUser } from "./reducer";
+import {UserType,RefreshCount,FullHCPList, Admin_Main_Filter, DocReason, HCAList, LoadingClient, PreviedComponent, SUbHeadings, Submmision_Client_Status, Suitable_HCP, TaskOne, UserIdValue, UserInformation, Medication, FullInfo, TimeStamp, CurrentRegisterUser, VendorReferal, ReferdVendorUserId } from "./reducer";
 
 export const store = configureStore({
     reducer: {
@@ -20,6 +20,8 @@ export const store = configureStore({
         RegisterdUsersFullInformation:FullInfo,
         RegisteredUserType:UserType,
         TimeStampInfo:TimeStamp,
-        CurrentRegisteredUserType:CurrentRegisterUser
+        CurrentRegisteredUserType:CurrentRegisterUser,
+        ReferalPopup:VendorReferal,
+        ReferdUserId:ReferdVendorUserId,
     }
 })

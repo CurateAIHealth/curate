@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { User, Building2, GraduationCap, FileText, ClipboardList, CircleHelp, Hospital, Stethoscope, UserCog, HeartPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
-import { UpdateRegisterdType } from "@/Redux/action";
+import { useDispatch, useSelector } from "react-redux";
+import { UpdateRegisterdType, UpdateVendorPopUpStatus } from "@/Redux/action";
 import CommonSection from "@/Components/StaffRegistration/page";
 import CommonFormSection from "@/Components/StaffRegistration/page";
 import CommonMedicalSection from "@/Components/StaffRegistration/page";
@@ -12,11 +12,11 @@ import { VendorScreens } from "@/Lib/Content";
 
 
 export default function UserTypeSelector() {
-    const [selected, setSelected] = useState("");
-    const [UpdateStatus, SetUpdateStatus] = useState(true)
-    const router = useRouter();
-    const dispatch = useDispatch()
-
+  const [selected, setSelected] = useState("");
+  const [UpdateStatus, SetUpdateStatus] = useState(true)
+  const router = useRouter();
+  const dispatch = useDispatch()
+  const showConfirmPopup = useSelector((state: any) => state.ReferalPopup)
 useEffect(() => {
   const redirectTypes = ["HCA", "HCP", "HCN"];
   if (UpdateStatus === false && redirectTypes.includes(selected)) {
@@ -99,6 +99,66 @@ const UpdateView = () => {
 
   return (
 <div>
+  <div>
+     {showConfirmPopup && (
+ <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm">
+  <div className="bg-white/20 backdrop-blur-xl border border-white/30 shadow-2xl 
+                  rounded-3xl p-8 w-[420px] text-center relative">
+
+  
+<div className="mx-auto mb-4 w-20 h-20 flex items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 shadow-2xl animate-bounce">
+
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-12 h-12 text-white animate-[pop_0.6s_ease-out]"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+  >
+    <path
+      d="M5 13l4 4L19 7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+</div>
+
+
+
+    <h2 className="text-2xl font-semibold text-gray-800 mb-3">
+      Vendor Registration Succesfull
+    </h2>
+
+
+    <p className="text-white mb-8 text-sm leading-relaxed">
+      Are  you want to register your referred member?
+    </p>
+
+
+    <div className="flex justify-center gap-5 mt-6">
+      <button
+      onClick={()=>  router.push("/register")}
+        className="px-6 py-2.5 cursor-pointer rounded-xl text-white font-medium shadow-lg 
+                   bg-green-600 
+                   hover:from-red-600 hover:to-red-700 transition-all duration-300"
+      >
+        Yes, Register
+      </button>
+
+      <button
+      onClick={()=>{dispatch(UpdateVendorPopUpStatus(false));SetUpdateStatus(!UpdateStatus)}}
+        className="px-6 py-2.5 rounded-xl cursor-pointer font-medium shadow bg-gray-100 text-gray-800 
+                   hover:bg-gray-200 transition-all duration-300"
+      >
+        No, Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+  )}
+  </div>
  {UpdateStatus?
 
      <div className="relative w-full  mx-auto bg-gradient-to-b from-white via-sky-50 to-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] p-4 border border-gray-100 overflow-hidden">

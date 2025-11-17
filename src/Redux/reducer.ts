@@ -181,3 +181,22 @@ export const CurrentRegisterUser = (state: any = "", action: any) => {
 
     }
 }
+
+export const VendorReferal = (state: any = false, action: any) => {
+    switch (action.type) {
+        case "UpdateVendorPopUpStatus":
+            return action.payload;
+        default:
+            return state
+    }
+}
+
+
+export const ReferdVendorUserId=(state:any="",action:any)=>{
+    switch(action.type){
+        case "CurrentReferdVendorId":
+            return action.payload;
+            default:
+                return state
+    }
+}

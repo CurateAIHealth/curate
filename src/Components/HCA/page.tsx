@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { HCARegistration, UpdatePatientInformation } from '@/Lib/user.action';
 import ReactDOMServer from 'react-dom/server';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
 const StaffType=["HCA", "HCP", "HCN","HCP Vendor","Business Vendor","Institute","Individual Vendor","Other"]
 export default function HealthcareAssistantForm() {
   const [formData, setFormData] = useState({
@@ -28,7 +29,8 @@ export default function HealthcareAssistantForm() {
     FinelVerification:false,
     EmailVerification:false,
     CurrentStatus:"Active",
-    StaffType:""
+    StaffType:"",
+    
   });
 
   const [CheckBoxStatus, setCheckBoxStatus] = useState(false);
@@ -38,7 +40,7 @@ export default function HealthcareAssistantForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [SubmissionRequest, setSubmissionRequest] = useState(true);
   const router = useRouter();
-
+const VendorId=useSelector((state:any)=>state.ReferdUserId)
   const handleChange = (e:any) => {
    
     setStatusMessage('');
@@ -119,6 +121,7 @@ export default function HealthcareAssistantForm() {
         ...formData,
         AadharNumber: formData.AadharNumber.replace(/\s/g, ''),
         userId: generatedUserId,
+        ReferdVedorId:VendorId
       };
 
       const result:any = await HCARegistration(payload);

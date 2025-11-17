@@ -169,7 +169,9 @@ export default function Dashboard() {
         case "Pending PDR":
           return router.push("/PDRView");
           case 'Vendors':
-            return router.push('/VendorsPanel')
+            return router.push('/VendorsPanel');
+            case "Document Compliance":
+              return router.push('/Documents')
 
       default:
         return null
