@@ -1867,6 +1867,80 @@ export const UpdateUserVerificationstatus = async (UserId: string, UpdatedStatus
   }
 }
 
+export const UpdateDocumentFollowUpStatus = async (
+  UserId: string,
+  data: Record<string, any>
+) => {
+  try {
+    console.log("Check----", UserId);
+
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Registration");
+
+    const updateFields = {
+      userId: UserId, 
+      FirstName: data.FirstName,
+      DocumentSkipReason: String(data.DocumentSkipReason ?? ""),
+      followTime: String(data.followTime ?? ""),
+      followDate: String(data.followDate ?? ""),
+      RemainderDate: String(data.followDate ?? ""),
+      RemainderTime: String(data.followTime ?? "")
+    };
+
+    const result = await Collection.updateOne(
+      { userId: UserId },
+      { $set: updateFields },
+      { upsert: true } // 👉 THIS CREATES NEW USER IF NOT EXIST
+    );
+
+    if (result.upsertedCount > 0) {
+      return { success: true, message: "New user created successfully!" };
+    }
+
+    return { success: true, message: "User updated successfully!" };
+
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+};
+
+export const UpdateDocumentFollowUpStatusInFullInfo = async (
+  UserId: string,
+  data: Record<string, any>
+) => {
+  try {
+    console.log("Check----",UserId)
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("CompliteRegistrationInformation");
+
+    const updateFields = {
+      DocumentSkipReason: String(data.DocumentSkipReason ?? ""),
+      followTime: String(data.followTime ?? ""),
+      followDate: String(data.followDate ?? "")
+    };
+
+    const result = await Collection.updateOne(
+      { "HCAComplitInformation.UserId": UserId },
+      { $set: {"HCAComplitInformation.DocumentSkipReason":updateFields.DocumentSkipReason,
+        "HCAComplitInformation.followDate":updateFields.followDate,
+        "HCAComplitInformation.followTime":updateFields.followTime,
+      } }
+    );
+
+    if (result.matchedCount === 0) {
+      return { success: false, message: "User not found!" };
+    }
+
+    return { success: true, message: "Created or Updated successfully!" };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+};
+
+
+
 
 export const UpdateUserEmailVerificationstatus = async (UserId: string, UpdatedStatus: string) => {
   try {
