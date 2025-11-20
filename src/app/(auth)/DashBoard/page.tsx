@@ -19,6 +19,7 @@ import {
   GraduationCap,
   Users,
   FileClock,
+  ReceiptIndianRupee,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
@@ -88,8 +89,6 @@ const tabs = [
     icon: FileClock,
     color: "bg-gradient-to-tr from-sky-500 to-cyan-600",
   },
-
-  
   {
     name: "Vendors",
     count: 24,
@@ -118,7 +117,16 @@ const tabs = [
     icon: FileText,
     color: "bg-gradient-to-tr from-fuchsia-500 to-pink-600",
   },
+
+  {
+    name: "Invoices",
+    count: 30,
+    growth: "+12%",
+    icon: ReceiptIndianRupee, 
+    color: "bg-gradient-to-tr from-lime-500 to-green-600",
+  },
 ];
+
 
 
 export default function Dashboard() {
@@ -171,7 +179,9 @@ export default function Dashboard() {
           case 'Vendors':
             return router.push('/VendorsPanel');
             case "Document Compliance":
-              return router.push('/Documents')
+              return router.push('/Documents');
+             case "Invoices":
+              return router.push("/Invoices")
 
       default:
         return null
