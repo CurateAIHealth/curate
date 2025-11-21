@@ -61,7 +61,7 @@ const Router=useRouter()
       const RegisterdUsersResult = await GetRegidterdUsers();
       setUsers(RegisterdUsersResult || []);
       const PlacementInformation: any = await GetTimeSheetInfo();
-      console.log("Test Adress-----",PlacementInformation)
+      
       setClientsInformation(PlacementInformation);
       dispatch(UpdateSubHeading("On Service"));
       setIsChecking(false);
@@ -99,6 +99,7 @@ const Router=useRouter()
       hcpSource: each.hcpSource,
       hcpTotal: each.hcpTotal,
       invoice: each.invoice,
+      PDRStatus:each.PDRStatus
 
 
 
@@ -122,7 +123,7 @@ const Router=useRouter()
     ClientStatus: each.ClientStatus,
     Status: each.Status,
     provider:each.provider,
-    payTerms:each.payTerms
+    payTerms:each.payTerms,
 
 
   }));
@@ -278,7 +279,7 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((each:any) => {
     role.includes(search)
   );
 });
-console.log("Check Finel Time Sheet---",ClientsInformation)
+
 
 const handleLogout = () => {
   dispatch(Update_Main_Filter_Status(""))
@@ -302,13 +303,13 @@ const handleLogout = () => {
  return (
 <div className="w-full min-h-screen bg-gradient-to-br from-[#f9fbfa] via-[#f0fdfa] to-[#ecfeff] flex flex-col gap-10 p-10 relative overflow-hidden">
 
-  {/* Background accents */}
+
   <div className="absolute inset-0 -z-10">
     <div className="absolute top-[10%] left-[15%] w-[300px] h-[300px] bg-emerald-100/40 rounded-full blur-3xl"></div>
     <div className="absolute bottom-[5%] right-[10%] w-[250px] h-[250px] bg-cyan-100/30 rounded-full blur-3xl"></div>
   </div>
 
-  {/* Header */}
+  
   <div className="flex flex-col sm:flex-row justify-between items-center gap-6 bg-white/90 backdrop-blur-xl rounded-2xl shadow-[0_6px_30px_rgba(0,0,0,0.08)] border border-gray-100 px-8 py-6">
     <div>
       <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">🩺 Patient Daily Record</h1>
@@ -344,7 +345,7 @@ const handleLogout = () => {
               </button>
   </div>
 
-  {/* No data */}
+
   {ClientsInformation.length === 0 && (
     <div className="flex flex-col items-center justify-center text-center gap-8 h-[65vh] rounded-3xl bg-white/70 backdrop-blur-xl border border-emerald-100 shadow-[0_8px_40px_rgba(16,185,129,0.08)] p-16">
       <h2 className="text-4xl font-extrabold text-gray-800">
@@ -360,7 +361,7 @@ const handleLogout = () => {
     </div>
   )}
 
-  {/* Main Table */}
+
   {ClientsInformation.length > 0 && (
     <div className="flex flex-col gap-6 bg-white/80 backdrop-blur-xl border border-gray-100 rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.05)] p-8 transition-all hover:shadow-[0_12px_60px_rgba(0,0,0,0.08)]">
 
@@ -402,7 +403,7 @@ const handleLogout = () => {
                     onClick={() => UpdatePopup(c)}
                     className="px-6 py-2 text-xs cursor-pointer font-semibold bg-gradient-to-r from-emerald-600 to-teal-500 text-white rounded-full shadow-md hover:shadow-lg hover:scale-[1.05] transition-all duration-300"
                   >
-                    Fill PDR
+                  {c.PDRStatus?  'Update PDR':'Fill PDR'}
                   </button>
                 </td>
               </tr>

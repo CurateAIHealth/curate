@@ -19,7 +19,7 @@ import { useState, useEffect } from "react";
 })=> {
   const [otherValue, setOtherValue] = useState("");
 
-  // Initialize otherValue if selected contains a custom value
+
   useEffect(() => {
     if (multiple) {
       const otherItem = Array.isArray(selected)
@@ -53,7 +53,7 @@ import { useState, useEffect } from "react";
     setOtherValue(value);
 
     if (multiple) {
-      // Replace 'Other' with typed value
+     
       const current = (selected || []).filter((x:any) => x !== "Other" && x !== otherValue);
       onChange(value ? [...current, value] : current);
     } else {

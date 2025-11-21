@@ -1312,12 +1312,6 @@ export const indianFamilyRelations = [
   "Sister-in-law",
   "Husband",
   "Wife",
-  "Stepfather",
-  "Stepmother",
-  "Stepbrother",
-  "Stepsister",
-  "Foster Father",
-  "Foster Mother",
   "Godfather",
   "Godmother"
 ];

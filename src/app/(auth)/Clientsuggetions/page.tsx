@@ -16,6 +16,7 @@ const ClientSuggetions = () => {
   const [loading, setLoading] = useState(true);
 
   const currentClientUserId = useSelector((state: any) => state.Suggested_HCP);
+  console.log("Id")
   const updatedRefresh = useSelector((state: any) => state.updatedCount);
   const router = useRouter();
   const dispatch = useDispatch()
@@ -29,6 +30,7 @@ const ClientSuggetions = () => {
     }
     Fetch()
   }, [])
+
   useEffect(() => {
     if (!currentClientUserId) {
       router.push("/AdminPage");

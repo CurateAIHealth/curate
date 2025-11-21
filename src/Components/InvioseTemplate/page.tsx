@@ -1,3 +1,4 @@
+import { numberToWords } from '@/Lib/Actions';
 import { company, payment, terms } from '@/Lib/Content';
 import React, { JSX } from 'react';
 
@@ -24,12 +25,7 @@ interface ItemRow {
   amount: number | string;
 }
 
-interface TotalsInfo {
-  subTotal?: string;
-  total?: string;
-  balanceDue?: string;
-  totalInWords?: string;
-}
+
 
 interface ColorConfig {
   primary?: string;
@@ -41,7 +37,7 @@ interface Props {
   invoice?: InvoiceInfo;
   billTo?: BillToInfo;
   items?: ItemRow[];
-  totals?: TotalsInfo;
+  totals?: any;
   colors?: ColorConfig;
 }
 
@@ -152,8 +148,8 @@ export default function ReusableInvoice({
                 <td className="p-2">{idx + 1}</td>
                 <td className="p-2 font-medium">{it.description}</td>
                 <td className="p-2 text-right">{it.days}</td>
-                <td className="p-2 text-right">{it.rate}</td>
-                <td className="p-2 text-right">{it.amount}</td>
+                <td className="p-2 text-right">₹{it.rate}/-</td>
+                <td className="p-2 text-right">₹{it.amount}/-</td>
               </tr>
             ))}
           </tbody>
@@ -184,24 +180,27 @@ export default function ReusableInvoice({
         <div className="sm:w-1/2">
           <div className="text-sm">
             <div className="flex justify-end">
-              <div className="w-full max-w-sm">
+              <div className="w-full max-w-sm bg-slate-50">
                 <div className="flex justify-between p-2">
-                  <div>Sub Total</div>
-                  <div className="font-medium">{totals.subTotal}</div>
+                  <div>Discount</div>
+                  <div className=" text-green-600 font-bold">₹{totals.Discount}/-</div>
                 </div>
-
-                <div className="flex justify-between p-2 bg-slate-50">
+ <div className="flex justify-between p-2 ">
+                  <div>OtherExpenses</div>
+                  <div >₹{totals.OtherExpenses}/-</div>
+                </div>
+                <div className="flex justify-between p-2 ">
                   <div>Total</div>
-                  <div className="font-bold">{totals.total}</div>
+                  <div >₹{totals.total}/-</div>
                 </div>
 
                 <div className="flex justify-between p-2">
                   <div>Balance Due</div>
-                  <div className="font-semibold">{totals.balanceDue}</div>
+                  <div className="font-semibold text-red-600">₹{totals.balanceDue}/-</div>
                 </div>
 
-                <div className="mt-2 p-2 text-xs text-slate-600">
-                  In Words: {totals.totalInWords}
+                <div className="mt-2 p-2  text-slate-600">
+                  In Words: <a className='text-gray-800 font-bold underline text-[13px] uppercase'>{numberToWords(totals.total)} Only</a>
                 </div>
               </div>
             </div>

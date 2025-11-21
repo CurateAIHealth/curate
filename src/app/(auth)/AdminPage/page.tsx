@@ -157,7 +157,7 @@ useEffect(() => {
       setFullInfo(fullInfo);
       setSearch(CurrentClientStatus);
       setUsers((registeredUsers || []).reverse());
-      console.log("Get User Id------",)
+    
       setIsChecking(false);
     } catch (err: any) {
       console.error('Error fetching data:', err);
@@ -507,6 +507,7 @@ const Filter_HCA = Finel.filter((each:any) => {
 
 
 const UpdateNavigattosuggetions=(D:any)=>{
+  console.log("Testing------")
   router.push("/Clientsuggetions")
   dispatch(UpdateClientSuggetion(D))
 }
