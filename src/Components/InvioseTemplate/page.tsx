@@ -46,128 +46,150 @@ export default function ReusableInvoice({
   billTo = {},
   items = [],
   totals = {},
-  colors = { primary: '#50c896', accent: '#1392d3', pink: '#ff1493' },
+  colors = { primary: "#50c896", accent: "#1392d3", pink: "#ff1493" }
 }: Props): JSX.Element {
 
   return (
-    <div className="p-4 w-full max-w-4xl mx-auto bg-white shadow-lg rounded-lg print:shadow-none print:rounded-none">
+    <div
+      style={{
+        padding: "4px",
+        width: "100%",
+      
+        background: "#fff",
+        borderRadius: "10px",
+        boxShadow: "0 0 10px rgba(0,0,0,0.1)"
+      }}
+    >
 
-    
-      <div className="flex items-center mb-2">
-  
+      {/* HEADER */}
+      <div style={{ display: "flex", alignItems: "center", marginBottom: "15px" }}>
+        <div
+          style={{
+            width: "8px",
+            height: "100px",
+            borderRadius: "0 8px 8px 0",
+            background: colors.primary
+          }}
+        ></div>
 
-  <div
-    className="w-2 h-24 rounded-r-lg"
-    style={{ background: colors.primary }}
-  ></div>
+        <div style={{ flex: 1, display: "flex", justifyContent: "space-between", marginLeft: "16px" }}>
+          <div>
+            <h1
+              style={{
+                fontSize: "32px",
+                fontWeight: "bold",
+                letterSpacing: "2px",
+                margin: 0,
+                color: colors.primary
+              }}
+            >
+              INVOICE
+            </h1>
 
-  <div className="flex-1 flex justify-between items-center ml-4">
-    <div>
-      <h1 className="text-3xl font-bold tracking-wide" 
-          style={{ color: colors.primary }}>
-        INVOICE
-      </h1>
-      <p className="text-lg text-slate-600 mt-1">
-        Invoice ID: #{invoice.number}
-      </p>
-    </div>
+            <p style={{ marginTop: "6px", color: "#475569", fontSize: "16px" }}>
+              Invoice ID: #{invoice.number}
+            </p>
+          </div>
 
-    <img
-      src="Icons/UpdateCurateLogo.png"
-      alt="logo"
-      className="h-46 w-auto object-contain"
-    />
-  </div>
-</div>
-
-
-
-
-<div className="flex justify-between items-start ">
-
- 
-  <div className="w-1/2">
-    <h4 className="font-semibold text-lg">Bill To</h4>
-    <div className="text-sm text-slate-700 leading-tight mt-1">
-      <div className="font-semibold text-base">{billTo.name}</div>
-      <div>{billTo.addressLines}</div>
-      {billTo.otherDetails && (
-        <div className="mt-1">{billTo.otherDetails}</div>
-      )}
-    </div>
- <div className="mt-6 text-sm text-slate-700 leading-tight">
-        <div><strong>Invoice Date:</strong> {invoice.date}</div>
-        <div><strong>Due Date:</strong> {invoice.dueDate}</div>
-        <div><strong>Terms:</strong> {invoice.terms}</div>
+          <img
+            src="https://curate-pearl.vercel.app/Icons/Curate-logoq.png"
+            alt="logo"
+            style={{ height: "70px", width: "auto", objectFit: "contain" }}
+          />
+        </div>
       </div>
-   
-  </div>
 
+      {/* BILL TO + COMPANY */}
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        {/* BILL TO */}
+        <div style={{ width: "50%" }}>
+          <h4 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "4px" }}>Bill To</h4>
 
-  <div className="text-right w-1/2">
-    <h3 className="text-xl font-bold" style={{ color: colors.pink }}>
-      {company.name}
-    </h3>
+          <div style={{ fontSize: "14px", color: "#334155", lineHeight: "18px" }}>
+            <div style={{ fontWeight: 600, fontSize: "16px" }}>{billTo.name}</div>
+            <div>{billTo.addressLines}</div>
 
-    {company.addressLines?.map((l, i) => (
-      <div key={i} className="text-sm text-slate-600 leading-tight">
-        {l}
+            {billTo.otherDetails && (
+              <div style={{ marginTop: "4px" }}>{billTo.otherDetails}</div>
+            )}
+          </div>
+
+          <div style={{ marginTop: "20px", fontSize: "14px", color: "#334155" }}>
+            <div><strong>Invoice Date:</strong> {invoice.date}</div>
+            <div><strong>Due Date:</strong> {invoice.dueDate}</div>
+            <div><strong>Terms:</strong> {invoice.terms}</div>
+          </div>
+        </div>
+
+        {/* COMPANY INFO */}
+        <div style={{ width: "50%", textAlign: "right" }}>
+          <h3 style={{ fontSize: "20px", fontWeight: "bold", color: colors.pink, marginBottom: "4px" }}>
+            {company.name}
+          </h3>
+
+          {company.addressLines?.map((l, i) => (
+            <div key={i} style={{ fontSize: "14px", color: "#475569", lineHeight: "16px" }}>
+              {l}
+            </div>
+          ))}
+
+          <div style={{ marginTop: "8px", fontSize: "14px", color: "#334155" }}>
+            <div><strong>Patient Name:</strong> {billTo.patientName || "-"}</div>
+            <div style={{ marginTop: "4px" }}><strong>Service Dates:</strong></div>
+            <div>{invoice.serviceFrom} to {invoice.serviceTo}</div>
+          </div>
+        </div>
       </div>
-    ))}
-     <div className="mt-3 text-sm text-slate-700">
-      <div><strong>Patient Name:</strong> {billTo.patientName || "-"}</div>
-      <div className="mt-1"><strong>Service Dates:</strong></div>
-      <div>{invoice.serviceFrom} to {invoice.serviceTo}</div>
-    </div>
-  </div>
 
-</div>
+      {/* LINE BREAK */}
+      <hr style={{ margin: "18px 0", borderColor: "#cbd5e1" }} />
 
-
-
-     
-
-      <hr className="my-4 border-slate-300" />
-
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm border-collapse">
+      {/* ITEMS TABLE */}
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", fontSize: "14px", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ background: colors.primary }} className="text-white">
-              <th className="p-2 text-left">#</th>
-              <th className="p-2 text-left">Service & Description</th>
-              <th className="p-2 text-right">Days</th>
-              <th className="p-2 text-right">Rate</th>
-              <th className="p-2 text-right">Amount</th>
+            <tr style={{ background: colors.primary, color: "white" }}>
+              <th style={{ padding: "8px", textAlign: "left" }}>#</th>
+              <th style={{ padding: "8px", textAlign: "left" }}>Service & Description</th>
+              <th style={{ padding: "8px", textAlign: "right" }}>Days</th>
+              <th style={{ padding: "8px", textAlign: "right" }}>Rate</th>
+              <th style={{ padding: "8px", textAlign: "right" }}>Amount</th>
             </tr>
           </thead>
 
           <tbody>
             {items.map((it, idx) => (
-              <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50"}>
-                <td className="p-2">{idx + 1}</td>
-                <td className="p-2 font-medium">{it.description}</td>
-                <td className="p-2 text-right">{it.days}</td>
-                <td className="p-2 text-right">₹{it.rate}/-</td>
-                <td className="p-2 text-right">₹{it.amount}/-</td>
+              <tr
+                key={idx}
+                style={{
+                  background: idx % 2 === 0 ? "#ffffff" : "#f8fafc"
+                }}
+              >
+                <td style={{ padding: "8px" }}>{idx + 1}</td>
+                <td style={{ padding: "8px", fontWeight: 500 }}>{it.description}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>{it.days}</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>₹{it.rate}/-</td>
+                <td style={{ padding: "8px", textAlign: "right" }}>₹{it.amount}/-</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
+      {/* PAYMENT + TOTALS */}
+      <div style={{ marginTop: "20px", display: "flex", gap: "20px" }}>
+        
+        {/* PAYMENT */}
+        <div style={{ width: "50%" }}>
+          <h5 style={{ fontWeight: 600 }}>Payment Method</h5>
 
-      <div className="mt-4 sm:flex sm:justify-between gap-4">
-
-       
-        <div className="sm:w-1/2">
-          <h5 className="font-semibold">Payment Method</h5>
-          <div className="mt-2 text-sm text-slate-700 leading-tight">
+          <div style={{ marginTop: "8px", fontSize: "14px", color: "#334155", lineHeight: "18px" }}>
             <img
-              src="Icons/PaymentScanner.png"
+              src="https://curate-pearl.vercel.app/Icons/PaymentScanner.png"
               alt="QR"
-              className="h-28 w-28 object-contain mb-2"
+              style={{ height: "110px", width: "110px", objectFit: "contain", marginBottom: "6px" }}
             />
+
             <div><strong>Account Name:</strong> {payment.accountName}</div>
             <div><strong>Bank Name:</strong> {payment.BankName}</div>
             <div><strong>Account Number:</strong> {payment.accountNumber}</div>
@@ -176,69 +198,70 @@ export default function ReusableInvoice({
           </div>
         </div>
 
+        {/* TOTALS */}
+        <div style={{ width: "50%" }}>
+          <div style={{ fontSize: "14px" }}>
+            <div style={{ width: "100%", maxWidth: "300px", marginLeft: "auto", background: "#f1f5f9" }}>
 
-        <div className="sm:w-1/2">
-          <div className="text-sm">
-            <div className="flex justify-end">
-              <div className="w-full max-w-sm bg-slate-50">
-                <div className="flex justify-between p-2">
+              {totals.Discount > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px" }}>
                   <div>Discount</div>
-                  <div className=" text-green-600 font-bold">₹{totals.Discount}/-</div>
+                  <div style={{ color: "green", fontWeight: "bold" }}>₹{totals.Discount}/-</div>
                 </div>
- <div className="flex justify-between p-2 ">
-                  <div>OtherExpenses</div>
-                  <div >₹{totals.OtherExpenses}/-</div>
-                </div>
-                <div className="flex justify-between p-2 ">
-                  <div>Total</div>
-                  <div >₹{totals.total}/-</div>
-                </div>
+              )}
 
-                <div className="flex justify-between p-2">
-                  <div>Balance Due</div>
-                  <div className="font-semibold text-red-600">₹{totals.balanceDue}/-</div>
+              {totals.OtherExpenses > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px" }}>
+                  <div>Other Expenses</div>
+                  <div>₹{totals.OtherExpenses}/-</div>
                 </div>
+              )}
 
-                <div className="mt-2 p-2  text-slate-600">
-                  In Words: <a className='text-gray-800 font-bold underline text-[13px] uppercase'>{numberToWords(totals.total)} Only</a>
-                </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px" }}>
+                <div>Total</div>
+                <div>₹{totals.total}/-</div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px" }}>
+                <div>Balance Due</div>
+                <div style={{ fontWeight: "bold", color: "red" }}>₹{totals.balanceDue}/-</div>
+              </div>
+
+              <div style={{ padding: "8px", color: "#475569", marginTop: "5px" }}>
+                In Words:{" "}
+                <span style={{ fontWeight: "bold", textDecoration: "underline", fontSize: "13px", textTransform: "uppercase" }}>
+                  {numberToWords(totals.total)} Only
+                </span>
               </div>
             </div>
           </div>
         </div>
+
       </div>
 
-    
-      <div className="mt-6">
-        <h5 className="font-semibold mb-2">Terms & Conditions</h5>
+      {/* TERMS */}
+      <div style={{ marginTop: "25px" }}>
+        <h5 style={{ fontWeight: 600, marginBottom: "6px" }}>Terms & Conditions</h5>
 
-        <ol className="list-decimal ml-5 text-[10px] text-slate-700 leading-tight space-y-1">
+        <ol style={{ fontSize: "11px", color: "#334155", lineHeight: "14px", paddingLeft: "18px" }}>
           {terms.map((t, i) => (
             <li key={i}>{t}</li>
           ))}
         </ol>
-
-    
       </div>
 
-<div className="mt-6 text-center font-semibold text-pink-600">
+      {/* NOTES */}
+      <div style={{ marginTop: "20px", textAlign: "center", fontWeight: 600, color: colors.pink }}>
+        {company.notes}
+      </div>
 
-  {company.notes}
-</div>
-
-
-
-  
-      <div className="mt-4 text-center text-sm">
-        <a
-          href={company.website}
-          target="_blank"
-          rel="noreferrer"
-          className='gray-800'
-        >
+      {/* WEBSITE */}
+      <div style={{ marginTop: "12px", textAlign: "center", fontSize: "14px" }}>
+        <a href={company.website} target="_blank" rel="noreferrer" style={{ color: "#000" }}>
           {company.website}
         </a>
       </div>
+
     </div>
   );
 }

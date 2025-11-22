@@ -213,6 +213,7 @@ export default function InvoicesPage() {
     return { label: `${daysLeft} days left`, days: daysLeft, status: "upcoming" };
   }
 const UpdateInvoiceMailTemplate=(MainTemplateInfo:any)=>{
+
   dispatch(UpdateInvoiceInfo(MainTemplateInfo))
 Router.push("/MailInvoiceTemplate")
 }

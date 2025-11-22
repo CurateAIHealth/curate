@@ -2,8 +2,11 @@
 
 import { useSelector } from "react-redux";
 import { useState } from "react";
-import { getDaysBetween } from "@/Lib/Actions";
+import { generatePDF, getDaysBetween } from "@/Lib/Actions";
 import ReusableInvoice from "@/Components/InvioseTemplate/page";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { UpdateInvoice } from "@/Lib/user.action";
 
 const serviceOptions = [
   { name: "Healthcare Assistant Service", code: "HCAS" },
@@ -24,14 +27,17 @@ export default function InvoiceForm() {
   const InvoiceData = useSelector((state: any) => state.InvoiceInfo);
 
   
-  const [otherExpenses, setOtherExpenses] = useState<number>(0);
+  const [otherExpenses, setOtherExpenses] = useState<any>();
   const [discountType, setDiscountType] = useState<"flat" | "percent">("flat");
-  const [discountValue, setDiscountValue] = useState<number>(0);
+  const [discountValue, setDiscountValue] = useState<any>();
   const [roundType, setRoundType] = useState<RoundType>("none");
+  const [Mailstatus,setMailstatus]=useState(true)
+  const Router=useRouter()
   const [services, setServices] = useState([
     { name: "Healthcare Assistant Service", code: "HCAS" },
   ]);
   const [ShowMailTemplate, setShowMailTemplate] = useState(true);
+const [isSending, setIsSending] = useState(false);
 
  
   const start = InvoiceData?.StartDate;
@@ -133,18 +139,112 @@ export default function InvoiceForm() {
   };
 
 
-  const handleSubmit = () => {
-    const finalInvoiceObject = {
-      customer: billTo,
-      invoiceDetails: invoice,
-      services,
-      items,
-      totals,
-    };
+const handleSubmit = async () => {
+  setIsSending(true);   
+  setShowMailTemplate(false);
 
-    setShowMailTemplate(!ShowMailTemplate);
-    console.log("🔵 FINAL UPDATED INVOICE DATA:", finalInvoiceObject);
-  };
+  setTimeout(async () => {
+    const element = document.getElementById("invoice-pdf-area");
+
+    if (!element) {
+      alert("Invoice HTML not found!");
+      setIsSending(false); 
+      return;
+    }
+
+    const html = element.outerHTML;
+    const pdfResponse = await axios.post("/api/generate-pdf", { html });
+    const pdfBase64 = pdfResponse.data.pdf;
+
+    await axios.post("/api/MailSend", {
+      to: "admin@curatehealth.in",
+      subject:
+        "Request for Payment – Attached Invoice from Curate Health Services",
+   html: `
+<div style="width: 100%; max-width: 600px; margin: auto; font-family: 'Segoe UI', sans-serif; background: #ffffff; border-radius: 14px; padding: 0; box-shadow: 0 8px 25px rgba(0,0,0,0.08); overflow: hidden;">
+
+  <div style="background: lightblue; padding: 25px 20px; text-align: center; color: #fff;">
+    <h2 style="margin: 0; font-size: 22px; font-weight: 600;">
+      Invoice Amount
+    </h2>
+
+    <h1 style="margin: 10px 0 0 0; font-size: 36px; font-weight: 700;">
+      ₹${Number(balanceDue).toFixed(2)}
+    </h1>
+  </div>
+
+  <div style="padding: 20px;">
+    <div style="background: #f8f9fc; padding: 15px 20px; border-radius: 10px; border: 1px solid #e3e6ef;">
+      <table style="width: 100%; font-size: 15px; color: #444;">
+        <tbody>
+          <tr>
+            <td><strong>Invoice No</strong></td>
+            <td style="text-align: right;">${invoice.number}</td>
+          </tr>
+          <tr>
+            <td><strong>Invoice Date</strong></td>
+            <td style="text-align: right;">${invoice.date}</td>
+          </tr>
+          <tr>
+            <td><strong>Due Date</strong></td>
+            <td style="text-align: right;">${invoice.dueDate}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 🔥 WORKING PAY NOW BUTTON USING REDIRECT PAGE -->
+    <div style="text-align: center; margin-top: 25px;">
+  <a 
+    href="https://curate-pearl.vercel.app/upi-pay?amount=${Number(balanceDue).toFixed(2)}"
+    style="
+      background: #ff3e6c;
+      color: #fff;
+      padding: 14px 42px;
+      text-decoration: none;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 600;
+      display: inline-block;
+      text-align: center;
+    "
+  >
+    PAY NOW
+  </a>
+</div>
+
+
+    <p style="margin-top: 30px; font-size: 15px; color: #555;">
+      Dear Customer,<br />
+      Please find your invoice attached. Kindly complete the payment at the earliest.
+    </p>
+
+    <p style="font-size: 15px; color: #333; margin-top: 25px;">
+      Regards,<br />
+      <strong>Curate Health Services</strong>
+    </p>
+  </div>
+
+</div>
+`,
+
+      pdfBase64,
+    });
+
+const UpdateInvoiceStatus=await UpdateInvoice(invoice.number)
+if(UpdateInvoiceStatus?.success===true){
+  setMailstatus(false)
+}
+    
+  }, 100);
+};
+
+
+const NavigatetoInvoices=()=>{
+  Router.push("/Invoices")
+}
+
+
 
   const getStatusStyles = (status: string | undefined) => {
     if (!status) return "bg-gray-100 text-gray-700 border-gray-200";
@@ -156,7 +256,50 @@ export default function InvoiceForm() {
   };
 
   return (
-    <div>
+   <>{isSending && (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+    {Mailstatus?
+    <div className="bg-white shadow-xl rounded-2xl px-8 py-6 text-center w-[90%] max-w-sm">
+      <div className="animate-spin h-10 w-10 border-4 border-slate-300 border-t-slate-900 rounded-full mx-auto mb-4"></div>
+
+      <h2 className="text-lg font-semibold text-slate-800">
+        Please Wait…
+      </h2>
+      <p className="text-sm text-slate-500 mt-1">
+        Sending Invoice Email
+      </p>
+    </div>:<div className="bg-white shadow-xl rounded-2xl px-8 py-6 text-center w-[90%] max-w-sm">
+
+  {/* Animated Tick Mark */}
+  <div className="flex items-center justify-center mb-4">
+    <svg
+      className="h-14 w-14 text-green-600 animate-[tick_0.5s_ease-out_forwards]"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M20 6L9 17l-5-5" />
+    </svg>
+  </div>
+
+  <h2 className="text-lg font-semibold text-slate-800">
+    Invoice Sent Successfully
+  </h2>
+
+  <p className="text-sm text-slate-500 mt-1">
+    The invoice email has been delivered.
+  </p>
+
+<button className="px-6 py-3 border cursor-pointer border-teal-600 text-teal-600 rounded-lg font-semibold hover:bg-blue-50 transition" onClick={NavigatetoInvoices}>
+  Go to Invoices
+</button>
+
+</div>}
+  </div>
+)}
 {ShowMailTemplate?    <div className="min-h-screen bg-slate-50 py-8 px-4">
       <div className="max-w-6xl mx-auto space-y-6">
 
@@ -201,6 +344,7 @@ export default function InvoiceForm() {
             </div>
           </div>
         </div>
+
 
 
         <div className="grid grid-cols-1 lg:grid-cols-[2fr,1.4fr] gap-6 items-start">
@@ -314,9 +458,9 @@ export default function InvoiceForm() {
 
                 <KeyRow label="Other Expenses (₹)">
                   <input
-                    type="number"
+                    type="text"
                     className="border border-slate-200 rounded-lg px-2 py-1 w-28 text-right text-sm"
-                    value={otherExpenses}
+                    value={otherExpenses||''}
                     onChange={(e) => setOtherExpenses(Number(e.target.value || 0))}
                   />
                 </KeyRow>
@@ -335,9 +479,9 @@ export default function InvoiceForm() {
                       <option value="percent">% Percent</option>
                     </select>
                     <input
-                      type="number"
+                      type="text"
                       className="border border-slate-200 rounded-lg px-2 py-1 w-24 text-right text-sm"
-                      value={discountValue}
+                      value={discountValue||''}
                       onChange={(e) => setDiscountValue(Number(e.target.value || 0))}
                     />
                     <span className="text-xs text-emerald-700 font-medium">
@@ -372,15 +516,17 @@ export default function InvoiceForm() {
           </div>
         </div>
       </div>
-    </div>: <div className="p-6">
+    </div>:
+   <div id="invoice-pdf-area">
       <ReusableInvoice
         invoice={invoiceProps.invoice}
         billTo={invoiceProps.billTo}
         items={invoiceProps.items}
         totals={invoiceProps.totals}
       />
-    </div>}
     </div>
+}
+    </>
   );
 }
 
@@ -468,3 +614,5 @@ function RoundPill({
     </button>
   );
 }
+
+

@@ -1267,6 +1267,27 @@ export const UpdatePdrStatus = async (UserId: any) => {
   }
 };
 
+export const UpdateInvoice=async(InvoiceNumber:any)=>{
+  try{
+const Cluster=await clientPromise
+const Db=Cluster.db("CurateInformation")
+const Collection=Db.collection("Invoices")
+const UpdateStatus=await Collection.updateOne(
+  {
+  Invoice:InvoiceNumber
+},{
+  $set:{status:"Sent"}
+}
+
+)
+ return {
+      success: true,
+      message: "PDR Status updated successfully.",
+    };
+  }catch(err:any){
+
+  }
+}
 export const GetUserPDRInfo = async (UserId: any) => {
   try {
     const Cluster = await clientPromise;

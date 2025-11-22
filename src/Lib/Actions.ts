@@ -159,3 +159,34 @@ export const numberToWords=(num: any)=> {
 
   return result;
 }
+
+
+
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+
+export const generatePDF = async () => {
+  const element = document.getElementById("invoice-pdf-area");
+  if (!element) {
+    console.error("invoice-pdf-area not found");
+    return null;
+  }
+
+  try {
+    const canvas = await html2canvas(element, { scale: 2 });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const width = pdf.internal.pageSize.getWidth();
+    const height = (canvas.height * width) / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, width, height);
+
+    return pdf.output("datauristring"); // must return a string
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    return null;
+  }
+};
+
