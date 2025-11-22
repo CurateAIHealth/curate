@@ -33,11 +33,6 @@ type RemarkStatusType = {
 
 export default function CallEnquiryForm() {
   const [formData, setFormData] = useState<any>({
-
-
-
-
-
     userType: "patient",
     clientName: "",
     clientPhone: "",
@@ -127,25 +122,25 @@ export default function CallEnquiryForm() {
     patientDrNeedsRemarks: "",
     patientHealthCardRemarks: "",
     hcpTypeRemarks: "",
-    Current_Previous_Occupation: "Software Engineer",
-    Hobbies: ['Reading', 'Traveling', 'Photography'],
-    Present_Illness: "Hypertension",
-    Speciality_Areas: "Orthopedics",
-    OnGoing_Treatment: "Physiotherapy",
-    Balance: "Stable",
-    History_of_Fall: "No recent falls reported",
-    Hearing_Loss: "Mild hearing loss in left ear",
-    Visual_Impairment: "Uses reading glasses",
-    Depression: "None",
-    Confusion: "Occasional forgetfulness",
-    Frequent_Urination: "Yes, during nighttime",
-    Sleep_Issues: "Difficulty falling asleep",
-    Anxiety: "Mild anxiety under stress",
-    Mobility_Aids: "Walking stick",
-    Breathing_Equipment: "None",
-    Feeding_Method: "Self-feeding",
-    Floor_Type: "Tiled floor with rugs",
-    Washroom_Accessories: "Grab bars and non-slip mats",
+    Current_Previous_Occupation: "",
+    Hobbies: [],
+    Present_Illness: "",
+    Speciality_Areas: "",
+    OnGoing_Treatment: "",
+    Balance: "",
+    History_of_Fall: "",
+    Hearing_Loss: "",
+    Visual_Impairment: "",
+    Depression: "",
+    Confusion: "",
+    Frequent_Urination: "",
+    Sleep_Issues: "",
+    Anxiety: "",
+    Mobility_Aids: "",
+    Breathing_Equipment: "",
+    Feeding_Method: "",
+    Floor_Type: "",
+    Washroom_Accessories: "",
    PhysioScore:0,
    PresentHealthRemarks:'',
    TreatmentRemarks:"",
@@ -158,10 +153,11 @@ export default function CallEnquiryForm() {
 
     ClientStatus: "",
   });
-
+const [DiscountStatus,SetDiscountStatus]=useState(true)
 const [visible, setVisible] = useState(true);
   const [WarningMessage, setWarningMessage] = useState("");
-  const [DiscountPrice,setDiscountPrice]=useState(1500)
+  const [DiscountPrice,setDiscountPrice]=useState<any>(1500)
+  const [ClientDiscount,SetClientDiscount]=useState<any>(0)
   const [PhysioScore,SetPhysioScore]=useState(0)
   const [addingWeight, setaddingWeight] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
@@ -179,7 +175,7 @@ Medication:false})
   const dispatch=useDispatch()
     const router=useRouter()
 const MedicationData=useSelector((each:any)=>each.MedicationInfo)
-    const FinelPostingData={...formData,serviceCharges:parseFloat(formData.serviceCharges.replace(/[^0-9.]/g, '')) + DiscountPrice,Medications:MedicationData}
+    const FinelPostingData={...formData,serviceCharges:formData.serviceCharges,RegistrationFee:DiscountPrice-ClientDiscount,Medications:MedicationData}
 console.log('Test Data----',FinelPostingData)
   const handleChange = (field: string, value: string) => {
     setFormData((prev: any) => {
@@ -240,9 +236,9 @@ const UpdatePreview = (A: string) => {
   }
     setStatusMessage("Please Wait...");
     const generatedUserId = uuidv4();
-    const FinelData = { ...formData, userId: generatedUserId,SuitableHCP:"" };
-      const FinelPostingData={...formData,serviceCharges:parseFloat(formData.serviceCharges.replace(/[^0-9.]/g, '')) + DiscountPrice,Medications:MedicationData,userId: generatedUserId,SuitableHCP:"", TimeStamp:TimeStameDetails}
-console.log('Finel Test Data----',FinelPostingData)
+ 
+    const FinelPostingData={...formData,serviceCharges:formData.serviceCharges,RegistrationFee:DiscountPrice-ClientDiscount,Medications:MedicationData,userId: generatedUserId,SuitableHCP:""}
+
     const PostResult = await UpdateNewLeadInformation(FinelPostingData);
     if (PostResult.success) {
       setStatusMessage(`${PostResult.message},Riderecting to Admin Page...`);
@@ -878,17 +874,62 @@ className="overflow-hidden h-[95%]"
                 )}
             </div>
           ))}
-          <p>Registration Charger: 1500</p>
-          <div className="flex justify-between">
-<p className="border flex items-center p-2 rounded-md">Total Amount: {  formData.serviceCharges==="Other"?1500:(parseFloat(formData.serviceCharges.replace(/[^0-9.]/g, '')) || 0) + DiscountPrice}</p>
-
- <button
-    type="button"
-    className="bg-green-800 hover:bg-green-600 cursor-pointer text-white font-semibold px-4 py-2 rounded-lg shadow transition-colors duration-200" onClick={()=>setDiscountPrice(0)}
+          <div>
+            <p>Registration Charger: 1500</p>
+           {DiscountStatus ? (
+  <button
+    onClick={() => SetDiscountStatus(false)}
+    className="px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg
+               hover:bg-teal-700 transition shadow-sm"
   >
-    Discount
+    Add Discount
   </button>
-  </div>
+) : (
+  <input
+    type="number"
+    placeholder="Enter Registration discount"
+    onChange={(e) => SetClientDiscount(e.target.value)}
+    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm
+               focus:outline-none focus:ring-2 focus:ring-teal-500 
+               text-gray-700"
+  />
+)}
+
+            
+          </div>
+         <div className="flex flex-col gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+
+  <p className="text-gray-700 text-sm font-medium">
+    Care Taker Charge Per Day:{" "}
+    <span className="font-semibold text-teal-700">
+      {formData.serviceCharges}
+    </span>
+  </p>
+
+  <p className="text-gray-700 text-sm font-medium">
+    Registration Fee:{" "}
+    <span className="font-semibold text-teal-700">
+      ₹{DiscountPrice - ClientDiscount}
+    </span>
+  </p>
+
+  <p
+    className="border border-teal-400 bg-teal-50 text-teal-800 
+               font-semibold rounded-lg px-4 py-3 shadow-sm 
+               flex items-center justify-between"
+  >
+    <span>Total Amount</span>
+    <span>
+      ₹{formData.serviceCharges === "Other"
+        ? 1500
+        : (parseFloat(formData.serviceCharges.replace(/[^0-9.]/g, "")) || 0) +
+          DiscountPrice -
+          ClientDiscount}
+    </span>
+  </p>
+
+</div>
+
           <p className="text-red-500">{WarningMessage}</p>
         </div>
 

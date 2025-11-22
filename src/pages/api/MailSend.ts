@@ -1,25 +1,44 @@
-
-import type { NextApiRequest, NextApiResponse } from 'next';
-import sgMail from '@sendgrid/mail';
-const ApiKey = process.env.SENDGRID_API_KEY;
-if (!ApiKey) {
-  throw new Error('Missing SendGrid API Key');
-}
-sgMail.setApiKey(ApiKey);
-
+import type { NextApiRequest, NextApiResponse } from "next";
+import nodemailer from "nodemailer";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Only POST allowed' });
-  }
-
-  const { to, subject, html } = req.body;
-
   try {
-    await sgMail.send({ to, from: 'admin@curatehealth.in', subject, html });
-    res.status(200).json({ success: true });
-  } catch (error: any) {
-console.log("EmailError---",error)
-    res.status(500).json({ success: false, error: error.message });
+    const { to, subject, html, pdfBase64 } = req.body;
+
+    // Create SMTP transporter
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_SERVER_HOST,
+      port: Number(process.env.EMAIL_SERVER_PORT),
+      secure: false, // use TLS
+      auth: {
+        user: process.env.EMAIL_FROM,
+        pass: process.env.EMAIL_PASSWORD, 
+      },
+    });
+
+    // Email content
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to,
+      subject,
+      html,
+      attachments: [
+        {
+          filename: "invoice.pdf",
+          content: pdfBase64,
+          encoding: "base64",
+        },
+      ],
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    return res.status(200).json({ success: true });
+  } catch (err: any) {
+    console.error("Nodemailer Error:", err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Email sending failed",
+    });
   }
 }

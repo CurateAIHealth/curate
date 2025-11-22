@@ -1068,20 +1068,25 @@ Search For HCP Criteria
 
                       <div className="mt-2 flex justify-center gap-2 flex-wrap">
                         {clients[0]?.SuitableHCP === hcp.UserId ? (
-                          <button className="bg-green-600 text-white cursor-pointer px-3 py-1 rounded-full text-[10px] font-medium shadow-sm hover:bg-green-700 transition-colors" onClick={() => UpdateAssignHca(
-                            clients[0].userId,
-                            hcp.UserId,
-                            clients[0].FirstName,
-                            clients[0].Email,
-                            clients[0].ContactNumber,
-                            clients[0].Location,
-                            hcp.HCPFirstName,
-                            hcp.HCPContactNumber,
-                            clients[0].patientName,
-                            clients[0].patientPhone,
-                            clients[0].Source,
-                             clients[0].hcpType
-                          )}>
+                          <button className="bg-green-600 text-white cursor-pointer px-3 py-1 rounded-full text-[10px] font-medium shadow-sm hover:bg-green-700 transition-colors" 
+                           onClick={() =>
+                      UpdateAssignHca(
+                        clients[0].userId,
+                        hcp.UserId,
+                        clients[0].FirstName,
+                        clients[0].Email,
+                        clients[0].ContactNumber,
+                        clients[0].serviceLocation,
+                        hcp.HCPFirstName,
+                        hcp.HCPContactNumber,
+                        clients[0].patientName,
+                        clients[0].patientPhone,
+                        clients[0].Source,
+                        clients[0].hcpType
+
+
+                      )
+                    }>
                             Assign
                           </button>
                         ) : (

@@ -200,3 +200,12 @@ export const ReferdVendorUserId=(state:any="",action:any)=>{
                 return state
     }
 }
+
+export const InvoiceData=(state:any="",action:any)=>{
+    switch(action.type){
+        case "UpdateInvoiceInfo":
+            return action.payload;
+            default:
+                return state
+    }
+}

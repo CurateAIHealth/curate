@@ -504,6 +504,7 @@ export const UpdatePatientInformation = async (Patient: {
 };
 export const UpdateNewLeadInformation = async (FinelPostingData: any) => {
   try {
+    console.log("Test User-id---",FinelPostingData.userId)
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
@@ -568,6 +569,7 @@ export const UpdateNewLeadInformation = async (FinelPostingData: any) => {
       AssistanceRequire: FinelPostingData.AssistanceRequire,
       HIV: FinelPostingData.HIV,
       serviceCharges: FinelPostingData.serviceCharges,
+      RegistrationFee:FinelPostingData.RegistrationFee,
       PatientRoomCleaning: FinelPostingData.PatientRoomCleaning,
       Brushing_FaceFash: FinelPostingData.Brushing_FaceFash,
       BedMaking: FinelPostingData.BedMaking,
@@ -690,7 +692,98 @@ try{
 }
 
 
+export const UpdatePDR = async (
+  UserId: string,
+  Info: Record<string, any>,
+  
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
 
+    const encryptedFields = [
+      "FirstName",
+      "Email",
+      "ContactNumber",
+      "AadharNumber",
+      "patientFullName",
+      "emailId",
+      "phoneNo1",
+      "clientAadharNo"
+    ];
+
+    const updatePayload: Record<string, any> = {};
+
+  
+    for (const key of Object.keys(Info)) {
+      const value = Info[key];
+
+      if (encryptedFields.includes(key)) {
+        updatePayload[key] = encrypt(value ?? "");
+      } else {
+        updatePayload[key] = value;
+      }
+    }
+    
+     
+  
+    const finalUpdatePayload = { ...updatePayload };
+    delete finalUpdatePayload._id;
+     
+
+    const result = await collection.updateOne(
+      { userId: UserId },
+      { $set: finalUpdatePayload }
+    );
+
+    if (result.matchedCount === 0) {
+      return { success: false, message: "User not found" };
+    }
+
+    return { success: true, message: "Patient data updated successfully" };
+
+  } catch (error: any) {
+    console.error("Update Error:", error.message);
+    return { success: false, message: error.message };
+  }
+};
+
+export const PostInvoice = async (InvoiseInfo:any,AdvanceAmount:any,InvoiceNumber:any) => {
+  try {
+    console.log("Test Invo---",InvoiceNumber)
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Invoices");
+   const now = new Date();
+const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+const endOfMonthFormatted = endOfMonth.toLocaleDateString("en-IN");
+
+    const Invoice =await  collection.insertOne({
+      Invoice:InvoiceNumber,
+      DeployDate: new Date().toLocaleDateString("en-IN"),
+      ServiceEndDate: endOfMonthFormatted,
+      Adress: InvoiseInfo.serviceLocation,
+      ClientName:InvoiseInfo.FirstName,
+      Patient: InvoiseInfo.patientName,
+      contact: InvoiseInfo.ContactNumber,
+      Email:InvoiseInfo.Email,
+      AdvanceReceived: AdvanceAmount || "",
+      CareTakeChare: InvoiseInfo.serviceCharges,
+      RegistrationFee:InvoiseInfo.RegistrationFee,
+      status: "Draft",
+    });
+
+    return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+ insertedId: Invoice.insertedId.toString(),
+    };
+    
+  } catch (err: any) {
+
+  }
+}
 
 
 
@@ -1093,10 +1186,11 @@ export const TestInserTimeSheet = async (
   TimeSheetArray: any,
   UpdatedBy: any,
   invoice:any,
-  Type:any
+  Type:any,
+
 ) => {
   try {
-    console.log("🟢 Upserting Timesheet for Client:", TimeStamp);
+   
 
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
@@ -1128,7 +1222,8 @@ export const TestInserTimeSheet = async (
       UpdatedAt: new Date(),
       UpdatedBy: UpdatedBy,
       invoice:invoice,
-      Type:Type
+      Type:Type,
+      PDRStatus:false
     };
 
   const TimeSheetDataInsert=await collection.insertOne(TimeSheetData)
@@ -1147,6 +1242,72 @@ return {
   }
 };
 
+export const UpdatePdrStatus = async (UserId: any) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("TimeSheet");
+
+    const UpdateVerificationStatus = await Collection.updateOne(
+      { ClientId: UserId },
+      {
+        $set: {
+          PDRStatus: true,
+        },
+      },
+      { upsert: true } 
+    );
+
+    return {
+      success: true,
+      message: "PDR Status updated successfully.",
+    };
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+};
+
+export const UpdateInvoice=async(InvoiceNumber:any)=>{
+  try{
+const Cluster=await clientPromise
+const Db=Cluster.db("CurateInformation")
+const Collection=Db.collection("Invoices")
+const UpdateStatus=await Collection.updateOne(
+  {
+  Invoice:InvoiceNumber
+},{
+  $set:{status:"Sent"}
+}
+
+)
+ return {
+      success: true,
+      message: "PDR Status updated successfully.",
+    };
+  }catch(err:any){
+
+  }
+}
+export const GetUserPDRInfo = async (UserId: any) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("TimeSheet");
+
+    const userPDR = await Collection.findOne({ ClientId: UserId });
+
+    if (!userPDR) {
+      return { success: false, message: "No PDR Record Found" };
+    }
+
+
+    const safeDoc = JSON.parse(JSON.stringify(userPDR));
+
+    return { success: true, data: safeDoc };
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+};
 
 export const UpdateTimeSheet = async (
  
@@ -1255,6 +1416,22 @@ export const GetTimeSheetInfo=async()=>{
 const cluster=await clientPromise
 const db=cluster.db("CurateInformation")
 const collection=db.collection("TimeSheet")
+const TimeSheetInfoData=await collection.find().toArray()
+
+const safeUsers = TimeSheetInfoData.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+return safeUsers
+  }catch(e){
+
+  }
+}
+export const GetInvoiceInfo=async()=>{
+  try{
+const cluster=await clientPromise
+const db=cluster.db("CurateInformation")
+const collection=db.collection("Invoices")
 const TimeSheetInfoData=await collection.find().toArray()
 
 const safeUsers = TimeSheetInfoData.map((user: any) => ({

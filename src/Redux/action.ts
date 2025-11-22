@@ -144,3 +144,10 @@ export const CurrentReferdVendorId=(CyrrentVedorId:any)=>{
         payload:CyrrentVedorId
     }
 }
+
+export const UpdateInvoiceInfo=(InvoiceIno:any)=>{
+    return{
+        type:"UpdateInvoiceInfo",
+        payload:InvoiceIno
+    }
+}

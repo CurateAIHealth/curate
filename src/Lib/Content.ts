@@ -1312,12 +1312,6 @@ export const indianFamilyRelations = [
   "Sister-in-law",
   "Husband",
   "Wife",
-  "Stepfather",
-  "Stepmother",
-  "Stepbrother",
-  "Stepsister",
-  "Foster Father",
-  "Foster Mother",
   "Godfather",
   "Godmother"
 ];
@@ -1773,3 +1767,39 @@ export const Infodata = [
   }
 ];
 
+   export const company = {
+        name: 'Curate Health Services LLP',
+        addressLines: [
+            '15/100030, Brindhavanam Colony',
+            'Near Iskabavi',
+            'Beeramguda Telangana 502032',
+            'India',
+        ],
+        website: 'https://curatehealthservices.com',
+        logoUrl: '/logo.png',
+        notes: 'A Complete Home Healthcare Professionals. We care for your beloved.'
+    };
+
+  export const payment = {
+    accountName: "Curate Health Services",
+    accountNumber: "01140210002278",
+    BankName: "UCO Bank",
+    ifsc: "UCBA0000114",
+    upiId: "curateservices@ucobank",
+  };
+
+export const terms = [
+'Advance payment for 7 days has to be paid immediately after accepting the service.',
+'Termination should be informed before 5 days, if not 5 days charges will be added to the service invoice. (This is due to sudden loss of job for healthcare professional).',
+'Replacement charges will be applied, if the operational cost is not feasible to adjust with the service provided.',
+'Payment is accepted online to the bank account or UPI scanning. No cash receipts, cash collection deposit will have additional charges of 250/-.',
+'Late payment charges are collected with 500/- for every 7 days overdue.',
+'Refund policy is to clear within 7 days, deducting any additional charges and cancellations with the service provided or consumed. There is no refund for medical equipment and services consumed when delivered.',
+'Confidential Clause: Patient details mentioned in the invoice are confidential and intended solely for billing purposes.',
+'No Liability Disclaimer: Company is not liable for any direct or indirect consequential losses arising from healthcare services provided by contractor. Service provider and company are two different entities.',
+'TDS is applicable as per IT Act and FORM 16A.',
+'This is an E-invoice, this computer-generated invoice does not require a signature.',
+'Acknowledgement Clause: Receipt of this invoice confirms that services were availed as per patient consent.',
+'All billing enquiries must be mailed to info@curatehealth.in to be addressed accordingly.',
+'Client service agreement has more detailed information on payment terms'
+];
