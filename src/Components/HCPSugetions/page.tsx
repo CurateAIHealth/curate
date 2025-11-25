@@ -151,9 +151,7 @@ const Invoise=`BSV${new Date().getFullYear()}_${PlacementInformation.length+1}`
         dispatch(UpdateRefresh(1))
         setStatusMessage("HCA Assigned Successfully, For More Information Check in Deployments")
 
-        // sendWhatsApp("+919347877159", "+919347877159");
-
-        const Timer = setInterval(() => {
+ const Timer = setInterval(() => {
           dispatch(UpdateRefresh(1))
  router.push("/PDRView");
     dispatch(Update_Main_Filter_Status("Deployment"));
@@ -554,23 +552,34 @@ const matchesClientAssistance = hcp.HandledSkills?.some((skill: string) => clien
   return hasDiaperSkill && matchesClientAssistance && available;
 });
 
-const First=hcps.filter((each:any)=>each.userType==="healthcare-assistant")
+// Filter only healthcare assistants
+const First = hcps.filter((each: any) => each.userType === "healthcare-assistant");
 
-  const ShowAdditionHCPs = First?.filter((each: HcpType) =>
-  form?.hcpType?.some((type: any) => type === each?.Type) ||
+// Helper: Check availability (NOT assigned)
+const isAvailable = (hcp: any) =>
+  !hcp.Status?.some((value: string) => value === "Assigned");
 
-  form?.qualification?.some((qual: any) => qual === each?.['Professional Education']) ||
+// Final filtered list
+const ShowAdditionHCPs = First?.filter((each: HcpType) =>
+  isAvailable(each) && (
+    form?.hcpType?.some((type: any) => type === each?.Type) ||
 
-  (form?.experience && each?.Experience?.toLowerCase()?.includes(form?.experience?.toLowerCase())) ||
+    form?.qualification?.some((qual: any) => qual === each?.["Professional Education"]) ||
 
-  form?.healthConditions?.some((condition: string) =>
-    each?.HandledSkills?.some((skill: string) =>
-      skill?.toLowerCase()?.includes(condition?.toLowerCase())
-    )
-  ) ||
+    (form?.experience &&
+      each?.Experience?.toLowerCase()?.includes(form?.experience?.toLowerCase())) ||
 
-  (form?.location && each?.["Current Address"]?.toLowerCase()?.includes(form?.location?.toLowerCase()))
+    form?.healthConditions?.some((condition: string) =>
+      each?.HandledSkills?.some((skill: string) =>
+        skill?.toLowerCase()?.includes(condition.toLowerCase())
+      )
+    ) ||
+
+    (form?.location &&
+      each?.["Current Address"]?.toLowerCase()?.includes(form?.location?.toLowerCase()))
+  )
 );
+
 
 
 console.log("Test Client id----",clients)

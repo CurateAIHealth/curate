@@ -209,3 +209,14 @@ export const InvoiceData=(state:any="",action:any)=>{
                 return state
     }
 }
+
+export const DeploymentInformation = (state: any = null, action: any) => {
+    switch (action.type) {
+        case "GetCurrentDeploymentData":
+            return action.payload;
+        default:
+            return state
+
+
+    }
+}

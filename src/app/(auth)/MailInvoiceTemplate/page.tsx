@@ -157,74 +157,93 @@ const handleSubmit = async () => {
     const pdfBase64 = pdfResponse.data.pdf;
 
     await axios.post("/api/MailSend", {
-      to: "admin@curatehealth.in",
+      to: "srivanikasham@curatehealth.in",
       subject:
         "Request for Payment – Attached Invoice from Curate Health Services",
-   html: `
-<div style="width: 100%; max-width: 600px; margin: auto; font-family: 'Segoe UI', sans-serif; background: #ffffff; border-radius: 14px; padding: 0; box-shadow: 0 8px 25px rgba(0,0,0,0.08); overflow: hidden;">
-
-  <div style="background: lightblue; padding: 25px 20px; text-align: center; color: #fff;">
-    <h2 style="margin: 0; font-size: 22px; font-weight: 600;">
-      Invoice Amount
-    </h2>
-
-    <h1 style="margin: 10px 0 0 0; font-size: 36px; font-weight: 700;">
-      ₹${Number(balanceDue).toFixed(2)}
-    </h1>
-  </div>
-
-  <div style="padding: 20px;">
-    <div style="background: #f8f9fc; padding: 15px 20px; border-radius: 10px; border: 1px solid #e3e6ef;">
-      <table style="width: 100%; font-size: 15px; color: #444;">
-        <tbody>
-          <tr>
-            <td><strong>Invoice No</strong></td>
-            <td style="text-align: right;">${invoice.number}</td>
-          </tr>
-          <tr>
-            <td><strong>Invoice Date</strong></td>
-            <td style="text-align: right;">${invoice.date}</td>
-          </tr>
-          <tr>
-            <td><strong>Due Date</strong></td>
-            <td style="text-align: right;">${invoice.dueDate}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- 🔥 WORKING PAY NOW BUTTON USING REDIRECT PAGE -->
-    <div style="text-align: center; margin-top: 25px;">
-  <a 
-    href="https://curate-pearl.vercel.app/upi-pay?amount=${Number(balanceDue).toFixed(2)}"
-    style="
-      background: #ff3e6c;
-      color: #fff;
-      padding: 14px 42px;
-      text-decoration: none;
-      border-radius: 50px;
-      font-size: 16px;
-      font-weight: 600;
-      display: inline-block;
-      text-align: center;
-    "
-  >
-    PAY NOW
-  </a>
-</div>
+   html: `<div style="
+  width: 100%;
+  max-width: 680px;
+  margin: auto;
+  background: #f7f5ef;
+  border-radius: 14px;
+  border: 2px solid #c6c2b8;
+  font-family: 'Segoe UI', sans-serif;
+  overflow: hidden;
+">
 
 
-    <p style="margin-top: 30px; font-size: 15px; color: #555;">
-      Dear Customer,<br />
-      Please find your invoice attached. Kindly complete the payment at the earliest.
-    </p>
+  <div style="text-align:center; padding: 25px 20px;">
+    <img
+          src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
+          alt="Curate Health Services Logo"
+          style="height: 90px; width: auto;"
 
-    <p style="font-size: 15px; color: #333; margin-top: 25px;">
-      Regards,<br />
-      <strong>Curate Health Services</strong>
+        />
+    <p style="margin:6px 0 0 0; font-size:14px; color:#1392d3;">
+    Invoice Receipt
     </p>
   </div>
 
+  <div style="border-top: 2px solid #c6c2b8;"></div>
+
+
+  <div style="padding: 30px 25px;">
+
+   
+    <div style="
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    ">
+
+      
+      <div>
+        <p style="margin:0; font-size:14px; color:#444;">AMOUNT DUE</p>
+        <h1 style="margin-top:8px; font-size:42px; font-weight:700; color:#000;">
+          ₹${Number(balanceDue).toFixed(2)}
+        </h1>
+      </div>
+
+     
+      <div style="font-size:15px; color:#444; line-height:24px;">
+        <strong>Invoice No:</strong> ${invoice.number} <br>
+        <strong>Issued:</strong> ${invoice.date} <br>
+   
+
+        <strong style="color:#000;">Dear Customer,</strong><br>
+        Please find your invoice attached.<br>
+        Kindly complete the payment at the earliest.
+      </div>
+
+     
+      <div style="text-align:center;">
+        <div style="margin-bottom:20px;">
+          <a href="https://curate-pearl.vercel.app/upi-pay?amount=${Number(balanceDue).toFixed(2)}"
+            style="
+              background:#50c896;
+              color:white;
+              padding:18px 30px;
+              text-decoration:none;
+              border-radius:50px;
+              font-size:18px;
+              font-weight:700;
+              display:inline-block;
+              width:150px;
+            ">
+            PAY NOW
+          </a>
+        </div>
+
+        <p style="font-size:15px; color:#333; margin-top:20px;">
+          Regards,<br>
+          <strong>Curate Health Services</strong>
+        </p>
+      </div>
+
+    </div> 
+
+  </div>
 </div>
 `,
 
@@ -509,7 +528,7 @@ const NavigatetoInvoices=()=>{
         
             <button
               onClick={handleSubmit}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold py-3 rounded-xl shadow-sm transition"
+              className="w-full bg-slate-900 hover:bg-slate-800 cursor-pointer text-white text-sm font-semibold py-3 rounded-xl shadow-sm transition"
             >
               Send E-Mail
             </button>

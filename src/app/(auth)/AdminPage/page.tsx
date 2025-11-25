@@ -117,56 +117,67 @@ const UpdatedFilterUserType = useMemo(() => {
 useEffect(() => {
   const Fetch = async () => {
     try {
-      const localValue = localStorage.getItem('UserId');
+      const localValue = localStorage.getItem("UserId");
+      if (!localValue) return;
 
-
+      // Reset cache only if userType updated
       if (UpdateduserType) {
         cachedUserInfo = null;
         cachedRegisteredUsers = null;
         cachedFullInfo = null;
       }
 
+      // ---- PARALLEL FETCH (cached or fresh) ----
       const [profile, registeredUsers, fullInfo] = await Promise.all([
-        cachedUserInfo ? Promise.resolve(cachedUserInfo) : GetUserInformation(localValue),
-        cachedRegisteredUsers ? Promise.resolve(cachedRegisteredUsers) : GetRegidterdUsers(),
-        cachedFullInfo ? Promise.resolve(cachedFullInfo) : GetUsersFullInfo(),
+        cachedUserInfo ?? GetUserInformation(localValue),
+        cachedRegisteredUsers ?? GetRegidterdUsers(),
+        cachedFullInfo ?? GetUsersFullInfo(),
       ]);
 
-      if (!cachedUserInfo) cachedUserInfo = profile;
-      if (!cachedRegisteredUsers) cachedRegisteredUsers = registeredUsers;
-      if (!cachedFullInfo) cachedFullInfo = fullInfo;
+      // ---- SET CACHE IF EMPTY ----
+      cachedUserInfo ||= profile;
+      cachedRegisteredUsers ||= registeredUsers;
+      cachedFullInfo ||= fullInfo;
 
+      // ---- SET BASIC STATES (grouped to reduce renders) ----
+      setUsers(registeredUsers);
       setUserFirstName(profile.FirstName);
       setLoginEmail(profile.Email);
-
-
-      if (profile?.Email?.toLowerCase() === 'info@curatehealth.in') {
-        dispatch(UpdateUserType('patient'));
-      } else if (profile?.Email?.toLowerCase() === 'gouricurate@gmail.com') {
-        dispatch(UpdateUserType('healthcare-assistant'));
-      }
-
-      if (
-        profile?.Email?.toLowerCase() !== 'admin@curatehealth.in' &&
-        profile?.Email?.toLowerCase() !== 'info@curatehealth.in' &&
-        profile?.Email?.toLowerCase() !== 'gouricurate@gmail.com'
-      ) {
-        router.push('/');
-      }
-
       setFullInfo(fullInfo);
       setSearch(CurrentClientStatus);
-      setUsers((registeredUsers || []).reverse());
-    
-      setIsChecking(false);
+
+      // ---- PRE-COMPUTE EMAIL ----
+      const email = profile?.Email?.toLowerCase();
+
+      // ---- UPDATE USER TYPE (only when needed) ----
+      if (email === "info@curatehealth.in") {
+        dispatch(UpdateUserType("patient"));
+      } else if (email === "gouricurate@gmail.com") {
+        dispatch(UpdateUserType("healthcare-assistant"));
+      }
+
+      // ---- ACCESS BLOCK CHECK (early exit improves perf) ----
+      const restricted = [
+        "admin@curatehealth.in",
+        "info@curatehealth.in",
+        "gouricurate@gmail.com"
+      ];
+
+      if (!restricted.includes(email)) {
+        router.push("/");
+        return;
+      }
+
     } catch (err: any) {
-      console.error('Error fetching data:', err);
+      console.error("Error fetching data:", err);
+    } finally {
       setIsChecking(false);
     }
   };
 
   Fetch();
 }, [updatedStatusMsg, CurrentClientStatus, UpdateduserType]);
+
 
 
  const FilterUserType = (e: any) => {
@@ -458,7 +469,7 @@ onClick={()=>UpdateNavigattosuggetions(user.userId)}
           </div>
         </div>
       ) : (
-        <p className="text-center py-10 text-gray-400 text-base sm:text-lg">No users found.</p>
+<LoadingData/>
       )}
 
       {updatedStatusMsg && (
@@ -527,7 +538,7 @@ console.log('Test Registerd Userss---',users)
           <div className="flex items-center gap-3">
             <img src="/Icons/Curate-logo.png" alt="Logo" className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl" />
             <h1 className="text-lg sm:text-2xl font-extrabold text-[#007B7F] tracking-tight leading-tight">
-              Hi, <span className="text-[#ff1493]">{UpdateduserType}</span>
+              Hi, <span className="text-[#ff1493]">{UserFirstName}</span>
             </h1>
           </div>
          

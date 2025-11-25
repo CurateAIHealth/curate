@@ -161,7 +161,6 @@ export default function Dashboard() {
   const RoutToAdminPage = async (A: any) => {
     dispatch(Update_Main_Filter_Status(A));
     dispatch(UpdateUserType("patient"));
-     router.prefetch("/AdminPage");
     router.push("/AdminPage");
   };
   const Switching = (A: any) => {

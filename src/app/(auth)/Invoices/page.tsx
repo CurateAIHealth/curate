@@ -245,7 +245,7 @@ Router.push("/MailInvoiceTemplate")
 
 
         <img
-          src="Icons/UpdateCurateLogo.png"
+          src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
           alt="Curate Health Services Logo"
           className="h-16 md:h-24 w-auto object-contain mx-auto md:mx-0"
         />

@@ -1,9 +1,10 @@
 'use client';
 
-import { GetInvoiceInfo, GetUserPDRInfo, PostInvoice, UpdatePDR, UpdatePdrStatus } from "@/Lib/user.action";
+import { GetInvoiceInfo, GetTimeSheetInfo, GetUserPDRInfo, InsertDeployment, PostInvoice, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdatePDR, UpdatePdrStatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { UpdatePreviewStatus } from "@/Redux/action";
+import { TimeStamp } from "@/Redux/reducer";
 import { data } from "framer-motion/client";
-import { SquarePen } from "lucide-react";
+import { SquarePen, Type } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -56,9 +57,12 @@ const Section = ({
 const PreviewComponent: React.FC<PreviewProps> = ({ data,Advance }) => {
   const dispatch = useDispatch();
   const [UpdatedData, setFormData] = useState(useSelector((state: any) => state.RegisterdUsersFullInformation));
-    console.log("Working.....",UpdatedData)
+    
   const [selectedRecord, setSelectedRecord] = useState<any>(false);
    const [UpdatingStatus,setUpdatingStatus]=useState("Finalizing PDR update…")
+   const DeploaymentInformation=useSelector((state:any)=>state.DeploaymentData)
+   const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
+   console.log("PDR Info ======", DeploaymentInformation);
    const Router=useRouter()
   const UpdateEdit = () => {
     dispatch(UpdatePreviewStatus(true));
@@ -82,7 +86,7 @@ const UpdatePDRInfo = async () => {
 
 
     const GetPdrInfo = await GetUserPDRInfo(data.userId);
-    console.log("PDR Info ======", GetPdrInfo);
+   
 
     if (!GetPdrInfo.success || !GetPdrInfo.data) {
       setUpdatingStatus("Error fetching PDR info");
@@ -91,13 +95,58 @@ const UpdatePDRInfo = async () => {
 
     const PDRStatus = GetPdrInfo.data.PDRStatus ===false;
 
-   
+  
+
     const Invoise = `#INV#${new Date().getFullYear()}_${PlacementInformation.length + 1}`;
+ const CurrentMonth=`${new Date().getFullYear()}-${new Date().getMonth()+1}`
 
 
-    if (PDRStatus === false) {
-      await PostInvoice(UpdatedData, Advance, Invoise);
-      await UpdatePdrStatus(data.userId);
+
+    if (PDRStatus === true) {
+      // const UpdateStatus = await UpdateUserContactVerificationstatus(DeploaymentInformation.Client_Id, "Placced")
+      // const UpdateHcaStatus = await UpdateHCAnstatus(DeploaymentInformation.HCA_Id, "Assigned")
+      // const UpdatedHCPStatusInCompliteInformation = await UpdateHCAnstatusInFullInformation(DeploaymentInformation.HCA_Id)
+      const PlacementInformation: any = await GetTimeSheetInfo();
+      const DateOfCurrentDay = new Date()
+      const DeploymentAttendence = [{ AttendenceDate: DateOfCurrentDay, HCPAttendence: true, AdminAttendece: true }]
+      const LastDateOfMonth = new Date(DateOfCurrentDay.getFullYear(), DateOfCurrentDay.getMonth() + 1, 0)
+        .toLocaleDateString('en-IN');
+        const DateofToday=new Date().toLocaleDateString('In-en')
+const CurrentServiceCharge=UpdatedData.serviceCharges = String(UpdatedData.serviceCharges || "").replace(/,/g, "");
+ const nextCounter = PlacementInformation.length + 1;
+const DeploymentInvoise = `BSV${new Date().getFullYear()}_${nextCounter}_${new Date().getTime()}`;
+const PostDeployment = await InsertDeployment(
+  DateofToday,               
+  LastDateOfMonth,          
+  "Active",                  
+  DeploaymentInformation.location,          
+  DeploaymentInformation.contact,            
+  DeploaymentInformation.name,               
+  DeploaymentInformation.PatientName,       
+  DeploaymentInformation.Patient_PhoneNumber,
+  DeploaymentInformation.RreferralName,      
+  DeploaymentInformation.HCA_Id,             
+  DeploaymentInformation.Client_Id,          
+  DeploaymentInformation.HCA_Name,           
+  DeploaymentInformation.HCAContact,        
+  "Google",                                
+  "Not Provided",                           
+  "PP",                                  
+  "21000",                                  
+  "700",                                  
+  "1800",                                    
+  CurrentServiceCharge,                      
+  CurrentMonth,                              
+  DeploymentAttendence,                      
+  TimeStamp,                                 
+  DeploymentInvoise,                        
+  DeploaymentInformation.Type                                  
+);
+
+      const PostInvoiceData=await PostInvoice(UpdatedData, Advance, Invoise);
+      const Check=await UpdatePdrStatus(data.userId);
+      console.log("Test Deployment-----",Check)
+      console.log("Check Invoice Post===",PostInvoiceData)
     }
 
 

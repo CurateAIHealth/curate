@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Trash } from "lucide-react";
-import { DeleteTimeSheet, GetRegidterdUsers, GetTimeSheetInfo, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
+import { DeleteTimeSheet, GetDeploymentInfo, GetRegidterdUsers, GetTimeSheetInfo, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateSubHeading } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -36,7 +36,7 @@ const ClientTable = () => {
   const [HCPName,setHCPName]=useState("")
  const [updatedAttendance, setUpdatedAttendance] = useState<AttendanceState>({});
  const [SaveButton,setSaveButton]=useState(false)
-  console.log("Test Attendence Status----",Fineldate)
+
 
   const [TimeSheet_UserId, setTimeSheet_UserId] = useState("");
   const [selectedReason, setSelectedReason] = useState("");
@@ -58,8 +58,8 @@ const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
     const Fetch = async () => {
       const RegisterdUsersResult = await GetRegidterdUsers();
       setUsers(RegisterdUsersResult || []);
-      const PlacementInformation: any = await GetTimeSheetInfo();
-      console.log("Test Adress-----",PlacementInformation)
+      const PlacementInformation: any = await GetDeploymentInfo();
+  
       setClientsInformation(PlacementInformation);
       dispatch(UpdateSubHeading("On Service"));
       setIsChecking(false);
@@ -68,41 +68,49 @@ const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
   }, [ActionStatusMessage]);
 
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
-    const normalizedAttendance =
-      Array.isArray(each.Attendence) && each.Attendence.length > 0
-        ? each.Attendence.map((att: any) => ({
-            date: att.date,
-            status: att.status || "Absent",
-          }))
-        : [];
-    return {
-      Client_Id: each.ClientId,
-      HCA_Id: each.HCAId,
-      Address:each.Address,
-      name: each.ClientName,
-      email: each.ClientEmail,
-      contact: each.ClientContact,
-      HCAContact: each.HCAContact,
-      HCA_Name: each.HCAName,
-      location: each.Address,
-      TimeSheet: normalizedAttendance,
-      PatientName: each.patientName,
-      Patient_PhoneNumber: each.patientPhone,
-      RreferralName: each.referralName,
-      Type: each.Type,
-      Status: each.Status,
-      cPay: each.cPay,
-      cTotal: each.cTotal,
-      hcpPay: each.hcpPay,
-      hcpSource: each.hcpSource,
-      hcpTotal: each.hcpTotal,
-      invoice: each.invoice,
+ const normalizedAttendance =
+  Array.isArray(each.Attendance) && each.Attendance.length > 0
+    ? each.Attendance.map((att: any) => {
+        const hcp = att.HCPAttendence ?? att.HCPAttendance ?? att.hcpAttendence;
+        const admin =
+          att.AdminAttendece ??
+          att.AdminAttendence ??
+          att.AdminAttendance ??
+          att.adminAttendence;
+
+        return {
+          date: att.AttendenceDate,
+          status: hcp === true && admin === true ? "Present" : "Absent",
+        };
+      })
+    : [];
 
 
+  return {
+    Client_Id: each.ClientId,
+    HCA_Id: each.HCAId,
+    Address: each.Address,
+    name: each.ClientName,
+    email: each.ClientEmail,
+    contact: each.ClientContact,
+    HCAContact: each.HCAContact,
+    HCA_Name: each.HCAName,
+    location: each.Address,
+    TimeSheet: normalizedAttendance,
+    PatientName: each.patientName,
+    Patient_PhoneNumber: each.patientPhone,
+    RreferralName: each.referralName,
+    Type: each.Type,
+    Status: each.Status,
+    cPay: each.cPay,
+    cTotal: each.cTotal,
+    hcpPay: each.hcpPay,
+    hcpSource: each.hcpSource,
+    hcpTotal: each.hcpTotal,
+    invoice: each.invoice,
+  };
+});
 
-
-    };
-  });
 
   const Finel = users.map((each: any) => ({
     id: each.userId,
@@ -181,7 +189,7 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
       .toLocaleDateString('en-IN');
     const PostTimeSheet: any = await TestInserTimeSheet(DateofToday, LastDateOfMonth, ExtendInfo.Status, ExtendInfo.Address, ExtendInfo.contact, ExtendInfo.name, ExtendInfo.PatientName, ExtendInfo.Patient_PhoneNumber, ExtendInfo.RreferralName, ExtendInfo.HCA_Id, ExtendInfo.Client_Id, ExtendInfo.HCA_Name, ExtendInfo.HCAContact, ExtendInfo.
       hcpSource, ExtendInfo.provider, ExtendInfo.payTerms, ExtendInfo.cTotal, ExtendInfo.cPay, ExtendInfo.hcpTotal, ExtendInfo.hcpPay, CurrentMonth, ["P"], TimeStamp, ExtendInfo.invoice, ExtendInfo.Type)
-    console.log("Test Updated Result----", PostTimeSheet)
+   
 
     if(PostTimeSheet.success===true){
      
@@ -200,9 +208,10 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
   );
 
   const TimeSheet_Info = FinelTimeSheet.find(
+
     (each) => each.Client_Id === TimeSheet_UserId
   );
-
+console.log("Check Time Sheet---",TimeSheet_Info)
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
 
   const handleStatusClick = (day: number) => {
@@ -247,7 +256,7 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
          const UpdateStatus=await UpdateUserContactVerificationstatus(deleteTargetId.Client_Id,"Converted")
            const DeleteTimeSheetData=await DeleteTimeSheet(deleteTargetId.Client_Id)
            const PostTimeSheet:any = await InserTerminationData(deleteTargetId.Client_Id, deleteTargetId?.HCA_Id, deleteTargetId.name, deleteTargetId.email, deleteTargetId.contact,deleteTargetId.location, deleteTargetId.role, deleteTargetId.HCAContact, deleteTargetId.TimeSheet)
-                console.log("Compare Data--",DeleteTimeSheetData)
+                
                 if(DeleteTimeSheetData.success===true){
           SetActionStatusMessage("Seccessfully Deleted Placement")
 
@@ -273,7 +282,6 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((each:any) => {
     role.includes(search)
   );
 });
-console.log("Check Finel Time Sheet---",ClientsInformation)
   const OmServiceView = () => {
     return (
       <div className="w-full flex flex-col gap-8 p-6 bg-gray-50">
@@ -344,8 +352,8 @@ console.log("Check Finel Time Sheet---",ClientsInformation)
               <td className="px-6 py-4 font-semibold text-gray-900">{c.name}</td>
               <td className="px-6 py-4 text-gray-700">{c.contact}</td>
               <td className="px-6 py-4 text-gray-600 truncate max-w-[200px]">{c.location}</td>
-              <td className="px-6 py-4">
-                <span className="px-3 py-1 text-[11.5px] rounded-md font-medium shadow-sm bg-white/70 border border-gray-200 flex items-center gap-1">
+              <td className="px-4 py-4">
+                <span className="px-3 py-1 text-[12px] rounded-md font-medium shadow-sm bg-white/70 border border-gray-200 flex items-center gap-1">
                   🩺 {c.HCA_Name} 👚
                 </span>
               </td>
@@ -500,160 +508,187 @@ console.log("Check Finel Time Sheet---",ClientsInformation)
   )}
 
 
-  {showTimeSheet && TimeSheet_Info && (
-<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-  <div className="bg-white rounded-3xl shadow-2xl p-6 w-[750px] max-h-[90vh] overflow-y-auto backdrop-blur-md border border-gray-200">
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-lg font-bold">
-        📅 Attendance - {monthNames[selectedMonth]} {selectedYear}
-      </h2>
-      <div className="flex gap-3">
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(Number(e.target.value))}
-          className="border p-2 rounded-md"
-        >
-          {monthNames.map((m, i) => (
-            <option key={i} value={i}>
-              {m}
-            </option>
-          ))}
-        </select>
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className="border p-2 rounded-md"
-        >
-          {Array.from({ length: 5 }).map((_, i) => {
-            const year = new Date().getFullYear() - 2 + i;
-            return (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            );
-          })}
-        </select>
+{showTimeSheet && TimeSheet_Info && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white rounded-3xl shadow-2xl p-6 w-[750px] max-h-[90vh] overflow-y-auto backdrop-blur-md border border-gray-200">
+
+    
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold">
+          📅 Attendance - {monthNames[selectedMonth]} {selectedYear}
+        </h2>
+
+        <div className="flex gap-3">
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            className="border p-2 rounded-md"
+          >
+            {monthNames.map((m, i) => (
+              <option key={i} value={i}>{m}</option>
+            ))}
+          </select>
+
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="border p-2 rounded-md"
+          >
+            {Array.from({ length: 5 }).map((_, i) => {
+              const year = new Date().getFullYear() - 2 + i;
+              return <option key={year} value={year}>{year}</option>;
+            })}
+          </select>
+        </div>
       </div>
-    </div>
 
-    <div className="grid grid-cols-7 gap-3 text-center">
-      {Array.from({ length: daysInMonth }).map((_, dayIndex) => {
-        const day = dayIndex + 1;
 
-        const record = TimeSheet_Info.TimeSheet?.find((t: any) => {
-          const parsed = parseEnInDate(t.date);
-          return (
-            parsed.getDate() === day &&
-            parsed.getMonth() === selectedMonth &&
-            parsed.getFullYear() === selectedYear
-          );
-        });
+      
+      <div className="grid grid-cols-7 gap-3 text-center">
 
-        const today = new Date();
-        const currentDate = new Date(selectedYear, selectedMonth, day);
-        const isFuture = currentDate > today;
+        {Array.from({ length: daysInMonth }).map((_, dayIndex) => {
+          const day = dayIndex + 1;
 
-        const currentStatus =
-          updatedAttendance?.[day]?.status || record?.status || "Absent";
+          
+          const record = TimeSheet_Info.TimeSheet?.find((t:any) => {
+            let d = t.date;
 
-        const statusColor =
-          currentStatus === "Present"
-            ? "bg-green-100 text-green-700 border-green-300"
-            : currentStatus === "Absent"
-            ? "bg-red-100 text-red-700 border-red-300"
-            : "bg-yellow-100 text-yellow-700 border-yellow-300";
+     
+            if (d instanceof Date) {
+              return (
+                d.getDate() === day &&
+                d.getMonth() === selectedMonth &&
+                d.getFullYear() === selectedYear
+              );
+            }
 
-        // ✅ Update function with full date/day/time in Indian format
-        const handleStatusClick = (day: number) => {
-          if (isFuture) return;
-          setSaveButton(true) 
-          setUpdatedAttendance((prev: any) => {
-            const current = prev?.[day]?.status || record?.status || "Absent";
-            const nextStatus =
-              current === "Absent"
-                ? "Present"
-                : current === "Present"
-                ? "Leave"
-                : "Absent";
+          
+            const parsed = new Date(d);
+            return (
+              parsed.getDate() === day &&
+              parsed.getMonth() === selectedMonth &&
+              parsed.getFullYear() === selectedYear
+            );
+          });
 
-            const currentDate = new Date(selectedYear, selectedMonth, day);
+     
+          const today = new Date();
+          const currentDateObj = new Date(selectedYear, selectedMonth, day);
+          const isFuture = currentDateObj > today;
 
-           
-            const formattedDate = currentDate.toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-              timeZone: "Asia/Kolkata",
-            });
+      
+          const currentStatus =
+            updatedAttendance?.[day]?.status ??
+            record?.status ??
+            "Absent";
 
-            const formattedDay = currentDate.toLocaleDateString("en-IN", {
-              weekday: "long",
-              timeZone: "Asia/Kolkata",
-            });
+      
+          const statusColor =
+            currentStatus === "Present"
+              ? "bg-green-100 text-green-700 border-green-300"
+              : currentStatus === "Absent"
+              ? "bg-red-100 text-red-700 border-red-300"
+              : "bg-yellow-100 text-yellow-700 border-yellow-300";
 
-            const updateTime = new Date().toLocaleTimeString("en-IN", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: true,
-              timeZone: "Asia/Kolkata",
-            });
-setFineldate({...Fineldate, 
-               date: formattedDate,
-                day: formattedDay,
-                updatedAt: updateTime,
-                status: nextStatus,})
-            return {
-              ...prev,
-              [day]: {
+          
+          const handleStatusClick = (day:any) => {
+            if (isFuture) return;
+
+            setSaveButton(true);
+
+            setUpdatedAttendance((prev) => {
+              const current = prev?.[day]?.status || record?.status || "Absent";
+
+              const nextStatus =
+                current === "Absent"
+                  ? "Present"
+                  : current === "Present"
+                  ? "Leave"
+                  : "Absent";
+
+              const currentDate = new Date(selectedYear, selectedMonth, day);
+
+              const formattedDate = currentDate.toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                timeZone: "Asia/Kolkata",
+              });
+
+              const formattedDay = currentDate.toLocaleDateString("en-IN", {
+                weekday: "long",
+                timeZone: "Asia/Kolkata",
+              });
+
+              const updateTime = new Date().toLocaleTimeString("en-IN", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: true,
+                timeZone: "Asia/Kolkata",
+              });
+
+              setFineldate({
+                ...Fineldate,
                 date: formattedDate,
                 day: formattedDay,
                 updatedAt: updateTime,
                 status: nextStatus,
-              },
-            };
-          });
-        };
+              });
 
-        const dayData = updatedAttendance?.[day];
+              return {
+                ...prev,
+                [day]: {
+                  date: formattedDate,
+                  day: formattedDay,
+                  updatedAt: updateTime,
+                  status: nextStatus,
+                },
+              };
+            });
+          };
 
-        return (
-          <div
-            key={day}
-            onClick={() => handleStatusClick(day)}
-            className={`p-3 border rounded-lg flex flex-col items-center justify-center 
-              ${isFuture ? "opacity-40 blur-[1px] cursor-not-allowed" : "cursor-pointer hover:scale-105"} 
-              ${statusColor} 
-              transition-transform`}
-          >
-            <span className="text-sm font-semibold">{day}</span>
-            <span className="text-xs font-medium">{currentStatus}</span>
+          return (
+            <div
+              key={day}
+              onClick={() => handleStatusClick(day)}
+              className={`p-3 border rounded-lg flex flex-col items-center justify-center 
+                ${
+                  isFuture
+                    ? "opacity-40 blur-[1px] cursor-not-allowed"
+                    : "cursor-pointer hover:scale-105"
+                } 
+                ${statusColor}
+                transition-transform`}
+            >
+              <span className="text-sm font-semibold">{day}</span>
+              <span className="text-xs font-medium">{currentStatus}</span>
+            </div>
+          );
+        })}
+      </div>
 
-         
-          </div>
-        );
-      })}
-    </div>
-{SaveButton&&<p
-  className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-green-600 text-white font-medium text-sm hover:bg-green-900 md:mt-2 active:bg-indigo-800 transition-colors duration-200 cursor-pointer select-none"
-  onClick={UpdateInformation}
->
-  Save Attendance
-</p>
-}
-    <div className="mt-5 text-right">
-      <button
-        onClick={() => setShowTimeSheet(false)}
-        className="px-4 py-2 bg-red-500 text-white rounded-xl shadow hover:bg-red-600 transition"
-      >
-        Close
-      </button>
+      {SaveButton && (
+        <p
+          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-green-600 text-white font-medium text-sm hover:bg-green-900 md:mt-2 transition-colors cursor-pointer select-none"
+          onClick={UpdateInformation}
+        >
+          Save Attendance
+        </p>
+      )}
+
+      <div className="mt-5 text-right">
+        <button
+          onClick={() => setShowTimeSheet(false)}
+          className="px-4 py-2 bg-red-500 text-white cursor-pointer rounded-xl shadow hover:bg-red-600 transition"
+        >
+          Close
+        </button>
+      </div>
     </div>
   </div>
-</div>
+)}
 
-
-  )}
 </div>
 
     );

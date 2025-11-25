@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { CircleCheckBig, LogOut, Trash } from "lucide-react";
 import { DeleteTimeSheet, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
-import { Update_Main_Filter_Status, UpdateFetchedInformation, UpdateSubHeading } from "@/Redux/action";
+import { GetCurrentDeploymentData, Update_Main_Filter_Status, UpdateFetchedInformation, UpdateSubHeading } from "@/Redux/action";
 import TerminationTable from "@/Components/Terminations/page";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
@@ -171,7 +171,7 @@ const phoneNumber='919347877159'
 
 
 const UpdatePopup=async(a:any)=>{
-
+dispatch(GetCurrentDeploymentData(a))
 const data = await GetUserInformation(a.Client_Id);
    dispatch(UpdateFetchedInformation(data))
    Router.push("/PDR")
