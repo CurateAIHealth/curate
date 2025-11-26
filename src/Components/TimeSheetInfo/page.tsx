@@ -7,17 +7,24 @@ import { useRouter } from "next/navigation";
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useDispatch } from "react-redux";
+import MissingAttendence from "../MissingAttendence/page";
 
 type DayStatus = "P" | "NA" | "HP" | "A";
 
 const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function InvoiceMedicalTable() {
-  const [selectedMonth, setSelectedMonth] = useState("11");
-  const [selectedYear, setSelectedYear] = useState("2025");
+ const now = new Date();
+const currentYear = now.getFullYear().toString();
+const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
+
+const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+const [selectedYear, setSelectedYear] = useState(currentYear);
+
   const [ClientsInformation, setClientsInformation] = useState<any>({});
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [showPendingCalendar, setShowPendingCalendar] = useState(false);
+   const [showMissingCalendar, setShowMissingCalendar] = useState(false);
   const [StatusMessage,SetStatusMessage]=useState<any>("")
 
   const dispatch = useDispatch();
@@ -246,6 +253,12 @@ export default function InvoiceMedicalTable() {
         
 
         <div className="flex gap-3">
+           <button
+          onClick={() => setShowMissingCalendar(true)}
+          className="px-4 py-2 bg-blue-500 cursor-pointer text-white rounded-lg shadow hover:bg-blue-800 self-start"
+        >
+          View Missing Attendance
+        </button>
           <button
           onClick={() => setShowPendingCalendar(true)}
           className="px-4 py-2 bg-teal-600 cursor-pointer text-white rounded-lg shadow hover:bg-teal-800 self-start"
@@ -454,7 +467,17 @@ export default function InvoiceMedicalTable() {
           </div>
         </div>
       )}
-
+{showMissingCalendar&&  <div className=" flex flex-col fixed inset-0 z-50 bg-black/85">
+        <div className="flex justify-end mt-4 mr-2">
+          <button
+                onClick={() => setShowMissingCalendar(false)}
+                className="inline-flex  cursor-pointer gap-2 rounded-full border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100"
+              >
+                <X size={16} />
+                Close
+              </button>
+              </div>
+              <MissingAttendence/></div>}
      
       {showPendingCalendar && (
         <div className="fixed inset-0 z-50 bg-black/40">

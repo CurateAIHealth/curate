@@ -9,7 +9,9 @@ export default function UpdateAttendance() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<{ success: boolean; message: string } | null>(null);
-  const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
+  const now = new Date();
+const currentYear = now.getFullYear().toString();
+const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 
    const dispatch=useDispatch()
    const TimeStampData=useSelector((state:any)=>state.TimeStampInfo)
@@ -35,7 +37,7 @@ export default function UpdateAttendance() {
     try {
       const AttendenceUpdateResult:any=await  UpdateAttendence(
   "c81a9101-a1f7-4754-96cf-610850e9e4cc", 
-  "2025-11",                              
+  `${currentYear}-${currentMonth}`,                              
   {
     HCPAttendence: true,
     AdminAttendece: false

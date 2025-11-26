@@ -1607,6 +1607,62 @@ return safeUsers
     return { success: false, message: "Error occurred.", error };
   }
 };
+export const UpdatehcpDailyAttendce = async (selectedYear: any, selectedMonth: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const monthKey = `${selectedYear}-${selectedMonth}`;
+    const today = new Date().toISOString().split("T")[0]; 
+
+    const records = await collection.find({ Month: monthKey }).toArray();
+
+    if (!records || records.length === 0) {
+      return { success: false, message: "No records found for this month." };
+    }
+
+    let totalAdded = 0;
+
+    for (let record of records) {
+      if (!record.Attendance) record.Attendance = [];
+
+      const hasToday = record.Attendance.some((att: any) => {
+        if (!att.AttendenceDate) return false;
+        const attDate = new Date(att.AttendenceDate).toISOString().split("T")[0];
+        return attDate === today;
+      });
+
+      if (hasToday) continue;
+
+      totalAdded++;
+
+      const attendanceEntry = {
+        AttendenceDate: new Date(),
+        HCPAttendence: true,
+        AdminAttendece: true,
+        UpdatedAt: new Date(),
+        UpdatedBy: "Admin",
+      };
+
+
+      await collection.updateOne(
+        { _id: record._id },
+        {
+          $push: { Attendance: attendanceEntry }as any,
+        }
+      );
+    }
+
+    return {
+      success: true,
+      message: `${totalAdded} new attendance entries added for today.`,
+    };
+  } catch (error) {
+    console.error("❌ Error updating attendance:", error);
+    return { success: false, message: "Error occurred.", error };
+  }
+};
 
 export const GetInvoiceInfo=async()=>{
   try{

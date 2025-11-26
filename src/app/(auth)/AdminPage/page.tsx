@@ -199,11 +199,12 @@ useEffect(() => {
     // SetUpdateMainFilter(Z)
     dispatch(Update_Main_Filter_Status(Z))
   }
-useEffect(() => {UpdateAssignHca
+useEffect(() => {
   if (UpdateMainFilter === "Client Enquiry") {
     setSearch(""); 
   }
-}, [UpdateMainFilter,CurrentCount]);
+}, [UpdateMainFilter, CurrentCount]);
+
 
   const UpdateMainFilterValues = () => {
     switch (UpdateMainFilter) {
