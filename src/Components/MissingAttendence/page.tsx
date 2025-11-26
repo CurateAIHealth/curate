@@ -1,6 +1,6 @@
 'use client'
 
-import { GetDeploymentInfo, UpdatehcpDailyAttendce, UpdateAttendence } from "@/Lib/user.action"
+import { GetDeploymentInfo, UpdatehcpDailyAttendce, UpdateAttendence, UpdateMultipleAttendance } from "@/Lib/user.action"
 import { useEffect, useState } from "react"
 import { LoadingData } from "../Loading/page"
 import { useSelector } from "react-redux"
@@ -16,8 +16,10 @@ const MissingAttendence = () => {
   const TimeStampData = useSelector((state: any) => state.TimeStampInfo)
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [ChooseMultiple,setChooseMultiple]=useState(true)
+  const [selectedHCPIds,setselectedHCPIds]=useState<any>([])
 
-
+console.log("Test Selected HCP Id's---",selectedHCPIds)
   useEffect(() => {
     const Fetch = async () => {
       try {
@@ -80,6 +82,26 @@ const MissingAttendence = () => {
 
     }
   };
+
+  const UpdateMultipleAttendence=async()=>{
+    try{
+const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
+        selectedHCPIds,
+        `${currentYear}-${currentMonth}`,
+        {
+          HCPAttendence: true,
+          AdminAttendece: true
+        },
+        TimeStampData
+      );
+
+      if (AttendenceUpdateResult.success === true) {
+        setStatusMessage("Selected HCPs Today's Attendance Updated Succesfully ✅")
+      }
+    }catch(err:any){
+
+    }
+  }
   if (isChecking) {
     return <LoadingData />
   }
@@ -100,7 +122,10 @@ const MissingAttendence = () => {
                 ? "bg-green-100 text-green-700 border border-green-300"
                 : "bg-red-100 text-red-700 border border-red-300"
               }`}>{StatusMessage}</p>}
-            <button className=" p-2  shadow-lg  bg-[#1392d3] text-white rounded-md cursor-pointer m-2 text-xs" onClick={UpdateCurrentAttendence}>Check In All HCP's</button>
+              <div className="flex gap-2">
+                <button className=" p-2  shadow-lg  bg-[#1392d3] text-white rounded-md cursor-pointer m-2 text-xs" onClick={UpdateCurrentAttendence}>Check In All HCP's</button>
+                <button className=" p-2  shadow-lg  bg-[#cbd5e1] text-grey-800 rounded-md cursor-pointer m-2 text-xs" onClick={()=>{if(ChooseMultiple){ setChooseMultiple(false);}else{ UpdateMultipleAttendence(); setChooseMultiple(true);}}}>{ChooseMultiple?"Select Multiple HCP's":"Check In Selected HCP's"}</button>
+              </div>
           </div>
           <table className="w-full text-center  border-collapse">
             <thead className="bg-[#50c896] text-white text-sm uppercase tracking-wide">
@@ -140,9 +165,9 @@ const MissingAttendence = () => {
                       Pending
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-gray-700">
+                  <td className="py-3 px-4 flex items-center justify-center text-gray-700">
                    
-
+{ChooseMultiple&&
                     <button className="
   bg-teal-800 text-white
   px-6 py-2 rounded-md cursor-pointer
@@ -151,8 +176,23 @@ const MissingAttendence = () => {
 "
                       onClick={() => handleUpdate(item.HCAId)}
                     >
-                      <span>✔</span> {item.HCAName}'s Attendance Check-in
-                    </button>
+                      <span>✔</span> {item.HCAName}'s Attendance Check-in 
+                    </button>}
+{ChooseMultiple === false && (
+  <span className="ml-4 mt-5 h-10 w-10 ">
+    <input
+      type="checkbox"
+      onChange={(e) => {
+  setselectedHCPIds((prev: any) =>
+    e.target.checked
+      ? [...prev, item.HCAId]              
+      : prev.filter((id: any) => id !== item.HCAId) 
+  );
+}}
+      className="h-5 w-5 cursor-pointer accent-[#1392d3]"
+    />
+  </span>
+)}
 
 
                   </td>

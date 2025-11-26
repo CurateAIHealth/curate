@@ -1463,6 +1463,87 @@ export const UpdateAttendence = async (
   }
 };
 
+export const UpdateMultipleAttendance = async (
+  hcpIds: string[],    
+  Month: string,
+  Status: {
+    HCPAttendence: boolean;
+    AdminAttendece: boolean;
+  },
+  UpdatedBy: string
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const today = new Date().toISOString().split("T")[0];
+    const todayStart = new Date(today + "T00:00:00.000Z");
+    const todayEnd = new Date(today + "T23:59:59.999Z");
+
+    let skipped: string[] = [];      
+    let operations: any[] = [];      
+
+    for (const hcpId of hcpIds) {
+   
+      const alreadyExist = await collection.findOne({
+        HCAId: hcpId,
+        Month: Month,
+        Attendance: {
+          $elemMatch: {
+            AttendenceDate: { $gte: todayStart, $lte: todayEnd },
+          },
+        },
+      });
+
+      if (alreadyExist) {
+        skipped.push(hcpId);
+        continue; 
+      }
+
+      const attendanceEntry = {
+        AttendenceDate: new Date(),
+        HCPAttendence: Status.HCPAttendence,
+        AdminAttendece: Status.AdminAttendece,
+        UpdatedAt: new Date(),
+        UpdatedBy: UpdatedBy || "",
+      };
+
+      operations.push({
+        updateOne: {
+          filter: { HCAId: hcpId, Month: Month },
+          update: {
+            $push: { Attendance: attendanceEntry },
+            $setOnInsert: {
+              HCAId: hcpId,
+              Month: Month,
+              CreatedAt: new Date(),
+            },
+          },
+          upsert: true,
+        },
+      });
+    }
+
+    // Perform bulk update in a single DB call
+    if (operations.length > 0) {
+      await collection.bulkWrite(operations);
+    }
+
+    return {
+      success: true,
+      updated: operations.length,
+      skipped: skipped,
+      message: `Updated: ${operations.length}, Skipped (already marked): ${skipped.length}`,
+    };
+  } catch (error: any) {
+    console.error("❌ Error updating multiple attendance:", error.message);
+    return {
+      success: false,
+      message: "Error updating multiple attendance: " + error.message,
+    };
+  }
+};
 
 
 
