@@ -104,7 +104,7 @@ const ClientSuggetions = () => {
       </div>
     );
   }
-
+console.log("Test Availability---",HCP)
   return (
     <div>
       <SuitableHcpList clients={clientList} hcps={HCP} />

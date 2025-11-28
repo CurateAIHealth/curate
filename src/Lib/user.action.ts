@@ -1194,7 +1194,7 @@ export const TestInserTimeSheet = async (
 
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
-    const collection = db.collection("TimeSheet");
+    const collection = db.collection("Deployment");
 
     const TimeSheetData = {
       StartDate:StartDate,
@@ -1632,6 +1632,101 @@ return safeUsers
 
   }
 }
+export const GetReplacementInfo=async()=>{
+  try{
+const cluster=await clientPromise
+const db=cluster.db("CurateInformation")
+const collection=db.collection("Replacement")
+const TimeSheetInfoData=await collection.find().toArray()
+
+const safeUsers = TimeSheetInfoData.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+return safeUsers
+  }catch(e){
+
+  }
+}
+export const UpdateReplacmentData = async (
+  Available_HCP: any,
+  Exsting_HCP: any,
+  UpdatedBy: any
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const deploymentCollection = db.collection("Deployment");
+    const replacementCollection = db.collection("Replacement");
+
+  
+    const existingInfo: any = await deploymentCollection.findOne({
+      HCAId: Exsting_HCP.HCA_Id,
+    });
+
+    if (existingInfo && existingInfo._id) {
+    delete existingInfo._id;
+   
+}
+
+
+    const attendanceEntry = {
+      AttendenceDate: new Date(),
+      HCPAttendence: true,
+      AdminAttendece: false,
+      UpdatedAt: new Date(),
+      UpdatedBy: UpdatedBy || "",
+    };
+
+   
+    const updatedAttendance = Array.isArray(existingInfo.Attendance)
+      ? [...existingInfo.Attendance, attendanceEntry]
+      : [attendanceEntry];
+
+   
+    const replacementData = {
+      ...existingInfo,
+      Attendance: updatedAttendance,   
+      ReplacedAt: new Date(),
+      NewHCAId: Available_HCP?.userId,
+      NewHCAName: Available_HCP?.FirstName,
+      NewHCAContact: Available_HCP?.Contact,
+    };
+
+    await replacementCollection.insertOne(replacementData);
+
+   
+    const UpdateReplasementInfo = await deploymentCollection.updateOne(
+      { HCAId: Exsting_HCP.HCA_Id },
+      {
+        $set: {
+          HCAId: Available_HCP.userId,
+          HCAName: Available_HCP.FirstName,
+          HCAContact: Available_HCP.Contact
+        },$push: {
+        Attendance: attendanceEntry   
+      } as any
+      }
+    );
+
+    if (UpdateReplasementInfo.matchedCount === 0) {
+      return { success: false, message: "Update failed, no match found" };
+    }
+
+    return {
+      success: true,
+      message: "Replacement updated successfully",
+      update: UpdateReplasementInfo
+    };
+
+  } catch (err: any) {
+    console.error("Error updating replacement:", err);
+    return { success: false, message: "Error occurred", error: err };
+  }
+};
+
+
 
  export const UpdateAllPendingAttendance = async (selectedYear:any, selectedMonth:any) => {
   try {
@@ -2527,6 +2622,32 @@ export const UpdateHCAnstatus = async (UserId: string,AvailableStatus:String) =>
   }
 }
 
+export const DeleteHCAStatus = async (UserId: string) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Registration");
+
+    const UpdateStatus = await Collection.updateOne(
+      { userId: UserId },
+      {
+        $set: {
+          Status: ""  
+        }
+      }
+    );
+
+    if (UpdateStatus.modifiedCount === 0) {
+      return { success: false, message: "Internal Error Try Again!" };
+    }
+
+    return { success: true, message: "Status deleted successfully." };
+  } catch (err: any) {
+    return err;
+  }
+};
+
+
 export const UpdateHCAnstatusInFullInformation = async (Userid: string,) => {
   try {
     const Cluster = await clientPromise;
@@ -2545,6 +2666,28 @@ const Try:any="Assigned"
     return { success: true, message: 'Verification Status updated successfully.' };
   } catch (err: any) {
     return { success: false, message: err.message || 'Internal Error' };
+  }
+};
+export const DeleteHCAStatusInFullInformation = async (Userid: string) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const collection = Db.collection("CompliteRegistrationInformation");
+
+    const UpdateResult = await collection.updateOne(
+      { "HCAComplitInformation.UserId": Userid },
+      { 
+        $unset: { "HCAComplitInformation.Status": "" } 
+      }
+    );
+
+    if (UpdateResult.matchedCount === 0) {
+      return { success: false, message: "User not found!" };
+    }
+
+    return { success: true, message: "Status key deleted successfully." };
+  } catch (err: any) {
+    return { success: false, message: err.message || "Internal Error" };
   }
 };
 

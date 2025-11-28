@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  GetDeploymentInfo,
   GetRegidterdUsers,
   GetUserInformation,
   GetUsersFullInfo,
@@ -26,9 +27,11 @@ import { setTimeout } from 'timers/promises';
 import { decrypt, encrypt } from '@/Lib/Actions';
 import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 import { LoadingData } from '@/Components/Loading/page';
+import ReplacementsTable from '@/Components/ReplacementsTable/page';
 let cachedUserInfo: any = null;
 let cachedRegisteredUsers: any[] | null = null;
 let cachedFullInfo: any[] | null = null;
+let Deployed:any[] 
 export default function UserTableList() {
   const [updatedStatusMsg, setUpdatedStatusMsg] = useState('');
   const [users, setUsers] = useState<any[]>([]);
@@ -128,16 +131,18 @@ useEffect(() => {
       }
 
       // ---- PARALLEL FETCH (cached or fresh) ----
-      const [profile, registeredUsers, fullInfo] = await Promise.all([
+      const [profile, registeredUsers, fullInfo,DeployedLength] = await Promise.all([
         cachedUserInfo ?? GetUserInformation(localValue),
         cachedRegisteredUsers ?? GetRegidterdUsers(),
         cachedFullInfo ?? GetUsersFullInfo(),
+        Deployed?? GetDeploymentInfo()
       ]);
 
       // ---- SET CACHE IF EMPTY ----
       cachedUserInfo ||= profile;
       cachedRegisteredUsers ||= registeredUsers;
       cachedFullInfo ||= fullInfo;
+      Deployed ||=DeployedLength 
 
       // ---- SET BASIC STATES (grouped to reduce renders) ----
       setUsers(registeredUsers);
@@ -199,6 +204,7 @@ useEffect(() => {
     // SetUpdateMainFilter(Z)
     dispatch(Update_Main_Filter_Status(Z))
   }
+
 useEffect(() => {
   if (UpdateMainFilter === "Client Enquiry") {
     setSearch(""); 
@@ -238,6 +244,8 @@ setAsignStatus(e.target.value)
         return <ClientTable/>
       case "Timesheet":
         return <InvoiceMedicalTable/>
+         case "Replacements":
+        return <ReplacementsTable/>
       case "Referral Pay":
         return <WorkingOn ServiceName="Referral Pay"/>
       case "Payments":
@@ -321,7 +329,7 @@ const ClientEnquiryUserInterFace = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {UpdatedFilterUserType.map((user, index) => (
+                  {UpdatedFilterUserType.reverse().map((user, index) => (
                     <tr
                       key={index}
                       className="border-b border-gray-100 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors"
@@ -608,13 +616,17 @@ console.log('Test Registerd Userss---',users)
           filterColors[each]
         }`}
       >
-        {UpdateMainFilter === "Client Enquiry"
-          ? `${each} (${
-              UpdatedFilterUserType.filter(
-                (Try) => Try.ClientStatus === each
-              ).length
-            })`
-          : each}
+        {
+  UpdateMainFilter === "Client Enquiry"
+    ? `${each} (${
+        UpdatedFilterUserType?.filter(
+          (Try) => Try.ClientStatus === each
+        )?.length || Deployed?.length||0
+      })`
+    : each 
+}
+
+        
       </button>
     ))}
   </div>

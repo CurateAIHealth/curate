@@ -68,7 +68,7 @@ const [selectedFile, setSelectedFile] = useState<File | null>(null);
     location: "",
     healthConditions: [] as string[],
   });
-console.log("Current Work----",form)
+
   const handleCheckboxChange = (type: string, value: string) => {
     setForm((prev) => {
       const list = prev[type as keyof typeof form] as string[];
@@ -552,15 +552,15 @@ const matchesClientAssistance = hcp.HandledSkills?.some((skill: string) => clien
   return hasDiaperSkill && matchesClientAssistance && available;
 });
 
-// Filter only healthcare assistants
-const First = hcps.filter((each: any) => each.userType === "healthcare-assistant");
 
-// Helper: Check availability (NOT assigned)
+// const First = hcps.filter((each: any) => each.userType === "healthcare-assistant");
+
+
 const isAvailable = (hcp: any) =>
   !hcp.Status?.some((value: string) => value === "Assigned");
 
-// Final filtered list
-const ShowAdditionHCPs = First?.filter((each: HcpType) =>
+
+const ShowAdditionHCPs = hcps?.filter((each: HcpType) =>
   isAvailable(each) && (
     form?.hcpType?.some((type: any) => type === each?.Type) ||
 
@@ -582,7 +582,7 @@ const ShowAdditionHCPs = First?.filter((each: HcpType) =>
 
 
 
-console.log("Test Client id----",clients)
+console.log("Test Client id----",hcps)
 
 
  

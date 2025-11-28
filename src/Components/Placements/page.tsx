@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Trash } from "lucide-react";
-import { DeleteTimeSheet, GetDeploymentInfo, GetRegidterdUsers, GetTimeSheetInfo, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteTimeSheet, GetDeploymentInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReplacmentData, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateSubHeading } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -56,8 +56,8 @@ const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
 
   useEffect(() => {
     const Fetch = async () => {
-      const RegisterdUsersResult = await GetRegidterdUsers();
-      setUsers(RegisterdUsersResult || []);
+      const RegisterdUsersResult = await GetUsersFullInfo();
+      setUsers(RegisterdUsersResult);
       const PlacementInformation: any = await GetDeploymentInfo();
   
       setClientsInformation(PlacementInformation);
@@ -111,17 +111,19 @@ const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
   };
 });
 
-
-  const Finel = users.map((each: any) => ({
-    id: each.userId,
-    FirstName: each.FirstName,
-    AadharNumber: each.AadharNumber,
+ const filterProfilePic = (users || []).map(
+        (each: any) => each?.HCAComplitInformation ?? {}
+      );
+  const Finel = filterProfilePic.map((each: any) => ({
+    id: each.UserId,
+    FirstName: each.HCPFirstName,
+    AadharNumber: each.HCPAdharNumber,
     Age: each.Age,
     userType: each.userType,
-    Location: each.Location,
-    Email: each.Email,
-    Contact: each.ContactNumber,
-    userId: each.userId,
+    Location: each['Permanent Address']||'',
+    Email: each.HCPEmail,
+    Contact: each.HCPContactNumber,
+    userId: each.UserId,
     VerificationStatus: each.VerificationStatus,
     DetailedVerification: each.FinelVerification,
     EmailVerification: each.EmailVerification,
@@ -129,9 +131,8 @@ const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
     Status: each.Status,
     provider:each.provider,
     payTerms:each.payTerms
-
-
   }));
+
  const handleDelete = () => {
     if (selectedReason === "Other") {
       confirmDelete(otherReason.trim());
@@ -202,16 +203,25 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
     }
     
   }
-  const HCA_List = Finel.filter(
-    (each: any) =>
-      each.userType === "healthcare-assistant" && each.Status !== "Assigned"
-  );
+  const HCA_List = Finel.filter((each: any) => {
+  const typeMatch =
+    each.userType === "healthcare-assistant" ||
+    each.userType === "HCA" ||
+    each.userType === "HCP" ||
+    each.userType === "HCPT";
+
+  const isNotAssigned = !each.Status?.some((s: string) => s === "Assigned");
+
+  return typeMatch && isNotAssigned;
+});
+
+
 
   const TimeSheet_Info = FinelTimeSheet.find(
 
     (each) => each.Client_Id === TimeSheet_UserId
   );
-console.log("Check Time Sheet---",TimeSheet_Info)
+
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
 
   const handleStatusClick = (day: number) => {
@@ -282,6 +292,31 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((each:any) => {
     role.includes(search)
   );
 });
+
+const UpdateReplacement=async(Available_HCP:any,Exsting_HCP:any)=>{
+  SetActionStatusMessage("Please Wait....")
+
+try{
+    const localValue = localStorage.getItem('UserId');
+  const Sign_in_UserInfo:any = await GetUserInformation(localValue)
+   
+   const TimeStampData=   `${Sign_in_UserInfo.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`
+const UpdateReplacmentInfo=await UpdateReplacmentData(Available_HCP,Exsting_HCP,TimeStampData)
+console.log("Find Mistake--",UpdateReplacmentInfo)
+if(UpdateReplacmentInfo.success=== true){
+  const UpdateHcaStatus = await UpdateHCAnstatus(Available_HCP?.userId, "Assigned")
+  const reove=await DeleteHCAStatus(Exsting_HCP.HCA_Id)
+const UpdateAssignStatus= await UpdateHCAnstatusInFullInformation(Available_HCP?.userId)
+const RemoveStatus= await DeleteHCAStatusInFullInformation(Exsting_HCP.HCA_Id)
+SetActionStatusMessage("Replacement Updated Sucessfull")
+
+}
+
+}catch(err:any){
+
+}
+}
+
   const OmServiceView = () => {
     return (
       <div className="w-full flex flex-col gap-8 p-6 bg-gray-50">
@@ -364,10 +399,17 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((each:any) => {
                 </div>
               </td>
               <td className="px-6 py-4">
-                <select className="p-2 text-sm border cursor-pointer rounded-lg focus:ring-2 focus:ring-teal-300 outline-none transition w-[150px] bg-white/70 shadow-sm">
+                <select className="p-2 text-sm border cursor-pointer rounded-lg focus:ring-2 focus:ring-teal-300 outline-none transition w-[150px] bg-white/70 shadow-sm"
+                  onChange={(e) => {
+    const selected = HCA_List.find(hca => hca.FirstName === e.target.value);
+    if (selected) {
+      UpdateReplacement(selected, c);
+    }
+  }}
+                >
                   <option>Assign New HCA</option>
-                  {HCA_List.map((each: any) => (
-                    <option key={each.FirstName}>{each.FirstName}</option>
+                  {HCA_List.map((each: any,index:any) => (
+                    <option key={index} >{each.FirstName}</option>
                   ))}
                 </select>
               </td>
@@ -401,7 +443,14 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((each:any) => {
       </table>
     </div>
   )}
-
+   {ActionStatusMessage && (
+          <div className="flex flex-col items-center justify-center gap-4 mt-4 bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 px-4 py-4">
+          {ActionStatusMessage!=="Replacement Updated Sucessfull"&&  <div className="w-5 h-5 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>}
+            <p className={`text-center ${ActionStatusMessage==="Replacement Updated Sucessfull"?"text-green-800":"text-red-500"} font-semibold`}>
+              {ActionStatusMessage}
+            </p>
+          </div>
+        )}
 {showExtendPopup&&
  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-2xl w-[350px] p-6 text-center border border-gray-200">
@@ -429,14 +478,7 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((each:any) => {
           </button>
         </div>
         
-        {ActionStatusMessage && (
-          <div className="flex flex-col items-center justify-center gap-4 mt-4 bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 px-4 py-4">
-            <div className="w-5 h-5 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-center text-red-500 font-semibold">
-              {ActionStatusMessage}
-            </p>
-          </div>
-        )}
+        
       </div>
       
     </div>
@@ -495,14 +537,7 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((each:any) => {
         </div>
 
   
-        {ActionStatusMessage && (
-          <div className="flex flex-col items-center justify-center gap-4 mt-4 bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 px-4 py-4">
-            <div className="w-5 h-5 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-center text-red-500 font-semibold">
-              {ActionStatusMessage}
-            </p>
-          </div>
-        )}
+     
       </div>
     </div>
   )}
