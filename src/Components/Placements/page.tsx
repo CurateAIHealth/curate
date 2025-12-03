@@ -382,7 +382,7 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
           {FilterFinelTimeSheet.reverse().map((c, i) => (
             <tr
               key={i}
-              className="hover:bg-teal-50/30 transition-all border-b border-gray-100"
+              className="hover:bg-teal-50/30 transition-all border-b border-gray-400"
             >
               <td className="px-6 py-4 font-semibold text-gray-900">{c.name}</td>
               <td className="px-6 py-4 text-gray-700">{c.contact}</td>

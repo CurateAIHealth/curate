@@ -332,7 +332,7 @@ const ClientEnquiryUserInterFace = () => {
                   {UpdatedFilterUserType.reverse().map((user, index) => (
                     <tr
                       key={index}
-                      className="border-b border-gray-100 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors"
+                      className="border-b border-gray-400 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors"
                     >
                       <td className="px-2 py-2 truncate">
                         <div className="flex items-center gap-2">
@@ -465,9 +465,11 @@ const ClientEnquiryUserInterFace = () => {
                          <button
 onClick={()=>UpdateNavigattosuggetions(user.userId)}
             className="flex   cursor-pointer items-center gap-2 w-full sm:w-auto justify-center  py-2
- text-white   shadow-lg rounded-full h-10 text-[9px] transition-all duration-150"
+ text-white    h-10 text-[9px] transition-all duration-150"
           >
-            <img src="Icons/HCP.png" className='h-10 w-10 rounded-full'/>
+            {/* <img src="Icons/HCP.png" className='h-10 w-10 rounded-full'/> */}
+             <img src="Icons/FemaleHCA.png" className='h-15 w-15 rounded-full'/>
+            
           </button>
                       </td>}
                     </tr>

@@ -359,7 +359,7 @@ Router.push("/MailInvoiceTemplate")
 
 
         <div className="min-w-[900px]">
-          <div className="flex justify-between items-center px-5 py-3 border-b border-gray-100">
+          <div className="flex justify-between items-center px-5 py-3 border-b border-gray-400">
             <div>
               <p className="text-sm font-medium text-gray-800">Invoice list</p>
               <p className="text-xs text-gray-500">

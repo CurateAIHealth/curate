@@ -122,7 +122,7 @@ const tabs = [
     name: "Invoices",
     count: 30,
     growth: "+12%",
-    icon: ReceiptIndianRupee, 
+    icon: ReceiptIndianRupee,
     color: "bg-gradient-to-tr from-lime-500 to-green-600",
   },
 ];
@@ -134,15 +134,10 @@ export default function Dashboard() {
   const dispatch = useDispatch();
   const updatedRefresh = useSelector((afterEach: any) => afterEach.updatedCount);
 
-  
-  useEffect(() => {
-     
-    router.prefetch("/AdminPage");
-    router.prefetch("/NewLead");
-    router.prefetch("/UserInformation");
-  }, [router]);
 
-  
+
+
+
   const { data: BenchList = [], isLoading, mutate } = useSWR(
     "bench-list",
     fetcher,
@@ -153,47 +148,81 @@ export default function Dashboard() {
 
 
 
-  useEffect(() => {
-    if (updatedRefresh) mutate();
+    useEffect(() => {
+    if (updatedRefresh) {
+      mutate(); 
+    }
   }, [updatedRefresh, mutate]);
 
- 
-  const RoutToAdminPage = async (A: any) => {
-    dispatch(Update_Main_Filter_Status(A));
-    dispatch(UpdateUserType("patient"));
+
+    const RoutToAdminPage = (A: string) => {
+    dispatch(Update_Main_Filter_Status(A)); 
+    dispatch(UpdateUserType("patient"));    
+    router.push("/AdminPage");              
+  };
+
+ const navigateToRegistration = () => {
+    router.push("/UserTypeRegistration");
+  };
+
+  const navigateToHCPList = () => {
+    dispatch(UpdateUserType("healthcare-assistant"));  
     router.push("/AdminPage");
   };
-  const Switching = (A: any) => {
+
+  const navigateToPDRView = () => {
+    router.push("/PDRView");
+  };
+
+  const navigateToVendors = () => {
+    router.push("/VendorsPanel");
+  };
+
+  const navigateToDocuments = () => {
+    router.push("/Documents");
+  };
+
+  const navigateToInvoices = () => {
+    router.push("/Invoices");
+  };
+
+ const Switching = (A: string) => {
     switch (A) {
       case "Client Enquiry":
       case "Deployment":
-        case 'Timesheet':
-        return RoutToAdminPage(A)
+      case "Timesheet":
+        return RoutToAdminPage(A); 
+
       case "Registration":
-        return router.push('/UserTypeRegistration');
-        case "HCP List":
-        return NavigatetoFullHCPlIST();
-        case "Pending PDR":
-          return router.push("/PDRView");
-          case 'Vendors':
-            return router.push('/VendorsPanel');
-            case "Document Compliance":
-              return router.push('/Documents');
-             case "Invoices":
-              return router.push("/Invoices")
+        return navigateToRegistration();
+
+      case "HCP List":
+        return navigateToHCPList();
+
+      case "Pending PDR":
+        return navigateToPDRView();
+
+      case "Vendors":
+        return navigateToVendors();
+
+      case "Document Compliance":
+        return navigateToDocuments();
+
+      case "Invoices":
+        return navigateToInvoices();
 
       default:
-        return null
+        return;
     }
-  }
+  };
   const UpdateNewLead = async () => {
-     router.prefetch("/NewLead");
+    router.prefetch("/NewLead");
     router.push("/NewLead");
   };
 
   const handleLogout = async () => {
     localStorage.removeItem("UserId");
-    await router.prefetch("/");
+     router.prefetch("/");
     router.push("/");
   };
 
@@ -202,12 +231,11 @@ export default function Dashboard() {
       dispatch(UpdateClient(ClientName));
       dispatch(UpdateUserInformation(userId));
       dispatch(UpdateUserType("patient"));
-      await router.prefetch("/UserInformation");
       router.push("/UserInformation");
     }
   };
 
-  const NavigatetoFullHCPlIST =  () => {
+  const NavigatetoFullHCPlIST = () => {
     dispatch(UpdateUserType("healthcare-assistant"));
     router.push("/AdminPage");
   };
@@ -215,7 +243,7 @@ export default function Dashboard() {
   return (
     <div className="flex h-screen bg-gray-100 relative">
       <div className="flex-1 flex flex-col">
-        {/* Header */}
+      
         <header className="flex flex-wrap justify-between items-center bg-gray-400 text-white px-4 sm:px-6 py-3 shadow-md gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="user" className="w-8 h-8" />
@@ -249,10 +277,10 @@ export default function Dashboard() {
           </div>
         </header>
 
-    
+
         <main className="p-4 sm:p-2 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 space-y-6">
-       
+
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
               {tabs.map((tab, index) => (
                 <motion.div
@@ -272,13 +300,13 @@ export default function Dashboard() {
                   <p
                     className="mt-2 sm:mt-3 text-xs sm:text-sm hover:underline font-semibold cursor-pointer text-gray-900 text-center"
                     onClick={
-                     ()=>Switching(tab.name)
+                      () => Switching(tab.name)
                     }
                   >
                     {tab.name}
                   </p>
 
-             
+
                   <div className="relative group inline-block">
                     <h2 className="text-base sm:text-lg font-bold text-gray-700 mt-1 cursor-pointer">
                       {tab.count.toLocaleString()}
@@ -290,15 +318,14 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Growth + Buttons */}
+            
                   <div className="mt-2 flex flex-wrap justify-center gap-2">
                     <div className="relative group inline-block">
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-medium cursor-pointer ${
-                          tab.growth.startsWith("+")
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium cursor-pointer ${tab.growth.startsWith("+")
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
-                        }`}
+                          }`}
                       >
                         {tab.growth}
                       </span>
@@ -323,11 +350,11 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Bench List */}
+   
           <div className="lg:col-span-4 space-y-4">
             <div className="bg-white flex flex-col p-2 sm:p-4 rounded-xl shadow-md">
               <h2 className="text-base sm:text-lg font-semibold mb-3 text-gray-700">
-               Active Bench List
+                Active Bench List
               </h2>
               {isLoading ? (
                 <p>Bench List Loading...</p>

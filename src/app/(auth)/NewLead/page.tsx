@@ -2,7 +2,7 @@
 
 import MobileMedicationSchedule from "@/Components/MedicationMobileView/page";
 import MedicationSchedule from "@/Components/Medications/page";
-import { ClientEnquiry_Filters, filterColors, Headings, indianFamilyRelations, LeadSources, Main_Filters, medicalSpecializations, physioSpecializations } from "@/Lib/Content";
+import { ClientEnquiry_Filters, filterColors, Headings, Health_Card, HomeAssistance, indianFamilyRelations, IndianLanguages, LeadSources, Main_Filters, medicalSpecializations, Patient_Home_Supply_Needs, patientCategories, physioSpecializations } from "@/Lib/Content";
 import { GetUserInformation, UpdateNewLeadInformation } from "@/Lib/user.action";
 import { Update_Current_Client_Status } from "@/Redux/action";
 import { Info, ListFilter, LogOut, PhoneCall, X } from "lucide-react";
@@ -176,7 +176,7 @@ Medication:false})
     const router=useRouter()
 const MedicationData=useSelector((each:any)=>each.MedicationInfo)
     const FinelPostingData={...formData,serviceCharges:formData.serviceCharges,RegistrationFee:DiscountPrice-ClientDiscount,Medications:MedicationData}
-console.log('Test Data----',FinelPostingData)
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev: any) => {
       const updated = { ...prev, [field]: value };
@@ -250,7 +250,7 @@ router.push("/AdminPage")
       return ()=> clearInterval(Timer)
     }
   };
-
+console.log("Test Language----",formData.comfortableLanguages)
   return (
     <div
      
@@ -495,7 +495,7 @@ className="overflow-hidden h-[95%]"
           <div>
             <h3 className="font-medium text-sm">Patient Type</h3>
             <div className="flex flex-col gap-1">
-              {["Bed Ridden", "Semi Bed Ridden", "Wheel Chair", "Full Mobile", "Post Operative"].map(
+              {patientCategories.map(
                 (t) => (
                   <label key={t} className="flex items-center text-sm">
                     <input
@@ -666,86 +666,104 @@ className="overflow-hidden h-[95%]"
 }
         </div>
 
-        <div id="Comfortable Languages" className="bg-white rounded-lg shadow p-4 space-y-3">
-          <h2 className="text-lg font-semibold text-teal-600">Comfortable Languages</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {["Telugu", "Hindi", "English", "Other"].map((lang) => (
-              <div key={lang} className="flex flex-col">
-                <label className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
-                  <input
-                    type="checkbox"
-                    checked={
-                      lang === "Other"
-                        ? formData.comfortableLanguages.some((l: string) =>
-                            l.startsWith("Other")
-                          )
-                        : formData.comfortableLanguages.includes(lang)
-                    }
-                    onChange={() => {
-                      if (lang === "Other") {
-                        setFormData((prev: any) => {
-                          const hasOther = prev.comfortableLanguages.some((l: string) =>
-                            l.startsWith("Other")
-                          );
-                          return {
-                            ...prev,
-                            comfortableLanguages: hasOther
-                              ? prev.comfortableLanguages.filter(
-                                  (l: string) => !l.startsWith("Other")
-                                )
-                              : [...prev.comfortableLanguages, "Other:"],
-                          };
-                        });
-                      } else {
-                        handleCheckboxChange("comfortableLanguages", lang);
-                      }
-                    }}
-                    className="mr-2 accent-purple-600"
-                  />
-                  {lang}
-                </label>
-                {lang === "Other" &&
-                  formData.comfortableLanguages.some((l: string) =>
+       <div id="Comfortable Languages" className="bg-white rounded-lg shadow p-4 space-y-3">
+  <h2 className="text-lg font-semibold text-teal-600">Comfortable Languages</h2>
+
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    {["Telugu", "Hindi", "English", "Other"].map((lang) => (
+      <div key={lang} className="flex flex-col">
+
+        
+        <label className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
+          <input
+            type="checkbox"
+            checked={
+              lang === "Other"
+                ? formData.comfortableLanguages.some((l:any) => l.startsWith("Other"))
+                : formData.comfortableLanguages.includes(lang)
+            }
+            onChange={() => {
+              if (lang === "Other") {
+                setFormData((prev:any) => {
+                  const hasOther = prev.comfortableLanguages.some((l:any) =>
                     l.startsWith("Other")
-                  ) && (
-                    <input
-                      type="text"
-                      placeholder="Enter Other Language"
-                      className="mt-1 w-full border rounded-lg p-2 text-sm"
-                      value={
-                        formData.comfortableLanguages.find((l: string) =>
-                          l.startsWith("Other")
-                        )?.replace("Other:", "") || ""
-                      }
-                      onChange={(e) => {
-                        const customValue = `Other:${e.target.value}`;
-                        setFormData((prev: any) => {
-                          const filtered = prev.comfortableLanguages.filter(
-                            (l: string) => !l.startsWith("Other")
-                          );
-                          return {
-                            ...prev,
-                            comfortableLanguages: [...filtered, customValue],
-                          };
-                        });
-                      }}
-                    />
-                  )}
-              </div>
-            ))}
-          </div>
-        </div>
+                  );
+
+                  return {
+                    ...prev,
+                    comfortableLanguages: hasOther
+                      ? prev.comfortableLanguages.filter(
+                          (l:any) => !l.startsWith("Other")
+                        )
+                      : [...prev.comfortableLanguages, "Other:"],
+                  };
+                });
+              } else {
+                handleCheckboxChange("comfortableLanguages", lang);
+              }
+            }}
+            className="mr-2 accent-purple-600"
+          />
+          {lang}
+        </label>
+
+       
+        {lang === "Other" &&
+  formData.comfortableLanguages.some((l: any) => l.startsWith("Other")) && (
+    <div>
+      <select
+        className="mt-1 w-full border rounded-lg p-2 text-sm"
+        value={
+          (() => {
+            const otherValue = formData.comfortableLanguages.find((l: any) =>
+              l.startsWith("Other")
+            );
+            return otherValue ? otherValue.replace("Other:", "") : "";
+          })()
+        }
+        onChange={(e) => {
+          const value = e.target.value;
+
+          setFormData((prev: any) => {
+            return {
+              ...prev,
+              comfortableLanguages: [
+                ...prev.comfortableLanguages.filter(
+                  (l: any) => !l.startsWith("Other")
+                ),
+                value ? `Other:${value}` : "Other",
+              ],
+            };
+          });
+        }}
+      >
+        <option value="">Select Language</option>
+
+        {IndianLanguages.map((l) => (
+          <option key={l} value={l}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </div>
+  )}
+
+      </div>
+    ))}
+  </div>
+</div>
+
 
         {[
           {
             title: "Home Assistance",
             field: "patientHomeAssistance",
-            options: ["Diaper", "Bathing", "Bedding", "Brushing"],
+            options: HomeAssistance,
           },
           {
             title: "Home Needs",
             field: "patientHomeNeeds",
-            options: ["Diaper", "BP Monitor", "Sugar Monitor", "Water Bed"],
+            options: Patient_Home_Supply_Needs,
           },
           {
             title: "Doctor Needs",
@@ -755,13 +773,7 @@ className="overflow-hidden h-[95%]"
           {
             title: "Health Card",
             field: "patientHealthCard",
-            options: [
-              "Diabetic",
-              "Blood Pressure",
-              "Surgery – Hip, Knee, Shoulder etc",
-              "Dementia",
-              "Paralysis",
-            ],
+            options:Health_Card,
           },
           {
             title: "HCP Type",

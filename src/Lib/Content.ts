@@ -1803,3 +1803,184 @@ export const terms = [
 'All billing enquiries must be mailed to info@curatehealth.in to be addressed accordingly.',
 'Client service agreement has more detailed information on payment terms'
 ];
+
+
+
+export const IndianLanguages = [
+  "Assamese", "Bengali", "Bodo", "Dogri", "Gujarati", "Hindi", "Kannada",
+  "Kashmiri", "Konkani", "Maithili", "Malayalam", "Manipuri", "Marathi",
+  "Nepali", "Odia", "Punjabi", "Sanskrit", "Santali", "Sindhi", "Tamil",
+  "Telugu", "Urdu",
+  "Tulu", "Khasi", "Garo", "Mizo", "Nagamese", "Ladakhi", "Bhil",
+  "Rajasthani", "Haryanvi", "Bhojpuri", "Chhattisgarhi", "Garhwali",
+  "Kumaoni", "Sourashtra"
+];
+
+export const HomeAssistance = [
+  "Brushing",
+  "Face cleaning",
+  "Diaper changing",
+  "Bathing (Bed Bath or Sponge Bath)",
+  "Hair washing",
+  "Patient cloth washing through machine",
+  "Dressing & Grooming",
+  "Bed Making",
+  "Washroom assistance",
+  "Walker or Stick assistance for exercise",
+  "Wheelchair activities",
+  "Artificial commode activities",
+  "Giving bed pan",
+  "Urine bottle emptying",
+  "Stoma bag care",
+  "Catheter care",
+  "NG tube feeding (Ryles tube feeding)",
+  "Diabetic care",
+  "Basic nursing activities (Vital signs)",
+  "Temperature checking",
+  "Pulse checking",
+  "Blood pressure checking",
+  "Glucose (Sugar) checking",
+  "Oxygen (Saturation) checking",
+  "Medications",
+  "Nebulization",
+  "Handling oxygen concentrator",
+  "Bedding",
+  "Small injury dressing",
+  "Small food preparation for patient (e.g., Maggie, boiled egg, hot water, tea, coffee, daliya, khichdi, sabudana etc.)"
+];
+
+
+export const patientCategories = [
+  "Independent Patients",
+  "Support Care Patients",
+  "Wheel Chair - self propel",
+  "Wheel Chair - Dependent",
+  "Semi Bedridden - Limited Mobility",
+  "Completely Bedridden",
+  "Paralysis/Stroke Patients",
+  "Post Surgery care",
+  "Fractures/Injury"
+];
+
+
+
+export const Patient_Home_Supply_Needs=[
+  "Diaper",
+  "Cervical collars",
+  "Walker",
+  "Wheel chair",
+  "Artificial Comode",
+  "Hospital Bed",
+  "Wet wipes",
+  "Cotton",
+  "Medication store box",
+  "Lumber (back) Belt",
+  "Glucose machine",
+  "Automatic Blood pressure monitor",
+  "Hand Gloves",
+  "Garbage Bag",
+  "Face Mask",
+  "Medications",
+  "Under Pads",
+  "Water mattress",
+  "Air Mattress",
+  "First Aid kit",
+  "Rubber Sheet",
+  "Hand wash",
+  "Sanitizer bottle",
+  "Nebilizer machine",
+  "Steam Inhaler machine",
+  "Instant cold pack"
+]
+
+
+
+export const Health_Card = [
+  "Diabetes Mellitus",
+  "Hypertension",
+  "Dementia",
+  "Parkinson's Disease",
+  "Stroke / Paralysis",
+  "Alzheimer's Disease",
+  "Chronic Kidney Disease (CKD)",
+  "Chronic Obstructive Pulmonary Disease (COPD)",
+  "Heart Attack",
+  "Post Cardiac Surgery",
+  "Thyroid",
+  "Obesity",
+  "Urinary Incontinence",
+  "Liver Disease",
+  "Hepatitis",
+  "Colostomy Patients",
+  "Osteoarthritis",
+  "Rheumatoid Arthritis",
+  "Post Orthopedic Surgeries - Hip/Knee Replacement, Spine Surgery",
+  "Cancers",
+  "Palliative Care - End of Life Care",
+  "Geriatric Patients"
+];
+
+export const paymentData = [
+  {
+    typeOfPayment: "Doctor’s professional fees (consultants, visiting doctors)",
+    taxType: "TDS",
+    section: "194J",
+    tdsRate: "10%"
+  },
+  {
+    typeOfPayment: "Housekeeping / Nursing staff outsourced through agency",
+    taxType: "TDS",
+    section: "194C",
+    tdsRate: "3% (Company)&(Individual)"
+  },
+  {
+    typeOfPayment: "Ambulance or equipment hire",
+    taxType: "TDS",
+    section: "194C",
+    tdsRate: "2%"
+  },
+  {
+    typeOfPayment: "Building Rent for hospital premises",
+    taxType: "TDS",
+    section: "194I",
+    tdsRate: "10%"
+  },
+  {
+    typeOfPayment: "Medical Equipment Rent",
+    taxType: "TDS",
+    section: "194I",
+    tdsRate: "2%"
+  },
+  {
+    typeOfPayment: "Consultant/Technical Services (IT, Accounting, Lab support)",
+    taxType: "TDS",
+    section: "194J",
+    tdsRate: "10%"
+  },
+  {
+    typeOfPayment: "Purchase of medical goods (if value > ₹50L)",
+    taxType: "TDS",
+    section: "194Q",
+    tdsRate: "0.10%"
+  },
+  {
+    typeOfPayment: "Patient treatment, diagnostic service",
+    taxType: "GST/TDS/TCS",
+    section: "Exempt",
+    tdsRate: null
+  }
+];
+
+
+export const serviceOptions = [
+  { name: "Healthcare Assistant Service", code: "HCAS" },
+  { name: "Healthcare Nursing Service", code: "HCNS" },
+  { name: "Physiotherapy Service", code: "PTS" },
+  { name: "Medical Equipment Service", code: "MES" },
+  { name: "Lab Service", code: "LABS" },
+  { name: "Digital Health Service", code: "DHS" },
+  { name: "Speech & Language Therapy Service", code: "SPTS" },
+  { name: "Occupational Therapy Service", code: "OTS" },
+  { name: "Behaviour Health Service", code: "BHS" },
+  { name: "Healthcare Consulting Service", code: "HCS" },
+];

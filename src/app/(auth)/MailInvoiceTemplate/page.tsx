@@ -7,26 +7,17 @@ import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { UpdateInvoice } from "@/Lib/user.action";
+import { Plus } from "lucide-react";
+import { paymentData, serviceOptions } from "@/Lib/Content";
 
-const serviceOptions = [
-  { name: "Healthcare Assistant Service", code: "HCAS" },
-  { name: "Healthcare Nursing Service", code: "HCNS" },
-  { name: "Physiotherapy Service", code: "PTS" },
-  { name: "Medical Equipment Service", code: "MES" },
-  { name: "Lab Service", code: "LABS" },
-  { name: "Digital Health Service", code: "DHS" },
-  { name: "Speech & Language Therapy Service", code: "SPTS" },
-  { name: "Occupational Therapy Service", code: "OTS" },
-  { name: "Behaviour Health Service", code: "BHS" },
-  { name: "Healthcare Consulting Service", code: "HCS" },
-];
+
 
 type RoundType = "none" | "nearest" | "up" | "down";
 
 export default function InvoiceForm() {
   const InvoiceData = useSelector((state: any) => state.InvoiceInfo);
 
-  
+  const [ShowServices,setShowServices]=useState(false)
   const [otherExpenses, setOtherExpenses] = useState<any>();
   const [discountType, setDiscountType] = useState<"flat" | "percent">("flat");
   const [discountValue, setDiscountValue] = useState<any>();
@@ -38,6 +29,19 @@ export default function InvoiceForm() {
   ]);
   const [ShowMailTemplate, setShowMailTemplate] = useState(true);
 const [isSending, setIsSending] = useState(false);
+  const [selected, setSelected] = useState<any>({
+    typeOfPayment: "Doctor’s professional fees (consultants, visiting doctors)",
+    taxType: "TDS",
+    section: "194J",
+    tdsRate: "10%"
+  });
+
+  const handleSelect = (e:any) => {
+    const item:any = paymentData.find(
+      (p) => p.typeOfPayment === e.target.value
+    );
+    setSelected(item);
+  };
 
  
   const start = InvoiceData?.StartDate;
@@ -65,7 +69,7 @@ const [isSending, setIsSending] = useState(false);
   if (roundType === "nearest") finalTotal = Math.round(rawTotal);
 
   const roundingDifference = finalTotal - rawTotal;
-  const balanceDue = finalTotal - advance;
+  const balanceDue:any = finalTotal - advance;
 
   const invoice = {
     number: InvoiceData?.id,
@@ -263,7 +267,7 @@ const NavigatetoInvoices=()=>{
   Router.push("/Invoices")
 }
 
-
+const TaxAmount=balanceDue.toFixed(2)*Number(selected?.tdsRate?.replace("%", ""))/100
 
   const getStatusStyles = (status: string | undefined) => {
     if (!status) return "bg-gray-100 text-gray-700 border-gray-200";
@@ -440,6 +444,37 @@ const NavigatetoInvoices=()=>{
                   </tbody>
                 </table>
               </div>
+              <div className="flex gap-4 items-center">
+             <Plus  className="bg-teal-800 p-2 ml-2 mb-2 rounded-md text-white cursor-pointer h-8 w-8" onClick={()=>setShowServices(!ShowServices)}/>
+             {ShowServices&&
+                
+                      <tr className="border-t border-slate-100 hover:bg-slate-50/60">
+                        
+       <Td>
+  <select
+    className="border border-slate-200 text-sm px-2 py-1 rounded-lg bg-white"
+    
+    onChange={(e) => {
+      const selected = serviceOptions.find((s: any) => s.code === e.target.value);
+
+      setServices((prev: any) => {
+        
+        return [...prev, selected];
+      });
+    }}
+  >
+    {serviceOptions.map((opt: any, idx) => (
+      <option key={idx} value={opt.code}>
+        {opt.name}
+      </option>
+    ))}
+  </select>
+</Td>
+
+
+                      </tr>
+                    }
+             </div>
             </div>
           </div>
 
@@ -456,6 +491,7 @@ const NavigatetoInvoices=()=>{
                     Invoice Amount
                   </h2>
                 </div>
+     
                 <div className="text-right">
                   <p className="text-[11px] text-slate-500">Total</p>
                   <p className="text-2xl font-bold text-emerald-600">
@@ -469,7 +505,30 @@ const NavigatetoInvoices=()=>{
                   )}
                 </div>
               </div>
+           <div className="space-y-4">
+      
+      <select
+        className="border p-1 m-1 rounded w-[99%] bg-gray-100"
+        onChange={handleSelect}
+      >
+        
+        {paymentData.map((item, index) => (
+          <option key={index} value={item.typeOfPayment}>
+            {item.typeOfPayment}
+          </option>
+        ))}
+      </select>
 
+      {/* Show Details */}
+      {selected && (
+        <div className="p-1 m-1 rounded w-[99%] border rounded bg-gray-50">
+          <p><strong>Type of Payment:</strong> {selected.typeOfPayment}</p>
+          <p><strong>Tax Type:</strong> {selected.taxType}</p>
+          <p><strong>Section:</strong> {selected.section}</p>
+          <p><strong>TDS Rate:</strong> {selected.tdsRate}</p>
+        </div>
+      )}
+    </div>
               <div className="px-6 py-4 space-y-3 text-sm">
                 <KeyRow label="Base Amount">
                   ₹{baseTotal.toFixed(2)}/-
@@ -510,7 +569,7 @@ const NavigatetoInvoices=()=>{
                 </div>
 
                 <KeyRow label="Raw Total">
-                  ₹{rawTotal.toFixed(2)}/-
+                  ₹{Number(rawTotal.toFixed(2))}/-
                 </KeyRow>
 
               
@@ -519,8 +578,13 @@ const NavigatetoInvoices=()=>{
                   ₹{advance.toFixed(2)}/-
                 </KeyRow>
 
+                  <KeyRow label="Tax">
+                  ₹{balanceDue.toFixed(2)*Number(selected.tdsRate.replace("%", ""))/100}/-
+                  
+                </KeyRow>
+
                 <KeyRow label="Balance Due" highlight>
-                  ₹{balanceDue.toFixed(2)}/-
+                  ₹{Number(balanceDue.toFixed(2))+Number(TaxAmount)-discountAmount}/-
                 </KeyRow>
               </div>
             </div>

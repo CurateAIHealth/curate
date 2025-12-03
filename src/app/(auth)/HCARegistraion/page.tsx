@@ -1,7 +1,7 @@
 'use client';
 
 import HCAMobileView from '@/Components/HCAMobileView/page';
-import { PROFESSIONAL_SKILL_OPTIONS, Relations } from '@/Lib/Content';
+import { IndianLanguages, PROFESSIONAL_SKILL_OPTIONS, Relations } from '@/Lib/Content';
 import { v4 as uuidv4 } from 'uuid';
 import { GetUserInformation, HCARegistration, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
 import { UpdateDocmentSkipReason, UpdateRefresh } from '@/Redux/action';
@@ -11,7 +11,7 @@ import { stringify } from 'querystring';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { LogOut } from 'lucide-react';
+
 import { LoadingData } from '@/Components/Loading/page';
 
 
@@ -210,7 +210,7 @@ const [form, setForm] = useState<FormState>({
   specialties: '  ',
 });
 
-console.log("Document-----",Docs)
+console.log("Document-----",form.languages)
 
   const { serviceHours12hrs, serviceHours24hrs, ...restForm } = form;
 
@@ -640,13 +640,13 @@ console.log("Posting Data------------------------********8")
           Ensure that all details are accurate to facilitate faster verification and onboarding.
         </p>
 
-         <button
+         {/* <button
               onClick={handleLogout}
               className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-lg sm:rounded-xl font-semibold shadow-lg transition-all duration-150 text-sm sm:text-base"
             >
               <LogOut size={18} className="flex-shrink-0" />
               <span className="hidden xs:inline">Logout</span>
-            </button>
+            </button> */}
 
         {UpdatedStatusMessage && (
           <div
@@ -1772,15 +1772,21 @@ console.log("Posting Data------------------------********8")
     </h3>
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <input
-        type="text"
-        name="languages"
+   
+<select  name="languages"
         value={form.languages || ''}
         onChange={handleChange}
-        placeholder="Languages Spoken (comma-separated)"
-        className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-        required
-      />
+         className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+        >
+       <option value="">Select Language</option>
+      
+                      {IndianLanguages.map((l) => (
+                        <option key={l} value={l}>
+                          {l}
+                        </option>
+                      ))}
+      
+                    </select>
 
       <input
         type="text"
