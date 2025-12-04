@@ -4,12 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, Eye, Download, CheckCircle, Clock, Slice } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { GetInvoiceInfo } from "@/Lib/user.action";
-import { getDaysBetween } from "@/Lib/Actions";
+import { GetInvoiceInfo, GetSentInvoiceData } from "@/Lib/user.action";
+import { GeneratePDF, getDaysBetween } from "@/Lib/Actions";
 import { LoadingData } from "@/Components/Loading/page";
 import { useRouter } from "next/navigation";
 import { UpdateInvoiceInfo } from "@/Redux/action";
 import { useDispatch } from "react-redux";
+import ReusableInvoice from "@/Components/InvioseTemplate/page";
 
 type InvoiceStatus = "Draft" | "Sent" | "Overdue";
 
@@ -29,9 +30,12 @@ export default function InvoicesPage() {
   const [yearFilter, setYearFilter] = useState("All");
   const [FetchedInfo, setFetchedInfo] = useState<any>([])
   const [isChecking,setisChecking]=useState(true)
+  const [isSending, setIsSending] = useState(false);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"All" | InvoiceStatus>("All");
   const [page, setPage] = useState(1);
+  const [ShowMailTemplate, setShowMailTemplate] = useState(true);
+const [InvoiceData,setInvoiceData]=useState<any>()
   const Router=useRouter()
   const dispatch=useDispatch()
   const pageSize = 4;
@@ -91,7 +95,39 @@ export default function InvoicesPage() {
 };
 
 
+const DownloadInvoice = async (id:any)=>{
+  try{
+    console.log("Test Invoice is ----",id);
+    setIsSending(true)
+  setShowMailTemplate(false);
+    const SentInvoices:any = await GetSentInvoiceData();
 
+     
+    const FilteredResult = SentInvoices.insertedId.filter((each:any)=> each.number === id);
+setInvoiceData(FilteredResult[0]);
+
+setTimeout(async() => {
+     const Result=await GeneratePDF(FilteredResult[0]);
+     if(Result?.status===true){
+      setIsSending(false)
+  setShowMailTemplate(true);
+     }
+}, 300)
+
+
+    if(FilteredResult.length === 0){
+        alert("Invoice Not Found");
+        return;
+    }
+
+   
+   
+      
+
+  }catch(err:any){
+    console.log("Error",err)
+  }
+}
 
   const PreviewInfo = FetchedInfo.map((each: any) => {
 
@@ -109,7 +145,9 @@ export default function InvoicesPage() {
       ServiceEndDate: each.ServiceEndDate,
       RegistrationFee: each.RegistrationFee,
       CareTakeCharge: each.CareTakeChare,
-      AdvanceReceived: each.AdvanceReceived
+      AdvanceReceived: each.AdvanceReceived,
+
+
     }
 
   }
@@ -213,17 +251,78 @@ export default function InvoicesPage() {
     return { label: `${daysLeft} days left`, days: daysLeft, status: "upcoming" };
   }
 const UpdateInvoiceMailTemplate=(MainTemplateInfo:any)=>{
-
+console.log("Check Registratio Fee----",MainTemplateInfo)
   dispatch(UpdateInvoiceInfo(MainTemplateInfo))
 Router.push("/MailInvoiceTemplate")
 }
 
+const invoiceProps = {
+  invoice: {
+    number: InvoiceData?.number ?? "-",
+    date: InvoiceData?.serviceFrom,
+    dueDate: InvoiceData?.serviceTo,
+    serviceFrom: InvoiceData?.serviceFrom,
+    serviceTo: InvoiceData?.serviceTo,
+    terms: InvoiceData?.terms ?? "7 Days",
+    patientName: InvoiceData?.patientName,
+    invoiceName: InvoiceData?.name,
+  },
+
+  billTo: {
+   
+    name: InvoiceData?.ClientName,
+    patientName: InvoiceData?.name,
+    contact: InvoiceData?.contact,
+    email: InvoiceData?.Email,
+    addressLines: InvoiceData?.Adress,
+  },
+
+  items: InvoiceData?.items?.map((srv:any) => ({
+    description: srv.description,
+    days: srv.days,
+    rate: srv.rate,
+    amount: srv.amount,
+  })),
+
+  totals: {
+    BaseAmount: InvoiceData?.BaseAmount,
+    Tax: InvoiceData?.Tax,
+    Discount: InvoiceData?.Discount,
+    OtherExpenses: InvoiceData?.OtherExpenses,
+    total: InvoiceData?.RoundedTotal,
+    AdvancePaid: InvoiceData?.AdvancePaid,
+    balanceDue: InvoiceData?.balanceDue,
+    RegistraionFee:InvoiceData?.RegistraionFee
+
+
+
+  }
+};
+console.log("Check Regisratio Fee--",invoiceProps)
   if (isChecking) {
     return (
       <LoadingData/>
     );
   }
   return (
+    <div>
+      <>{isSending && (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+    
+    <div className="bg-white shadow-xl rounded-2xl px-8 py-6 text-center w-[90%] max-w-sm">
+      <div className="animate-spin h-10 w-10 border-4 border-slate-300 border-t-slate-900 rounded-full mx-auto mb-4"></div>
+
+      <h2 className="text-lg font-semibold text-slate-800">
+        Please Wait…
+      </h2>
+      <p className="text-sm text-slate-500 mt-1">
+        Downloading Invoice 
+      </p>
+    </div>
+  </div>
+)}
+</>
+    {ShowMailTemplate?
     <div className="min-h-screen bg-[#f5f7fb] p-2 md:p-2">
 
 
@@ -245,7 +344,7 @@ Router.push("/MailInvoiceTemplate")
 
 
         <img
-          src="Icons/UpdateCurateLogo.png"
+          src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
           alt="Curate Health Services Logo"
           className="h-16 md:h-24 w-auto object-contain mx-auto md:mx-0"
         />
@@ -359,7 +458,7 @@ Router.push("/MailInvoiceTemplate")
 
 
         <div className="min-w-[900px]">
-          <div className="flex justify-between items-center px-5 py-3 border-b border-gray-100">
+          <div className="flex justify-between items-center px-5 py-3 border-b border-gray-400">
             <div>
               <p className="text-sm font-medium text-gray-800">Invoice list</p>
               <p className="text-xs text-gray-500">
@@ -377,7 +476,7 @@ Router.push("/MailInvoiceTemplate")
           </div>
 
 
-          <div className="grid grid-cols-9 gap-x-8 text-xs font-semibold text-gray-500 px-5 py-2 border-b bg-[#f9fafc]">
+          <div className="grid grid-cols-10 gap-x-8 text-xs font-semibold text-gray-500 px-5 py-2 border-b bg-[#f9fafc]">
             <div>Patient / Client</div>
             <div>Contact</div>
             <div>Status</div>
@@ -387,6 +486,7 @@ Router.push("/MailInvoiceTemplate")
             <div>Balance</div>
             <div>Remarks</div>
             <div className="text-right pr-4">Actions</div>
+            <div>Download</div>
           </div>
 
 
@@ -395,12 +495,12 @@ Router.push("/MailInvoiceTemplate")
             return (
               <div
                 key={inv.id}
-                className="grid grid-cols-9 gap-x-8 px-5 py-3 border-b text-sm hover:bg-[#f7f9fd] transition"
+                className="grid grid-cols-10 gap-x-8 px-5 py-3 border-b text-sm hover:bg-[#f7f9fd] transition"
               >
 
                 <div className="flex flex-col">
                   <span className="font-medium">{inv.name}</span>
-                  <span className="text-[10px] text-gray-500">Invoice ID: {inv.id}</span>
+                  <span className="text-[9px] text-gray-500">Invoice ID: {inv.id}</span>
                 </div>
 
 
@@ -466,15 +566,21 @@ Router.push("/MailInvoiceTemplate")
                     </button>
                   ) : (
                     <button
-                      className="px-4 py-1.5 rounded-md text-xs font-semibold flex items-center gap-2 bg-[#1392d3] text-white"
+                      className="px-2 py-1.5 rounded-md cursor-pointer text-xs font-semibold flex items-center gap-2 bg-[#1392d3] text-white"
+                      onClick={()=>console.log("Test Individual DowanloadDetails---",inv)}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="white" strokeWidth="2">
+                      <svg className="w-4 h-6 " fill="none" stroke="white" strokeWidth="2">
                         <path d="M5 13l4 4L19 7" />
                       </svg>
                       Sent
                     </button>
                   )}
                 </div>
+
+                {inv.status !== "Draft"&&<div className="cursor-pointer ">
+                  <Download onClick={()=>DownloadInvoice(inv.id)}/>
+                </div> }
+                
               </div>
             );
           })}
@@ -503,7 +609,16 @@ Router.push("/MailInvoiceTemplate")
           </button>
         </div>
       </div>
-    </div>
+    </div>:
+       <div id="invoice-pdf-area">
+          <ReusableInvoice
+            invoice={invoiceProps?.invoice}
+            billTo={invoiceProps.billTo}
+            items={invoiceProps.items}
+            totals={invoiceProps.totals}
+          />
+        </div>}
+        </div>
   );
 
 }

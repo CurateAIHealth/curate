@@ -61,7 +61,7 @@ export default function ReusableInvoice({
       }}
     >
 
-      {/* HEADER */}
+  
       <div style={{ display: "flex", alignItems: "center", marginBottom: "15px" }}>
         <div
           style={{
@@ -99,9 +99,8 @@ export default function ReusableInvoice({
         </div>
       </div>
 
-      {/* BILL TO + COMPANY */}
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-        {/* BILL TO */}
+ 
         <div style={{ width: "50%" }}>
           <h4 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "4px" }}>Bill To</h4>
 
@@ -121,7 +120,7 @@ export default function ReusableInvoice({
           </div>
         </div>
 
-        {/* COMPANY INFO */}
+       
         <div style={{ width: "50%", textAlign: "right" }}>
           <h3 style={{ fontSize: "20px", fontWeight: "bold", color: colors.pink, marginBottom: "4px" }}>
             {company.name}
@@ -141,10 +140,10 @@ export default function ReusableInvoice({
         </div>
       </div>
 
-      {/* LINE BREAK */}
+
       <hr style={{ margin: "18px 0", borderColor: "#cbd5e1" }} />
 
-      {/* ITEMS TABLE */}
+
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", fontSize: "14px", borderCollapse: "collapse" }}>
           <thead>
@@ -176,10 +175,10 @@ export default function ReusableInvoice({
         </table>
       </div>
 
-      {/* PAYMENT + TOTALS */}
+    
       <div style={{ marginTop: "20px", display: "flex", gap: "20px" }}>
         
-        {/* PAYMENT */}
+    
         <div style={{ width: "50%" }}>
           <h5 style={{ fontWeight: 600 }}>Payment Method</h5>
 
@@ -198,7 +197,7 @@ export default function ReusableInvoice({
           </div>
         </div>
 
-        {/* TOTALS */}
+       
         <div style={{ width: "50%" }}>
           <div style={{ fontSize: "14px" }}>
             <div style={{ width: "100%", maxWidth: "300px", marginLeft: "auto", background: "#f1f5f9" }}>
@@ -207,6 +206,27 @@ export default function ReusableInvoice({
                 <div style={{ display: "flex", justifyContent: "space-between", padding: "8px" }}>
                   <div>Discount</div>
                   <div style={{ color: "green", fontWeight: "bold" }}>₹{totals.Discount}/-</div>
+                </div>
+              )}
+               {totals.AdvancePaid > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px" }}>
+                  <div>Advance</div>
+                  <div style={{ color: "green", fontWeight: "bold" }}>₹{totals.AdvancePaid}/-</div>
+                </div>
+              )}
+
+               {totals.Tax > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px" }}>
+                  <div>Tax</div>
+                  <div style={{ color: "red", fontWeight: "bold" }}>₹{totals.Tax}/-</div>
+                </div>
+              )}
+              
+
+               {totals.RegistraionFee  && (
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px" }}>
+                  <div>RegistraionFee</div>
+                  <div style={{ fontWeight: "bold" }}>₹{totals.RegistraionFee}/-</div>
                 </div>
               )}
 
@@ -239,7 +259,7 @@ export default function ReusableInvoice({
 
       </div>
 
-      {/* TERMS */}
+  
       <div style={{ marginTop: "25px" }}>
         <h5 style={{ fontWeight: 600, marginBottom: "6px" }}>Terms & Conditions</h5>
 
@@ -250,12 +270,12 @@ export default function ReusableInvoice({
         </ol>
       </div>
 
-      {/* NOTES */}
+    
       <div style={{ marginTop: "20px", textAlign: "center", fontWeight: 600, color: colors.pink }}>
         {company.notes}
       </div>
 
-      {/* WEBSITE */}
+    
       <div style={{ marginTop: "12px", textAlign: "center", fontSize: "14px" }}>
         <a href={company.website} target="_blank" rel="noreferrer" style={{ color: "#000" }}>
           {company.website}

@@ -182,7 +182,7 @@ export const CurrentRegisterUser = (state: any = "", action: any) => {
     }
 }
 
-export const VendorReferal = (state: any = true, action: any) => {
+export const VendorReferal = (state: any = false, action: any) => {
     switch (action.type) {
         case "UpdateVendorPopUpStatus":
             return action.payload;
@@ -207,5 +207,16 @@ export const InvoiceData=(state:any="",action:any)=>{
             return action.payload;
             default:
                 return state
+    }
+}
+
+export const DeploymentInformation = (state: any = null, action: any) => {
+    switch (action.type) {
+        case "GetCurrentDeploymentData":
+            return action.payload;
+        default:
+            return state
+
+
     }
 }

@@ -151,3 +151,13 @@ export const UpdateInvoiceInfo=(InvoiceIno:any)=>{
         payload:InvoiceIno
     }
 }
+
+
+export const GetCurrentDeploymentData=(CurrentDeploymentInfo:any)=>{
+
+    return{
+        type:"GetCurrentDeploymentData",
+        payload:CurrentDeploymentInfo
+    }
+
+}

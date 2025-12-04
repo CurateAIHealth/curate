@@ -1,6 +1,6 @@
 "use client";
 
-import { GetUserInformation, UpdateTimeSheet } from "@/Lib/user.action";
+import { GetUserInformation, UpdateAttendence, } from "@/Lib/user.action";
 import { UpdateTimeStamp } from "@/Redux/action";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,10 +9,12 @@ export default function UpdateAttendance() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<{ success: boolean; message: string } | null>(null);
-  const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
+  const now = new Date();
+const currentYear = now.getFullYear().toString();
+const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 
    const dispatch=useDispatch()
-   
+   const TimeStampData=useSelector((state:any)=>state.TimeStampInfo)
   useEffect(() => {
      const Fetch = async () => {
        const localValue = localStorage.getItem('UserId');
@@ -33,7 +35,16 @@ export default function UpdateAttendance() {
     setResponse(null);
 
     try {
-      const AttendenceUpdateResult:any=await UpdateTimeSheet(hcpId,Month,status,TimeStamp)
+      const AttendenceUpdateResult:any=await  UpdateAttendence(
+  "72934d29-9c06-4d28-a1bb-8776b30adeaf", 
+  `${currentYear}-${currentMonth}`,                              
+  {
+    HCPAttendence: true,
+    AdminAttendece: false
+  },
+TimeStampData
+);
+
      
     setResponse(AttendenceUpdateResult);
       

@@ -1,6 +1,7 @@
+
 "use client";
 
-import { GetDeploymentInfo, UpdateAllPendingAttendance } from "@/Lib/user.action";
+import { GetDeploymentInfo, GetReplacementInfo, UpdateAllPendingAttendance } from "@/Lib/user.action";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
 import { Eye, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -13,7 +14,7 @@ type DayStatus = "P" | "NA" | "HP" | "A";
 
 const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function InvoiceMedicalTable() {
+export default function ReplacementsTable() {
  const now = new Date();
 const currentYear = now.getFullYear().toString();
 const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
@@ -32,7 +33,7 @@ const [selectedYear, setSelectedYear] = useState(currentYear);
 
   useEffect(() => {
     const Fetch = async () => {
-      const PlacementInformation: any = await GetDeploymentInfo();
+      const PlacementInformation: any = await GetReplacementInfo();
       if (!PlacementInformation || PlacementInformation.length === 0) return;
 
       const formattedData: any = {};

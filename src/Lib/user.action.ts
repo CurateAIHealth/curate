@@ -844,6 +844,62 @@ export const UpdateOrganisation = async (Organisation: {
 }
 
 
+
+export const SaveInvoiceData = async (invoiceProps: {
+  invoice: any,
+  billTo: any,
+  items: any[],
+  totals: any
+}) => {
+
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("SentInvoices");
+
+    // 👇 MERGE ALL OBJECTS INTO A SINGLE ONE
+    const finalInvoice = {
+      ...invoiceProps.invoice,   // invoice details merged
+      ...invoiceProps.billTo,    // customer details merged
+      items: invoiceProps.items, // keep array
+      ...invoiceProps.totals,    // totals merged
+      createdAt: new Date().toISOString()
+    };
+
+    const result = await collection.insertOne(finalInvoice);
+
+    return { success: true, insertedId: result.insertedId.toString() };
+
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+};
+
+export const GetSentInvoiceData = async () => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("SentInvoices");
+
+    const result = await collection.find().toArray();
+
+    // Convert ObjectId and Date to plain JSON values
+    const formatted = result.map((item: any) => ({
+      ...item,
+      _id: item._id.toString(),            // Convert ObjectId
+      date: item.date?.toISOString?.(),    // Convert Date to string
+      dueDate: item.dueDate?.toISOString?.(),
+      createdAt: item.createdAt?.toISOString?.()
+    }));
+
+    return { success: true, insertedId: formatted };
+
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+};
+
+
 export interface HCAInfo {
   userType: any;
   FirstName: any;
@@ -1194,6 +1250,87 @@ export const TestInserTimeSheet = async (
 
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const TimeSheetData = {
+      StartDate:StartDate,
+      EndDate:EndDate,
+      Status:Status,
+      ClientId:ClientId,
+      HCAId: hcpId,
+      ClientName: clientName,
+      patientName:patientName,
+      patientPhone:patientPhone,
+      ClientContact: clientPhone,
+      Address: location,
+      HCAName: hcpName,
+      HCAContact: hcpPhone,
+      referralName:referralName,
+      hcpSource:hcpSource,
+      provider:provider,
+      payTerms:payTerms,
+      cTotal:cTotal,
+      cPay:cPay,
+      hcpTotal:hcpTotal,
+      hcpPay:hcpPay,
+      Month:Month,
+      Attendance: TimeSheetArray,
+      UpdatedAt: new Date(),
+      UpdatedBy: UpdatedBy,
+      invoice:invoice,
+      Type:Type,
+      PDRStatus:false
+    };
+
+  const TimeSheetDataInsert=await collection.insertOne(TimeSheetData)
+
+return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedId: TimeSheetDataInsert.insertedId.toString(),
+    };
+  } catch (error: any) {
+    console.error("❌ Error inserting/updating timesheet:", error.message);
+    return {
+      success: false,
+      message: "Error inserting/updating timesheet: " + error.message,
+    };
+  }
+};
+
+export const TestInsertTimeSheet = async (
+  StartDate: any,
+  EndDate: any,
+  Status: any,
+  location: any,
+  clientPhone: any,
+  clientName: any,
+  patientName: any,
+  patientPhone: any,
+  referralName: any,
+  hcpId: any,
+  ClientId: any,
+  hcpName: any,
+  hcpPhone: any,
+  hcpSource: any,
+  provider: any,
+  payTerms: any,
+  cTotal: any,
+  cPay: any,
+  hcpTotal: any,
+  hcpPay: any,
+  Month: any,
+  TimeSheetArray: any,
+  UpdatedBy: any,
+  invoice:any,
+  Type:any,
+
+) => {
+  try {
+   
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
     const collection = db.collection("TimeSheet");
 
     const TimeSheetData = {
@@ -1241,6 +1378,85 @@ return {
     };
   }
 };
+
+export const InsertDeployment = async (
+  StartDate: any,
+  EndDate: any,
+  Status: any,
+  location: any,
+  clientPhone: any,
+  clientName: any,
+  patientName: any,
+  patientPhone: any,
+  referralName: any,
+  hcpId: any,
+  ClientId: any,
+  hcpName: any,
+  hcpPhone: any,
+  hcpSource: any,
+  provider: any,
+  payTerms: any,
+  cTotal: any,
+  cPay: any,
+  hcpTotal: any,
+  hcpPay: any,
+  Month: any,
+  TimeSheetArray: any,
+  UpdatedBy: any,
+  invoice: any,
+  Type: any
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const DeploymentData = {
+      StartDate,
+      EndDate,
+      Status,
+      ClientId,
+      HCAId: hcpId,
+      ClientName: clientName,
+      patientName,
+      patientPhone,
+      ClientContact: clientPhone,
+      Address: location,
+      HCAName: hcpName,
+      HCAContact: hcpPhone,
+      referralName,
+      hcpSource,
+      provider,
+      payTerms,
+      cTotal,
+      cPay,
+      hcpTotal,
+      hcpPay,
+      Month,
+      Attendance: TimeSheetArray,
+      UpdatedAt: new Date(),
+      UpdatedBy,
+      invoice,
+      Type,
+      PDRStatus: false
+    };
+console.log("Check Function----",DeploymentData)
+    const insertResult = await collection.insertOne(DeploymentData);
+
+    return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedId: insertResult.insertedId.toString(),
+    };
+  } catch (error: any) {
+    console.error("❌ Error inserting/updating timesheet:", error.message);
+    return {
+      success: false,
+      message: "Error inserting/updating timesheet: " + error.message,
+    };
+  }
+};
+
 
 export const UpdatePdrStatus = async (UserId: any) => {
   try {
@@ -1309,55 +1525,163 @@ export const GetUserPDRInfo = async (UserId: any) => {
   }
 };
 
-export const UpdateTimeSheet = async (
- 
-  hcpId: any,
-  Month: any,
-  Status: any,      
-  UpdatedBy: any
+export const UpdateAttendence = async (
+  hcpId: string,
+  Month: string,
+  Status: {
+    HCPAttendence: boolean;
+    AdminAttendece: boolean;
+  },
+  UpdatedBy: string
 ) => {
   try {
-    console.log("🟢 Updating TimeSheet status for Client:", hcpId);
-
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
-    const collection = db.collection("TimeSheet");
+    const collection = db.collection("Deployment");
+
+    const today = new Date().toISOString().split("T")[0];
 
 
-
- 
-    const result = await collection.updateOne(
-      {  HCAId: hcpId, Month: Month },
-      {
-        $push: { Attendance: Status },
-        $set: {
-          UpdatedAt: new Date(),
-          UpdatedBy: UpdatedBy,
+    const alreadyExist = await collection.findOne({
+      HCAId: hcpId,
+      Month: Month,
+      Attendance: {
+        $elemMatch: {
+          AttendenceDate: {
+            $gte: new Date(today + "T00:00:00.000Z"),
+            $lte: new Date(today + "T23:59:59.999Z"),
+          },
         },
-      }
-    );
+      },
+    });
 
-    if (result.modifiedCount > 0) {
-      return {
-        success: true,
-        message: `✅ Your attendance status “${Status}” has been added to the timesheet for ${new Date().toLocaleDateString('In-en')}!`,
-
-        
-      };
-    } else {
+    if (alreadyExist) {
       return {
         success: false,
-        message: "⚠️ No changes were made to the TimeSheet.",
+        message: "⚠️ Attendance already marked for today. You cannot submit again.",
       };
     }
+
+    const attendanceEntry = {
+      AttendenceDate: new Date(),
+      HCPAttendence: Status.HCPAttendence,
+      AdminAttendece: Status.AdminAttendece,
+      UpdatedAt: new Date(),
+      UpdatedBy: UpdatedBy || "",
+    };
+
+    
+    const result = await collection.updateOne(
+      { HCAId: hcpId, Month: Month },
+      {
+        $push: { Attendance: attendanceEntry }as any,
+        $setOnInsert: {
+          HCAId: hcpId,
+          Month: Month,
+          CreatedAt: new Date(),
+        },
+      },
+      { upsert: true }   
+    );
+
+    return {
+      success: true,
+      message: `✅ Attendance updated successfully on ${new Date().toLocaleDateString(
+        "en-IN"
+      )}.`,
+    };
   } catch (error: any) {
-    console.error("❌ Error updating timesheet status:", error.message);
+    console.error("❌ Error updating attendance:", error.message);
     return {
       success: false,
-      message: "Error updating timesheet status: " + error.message,
+      message: "Error updating attendance: " + error.message,
     };
   }
 };
+
+export const UpdateMultipleAttendance = async (
+  hcpIds: string[],    
+  Month: string,
+  Status: {
+    HCPAttendence: boolean;
+    AdminAttendece: boolean;
+  },
+  UpdatedBy: string
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const today = new Date().toISOString().split("T")[0];
+    const todayStart = new Date(today + "T00:00:00.000Z");
+    const todayEnd = new Date(today + "T23:59:59.999Z");
+
+    let skipped: string[] = [];      
+    let operations: any[] = [];      
+
+    for (const hcpId of hcpIds) {
+   
+      const alreadyExist = await collection.findOne({
+        HCAId: hcpId,
+        Month: Month,
+        Attendance: {
+          $elemMatch: {
+            AttendenceDate: { $gte: todayStart, $lte: todayEnd },
+          },
+        },
+      });
+
+      if (alreadyExist) {
+        skipped.push(hcpId);
+        continue; 
+      }
+
+      const attendanceEntry = {
+        AttendenceDate: new Date(),
+        HCPAttendence: Status.HCPAttendence,
+        AdminAttendece: Status.AdminAttendece,
+        UpdatedAt: new Date(),
+        UpdatedBy: UpdatedBy || "",
+      };
+
+      operations.push({
+        updateOne: {
+          filter: { HCAId: hcpId, Month: Month },
+          update: {
+            $push: { Attendance: attendanceEntry },
+            $setOnInsert: {
+              HCAId: hcpId,
+              Month: Month,
+              CreatedAt: new Date(),
+            },
+          },
+          upsert: true,
+        },
+      });
+    }
+
+    // Perform bulk update in a single DB call
+    if (operations.length > 0) {
+      await collection.bulkWrite(operations);
+    }
+
+    return {
+      success: true,
+      updated: operations.length,
+      skipped: skipped,
+      message: `Updated: ${operations.length}, Skipped (already marked): ${skipped.length}`,
+    };
+  } catch (error: any) {
+    console.error("❌ Error updating multiple attendance:", error.message);
+    return {
+      success: false,
+      message: "Error updating multiple attendance: " + error.message,
+    };
+  }
+};
+
+
 
 export const DeleteTimeSheet=async(clientId:any)=>{
 
@@ -1427,6 +1751,231 @@ return safeUsers
 
   }
 }
+
+export const GetDeploymentInfo=async()=>{
+  try{
+const cluster=await clientPromise
+const db=cluster.db("CurateInformation")
+const collection=db.collection("Deployment")
+const TimeSheetInfoData=await collection.find().toArray()
+
+const safeUsers = TimeSheetInfoData.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+return safeUsers
+  }catch(e){
+
+  }
+}
+export const GetReplacementInfo=async()=>{
+  try{
+const cluster=await clientPromise
+const db=cluster.db("CurateInformation")
+const collection=db.collection("Replacement")
+const TimeSheetInfoData=await collection.find().toArray()
+
+const safeUsers = TimeSheetInfoData.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+return safeUsers
+  }catch(e){
+
+  }
+}
+export const UpdateReplacmentData = async (
+  Available_HCP: any,
+  Exsting_HCP: any,
+  UpdatedBy: any
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const deploymentCollection = db.collection("Deployment");
+    const replacementCollection = db.collection("Replacement");
+
+  
+    const existingInfo: any = await deploymentCollection.findOne({
+      HCAId: Exsting_HCP.HCA_Id,
+    });
+
+    if (existingInfo && existingInfo._id) {
+    delete existingInfo._id;
+   
+}
+
+
+    const attendanceEntry = {
+      AttendenceDate: new Date(),
+      HCPAttendence: true,
+      AdminAttendece: false,
+      UpdatedAt: new Date(),
+      UpdatedBy: UpdatedBy || "",
+    };
+
+   
+    const updatedAttendance = Array.isArray(existingInfo.Attendance)
+      ? [...existingInfo.Attendance, attendanceEntry]
+      : [attendanceEntry];
+
+   
+    const replacementData = {
+      ...existingInfo,
+      Attendance: updatedAttendance,   
+      ReplacedAt: new Date(),
+      NewHCAId: Available_HCP?.userId,
+      NewHCAName: Available_HCP?.FirstName,
+      NewHCAContact: Available_HCP?.Contact,
+    };
+
+    await replacementCollection.insertOne(replacementData);
+
+   
+    const UpdateReplasementInfo = await deploymentCollection.updateOne(
+      { HCAId: Exsting_HCP.HCA_Id },
+      {
+        $set: {
+          HCAId: Available_HCP.userId,
+          HCAName: Available_HCP.FirstName,
+          HCAContact: Available_HCP.Contact
+        },$push: {
+        Attendance: attendanceEntry   
+      } as any
+      }
+    );
+
+    if (UpdateReplasementInfo.matchedCount === 0) {
+      return { success: false, message: "Update failed, no match found" };
+    }
+
+    return {
+      success: true,
+      message: "Replacement updated successfully",
+      update: UpdateReplasementInfo
+    };
+
+  } catch (err: any) {
+    console.error("Error updating replacement:", err);
+    return { success: false, message: "Error occurred", error: err };
+  }
+};
+
+
+
+ export const UpdateAllPendingAttendance = async (selectedYear:any, selectedMonth:any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const monthKey = `${selectedYear}-${selectedMonth}`;
+
+    const records = await collection.find({ Month: monthKey }).toArray();
+
+    if (!records || records.length === 0) {
+      return { success: false, message: "No records found for this month." };
+    }
+
+    let totalUpdates = 0;
+
+    for (let record of records) {
+      if (!record.Attendance) continue;
+
+      let updated = false;
+
+      const newAttendance = record.Attendance.map((att:any) => {
+        if (att.HCPAttendence === true && att.AdminAttendece === false) {
+          updated = true;
+          totalUpdates++;
+
+          return {
+            ...att,
+            AdminAttendece: true,
+            UpdatedAt: new Date(),
+            UpdatedBy: "Admin",
+          };
+        }
+
+        return att;
+      });
+
+      // If no pending attendance in this record → skip
+      if (!updated) continue;
+
+      await collection.updateOne(
+        { _id: record._id },
+        { $set: { Attendance: newAttendance } }
+      );
+    }
+
+    return {
+      success: true,
+      message: `${totalUpdates} pending attendance entries updated.`,
+    };
+  } catch (error) {
+    console.error("❌ Error updating attendance:", error);
+    return { success: false, message: "Error occurred.", error };
+  }
+};
+export const UpdatehcpDailyAttendce = async (selectedYear: any, selectedMonth: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const monthKey = `${selectedYear}-${selectedMonth}`;
+    const today = new Date().toISOString().split("T")[0]; 
+
+    const records = await collection.find({ Month: monthKey }).toArray();
+
+    if (!records || records.length === 0) {
+      return { success: false, message: "No records found for this month." };
+    }
+
+    let totalAdded = 0;
+
+    for (let record of records) {
+      if (!record.Attendance) record.Attendance = [];
+
+      const hasToday = record.Attendance.some((att: any) => {
+        if (!att.AttendenceDate) return false;
+        const attDate = new Date(att.AttendenceDate).toISOString().split("T")[0];
+        return attDate === today;
+      });
+
+      if (hasToday) continue;
+
+      totalAdded++;
+
+      const attendanceEntry = {
+        AttendenceDate: new Date(),
+        HCPAttendence: true,
+        AdminAttendece: true,
+        UpdatedAt: new Date(),
+        UpdatedBy: "Admin",
+      };
+
+
+      await collection.updateOne(
+        { _id: record._id },
+        {
+          $push: { Attendance: attendanceEntry }as any,
+        }
+      );
+    }
+
+    return {
+      success: true,
+      message: `${totalAdded} new attendance entries added for today.`,
+    };
+  } catch (error) {
+    console.error("❌ Error updating attendance:", error);
+    return { success: false, message: "Error occurred.", error };
+  }
+};
+
 export const GetInvoiceInfo=async()=>{
   try{
 const cluster=await clientPromise
@@ -2068,7 +2617,7 @@ export const UpdateDocumentFollowUpStatus = async (
     const result = await Collection.updateOne(
       { userId: UserId },
       { $set: updateFields },
-      { upsert: true } // 👉 THIS CREATES NEW USER IF NOT EXIST
+      { upsert: true } 
     );
 
     if (result.upsertedCount > 0) {
@@ -2173,8 +2722,7 @@ export const UpdateUserContactVerificationstatus = async (UserId: string,Contact
     const UpdateVerificationStatus = await Collection.updateOne(
       { userId: UserId }, {
       $set: {
-        
-ClientStatus:ContactStatus
+        ClientStatus:ContactStatus
       }
     }
     )
@@ -2195,9 +2743,9 @@ export const UpdateHCAnstatus = async (UserId: string,AvailableStatus:String) =>
     const UpdateVerificationStatus = await Collection.updateOne(
       { userId: UserId }, {
       $set: {
-        
-Status:AvailableStatus
-      }
+        Status:AvailableStatus
+      },
+    
     }
     )
     if (UpdateVerificationStatus.modifiedCount === 0) {
@@ -2209,6 +2757,32 @@ Status:AvailableStatus
     return err
   }
 }
+
+export const DeleteHCAStatus = async (UserId: string) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Registration");
+
+    const UpdateStatus = await Collection.updateOne(
+      { userId: UserId },
+      {
+        $set: {
+          Status: ""  
+        }
+      }
+    );
+
+    if (UpdateStatus.modifiedCount === 0) {
+      return { success: false, message: "Internal Error Try Again!" };
+    }
+
+    return { success: true, message: "Status deleted successfully." };
+  } catch (err: any) {
+    return err;
+  }
+};
+
 
 export const UpdateHCAnstatusInFullInformation = async (Userid: string,) => {
   try {
@@ -2228,6 +2802,28 @@ const Try:any="Assigned"
     return { success: true, message: 'Verification Status updated successfully.' };
   } catch (err: any) {
     return { success: false, message: err.message || 'Internal Error' };
+  }
+};
+export const DeleteHCAStatusInFullInformation = async (Userid: string) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const collection = Db.collection("CompliteRegistrationInformation");
+
+    const UpdateResult = await collection.updateOne(
+      { "HCAComplitInformation.UserId": Userid },
+      { 
+        $unset: { "HCAComplitInformation.Status": "" } 
+      }
+    );
+
+    if (UpdateResult.matchedCount === 0) {
+      return { success: false, message: "User not found!" };
+    }
+
+    return { success: true, message: "Status key deleted successfully." };
+  } catch (err: any) {
+    return { success: false, message: err.message || "Internal Error" };
   }
 };
 

@@ -7,7 +7,7 @@ import { Update_Main_Filter_Status, UpdateClient, UpdateClientSuggetion, UpdateR
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import * as htmlToImage from 'html-to-image';
-import { GetInformedUsers, GetTimeSheetInfo, InserTimeSheet, IntrestedHCP, PostConfirmationInfo, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateUserContactVerificationstatus } from '@/Lib/user.action';
+import { GetInformedUsers, GetTimeSheetInfo, InserTimeSheet, IntrestedHCP, PostConfirmationInfo, TestInserTimeSheet, TestInsertTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateUserContactVerificationstatus } from '@/Lib/user.action';
 import axios from 'axios';
 import { calculateAgeIndianFormat } from '@/Lib/Actions';
 import { HyderabadAreas, PROFESSIONAL_SKILL_OPTIONS, TestData } from '@/Lib/Content';
@@ -68,7 +68,7 @@ const [selectedFile, setSelectedFile] = useState<File | null>(null);
     location: "",
     healthConditions: [] as string[],
   });
-console.log("Current Work----",form)
+
   const handleCheckboxChange = (type: string, value: string) => {
     setForm((prev) => {
       const list = prev[type as keyof typeof form] as string[];
@@ -85,7 +85,7 @@ console.log("Current Work----",form)
   const cardRefs = useRef<{ [key: string]: HTMLElement | null }>({});
 const updatedRefresh=useSelector((afterEach:any)=>afterEach.updatedCount)
 const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
-
+console.log("Test Informed Information-----",ExsitingInformedUsers)
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -115,58 +115,71 @@ const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
     router.push('/AdminPage');
   };
 
- const UpdateAssignHca = async (UserIDClient: any, UserIdHCA: any, ClientName: any, ClientEmail: any, ClientContact: any, Adress: any, HCAName: any, HCAContact: any,patientName:any,patientPhone:any,
-Source:any,Type:any
-
+ const UpdateAssignHca = async (
+  UserIDClient: any, UserIdHCA: any, ClientName: any, ClientEmail: any, 
+  ClientContact: any, Adress: any, HCAName: any, HCAContact: any,
+  patientName: any, patientPhone: any, Source: any, Type: any
 ) => {
-    setCurrentUserId(UserIdHCA);
-           
-           const CurrentMonth=`${new Date().getFullYear()}-${new Date().getMonth()+1}`
-           const DateofToday=new Date().toLocaleDateString('In-en')
-    console.log("Checking With Adress----", Adress)
-    setStatusMessage("Please Wait Assigning HCA...")
-    try {
-      const today = new Date();
-      const attendanceRecord = {
-        date: today.toLocaleDateString('EN-In'),
-        checkIn: today.toLocaleTimeString(),
-        status: "Present",
-      };
 
+  setCurrentUserId(UserIdHCA);
 
-      const TimeSheetData: any[] = [];
-      TimeSheetData.push(attendanceRecord)
-      const UpdateStatus = await UpdateUserContactVerificationstatus(UserIDClient, "Placced")
-      const UpdateHcaStatus = await UpdateHCAnstatus(UserIdHCA, "Assigned")
-      const UpdatedHCPStatusInCompliteInformation = await UpdateHCAnstatusInFullInformation(UserIdHCA)
-       const PlacementInformation: any = await GetTimeSheetInfo();
-       const DateOfCurrentDay=new Date()
-const LastDateOfMonth = new Date(DateOfCurrentDay.getFullYear(), DateOfCurrentDay.getMonth() + 1, 0)
-  .toLocaleDateString('en-IN');
-const Invoise=`BSV${new Date().getFullYear()}_${PlacementInformation.length+1}`
-      // const PostTimeSheet: any = await InserTimeSheet(UserIDClient, UserIdHCA, ClientName, ClientEmail, ClientContact, Adress, HCAName, HCAContact, TimeSheetData)
-      const PostTimeSheet:any= await TestInserTimeSheet (DateofToday,LastDateOfMonth,"Active",Adress,ClientContact,ClientName,patientName,patientPhone,Source,UserIdHCA,UserIDClient,HCAName,HCAContact,"Google","Not Provided",'PP',"21000","700","1800","900",CurrentMonth,["P"],TimeStamp,Invoise,Type)
-   console.log("Test Updated Result----", PostTimeSheet)
-      if (PostTimeSheet.success === true) {
-        dispatch(UpdateRefresh(1))
-        setStatusMessage("HCA Assigned Successfully, For More Information Check in Deployments")
+  const CurrentMonth = `${new Date().getFullYear()}-${new Date().getMonth() + 1}`;
+  const DateofToday = new Date().toLocaleDateString('en-IN');
+  const TimeStamp = new Date().toISOString();
 
-        // sendWhatsApp("+919347877159", "+919347877159");
+  setStatusMessage("Please Wait Assigning HCA...");
 
-        const Timer = setInterval(() => {
-          dispatch(UpdateRefresh(1))
- router.push("/PDRView");
-    dispatch(Update_Main_Filter_Status("Deployment"));
+  try {
 
-        }, 3000)
+    const today = new Date();
+    const attendanceRecord = {
+      date: today.toLocaleDateString('en-IN'),
+      checkIn: today.toLocaleTimeString(),
+      status: "Present",
+    };
 
-        return () => clearInterval(Timer)
-      }
+    const TimeSheetData: any[] = [attendanceRecord];
 
-    } catch (err: any) {
-      setStatusMessage(err)
+    await UpdateUserContactVerificationstatus(UserIDClient, "Placed");
+    await UpdateHCAnstatus(UserIdHCA, "Assigned");
+    await UpdateHCAnstatusInFullInformation(UserIdHCA);
+
+    const PlacementInformation: any = await GetTimeSheetInfo();
+
+    const DateOfCurrentDay = new Date();
+    const LastDateOfMonth = new Date(
+      DateOfCurrentDay.getFullYear(),
+      DateOfCurrentDay.getMonth() + 1,
+      0
+    ).toLocaleDateString('en-IN');
+
+    const Invoise = `BSV${new Date().getFullYear()}_${PlacementInformation.length + 1}`;
+
+    const PostTimeSheet: any = await TestInsertTimeSheet(
+      DateofToday, LastDateOfMonth, "Active", Adress, ClientContact, ClientName,
+      patientName, patientPhone, Source, UserIdHCA, UserIDClient, HCAName,
+      HCAContact, "Google", "Not Provided", 'PP', "21000", "700", "1800",
+      "900", CurrentMonth, ["P"], TimeStamp, Invoise, Type
+    );
+
+    
+
+    if (PostTimeSheet.success === true) {
+
+      setStatusMessage("HCA Assigned Successfully, For More Information Check in Deployments");
+
+      setTimeout(() => {
+        dispatch(UpdateRefresh(1));
+        router.push("/PDRView");
+        dispatch(Update_Main_Filter_Status("Deployment"));
+      }, 3000);
     }
+
+  } catch (err: any) {
+    setStatusMessage(err);
   }
+};
+
 
 const SendBVR=(A:any)=>{
  const BVR_Link="https://res.cloudinary.com/db3dr9lf5/image/upload/v1761886244/uploads/xaxdclpd83ctaalexmzb.pdf"
@@ -344,7 +357,7 @@ const handleShare = async (hcp: any, clientUserId: any) => {
     addText(`Preferred Service: ${hcp["Preferred Service"] || ""}`);
     addText(`Payment Service: ${hcp["Payment Service"] || ""}`);
     addText(`Service Hours: ${hcp["Service Hours 24hrs"] ? "24 Hours" : "12 Hours"}`);
-    addText(`BVR (Background Verification Report): Finished`);
+    addText(`BVR (Background Verification Report): Complited`);
 
     y += 10;
   
@@ -554,26 +567,37 @@ const matchesClientAssistance = hcp.HandledSkills?.some((skill: string) => clien
   return hasDiaperSkill && matchesClientAssistance && available;
 });
 
-const First=hcps.filter((each:any)=>each.userType==="healthcare-assistant")
 
-  const ShowAdditionHCPs = First?.filter((each: HcpType) =>
-  form?.hcpType?.some((type: any) => type === each?.Type) ||
+// const First = hcps.filter((each: any) => each.userType === "healthcare-assistant");
 
-  form?.qualification?.some((qual: any) => qual === each?.['Professional Education']) ||
 
-  (form?.experience && each?.Experience?.toLowerCase()?.includes(form?.experience?.toLowerCase())) ||
+const isAvailable = (hcp: any) =>
+  !hcp.Status?.some((value: string) => value === "Assigned");
 
-  form?.healthConditions?.some((condition: string) =>
-    each?.HandledSkills?.some((skill: string) =>
-      skill?.toLowerCase()?.includes(condition?.toLowerCase())
-    )
-  ) ||
 
-  (form?.location && each?.["Current Address"]?.toLowerCase()?.includes(form?.location?.toLowerCase()))
+const ShowAdditionHCPs = hcps?.filter((each: HcpType) =>
+  isAvailable(each) && (
+    form?.hcpType?.some((type: any) => type === each?.Type) ||
+
+    form?.qualification?.some((qual: any) => qual === each?.["Professional Education"]) ||
+
+    (form?.experience &&
+      each?.Experience?.toLowerCase()?.includes(form?.experience?.toLowerCase())) ||
+
+    form?.healthConditions?.some((condition: string) =>
+      each?.HandledSkills?.some((skill: string) =>
+        skill?.toLowerCase()?.includes(condition.toLowerCase())
+      )
+    ) ||
+
+    (form?.location &&
+      each?.["Current Address"]?.toLowerCase()?.includes(form?.location?.toLowerCase()))
+  )
 );
 
 
-console.log("Test Client id----",clients)
+
+console.log("Test Client id----",hcps)
 
 
  

@@ -17,6 +17,7 @@ export default function UserTypeSelector() {
   const router = useRouter();
   const dispatch = useDispatch()
   const showConfirmPopup = useSelector((state: any) => state.ReferalPopup)
+  
 useEffect(() => {
   const redirectTypes = ["HCA", "HCP", "HCN"];
   if (UpdateStatus === false && redirectTypes.includes(selected)) {

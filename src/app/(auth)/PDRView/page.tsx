@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { CircleCheckBig, LogOut, Trash } from "lucide-react";
 import { DeleteTimeSheet, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
-import { Update_Main_Filter_Status, UpdateFetchedInformation, UpdateSubHeading } from "@/Redux/action";
+import { GetCurrentDeploymentData, Update_Main_Filter_Status, UpdateFetchedInformation, UpdateSubHeading } from "@/Redux/action";
 import TerminationTable from "@/Components/Terminations/page";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
@@ -171,7 +171,7 @@ const phoneNumber='919347877159'
 
 
 const UpdatePopup=async(a:any)=>{
-
+dispatch(GetCurrentDeploymentData(a))
 const data = await GetUserInformation(a.Client_Id);
    dispatch(UpdateFetchedInformation(data))
    Router.push("/PDR")
@@ -387,7 +387,7 @@ const handleLogout = () => {
             {FilterFinelTimeSheet.reverse().map((c, i) => (
               <tr
                 key={i}
-                className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-cyan-50 transition-all duration-300"
+                className="border-b border-gray-400 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-cyan-50 transition-all duration-300"
               >
                 <td className="px-6 py-4 font-semibold text-gray-900">{c.name}</td>
                 <td className="px-6 py-4">{c.contact}</td>

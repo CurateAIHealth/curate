@@ -2,42 +2,45 @@
 
 import { useSelector } from "react-redux";
 import { useState } from "react";
-import { generatePDF, getDaysBetween } from "@/Lib/Actions";
+import {  getDaysBetween } from "@/Lib/Actions";
 import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { UpdateInvoice } from "@/Lib/user.action";
+import { SaveInvoiceData, UpdateInvoice } from "@/Lib/user.action";
+import { Plus } from "lucide-react";
+import { paymentData, serviceOptions } from "@/Lib/Content";
 
-const serviceOptions = [
-  { name: "Healthcare Assistant Service", code: "HCAS" },
-  { name: "Healthcare Nursing Service", code: "HCNS" },
-  { name: "Physiotherapy Service", code: "PTS" },
-  { name: "Medical Equipment Service", code: "MES" },
-  { name: "Lab Service", code: "LABS" },
-  { name: "Digital Health Service", code: "DHS" },
-  { name: "Speech & Language Therapy Service", code: "SPTS" },
-  { name: "Occupational Therapy Service", code: "OTS" },
-  { name: "Behaviour Health Service", code: "BHS" },
-  { name: "Healthcare Consulting Service", code: "HCS" },
-];
+
 
 type RoundType = "none" | "nearest" | "up" | "down";
 
 export default function InvoiceForm() {
   const InvoiceData = useSelector((state: any) => state.InvoiceInfo);
 
-  
+  const [ShowServices,setShowServices]=useState(false)
   const [otherExpenses, setOtherExpenses] = useState<any>();
   const [discountType, setDiscountType] = useState<"flat" | "percent">("flat");
   const [discountValue, setDiscountValue] = useState<any>();
   const [roundType, setRoundType] = useState<RoundType>("none");
   const [Mailstatus,setMailstatus]=useState(true)
   const Router=useRouter()
-  const [services, setServices] = useState([
-    { name: "Healthcare Assistant Service", code: "HCAS" },
-  ]);
+  
   const [ShowMailTemplate, setShowMailTemplate] = useState(true);
 const [isSending, setIsSending] = useState(false);
+const [selected, setSelected] = useState<any>({
+  typeOfPayment: "",
+  taxType: "",
+  section: "",
+  tdsRate: ""
+});
+
+
+  const handleSelect = (e:any) => {
+    const item:any = paymentData.find(
+      (p) => p.typeOfPayment === e.target.value
+    );
+    setSelected(item);
+  };
 
  
   const start = InvoiceData?.StartDate;
@@ -60,12 +63,14 @@ const [isSending, setIsSending] = useState(false);
 
   let finalTotal = rawTotal;
 
-  if (roundType === "up") finalTotal = Math.ceil(rawTotal);
-  if (roundType === "down") finalTotal = Math.floor(rawTotal);
-  if (roundType === "nearest") finalTotal = Math.round(rawTotal);
-
+  // if (roundType === "up") finalTotal = Math.ceil(rawTotal);
+  // if (roundType === "down") finalTotal = Math.floor(rawTotal);
+  // if (roundType === "nearest") finalTotal = Math.round(rawTotal);
+const [services, setServices] = useState([
+    { name: "Healthcare Assistant Service", code: "HCAS",amount:Number(baseTotal) },
+  ]);
   const roundingDifference = finalTotal - rawTotal;
-  const balanceDue = finalTotal - advance;
+  const balanceDue:any = finalTotal - advance;
 
   const invoice = {
     number: InvoiceData?.id,
@@ -92,7 +97,7 @@ const [isSending, setIsSending] = useState(false);
       amount: perDay,
     },
   ];
-
+const TaxAmount:any=balanceDue.toFixed(2)*Number(selected?.tdsRate?.replace("%", ""))/100
   const totals = {
     BaseAmount: 20000,
     OtherExpenses: otherExpenses,
@@ -101,18 +106,28 @@ const [isSending, setIsSending] = useState(false);
     RoundedTotal: finalTotal,
     RoundingDifference: roundingDifference,
     AdvancePaid: advance,
-    balanceDue: balanceDue,
+    Tax:TaxAmount,
+    balanceDue: balanceDue+Number(TaxAmount),
+    RegistraionFee:regFee
   };
 
  
   const updateService = (index: number, selectedCode: string) => {
-    const selected = serviceOptions.find((opt) => opt.code === selectedCode);
-    if (!selected) return;
+  const selected: any = serviceOptions.find((opt) => opt.code === selectedCode);
+  if (!selected) return;
 
-    const updated = [...services];
-    updated[index] = { name: selected.name, code: selected.code };
-    setServices(updated);
-  };
+  setServices((prev: any) => {
+    const updated = [...prev];
+    updated[index] = {
+      ...updated[index],
+      name: selected.name,
+      code: selected.code,
+      amount: selected.amount, 
+    };
+    return updated;
+  });
+};
+
 
   const invoiceProps = {
     invoice: {
@@ -126,14 +141,26 @@ const [isSending, setIsSending] = useState(false);
 
     billTo: billTo,
 
-    items: [
-      {
-        description: `${services[0].name} for ${InvoiceData?.name}`,
-        days,
-        rate: perDay,
-        amount: perDay*days,
-      },
-    ],
+   items: services.map((srv, index) => {
+  if (index === 0) {
+    
+    return {
+      description: `${srv.name} for ${InvoiceData?.name}`,
+      days,
+      rate: perDay,
+      amount: perDay * days,
+    };
+  } else {
+   
+    return {
+      description: `${srv.name} Package`,
+      days: "-",
+      rate: srv.amount,
+      amount: srv.amount,
+    };
+  }
+}),
+
 
     totals,
   };
@@ -151,80 +178,107 @@ const handleSubmit = async () => {
       setIsSending(false); 
       return;
     }
+const save = await SaveInvoiceData({
+    invoice: invoiceProps.invoice,
+    billTo: invoiceProps.billTo,
+    items: invoiceProps.items,
+    totals: invoiceProps.totals,
+  });
 
+  console.log("PostedSent Invoces Data----",save);
     const html = element.outerHTML;
     const pdfResponse = await axios.post("/api/generate-pdf", { html });
     const pdfBase64 = pdfResponse.data.pdf;
 
     await axios.post("/api/MailSend", {
-      to: "admin@curatehealth.in",
+      to: "tsiddu805@gmail.com",
       subject:
         "Request for Payment – Attached Invoice from Curate Health Services",
-   html: `
-<div style="width: 100%; max-width: 600px; margin: auto; font-family: 'Segoe UI', sans-serif; background: #ffffff; border-radius: 14px; padding: 0; box-shadow: 0 8px 25px rgba(0,0,0,0.08); overflow: hidden;">
-
-  <div style="background: lightblue; padding: 25px 20px; text-align: center; color: #fff;">
-    <h2 style="margin: 0; font-size: 22px; font-weight: 600;">
-      Invoice Amount
-    </h2>
-
-    <h1 style="margin: 10px 0 0 0; font-size: 36px; font-weight: 700;">
-      ₹${Number(balanceDue).toFixed(2)}
-    </h1>
-  </div>
-
-  <div style="padding: 20px;">
-    <div style="background: #f8f9fc; padding: 15px 20px; border-radius: 10px; border: 1px solid #e3e6ef;">
-      <table style="width: 100%; font-size: 15px; color: #444;">
-        <tbody>
-          <tr>
-            <td><strong>Invoice No</strong></td>
-            <td style="text-align: right;">${invoice.number}</td>
-          </tr>
-          <tr>
-            <td><strong>Invoice Date</strong></td>
-            <td style="text-align: right;">${invoice.date}</td>
-          </tr>
-          <tr>
-            <td><strong>Due Date</strong></td>
-            <td style="text-align: right;">${invoice.dueDate}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- 🔥 WORKING PAY NOW BUTTON USING REDIRECT PAGE -->
-    <div style="text-align: center; margin-top: 25px;">
-  <a 
-    href="https://curate-pearl.vercel.app/upi-pay?amount=${Number(balanceDue).toFixed(2)}"
-    style="
-      background: #ff3e6c;
-      color: #fff;
-      padding: 14px 42px;
-      text-decoration: none;
-      border-radius: 50px;
-      font-size: 16px;
-      font-weight: 600;
-      display: inline-block;
-      text-align: center;
-    "
-  >
-    PAY NOW
-  </a>
-</div>
+   html: `<div style="
+  width: 100%;
+  max-width: 680px;
+  margin: auto;
+  background: #f7f5ef;
+  border-radius: 14px;
+  border: 2px solid #c6c2b8;
+  font-family: 'Segoe UI', sans-serif;
+  overflow: hidden;
+">
 
 
-    <p style="margin-top: 30px; font-size: 15px; color: #555;">
-      Dear Customer,<br />
-      Please find your invoice attached. Kindly complete the payment at the earliest.
-    </p>
+  <div style="text-align:center; padding: 25px 20px;">
+    <img
+          src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
+          alt="Curate Health Services Logo"
+          style="height: 90px; width: auto;"
 
-    <p style="font-size: 15px; color: #333; margin-top: 25px;">
-      Regards,<br />
-      <strong>Curate Health Services</strong>
+        />
+    <p style="margin:6px 0 0 0; font-size:14px; color:#1392d3;">
+    Invoice Receipt
     </p>
   </div>
 
+  <div style="border-top: 2px solid #c6c2b8;"></div>
+
+
+  <div style="padding: 30px 25px;">
+
+   
+    <div style="
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    ">
+
+      
+      <div>
+        <p style="margin:0; font-size:14px; color:#444;">AMOUNT DUE</p>
+        <h1 style="margin-top:8px; font-size:42px; font-weight:700; color:#000;">
+   ₹${(Number(balanceDue) + Number(TaxAmount)).toFixed(2)}
+
+        </h1>
+      </div>
+
+     
+      <div style="font-size:15px; color:#444; line-height:24px;">
+        <strong>Invoice No:</strong> ${invoice.number} <br>
+        <strong>Issued:</strong> ${invoice.date} <br>
+   
+
+        <strong style="color:#000;">Dear Customer,</strong><br>
+        Please find your invoice attached.<br>
+        Kindly complete the payment at the earliest.
+      </div>
+
+     
+      <div style="text-align:center;">
+        <div style="margin-bottom:20px;">
+          <a href="https://curate-pearl.vercel.app/upi-pay?amount=${(Number(balanceDue) + Number(TaxAmount)).toFixed(2)}"
+            style="
+              background:#50c896;
+              color:white;
+              padding:18px 30px;
+              text-decoration:none;
+              border-radius:50px;
+              font-size:18px;
+              font-weight:700;
+              display:inline-block;
+              width:150px;
+            ">
+            PAY NOW
+          </a>
+        </div>
+
+        <p style="font-size:15px; color:#333; margin-top:20px;">
+          Regards,<br>
+          <strong>Curate Health Services</strong>
+        </p>
+      </div>
+
+    </div> 
+
+  </div>
 </div>
 `,
 
@@ -395,6 +449,7 @@ const NavigatetoInvoices=()=>{
                       <Th>Service Name</Th>
                       <Th>Service Code</Th>
                       <Th>Change Service</Th>
+                      <Th>Amount</Th>
                     </tr>
                   </thead>
                   <tbody>
@@ -416,11 +471,51 @@ const NavigatetoInvoices=()=>{
                             ))}
                           </select>
                         </Td>
+                        <Td className="font-mono text-xs text-slate-600">{srv.amount}</Td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+             
+             <Plus  className="bg-teal-800 p-2 ml-2 mb-2 rounded-md text-white cursor-pointer h-8 w-8" onClick={()=>setShowServices(!ShowServices)}/>
+             {ShowServices&&
+                
+                      <tr className="border-t border-slate-100 hover:bg-slate-50/60">
+                        
+       <Td>
+<select
+  className="border border-slate-200 text-sm px-2 py-1 rounded-lg bg-white"
+  onChange={(e) => {
+    const selected: any = serviceOptions.find(
+      (s: any) => s.code === e.target.value
+    );
+    if (!selected) return;
+
+    setServices((prev: any) => [
+      ...prev,
+      {
+        name: selected.name,
+        code: selected.code,
+        amount: selected.amount, 
+      },
+    ]);
+  }}
+>
+  <option value="">Select Service</option>
+  {serviceOptions.map((opt: any, idx) => (
+    <option key={idx} value={opt.code}>
+      {opt.name}
+    </option>
+  ))}
+</select>
+
+</Td>
+
+
+                      </tr>
+                    }
+            
             </div>
           </div>
 
@@ -437,10 +532,11 @@ const NavigatetoInvoices=()=>{
                     Invoice Amount
                   </h2>
                 </div>
+     
                 <div className="text-right">
                   <p className="text-[11px] text-slate-500">Total</p>
                   <p className="text-2xl font-bold text-emerald-600">
-                    ₹{finalTotal.toFixed(0)}/-
+                    ₹{baseTotal}/-
                   </p>
                   {roundingDifference !== 0 && (
                     <p className="text-[11px] text-slate-500">
@@ -450,7 +546,30 @@ const NavigatetoInvoices=()=>{
                   )}
                 </div>
               </div>
+           <div className="space-y-4">
+      
+      <select
+        className="border p-1 m-1 rounded w-[99%] bg-gray-100"
+        onChange={handleSelect}
+      >
+        <option>Add Tax</option>
+        {paymentData.map((item, index) => (
+          <option key={index} value={item.typeOfPayment}>
+            {item.typeOfPayment}
+          </option>
+        ))}
+      </select>
 
+     {selected ? (
+  <div className="p-1 m-1 rounded w-[99%] border bg-gray-50">
+    <p><strong>Type of Payment:</strong> {selected?.typeOfPayment ?? "N/A"}</p>
+    <p><strong>Tax Type:</strong> {selected?.taxType ?? "N/A"}</p>
+    <p><strong>Section:</strong> {selected?.section ?? "N/A"}</p>
+    <p><strong>TDS Rate:</strong> {selected?.tdsRate ?? "N/A"}</p>
+  </div>
+):null}
+
+    </div>
               <div className="px-6 py-4 space-y-3 text-sm">
                 <KeyRow label="Base Amount">
                   ₹{baseTotal.toFixed(2)}/-
@@ -491,17 +610,22 @@ const NavigatetoInvoices=()=>{
                 </div>
 
                 <KeyRow label="Raw Total">
-                  ₹{rawTotal.toFixed(2)}/-
+                  ₹{Number(rawTotal)}/-
                 </KeyRow>
 
               
 
                 <KeyRow label="Advance Received">
-                  ₹{advance.toFixed(2)}/-
+                  ₹{advance}/-
+                </KeyRow>
+
+                  <KeyRow label="Tax">
+                  ₹{baseTotal*Number(selected.tdsRate.replace("%", ""))/100}/-
+                  
                 </KeyRow>
 
                 <KeyRow label="Balance Due" highlight>
-                  ₹{balanceDue.toFixed(2)}/-
+                  ₹{Number(balanceDue)+Number(TaxAmount)}/-
                 </KeyRow>
               </div>
             </div>
@@ -509,7 +633,7 @@ const NavigatetoInvoices=()=>{
         
             <button
               onClick={handleSubmit}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold py-3 rounded-xl shadow-sm transition"
+              className="w-full bg-slate-900 hover:bg-slate-800 cursor-pointer text-white text-sm font-semibold py-3 rounded-xl shadow-sm transition"
             >
               Send E-Mail
             </button>

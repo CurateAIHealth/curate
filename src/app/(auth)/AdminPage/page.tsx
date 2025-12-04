@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  GetDeploymentInfo,
   GetRegidterdUsers,
   GetUserInformation,
   GetUsersFullInfo,
@@ -26,9 +27,11 @@ import { setTimeout } from 'timers/promises';
 import { decrypt, encrypt } from '@/Lib/Actions';
 import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 import { LoadingData } from '@/Components/Loading/page';
+import ReplacementsTable from '@/Components/ReplacementsTable/page';
 let cachedUserInfo: any = null;
 let cachedRegisteredUsers: any[] | null = null;
 let cachedFullInfo: any[] | null = null;
+let Deployed:any[] 
 export default function UserTableList() {
   const [updatedStatusMsg, setUpdatedStatusMsg] = useState('');
   const [users, setUsers] = useState<any[]>([]);
@@ -117,56 +120,69 @@ const UpdatedFilterUserType = useMemo(() => {
 useEffect(() => {
   const Fetch = async () => {
     try {
-      const localValue = localStorage.getItem('UserId');
+      const localValue = localStorage.getItem("UserId");
+      if (!localValue) return;
 
-
+      // Reset cache only if userType updated
       if (UpdateduserType) {
         cachedUserInfo = null;
         cachedRegisteredUsers = null;
         cachedFullInfo = null;
       }
 
-      const [profile, registeredUsers, fullInfo] = await Promise.all([
-        cachedUserInfo ? Promise.resolve(cachedUserInfo) : GetUserInformation(localValue),
-        cachedRegisteredUsers ? Promise.resolve(cachedRegisteredUsers) : GetRegidterdUsers(),
-        cachedFullInfo ? Promise.resolve(cachedFullInfo) : GetUsersFullInfo(),
+      // ---- PARALLEL FETCH (cached or fresh) ----
+      const [profile, registeredUsers, fullInfo,DeployedLength] = await Promise.all([
+        cachedUserInfo ?? GetUserInformation(localValue),
+        cachedRegisteredUsers ?? GetRegidterdUsers(),
+        cachedFullInfo ?? GetUsersFullInfo(),
+        Deployed?? GetDeploymentInfo()
       ]);
 
-      if (!cachedUserInfo) cachedUserInfo = profile;
-      if (!cachedRegisteredUsers) cachedRegisteredUsers = registeredUsers;
-      if (!cachedFullInfo) cachedFullInfo = fullInfo;
+      // ---- SET CACHE IF EMPTY ----
+      cachedUserInfo ||= profile;
+      cachedRegisteredUsers ||= registeredUsers;
+      cachedFullInfo ||= fullInfo;
+      Deployed ||=DeployedLength 
 
+      // ---- SET BASIC STATES (grouped to reduce renders) ----
+      setUsers(registeredUsers);
       setUserFirstName(profile.FirstName);
       setLoginEmail(profile.Email);
-
-
-      if (profile?.Email?.toLowerCase() === 'info@curatehealth.in') {
-        dispatch(UpdateUserType('patient'));
-      } else if (profile?.Email?.toLowerCase() === 'gouricurate@gmail.com') {
-        dispatch(UpdateUserType('healthcare-assistant'));
-      }
-
-      if (
-        profile?.Email?.toLowerCase() !== 'admin@curatehealth.in' &&
-        profile?.Email?.toLowerCase() !== 'info@curatehealth.in' &&
-        profile?.Email?.toLowerCase() !== 'gouricurate@gmail.com'
-      ) {
-        router.push('/');
-      }
-
       setFullInfo(fullInfo);
       setSearch(CurrentClientStatus);
-      setUsers((registeredUsers || []).reverse());
-    
-      setIsChecking(false);
+
+      // ---- PRE-COMPUTE EMAIL ----
+      const email = profile?.Email?.toLowerCase();
+
+      // ---- UPDATE USER TYPE (only when needed) ----
+      if (email === "info@curatehealth.in") {
+        dispatch(UpdateUserType("patient"));
+      } else if (email === "gouricurate@gmail.com") {
+        dispatch(UpdateUserType("healthcare-assistant"));
+      }
+
+      // ---- ACCESS BLOCK CHECK (early exit improves perf) ----
+      const restricted = [
+        "admin@curatehealth.in",
+        "info@curatehealth.in",
+        "gouricurate@gmail.com"
+      ];
+
+      if (!restricted.includes(email)) {
+        router.push("/");
+        return;
+      }
+
     } catch (err: any) {
-      console.error('Error fetching data:', err);
+      console.error("Error fetching data:", err);
+    } finally {
       setIsChecking(false);
     }
   };
 
   Fetch();
 }, [updatedStatusMsg, CurrentClientStatus, UpdateduserType]);
+
 
 
  const FilterUserType = (e: any) => {
@@ -188,11 +204,13 @@ useEffect(() => {
     // SetUpdateMainFilter(Z)
     dispatch(Update_Main_Filter_Status(Z))
   }
-useEffect(() => {UpdateAssignHca
+
+useEffect(() => {
   if (UpdateMainFilter === "Client Enquiry") {
     setSearch(""); 
   }
-}, [UpdateMainFilter,CurrentCount]);
+}, [UpdateMainFilter, CurrentCount]);
+
 
   const UpdateMainFilterValues = () => {
     switch (UpdateMainFilter) {
@@ -226,6 +244,8 @@ setAsignStatus(e.target.value)
         return <ClientTable/>
       case "Timesheet":
         return <InvoiceMedicalTable/>
+         case "Replacements":
+        return <ReplacementsTable/>
       case "Referral Pay":
         return <WorkingOn ServiceName="Referral Pay"/>
       case "Payments":
@@ -309,10 +329,10 @@ const ClientEnquiryUserInterFace = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {UpdatedFilterUserType.map((user, index) => (
+                  {UpdatedFilterUserType.reverse().map((user, index) => (
                     <tr
                       key={index}
-                      className="border-b border-gray-100 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors"
+                      className="border-b border-gray-400 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors"
                     >
                       <td className="px-2 py-2 truncate">
                         <div className="flex items-center gap-2">
@@ -445,9 +465,11 @@ const ClientEnquiryUserInterFace = () => {
                          <button
 onClick={()=>UpdateNavigattosuggetions(user.userId)}
             className="flex   cursor-pointer items-center gap-2 w-full sm:w-auto justify-center  py-2
- text-white   shadow-lg rounded-full h-10 text-[9px] transition-all duration-150"
+ text-white    h-10 text-[9px] transition-all duration-150"
           >
-            <img src="Icons/HCP.png" className='h-10 w-10 rounded-full'/>
+            {/* <img src="Icons/HCP.png" className='h-10 w-10 rounded-full'/> */}
+             <img src="Icons/FemaleHCA.png" className='h-15 w-15 rounded-full'/>
+            
           </button>
                       </td>}
                     </tr>
@@ -458,7 +480,7 @@ onClick={()=>UpdateNavigattosuggetions(user.userId)}
           </div>
         </div>
       ) : (
-        <p className="text-center py-10 text-gray-400 text-base sm:text-lg">No users found.</p>
+<LoadingData/>
       )}
 
       {updatedStatusMsg && (
@@ -527,7 +549,7 @@ console.log('Test Registerd Userss---',users)
           <div className="flex items-center gap-3">
             <img src="/Icons/Curate-logo.png" alt="Logo" className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl" />
             <h1 className="text-lg sm:text-2xl font-extrabold text-[#007B7F] tracking-tight leading-tight">
-              Hi, <span className="text-[#ff1493]">{UpdateduserType}</span>
+              Hi, <span className="text-[#ff1493]">{UserFirstName}</span>
             </h1>
           </div>
          
@@ -596,13 +618,17 @@ console.log('Test Registerd Userss---',users)
           filterColors[each]
         }`}
       >
-        {UpdateMainFilter === "Client Enquiry"
-          ? `${each} (${
-              UpdatedFilterUserType.filter(
-                (Try) => Try.ClientStatus === each
-              ).length
-            })`
-          : each}
+        {
+  UpdateMainFilter === "Client Enquiry"
+    ? `${each} (${
+        UpdatedFilterUserType?.filter(
+          (Try) => Try.ClientStatus === each
+        )?.length || Deployed?.length||0
+      })`
+    : each 
+}
+
+        
       </button>
     ))}
   </div>

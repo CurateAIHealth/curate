@@ -165,28 +165,32 @@ export const numberToWords=(num: any)=> {
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-export const generatePDF = async () => {
-  const element = document.getElementById("invoice-pdf-area");
-  if (!element) {
-    console.error("invoice-pdf-area not found");
-    return null;
-  }
-
+export const GeneratePDF = async (invoiceData:any) => {
   try {
-    const canvas = await html2canvas(element, { scale: 2 });
+    const pdfRef = document.getElementById("invoice-pdf-area");
+    if (!pdfRef) return;
+
+ 
+    const canvas = await html2canvas(pdfRef, { 
+        scale: 3,      
+        useCORS: true,  
+        allowTaint: true
+    });
 
     const imgData = canvas.toDataURL("image/png");
-
     const pdf = new jsPDF("p", "mm", "a4");
-    const width = pdf.internal.pageSize.getWidth();
-    const height = (canvas.height * width) / canvas.width;
 
-    pdf.addImage(imgData, "PNG", 0, 0, width, height);
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = (canvas.height * pageWidth) / canvas.width;
 
-    return pdf.output("datauristring"); // must return a string
+    pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pageHeight);
+    pdf.save(`${invoiceData.number || "invoice"}.pdf`);
+
+    return { status: true, message: "Invoice downloaded successfully!" };
   } catch (err) {
-    console.error("PDF generation error:", err);
-    return null;
+    console.log("PDF Error ----", err);
   }
 };
+
+
 
