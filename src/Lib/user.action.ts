@@ -844,6 +844,62 @@ export const UpdateOrganisation = async (Organisation: {
 }
 
 
+
+export const SaveInvoiceData = async (invoiceProps: {
+  invoice: any,
+  billTo: any,
+  items: any[],
+  totals: any
+}) => {
+
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("SentInvoices");
+
+    // 👇 MERGE ALL OBJECTS INTO A SINGLE ONE
+    const finalInvoice = {
+      ...invoiceProps.invoice,   // invoice details merged
+      ...invoiceProps.billTo,    // customer details merged
+      items: invoiceProps.items, // keep array
+      ...invoiceProps.totals,    // totals merged
+      createdAt: new Date().toISOString()
+    };
+
+    const result = await collection.insertOne(finalInvoice);
+
+    return { success: true, insertedId: result.insertedId.toString() };
+
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+};
+
+export const GetSentInvoiceData = async () => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("SentInvoices");
+
+    const result = await collection.find().toArray();
+
+    // Convert ObjectId and Date to plain JSON values
+    const formatted = result.map((item: any) => ({
+      ...item,
+      _id: item._id.toString(),            // Convert ObjectId
+      date: item.date?.toISOString?.(),    // Convert Date to string
+      dueDate: item.dueDate?.toISOString?.(),
+      createdAt: item.createdAt?.toISOString?.()
+    }));
+
+    return { success: true, insertedId: formatted };
+
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+};
+
+
 export interface HCAInfo {
   userType: any;
   FirstName: any;

@@ -1921,66 +1921,90 @@ export const Health_Card = [
 ];
 
 export const paymentData = [
-  {
-    typeOfPayment: "Doctor’s professional fees (consultants, visiting doctors)",
-    taxType: "TDS",
-    section: "194J",
-    tdsRate: "10%"
-  },
-  {
-    typeOfPayment: "Housekeeping / Nursing staff outsourced through agency",
+ {
+    typeOfPayment: "Payment of contractors HUF/Individual (Reduced)",
     taxType: "TDS",
     section: "194C",
-    tdsRate: "3% (Company)&(Individual)"
+    tdsRate: "0.75%"
   },
   {
-    typeOfPayment: "Ambulance or equipment hire",
+    typeOfPayment: "Payment of contractors HUF/Individual",
+    taxType: "TDS",
+    section: "194C",
+    tdsRate: "1%"
+  },
+  {
+    typeOfPayment: "Payment of contractors for Others (Reduced)",
+    taxType: "TDS",
+    section: "194C",
+    tdsRate: "1.5%"
+  },
+  {
+    typeOfPayment: "Payment of contractors for Others",
     taxType: "TDS",
     section: "194C",
     tdsRate: "2%"
   },
   {
-    typeOfPayment: "Building Rent for hospital premises",
-    taxType: "TDS",
-    section: "194I",
-    tdsRate: "10%"
-  },
-  {
-    typeOfPayment: "Medical Equipment Rent",
-    taxType: "TDS",
-    section: "194I",
-    tdsRate: "2%"
-  },
-  {
-    typeOfPayment: "Consultant/Technical Services (IT, Accounting, Lab support)",
+    typeOfPayment: "Professional Fees",
     taxType: "TDS",
     section: "194J",
     tdsRate: "10%"
   },
   {
-    typeOfPayment: "Purchase of medical goods (if value > ₹50L)",
+    typeOfPayment: "Professional Fees (Reduced)",
     taxType: "TDS",
-    section: "194Q",
-    tdsRate: "0.10%"
+    section: "194J",
+    tdsRate: "7.5%"
   },
   {
-    typeOfPayment: "Patient treatment, diagnostic service",
-    taxType: "GST/TDS/TCS",
-    section: "Exempt",
-    tdsRate: null
+    typeOfPayment: "Commission or Brokerage",
+    taxType: "TDS",
+    section: "194H",
+    tdsRate: "5%"
+  },
+  {
+    typeOfPayment: "Commission or Brokerage (Reduced)",
+    taxType: "TDS",
+    section: "194H",
+    tdsRate: "3.75%"
+  },
+  {
+    typeOfPayment: "Dividend",
+    taxType: "TDS",
+    section: "194",
+    tdsRate: "10%"
+  },
+  {
+    typeOfPayment: "Dividend (Reduced)",
+    taxType: "TDS",
+    section: "194",
+    tdsRate: "7.5%"
+  },
+  {
+    typeOfPayment: "Other Interest than securities",
+    taxType: "TDS",
+    section: "194A",
+    tdsRate: "10%"
+  },
+  {
+    typeOfPayment: "Other Interest than securities (Reduced)",
+    taxType: "TDS",
+    section: "194A",
+    tdsRate: "7.5%"
+  },
+  {
+    typeOfPayment: "Rent on land or furniture etc",
+    taxType: "TDS",
+    section: "194I",
+    tdsRate: "10%"
   }
 ];
 
 
-export const serviceOptions = [
-  { name: "Healthcare Assistant Service", code: "HCAS" },
-  { name: "Healthcare Nursing Service", code: "HCNS" },
-  { name: "Physiotherapy Service", code: "PTS" },
-  { name: "Medical Equipment Service", code: "MES" },
-  { name: "Lab Service", code: "LABS" },
-  { name: "Digital Health Service", code: "DHS" },
-  { name: "Speech & Language Therapy Service", code: "SPTS" },
-  { name: "Occupational Therapy Service", code: "OTS" },
-  { name: "Behaviour Health Service", code: "BHS" },
-  { name: "Healthcare Consulting Service", code: "HCS" },
+
+export  const serviceOptions = [
+  { name: "Healthcare Assistant Service", code: "HCAS", amount: 20000 },
+  { name: "Nursing Care Service", code: "NURS", amount: 35000 },
+  { name: "Bedside Attendant", code: "BSA", amount: 15000 }
 ];

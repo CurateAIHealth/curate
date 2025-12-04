@@ -2,11 +2,11 @@
 
 import { useSelector } from "react-redux";
 import { useState } from "react";
-import { generatePDF, getDaysBetween } from "@/Lib/Actions";
+import {  getDaysBetween } from "@/Lib/Actions";
 import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { UpdateInvoice } from "@/Lib/user.action";
+import { SaveInvoiceData, UpdateInvoice } from "@/Lib/user.action";
 import { Plus } from "lucide-react";
 import { paymentData, serviceOptions } from "@/Lib/Content";
 
@@ -24,17 +24,16 @@ export default function InvoiceForm() {
   const [roundType, setRoundType] = useState<RoundType>("none");
   const [Mailstatus,setMailstatus]=useState(true)
   const Router=useRouter()
-  const [services, setServices] = useState([
-    { name: "Healthcare Assistant Service", code: "HCAS" },
-  ]);
+  
   const [ShowMailTemplate, setShowMailTemplate] = useState(true);
 const [isSending, setIsSending] = useState(false);
-  const [selected, setSelected] = useState<any>({
-    typeOfPayment: "Doctor’s professional fees (consultants, visiting doctors)",
-    taxType: "TDS",
-    section: "194J",
-    tdsRate: "10%"
-  });
+const [selected, setSelected] = useState<any>({
+  typeOfPayment: "",
+  taxType: "",
+  section: "",
+  tdsRate: ""
+});
+
 
   const handleSelect = (e:any) => {
     const item:any = paymentData.find(
@@ -64,10 +63,12 @@ const [isSending, setIsSending] = useState(false);
 
   let finalTotal = rawTotal;
 
-  if (roundType === "up") finalTotal = Math.ceil(rawTotal);
-  if (roundType === "down") finalTotal = Math.floor(rawTotal);
-  if (roundType === "nearest") finalTotal = Math.round(rawTotal);
-
+  // if (roundType === "up") finalTotal = Math.ceil(rawTotal);
+  // if (roundType === "down") finalTotal = Math.floor(rawTotal);
+  // if (roundType === "nearest") finalTotal = Math.round(rawTotal);
+const [services, setServices] = useState([
+    { name: "Healthcare Assistant Service", code: "HCAS",amount:Number(baseTotal) },
+  ]);
   const roundingDifference = finalTotal - rawTotal;
   const balanceDue:any = finalTotal - advance;
 
@@ -96,7 +97,7 @@ const [isSending, setIsSending] = useState(false);
       amount: perDay,
     },
   ];
-
+const TaxAmount:any=balanceDue.toFixed(2)*Number(selected?.tdsRate?.replace("%", ""))/100
   const totals = {
     BaseAmount: 20000,
     OtherExpenses: otherExpenses,
@@ -105,18 +106,28 @@ const [isSending, setIsSending] = useState(false);
     RoundedTotal: finalTotal,
     RoundingDifference: roundingDifference,
     AdvancePaid: advance,
-    balanceDue: balanceDue,
+    Tax:TaxAmount,
+    balanceDue: balanceDue+Number(TaxAmount),
+    RegistraionFee:regFee
   };
 
  
   const updateService = (index: number, selectedCode: string) => {
-    const selected = serviceOptions.find((opt) => opt.code === selectedCode);
-    if (!selected) return;
+  const selected: any = serviceOptions.find((opt) => opt.code === selectedCode);
+  if (!selected) return;
 
-    const updated = [...services];
-    updated[index] = { name: selected.name, code: selected.code };
-    setServices(updated);
-  };
+  setServices((prev: any) => {
+    const updated = [...prev];
+    updated[index] = {
+      ...updated[index],
+      name: selected.name,
+      code: selected.code,
+      amount: selected.amount, 
+    };
+    return updated;
+  });
+};
+
 
   const invoiceProps = {
     invoice: {
@@ -130,14 +141,26 @@ const [isSending, setIsSending] = useState(false);
 
     billTo: billTo,
 
-    items: [
-      {
-        description: `${services[0].name} for ${InvoiceData?.name}`,
-        days,
-        rate: perDay,
-        amount: perDay*days,
-      },
-    ],
+   items: services.map((srv, index) => {
+  if (index === 0) {
+    
+    return {
+      description: `${srv.name} for ${InvoiceData?.name}`,
+      days,
+      rate: perDay,
+      amount: perDay * days,
+    };
+  } else {
+   
+    return {
+      description: `${srv.name} Package`,
+      days: "-",
+      rate: srv.amount,
+      amount: srv.amount,
+    };
+  }
+}),
+
 
     totals,
   };
@@ -155,13 +178,20 @@ const handleSubmit = async () => {
       setIsSending(false); 
       return;
     }
+const save = await SaveInvoiceData({
+    invoice: invoiceProps.invoice,
+    billTo: invoiceProps.billTo,
+    items: invoiceProps.items,
+    totals: invoiceProps.totals,
+  });
 
+  console.log("PostedSent Invoces Data----",save);
     const html = element.outerHTML;
     const pdfResponse = await axios.post("/api/generate-pdf", { html });
     const pdfBase64 = pdfResponse.data.pdf;
 
     await axios.post("/api/MailSend", {
-      to: "srivanikasham@curatehealth.in",
+      to: "tsiddu805@gmail.com",
       subject:
         "Request for Payment – Attached Invoice from Curate Health Services",
    html: `<div style="
@@ -205,7 +235,8 @@ const handleSubmit = async () => {
       <div>
         <p style="margin:0; font-size:14px; color:#444;">AMOUNT DUE</p>
         <h1 style="margin-top:8px; font-size:42px; font-weight:700; color:#000;">
-          ₹${Number(balanceDue).toFixed(2)}
+   ₹${(Number(balanceDue) + Number(TaxAmount)).toFixed(2)}
+
         </h1>
       </div>
 
@@ -223,7 +254,7 @@ const handleSubmit = async () => {
      
       <div style="text-align:center;">
         <div style="margin-bottom:20px;">
-          <a href="https://curate-pearl.vercel.app/upi-pay?amount=${Number(balanceDue).toFixed(2)}"
+          <a href="https://curate-pearl.vercel.app/upi-pay?amount=${(Number(balanceDue) + Number(TaxAmount)).toFixed(2)}"
             style="
               background:#50c896;
               color:white;
@@ -267,7 +298,7 @@ const NavigatetoInvoices=()=>{
   Router.push("/Invoices")
 }
 
-const TaxAmount=balanceDue.toFixed(2)*Number(selected?.tdsRate?.replace("%", ""))/100
+
 
   const getStatusStyles = (status: string | undefined) => {
     if (!status) return "bg-gray-100 text-gray-700 border-gray-200";
@@ -418,6 +449,7 @@ const TaxAmount=balanceDue.toFixed(2)*Number(selected?.tdsRate?.replace("%", "")
                       <Th>Service Name</Th>
                       <Th>Service Code</Th>
                       <Th>Change Service</Th>
+                      <Th>Amount</Th>
                     </tr>
                   </thead>
                   <tbody>
@@ -439,42 +471,51 @@ const TaxAmount=balanceDue.toFixed(2)*Number(selected?.tdsRate?.replace("%", "")
                             ))}
                           </select>
                         </Td>
+                        <Td className="font-mono text-xs text-slate-600">{srv.amount}</Td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <div className="flex gap-4 items-center">
+             
              <Plus  className="bg-teal-800 p-2 ml-2 mb-2 rounded-md text-white cursor-pointer h-8 w-8" onClick={()=>setShowServices(!ShowServices)}/>
              {ShowServices&&
                 
                       <tr className="border-t border-slate-100 hover:bg-slate-50/60">
                         
        <Td>
-  <select
-    className="border border-slate-200 text-sm px-2 py-1 rounded-lg bg-white"
-    
-    onChange={(e) => {
-      const selected = serviceOptions.find((s: any) => s.code === e.target.value);
+<select
+  className="border border-slate-200 text-sm px-2 py-1 rounded-lg bg-white"
+  onChange={(e) => {
+    const selected: any = serviceOptions.find(
+      (s: any) => s.code === e.target.value
+    );
+    if (!selected) return;
 
-      setServices((prev: any) => {
-        
-        return [...prev, selected];
-      });
-    }}
-  >
-    {serviceOptions.map((opt: any, idx) => (
-      <option key={idx} value={opt.code}>
-        {opt.name}
-      </option>
-    ))}
-  </select>
+    setServices((prev: any) => [
+      ...prev,
+      {
+        name: selected.name,
+        code: selected.code,
+        amount: selected.amount, 
+      },
+    ]);
+  }}
+>
+  <option value="">Select Service</option>
+  {serviceOptions.map((opt: any, idx) => (
+    <option key={idx} value={opt.code}>
+      {opt.name}
+    </option>
+  ))}
+</select>
+
 </Td>
 
 
                       </tr>
                     }
-             </div>
+            
             </div>
           </div>
 
@@ -495,7 +536,7 @@ const TaxAmount=balanceDue.toFixed(2)*Number(selected?.tdsRate?.replace("%", "")
                 <div className="text-right">
                   <p className="text-[11px] text-slate-500">Total</p>
                   <p className="text-2xl font-bold text-emerald-600">
-                    ₹{finalTotal.toFixed(0)}/-
+                    ₹{baseTotal}/-
                   </p>
                   {roundingDifference !== 0 && (
                     <p className="text-[11px] text-slate-500">
@@ -511,7 +552,7 @@ const TaxAmount=balanceDue.toFixed(2)*Number(selected?.tdsRate?.replace("%", "")
         className="border p-1 m-1 rounded w-[99%] bg-gray-100"
         onChange={handleSelect}
       >
-        
+        <option>Add Tax</option>
         {paymentData.map((item, index) => (
           <option key={index} value={item.typeOfPayment}>
             {item.typeOfPayment}
@@ -519,15 +560,15 @@ const TaxAmount=balanceDue.toFixed(2)*Number(selected?.tdsRate?.replace("%", "")
         ))}
       </select>
 
-      {/* Show Details */}
-      {selected && (
-        <div className="p-1 m-1 rounded w-[99%] border rounded bg-gray-50">
-          <p><strong>Type of Payment:</strong> {selected.typeOfPayment}</p>
-          <p><strong>Tax Type:</strong> {selected.taxType}</p>
-          <p><strong>Section:</strong> {selected.section}</p>
-          <p><strong>TDS Rate:</strong> {selected.tdsRate}</p>
-        </div>
-      )}
+     {selected ? (
+  <div className="p-1 m-1 rounded w-[99%] border bg-gray-50">
+    <p><strong>Type of Payment:</strong> {selected?.typeOfPayment ?? "N/A"}</p>
+    <p><strong>Tax Type:</strong> {selected?.taxType ?? "N/A"}</p>
+    <p><strong>Section:</strong> {selected?.section ?? "N/A"}</p>
+    <p><strong>TDS Rate:</strong> {selected?.tdsRate ?? "N/A"}</p>
+  </div>
+):null}
+
     </div>
               <div className="px-6 py-4 space-y-3 text-sm">
                 <KeyRow label="Base Amount">
@@ -569,22 +610,22 @@ const TaxAmount=balanceDue.toFixed(2)*Number(selected?.tdsRate?.replace("%", "")
                 </div>
 
                 <KeyRow label="Raw Total">
-                  ₹{Number(rawTotal.toFixed(2))}/-
+                  ₹{Number(rawTotal)}/-
                 </KeyRow>
 
               
 
                 <KeyRow label="Advance Received">
-                  ₹{advance.toFixed(2)}/-
+                  ₹{advance}/-
                 </KeyRow>
 
                   <KeyRow label="Tax">
-                  ₹{balanceDue.toFixed(2)*Number(selected.tdsRate.replace("%", ""))/100}/-
+                  ₹{baseTotal*Number(selected.tdsRate.replace("%", ""))/100}/-
                   
                 </KeyRow>
 
                 <KeyRow label="Balance Due" highlight>
-                  ₹{Number(balanceDue.toFixed(2))+Number(TaxAmount)-discountAmount}/-
+                  ₹{Number(balanceDue)+Number(TaxAmount)}/-
                 </KeyRow>
               </div>
             </div>

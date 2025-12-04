@@ -597,7 +597,7 @@ const ShowAdditionHCPs = hcps?.filter((each: HcpType) =>
 
 
 
-console.log("Test Client id----",clients)
+console.log("Test Client id----",hcps)
 
 
  
