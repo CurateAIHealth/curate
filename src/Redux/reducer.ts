@@ -220,3 +220,13 @@ export const DeploymentInformation = (state: any = null, action: any) => {
 
     }
 }
+
+
+export const EditInvoice=(state:any=false,action:any)=>{
+    switch(action.type){
+        case "UpdateInvoiceStatus":
+            return action.payload;
+            default:
+                return state
+    }
+}

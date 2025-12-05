@@ -161,3 +161,11 @@ export const GetCurrentDeploymentData=(CurrentDeploymentInfo:any)=>{
     }
 
 }
+
+
+export const UpdateInvoiceStatus=(CurrentInvoiceStatus:any)=>{
+    return{
+        type:'UpdateInvoiceStatus',
+        payload:CurrentInvoiceStatus
+    }
+}
