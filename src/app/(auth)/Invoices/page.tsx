@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search, Eye, Download, CheckCircle, Clock, Slice } from "lucide-react";
+import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { GetInvoiceInfo, GetSentInvoiceData } from "@/Lib/user.action";
 import { GeneratePDF, getDaysBetween } from "@/Lib/Actions";
 import { LoadingData } from "@/Components/Loading/page";
 import { useRouter } from "next/navigation";
-import { UpdateInvoiceInfo } from "@/Redux/action";
+import { UpdateInvoiceInfo, UpdateInvoiceStatus } from "@/Redux/action";
 import { useDispatch } from "react-redux";
 import ReusableInvoice from "@/Components/InvioseTemplate/page";
 
@@ -29,15 +29,15 @@ export default function InvoicesPage() {
   const [monthFilter, setMonthFilter] = useState("All");
   const [yearFilter, setYearFilter] = useState("All");
   const [FetchedInfo, setFetchedInfo] = useState<any>([])
-  const [isChecking,setisChecking]=useState(true)
+  const [isChecking, setisChecking] = useState(true)
   const [isSending, setIsSending] = useState(false);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"All" | InvoiceStatus>("All");
   const [page, setPage] = useState(1);
   const [ShowMailTemplate, setShowMailTemplate] = useState(true);
-const [InvoiceData,setInvoiceData]=useState<any>()
-  const Router=useRouter()
-  const dispatch=useDispatch()
+  const [InvoiceData, setInvoiceData] = useState<any>()
+  const Router = useRouter()
+  const dispatch = useDispatch()
   const pageSize = 4;
 
   useEffect(() => {
@@ -50,85 +50,102 @@ const [InvoiceData,setInvoiceData]=useState<any>()
 
     Fetch()
   }, [])
- const downloadExcel = () => {
-  const exportData = paginatedData.map((inv) => {
-    const totalAmount =
-      getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
+  const downloadExcel = () => {
+    const exportData = paginatedData.map((inv) => {
+      const totalAmount =
+        getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
         Number(inv.CareTakeCharge.replace("₹", "")) +
-      Number(inv.RegistrationFee);
+        Number(inv.RegistrationFee);
 
-    const balance =
-      totalAmount - Number(inv.AdvanceReceived);
+      const balance =
+        totalAmount - Number(inv.AdvanceReceived);
 
-    return {
-      InvoiceID: inv.id,
-      ClientName: inv.ClientName,
-      Address: inv.Adress,
-      PatientName: inv.name,
-      Contact: inv.contact,
-      Email: inv.Email,
-      Status: inv.status,
-      StartDate: inv.StartDate,
-      EndDate: inv.ServiceEndDate,
-      RegistrationFee: inv.RegistrationFee,
-      CareTakerCharge: inv.CareTakeCharge,
-      AdvanceReceived: inv.AdvanceReceived,
-      TotalAmount: totalAmount,
-      Balance: balance,
-    };
-  });
+      return {
+        InvoiceID: inv.id,
+        ClientName: inv.ClientName,
+        Address: inv.Adress,
+        PatientName: inv.name,
+        Contact: inv.contact,
+        Email: inv.Email,
+        Status: inv.status,
+        StartDate: inv.StartDate,
+        EndDate: inv.ServiceEndDate,
+        RegistrationFee: inv.RegistrationFee,
+        CareTakerCharge: inv.CareTakeCharge,
+        AdvanceReceived: inv.AdvanceReceived,
+        TotalAmount: totalAmount,
+        Balance: balance,
+      };
+    });
 
-  const worksheet = XLSX.utils.json_to_sheet(exportData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices Preview");
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices Preview");
 
-  const excelBuffer = XLSX.write(workbook, {
-    bookType: "xlsx",
-    type: "array",
-  });
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
 
-  const fileData = new Blob([excelBuffer], {
-    type: "application/octet-stream",
-  });
+    const fileData = new Blob([excelBuffer], {
+      type: "application/octet-stream",
+    });
 
-  saveAs(fileData, "Invoice_Preview.xlsx");
-};
-
-
-const DownloadInvoice = async (id:any)=>{
-  try{
-    console.log("Test Invoice is ----",id);
-    setIsSending(true)
-  setShowMailTemplate(false);
-    const SentInvoices:any = await GetSentInvoiceData();
-
-     
-    const FilteredResult = SentInvoices.insertedId.filter((each:any)=> each.number === id);
-setInvoiceData(FilteredResult[0]);
-
-setTimeout(async() => {
-     const Result=await GeneratePDF(FilteredResult[0]);
-     if(Result?.status===true){
-      setIsSending(false)
-  setShowMailTemplate(true);
-     }
-}, 300)
+    saveAs(fileData, "Invoice_Preview.xlsx");
+  };
 
 
-    if(FilteredResult.length === 0){
+  const DownloadInvoice = async (id: any) => {
+    try {
+      console.log("Test Invoice is ----", id);
+      setIsSending(true)
+      setShowMailTemplate(false);
+      const SentInvoices: any = await GetSentInvoiceData();
+
+
+      const FilteredResult = SentInvoices.insertedId.filter((each: any) => each.number === id);
+      setInvoiceData(FilteredResult[0]);
+
+      setTimeout(async () => {
+        const Result = await GeneratePDF(FilteredResult[0]);
+        if (Result?.status === true) {
+          setIsSending(false)
+          setShowMailTemplate(true);
+        }
+      }, 500)
+
+
+      if (FilteredResult.length === 0) {
         alert("Invoice Not Found");
         return;
+      }
+
+
+
+
+
+    } catch (err: any) {
+      console.log("Error", err)
     }
-
-   
-   
-      
-
-  }catch(err:any){
-    console.log("Error",err)
   }
-}
 
+
+  const EditInvoice = async (id: any) => {
+    try {
+
+      const SentInvoices: any = await GetSentInvoiceData();
+      const FilteredResult = SentInvoices.insertedId.filter((each: any) => each.number === id);
+      setInvoiceData(FilteredResult[0]);
+      dispatch(UpdateInvoiceStatus(true))
+      setTimeout(async () => {
+        setShowMailTemplate(false);
+
+      }, 300)
+    } catch (err: any) {
+      console.log("Error", err)
+    }
+  }
+  
   const PreviewInfo = FetchedInfo.map((each: any) => {
 
 
@@ -152,7 +169,7 @@ setTimeout(async() => {
 
   }
   )
-  const statusStyles:any = {
+  const statusStyles: any = {
     Draft:
       "bg-[#50c89612] text-[#50c896] border border-[#50c89655]",
     Sent:
@@ -250,367 +267,381 @@ setTimeout(async() => {
 
     return { label: `${daysLeft} days left`, days: daysLeft, status: "upcoming" };
   }
-const UpdateInvoiceMailTemplate=(MainTemplateInfo:any)=>{
-console.log("Check Registratio Fee----",MainTemplateInfo)
-  dispatch(UpdateInvoiceInfo(MainTemplateInfo))
-Router.push("/MailInvoiceTemplate")
-}
-
-const invoiceProps = {
-  invoice: {
-    number: InvoiceData?.number ?? "-",
-    date: InvoiceData?.serviceFrom,
-    dueDate: InvoiceData?.serviceTo,
-    serviceFrom: InvoiceData?.serviceFrom,
-    serviceTo: InvoiceData?.serviceTo,
-    terms: InvoiceData?.terms ?? "7 Days",
-    patientName: InvoiceData?.patientName,
-    invoiceName: InvoiceData?.name,
-  },
-
-  billTo: {
-   
-    name: InvoiceData?.ClientName,
-    patientName: InvoiceData?.name,
-    contact: InvoiceData?.contact,
-    email: InvoiceData?.Email,
-    addressLines: InvoiceData?.Adress,
-  },
-
-  items: InvoiceData?.items?.map((srv:any) => ({
-    description: srv.description,
-    days: srv.days,
-    rate: srv.rate,
-    amount: srv.amount,
-  })),
-
-  totals: {
-    BaseAmount: InvoiceData?.BaseAmount,
-    Tax: InvoiceData?.Tax,
-    Discount: InvoiceData?.Discount,
-    OtherExpenses: InvoiceData?.OtherExpenses,
-    total: InvoiceData?.RoundedTotal,
-    AdvancePaid: InvoiceData?.AdvancePaid,
-    balanceDue: InvoiceData?.balanceDue,
-    RegistraionFee:InvoiceData?.RegistraionFee
-
-
-
+  const UpdateInvoiceMailTemplate = (MainTemplateInfo: any) => {
+    console.log("Check Registratio Fee----", MainTemplateInfo)
+    dispatch(UpdateInvoiceInfo(MainTemplateInfo))
+    Router.push("/MailInvoiceTemplate")
   }
-};
-console.log("Check Regisratio Fee--",invoiceProps)
+
+  const invoiceProps = {
+    invoice: {
+      number: InvoiceData?.number ?? "-",
+      date: InvoiceData?.serviceFrom,
+      dueDate: InvoiceData?.serviceTo,
+      serviceFrom: InvoiceData?.serviceFrom,
+      serviceTo: InvoiceData?.serviceTo,
+      terms: InvoiceData?.terms ?? "7 Days",
+      patientName: InvoiceData?.patientName,
+      invoiceName: InvoiceData?.name,
+    },
+
+    billTo: {
+
+      name: InvoiceData?.ClientName,
+      patientName: InvoiceData?.name,
+      contact: InvoiceData?.contact,
+      email: InvoiceData?.Email,
+      addressLines: InvoiceData?.Adress,
+    },
+
+    items: InvoiceData?.items?.map((srv: any) => ({
+      description: srv.description,
+      days: srv.days,
+      rate: srv.rate,
+      amount: srv.amount,
+    })),
+
+    totals: {
+      BaseAmount: InvoiceData?.BaseAmount,
+      Tax: InvoiceData?.Tax,
+      Discount: InvoiceData?.Discount,
+      OtherExpenses: InvoiceData?.OtherExpenses,
+      total: InvoiceData?.RoundedTotal,
+      AdvancePaid: InvoiceData?.AdvancePaid,
+      balanceDue: InvoiceData?.balanceDue,
+      RegistraionFee: InvoiceData?.RegistraionFee
+
+
+
+    }
+  };
+  console.log("Check Regisratio Fee--", invoiceProps)
   if (isChecking) {
     return (
-      <LoadingData/>
+      <LoadingData />
     );
   }
   return (
     <div>
       <>{isSending && (
-  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-    
-    <div className="bg-white shadow-xl rounded-2xl px-8 py-6 text-center w-[90%] max-w-sm">
-      <div className="animate-spin h-10 w-10 border-4 border-slate-300 border-t-slate-900 rounded-full mx-auto mb-4"></div>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
 
-      <h2 className="text-lg font-semibold text-slate-800">
-        Please Wait…
-      </h2>
-      <p className="text-sm text-slate-500 mt-1">
-        Downloading Invoice 
-      </p>
-    </div>
-  </div>
-)}
-</>
-    {ShowMailTemplate?
-    <div className="min-h-screen bg-[#f5f7fb] p-2 md:p-2">
+          <div className="bg-white shadow-xl rounded-2xl px-8 py-6 text-center w-[90%] max-w-sm">
+            <div className="animate-spin h-10 w-10 border-4 border-slate-300 border-t-slate-900 rounded-full mx-auto mb-4"></div>
 
-
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 md:gap-0">
-
-
-        <div className="flex flex-col gap-2">
-          <h1
-            className="text-2xl md:text-3xl font-semibold tracking-tight"
-            style={{ color: "#ff1493" }}
-          >
-            Invoice Management
-          </h1>
-
-          <p className="text-gray-500 text-sm">
-            Billing overview for patients & clients
-          </p>
-        </div>
-
-
-        <img
-          src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
-          alt="Curate Health Services Logo"
-          className="h-16 md:h-24 w-auto object-contain mx-auto md:mx-0"
-        />
-      </div>
-
-
-      <div className="flex flex-col gap-4 mt-4">
-
-        <div className="flex flex-col lg:flex-row gap-4 justify-between">
-
-          <div className="flex flex-col gap-1 w-full lg:w-72">
-            <label className="text-xs font-medium text-gray-500">
-              Search by name or contact
-            </label>
-
-            <div className="flex items-center gap-2 bg-white px-3 py-2 border border-gray-200 rounded-xl shadow-sm">
-              <Search className="w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="e.g. Savita, 9876..."
-                className="w-full outline-none text-gray-700 text-sm"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  resetToFirstPage();
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-3 items-center">
-
-
-            <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-xs text-gray-500">Status</span>
-              {["All", "Draft", "Sent", "Overdue"].map((s) => {
-                const active = filter === s;
-                return (
-                  <button
-                    key={s}
-                    onClick={() => {
-                      setFilter(s as any);
-                      resetToFirstPage();
-                    }}
-                    className={
-                      "px-3 py-1.5 rounded-full text-xs font-medium border transition " +
-                      (active
-                        ? "bg-[#1392d3] text-white border-[#1392d3]"
-                        : "bg-white text-gray-600 border-gray-200")
-                    }
-                  >
-                    {s}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">Month</span>
-              <select
-                value={monthFilter}
-                onChange={(e) => {
-                  setMonthFilter(e.target.value);
-                  resetToFirstPage();
-                }}
-                className="px-3 py-1.5 rounded-full text-xs border border-gray-300 bg-white text-gray-700"
-              >
-                <option value="All">All</option>
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {new Date(0, i).toLocaleString("en", { month: "long" })}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">Year</span>
-              <select
-                value={yearFilter}
-                onChange={(e) => {
-                  setYearFilter(e.target.value);
-                  resetToFirstPage();
-                }}
-                className="px-3 py-1.5 rounded-full text-xs border border-gray-300 bg-white text-gray-700"
-              >
-                <option value="All">All</option>
-                {availableYears.map((yr) => (
-                  <option key={yr} value={yr}>
-                    {yr}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+            <h2 className="text-lg font-semibold text-slate-800">
+              Please Wait…
+            </h2>
+            <p className="text-sm text-slate-500 mt-1">
+              Downloading Invoice
+            </p>
           </div>
         </div>
+      )}
+      </>
+      {ShowMailTemplate ?
+        <div className="min-h-screen bg-[#f5f7fb] p-2 md:p-2">
 
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <SummaryCard label="Total Invoices" value={paginatedData.length} subtleLabel="All statuses" borderColor="#1392d3" />
-          <SummaryCard label="Draft" value={totalDraft} subtleLabel="Need review" borderColor="#50c896" />
-          <SummaryCard label="Sent" value={totalSent} subtleLabel="Shared with Client" borderColor="#1392d3" />
-          <SummaryCard label="Overdue" value={totalOverdue} subtleLabel="Needs follow-up" borderColor="#ff1493" />
-        </div>
-      </div>
+          <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 md:gap-0">
 
 
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-x-auto mt-5">
+            <div className="flex flex-col gap-2">
+              <h1
+                className="text-2xl md:text-3xl font-semibold tracking-tight"
+                style={{ color: "#ff1493" }}
+              >
+                Invoice Management
+              </h1>
 
-
-        <div className="min-w-[900px]">
-          <div className="flex justify-between items-center px-5 py-3 border-b border-gray-400">
-            <div>
-              <p className="text-sm font-medium text-gray-800">Invoice list</p>
-              <p className="text-xs text-gray-500">
-                Showing {paginatedData.length} of {filteredInvoices.length} filtered invoices
+              <p className="text-gray-500 text-sm">
+                Billing overview for patients & clients
               </p>
             </div>
 
-            <button
-              className="flex items-center cursor-pointer gap-2 px-4 py-2 rounded-lg bg-[#1392d3] text-white text-xs font-semibold shadow-sm hover:bg-[#117bb1] transition"
-              onClick={downloadExcel}
-            >
-              <Download className="w-4 h-4" />
-              Download Invoices
-            </button>
+
+            <img
+              src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
+              alt="Curate Health Services Logo"
+              className="h-16 md:h-24 w-auto object-contain mx-auto md:mx-0"
+            />
           </div>
 
 
-          <div className="grid grid-cols-10 gap-x-8 text-xs font-semibold text-gray-500 px-5 py-2 border-b bg-[#f9fafc]">
-            <div>Patient / Client</div>
-            <div>Contact</div>
-            <div>Status</div>
-            <div>Due date</div>
-            <div>Total Amount</div>
-            <div>Advance Paid</div>
-            <div>Balance</div>
-            <div>Remarks</div>
-            <div className="text-right pr-4">Actions</div>
-            <div>Download</div>
-          </div>
+          <div className="flex flex-col gap-4 mt-4">
 
+            <div className="flex flex-col lg:flex-row gap-4 justify-between">
 
-          {paginatedData.map((inv, i) => {
-            const dueInfo = getDueStatus(inv.StartDate);
-            return (
-              <div
-                key={inv.id}
-                className="grid grid-cols-10 gap-x-8 px-5 py-3 border-b text-sm hover:bg-[#f7f9fd] transition"
-              >
+              <div className="flex flex-col gap-1 w-full lg:w-72">
+                <label className="text-xs font-medium text-gray-500">
+                  Search by name or contact
+                </label>
 
-                <div className="flex flex-col">
-                  <span className="font-medium">{inv.name}</span>
-                  <span className="text-[9px] text-gray-500">Invoice ID: {inv.id}</span>
-                </div>
-
-
-                <div>+91{inv.contact}</div>
-
-
-                <div>
-                  <span
-                    className={
-                      "px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 " +
-                      statusStyles[inv.status]
-                    }
-                  >
-                    {inv.status === "Sent" ? <CheckCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                    {inv.status}
-                  </span>
-                </div>
-
-
-                <div>
-                  {dueInfo.status === "overdue" ? (
-                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#ff149312] text-[#ff1493] border border-[#ff149355]">
-                      Overdue
-                    </span>
-                  ) : (
-                    <span className="text-gray-700 text-sm">{dueInfo.label}</span>
-                  )}
-                </div>
-
-                <div>₹{getDaysBetween(inv.StartDate, inv.ServiceEndDate) * Number(inv.CareTakeCharge.replace("₹", "")) + Number(inv.RegistrationFee)}/-</div>
-
-                <div> ₹{inv.AdvanceReceived}/-</div>
-
-                <div>₹{
-                  getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
-                  Number(inv.CareTakeCharge.replace("₹", "")) +
-                  Number(inv.RegistrationFee) -
-                  Number(inv.AdvanceReceived)
-                }
-                  /-
-                </div>
-
-
-                <div>
+                <div className="flex items-center gap-2 bg-white px-3 py-2 border border-gray-200 rounded-xl shadow-sm">
+                  <Search className="w-4 h-4 text-gray-400" />
                   <input
                     type="text"
-                    className="border rounded-md w-[120px] text-[14px] pl-2"
-                    placeholder="Enter Remark..."
+                    placeholder="e.g. Savita, 9876..."
+                    className="w-full outline-none text-gray-700 text-sm"
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      resetToFirstPage();
+                    }}
                   />
                 </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 items-center">
 
 
-                <div className="flex justify-end pr-4">
-                  {inv.status === "Draft" ? (
-                    <button
-                      className="px-2 py-1.5 rounded-md text-xs cursor-pointer font-semibold flex items-center gap-2 bg-[#50c896] text-white"
-                    onClick={()=>UpdateInvoiceMailTemplate(inv)}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="white" strokeWidth="2">
-                        <path d="M16.5 3.5l3 3L7 19l-4 1 1-4 12.5-12.5z" />
-                      </svg>
-                      Edit & Send
-                    </button>
-                  ) : (
-                    <button
-                      className="px-2 py-1.5 rounded-md cursor-pointer text-xs font-semibold flex items-center gap-2 bg-[#1392d3] text-white"
-                      onClick={()=>console.log("Test Individual DowanloadDetails---",inv)}
-                    >
-                      <svg className="w-4 h-6 " fill="none" stroke="white" strokeWidth="2">
-                        <path d="M5 13l4 4L19 7" />
-                      </svg>
-                      Sent
-                    </button>
-                  )}
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="text-xs text-gray-500">Status</span>
+                  {["All", "Draft", "Sent", "Overdue"].map((s) => {
+                    const active = filter === s;
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => {
+                          setFilter(s as any);
+                          resetToFirstPage();
+                        }}
+                        className={
+                          "px-3 py-1.5 rounded-full text-xs font-medium border transition " +
+                          (active
+                            ? "bg-[#1392d3] text-white border-[#1392d3]"
+                            : "bg-white text-gray-600 border-gray-200")
+                        }
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {inv.status !== "Draft"&&<div className="cursor-pointer ">
-                  <Download onClick={()=>DownloadInvoice(inv.id)}/>
-                </div> }
-                
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">Month</span>
+                  <select
+                    value={monthFilter}
+                    onChange={(e) => {
+                      setMonthFilter(e.target.value);
+                      resetToFirstPage();
+                    }}
+                    className="px-3 py-1.5 rounded-full text-xs border border-gray-300 bg-white text-gray-700"
+                  >
+                    <option value="All">All</option>
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {new Date(0, i).toLocaleString("en", { month: "long" })}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">Year</span>
+                  <select
+                    value={yearFilter}
+                    onChange={(e) => {
+                      setYearFilter(e.target.value);
+                      resetToFirstPage();
+                    }}
+                    className="px-3 py-1.5 rounded-full text-xs border border-gray-300 bg-white text-gray-700"
+                  >
+                    <option value="All">All</option>
+                    {availableYears.map((yr) => (
+                      <option key={yr} value={yr}>
+                        {yr}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
               </div>
-            );
-          })}
-        </div>
-      </div>
+            </div>
 
 
-      <div className="flex justify-between items-center mt-5 text-xs text-gray-600">
-        <span>Page {page} of {totalPages}</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <SummaryCard label="Total Invoices" value={paginatedData.length} subtleLabel="All statuses" borderColor="#1392d3" />
+              <SummaryCard label="Draft" value={totalDraft} subtleLabel="Need review" borderColor="#50c896" />
+              <SummaryCard label="Sent" value={totalSent} subtleLabel="Shared with Client" borderColor="#1392d3" />
+              <SummaryCard label="Overdue" value={totalOverdue} subtleLabel="Needs follow-up" borderColor="#ff1493" />
+            </div>
+          </div>
 
-        <div className="flex gap-2">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-            className="px-3 py-1.5 rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-40"
-          >
-            Previous
-          </button>
 
-          <button
-            disabled={page === totalPages}
-            onClick={() => setPage(page + 1)}
-            className="px-3 py-1.5 rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-40"
-          >
-            Next
-          </button>
-        </div>
-      </div>
-    </div>:
-       <div id="invoice-pdf-area">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-x-auto mt-5">
+
+
+            <div className="min-w-[900px]">
+              <div className="flex justify-between items-center px-5 py-3 border-b border-gray-400">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">Invoice list</p>
+                  <p className="text-xs text-gray-500">
+                    Showing {paginatedData.length} of {filteredInvoices.length} filtered invoices
+                  </p>
+                </div>
+
+                <button
+                  className="flex items-center cursor-pointer gap-2 px-4 py-2 rounded-lg bg-[#1392d3] text-white text-xs font-semibold shadow-sm hover:bg-[#117bb1] transition"
+                  onClick={downloadExcel}
+                >
+                  <Download className="w-4 h-4" />
+                  Download Invoices
+                </button>
+              </div>
+
+
+              <div className="w-full overflow-x-auto">
+                <div className="
+    grid grid-cols-11 gap-x-8 text-xs font-semibold text-gray-500 
+    px-5 py-2 border-b bg-[#f9fafc]
+    
+    /* Responsive grid columns */
+    md:grid-cols-11 
+    sm:grid-cols-6 
+    grid-cols-4
+    min-w-max
+  ">
+
+                  <div className="whitespace-nowrap">Patient / Client</div>
+                  <div className="whitespace-nowrap">Contact</div>
+                  <div className="whitespace-nowrap hidden sm:block">Status</div>
+                  <div className="whitespace-nowrap hidden sm:block">Due date</div>
+                  <div className="whitespace-nowrap hidden md:block">Total Amount</div>
+                  <div className="whitespace-nowrap hidden md:block">Advance Paid</div>
+                  <div className="whitespace-nowrap hidden md:block">Balance</div>
+
+                  <div className="whitespace-nowrap hidden md:block">Remarks</div>
+
+                  <div className="whitespace-nowrap pl-8">Actions</div>
+                  <div className="whitespace-nowrap">Edit</div>
+                  <div className="whitespace-nowrap">Download</div>
+                </div>
+              </div>
+
+
+
+              {paginatedData.map((inv, i) => {
+                const dueInfo = getDueStatus(inv.StartDate);
+                return (
+                  <div
+                    key={inv.id}
+                    className="grid grid-cols-11 gap-x-8 px-5 py-3 border-b text-sm hover:bg-[#f7f9fd] transition"
+                  >
+
+                    <div className="flex flex-col">
+                      <span className="font-medium">{inv.name}</span>
+                      <span className="text-[8px] text-gray-500">Invoice ID: {inv.id}</span>
+                    </div>
+
+
+                    <div>+91{inv.contact}</div>
+
+
+                    <div>
+                      <span
+                        className={
+                          "px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 " +
+                          statusStyles[inv.status]
+                        }
+                      >
+                        {inv.status === "Sent" ? <CheckCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                        {inv.status}
+                      </span>
+                    </div>
+
+
+                    <div>
+                      {dueInfo.status === "overdue" ? (
+                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#ff149312] text-[#ff1493] border border-[#ff149355]">
+                          Overdue
+                        </span>
+                      ) : (
+                        <span className="text-gray-700 text-sm">{dueInfo.label}</span>
+                      )}
+                    </div>
+
+                    <div>₹{getDaysBetween(inv.StartDate, inv.ServiceEndDate) * Number(inv.CareTakeCharge.replace("₹", "")) + Number(inv.RegistrationFee)}/-</div>
+
+                    <div> ₹{inv.AdvanceReceived}/-</div>
+
+                    <div>₹{
+                      getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
+                      Number(inv.CareTakeCharge.replace("₹", "")) +
+                      Number(inv.RegistrationFee) -
+                      Number(inv.AdvanceReceived)
+                    }
+                      /-
+                    </div>
+
+
+                    <div>
+                      <input
+                        type="text"
+                        className="border rounded-md w-[120px] text-[14px] pl-2"
+                        placeholder="Enter Remark..."
+                      />
+                    </div>
+
+
+                    <div className="flex justify-end">
+                      {inv.status === "Draft" ? (
+                        <button
+                          className="px-1 py-1.5 pl-4 rounded-md cursor-pointer text-[13px] font-semibold flex items-center gap-2 text-red-500 "
+                          onClick={() => UpdateInvoiceMailTemplate(inv)}
+                        >
+                          <SquarePen className="w-4 h-4" />Edit&send
+
+                        </button>
+                      ) : (
+                        <button
+                          className="px-1 py-1.5 rounded-md cursor-pointer text-[13px] font-semibold flex items-center gap-2 text-green-800 "
+                          onClick={() => console.log("Test Individual DowanloadDetails---", inv)}
+                        >
+                          <CheckCircle className="w-4 h-4" />Sent
+                        </button>
+                      )}
+                    </div>
+                    <div className="cursor-pointer">
+                      <Pencil className="w-5 h-5" onClick={() => EditInvoice(inv.id)} />
+                    </div>
+
+                    {inv.status !== "Draft" && <div className="cursor-pointer ">
+                      <Download onClick={() => DownloadInvoice(inv.id)} />
+                    </div>}
+
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+
+          <div className="flex justify-between items-center mt-5 text-xs text-gray-600">
+            <span>Page {page} of {totalPages}</span>
+
+            <div className="flex gap-2">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+                className="px-3 py-1.5 rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-40"
+              >
+                Previous
+              </button>
+
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage(page + 1)}
+                className="px-3 py-1.5 rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div> :
+        <div id="invoice-pdf-area">
           <ReusableInvoice
             invoice={invoiceProps?.invoice}
             billTo={invoiceProps.billTo}
@@ -618,7 +649,7 @@ console.log("Check Regisratio Fee--",invoiceProps)
             totals={invoiceProps.totals}
           />
         </div>}
-        </div>
+    </div>
   );
 
 }
