@@ -7,7 +7,16 @@ import { Plus } from "lucide-react";
 interface InvoiceInfo { number?:string;date?:string;dueDate?:string;terms?:string;serviceFrom?:string;serviceTo?:string; }
 interface BillToInfo { name?:string;addressLines?:string;patientName?:string;otherDetails?:string; }
 interface ItemRow { description:string;days:number|string;rate:number|string;amount:number|string; }
-interface Totals { Discount?:number;AdvancePaid?:number;Tax?:number;OtherExpenses?:number;RegistraionFee?:number;total?:number;balanceDue?:number; }
+interface Totals {
+  Discount?: any;
+  AdvancePaid?: any;
+  Tax?: any;
+  OtherExpenses?: any;
+  RegistraionFee?: any;
+  total?: any;
+  balanceDue?: any;
+}
+
 interface ColorConfig { primary?:string;accent?:string;pink?:string; }
 interface Props { invoice?:InvoiceInfo;billTo?:BillToInfo;items?:ItemRow[];totals?:Totals;colors?:ColorConfig; }
 
