@@ -169,3 +169,11 @@ export const UpdateInvoiceStatus=(CurrentInvoiceStatus:any)=>{
         payload:CurrentInvoiceStatus
     }
 }
+
+
+export const UpdateInvoiceIntialStatus=(CurrentStaus:any)=>{
+    return{
+        type:'UpdateInvoiceIntialStatus',
+        payload:CurrentStaus
+    }
+}

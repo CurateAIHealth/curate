@@ -230,3 +230,14 @@ export const EditInvoice=(state:any=false,action:any)=>{
                 return state
     }
 }
+
+
+export const UpdateInvoicePageStatus=(state:any=true,action:any)=>{
+    switch(action.type){
+        case "UpdateInvoiceIntialStatus":
+            return action.payload;
+            default:
+                return state
+
+    }
+}
