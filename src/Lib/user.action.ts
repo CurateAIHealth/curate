@@ -751,7 +751,7 @@ export const UpdatePDR = async (
 
 export const PostInvoice = async (InvoiseInfo:any,AdvanceAmount:any,InvoiceNumber:any) => {
   try {
-    console.log("Test Invo---",InvoiceNumber)
+    
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Invoices");
@@ -772,6 +772,7 @@ const endOfMonthFormatted = endOfMonth.toLocaleDateString("en-IN");
       CareTakeChare: InvoiseInfo.serviceCharges,
       RegistrationFee:InvoiseInfo.RegistrationFee,
       status: "Draft",
+      PaymentStatus:false
     });
 
     return {
@@ -855,14 +856,15 @@ export const SaveInvoiceData = async (invoiceProps: {
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
-    const collection = db.collection("SentInvoices");
+    const collection = db.collection("Invoices");
 
-    // 👇 MERGE ALL OBJECTS INTO A SINGLE ONE
+
     const finalInvoice = {
-      ...invoiceProps.invoice,   // invoice details merged
-      ...invoiceProps.billTo,    // customer details merged
-      items: invoiceProps.items, // keep array
-      ...invoiceProps.totals,    // totals merged
+      ...invoiceProps.invoice,  
+      ...invoiceProps.billTo,    
+      items: invoiceProps.items, 
+      ...invoiceProps.totals, 
+      PaymentStatus:false,   
       createdAt: new Date().toISOString()
     };
 
@@ -875,11 +877,51 @@ export const SaveInvoiceData = async (invoiceProps: {
   }
 };
 
+
+export const UpdateInvoiceData = async (
+  invoiceNumber: any,   
+  updatedProps: {
+    invoice: Record<string, any>,
+    billTo: Record<string, any>,
+    items: any[],
+    totals: Record<string, any>
+  }
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Invoices");
+
+ 
+    const dynamicUpdates = {
+      ...updatedProps.invoice,
+      ...updatedProps.billTo,
+      ...updatedProps.totals,
+      items: updatedProps.items,
+      updatedAt: new Date().toISOString()
+    };
+
+
+
+  
+    const result = await collection.updateOne(
+      { Invoice: invoiceNumber },   
+      { $set: dynamicUpdates }
+    );
+
+    return { success: true, modifiedCount: result.modifiedCount };
+
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+};
+
+
 export const GetSentInvoiceData = async () => {
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
-    const collection = db.collection("SentInvoices");
+    const collection = db.collection("Invoices");
 
     const result = await collection.find().toArray();
 
@@ -899,6 +941,28 @@ export const GetSentInvoiceData = async () => {
   }
 };
 
+export const UpdateStatusPayment=async(InvoiceId:any)=>{
+  try{
+     const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Invoices");
+ const UpdateVerificationStatus = await collection.updateOne(
+      { Invoice: InvoiceId },
+      {
+        $set: {
+          PaymentStatus: true,
+        },
+      }
+    );
+
+    return {
+      success: true,
+      message: "PDR Status updated successfully.",
+    };
+  }catch(err:any){
+    
+  }
+}
 
 export interface HCAInfo {
   userType: any;

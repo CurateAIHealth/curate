@@ -6,7 +6,7 @@ import {  getDaysBetween } from "@/Lib/Actions";
 import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { SaveInvoiceData, UpdateInvoice } from "@/Lib/user.action";
+import { SaveInvoiceData, UpdateInvoice, UpdateInvoiceData } from "@/Lib/user.action";
 import { Plus } from "lucide-react";
 import { paymentData, serviceOptions } from "@/Lib/Content";
 
@@ -178,7 +178,9 @@ const handleSubmit = async () => {
       setIsSending(false); 
       return;
     }
-const save = await SaveInvoiceData({
+const save = await UpdateInvoiceData(
+invoice.number,
+  {
     invoice: invoiceProps.invoice,
     billTo: invoiceProps.billTo,
     items: invoiceProps.items,

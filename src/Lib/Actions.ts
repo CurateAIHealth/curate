@@ -168,7 +168,7 @@ import jsPDF from "jspdf";
 export const GeneratePDF = async (invoiceData:any) => {
   try {
     const pdfRef = document.getElementById("invoice-pdf-area");
-    if (!pdfRef) return;
+    if (!pdfRef) return null;
 
  
     const canvas = await html2canvas(pdfRef, { 
