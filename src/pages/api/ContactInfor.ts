@@ -1,24 +1,19 @@
-import { NextResponse } from "next/server";
+import type { NextApiRequest, NextApiResponse } from "next";
 import axios from "axios";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const abhaNumber = searchParams.get("abhaNumber");
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const abhaNumber = req.query.abhaNumber as string;
 
   if (!abhaNumber) {
-    return NextResponse.json(
-      { error: "Missing ABHA Number" },
-      { status: 400 }
-    );
+    return res.status(400).json({ error: "Missing ABHA Number" });
   }
 
   try {
-
     const tokenResponse = await axios.post(
       "https://healthidsbx.abdm.gov.in/api/v1/auth/token",
       {
-        clientId: 'SBXID_010773',
-        clientSecret: 'b9ff1d0e-53d8-4219-b7e0-7d111bd555c4',
+        clientId: "SBXID_010773",
+        clientSecret: "b9ff1d0e-53d8-4219-b7e0-7d111bd555c4",
       },
       {
         headers: { "Content-Type": "application/json" },
@@ -39,13 +34,11 @@ export async function GET(request: Request) {
       }
     );
 
-   
-    return NextResponse.json(abhaResponse.data, { status: 200 });
+    return res.status(200).json(abhaResponse.data);
   } catch (error: any) {
     console.error("Error fetching ABHA user:", error.response?.data || error);
-    return NextResponse.json(
-      { error: "Failed to fetch ABHA user details" },
-      { status: 500 }
-    );
+    return res
+      .status(500)
+      .json({ error: "Failed to fetch ABHA user details" });
   }
 }
