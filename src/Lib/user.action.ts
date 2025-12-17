@@ -4,7 +4,7 @@ import { decrypt, encrypt, hashValue, verifySHA256 } from "./Actions";
 
 import clientPromise from "./db";
 import { TimeStamp } from "@/Redux/reducer";
-import { data } from "framer-motion/client";
+import { data, symbol } from "framer-motion/client";
 import { VendorFieldMap } from "./Content";
 
 export const UpdateDocterInformation = async (doctorInfo: {
@@ -2633,6 +2633,306 @@ export const GetUsersFullInfo = async () => {
     return [];
   }
 };
+
+
+
+export const PostHostelAttendence = async (
+  UserId: string,
+  Name: string,
+  UpdatedStatus: string,
+  ArguDate:any
+) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const collection = Db.collection("HostelAttendence");
+
+   
+ 
+
+    const userDoc = await collection.findOne({ UserId });
+
+    if (userDoc) {
+      const alreadyMarked = userDoc.attendance?.some(
+        (a: any) => a.date === ArguDate
+      );
+
+      if (alreadyMarked) {
+        return {
+          success: false,
+          warning: true,
+          message: "Attendance already marked for today",
+        };
+      }
+
+  
+      // await collection.updateOne(
+      //   { UserId },
+      //   {
+      //     $set: { updatedAt: new Date() },
+      //     $push: {
+      //       attendance: {
+      //         date: ArguDate,
+      //         HcpStatus:UpdatedStatus==="Pending"?true:false,
+      //         AdminStaus:false,
+      //         status: UpdatedStatus,
+      //       }as any,
+      //     },
+      //   }
+      // );
+
+      // return {
+      //   success: true,
+      //   message: "Attendance added successfully",
+      // };
+    }
+
+
+    await collection.insertOne({
+      UserId,
+      Name,
+      attendance: [
+        {
+          date: ArguDate,
+          HcpStatus: UpdatedStatus === "Pending" ? true : false,
+          AdminStaus: false,
+          status: UpdatedStatus,
+        },
+      ],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    return {
+      success: true,
+      message: "User created and attendance marked",
+    };
+  } catch (err: any) {
+    console.error("UpdateHostelAttendence Error:", err);
+    return {
+      success: false,
+      message: err.message || "Failed to update attendance",
+    };
+  }
+};
+
+
+export const UpdateHostelAttendence = async (
+  UserId: string,
+  Name: string,
+  UpdatedStatus: string,
+  ArguDate: string
+) => {
+  try {
+    const client = await clientPromise;
+    const db = client.db("CurateInformation");
+    const collection = db.collection("HostelAttendence");
+
+    const todayAttendance = {
+      date: ArguDate,
+      status: UpdatedStatus,
+      AdminStatus: UpdatedStatus === "Present"?true:false,
+      markedAt: new Date(),
+    };
+
+    const userDoc = await collection.findOne({ UserId });
+
+
+    if (!userDoc) {
+      await collection.insertOne({
+        UserId,
+        Name,
+        attendance: [todayAttendance],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      return {
+        success: true,
+        message: "Attendance created for new user",
+      };
+    }
+
+
+    const hasTodayAttendance = userDoc.attendance?.some(
+      (a: any) => a.date === ArguDate
+    );
+
+ 
+    if (hasTodayAttendance) {
+      await collection.updateOne(
+        {
+          UserId,
+          "attendance.date": ArguDate,
+        },
+        {
+          $set: {
+            "attendance.$.status": UpdatedStatus,
+            "attendance.$.AdminStatus": UpdatedStatus === "Present"?true:false,
+            "attendance.$.markedAt": new Date(),
+            updatedAt: new Date(),
+          },
+        }
+      );
+
+      return {
+        success: true,
+        message: "Attendance updated successfully",
+      };
+    }
+
+   
+    await collection.updateOne(
+      { UserId },
+      {
+        $push: { attendance: todayAttendance }as any,
+        $set: { updatedAt: new Date() },
+      }
+    );
+
+    return {
+      success: true,
+      message: "Attendance added for today",
+    };
+  } catch (err: any) {
+    console.error("UpdateHostelAttendence Error:", err);
+    return {
+      success: false,
+      message: err.message || "Failed to update attendance",
+    };
+  }
+};
+
+
+export const UpdateWholeTeamHostelAttendence = async (
+  teamUsers: {
+    UserId: string;
+    Name: string;
+    UpdatedStatus: string;
+  }[],
+  ArguDate: string
+) => {
+  try {
+    const client = await clientPromise;
+    const db = client.db("CurateInformation");
+    const collection = db.collection("HostelAttendence");
+
+    // ⚠️ 0️⃣ PRE-CHECK: Attendance already exists for this date
+    const alreadyExists = await collection.findOne({
+      "attendance.date": ArguDate,
+    });
+
+    if (alreadyExists) {
+      return {
+        success: false,
+        warning: true,
+        message: "Attendance already marked for selected date",
+      };
+    }
+
+    // 1️⃣ Update existing attendance (safe even if none exist)
+    const updateOps = teamUsers.map((user) => ({
+      updateOne: {
+        filter: {
+          UserId: user.UserId,
+          "attendance.date": ArguDate,
+        },
+        update: {
+          $set: {
+            "attendance.$.status": user.UpdatedStatus,
+            "attendance.$.AdminStatus":
+              user.UpdatedStatus === "Present",
+            "attendance.$.markedAt": new Date(),
+            updatedAt: new Date(),
+          },
+        },
+      },
+    }));
+
+    // 2️⃣ Insert new attendance
+    const insertOps:any = teamUsers.map((user) => ({
+      updateOne: {
+        filter: {
+          UserId: user.UserId,
+          attendance: {
+            $not: { $elemMatch: { date: ArguDate } },
+          },
+        },
+        update: {
+          $push: {
+            attendance: {
+              date: ArguDate,
+              status: user.UpdatedStatus,
+              AdminStatus: user.UpdatedStatus === "Present",
+              markedAt: new Date(),
+            },
+          },
+          $set: { updatedAt: new Date() },
+          $setOnInsert: {
+            UserId: user.UserId,
+            Name: user.Name,
+            createdAt: new Date(),
+          },
+        },
+        upsert: true,
+      },
+    }));
+
+    await collection.bulkWrite(updateOps);
+    await collection.bulkWrite(insertOps);
+
+    return {
+      success: true,
+      message: "Attendance marked for whole team",
+    };
+  } catch (err: any) {
+    console.error("UpdateWholeTeamHostelAttendence Error:", err);
+    return {
+      success: false,
+      message: err.message || "Bulk attendance update failed",
+    };
+  }
+};
+
+
+
+
+
+export const GetHostelAttendenceData = async () => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const collection = Db.collection("HostelAttendence");
+
+    const data = await collection
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
+   
+    const formattedData = data.map((doc: any) => ({
+      _id: doc._id.toString(),
+      UserId: doc.UserId,
+      Name: doc.Name,
+      attendance: doc.attendance || [],
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
+    }));
+
+    return {
+      success: true,
+      data: formattedData,
+    };
+  } catch (err: any) {
+    console.error("GetHostelAttendenceData Error:", err);
+    return {
+      success: false,
+      message: err.message || "Failed to fetch attendance data",
+      data: [],
+    };
+  }
+};
+
 
 
 export const UpdateUserVerificationstatus = async (UserId: string, UpdatedStatus: string) => {

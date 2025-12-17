@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import React, { useState, useMemo, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import MissingAttendence from "../MissingAttendence/page";
+import { PaymentInfoModal } from "../PaymentInfoModel/page";
 
 type DayStatus = "P" | "NA" | "HP" | "A";
 
@@ -20,7 +21,8 @@ const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 
 const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 const [selectedYear, setSelectedYear] = useState(currentYear);
-
+const [showPaymentModal, setShowPaymentModal] = useState(false);
+const [billingRecord, setBillingRecord] = useState<any>(null);
   const [ClientsInformation, setClientsInformation] = useState<any>({});
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [showPendingCalendar, setShowPendingCalendar] = useState(false);
@@ -243,7 +245,7 @@ const [selectedYear, setSelectedYear] = useState(currentYear);
       <header className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 gap-4">
         <div>
           <h1 className="text-3xl font-semibold text-gray-800 tracking-tight flex items-center gap-3">
-            🩺 Curate Health — Time Sheet
+            🩺 Curate Health — Time Sheet 
           </h1>
           <p className="text-gray-500 mt-1">
             View invoice and attendance details by month and year.
@@ -290,7 +292,18 @@ const [selectedYear, setSelectedYear] = useState(currentYear);
           </select>
         </div>
       </header>
-
+{showPaymentModal && billingRecord && (
+  <PaymentInfoModal
+    record={billingRecord}
+    onClose={() => { setShowPaymentModal(false); setBillingRecord(null); }}
+    onConfirm={(billingResult) => {
+ 
+      console.log("Saving billing:", billingResult);
+     
+    
+    }}
+  />
+)}
       {/* MAIN TABLE (unchanged) */}
       <div className="overflow-x-auto bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md rounded-2xl">
         <table className="min-w-[2800px] border-collapse text-sm text-gray-800 rounded-lg overflow-hidden">
@@ -307,9 +320,11 @@ const [selectedYear, setSelectedYear] = useState(currentYear);
               <Th>HCP Referral</Th>
               <Th>Vendor</Th>
               <Th>Type</Th>
+               <Th className="bg-amber-400 text-center">Payment Info</Th>
               <Th className="bg-amber-400 text-center">PD</Th>
               <Th className="bg-amber-400 text-center">AD</Th>
               <Th className="bg-amber-400 text-center">HP</Th>
+             
               {Array.from({ length: 31 }, (_, i) => (
                 <Th key={i} className="text-center bg-cyan-500 text-white">
                   {i + 1}
@@ -379,6 +394,18 @@ const [selectedYear, setSelectedYear] = useState(currentYear);
                   {r.VendorName}
                 </Td>
                 <Td>{r.Type}</Td>
+<Td>
+  <button
+    className="p-2 text-center text-white bg-teal-700 rounded-full w-fit cursor-pointer"
+    onClick={() => {
+      setBillingRecord(r);
+      setShowPaymentModal(true);
+    }}
+  >
+    Generate Bill
+  </button>
+</Td>
+
 
                 <Td className="bg-amber-50 text-center font-bold text-gray-800">
                   {r.pd}
