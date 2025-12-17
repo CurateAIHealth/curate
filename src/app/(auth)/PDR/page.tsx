@@ -1009,6 +1009,61 @@ export default function DataCollectionForm() {
         </div>
       )}
     </div>
+    <div className="max-w-md bg-white rounded-2xl shadow-md p-6 space-y-4">
+  {/* Title */}
+  <h3 className="text-lg font-semibold text-slate-800">
+    Upload Client Agreement
+  </h3>
+
+  <p className="text-sm text-slate-500">
+    Upload the signed agreement document (PDF or Image).
+  </p>
+
+  
+  <label
+    htmlFor="agreement"
+    className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-emerald-300 rounded-xl p-6 cursor-pointer hover:bg-emerald-50 transition"
+  >
+    <svg
+      className="w-8 h-8 text-emerald-600"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7 16V12M7 12V8M7 12H3M21 12h-4m-2 4l-3 3m0 0l-3-3m3 3V10"
+      />
+    </svg>
+
+    <span className="text-sm font-medium text-slate-700">
+      Click to upload or drag & drop
+    </span>
+
+    <span className="text-xs text-slate-500">
+      PDF, JPG, PNG (Max 5MB)
+    </span>
+
+    <input
+      id="agreement"
+      type="file"
+      accept=".pdf,.jpg,.png"
+      className="hidden"
+    />
+  </label>
+
+
+  <button
+    className="w-full py-2.5 rounded-xl text-white font-semibold tracking-wide
+               bg-gradient-to-r from-emerald-500 to-teal-600
+               hover:shadow-lg hover:scale-[1.01] transition"
+  >
+    Upload Agreement
+  </button>
+</div>
+
 
             <button
               type="button"

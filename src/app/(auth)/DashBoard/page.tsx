@@ -20,6 +20,8 @@ import {
   Users,
   FileClock,
   ReceiptIndianRupee,
+  BellRing,
+  ClipboardCheck,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
@@ -47,6 +49,7 @@ const tabs = [
     icon: Bell,
     color: "bg-gradient-to-tr from-blue-500 to-indigo-500",
   },
+
   {
     name: "Deployment",
     count: 42,
@@ -117,13 +120,27 @@ const tabs = [
     icon: FileText,
     color: "bg-gradient-to-tr from-fuchsia-500 to-pink-600",
   },
-
+  
   {
     name: "Invoices",
     count: 30,
     growth: "+12%",
     icon: ReceiptIndianRupee,
     color: "bg-gradient-to-tr from-lime-500 to-green-600",
+  },
+    {
+    name: "Notifications",
+    count: 34,
+    growth: "+8%",
+    icon: BellRing,
+    color: "bg-gradient-to-tr from-cyan-500 to-sky-600",
+  },
+  {
+    name: "Hostel Attendance",
+    count: 61,
+    growth: "+11%",
+    icon: ClipboardCheck,
+    color: "bg-gradient-to-tr from-green-500 to-emerald-600",
   },
 ];
 
@@ -186,6 +203,10 @@ export default function Dashboard() {
     router.push("/Invoices");
   };
 
+  const navigateToHostel=()=>{
+    router.push("/HostelAttendence")
+  }
+
  const Switching = (A: string) => {
     switch (A) {
       case "Client Enquiry":
@@ -210,6 +231,9 @@ export default function Dashboard() {
 
       case "Invoices":
         return navigateToInvoices();
+
+        case "Hostel Attendance":
+          return navigateToHostel()
 
       default:
         return;
