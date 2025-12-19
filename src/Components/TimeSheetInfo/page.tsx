@@ -394,7 +394,7 @@ const [billingRecord, setBillingRecord] = useState<any>(null);
                   {r.VendorName}
                 </Td>
                 <Td>{r.Type}</Td>
-<Td>
+{/* <Td>
   <button
     className="p-2 text-center text-white bg-teal-700 rounded-full w-fit cursor-pointer"
     onClick={() => {
@@ -404,7 +404,7 @@ const [billingRecord, setBillingRecord] = useState<any>(null);
   >
     Generate Bill
   </button>
-</Td>
+</Td> */}
 
 
                 <Td className="bg-amber-50 text-center font-bold text-gray-800">

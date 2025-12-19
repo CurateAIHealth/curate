@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { UpdateSubHeading } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
 import { LoadingData } from "../Loading/page";
+import { PaymentInfoModal } from "../PaymentInfoModel/page";
 
 type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday";
 const statusCycle: AttendanceStatus[] = ["Present", "Absent", "Leave", "Holiday"];
@@ -37,7 +38,7 @@ const ClientTable = () => {
  const [updatedAttendance, setUpdatedAttendance] = useState<AttendanceState>({});
  const [SaveButton,setSaveButton]=useState(false)
 
-
+const [enableStatus,setenableStatus]=useState(false)
   const [TimeSheet_UserId, setTimeSheet_UserId] = useState("");
   const [selectedReason, setSelectedReason] = useState("");
   const [otherReason, setOtherReason] = useState("");
@@ -50,6 +51,8 @@ const ClientTable = () => {
   const [deleteTargetId, setDeleteTargetId] =  useState<any>();
   const [ActionStatusMessage,SetActionStatusMessage]= useState<any>();
   const [SearchResult,setSearchResult]=useState("")
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [billingRecord, setBillingRecord] = useState<any>(null);
 const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
   const SubHeading = useSelector((state: any) => state.SubHeadinList);
   const dispatch = useDispatch();
@@ -292,7 +295,11 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((each:any) => {
     role.includes(search)
   );
 });
+const today:any = new Date().getDate();
+const isInvoiceDay = [ 28, 29, 30, 31].includes(today);
+console.log("Test Today------",isInvoiceDay
 
+)
 const UpdateReplacement=async(Available_HCP:any,Exsting_HCP:any)=>{
   SetActionStatusMessage("Please Wait....")
 
@@ -336,7 +343,8 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
 
   {ClientsInformation.length > 0 && (
     <div className="overflow-x-auto flex flex-col">
-     <div className="flex justify-end w-full mb-2">
+     <div className="flex items-center justify-end w-full mb-2">
+    <button  className="px-5 py-2 text-xs cursor-pointer font-medium bg-gradient-to-r from-teal-600 to-emerald-500 hover:from-teal-700 hover:to-emerald-600 text-white rounded-lg shadow-md transition mr-2" onClick={()=>setenableStatus(!enableStatus)}>{enableStatus?"Disable Genarate Bill":"Enable Genarate Bill"}</button>
   <div className="flex items-center bg-white shadow-lg rounded-full px-4 py-2 w-[350px] border border-gray-200 focus-within:border-blue-500 transition duration-300">
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -362,7 +370,14 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
   </div>
 </div>
 
-
+{showPaymentModal && billingRecord && (
+  <PaymentInfoModal
+    record={billingRecord}
+    
+    onClose={() => { setShowPaymentModal(false); setBillingRecord(null); }}
+    
+  />
+)}
       <table className="w-full border-collapse rounded-2xl shadow-xl overflow-hidden bg-white">
         <thead className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white uppercase text-xs font-semibold sticky top-0 shadow-md">
           <tr>
@@ -374,7 +389,11 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
             <th className="px-8 py-4 text-left">Replacement</th>
            
             <th className="px-6 py-4 text-center">Time Sheet</th>
-             <th className="px-8 py-4 text-left">Service Continue</th>
+          {(isInvoiceDay || enableStatus) && (
+  <th className="px-6 py-4 text-center">Invoice</th>
+)}
+             <th className="px-6 py-4 text-left">Service Continue</th>
+
             <th className="px-6 py-4 text-center">Terminate</th>
           </tr>
         </thead>
@@ -421,7 +440,22 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
                   View
                 </button>
               </td>
-                 <td className="px-6 py-4 text-center">
+ {(isInvoiceDay || enableStatus)&&
+
+                  
+                <td>
+  <button
+ className="px-5 py-2 text-xs cursor-pointer font-medium bg-gradient-to-r from-teal-600 to-emerald-500 hover:from-teal-700 hover:to-emerald-600 text-white rounded-lg shadow-md transition"
+    onClick={() => {
+      console.log('Check Resulted Info--------',c)
+      setBillingRecord(c);
+      setShowPaymentModal(true);
+    }}
+  >
+   Generate Bill 
+  </button>
+</td>}
+ <td className="px-6 py-4 text-center">
                 <button
                   className="px-5 py-2 text-xs cursor-pointer font-medium bg-gradient-to-r from-teal-600 to-emerald-500 hover:from-teal-700 hover:to-emerald-600 text-white rounded-lg shadow-md transition"
                   onClick={() =>UpdatePopup(c)}

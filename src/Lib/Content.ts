@@ -1775,7 +1775,7 @@ export const Infodata = [
             'Beeramguda Telangana 502032',
             'India',
         ],
-        website: 'https://curatehealthservices.com',
+        website: 'www.curatehealthservices.com',
         logoUrl: '/logo.png',
         notes: 'A Complete Home Healthcare Professionals. We care for your beloved.'
     };
@@ -1946,10 +1946,22 @@ export const paymentData = [
     tdsRate: "2%"
   },
   {
-    typeOfPayment: "Professional Fees",
+    typeOfPayment: "Professional Fees (10%)",
     taxType: "TDS",
     section: "194J",
     tdsRate: "10%"
+  },
+    {
+    typeOfPayment: "Professional Fees (1%)",
+    taxType: "TDS",
+    section: "194J",
+    tdsRate: "1%"
+  },
+    {
+    typeOfPayment: "Professional Fees (2%)",
+    taxType: "TDS",
+    section: "194J",
+    tdsRate: "2%"
   },
   {
     typeOfPayment: "Professional Fees (Reduced)",

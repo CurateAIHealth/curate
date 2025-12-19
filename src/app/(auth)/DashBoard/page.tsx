@@ -183,7 +183,8 @@ export default function Dashboard() {
   };
 
   const navigateToHCPList = () => {
-    dispatch(UpdateUserType("healthcare-assistant"));  
+    dispatch(Update_Main_Filter_Status("HCP List")); 
+    dispatch(UpdateUserType("healthcare-assistant"));
     router.push("/AdminPage");
   };
 

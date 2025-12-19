@@ -130,7 +130,7 @@ useEffect(() => {
         cachedFullInfo = null;
       }
 
-      // ---- PARALLEL FETCH (cached or fresh) ----
+  
       const [profile, registeredUsers, fullInfo,DeployedLength] = await Promise.all([
         cachedUserInfo ?? GetUserInformation(localValue),
         cachedRegisteredUsers ?? GetRegidterdUsers(),
@@ -138,30 +138,29 @@ useEffect(() => {
         Deployed?? GetDeploymentInfo()
       ]);
 
-      // ---- SET CACHE IF EMPTY ----
+    
       cachedUserInfo ||= profile;
       cachedRegisteredUsers ||= registeredUsers;
       cachedFullInfo ||= fullInfo;
       Deployed ||=DeployedLength 
 
-      // ---- SET BASIC STATES (grouped to reduce renders) ----
+     
       setUsers(registeredUsers);
       setUserFirstName(profile.FirstName);
       setLoginEmail(profile.Email);
       setFullInfo(fullInfo);
       setSearch(CurrentClientStatus);
 
-      // ---- PRE-COMPUTE EMAIL ----
       const email = profile?.Email?.toLowerCase();
 
-      // ---- UPDATE USER TYPE (only when needed) ----
+
       if (email === "info@curatehealth.in") {
         dispatch(UpdateUserType("patient"));
       } else if (email === "gouricurate@gmail.com") {
         dispatch(UpdateUserType("healthcare-assistant"));
       }
 
-      // ---- ACCESS BLOCK CHECK (early exit improves perf) ----
+     
       const restricted = [
         "admin@curatehealth.in",
         "info@curatehealth.in",
@@ -239,6 +238,7 @@ setAsignStatus(e.target.value)
   const ContetUserInterface=()=>{
       switch (UpdateMainFilter) {
       case "Client Enquiry":
+        case "HCP List":
         return ClientEnquiryUserInterFace()
       case "Deployment":
         return <ClientTable/>
@@ -549,7 +549,7 @@ console.log('Test Registerd Userss---',users)
           <div className="flex items-center gap-3">
             <img src="/Icons/Curate-logo.png" alt="Logo" className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl" />
             <h1 className="text-lg sm:text-2xl font-extrabold text-[#007B7F] tracking-tight leading-tight">
-              Hi, <span className="text-[#ff1493]">{UserFirstName}</span>
+              Hi,{UpdateduserType}<span className="text-[#ff1493]">{UserFirstName}</span>
             </h1>
           </div>
          
