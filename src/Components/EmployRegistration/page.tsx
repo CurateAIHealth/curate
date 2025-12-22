@@ -147,17 +147,56 @@ export default function EmployRegistration() {
       </div>
 
 
-      <div className="mt-6">
-        <label className="text-sm font-medium text-gray-600">
-          Address
-        </label>
-        <textarea
-          rows={3}
-          placeholder="Enter employee address"
-          className="w-full mt-1 px-4 py-3 rounded-xl border 
-                     focus:ring-2 focus:ring-indigo-400 outline-none"
-        />
-      </div>
+   {/* Address Section */}
+<div className="mt-6">
+  <label className="text-sm font-medium text-gray-600 mb-2 block">
+    Address
+  </label>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {/* House No / Street */}
+    <input
+      type="text"
+      placeholder="House No / Street Name"
+      className="w-full px-4 py-2.5 rounded-xl border 
+                 focus:ring-2 focus:ring-indigo-400 outline-none"
+    />
+
+    {/* Landmark */}
+    <input
+      type="text"
+      placeholder="Landmark (Near Hospital, School, etc.)"
+      className="w-full px-4 py-2.5 rounded-xl border 
+                 focus:ring-2 focus:ring-indigo-400 outline-none"
+    />
+
+    {/* City */}
+    <input
+      type="text"
+      placeholder="City"
+      className="w-full px-4 py-2.5 rounded-xl border 
+                 focus:ring-2 focus:ring-indigo-400 outline-none"
+    />
+
+    {/* State */}
+    <input
+      type="text"
+      placeholder="State"
+      className="w-full px-4 py-2.5 rounded-xl border 
+                 focus:ring-2 focus:ring-indigo-400 outline-none"
+    />
+
+    {/* Pincode */}
+    <input
+      type="text"
+      placeholder="Pincode"
+      maxLength={6}
+      className="md:col-span-2 w-full px-4 py-2.5 rounded-xl border 
+                 focus:ring-2 focus:ring-indigo-400 outline-none"
+    />
+  </div>
+</div>
+
 
    
       <div className="flex justify-center mt-8">

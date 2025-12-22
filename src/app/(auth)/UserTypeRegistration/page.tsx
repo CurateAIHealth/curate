@@ -32,7 +32,7 @@ useEffect(() => {
      
   if (Sign_in_UserInfo) {
     
-    setIsManagement(Sign_in_UserInfo.Email === "srivanikasham@curatehealth.in");
+    setIsManagement(Sign_in_UserInfo.Email === "admin@curatehealth.in");
   } else {
     setIsManagement(false);
   }
