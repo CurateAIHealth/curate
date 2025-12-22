@@ -8,7 +8,8 @@ import { useRouter } from "next/navigation";
 import React, { useState, useMemo, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import MissingAttendence from "../MissingAttendence/page";
-import { PaymentInfoModal } from "../PaymentInfoModel/page";
+import PaymentModal from "../PaymentInfoModel/page";
+
 
 type DayStatus = "P" | "NA" | "HP" | "A";
 
@@ -293,10 +294,10 @@ const [billingRecord, setBillingRecord] = useState<any>(null);
         </div>
       </header>
 {showPaymentModal && billingRecord && (
-  <PaymentInfoModal
+  <PaymentModal
     record={billingRecord}
     onClose={() => { setShowPaymentModal(false); setBillingRecord(null); }}
-    onConfirm={(billingResult) => {
+    onConfirm={(billingResult:any) => {
  
       console.log("Saving billing:", billingResult);
      

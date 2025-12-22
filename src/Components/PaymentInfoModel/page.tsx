@@ -6,6 +6,13 @@ import { UpdateInvoiceStatus } from "@/Redux/action";
 import axios from "axios";
 import React, { useMemo, useState } from "react";
 
+type PaymentModalProps = {
+  record: any;
+  onClose: () => void;
+  onConfirm: (billingResult: any) => void;
+};
+
+
 type DayStatus = "P" | "HP" | "A" | "NA";
 
 function normalizeDaysStatusFromTimeSheet(timeSheet: any[]): DayStatus[] {
@@ -75,13 +82,12 @@ function calculateBilling(record: any) {
   };
 }
 
-export function PaymentInfoModal({
+export default function PaymentModal({
   record,
   onClose,
-}: {
-  record: any;
-  onClose: () => void;
-}) {
+  onConfirm,
+}: PaymentModalProps) 
+{
   const [isEdit, setIsEdit] = useState(false);
   const [HideForDownload,setHideForDownload]=useState(false)
   const [editableRecord, setEditableRecord] = useState({

@@ -6,7 +6,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { UpdateSubHeading } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
 import { LoadingData } from "../Loading/page";
-import { PaymentInfoModal } from "../PaymentInfoModel/page";
+import PaymentModal from "../PaymentInfoModel/page";
+
 
 type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday";
 const statusCycle: AttendanceStatus[] = ["Present", "Absent", "Leave", "Holiday"];
@@ -371,11 +372,12 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
 </div>
 
 {showPaymentModal && billingRecord && (
-  <PaymentInfoModal
-    record={billingRecord}
-    
-    onClose={() => { setShowPaymentModal(false); setBillingRecord(null); }}
-    
+  <PaymentModal
+                record={billingRecord}
+
+                onClose={() => { setShowPaymentModal(false); setBillingRecord(null); } } onConfirm={function (billingResult: any): void {
+                  throw new Error("Function not implemented.");
+                } }    
   />
 )}
       <table className="w-full border-collapse rounded-2xl shadow-xl overflow-hidden bg-white">
