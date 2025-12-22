@@ -35,7 +35,7 @@ export default function InvoicesPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"All" | InvoiceStatus>("All");
   const [page, setPage] = useState(1);
- 
+ const [CurrentPaymentStatus,SetCurrentPaymentStatus]=useState<any>(null)
   const [InvoiceData, setInvoiceData] = useState<any>()
   const [status, setStatus] = useState<any>(null);
   const Router = useRouter()
@@ -108,6 +108,7 @@ const ShowMailTemplate=useSelector((A:any)=>A.RevertInvoices)
 
 
       const FilteredResult = SentInvoices.insertedId.filter((each: any) => each.number === id);
+  
       setInvoiceData(FilteredResult[0]);
 
       setTimeout(async () => {
@@ -158,6 +159,7 @@ const RefundAmount = FetchedInfo
 
       const SentInvoices: any = await GetSentInvoiceData();
       const FilteredResult = SentInvoices.insertedId.filter((each: any) => each.number === id);
+          SetCurrentPaymentStatus(FilteredResult[0].PaymentStatus)
       setInvoiceData(FilteredResult[0]);
       dispatch(UpdateInvoiceStatus(true))
       setTimeout(async () => {
@@ -362,8 +364,8 @@ setStatus("Payment Status Updated Successfully")
       total: InvoiceData?.RoundedTotal,
       AdvancePaid: InvoiceData?.AdvancePaid,
       balanceDue: InvoiceData?.balanceDue,
-      RegistraionFee: InvoiceData?.RegistraionFee
-
+      RegistraionFee: InvoiceData?.RegistraionFee,
+CheckPaymentStatus:CurrentPaymentStatus
 
 
     }

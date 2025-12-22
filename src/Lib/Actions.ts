@@ -193,4 +193,70 @@ export const GeneratePDF = async (invoiceData:any) => {
 };
 
 
+export const GenerateBillPDF = async (invoiceData: any) => {
+  try {
+    const pdfRef = document.getElementById("invoice-pdf-area");
+    if (!pdfRef) {
+      return { status: false, message: "PDF area not found" };
+    }
+
+    const canvas = await html2canvas(pdfRef, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+
+      // ✅ CRITICAL FIX FOR oklab / lab
+      onclone: (clonedDoc) => {
+        const allElements = clonedDoc.querySelectorAll("*");
+
+        allElements.forEach((el: any) => {
+          const style = clonedDoc.defaultView?.getComputedStyle(el);
+
+          if (!style) return;
+
+          // Replace unsupported color formats
+          if (style.color?.includes("oklab") || style.color?.includes("lab")) {
+            el.style.color = "#000000";
+          }
+
+          if (
+            style.backgroundColor?.includes("oklab") ||
+            style.backgroundColor?.includes("lab")
+          ) {
+            el.style.backgroundColor = "#ffffff";
+          }
+
+          if (
+            style.borderColor?.includes("oklab") ||
+            style.borderColor?.includes("lab")
+          ) {
+            el.style.borderColor = "#cccccc";
+          }
+
+          // Remove shadows & filters (often use oklab internally)
+          el.style.boxShadow = "none";
+          el.style.filter = "none";
+        });
+      },
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = (canvas.height * pageWidth) / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pageHeight);
+    pdf.save(`${invoiceData.number || "invoice"}.pdf`);
+
+    return { status: true, message: "Invoice downloaded successfully!" };
+  } catch (err) {
+    console.error("PDF Error ----", err);
+    return { status: false, message: "PDF generation failed" };
+  }
+};
+
+
+
 

@@ -5,7 +5,7 @@ import MedicationSchedule from "@/Components/Medications/page";
 import { ClientEnquiry_Filters, filterColors, Headings, Health_Card, HomeAssistance, indianFamilyRelations, IndianLanguages, LeadSources, Main_Filters, medicalSpecializations, Patient_Home_Supply_Needs, patientCategories, physioSpecializations } from "@/Lib/Content";
 import { GetUserInformation, UpdateNewLeadInformation } from "@/Lib/user.action";
 import { Update_Current_Client_Status } from "@/Redux/action";
-import { Info, ListFilter, LogOut, PhoneCall, X } from "lucide-react";
+import { AlertCircle, Info, ListFilter, LogOut, PhoneCall, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { stringify } from "querystring";
 import { useEffect, useState } from "react";
@@ -374,7 +374,37 @@ className="overflow-hidden h-[95%]"
             {indianFamilyRelations.map((each:any)=><option key={each}>{each}</option>)}
           </select>
           <div>
-            <p>Lead Source :</p>
+    
+
+<p className="flex items-center gap-2 font-medium relative">
+  Lead Source :
+
+  <span className="relative group">
+    <AlertCircle
+      size={16}
+      className="text-red-500 cursor-pointer"
+    />
+
+    
+    <span
+      className="
+        absolute left-1/2 top-full mt-2 -translate-x-1/2
+        w-72
+        rounded-lg bg-gray-900 text-white text-xs
+        px-3 py-2
+        opacity-0 scale-95
+        group-hover:opacity-100 group-hover:scale-100
+        transition-all duration-200
+        shadow-lg
+        z-50
+      "
+    >
+      This is a key field. All salary calculations are derived based on the selected name.
+    </span>
+  </span>
+</p>
+
+
          
             <select className="w-full border rounded-md text-center"  onChange={(e) => handleChange("Source", e.target.value)}>
               <option className="bg-gray-400">Choose Lead</option>

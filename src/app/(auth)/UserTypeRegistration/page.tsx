@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { User, Building2, GraduationCap, FileText, ClipboardList, CircleHelp, Hospital, Stethoscope, UserCog, HeartPlus } from "lucide-react";
+import { User, Building2, GraduationCap, FileText, ClipboardList, CircleHelp, Hospital, Stethoscope, UserCog, HeartPlus, UserCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateRegisterdType, UpdateVendorPopUpStatus } from "@/Redux/action";
@@ -8,6 +8,8 @@ import CommonSection from "@/Components/StaffRegistration/page";
 import CommonFormSection from "@/Components/StaffRegistration/page";
 import CommonMedicalSection from "@/Components/StaffRegistration/page";
 import { VendorScreens } from "@/Lib/Content";
+import { GetUserInformation } from "@/Lib/user.action";
+import EmployRegistration from "@/Components/EmployRegistration/page";
 
 
 
@@ -17,6 +19,27 @@ export default function UserTypeSelector() {
   const router = useRouter();
   const dispatch = useDispatch()
   const showConfirmPopup = useSelector((state: any) => state.ReferalPopup)
+
+  const [isManagement, setIsManagement] = useState<boolean | null>(null);
+
+useEffect(() => {
+  
+   const fetch=async()=>{
+     const localValue = localStorage.getItem('UserId');
+  
+        const Sign_in_UserInfo = await GetUserInformation(localValue)
+  console.log("Check Admin Email.........000",Sign_in_UserInfo.Email)
+     
+  if (Sign_in_UserInfo) {
+    
+    setIsManagement(Sign_in_UserInfo.Email === "admin@curatehealth.in");
+  } else {
+    setIsManagement(false);
+  }
+   }
+   fetch()
+}, []);
+
   
 useEffect(() => {
   const redirectTypes = ["HCA", "HCP", "HCN"];
@@ -41,7 +64,7 @@ const userTypes = [
   },
   {
     label: "HCP",
-    icon:  <HeartPlus className="w-6 h-6 text-indigo-600" />,
+    icon: <HeartPlus className="w-6 h-6 text-indigo-600" />,
     info: "Healthcare Professionals including doctors, physiotherapists, and specialists.",
   },
   {
@@ -64,12 +87,21 @@ const userTypes = [
     icon: <User className="w-6 h-6 text-indigo-600" />,
     info: "Independent professionals or freelancers offering healthcare-related services.",
   },
+
+ 
+  {
+    label: "Employee Registration",
+    icon: <UserCheck className="w-6 h-6 text-indigo-600" />,
+    info: "Register internal employees for organizational roles, access control, and operational management.",
+  },
+
   {
     label: "Other",
     icon: <CircleHelp className="w-6 h-6 text-indigo-600" />,
     info: "For roles or categories not listed above. Please specify further details if applicable.",
   },
 ];
+
 
 
 
@@ -82,12 +114,86 @@ const userTypes = [
     }
   };
 
-
 const UpdateView = () => {
   if (!selected) return null;
 
-  const screenData = VendorScreens[selected];
+  
+  if (selected === "Employee Registration") {
+    if (isManagement === false) {
+      return (
+      <div className="flex items-center justify-center min-h-screen 
+                bg-gradient-to-br from-slate-50 to-slate-100">
+  <div className="relative max-w-md w-full text-center p-8 rounded-2xl 
+                  bg-white/80 backdrop-blur-xl
+                  border border-red-200
+                  shadow-[0_20px_40px_-15px_rgba(220,38,38,0.35)]">
 
+    {/* Decorative Glow */}
+    <div className="absolute -top-10 -right-10 w-28 h-28 bg-red-200 rounded-full blur-3xl opacity-40" />
+    <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-rose-300 rounded-full blur-3xl opacity-30" />
+
+    {/* Icon */}
+    <div className="mx-auto mb-5 w-16 h-16 rounded-full 
+                    bg-red-100 text-red-600 
+                    flex items-center justify-center shadow-inner">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="w-8 h-8"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 11c0-1.1.9-2 2-2h2a2 2 0 012 2v3a2 2 0 01-2 2h-6m-4 0H6a2 2 0 01-2-2v-3a2 2 0 012-2h2c1.1 0 2 .9 2 2"
+        />
+      </svg>
+    </div>
+
+    {/* Content */}
+    <h2 className="text-2xl font-bold text-gray-800 mb-2">
+      Access Restricted
+    </h2>
+
+    <p className="text-sm text-gray-600 leading-relaxed">
+      This section is reserved for{" "}
+      <span className="font-semibold text-red-600">Management users</span>.
+      <br />
+      You do not currently have permission to view this page.
+    </p>
+
+    {/* Divider */}
+    <div className="my-6 h-px bg-gradient-to-r from-transparent via-red-200 to-transparent" />
+
+    {/* Action Hint */}
+    <p className="text-xs text-gray-500">
+      If you believe this is a mistake, please contact your administrator.
+    </p>
+  </div>
+</div>
+
+
+      );
+    }
+
+    if (isManagement === true) {
+      return (
+        <div className="bg-white rounded-2xl shadow-xl p-0">
+         
+
+          
+          <EmployRegistration />
+        </div>
+      );
+    }
+
+    return null;
+  }
+
+  // ✅ Existing Vendor / Other Screens (unchanged)
+  const screenData = VendorScreens[selected];
   if (!screenData) return null;
 
   return (
@@ -97,6 +203,7 @@ const UpdateView = () => {
     />
   );
 };
+
 
   return (
 <div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   User,
@@ -41,6 +41,8 @@ const fetcher = async () => {
 };
 
 
+import { UserCheck } from "lucide-react";
+
 const tabs = [
   {
     name: "Client Enquiry",
@@ -49,7 +51,6 @@ const tabs = [
     icon: Bell,
     color: "bg-gradient-to-tr from-blue-500 to-indigo-500",
   },
-
   {
     name: "Deployment",
     count: 42,
@@ -120,7 +121,6 @@ const tabs = [
     icon: FileText,
     color: "bg-gradient-to-tr from-fuchsia-500 to-pink-600",
   },
-  
   {
     name: "Invoices",
     count: 30,
@@ -128,7 +128,7 @@ const tabs = [
     icon: ReceiptIndianRupee,
     color: "bg-gradient-to-tr from-lime-500 to-green-600",
   },
-    {
+  {
     name: "Notifications",
     count: 34,
     growth: "+8%",
@@ -142,7 +142,16 @@ const tabs = [
     icon: ClipboardCheck,
     color: "bg-gradient-to-tr from-green-500 to-emerald-600",
   },
+
+  {
+    name: "Employees",
+    count: 47,
+    growth: "+6%",
+    icon: UserCheck,
+    color: "bg-gradient-to-tr from-[#1392d3] to-[#50c896]",
+  },
 ];
+
 
 
 
@@ -150,8 +159,27 @@ export default function Dashboard() {
   const router = useRouter();
   const dispatch = useDispatch();
   const updatedRefresh = useSelector((afterEach: any) => afterEach.updatedCount);
+    const [isManagement, setIsManagement] = useState<boolean | null>(null);
+    const [showAccessDenied, setShowAccessDenied] = useState(false);
 
 
+useEffect(() => {
+  
+   const fetch=async()=>{
+     const localValue = localStorage.getItem('UserId');
+  
+        const Sign_in_UserInfo = await GetUserInformation(localValue)
+  console.log("Check Admin Email.........000",Sign_in_UserInfo.Email)
+     
+  if (Sign_in_UserInfo) {
+    
+    setIsManagement(Sign_in_UserInfo.Email === "admin@curatehealth.in");
+  } else {
+    setIsManagement(false);
+  }
+   }
+   fetch()
+}, []);
 
 
 
@@ -183,7 +211,8 @@ export default function Dashboard() {
   };
 
   const navigateToHCPList = () => {
-    dispatch(UpdateUserType("healthcare-assistant"));  
+    dispatch(Update_Main_Filter_Status("HCP List")); 
+    dispatch(UpdateUserType("healthcare-assistant"));
     router.push("/AdminPage");
   };
 
@@ -207,12 +236,33 @@ export default function Dashboard() {
     router.push("/HostelAttendence")
   }
 
- const Switching = (A: string) => {
+  const navigateToEmployes=()=>{
+console.log('Check Email Status-----',isManagement)
+
+
+
+      if (isManagement === false) {
+    setShowAccessDenied(true);
+    return;
+  }
+
+    if (isManagement === true) {
+      router.push("/Employes")
+    }
+ 
+  
+  }
+
+  const navigateToPayments=()=>{
+  router.push("/Payments")
+  }
+
+  const Switching = (A: string) => {
     switch (A) {
       case "Client Enquiry":
       case "Deployment":
       case "Timesheet":
-        return RoutToAdminPage(A); 
+        return RoutToAdminPage(A);
 
       case "Registration":
         return navigateToRegistration();
@@ -232,8 +282,12 @@ export default function Dashboard() {
       case "Invoices":
         return navigateToInvoices();
 
-        case "Hostel Attendance":
-          return navigateToHostel()
+      case "Hostel Attendance":
+        return navigateToHostel();
+      case "Employees":
+        return navigateToEmployes();
+      case "Payments":
+        return navigateToPayments();
 
       default:
         return;
@@ -374,7 +428,44 @@ export default function Dashboard() {
             </div>
           </div>
 
-   
+   {showAccessDenied && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+  <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl">
+
+    <div className="flex items-center justify-center gap-3 rounded-t-xl bg-red-600 px-6 py-4 text-white">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+        <UserX className="h-5 w-5" />
+      </div>
+      <h2 className="text-lg font-semibold tracking-wide">
+        Access Restricted
+      </h2>
+    </div>
+
+
+    <div className="px-6 py-6 text-center">
+      <p className="text-sm leading-relaxed text-gray-700">
+        This section is reserved for{" "}
+        <span className="font-semibold text-red-600">Management</span>.
+        <br />
+        You do not have permission to access Employees.
+      </p>
+    </div>
+
+
+    <div className="flex justify-end border-t border-gray-200 px-6 py-4">
+      <button
+        onClick={() => setShowAccessDenied(false)}
+        className="rounded-lg bg-red-600 px-5 py-2 text-sm cursor-pointer font-semibold text-white
+                   shadow transition hover:bg-red-700 active:scale-95"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+)}
+
 
           <div className="lg:col-span-4 space-y-4">
             <div className="bg-white flex flex-col p-2 sm:p-4 rounded-xl shadow-md">

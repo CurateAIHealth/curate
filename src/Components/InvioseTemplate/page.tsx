@@ -1,4 +1,4 @@
-import React, { JSX, useState } from "react";
+import React, { JSX, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getDaysBetween, numberToWords } from "@/Lib/Actions";
 import { company, payment, serviceOptions, terms } from "@/Lib/Content";
@@ -19,6 +19,7 @@ interface Totals {
   RegistraionFee?: any;
   total?: any;
   balanceDue?: any;
+  CheckPaymentStatus?:any
 }
 
 interface ColorConfig { primary?: string; accent?: string; pink?: string; }
@@ -50,6 +51,13 @@ export default function ReusableInvoice({
     total: totals.total || 0,
     balanceDue: totals.balanceDue || 0,
   });
+const [initialBalanceDue, setInitialBalanceDue] = useState<number | null>(null);
+
+useEffect(() => {
+  if (initialBalanceDue === null && display?.balanceDue !== undefined) {
+    setInitialBalanceDue(display.balanceDue);
+  }
+}, [ initialBalanceDue]);
 
 const dispatch=useDispatch()
 const Router=useRouter()
@@ -389,8 +397,8 @@ const recalcTotals = () => {
               <td>{i + 1}</td>
               <td>{InvoiceStatus ? <input className="border p-1 w-full" value={it.description} onChange={e => updateItem(i, "description", e.target.value)} /> : it.description}</td>
               <td align="right">{InvoiceStatus ? <input className="border p-1 w-14 text-right" value={it.days} onChange={e => updateItem(i, "days", e.target.value)} /> : it.days}</td>
-              <td align="right">{InvoiceStatus ? <input className="border p-1 w-20 text-right" value={it.rate} onChange={e => updateItem(i, "rate", e.target.value)} /> : `₹${it.rate}/-`}</td>
-              <td align="right">₹{it.amount}/-</td>
+              <td align="right">{InvoiceStatus ? <input className="border p-1 w-20 text-right" value={it.rate} onChange={e => updateItem(i, "rate", e.target.value)} /> : `₹${it.rate}`}</td>
+              <td align="right">₹{it.amount}</td>
             </tr>
           ))}
         </tbody>
@@ -460,15 +468,18 @@ const recalcTotals = () => {
           {renderRow("Tax", display.Tax, updateTotals, InvoiceStatus, "red")}
           {renderRow("RegistraionFee", display.RegistraionFee, updateTotals, InvoiceStatus)}
           {renderRow("OtherExpenses", display.OtherExpenses, updateTotals, InvoiceStatus)}
+{/* 
+          <Row label="Total" value={display.total} /> */}
+            {totals.CheckPaymentStatus&&<Row label="Payment Received" value={initialBalanceDue} bold  />}
+        {totals.CheckPaymentStatus!==true&&  <Row label="Balance Due" value={display.balanceDue} bold red />}
+          {(totals.CheckPaymentStatus&&display?.marginStatus?.type !== "Extra Amount")&&<Row label="Balance Due" value={0} bold red />}
+          { (totals.CheckPaymentStatus&&display?.marginStatus?.type === "Extra Amount")&&<Row label="Balance Due" value={display.marginStatus.amount.toFixed(2)} bold red />}
 
-          <Row label="Total" value={display.total} />
-          <Row label="Balance Due" value={display.balanceDue} bold red />
-
-          <p style={{ marginTop: 6 }}>In Words:
+          {/* <p style={{ marginTop: 6 }}>In Words:
             <b style={{ textDecoration: "underline" }}>
               {numberToWords(display.balanceDue || 0)} ONLY
             </b>
-          </p>
+          </p> */}
           {display.marginStatus && (
   <p style={{
     marginTop: "10px",
@@ -507,7 +518,7 @@ const recalcTotals = () => {
       <h3 style={{ textAlign: "center", color: colors.pink, marginTop: 25 }}>
         A Complete Home Healthcare Professionals. We care for your beloved.
       </h3>
-      <p style={{ textAlign: "center", marginTop: 6 }}>https://curatehealthservices.com</p>
+      <p style={{ textAlign: "center", marginTop: 6 }}>www.curatehealthservices.com</p>
 
 
 
@@ -524,7 +535,7 @@ function renderRow(label: string, value: any, update: any, active: boolean, colo
       {active ?
         <input className="border text-right w-20" style={{ color }} value={value}
           onChange={e => update(label as any, e.target.value)} />
-        : <span style={{ fontWeight: 600, color }}>₹{value}/-</span>}
+        : <span style={{ fontWeight: 600, color }}>₹{value}</span>}
     </div>)
 }
 
@@ -532,7 +543,7 @@ function Row({ label, value, red, bold }: { label: string; value: any; red?: boo
   return (
     <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0" }}>
       <span>{label}</span>
-      <span style={{ color: red ? "red" : "#000", fontWeight: bold ? 700 : 600 }}>₹{value}/-</span>
+      <span style={{ color: red ? "red" : "#000", fontWeight: bold ? 700 : 600 }}>₹{value}</span>
     </div>
   )
 }
