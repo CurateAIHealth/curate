@@ -540,7 +540,7 @@ if (CurrentUserType) {
   };
 const result: any = await HCARegistration(payload);
 if(result.success){
-console.log("Posting Data------------------------********8")
+
 }
 }
 

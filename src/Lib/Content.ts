@@ -1284,6 +1284,7 @@ export const LeadSources = [
   "Other"
 ];
 export const indianFamilyRelations = [
+  "Self",
   "Father",
   "Mother",
   "Son",
