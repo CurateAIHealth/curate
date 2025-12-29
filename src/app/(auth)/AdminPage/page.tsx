@@ -549,7 +549,7 @@ console.log('Test Registerd Userss---',users)
           <div className="flex items-center gap-3">
             <img src="/Icons/Curate-logo.png" alt="Logo" className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl" />
             <h1 className="text-lg sm:text-2xl font-extrabold text-[#007B7F] tracking-tight leading-tight">
-              Hi,{UpdateduserType}<span className="text-[#ff1493]">{UserFirstName}</span>
+              Hi,<span className="text-[#ff1493]">{UserFirstName}</span>
             </h1>
           </div>
          
