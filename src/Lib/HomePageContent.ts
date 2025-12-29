@@ -59,7 +59,20 @@ export  const steps = [
     "Continuous quality visits and feedback collection for updating service changes as per patient or senior requirement"
   ];
   
-
+export const testimonials = [
+  {
+    quote: 'My grandmother was bedridden post hip surgery. The caretaker Ms. Madhuri showed great patience and care. Thanks, Curate!',
+    name: 'Family of Patient',
+  },
+  {
+    quote: 'They provided a well-trained caretaker for my mother-in-law. I am totally satisfied with their service.',
+    name: 'Satisfied Client',
+  },
+  {
+    quote: 'Curate’s attendant Ms. Durga Bhavani was extremely flexible and sympathetic. Highly recommend their services.',
+    name: 'Client for 3 months',
+  },
+];
 export const reviews = [
   {
     reviewerName: "Customer",
