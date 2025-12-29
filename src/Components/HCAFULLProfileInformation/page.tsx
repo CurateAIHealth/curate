@@ -255,7 +255,7 @@ setSubmitstatusMessage("Profile Updated Succesfully")
         : { ...prev, ProfetionSkill: [...skills, skill] };
     });
   };
-
+console.log("Checkkkkk------", user)
   const renderTabContent = () => {
   switch (activeTab) {
     case 'Personal Info':
@@ -285,17 +285,18 @@ setSubmitstatusMessage("Profile Updated Succesfully")
                ))}
              
             </div>:
-            <div className="flex flex-wrap gap-2">
-              {user.ProfetionSkill?.map((each: any, index: any) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 bg-blue-100 h-7 text-blue-700 text-sm font-medium rounded-full shadow-sm hover:bg-blue-200 transition"
-                >
-                  {each}
-                </span>
-              ))}
-             
-            </div>}
+       <div className="flex flex-wrap gap-2">
+  {Array.isArray(user.ProfetionSkill) &&
+    user.ProfetionSkill.map((each: any, index: number) => (
+      <span
+        key={index}
+        className="px-3 py-1 bg-blue-100 h-7 text-blue-700 text-sm font-medium rounded-full shadow-sm hover:bg-blue-200 transition"
+      >
+        {each}
+      </span>
+    ))}
+</div>
+}
           </div>
        
         <div className="grid md:grid-cols-2 gap-4">

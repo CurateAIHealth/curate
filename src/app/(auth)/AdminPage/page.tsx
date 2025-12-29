@@ -437,7 +437,7 @@ const ClientEnquiryUserInterFace = () => {
           : "bg-gray-100 border-gray-300 text-gray-800"
       }
     `}
-    value={user.CurrentStatus}
+    value={user.CurrentStatus||""}
     onChange={(e) =>
       UpdateCurrentstatus(user.FirstName, e.target.value, user.userId)
     }
