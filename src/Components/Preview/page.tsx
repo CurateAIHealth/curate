@@ -57,7 +57,7 @@ const Section = ({
 const PreviewComponent: React.FC<PreviewProps> = ({ data,Advance }) => {
   const dispatch = useDispatch();
   const [UpdatedData, setFormData] = useState(useSelector((state: any) => state.RegisterdUsersFullInformation));
-    
+    console.log('Check for Document00-----',data)
   const [selectedRecord, setSelectedRecord] = useState<any>(false);
    const [UpdatingStatus,setUpdatingStatus]=useState("Finalizing PDR update…")
    const DeploaymentInformation=useSelector((state:any)=>state.DeploaymentData)
@@ -179,6 +179,9 @@ const PostDeployment = await InsertDeployment(
             label="Patient Name"
             value={data.patientName}
           />
+          
+
+
           <InfoItem
             label="Relation to Patient"
             value={data.RelationtoPatient}

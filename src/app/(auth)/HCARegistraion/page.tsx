@@ -23,7 +23,7 @@ export default function DoctorProfileForm() {
   const [PictureUploading, setPictureUploading] = useState(false);
   const [UpdateingStatus, SetUpdateingStatus] = useState(true);
   const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
-    const [addedheight, setaddedheight] = useState();
+    const [addedheight, setaddedheight] = useState<any>();
       const [addingWeight, setaddingWeight] = useState("");
   const [isChecking, setIsChecking] = useState(true);
     const [siblings, setSiblings] = useState([
@@ -121,6 +121,8 @@ HandledSkills:any,
 
   const router=useRouter()
   const ReasonValue=useSelector((state:any)=>state.DocumentReson)
+  const [heightInCm, setHeightInCm] = useState("");
+
    const distpatch=useDispatch()
   const [Docs, setDocs] = useState({
     ProfilePic: DEFAULT_PROFILE_PIC,
@@ -380,6 +382,7 @@ console.log("Check working Hours----",form)
     Fetch();
   }, []);
    const handleHeightChange = (field: string, value: string) => {
+   
     setForm((prev: any) => {
       const updated = { ...prev, [field]: value };
       
@@ -565,6 +568,16 @@ if(result.success){
     await router.prefetch("/");
     router.push("/");
   };
+const handleHeightFromCm = (cmValue: string) => {
+  setHeightInCm(cmValue);
+
+  const cm = parseFloat(cmValue);
+  if (!cm || cm <= 0) return;
+
+  const ft = (cm / 30.48).toFixed(1);
+  handleHeightChange("height", ft);
+  setaddedheight(0); // reset added height
+};
 
   if (isChecking) {
     return (
@@ -1234,9 +1247,31 @@ if(result.success){
           </p>
         )}
       </div>
+      <div className="mt-4 flex flex-col sm:flex-row items-center gap-3">
+  <label className="text-sm font-medium text-gray-600">
+    Enter Height (cm)
+  </label>
+
+  <input
+    type="number"
+    placeholder="Eg: 170"
+    value={heightInCm}
+    onChange={(e) => handleHeightFromCm(e.target.value)}
+    className="w-32 px-3 py-2 border border-gray-300 rounded-md
+               focus:ring-2 focus:ring-teal-400 focus:outline-none text-sm"
+  />
+
+  {heightInCm && form.height && (
+    <span className="text-xs text-gray-500">
+      ≈ {form.height} ft
+    </span>
+  )}
+</div>
     </div>
 
-  
+ 
+
+
     <div id="Patient Details" className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-3">
       <h2 className="text-lg font-semibold text-teal-600">Weight</h2>
 
