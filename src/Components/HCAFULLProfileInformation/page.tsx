@@ -4,11 +4,12 @@ import { useCallback, useEffect, useState, } from 'react';
 import Image from 'next/image';
 import axios from 'axios';
 import { GetHCACompliteInformation, GetUserCompliteInformation, GetUserInformation, UpdateClientComplitInformation, UpdateHCAComplitInformation } from '@/Lib/user.action';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { Pencil, X } from 'lucide-react';
 import { PROFESSIONAL_SKILL_OPTIONS } from '@/Lib/Content';
 import { LoadingData } from '../Loading/page';
+import { Update_Main_Filter_Status, UpdateUserType } from '@/Redux/action';
 
 
 const TABS = ['Personal Info', 'Bank Details', 'Documents', 'Work Experience', 'Identifiers'];
@@ -63,6 +64,7 @@ const [SubmitstatusMessage,setSubmitstatusMessage]=useState("")
   const [isChecking, setIsChecking] = useState(true);
   const [ProfetionlSkillsEdit,setProfetionlSkillsEdit]=useState(false)
 const Router=useRouter()
+const dispatch=useDispatch()
 const ImportedUserId=useSelector((state:any)=>state.UserDetails)
 const NameoftheClient=useSelector((state:any)=>state.ClientName)
   const [user, setUser] = useState<UserData>({
@@ -229,6 +231,8 @@ useEffect(()=>{
 );
 
   const Revert = () => {
+     dispatch(Update_Main_Filter_Status("HCP List")); 
+        dispatch(UpdateUserType("healthcare-assistant"));
         Router.push("/AdminPage")
     }
 const UpdatewithNewData=async()=>{
