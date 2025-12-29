@@ -73,6 +73,119 @@ export const testimonials = [
     name: 'Client for 3 months',
   },
 ];
+export const reviews = [
+  {
+    reviewerName: "Customer",
+    reviewerMeta: "1 month ago",
+    rating: 5,
+    review:
+      "Our caretaker Arthi was very professional and caring. We thank Curate services for providing good staff and for taking continuous feedback. I strongly recommend Curate services to those in need.",
+    ownerReply: {
+      company: "Curate Health Services LLP",
+      replyTime: "1 month ago",
+      message:
+        "Thank you so much for your kind words and valuable feedback. We truly appreciate your understanding and cooperation during the caretaker replacement process. It was a pleasure to support your mother’s recovery, and we’re glad to know you were satisfied with Arthi’s care and professionalism. Wishing your mother continued good health and a speedy recovery.",
+    },
+  },
+
+  {
+    reviewerName: "Customer",
+    reviewerMeta: "2 months ago",
+    rating: 5,
+    review:
+      "Excellent service 💐💐💐💐. Wish to continue serving needy people with the same spirit. God bless you 🙏",
+    ownerReply: {
+      company: "Curate Health Services LLP",
+      replyTime: "2 months ago",
+      message:
+        "Thank you so much for your kind words and blessings. We truly appreciate your trust in Curate Health. Your encouragement inspires our team to continue delivering compassionate home healthcare services.",
+    },
+  },
+
+  {
+    reviewerName: "Customer",
+    reviewerMeta: "4 months ago",
+    rating: 4,
+    review:
+      "We employed a female caretaker for my mother after a head injury for about 2 months. The service was good, and Mr. Soumya was very helpful in providing timely support.",
+    ownerReply: {
+      company: "Curate Health Services LLP",
+      replyTime: "4 months ago",
+      message:
+        "We’re glad to hear that our caretaker was able to support your mother during her recovery. Thank you for appreciating Mr. Soumya and for trusting Curate Health.",
+    },
+  },
+
+  {
+    reviewerName: "Padmaja Rudraraju",
+    reviewerMeta: "Local Guide · 5 months ago",
+    rating: 5,
+    review:
+      "Just like family. Very jovial and makes the patient laugh. Determined to complete tasks even when the patient is not cooperative. Blessed to have Hepsima.",
+    ownerReply: {
+      company: "Curate Health Services LLP",
+      replyTime: "5 months ago",
+      message:
+        "Thank you for your thoughtful feedback. We’re delighted to hear that Hepsima’s dedication and positivity brought comfort and joy. We’ll be sure to share your words with her.",
+    },
+  },
+
+  {
+    reviewerName: "Imran Pasha",
+    reviewerMeta: "Local Guide · 5 months ago",
+    rating: 5,
+    review:
+      "Compassionate, consistent, responsive, and professional care. My bedridden mother became more active and happier after Curate caregivers started. Replacements were smooth, follow-ups regular, and care standards excellent.",
+    ownerReply: {
+      company: "Curate Health Services LLP",
+      replyTime: "4 months ago",
+      message:
+        "Thank you for your detailed and thoughtful review. Your involvement and cooperation played a key role in creating a stable care environment. We deeply value your continued trust in Curate Health Services.",
+    },
+  },
+
+  {
+    reviewerName: "Sunitha Mareedu",
+    reviewerMeta: "5 months ago",
+    rating: 5,
+    review:
+      "The caretaker Asmika took very good and gentle care of my mother-in-law.",
+    ownerReply: {
+      company: "Curate Health Services LLP",
+      replyTime: "5 months ago",
+      message:
+        "We’re pleased to know that Asmika provided gentle and respectful care. Thank you for recognizing our caregivers’ dedication and training.",
+    },
+  },
+
+  {
+    reviewerName: "Sonal Thakur",
+    reviewerMeta: "5 months ago",
+    rating: 5,
+    review:
+      "Caregiver was a blessing in disguise. Curate understands patient needs well and suggests the right caregiver. Truly one of the best service providers.",
+    ownerReply: {
+      company: "Curate Health Services LLP",
+      replyTime: "5 months ago",
+      message:
+        "Thank you for your trust and kind words. We’re grateful that our caregivers could bring comfort and stability to your family during a crucial time.",
+    },
+  },
+
+  {
+    reviewerName: "Kshroon Mistry",
+    reviewerMeta: "Local Guide · 6 months ago",
+    rating: 5,
+    review:
+      "Well-trained and polite caretakers. Services include BP, sugar checks, sponging, and diaper care. Charges are reasonable and replacements are proactive.",
+    ownerReply: {
+      company: "Curate Health Services LLP",
+      replyTime: "6 months ago",
+      message:
+        "Thank you for your recommendation. We’re happy to know that our caregivers’ professionalism and continuity of care made a positive difference.",
+    },
+  },
+];
 
 export const cta = {
   heading: 'Need Reliable Home Health Care?',

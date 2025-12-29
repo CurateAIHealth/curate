@@ -37,7 +37,8 @@ import useSWR from "swr";
 
 const fetcher = async () => {
   const data = await GetRegidterdUsers();
-  return data;
+const FiltersHCPS=data.filter((each:any)=>each.userType==="healthcare-assistant")
+  return FiltersHCPS;
 };
 
 
@@ -169,7 +170,7 @@ useEffect(() => {
      const localValue = localStorage.getItem('UserId');
   
         const Sign_in_UserInfo = await GetUserInformation(localValue)
-  console.log("Check Admin Email.........000",Sign_in_UserInfo.Email)
+ 
      
   if (Sign_in_UserInfo) {
     

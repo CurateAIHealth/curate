@@ -4,7 +4,7 @@
 import { GetUserCompliteInformation, GetUserInformation } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { cta, features, heroContent, pricing, services, steps, testimonials } from "@/Lib/HomePageContent";
+import { cta, features, heroContent, pricing, reviews, services, steps } from "@/Lib/HomePageContent";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Star, Settings, User, LogIn, BriefcaseMedical, CircleEllipsis, Menu } from "lucide-react";
 import FreeConsultationForm from '@/Components/Contactfill/page';
@@ -37,6 +37,11 @@ export default function StaticInfoPage() {
     const [mobileOptsOpen, setMobileOptsOpen] = useState(false);
     const [ShowPopUp,setShowPopUp]=useState(false)
   const router = useRouter();
+const [showAllReviews, setShowAllReviews] = useState(false);
+const INITIAL_REVIEWS_COUNT = 4;
+const visibleReviews = showAllReviews
+  ? reviews
+  : reviews.slice(0, INITIAL_REVIEWS_COUNT);
 
 
  useEffect(() => {
@@ -502,21 +507,68 @@ If you or a loved one needs medical support at home, Curate Health Services is h
                     <h2 className="text-3xl font-bold mb-9 text-[#1392d3] text-center">
                         What Our Users Say
                     </h2>
-                    <div className="grid md:grid-cols-2 gap-8">
-                        {testimonials.map((t, idx) => (
-                            <motion.div
-                                key={idx}
-                                initial={{ scale: 0.98, opacity: 0 }}
-                                whileInView={{ scale: 1, opacity: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: 0.1 + idx * 0.08 }}
-                                className="bg-white/90 border border-[#e0eff5] rounded-2xl shadow p-7 flex flex-col min-h-[180px] justify-center group hover:shadow-lg transition"
-                            >
-                                <p className="text-[#527290] text-lg italic flex-1">"{t.quote}"</p>
-                                <p className="mt-4 font-semibold text-[#ff1493] group-hover:text-[#50c896] transition">{t.name}</p>
-                            </motion.div>
-                        ))}
-                    </div>
+                  <div className="grid md:grid-cols-2 gap-8">
+  {visibleReviews.map((t, idx) => (
+    <motion.div
+      key={idx}
+      initial={{ scale: 0.98, opacity: 0 }}
+      whileInView={{ scale: 1, opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay: 0.1 + idx * 0.08 }}
+      className="bg-white/90 border border-[#e0eff5] rounded-2xl shadow p-7 flex flex-col min-h-[220px] group hover:shadow-lg transition"
+    >
+      {/* Review */}
+      <p className="text-[#527290] text-lg italic flex-1 leading-relaxed">
+        “{t.review}”
+      </p>
+
+      {/* Rating */}
+      <div className="mt-4 flex items-center gap-1">
+        {Array.from({ length: t.rating }).map((_, i) => (
+          <span key={i} className="text-yellow-400 text-lg">★</span>
+        ))}
+      </div>
+
+      {/* Reviewer */}
+      <div className="mt-3">
+        <p className="font-semibold text-[#ff1493] group-hover:text-[#50c896] transition">
+          {t.reviewerName}
+        </p>
+        <p className="text-sm text-gray-500">{t.reviewerMeta}</p>
+      </div>
+
+      {/* Owner Reply */}
+      {t.ownerReply && (
+        <div className="mt-4 bg-[#f5fbfd] border border-[#e0eff5] rounded-xl p-4">
+          <p className="text-sm font-semibold text-[#1392d3]">
+            {t.ownerReply.company}
+          </p>
+          <p className="text-sm text-gray-600 mt-1">
+            {t.ownerReply.message}
+          </p>
+        </div>
+      )}
+    </motion.div>
+  ))}
+</div>
+{reviews.length > INITIAL_REVIEWS_COUNT && (
+  <div className="flex justify-center mt-10">
+    <button
+      onClick={() => setShowAllReviews((prev) => !prev)}
+      className='px-8 py-3 rounded-full font-semibold
+bg-white text-[#ff1493]
+border-2 border-[#ff1493]
+shadow-sm
+hover:bg-[#ff1493] hover:text-white
+hover:shadow-md cursor-pointer
+transition-all duration-300
+'
+    >
+      {showAllReviews ? "Show Less Reviews" : "See More Reviews"}
+    </button>
+  </div>
+)}
+
                 </div>
             </section>
 
