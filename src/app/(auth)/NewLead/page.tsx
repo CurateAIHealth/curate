@@ -3,7 +3,7 @@
 import MobileMedicationSchedule from "@/Components/MedicationMobileView/page";
 import MedicationSchedule from "@/Components/Medications/page";
 import { ClientEnquiry_Filters, filterColors, Headings, Health_Card, HomeAssistance, indianFamilyRelations, IndianLanguages, LeadSources, Main_Filters, medicalSpecializations, Patient_Home_Supply_Needs, patientCategories, physioSpecializations } from "@/Lib/Content";
-import { GetUserInformation, UpdateNewLeadInformation } from "@/Lib/user.action";
+import { GetRegidterdUsers, GetUserInformation, UpdateNewLeadInformation } from "@/Lib/user.action";
 import { Update_Current_Client_Status } from "@/Redux/action";
 import { AlertCircle, Info, ListFilter, LogOut, PhoneCall, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -164,6 +164,7 @@ const [visible, setVisible] = useState(true);
   const [addedheight, setaddedheight] = useState();
   const [TimeStameDetails,setTimeStameDetails]=useState("setTimeStameDetails")
     const [showTooltip, setShowTooltip] = useState(false);
+     const [ImportedVendors,setImportedVendors]=useState<any>([])
   const [MinimiseOptions,setMinimizeOptions]=useState({Hygiene:false,Nutrition:false,Vitals:false,Elimination:false,Mobility:false,Medication:false})
   const [RemarkStatus,setRemarkStatus]=useState({Hygiene:false,Nutrition :false,Vitals:false,Elimination:false,Mobility:false,ClientCard:false,PatientCard:false,PatientDetails:false,Weight:false,Height:false,patientHomeAssistance:false,
   patientHomeNeeds:false,
@@ -192,16 +193,18 @@ const MedicationData=useSelector((each:any)=>each.MedicationInfo)
       return updated;
     });
   };
-useEffect(()=>{
-  const Fetch=async()=>{
-const localValue = localStorage.getItem('UserId');
-   
-      const Sign_in_UserInfo=await GetUserInformation(localValue)
-
+  useEffect(() => {
+    const Fetch = async () => {
+      const localValue = localStorage.getItem('UserId');
+      const [Sign_in_UserInfo, RegisterdUsers] = await Promise.all([
+        GetUserInformation(localValue),
+        GetRegidterdUsers(),
+      ]);
+      setImportedVendors(RegisterdUsers.filter((each: any) => each.userType === "Vendor"))
       setTimeStameDetails(`${Sign_in_UserInfo.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`)
-  }
-  Fetch()
-},[])
+    }
+    Fetch()
+  }, [])
   const handleCheckboxChange = (section: string, value: string) => {
     setFormData((prev: any) => {
       const current = prev[section] || [];
@@ -251,6 +254,8 @@ router.push("/AdminPage")
     }
   };
 
+
+const FilterdImportedVendorName=ImportedVendors.map((each:any)=>each.VendorName)
   return (
     <div
      
@@ -408,7 +413,7 @@ className="overflow-hidden h-[95%]"
          
             <select className="w-full border rounded-md text-center"  onChange={(e) => handleChange("Source", e.target.value)}>
               <option className="bg-gray-400">Choose Lead</option>
-              {LeadSources.map((each:any)=><option key={each}>{each}</option>)}
+              {[...FilterdImportedVendorName,...LeadSources].map((each:any)=><option key={each}>{each}</option>)}
             </select>
             {formData.Source==="Other"&& <input
               type="text"

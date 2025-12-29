@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   Heart, User, Stethoscope, Pill, CalendarDays, Droplet, BedDouble, BadgeCheck, ShowerHead,
   Users,
@@ -21,6 +21,7 @@ import { indianFamilyRelations, LeadSources, medicalSpecializations, physioSpeci
 import MobileMedicationSchedule from '@/Components/MedicationMobileView/page'
 import MedicationSchedule from '@/Components/Medications/page'
 import { CheckboxGroup } from '@/Components/CheckboxGroup'
+import axios from 'axios'
 type EditingKeys = 'PatientCardEditing' | 'ClientCardEditing' | 'PatientDetails' | 'AdditionalInformation' | 'OtherInformation' | 'EquipmentDetails' | 'Hygiene' | 'Medication';
 
 
@@ -60,6 +61,7 @@ export default function DataCollectionForm() {
 
   const [showRemark, setShowRemark] = useState<Record<string, boolean>>({});
   const [showScanner, setShowScanner] = useState(false);
+  const [UploadStatusMessage,setUploadStatusMessage]=useState("")
   const [form, setForm] = useState<StringMap>({});
   const [otherInputs, setOtherInputs] = useState<StringMap>({});
   const [AdvanceAmount,setAdvanceAmount]=useState<any>("")
@@ -68,12 +70,60 @@ export default function DataCollectionForm() {
   const ShowPreviewData = useSelector((state: any) => state.CurrentPreview)
   const [formData, setFormData] = useState(useSelector((state: any) => state.RegisterdUsersFullInformation));
 
-
+console.log('Check Document Status-----',formData)
   const handleChange = (key: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [key]: value }));
   };
 
+const handleImageChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUploadStatusMessage("Please Wait Uploading Document");
 
+
+      const file = e.target.files?.[0];
+      const inputName = e.target.name;
+      if (!file) return;
+
+
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File too large. Max allowed is 10MB.');
+        return;
+      }
+
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg','application/pdf',];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Only image or video files are allowed.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+
+      
+
+        const res = await axios.post('/api/Upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+ 
+     setFormData((prev: any) => ({ ...prev, ClientAgreement: res.data.url }));
+  
+setUploadStatusMessage("Document Uploaded Successfully");
+     
+      } catch (error: any) {
+        console.error('Upload failed:', error.message);
+      
+      } finally {
+      
+      }
+    },
+    []
+  );
 
   const handleSave = async (Item: EditingKeys) => {
     console.log("Saving Updated Data:", formData);
@@ -964,7 +1014,7 @@ export default function DataCollectionForm() {
 
 
 <div className="w-full mb-6">
-      {/* Label */}
+
       <label className="text-sm font-medium text-gray-700 mb-1">
         Advance Amount Paid
       </label>
@@ -1010,7 +1060,7 @@ export default function DataCollectionForm() {
       )}
     </div>
     <div className="max-w-md bg-white rounded-2xl shadow-md p-6 space-y-4">
-  {/* Title */}
+
   <h3 className="text-lg font-semibold text-slate-800">
     Upload Client Agreement
   </h3>
@@ -1051,17 +1101,31 @@ export default function DataCollectionForm() {
       type="file"
       accept=".pdf,.jpg,.png"
       className="hidden"
+      onChange={handleImageChange}
+
     />
   </label>
 
-
-  <button
-    className="w-full py-2.5 rounded-xl text-white font-semibold tracking-wide
-               bg-gradient-to-r from-emerald-500 to-teal-600
-               hover:shadow-lg hover:scale-[1.01] transition"
+{UploadStatusMessage && (
+  <p
+    className={`
+      mt-3 px-5 py-3 rounded-xl text-center text-sm font-semibold
+      transition-all duration-300 ease-in-out
+      ${
+        UploadStatusMessage.toLowerCase().includes("wait") ||
+        UploadStatusMessage.toLowerCase().includes("uploading")
+          ? "bg-blue-50 text-blue-700 border border-blue-200 animate-pulse"
+          : UploadStatusMessage.toLowerCase().includes("success")
+          ? "bg-green-50 text-green-700 border border-green-200"
+          : "bg-red-50 text-red-700 border border-red-200"
+      }
+    `}
   >
-    Upload Agreement
-  </button>
+    {UploadStatusMessage}
+  </p>
+)}
+
+
 </div>
 
 

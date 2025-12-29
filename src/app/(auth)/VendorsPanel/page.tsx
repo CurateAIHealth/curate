@@ -1,12 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { columns, Infodata } from "@/Lib/Content";
 import { Search, Eye, X } from "lucide-react";
+import { GetRegidterdUsers } from "@/Lib/user.action";
 
 export default function VendorTable() {
   const [selectedVendor, setSelectedVendor] = useState<any | null>(null);
+  const [PreviewInfodata,setPreviewInfodata]=useState(Infodata)
+  const [ImportedVendors,setImportedVendors]=useState<any>([])
+  useEffect(() => {
+    const Fetch = async () => {
+      const [RegisterdUsers] = await Promise.all([
+        GetRegidterdUsers(),
+      ]);
+     setImportedVendors(RegisterdUsers.filter((each: any) => each.userType === "Vendor"))
 
+    }
+    Fetch()
+  }, [])
   return (
     <div className="relative w-full space-y-8 p-6 bg-gradient-to-b from-blue-50 to-purple-50 min-h-screen">
   
@@ -50,7 +62,7 @@ export default function VendorTable() {
           </thead>
 
           <tbody>
-            {Infodata.map((row: any, index) => (
+            {PreviewInfodata.map((row: any, index) => (
               <tr
                 key={index}
                 className="bg-white/80 backdrop-blur-xl border-b border-gray-200 hover:bg-white hover:shadow-xl transition cursor-pointer"
