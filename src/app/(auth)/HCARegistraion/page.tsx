@@ -135,8 +135,8 @@ HandledSkills:any,
 const [form, setForm] = useState<FormState>({
   firstName: '',
   surname: '',
-  fatherName: ' ',
-  motherName: ' ',
+  fatherName: '',
+  motherName: '',
   gender: '',
   dateOfBirth: '',
   maritalStatus: '',
@@ -151,7 +151,7 @@ const [form, setForm] = useState<FormState>({
   cityPostcodePermanent: '',
   cityPostcodeCurrent: '',
 
-  higherEducation: ' ',
+  higherEducation: '',
   higherEducationYearStart: '',
   higherEducationYearEnd: '',
   professionalEducation: '',
@@ -160,20 +160,20 @@ const [form, setForm] = useState<FormState>({
   registrationCouncil: '',
   registrationNo: '',
   professionalSkill: '',
-  HandledSkills: ' ',
-  certifiedBy: '  ',
+  HandledSkills: '',
+  certifiedBy: '',
   professionalWork1: '',
-  professionalWork2: ' ',
+  professionalWork2: '',
   experience: '',
 
   height: ' ',
   weight: ' ',
   hairColour: '',
-  eyeColour: ' ',
+  eyeColour: '',
   complexion: '',
   anyDeformity: '',
-  moleBodyMark1: '   ',
-  moleBodyMark2: '   ',
+  moleBodyMark1: '',
+  moleBodyMark2: '',
   SiblingsInfo: siblings,
   OngoingStudy: '',
   reportPreviousHealthProblems: '',
@@ -181,37 +181,36 @@ const [form, setForm] = useState<FormState>({
 
   sourceOfReferral: '',
   dateOfReferral: '',
-  reference1Name: ' ',
+  reference1Name: '',
   reference1Aadhar: '',
   reference1Mobile: '',
-  reference1Address: ', ',
+  reference1Address: '',
   reference1Relationship: '',
-  reference2Name: ' ',
+  reference2Name: '',
   reference2Aadhar: '',
   reference2Mobile: '',
   reference2Address: '',
 
   serviceHours12hrs: true,
   serviceHours24hrs: false,
-  preferredService: ' ',
+  preferredService: '',
   paymentService: '',
-  paymentBankName: ' ',
+  paymentBankName: '',
   paymentBankAccountNumber: '',
   ifscCode: '',
   bankBranchAddress: '',
 
-  Bankbranchname: ' ',
+  Bankbranchname: '',
   Branchcity: '',
   Branchstate: '',
   Branchpincode: '',
 
   languages: '',
   type: '',
-  specialties: '  ',
+  specialties: '',
 });
 
-console.log("Document-----",form.languages)
-
+console.log("Check working Hours----",form)
   const { serviceHours12hrs, serviceHours24hrs, ...restForm } = form;
 
   const flatFields = Object.values(restForm).flat();
@@ -1018,7 +1017,7 @@ if(result.success){
              
                 <input
                   type="text"
-                  name="registrationCouncil"
+                  name="higherEducation"
                 value={form.higherEducation||''}
                   onChange={handleChange}
                   placeholder="Higher Education ex:Tenth,inter"
@@ -1027,7 +1026,7 @@ if(result.success){
                 />
                 <input
                   type="text"
-                  name="registrationNo"
+                  name="professionalEducation"
                    value={form.professionalEducation||''}
                   onChange={handleChange}
                   placeholder="Profetional Qualification ex:GDA, ANM Etc....."
