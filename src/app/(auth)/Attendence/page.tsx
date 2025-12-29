@@ -21,7 +21,7 @@ const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
  
        const Sign_in_UserInfo = await GetUserInformation(localValue)
  
-       dispatch(UpdateTimeStamp(`${Sign_in_UserInfo.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`))
+       dispatch(UpdateTimeStamp(`${Sign_in_UserInfo?.FirstName} ${Sign_in_UserInfo?.LastName}, Email: ${Sign_in_UserInfo?.Email}`))
      }
      Fetch()
    }, [])
@@ -60,8 +60,8 @@ TimeStampData
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-6">
-      <div className="bg-white shadow-2xl rounded-3xl w-full max-w-md p-8 transition-all duration-300 hover:shadow-blue-200">
+    <div className="flex items-center justify-center">
+      <div className="bg-white shadow-xl rounded-3xl w-full max-w-md p-8 transition-all duration-300 hover:shadow-blue-200">
         <h2 className="text-2xl font-semibold text-[#ff1493] text-center mb-6">
           🩺 Update Your Attendance
         </h2>
