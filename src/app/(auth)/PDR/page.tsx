@@ -70,7 +70,7 @@ export default function DataCollectionForm() {
   const ShowPreviewData = useSelector((state: any) => state.CurrentPreview)
   const [formData, setFormData] = useState(useSelector((state: any) => state.RegisterdUsersFullInformation));
 
-console.log('Check Document Status-----',formData)
+
   const handleChange = (key: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [key]: value }));
   };

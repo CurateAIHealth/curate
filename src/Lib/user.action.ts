@@ -2996,6 +2996,37 @@ export const UpdateDocumentFollowUpStatus = async (
   }
 };
 
+export const UpdateClientInformation = async (
+  UserId: string,
+  data: any
+) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Registration");
+    const { _id, ...safeData } = data;
+    const result = await Collection.updateOne(
+      { userId: UserId },
+      {
+        $set: {
+          ...safeData,
+          userId: UserId,        
+          updatedAt: new Date(), 
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return { success: false, message: "User not found" };
+    }
+
+    return { success: true, message: "Profile updated successfully" };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+};
+
+
 export const UpdateDocumentFollowUpStatusInFullInfo = async (
   UserId: string,
   data: Record<string, any>

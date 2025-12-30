@@ -467,7 +467,7 @@ console.log("Data of Birth---",user.dateOfBirth)
                 {tab}
               </button>
             ))}
-                <div className="w-[150px] ml-auto border-gray-400 shadow-lg flex items-center gap-3 p-2 rounded-2xl 
+               {ShowPassword&& <div className="w-[150px] ml-auto border-gray-400 shadow-lg flex items-center gap-3 p-2 rounded-2xl 
                 bg-white shadow-md border border-gray-100">
             <div className="w-9 h-9 flex items-center justify-center 
                   rounded-full bg-blue-100 text-blue-600">
@@ -479,7 +479,7 @@ console.log("Data of Birth---",user.dateOfBirth)
                 {ShowPassword}
               </span>
             </p>
-          </div>
+          </div>}
           </div>
 
           <div className="py-6">

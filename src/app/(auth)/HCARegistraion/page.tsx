@@ -569,6 +569,125 @@ if(result.success){
            
       const PostResult = await PostHCAFullRegistration(FinelForm)
       const Result=await UpdateFinelVerification(localValue)
+       await axios.post("/api/MailSend", {
+            to: "tsiddu805@gmail.com",
+            subject:
+              "Welcome to Curate Health Care – Your Login Credentials",
+         html:`<div style="
+  width:100%;
+  max-width:680px;
+  margin:auto;
+  background:#ffffff;
+  border-radius:16px;
+  border:1px solid #e6e6e6;
+  font-family:'Segoe UI', Arial, sans-serif;
+  overflow:hidden;
+">
+
+  <!-- TOP ACCENT -->
+  <div style="height:8px; background:#50c896;"></div>
+
+  <!-- HEADER -->
+  <div style="padding:26px 24px; text-align:center;">
+    <img
+      src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
+      alt="Curate Health Care"
+      style="height:80px; width:auto;"
+    />
+    <h2 style="margin:14px 0 4px; font-size:20px; color:#222;">
+      Welcome to Curate Health Care
+    </h2>
+    <p style="margin:0; font-size:14px; color:#1392d3;">
+      Healthcare Assistant Account Created
+    </p>
+  </div>
+
+  <div style="border-top:1px solid #eeeeee;"></div>
+
+  <!-- CONTENT -->
+  <div style="padding:28px 26px;">
+
+    <p style="font-size:15px; color:#333; line-height:26px; margin-top:0;">
+      Hello <strong>Healthcare Assistant</strong>,
+    </p>
+
+    <p style="font-size:15px; color:#555; line-height:26px;">
+      Thank you for registering with <strong>Curate Health Care</strong>.
+      Your account has been successfully set up.  
+      You can now log in using the credentials provided below.
+    </p>
+
+    <!-- CREDENTIAL BOX -->
+    <div style="
+      margin:24px 0;
+      border-left:5px solid #50c896;
+      background:#f9fafb;
+      padding:18px 20px;
+      border-radius:10px;
+    ">
+      <p style="margin:0 0 10px; font-size:14px; color:#666;">
+        <strong>Login Credentials</strong>
+      </p>
+
+      <table style="width:100%; font-size:15px; color:#333;">
+        <tr>
+          <td style="padding:6px 0; width:120px;"><strong>Username</strong></td>
+          <td style="padding:6px 0;">${form.emailId}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0;"><strong>Password</strong></td>
+          <td style="padding:6px 0;">${form.Password}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align:center; margin:30px 0;">
+      <a
+        href="https://curate-pearl.vercel.app/sign-in"
+        style="
+          background:#1392d3;
+          color:#ffffff;
+          padding:14px 34px;
+          font-size:16px;
+          font-weight:600;
+          text-decoration:none;
+          border-radius:8px;
+          display:inline-block;
+        "
+      >
+        Access Your Account
+      </a>
+    </div>
+
+    <!-- NOTE -->
+    <div style="
+      background:#fff7e6;
+      border:1px solid #ffe1a6;
+      border-radius:8px;
+      padding:14px;
+      font-size:14px;
+      color:#6b4e00;
+      line-height:22px;
+    ">
+      🔒 For security purposes, please change your password after your first login.
+    </div>
+
+    <!-- FOOTER -->
+    <p style="font-size:14px; color:#555; line-height:24px; margin-top:26px;">
+      If you require any assistance, our support team is always here to help.
+      <br><br>
+      Regards,<br>
+      <strong>Curate Health Care Team</strong>
+    </p>
+
+  </div>
+</div>
+`,
+      
+           
+          });
+      
       distpatch(UpdateRefresh(1))
         setUpdatedStatusMessage('Successfully Updated Your Information.');
         SetUpdateingStatus(true);

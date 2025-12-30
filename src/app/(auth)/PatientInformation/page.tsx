@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { GetUserInformation } from "@/Lib/user.action";
+import { GetUserInformation, UpdateClientInformation } from "@/Lib/user.action";
 import {
   Users,
   Heart,
@@ -71,11 +71,13 @@ interface UserInformation {
 }
 export default function UserInformation() {
   const [userInfo, setUserInfo] = useState<UserInformation | null>(null);
+  const [StatusMessage,setStatusMessage]=useState("")
   const [formData, setFormData] = useState<UserInformation>({});
   const [isEditing, setIsEditing] = useState({PatientCardEditing:false,ClientCardEditing:false,PatientDetails:false,AdditionalInformation:false,OtherInformation:false});
   const [isLoading, setIsLoading] = useState(true);
     const userId = useSelector((state: any) => state?.UserDetails)
     const dispatch=useDispatch()
+
 
 
 
@@ -86,7 +88,7 @@ const router=useRouter()
     const fetchData = async () => {
       try {
         const data = await GetUserInformation(userId);
-        console.log("Test Data-----",data)
+        
         const defaultData: UserInformation = {
           name: "",
           email: "",
@@ -94,9 +96,17 @@ const router=useRouter()
           gender: "",
           hobbies: [],
         };
+   const cleanData = {
+  ...data,
+  updatedAt:
+    data.updatedAt instanceof Date
+      ? data.updatedAt.toISOString()
+      : data.updatedAt,
+};
+
         setUserInfo({ ...defaultData, ...data }); 
         setFormData({ ...defaultData, ...data });
-        dispatch(UpdateFetchedInformation(data))
+        dispatch(UpdateFetchedInformation(cleanData))
       } catch (err) {
         console.error("Error fetching user:", err);
       } finally {
@@ -130,7 +140,22 @@ const handleLogout = () => {
         </div>
       </div>
     );
+const UpdateSavedData=async()=>{
+  setStatusMessage("Please Wait Updating Profile");
+  try{
+    const UpdateProfile=await UpdateClientInformation(formData.userId,formData)
+    console.log("Check For Issues----",UpdateProfile)
+    if(UpdateProfile.success===true){
+setStatusMessage("Profile Updated Successfully");
+    }
 
+
+  }catch(err:any){
+
+  }
+}
+
+console.log("Check of Chnages,,,",formData)
   return (
    
 
@@ -634,7 +659,37 @@ const handleLogout = () => {
       <span className="text-gray-900 underline font-semibold">Info Collected by: </span>
       {formData.TimeStampInfo || "Not Entered"}
     </p>
+   
   </div>
+
+
+<button
+  className="flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-white
+             bg-teal-700
+             shadow-md cursor-pointer
+             hover:bg-[#44b989]
+             active:scale-95
+             transition-all duration-200"
+             onClick={UpdateSavedData}
+>
+  <Save size={18} />
+  Save Changes
+</button>
+{StatusMessage&&
+<p
+  className={`mt-3 px-5 py-3 rounded-xl text-sm font-semibold
+    flex items-center gap-2 w-fit
+    transition-all duration-300
+    ${
+      StatusMessage?.includes("Please")
+        ? "bg-blue-50 text-blue-700 border border-blue-200 animate-pulse"
+        : "bg-green-50 text-green-700 border border-green-200"
+    }
+  `}
+>
+  {StatusMessage?.includes("Please") ? "⏳" : "✅"}
+  {StatusMessage}
+</p>}
 
 
   {/* <button

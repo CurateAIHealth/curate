@@ -57,12 +57,12 @@ const Section = ({
 const PreviewComponent: React.FC<PreviewProps> = ({ data,Advance }) => {
   const dispatch = useDispatch();
   const [UpdatedData, setFormData] = useState(useSelector((state: any) => state.RegisterdUsersFullInformation));
-    console.log('Check for Document00-----',data)
+    console.log('Check for Document00-----',data.ClientAgreement)
   const [selectedRecord, setSelectedRecord] = useState<any>(false);
    const [UpdatingStatus,setUpdatingStatus]=useState("Finalizing PDR update…")
    const DeploaymentInformation=useSelector((state:any)=>state.DeploaymentData)
    const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
-   console.log("PDR Info ======", DeploaymentInformation);
+
    const Router=useRouter()
   const UpdateEdit = () => {
     dispatch(UpdatePreviewStatus(true));

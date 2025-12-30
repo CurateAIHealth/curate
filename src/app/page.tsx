@@ -71,7 +71,7 @@ const visibleReviews = showAllReviews
       }
 
       if (ProfileInformation?.FinelVerification === true) {
-        router.push("/SuccessfullyRegisterd");
+        router.push("/Profile");
         return;
       }
 
