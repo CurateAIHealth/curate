@@ -1034,6 +1034,7 @@ StaffType:HCA.StaffType,
 
     
       Password: hashValue(HCA.Password),
+      PreviewPassword:encrypt(HCA.Password),
 
       userId: HCA.userId,
       ReferdVedorId:HCA.ReferdVedorId,
