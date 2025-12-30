@@ -315,7 +315,9 @@ console.log('Check Email Status-----',isManagement)
   };
 
   const NavigatetoFullHCPlIST = () => {
+    dispatch(Update_Main_Filter_Status("HCP List")); 
     dispatch(UpdateUserType("healthcare-assistant"));
+ 
     router.push("/AdminPage");
   };
 

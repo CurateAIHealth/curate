@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LoadingData } from '@/Components/Loading/page';
+import { EyeOff, Eye, CheckCircle, XCircle } from 'lucide-react';
 
 
 const DEFAULT_PROFILE_PIC = '/Icons/DefaultProfileIcon.png';
@@ -37,6 +38,7 @@ export default function DoctorProfileForm() {
 
     const userId = useSelector((state: any) => state?.UserDetails);
   const CurrentUserType=useSelector((state:any)=>state.RegisteredUserType)
+  console.log('Check User Type------',CurrentUserType)
 interface FormState {
   HomeAssistance: any;
   // title: any;
@@ -116,6 +118,8 @@ HandledSkills:any,
   languages: string;
   type: string;
   specialties: string;
+  Password:any;
+  ConfirmPassword:any;
   // website?: string; // optional if commented
 }
 
@@ -210,7 +214,15 @@ const [form, setForm] = useState<FormState>({
   languages: '',
   type: '',
   specialties: '',
+  Password:'',
+  ConfirmPassword:''
 });
+const [mounted, setMounted] = useState(false);
+
+useEffect(() => {
+  setMounted(true);
+}, []);
+
 
 console.log("Check working Hours----",form)
   const { serviceHours12hrs, serviceHours24hrs, ...restForm } = form;
@@ -381,6 +393,13 @@ console.log("Check working Hours----",form)
     };
     Fetch();
   }, []);
+
+useEffect(() => {
+  if (mounted && CurrentUserType === null) {
+    router.replace("/UserTypeRegistration");
+  }
+}, [mounted, CurrentUserType, router]);
+
    const handleHeightChange = (field: string, value: string) => {
    
     setForm((prev: any) => {
@@ -415,7 +434,7 @@ console.log("Check working Hours----",form)
         : { ...prev, professionalSkill: [...skills, skill] };
     });
   };
-  console.log('CheckInfor===',form.professionalSkill)
+ 
   const handleImageChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       setUpdatedStatusMessage('');
@@ -533,12 +552,12 @@ if (CurrentUserType) {
     ContactNumber: form.mobileNumber || "",
     Email: form.emailId || "",
     Location: form.currentAddress || "",
-    Password: "",
     userId: generatedUserId,
     VerificationStatus: "Pending",
     TermsAndConditions: true,
     FinelVerification: true,
-    EmailVerification: false,
+    EmailVerification: true,
+    Password:form.Password||''
   };
 const result: any = await HCARegistration(payload);
 if(result.success){
@@ -547,9 +566,128 @@ if(result.success){
 }
 
         const FinelForm = { ...form, Documents: Docs, UserId: generatedUserId, DocumentSkipReason: ReasonValue, userType: CurrentUserType==="HCA"?"healthcare-assistant":CurrentUserType };
-             console.log("Test Finel HCA FinelForm---",FinelForm)
+           
       const PostResult = await PostHCAFullRegistration(FinelForm)
       const Result=await UpdateFinelVerification(localValue)
+       await axios.post("/api/MailSend", {
+            to: "tsiddu805@gmail.com",
+            subject:
+              "Welcome to Curate Health Care – Your Login Credentials",
+         html:`<div style="
+  width:100%;
+  max-width:680px;
+  margin:auto;
+  background:#ffffff;
+  border-radius:16px;
+  border:1px solid #e6e6e6;
+  font-family:'Segoe UI', Arial, sans-serif;
+  overflow:hidden;
+">
+
+  <!-- TOP ACCENT -->
+  <div style="height:8px; background:#50c896;"></div>
+
+  <!-- HEADER -->
+  <div style="padding:26px 24px; text-align:center;">
+    <img
+      src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
+      alt="Curate Health Care"
+      style="height:80px; width:auto;"
+    />
+    <h2 style="margin:14px 0 4px; font-size:20px; color:#222;">
+      Welcome to Curate Health Care
+    </h2>
+    <p style="margin:0; font-size:14px; color:#1392d3;">
+      Healthcare Assistant Account Created
+    </p>
+  </div>
+
+  <div style="border-top:1px solid #eeeeee;"></div>
+
+  <!-- CONTENT -->
+  <div style="padding:28px 26px;">
+
+    <p style="font-size:15px; color:#333; line-height:26px; margin-top:0;">
+      Hello <strong>Healthcare Assistant</strong>,
+    </p>
+
+    <p style="font-size:15px; color:#555; line-height:26px;">
+      Thank you for registering with <strong>Curate Health Care</strong>.
+      Your account has been successfully set up.  
+      You can now log in using the credentials provided below.
+    </p>
+
+    <!-- CREDENTIAL BOX -->
+    <div style="
+      margin:24px 0;
+      border-left:5px solid #50c896;
+      background:#f9fafb;
+      padding:18px 20px;
+      border-radius:10px;
+    ">
+      <p style="margin:0 0 10px; font-size:14px; color:#666;">
+        <strong>Login Credentials</strong>
+      </p>
+
+      <table style="width:100%; font-size:15px; color:#333;">
+        <tr>
+          <td style="padding:6px 0; width:120px;"><strong>Username</strong></td>
+          <td style="padding:6px 0;">${form.emailId}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0;"><strong>Password</strong></td>
+          <td style="padding:6px 0;">${form.Password}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align:center; margin:30px 0;">
+      <a
+        href="https://curate-pearl.vercel.app/sign-in"
+        style="
+          background:#1392d3;
+          color:#ffffff;
+          padding:14px 34px;
+          font-size:16px;
+          font-weight:600;
+          text-decoration:none;
+          border-radius:8px;
+          display:inline-block;
+        "
+      >
+        Access Your Account
+      </a>
+    </div>
+
+    <!-- NOTE -->
+    <div style="
+      background:#fff7e6;
+      border:1px solid #ffe1a6;
+      border-radius:8px;
+      padding:14px;
+      font-size:14px;
+      color:#6b4e00;
+      line-height:22px;
+    ">
+      🔒 For security purposes, please change your password after your first login.
+    </div>
+
+    <!-- FOOTER -->
+    <p style="font-size:14px; color:#555; line-height:24px; margin-top:26px;">
+      If you require any assistance, our support team is always here to help.
+      <br><br>
+      Regards,<br>
+      <strong>Curate Health Care Team</strong>
+    </p>
+
+  </div>
+</div>
+`,
+      
+           
+          });
+      
       distpatch(UpdateRefresh(1))
         setUpdatedStatusMessage('Successfully Updated Your Information.');
         SetUpdateingStatus(true);
@@ -579,11 +717,27 @@ const handleHeightFromCm = (cmValue: string) => {
   setaddedheight(0); // reset added height
 };
 
-  if (isChecking) {
-    return (
-        <LoadingData/>
-    );
-  }
+const passwordRules = {
+  length: (v: string) => v.length >= 8,
+  capital: (v: string) => /[A-Z]/.test(v),
+  number: (v: string) => /[0-9]/.test(v),
+  special: (v: string) => /[^A-Za-z0-9]/.test(v),
+};
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const password = form.Password || "";
+
+  const RuleItem = ({ ok, label }: { ok: boolean; label: string }) => (
+    <div className={`flex items-center gap-2 text-xs ${ok ? "text-green-600" : "text-gray-500"}`}>
+      {ok ? <CheckCircle size={14} /> : <XCircle size={14} />}
+      {label}
+    </div>
+  );
+  if (!mounted || isChecking || CurrentUserType === null) {
+  return <LoadingData />;
+}
 
   return (
  
@@ -1841,6 +1995,72 @@ const handleHeightFromCm = (cmValue: string) => {
         className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
         required
       />
+       
+    </div>
+    <div className="space-y-4 mt-2">
+   
+      <div className="relative">
+        <input
+          type={showPassword ? "text" : "password"}
+          name="Password"
+          value={password}
+          onChange={handleChange}
+          placeholder="Enter Password"
+          className="w-full border border-gray-300 p-3 pr-10 rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent"
+          required
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+        >
+          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </div>
+
+     
+      <div className="relative ">
+        <input
+          type={showConfirm ? "text" : "password"}
+          name="ConfirmPassword"
+          value={form.ConfirmPassword || ""}
+          onChange={handleChange}
+          placeholder="Confirm Password"
+          className={`w-full border p-3 pr-10 rounded-lg text-sm focus:ring-2 transition
+            ${
+              form.ConfirmPassword &&
+              form.ConfirmPassword !== password
+                ? "border-red-400 focus:ring-red-300"
+                : "border-gray-300 focus:ring-blue-300"
+            }`}
+          required
+        />
+        <button
+          type="button"
+          onClick={() => setShowConfirm(!showConfirm)}
+          className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+        >
+          {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </div>
+  <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-lg border">
+        <RuleItem ok={passwordRules.length(password)} label="Min 8 characters" />
+        <RuleItem ok={passwordRules.capital(password)} label="1 Capital letter" />
+        <RuleItem ok={passwordRules.number(password)} label="1 Number" />
+        <RuleItem ok={passwordRules.special(password)} label="1 Special character" />
+      </div>
+
+      {form.ConfirmPassword && (
+        <p
+          className={`text-xs font-medium ${
+            form.ConfirmPassword === password ? "text-green-600" : "text-red-500"
+          }`}
+        >
+          {form.ConfirmPassword === password
+            ? "Passwords match"
+            : "Passwords do not match"}
+        </p>
+      )}
     </div>
   </div>
 

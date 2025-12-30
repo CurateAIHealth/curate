@@ -4,11 +4,12 @@ import { useCallback, useEffect, useState, } from 'react';
 import Image from 'next/image';
 import axios from 'axios';
 import { GetHCACompliteInformation, GetUserCompliteInformation, GetUserInformation, UpdateClientComplitInformation, UpdateHCAComplitInformation } from '@/Lib/user.action';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { Pencil, X } from 'lucide-react';
 import { PROFESSIONAL_SKILL_OPTIONS } from '@/Lib/Content';
 import { LoadingData } from '../Loading/page';
+import { Update_Main_Filter_Status, UpdateUserType } from '@/Redux/action';
 
 
 const TABS = ['Personal Info', 'Bank Details', 'Documents', 'Work Experience', 'Identifiers'];
@@ -62,7 +63,9 @@ const [loadingDocs, setLoadingDocs] = useState<Record<string, boolean>>({});
 const [SubmitstatusMessage,setSubmitstatusMessage]=useState("")
   const [isChecking, setIsChecking] = useState(true);
   const [ProfetionlSkillsEdit,setProfetionlSkillsEdit]=useState(false)
+  const [ShowPassword,setShowPassword]=useState<any>("")
 const Router=useRouter()
+const dispatch=useDispatch()
 const ImportedUserId=useSelector((state:any)=>state.UserDetails)
 const NameoftheClient=useSelector((state:any)=>state.ClientName)
   const [user, setUser] = useState<UserData>({
@@ -116,6 +119,8 @@ useEffect(()=>{
     const Fetch = async () => {
     try {
       const Result:any = await GetHCACompliteInformation(ImportedUserId);
+      const BasicInfo:any=await GetUserInformation(ImportedUserId)
+    setShowPassword(BasicInfo.PreviewPassword)
       const FilterValue=Result.HCAComplitInformation
       console.log("Test Complite HCA Information---",FilterValue)
       setUser(prev=>({...prev,
@@ -229,6 +234,8 @@ useEffect(()=>{
 );
 
   const Revert = () => {
+     dispatch(Update_Main_Filter_Status("HCP List")); 
+        dispatch(UpdateUserType("healthcare-assistant"));
         Router.push("/AdminPage")
     }
 const UpdatewithNewData=async()=>{
@@ -261,6 +268,7 @@ console.log("Checkkkkk------", user)
     case 'Personal Info':
       return (
         <div>
+         
             <div className="p-4 mb-2 bg-white rounded-2xl shadow-md border border-gray-200">
               <div className='flex justify-between'>
   <label className="block text-gray-700 font-semibold mb-2 text-lg">
@@ -441,6 +449,7 @@ console.log("Data of Birth---",user.dateOfBirth)
   <button className="bg-teal-600 p-2 text-white rounded-md cursor-pointer" onClick={UpdatewithNewData}>
     Update Profile
   </button>
+      
 </div>
 
 
@@ -458,6 +467,19 @@ console.log("Data of Birth---",user.dateOfBirth)
                 {tab}
               </button>
             ))}
+               {ShowPassword&& <div className="w-[150px] ml-auto border-gray-400 shadow-lg flex items-center gap-3 p-2 rounded-2xl 
+                bg-white shadow-md border border-gray-100">
+            <div className="w-9 h-9 flex items-center justify-center 
+                  rounded-full bg-blue-100 text-blue-600">
+              🔐
+            </div>
+            <p className="text-sm">
+              <span className="block text-xs text-gray-500">Password</span>
+              <span className="font-mono tracking-widest text-gray-900">
+                {ShowPassword}
+              </span>
+            </p>
+          </div>}
           </div>
 
           <div className="py-6">

@@ -63,7 +63,7 @@ const UserDetailInfo = () => {
     fetchUserInfo();
   }, [userId, router]);
 
-  // ✅ Memoized render logic to prevent unnecessary recalculations
+
   const renderUserComponent = useMemo(() => {
     switch (userType) {
       case 'HCA':

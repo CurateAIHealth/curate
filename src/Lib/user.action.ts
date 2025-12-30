@@ -1034,6 +1034,7 @@ StaffType:HCA.StaffType,
 
     
       Password: hashValue(HCA.Password),
+      PreviewPassword:encrypt(HCA.Password),
 
       userId: HCA.userId,
       ReferdVedorId:HCA.ReferdVedorId,
@@ -2994,6 +2995,37 @@ export const UpdateDocumentFollowUpStatus = async (
     return { success: false, message: error.message };
   }
 };
+
+export const UpdateClientInformation = async (
+  UserId: string,
+  data: any
+) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Registration");
+    const { _id, ...safeData } = data;
+    const result = await Collection.updateOne(
+      { userId: UserId },
+      {
+        $set: {
+          ...safeData,
+          userId: UserId,        
+          updatedAt: new Date(), 
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return { success: false, message: "User not found" };
+    }
+
+    return { success: true, message: "Profile updated successfully" };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+};
+
 
 export const UpdateDocumentFollowUpStatusInFullInfo = async (
   UserId: string,
