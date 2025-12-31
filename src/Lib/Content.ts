@@ -1713,7 +1713,7 @@ export const columns = [
   "EndDate",
   "VendorName",
   "OrganisationName",
-  "ResourceAcquired",
+  "Contact",
   "Price",
   "Attendence",
 ];

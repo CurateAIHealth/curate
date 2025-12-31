@@ -13,8 +13,8 @@ import {
 import UpdateAttendance from "../Attendence/page";
 import { GetUserInformation } from "@/Lib/user.action";
 import { useRouter } from "next/navigation";
+import VendorProfile from "@/Components/VendorProfile/page";
 
-/* ---------------- HELPERS ---------------- */
 
 function getDutyStatus(status: string) {
   switch (status) {
@@ -39,6 +39,7 @@ export default function HCPHome() {
   const [showHostelInfo, setShowHostelInfo] = useState(false);
   const [showNetPay, setShowNetPay] = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
+  const [CurrentUserType,setCurrentUserType]=useState("Vendor")
 
   const router=useRouter()
 
@@ -91,8 +92,11 @@ export default function HCPHome() {
     router.push("/");
   };
 
-  return (
-    <>
+
+
+  const HCPProfile=()=>{
+    return(
+        <>
    
       <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
         <div className="w-full px-4 py-3 flex items-center justify-between">
@@ -128,6 +132,7 @@ export default function HCPHome() {
             <h1 className="text-xl sm:text-2xl font-extrabold text-[#50c896]">
               Welcome, {userInfo?.FirstName} {userInfo?.LastName}
             </h1>
+           
             <p className="text-sm text-gray-500 capitalize">
               {userInfo?.userType?.replace("-", " ")}
             </p>
@@ -179,7 +184,7 @@ export default function HCPHome() {
           />
         </div>
 
-        {showAttendance && <UpdateAttendance />}
+        {showAttendance && <UpdateAttendance ImportedUserId={userInfo?.userId}/>}
 
 
         {showHostelInfo && hostelApplicable && (
@@ -217,10 +222,35 @@ export default function HCPHome() {
         )}
       </main>
     </>
+    )
+  }
+
+  const PreviewCurrentUser=()=>{
+    switch(userInfo?.userType){
+
+      case 'healthcare-assistant':
+         return HCPProfile();
+         case 'Vendor':
+          return <VendorProfile/>;
+          case "patient":
+            return <p>Client Page</p>
+          default :
+          return null
+
+    }
+  }
+
+  return (
+  <div>
+    {PreviewCurrentUser()}
+  </div>
   );
 }
 
 /* ---------------- SMALL COMPONENTS ---------------- */
+
+
+
 
 function StatCard({ title, value, icon, color }: any) {
   return (

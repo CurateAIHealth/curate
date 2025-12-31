@@ -7,7 +7,7 @@ import { GetRegidterdUsers } from "@/Lib/user.action";
 
 export default function VendorTable() {
   const [selectedVendor, setSelectedVendor] = useState<any | null>(null);
-  const [PreviewInfodata,setPreviewInfodata]=useState(Infodata)
+  const [InputValues,setInputValues]=useState('')
   const [ImportedVendors,setImportedVendors]=useState<any>([])
   useEffect(() => {
     const Fetch = async () => {
@@ -19,6 +19,20 @@ export default function VendorTable() {
     }
     Fetch()
   }, [])
+
+  console.log("Check Vendor Information---",ImportedVendors)
+  const maskAadhar = (value?: string) =>
+  value ? value.replace(/\d(?=\d{4})/g, "•") : "";
+
+const formatDate = (date?: string) =>
+  date ? new Date(date).toLocaleDateString("en-IN") : "-";
+
+const AccessInputValues=(e:any)=>{
+setInputValues(e.target.value)
+}
+
+const FilterInputVlaue=ImportedVendors.filter((each:any)=>each.VendorName.includes(InputValues))
+
   return (
     <div className="relative w-full space-y-8 p-6 bg-gradient-to-b from-blue-50 to-purple-50 min-h-screen">
   
@@ -42,6 +56,7 @@ export default function VendorTable() {
           <input
             type="text"
             placeholder="Search vendors..."
+            onChange={AccessInputValues}
             className="bg-transparent outline-none text-sm w-full text-gray-800"
           />
         </div>
@@ -52,7 +67,7 @@ export default function VendorTable() {
           
           <thead className="bg-gradient-to-r from-blue-200 to-purple-200 text-gray-800 text-xs uppercase tracking-wider shadow-md">
             <tr>
-              <th className="px-6 py-4">Preview</th>
+              {/* <th className="px-6 py-4">Preview</th> */}
               {columns.map((col) => (
                 <th key={col} className="px-6 py-4 text-left font-semibold border-r border-white/40 last:border-r-0">
                   {col}
@@ -61,34 +76,64 @@ export default function VendorTable() {
             </tr>
           </thead>
 
-          <tbody>
-            {PreviewInfodata.map((row: any, index) => (
-              <tr
-                key={index}
-                className="bg-white/80 backdrop-blur-xl border-b border-gray-200 hover:bg-white hover:shadow-xl transition cursor-pointer"
-                style={{ boxShadow: "0 6px 18px rgba(0,0,0,0.06)" }}
-              >
-                <td
-                  className="px-6 py-4 text-gray-800 border-r border-gray-100 last:border-r-0"
-                  onClick={() => setSelectedVendor(row)}
-                >
-                  <Eye className="cursor-pointer hover:text-purple-600 transition" />
-                </td>
+         <tbody>
+  {FilterInputVlaue.map((row: any, index: number) => (
+    <tr
+      key={index}
+      className="bg-white border-b hover:bg-gray-50 transition"
+    >
+    
+      {/* <td className="px-5 py-4 text-center">
+        <Eye
+          className="w-5 h-5 text-gray-500 hover:text-purple-600 cursor-pointer"
+          onClick={() => setSelectedVendor(row)}
+        />
+      </td> */}
 
-                {columns.map((col) => (
-                  <td key={col} className="px-6 py-4 text-gray-800 border-r border-gray-100 last:border-r-0">
-                    {row[col] ?? ""}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
+      <td className="px-6 py-4 text-gray-700">
+        {formatDate(row.createdAt)}
+      </td>
+
+      <td className="px-6 py-4 text-gray-400">—</td>
+
+     
+      <td className="px-6 py-4 font-semibold text-gray-800">
+        {row.VendorName}
+      </td>
+
+      <td className="px-6 py-4 text-gray-700 max-w-xs">
+        {row.CompanyName}
+      </td>
+
+     
+      <td className="px-6 py-4 text-gray-700">
+        {row.ContactNumber||"Not Provided"}
+      </td>
+
+      <td className="px-6 py-4 tracking-wider text-gray-700">
+       -
+      </td>
+
+     
+     <td className="px-4 py-4 text-center">
+  <span
+    className="text-blue-600 text-sm font-medium underline cursor-pointer
+               hover:text-blue-800 transition"
+  >
+    View
+  </span>
+</td>
+
+    </tr>
+  ))}
+</tbody>
+
 
         </table>
       </div>
 
     
-      {selectedVendor && (
+      {/* {selectedVendor && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex justify-center items-center p-6 z-50">
           
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 relative border border-gray-200 animate-[fadeIn_0.3s_ease]">
@@ -118,7 +163,7 @@ export default function VendorTable() {
 
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

@@ -5,7 +5,11 @@ import { UpdateTimeStamp } from "@/Redux/action";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-export default function UpdateAttendance() {
+type Props = {
+  ImportedUserId: string;
+};
+
+export default function UpdateAttendance({ ImportedUserId }: Props) {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<{ success: boolean; message: string } | null>(null);
@@ -36,7 +40,7 @@ const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 
     try {
       const AttendenceUpdateResult:any=await  UpdateAttendence(
-  "72934d29-9c06-4d28-a1bb-8776b30adeaf", 
+ImportedUserId, 
   `${currentYear}-${currentMonth}`,                              
   {
     HCPAttendence: true,
@@ -63,7 +67,7 @@ TimeStampData
     <div className="flex items-center justify-center">
       <div className="bg-white shadow-xl rounded-3xl w-full max-w-md p-8 transition-all duration-300 hover:shadow-blue-200">
         <h2 className="text-2xl font-semibold text-[#ff1493] text-center mb-6">
-          🩺 Update Your Attendance
+          🩺 Mark Your Attendance
         </h2>
 
        
@@ -124,15 +128,13 @@ TimeStampData
   
         <div className="mt-8 text-center bg-gray-50 p-4 rounded-xl text-sm text-gray-600 border border-gray-100">
         
+          {/* <p>
+            <span className="font-medium text-gray-700">HCA ID:</span> {ImportedUserId}
+          </p> */}
           <p>
-            <span className="font-medium text-gray-700">HCA ID:</span> {hcpId}
+            <span className="font-medium text-gray-700">Date:</span> {new Date().toLocaleDateString('en-in')}
           </p>
-          <p>
-            <span className="font-medium text-gray-700">Month:</span> {Month}
-          </p>
-          <p>
-            <span className="font-medium text-gray-700">Updated By:</span> {UpdatedBy}
-          </p>
+       
         </div>
       </div>
     </div>
