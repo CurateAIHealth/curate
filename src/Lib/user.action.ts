@@ -1590,6 +1590,8 @@ export const GetUserPDRInfo = async (UserId: any) => {
   }
 };
 
+import { ObjectId } from "mongodb";
+
 export const UpdateAttendence = async (
   hcpId: string,
   Month: string,
@@ -1604,17 +1606,29 @@ export const UpdateAttendence = async (
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Deployment");
 
-    const today = new Date().toISOString().split("T")[0];
+    const normalizedMonth = new Date(Month + "-01")
+      .toISOString()
+      .slice(0, 7); 
+
+   
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
 
 
     const alreadyExist = await collection.findOne({
       HCAId: hcpId,
-      Month: Month,
+      $or: [
+        { Month: normalizedMonth },
+        { Month: normalizedMonth.replace("-0", "-") }, 
+      ],
       Attendance: {
         $elemMatch: {
           AttendenceDate: {
-            $gte: new Date(today + "T00:00:00.000Z"),
-            $lte: new Date(today + "T23:59:59.999Z"),
+            $gte: startOfDay,
+            $lte: endOfDay,
           },
         },
       },
@@ -1623,10 +1637,11 @@ export const UpdateAttendence = async (
     if (alreadyExist) {
       return {
         success: false,
-        message: "⚠️ Attendance already marked for today. You cannot submit again.",
+        message: "⚠️ Attendance already marked for today.",
       };
     }
 
+   
     const attendanceEntry = {
       AttendenceDate: new Date(),
       HCPAttendence: Status.HCPAttendence,
@@ -1637,32 +1652,47 @@ export const UpdateAttendence = async (
 
     
     const result = await collection.updateOne(
-      { HCAId: hcpId, Month: Month },
       {
-        $push: { Attendance: attendanceEntry }as any,
-        $setOnInsert: {
-          HCAId: hcpId,
-          Month: Month,
-          CreatedAt: new Date(),
-        },
+        HCAId: hcpId,
+        $or: [
+          { Month: normalizedMonth },
+          { Month: normalizedMonth.replace("-0", "-") },
+        ],
       },
-      { upsert: true }   
+      {
+        $push: { Attendance: attendanceEntry } as any,
+        $set: {
+          Month: normalizedMonth,
+          UpdatedAt: new Date(),
+          UpdatedBy: UpdatedBy || "",
+        },
+      }
     );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "❌ Deployment record not found. Attendance not updated.",
+      };
+    }
 
     return {
       success: true,
-      message: `✅ Attendance updated successfully on ${new Date().toLocaleDateString(
+      message: `✅ Attendance marked successfully on ${new Date().toLocaleDateString(
         "en-IN"
-      )}.`,
+      )}`,
     };
   } catch (error: any) {
-    console.error("❌ Error updating attendance:", error.message);
+    console.error("❌ Error updating attendance:", error);
     return {
       success: false,
       message: "Error updating attendance: " + error.message,
     };
   }
 };
+
+
+
 
 export const UpdateMultipleAttendance = async (
   hcpIds: string[],    
@@ -1709,7 +1739,7 @@ export const UpdateMultipleAttendance = async (
         UpdatedAt: new Date(),
         UpdatedBy: UpdatedBy || "",
       };
-
+console.log("Check Attendece Entry-----",attendanceEntry)
       operations.push({
         updateOne: {
           filter: { HCAId: hcpId, Month: Month },

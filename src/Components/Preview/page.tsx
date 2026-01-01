@@ -1,6 +1,6 @@
 'use client';
 
-import { GetInvoiceInfo, GetTimeSheetInfo, GetUserPDRInfo, InsertDeployment, PostInvoice, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdatePDR, UpdatePdrStatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
+import { GetDeploymentInfo, GetInvoiceInfo, GetUserPDRInfo, InsertDeployment, PostInvoice, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdatePDR, UpdatePdrStatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { UpdatePreviewStatus } from "@/Redux/action";
 import { TimeStamp } from "@/Redux/reducer";
 import { data } from "framer-motion/client";
@@ -106,15 +106,16 @@ const UpdatePDRInfo = async () => {
       // const UpdateStatus = await UpdateUserContactVerificationstatus(DeploaymentInformation.Client_Id, "Placced")
       // const UpdateHcaStatus = await UpdateHCAnstatus(DeploaymentInformation.HCA_Id, "Assigned")
       // const UpdatedHCPStatusInCompliteInformation = await UpdateHCAnstatusInFullInformation(DeploaymentInformation.HCA_Id)
-      const PlacementInformation: any = await GetTimeSheetInfo();
+      const PlacementInformation: any = await GetDeploymentInfo();
       const DateOfCurrentDay = new Date()
       const DeploymentAttendence = [{ AttendenceDate: DateOfCurrentDay, HCPAttendence: true, AdminAttendece: true }]
       const LastDateOfMonth = new Date(DateOfCurrentDay.getFullYear(), DateOfCurrentDay.getMonth() + 1, 0)
         .toLocaleDateString('en-IN');
         const DateofToday=new Date().toLocaleDateString('In-en')
 const CurrentServiceCharge=UpdatedData.serviceCharges = String(UpdatedData.serviceCharges || "").replace(/,/g, "");
- const nextCounter = PlacementInformation.length + 1;
-const DeploymentInvoise = `BSV${new Date().getFullYear()}_${nextCounter}_${new Date().getTime()}`;
+
+
+const DeploymentInvoise = `BSV${new Date().getFullYear()}_${PlacementInformation.length + 1}`;
 const PostDeployment = await InsertDeployment(
   DateofToday,               
   LastDateOfMonth,          

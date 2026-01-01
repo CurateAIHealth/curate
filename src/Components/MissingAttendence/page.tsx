@@ -19,7 +19,7 @@ const MissingAttendence = () => {
   const [ChooseMultiple,setChooseMultiple]=useState(true)
   const [selectedHCPIds,setselectedHCPIds]=useState<any>([])
 
-console.log("Test Selected HCP Id's---",selectedHCPIds)
+
   useEffect(() => {
     const Fetch = async () => {
       try {
@@ -102,6 +102,7 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
 
     }
   }
+  console.log("Test Selected HCP Id's---",result)
   if (isChecking) {
     return <LoadingData />
   }

@@ -32,6 +32,23 @@ const [billingRecord, setBillingRecord] = useState<any>(null);
 
   const dispatch = useDispatch();
   const router = useRouter();
+  const getMonthKey = (record: any) => {
+  // 1️⃣ Already correct format
+  if (record.Month) {
+    const [y, m] = record.Month.split("-");
+    return `${y}-${m.padStart(2, "0")}`;
+  }
+
+  // 2️⃣ From StartDate: DD/MM/YYYY
+  if (record.StartDate) {
+    const [, m, y] = record.StartDate.split("/");
+    return `${y}-${m.padStart(2, "0")}`;
+  }
+
+  return "Unknown";
+};
+
+
 
   useEffect(() => {
     const Fetch = async () => {
@@ -40,13 +57,14 @@ const [billingRecord, setBillingRecord] = useState<any>(null);
 
       const formattedData: any = {};
       PlacementInformation.forEach((record: any) => {
-        const monthKey = record.Month || "Unknown";
+      const monthKey = getMonthKey(record);
+
         if (!formattedData[monthKey]) formattedData[monthKey] = [];
         formattedData[monthKey].push({
           invoice: record.invoice || "",
           startDate: record.StartDate || "",
           endDate: record.EndDate || "",
-          status: record.Status || "Inactive",
+          status: record.Status || "",
           location: record.Address || "N/A",
           clientPhone: record.ClientContact || "",
           clientName: record.ClientName || "",
@@ -74,7 +92,7 @@ const [billingRecord, setBillingRecord] = useState<any>(null);
     };
 
     Fetch();
-  }, [StatusMessage]);
+  }, [StatusMessage,showMissingCalendar]);
 
   const months = [
     { value: "01", name: "January" },
@@ -239,7 +257,7 @@ const [billingRecord, setBillingRecord] = useState<any>(null);
       router.push("/UserInformation");
     }
   };
-
+console.log("Check Info-----",ClientsInformation)
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 p-6">
       {/* HEADER */}
@@ -321,7 +339,7 @@ const [billingRecord, setBillingRecord] = useState<any>(null);
               <Th>HCP Referral</Th>
               <Th>Vendor</Th>
               <Th>Type</Th>
-               <Th className="bg-amber-400 text-center">Payment Info</Th>
+               {/* <Th className="bg-amber-400 text-center">Payment Info</Th> */}
               <Th className="bg-amber-400 text-center">PD</Th>
               <Th className="bg-amber-400 text-center">AD</Th>
               <Th className="bg-amber-400 text-center">HP</Th>
