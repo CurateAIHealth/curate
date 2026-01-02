@@ -47,7 +47,7 @@ import { UserCheck } from "lucide-react";
 const tabs = [
   {
     name: "Client Enquiry",
-    count: 120,
+    count: 121,
     growth: "+15%",
     icon: Bell,
     color: "bg-gradient-to-tr from-blue-500 to-indigo-500",
