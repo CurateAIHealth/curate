@@ -349,7 +349,7 @@ const ClientEnquiryUserInterFace = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="px-2 py-2 break-words">{user.Email}</td>
+                      <td className="px-2 py-2 break-words">{user?.Email?.toLowerCase()||"Not Provided"}</td>
                       <td className="px-2 py-2">+91{user.Contact}</td>
                       {/* <td className="px-2 py-2">
                         <span className="px-2 sm:px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-[9px] sm:text-xs">

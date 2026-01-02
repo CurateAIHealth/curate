@@ -109,8 +109,8 @@ export default function OccupationalHealth() {
 
       <header className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto py-20 px-5 items-center md:items-start">
         <motion.div initial="hidden" animate="visible" className="flex-1 md:pt-7">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-[#ff1493] leading-snug">
-            CURATE <span className="text-[#1392d3]">Occupational Health</span>
+          <h1 className="text-xl md:text-5xl font-extrabold mb-5 tracking-tight text-[#11354b] drop-shadow">
+            CURATE Occupational Health
           </h1>
           <p className="text-lg md:text-2xl mt-6 text-[#1392d3] max-w-xl">
             Not just checking boxes—transforming workforce wellness through journeys, not programs.
@@ -128,7 +128,7 @@ export default function OccupationalHealth() {
           transition={{ duration: 0.7, type: "spring", bounce: 0.28, delay: 0.1 }}
           className="flex-1 w-full h-72 md:h-[420px] rounded-2xl shadow-2xl overflow-hidden"
         >
-          <img src='Icons/OccupationalHealthMain.png' alt="Occupational Health Hero" className="w-full h-full object-cover object-center" />
+          <img src='Icons/Wisconsin communities fight to save county-owned nursing homes from privatization - Wausau Pilot & Review.jpg' alt="Occupational Health Hero" className="w-full h-full object-cover object-center" />
         </motion.div>
       </header>
 
@@ -219,7 +219,7 @@ export default function OccupationalHealth() {
           <li>Always-on support and consultation</li>
         </ul>
         <motion.button
-          onClick={() => window.location.href = "/contact"}
+          
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.96 }}
           className="mt-4 px-8 py-3 bg-blue-700 text-white font-extrabold rounded-xl shadow-xl hover:bg-blue-800 transition text-lg"
@@ -228,28 +228,31 @@ export default function OccupationalHealth() {
         </motion.button>
       </motion.div>
 
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-center">
-        <motion.a
-          href="https://www.instagram.com/yourprofile"
-          target="_blank" rel="noopener noreferrer"
-          className="hover:bg-pink-600 text-white p-3 rounded-full shadow-lg transition"
-          aria-label="Instagram"
-          whileHover={{ scale: 1.15, rotate: -5 }}
-          whileTap={{ scale: 0.94 }}
-        >
-          <img alt="Instagram" src="Icons/insta.svg" className="w-10 h-10" />
-        </motion.a>
-        <motion.a
-          href="https://www.linkedin.com/in/yourprofile"
-          target="_blank" rel="noopener noreferrer"
-          className="hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition"
-          aria-label="LinkedIn"
-          whileHover={{ scale: 1.15, rotate: 5 }}
-          whileTap={{ scale: 0.94 }}
-        >
-          <img alt="LinkedIn" src="Icons/Linkedin.png" className="w-10 h-10" />
-        </motion.a>
-      </div>
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-4 items-center">
+  <a
+    href="https://www.instagram.com/yourprofile"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Instagram"
+    className="w-14 h-14 flex items-center justify-center rounded-full
+               bg-white border-2 border-[#ff1493]
+               shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300"
+  >
+    <img src="Icons/Insta.gif" alt="Instagram" className="w-7 h-7" />
+  </a>
+
+  <a
+    href="https://www.linkedin.com/in/yourprofile"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="LinkedIn"
+    className="w-14 h-14 flex items-center justify-center rounded-full
+               bg-white border-2 border-[#0a66c2]
+               shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300"
+  >
+    <img src="Icons/Linkedin.gif" alt="LinkedIn" className="w-7 h-7" />
+  </a>
+</div>
 
       <ModernFooter />
     </section>

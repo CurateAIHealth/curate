@@ -25,13 +25,19 @@ const green = "#50c896";
 const mainMenu = [
 
     { label: "Home Health", icon: <BriefcaseMedical size={18} />, href: "/" },
-    { label: "Ocuppational Health", icon: <User size={18} />, href: "/occupational" },
+    { label: "Occupational Health", icon: <User size={18} />, href: "/occupational" },
     { label: "Digital AI Health", icon: <User size={18} />, href: "/DigitalAI" },
     { label: "About US", icon: <User size={18} />, href: "/AboutUS" },
     { label: "Login", icon: <LogIn size={18} />, href: "/sign-in" },
 ];
 
-
+  const logos = [
+    "/Icons/AbhaLogo.png",
+    "/Icons/Parkson.jpeg",
+    "/Icons/AbhaLogo.png",
+    "/Icons/Parkson.jpeg",
+    "/Icons/AbhaLogo.png",
+  ];
 export default function StaticInfoPage() {
   const [isChecking, setIsChecking] = useState(true);
     const [mobileOptsOpen, setMobileOptsOpen] = useState(false);
@@ -91,7 +97,11 @@ const visibleReviews = showAllReviews
   Fetch();
 }, [router]);
 
+const ViewContactInfo=()=>{
+  const Contact_Container=document.getElementById("ContactInformation")
+  Contact_Container?.scrollIntoView({behavior:"smooth",block:'center'})
 
+}
   if (isChecking) {
     return (
       <LoadingData/>
@@ -107,8 +117,8 @@ const visibleReviews = showAllReviews
                       <img
                                   src="/Icons/HomeIcon.png"
                                   alt="Curate AI Health Logo"
-                                  width={120}
-                                  height={35}
+                                  width={180}
+                                  height={45}
                                   
                                   className="object-contain"
                                 />
@@ -218,7 +228,7 @@ const visibleReviews = showAllReviews
                             <motion.a
                                 whileHover={{ scale: 1.057 }}
                                 whileTap={{ scale: 0.96 }}
-                                href="/contact"
+                                onClick={ViewContactInfo}
                                 className="rounded-full px-8 py-4 font-semibold text-lg shadow transition bg-[#1392d3] text-white"
                                 style={{
                                     background: `linear-gradient(90deg, ${blue} 60%, ${green} 110%)`,
@@ -229,7 +239,7 @@ const visibleReviews = showAllReviews
                             </motion.a>
                             <motion.a
                                 whileHover={{ scale: 1.04 }}
-                                href="/pricing"
+                                href="/"
                                 className="rounded-full border-2 border-[#f5e8f8] bg-white text-[#1392d3] font-semibold px-8 py-4 transition hover:shadow-lg shadow"
                             >
                                 {heroContent.ctaSecondary}
@@ -426,47 +436,54 @@ If you or a loved one needs medical support at home, Curate Health Services is h
                 <div className="max-w-5xl mx-auto">
                     <h2 className="text-3xl font-bold mb-6 text-[#ff1493] text-center">Why Choose US !</h2>
                     <p className="text-lg text-[#48697e] mb-12 text-center">
-                        Transparent plans tailored for solo PTs and clinics
+                    Transparent plan and service orientation for benefit of Patients
                     </p>
-                    <div className="grid md:grid-cols-2 gap-8">
-                        {pricing.map((plan, idx) => (
-                            <motion.div
-                                key={idx}
-                                initial={{ y: 32, opacity: 0 }}
-                                whileInView={{ y: 0, opacity: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: 0.04 + idx * 0.09 }}
-                                className={`rounded-2xl p-10 border shadow-lg relative bg-white 
-                  ${plan.highlighted ? "border-2 border-[#50c896] scale-[1.04] shadow-[#50c89630]" : "border-[#e0eff5] shadow"}
-                  hover:shadow-2xl transition 
-                `}
-                            >
-                                {plan.highlighted && (
-                                    <div
-                                        className="absolute top-5 right-7 px-4 py-1 rounded-full uppercase text-xs font-bold shadow text-white tracking-wide"
-                                        style={{ background: `linear-gradient(80deg, ${pink}, ${blue})` }}
-                                    >
-                                        Popular
-                                    </div>
-                                )}
-                                <h3 className="text-xl font-bold mb-2 text-[#1392d3]">{plan.name}</h3>
-                                <p className="text-[#50c896] text-3xl font-bold mb-4">{plan.price}</p>
-                                <ul className="text-[#628fa1] space-y-2 text-left mb-7">
-                                    {plan.features.map((item, i) => (
-                                        <li key={i}><span className="text-[#50c896] font-semibold">✓</span> {item}</li>
-                                    ))}
-                                </ul>
-                                <motion.a
-                                    whileHover={{ scale: 1.035 }}
-                                    href="/contact"
-                                    className="bg-[#1392d3] transition text-white font-bold px-7 py-3 rounded-full block w-full text-center shadow hover:shadow-lg"
-                                    style={{ background: `linear-gradient(85deg, ${blue}, ${green})` }}
-                                >
-                                    Get Started
-                                </motion.a>
-                            </motion.div>
-                        ))}
-                    </div>
+       <div className="grid md:grid-cols-2 gap-8">
+  {pricing.map((plan, idx) => (
+    <motion.div
+      key={idx}
+      initial={{ y: 32, opacity: 0 }}
+      whileInView={{ y: 0, opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay: 0.04 + idx * 0.09 }}
+      className="rounded-2xl p-10 border border-[#e0eff5] shadow-lg bg-white 
+                 hover:shadow-2xl transition 
+                 flex flex-col h-full"
+    >
+   
+      <h3 className="text-xl font-bold mb-3 text-[#1392d3]">
+        {plan.name}
+      </h3>
+
+     
+      <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+        {plan.description}
+      </p>
+
+  
+      <ul className="text-[#628fa1] space-y-3 text-left mb-8">
+        {plan.features.map((item, i) => (
+          <li key={i} className="flex gap-2">
+            <span className="text-[#50c896] font-bold">✓</span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+
+   
+      <motion.button
+        whileHover={{ scale: 1.03 }}
+        onClick={ViewContactInfo}
+        className="mt-auto bg-[#1392d3] text-white font-semibold px-7 py-3 
+                   rounded-full w-full text-center shadow hover:shadow-lg transition"
+      >
+        Contact Us
+      </motion.button>
+    </motion.div>
+  ))}
+</div>
+
+
                 </div>
             </section>
             <AnimatePresence>
@@ -572,35 +589,84 @@ transition-all duration-300
                 </div>
             </section>
 
-<ContactSection/>
+
+<h1 className="text-center text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">
+  Our <span className="text-teal-600">Partners</span>
+</h1>
+
+<div className="relative w-full overflow-hidden bg-white py-10">
+      
+      <div className="pointer-events-none absolute left-0 top-0 h-full w-24 bg-gradient-to-r from-white to-transparent z-10" />
+      <div className="pointer-events-none absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-white to-transparent z-10" />
+
+     
+      <div className="flex gap-16 whitespace-nowrap animate-scroll">
+        {[...logos, ...logos].map((logo, index) => (
+          <img
+            key={index}
+            src={logo}
+            alt="Partner logo"
+            className="h-16 w-auto object-contain grayscale opacity-80 grayscale-0 opacity-100 transition duration-300"
+          />
+        ))}
+      </div>
+    </div>
 
           
-<div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-center">
+{/* <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
   <a
     href="https://www.instagram.com/yourprofile"
     target="_blank"
     rel="noopener noreferrer"
-    className=" hover:bg-pink-600 text-white p-3 rounded-full shadow-lg transition"
-    aria-label="Instagram"
+    className="flex items-center gap-3 px-4 py-3 rounded-full
+               bg-white shadow-lg border hover:shadow-xl transition"
   >
-    <img alt='Instagram' src="Icons/Insta.gif"/>
-     
-    
+    <img src="Icons/Insta.gif" className="w-6 h-6" />
+    <span className="text-sm font-medium">Instagram</span>
   </a>
 
   <a
     href="https://www.linkedin.com/in/yourprofile"
     target="_blank"
     rel="noopener noreferrer"
-    className=" hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition"
-    aria-label="LinkedIn"
+    className="flex items-center gap-3 px-4 py-3 rounded-full
+               bg-white shadow-lg border hover:shadow-xl transition"
   >
-   <img alt='Instagram' src="Icons/Linkedin.gif"/>
+    <img src="Icons/Linkedin.gif" className="w-6 h-6" />
+    <span className="text-sm font-medium">LinkedIn</span>
+  </a>
+</div> */}
+
+<div className="fixed bottom-6 right-6 z-50 flex flex-col gap-4 items-center">
+  <a
+    href="https://www.instagram.com/yourprofile"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Instagram"
+    className="w-14 h-14 flex items-center justify-center rounded-full
+               bg-white border-2 border-[#ff1493]
+               shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300"
+  >
+    <img src="Icons/Insta.gif" alt="Instagram" className="w-7 h-7" />
+  </a>
+
+  <a
+    href="https://www.linkedin.com/in/yourprofile"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="LinkedIn"
+    className="w-14 h-14 flex items-center justify-center rounded-full
+               bg-white border-2 border-[#0a66c2]
+               shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300"
+  >
+    <img src="Icons/Linkedin.gif" alt="LinkedIn" className="w-7 h-7" />
   </a>
 </div>
 
-
-            <ModernFooter/>
+<div id='ContactInformation'>
+<ModernFooter/>
+</div>
+            
         </div>
     );
 }

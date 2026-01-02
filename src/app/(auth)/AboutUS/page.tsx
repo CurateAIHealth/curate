@@ -47,21 +47,21 @@ const sections = [
         </p>
       </>
     ),
-    image: 'Icons/services.png'
+    image: 'Icons/services.jpg'
   },
   {
     icon: <HandHeart className="w-8 h-8 text-rose-500" />,
     title: 'Why Choose Us',
     content:
       'We go beyond clinical care. Our compassionate professionals foster emotional well-being, build trust, and ensure families feel supported at every step of the journey.',
-    image: 'Icons/why-us.png'
+    image: 'Icons/why-us.jpg'
   },
   {
     icon: <Stethoscope className="w-8 h-8 text-green-500" />,
     title: 'Trusted by Families',
     content:
       'From urban homes to remote communities, hundreds of families across the region rely on our dedicated team. Our client stories reflect our unwavering commitment to excellence.',
-    image: 'Icons/trusted.png'
+    image: 'Icons/trusted.jpg'
   }
 ];
 
@@ -269,26 +269,31 @@ export default function About() {
       </div>
 
       
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-center">
-        <a
-          href="https://www.instagram.com/yourprofile"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:bg-pink-600 text-white p-3 rounded-full shadow-lg transition"
-          aria-label="Instagram"
-        >
-          <img alt='Instagram' src="Icons/insta.svg" className="w-10 h-10" />
-        </a>
-        <a
-          href="https://www.linkedin.com/in/yourprofile"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition"
-          aria-label="LinkedIn"
-        >
-          <img alt='LinkedIn' src="Icons/Linkedin.png" className="w-10 h-10" />
-        </a>
-      </div>
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-4 items-center">
+  <a
+    href="https://www.instagram.com/yourprofile"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Instagram"
+    className="w-14 h-14 flex items-center justify-center rounded-full
+               bg-white border-2 border-[#ff1493]
+               shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300"
+  >
+    <img src="Icons/Insta.gif" alt="Instagram" className="w-7 h-7" />
+  </a>
+
+  <a
+    href="https://www.linkedin.com/in/yourprofile"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="LinkedIn"
+    className="w-14 h-14 flex items-center justify-center rounded-full
+               bg-white border-2 border-[#0a66c2]
+               shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300"
+  >
+    <img src="Icons/Linkedin.gif" alt="LinkedIn" className="w-7 h-7" />
+  </a>
+</div>
 
    
       <div className="relative z-10 mt-12">

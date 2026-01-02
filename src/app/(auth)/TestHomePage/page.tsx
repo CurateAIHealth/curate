@@ -14,7 +14,7 @@ const green = "#50c896";
 const mainMenu = [
 
     { label: "Home Health", icon: <BriefcaseMedical size={18} />, href: "/pricing" },
-    { label: "Ocuppational Health", icon: <User size={18} />, href: "/OcuppationalHealth" },
+    { label: "Occupational Health", icon: <User size={18} />, href: "/OcuppationalHealth" },
     { label: "Digital AI Health", icon: <User size={18} />, href: "/DigitalAIHealth" },
     { label: "About US", icon: <User size={18} />, href: "/AboutUS" },
     { label: "Login", icon: <LogIn size={18} />, href: "/login" },
@@ -31,8 +31,8 @@ export default function HomePage() {
                       <img
                                   src="/Icons/Curate-logo.png"
                                   alt="Curate AI Health Logo"
-                                  width={30}
-                                  height={30}
+                                  width={20}
+                                  height={20}
                                   
                                   className="object-contain"
                                 />
