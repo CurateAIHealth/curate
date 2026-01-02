@@ -89,7 +89,7 @@ const CurrentCount=useSelector((state:any)=>state.updatedCount)
       console.error(err);
     }
   };
-
+console.log("Check Permanent Adress0=--",users)
   const Finel = users.map((each: any) => ({
     id: each.userId,
     FirstName: each.FirstName,
@@ -297,6 +297,11 @@ sendWhatsApp("+919347877159","+919347877159");
 setUpdatedStatusMsg(err)
     }
   }
+  const toCamelCase = (value: string = "") =>
+  value
+    .toLowerCase()
+    .replace(/\b\w/g, char => char.toUpperCase());
+
 
 const ClientEnquiryUserInterFace = () => {
   return (
@@ -346,8 +351,9 @@ const ClientEnquiryUserInterFace = () => {
                             className="rounded-full h-7 w-7 sm:h-10 sm:w-10 object-cover"
                           /> */}
                           <span className="font-semibold text-[#007B7F] truncate">
-                            {user.FirstName}
-                          </span>
+  {toCamelCase(user.FirstName)}
+</span>
+
                         </div>
                       </td>
                       <td className="px-2 py-2 break-words">{user?.Email?.toLowerCase()||"Not Provided"}</td>
@@ -360,7 +366,8 @@ const ClientEnquiryUserInterFace = () => {
                       <td className="px-2 py-2">
                         {user.AadharNumber ? user.AadharNumber : "Aadhaar Pending"}
                       </td> */}
-                      <td className="px-2 py-2 break-words">{user.Location}</td>
+                        {UpdateduserType==="patient"?
+                      <td className="px-2 py-2 break-words">{user.Location}</td>: <td className="px-2 py-2 break-words">{GetPermanentAddress(user.userId)}</td>}
                       <td className="px-2 py-2">
                         <select
                           className="w-full text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200 cursor-pointer text-xs sm:text-sm"
@@ -535,10 +542,14 @@ const UpdateNavigattosuggetions=(D:any)=>{
   dispatch(UpdateClientSuggetion(D))
 }
 
-
-
+const GetPermanentAddress=(A:any)=>{
   const FilterProfilePic: any = UserFullInfo.map((each: any) => { return each?.HCAComplitInformation });
-console.log('Test Registerd Userss---',users)
+  const AdressInfo=FilterProfilePic.filter((each:any)=>each.UserId===A)
+  console.log("Check Adress-------",AdressInfo)
+  return AdressInfo[0]['Permanent Address']||"Not Enterd"
+}
+
+
 
 
   return (
@@ -653,16 +664,30 @@ onClick={()=>UpdateNavigattosuggetions()}
           >
             Show Placement Suggetions
           </button> */}
-          {(UpdateMainFilter!=="Deployment")&&(UpdateMainFilter!=="Timesheet") &&
+          {(UpdateMainFilter!=="Deployment")&&(UpdateMainFilter!=="Timesheet") &&(UpdateduserType!=='healthcare-assistant')&&
           <select
-            value={UpdateduserType}
-            onChange={FilterUserType}
-      className={`p-2 h-10 w-[120px] ${UpdateduserType==="patient"?"mt-6":"mt-0"} cursor-pointer text-center rounded-xl bg-white shadow border border-gray-800 text-base font-medium focus:border-[#62e0d9] focus:ring-2 focus:ring-[#caf0f8] ml-auto`}
-          >
-            <option value="patient">Patient</option>
-            <option value="healthcare-assistant">HCA</option>
-            <option value="doctor">Doctor</option>
-          </select>}
+  className={`
+    h-11 w-[150px] px-3
+    ${UpdateduserType === "patient" ? "mt-6" : "mt-0"}
+    ml-auto cursor-pointer
+    rounded-xl bg-white
+    border border-slate-300
+    text-sm font-semibold text-slate-700
+    shadow-sm
+    transition-all duration-200 ease-in-out
+
+    hover:border-slate-400 hover:shadow-md
+    focus:outline-none
+    focus:border-[#62e0d9]
+    focus:ring-2 focus:ring-[#caf0f8]
+  `}
+>
+  <option value="priority">⭐ Priority</option>
+  <option value="stable">🟢 Stable</option>
+  <option value="monitor">🟡 Monitor</option>
+  <option value="critical">🔴 Critical Attention</option>
+</select>
+}
         </div>
       </div>
 
