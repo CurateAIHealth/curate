@@ -5,16 +5,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { to, subject, html, pdfBase64 } = req.body;
 
-    // Create SMTP transporter
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_SERVER_HOST,
-      port: Number(process.env.EMAIL_SERVER_PORT),
-      secure: false, // use TLS
-      auth: {
-        user: process.env.EMAIL_FROM,
-        pass: process.env.EMAIL_PASSWORD, 
-      },
-    });
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_SERVER_HOST, 
+  port: 465,
+  secure: true, 
+  auth: {
+    user: process.env.EMAIL_FROM,
+    pass: process.env.EMAIL_PASSWORD, 
+  },
+});
+
 
     // Email content
     const mailOptions = {
