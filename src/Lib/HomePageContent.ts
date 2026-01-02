@@ -30,27 +30,33 @@ export const features = [
 
 export const pricing = [
   {
-    name: 'Basic Care Package',
-    price: 'Contact for Pricing',
+    name: "Basic Health Care Package",
+ 
+    description:
+      "A transparent and service-oriented care plan focused on the essential daily needs and well-being of patients.",
     features: [
-      'Certified Care Attendants',
-      'Home Assistance',
-      'Daily Health Monitoring',
-      'Flexible Scheduling',
+      "Certified Health Care Assistants",
+      "Daily Health Monitoring",
+      "Curate Health Digital Services",
+      "Immediate Response on Operational Issues",
+      "Physiotherapy Assessment",
     ],
   },
   {
-    name: 'Comprehensive Care Package',
-    price: 'Contact for Pricing',
+    name: "Comprehensive Health Care Package",
+    price: "Transparent Pricing",
+    description:
+      "An advanced care solution offering clinical expertise, rehabilitation support, and continuous digital monitoring.",
     features: [
-      'All features in Basic Care',
-      'Specialist Access',
-      'Nursing Care Days Included',
-      'Personalized Care Plans',
+      "Certified Nurse Services",
+      "Physiotherapy Regular Mentoring for Health Care Assistants",
+      "Curate Health Digital – Medication Chart Monitoring",
+      "Special Attention on Family Medical Needs",
+      "Rehabilitation Specialists Available for Online Consultation",
     ],
-    highlighted: true,
   },
 ];
+
 export  const steps = [
     "Attending the Home Health Service Request by Our Operations Manager",
     "Finding Suitable Healthcare Professional for your request & requirements",
@@ -196,23 +202,23 @@ export const cta = {
 export const services = [
   {
     title: 'Healthcare Assistants',
-    icon: '/Icons/healthcare-assistants.png',
+    icon: '/Icons/Medical care-rafiki.png',
   },
   {
     title: 'Nurse At Home 24/7',
-    icon: '/Icons/nurse-at-home.jpeg',
+    icon: '/Icons/Nursing home-bro.png',
   },
   {
     title: 'Physio At Home',
-    icon: '/Icons/physio-at-home.jpeg',
+    icon: '/Icons/Physical therapy exercise-bro.png',
   },
   {
     title: 'Labs At Home',
-    icon: '/Icons/Lab-at-Home.png',
+    icon: '/Icons/Laboratory-bro.png',
   },
   {
     title: 'Medical Equipment',
-    icon: '/Icons/medical-equipment.png',
+    icon: '/Icons/Stem-cell research-bro.png',
   },
 ];
 
@@ -248,7 +254,7 @@ export const images = {
       desc: "Professionals empowered nationwide",
     },
     {
-      img: "Icons/Recognisation.png",
+      img: "Icons/image.png",
       icon: Award,
       title: "Recognition",
       stat: "2024",
@@ -268,51 +274,51 @@ export const DigitalAiHealservices = [
   {
     title: "Ayurveda",
     desc: "Ancient science meets digital intelligence—restoring balance and well-being through holistic traditions and modern insights.",
-    icon: Activity, image: "Icons/Ayurvedha.png"
+    icon: Activity, image: "Icons/Ayurvedha.jpg"
   },
   {
     title: "Modern Medicine",
     desc: "Cutting-edge care enabled by AI, blending the latest evidence-based practice with a personalized, tech-empowered approach.",
-    icon: Heart, image: "Icons/medicine.png"
+    icon: Heart, image: "Icons/ModerMedicin.jpg"
   },
   {
     title: "Physiotherapy",
     desc: "Movement and recovery guided by smart rehabilitation tools—supporting you on your journey towards optimal function.",
-    icon: Thermometer, image: "Icons/physio.png"
+    icon: Thermometer, image: "Icons/physio.jpg"
   },
   {
     title: "Speech Therapy",
     desc: "Connecting voices and unlocking communication with the support of integrated digital and traditional therapies.",
-    icon: Mic, image: "Icons/speech.png"
+    icon: Mic, image: "Icons/speech.jpg"
   },
   {
     title: "Nutrition",
     desc: "Personalized dietary guidance powered by expert knowledge and AI insights for lifelong wellness.",
-    icon: Apple, image: "Icons/nutrition.png"
+    icon: Apple, image: "Icons/nutrition.jpg"
   },
   {
     title: "Yoga & Meditation",
     desc: "Mind and body connectivity, bringing ancient healing into the digital age for greater balance and calm.",
-    icon: PersonStanding, image: "Icons/yoga.png"
+    icon: PersonStanding, image: "Icons/Yoga.jpg"
   },
   {
     title: "Behavior Therapy",
     desc: "Empowering positive change through tech-enhanced behavioral strategies within a compassionate network.",
-    icon: BookOpen, image: "Icons/behavior.png"
+    icon: BookOpen, image: "Icons/behavior.jpg"
   },
   {
     title: "Music Therapy",
     desc: "Harnessing the healing power of sound and rhythm—supported by innovative, tech-enabled care.",
-    icon: Music, image: "Icons/music.png"
+    icon: Music, image: "Icons/Music.jpg"
   },
   {
     title: "Occupational Therapy",
     desc: "Fostering independence and daily skills with digital and personalized rehabilitation programs.",
-    icon: Hammer, image: "Icons/occupation.png"
+    icon: Hammer, image: "Icons/occupation.jpg"
   },
   {
     title: "Psychology",
     desc: "Promoting mental wellness and resilience, integrating modern psychology with digital advancement.",
-    icon: Brain, image: "Icons/psychology.png"
+    icon: Brain, image: "Icons/psychology.jpg"
   }
 ];

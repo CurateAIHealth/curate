@@ -100,7 +100,7 @@ export default function HospitalDesign() {
             className="md:w-7/12 w-full"
           >
             <img
-              src="Icons/doctor-patient-interaction.png"
+              src="Icons/DigitalAI.jpg"
               alt="Digital health professional with patient"
               className="rounded-2xl shadow-xl w-full max-h-[310px] md:max-h-[410px] object-cover border border-blue-100"
             />
@@ -198,7 +198,7 @@ export default function HospitalDesign() {
             transition={{ duration: 0.8 }}
           >
             <img
-              src="Icons/patient-rehabilitation-support.png"
+              src="Icons/patient-rehabilitation-support.jpg"
               alt="Patient rehabilitation support"
               className="rounded-2xl shadow-2xl border border-pink-100 w-full max-w-[380px] h-auto object-cover mx-auto"
               style={{ maxHeight: '290px', minHeight: '160px' }}
@@ -252,26 +252,31 @@ export default function HospitalDesign() {
         </div>
       </section>
 
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-center">
-        <a
-          href="https://www.instagram.com/yourprofile"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:bg-pink-600 text-white p-3 rounded-full shadow-lg transition"
-          aria-label="Instagram"
-        >
-          <img alt='Instagram' src="Icons/insta.svg" className="w-10 h-10" />
-        </a>
-        <a
-          href="https://www.linkedin.com/in/yourprofile"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition"
-          aria-label="LinkedIn"
-        >
-          <img alt='LinkedIn' src="Icons/Linkedin.png" className="w-10 h-10" />
-        </a>
-      </div>
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-4 items-center">
+  <a
+    href="https://www.instagram.com/yourprofile"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Instagram"
+    className="w-14 h-14 flex items-center justify-center rounded-full
+               bg-white border-2 border-[#ff1493]
+               shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300"
+  >
+    <img src="Icons/Insta.gif" alt="Instagram" className="w-7 h-7" />
+  </a>
+
+  <a
+    href="https://www.linkedin.com/in/yourprofile"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="LinkedIn"
+    className="w-14 h-14 flex items-center justify-center rounded-full
+               bg-white border-2 border-[#0a66c2]
+               shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300"
+  >
+    <img src="Icons/Linkedin.gif" alt="LinkedIn" className="w-7 h-7" />
+  </a>
+</div>
       <ModernFooter />
     </main>
   );

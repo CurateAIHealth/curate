@@ -18,23 +18,40 @@ export default function ModernFooter() {
             </p>
           </div>
         
-          <div className="flex items-center gap-4 mt-4">
-            <a href="#"><Facebook size={22} className="hover:text-teal-200" /></a>
-            <a href="#"><Twitter size={22} className="hover:text-teal-200" /></a>
-            <a href="#"><Linkedin size={22} className="hover:text-teal-200" /></a>
-          </div>
+        
         </section>
      
-     <div className="animate-popup-blink rounded-2xl border border-teal-200 bg-teal-900/80 shadow-xl py-8 px-7 w-[260px] flex flex-col gap-3">
-  <span className="block font-semibold text-teal-100 mb-2">Talk to us</span>
-  <span className="flex gap-2 items-center text-sm"><Mail size={18}/>info@curatehealth.in</span>
-  <span className="flex gap-2 items-center text-sm"><Phone size={18}/>+91 73860 45569</span>
-  <span className="flex gap-2 items-start text-sm"><MapPin size={18} className="mt-1"/>
-    <span>
-      Plot 45, St. No. 14, Puppalaguda Rd,<br/>Manikonda, Hyderabad, Telangana 500089
-    </span>
+  <div className="rounded-2xl border border-gray-200 bg-white shadow-lg p-6 w-[280px] flex flex-col gap-4">
+  
+  {/* Title */}
+  <span className="text-sm text-center font-semibold tracking-wide text-[#ff1493] uppercase">
+    Talk to us
   </span>
+
+  {/* Contact Info */}
+  <div className="flex flex-col gap-3 text-sm text-gray-700">
+    <div className="flex gap-3 items-center">
+      <Mail size={18} className="text-[#ff1493]" />
+      <span>info@curatehealth.in</span>
+    </div>
+
+    <div className="flex gap-3 items-center">
+      <Phone size={18} className="text-[#ff1493]" />
+      <span>+91 73860 45569</span>
+    </div>
+
+    <div className="flex gap-3 items-start">
+      <MapPin size={18} className="text-[#ff1493] mt-1" />
+      <span className="leading-relaxed">
+        H. No. 2-117/7-53, Anagha Datta Nilayam,<br />
+        2-117/3, Manikonda Road,<br />
+        Behind Preetham Hospital, OU Colony,<br />
+        Shaikpet, Hyderabad, Telangana – 500104
+      </span>
+    </div>
+  </div>
 </div>
+
 
       
         <section className="flex-1 flex flex-col md:items-end md:text-right">
