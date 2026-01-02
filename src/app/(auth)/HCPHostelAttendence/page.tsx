@@ -8,6 +8,7 @@ import {
   Home,
 } from "lucide-react";
 import { PostHostelAttendence } from "@/Lib/user.action";
+import { useRouter } from "next/navigation";
 
 
 
@@ -42,6 +43,7 @@ export default function HCADailyCheckInUI() {
       glow: "shadow-amber-200/50",
     },
   ];
+  const router=useRouter()
 const UpdateAttendance=async()=>{
     try{
 
@@ -71,7 +73,7 @@ const res = await PostHostelAttendence("b6cafc1b-eade-49fc-8830-5ef5e97bc9ca", "
     
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-22 h-22 p-4 rounded-full  text-white shadow-lg">
-        <img src='Icons/Curate-logoq.png' alt="CurateLogo"/>
+        <img src='Icons/Curate-logoq.png' onClick={()=>router.push("/DashBoard")}  alt="CurateLogo"/>
           </div>
           <h1 className="text-2xl font-semibold text-gray-900">
             Hostel Daily Check-In

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { User, Download } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const payments = [
   {
@@ -45,7 +46,7 @@ const payments = [
 export default function PaymentsUI() {
   const [selectedMonth, setSelectedMonth] = useState("All");
   const [selectedYear, setSelectedYear] = useState("All");
-
+const Router=useRouter()
   const months = [
     "January","February","March","April","May","June",
     "July","August","September","October","November","December",
@@ -95,6 +96,7 @@ export default function PaymentsUI() {
         <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full border border-gray-300 shadow-lg flex items-center justify-center">
           <img
             src="/Icons/Curate-logoq.png"
+            onClick={()=>Router.push("/DashBoard")} 
             alt="Curate Logo"
             className="h-8 sm:h-12 object-contain"
           />

@@ -414,7 +414,7 @@ console.log("Check of Chnages,,,",formData)
         />
 
          <FieldItem
-          label="patientHeight (Feet's)"
+          label="PatientHeight (Feet's)"
           value={formData.patientHeight}
           editable={isEditing.AdditionalInformation}
           onChange={(val) => handleChange("patientHeight", val)}

@@ -4,11 +4,13 @@ import React, { useEffect, useState } from "react";
 import { columns, Infodata } from "@/Lib/Content";
 import { Search, Eye, X } from "lucide-react";
 import { GetRegidterdUsers } from "@/Lib/user.action";
+import { useRouter } from "next/navigation";
 
 export default function VendorTable() {
   const [selectedVendor, setSelectedVendor] = useState<any | null>(null);
   const [InputValues,setInputValues]=useState('')
   const [ImportedVendors,setImportedVendors]=useState<any>([])
+  const Router=useRouter()
   useEffect(() => {
     const Fetch = async () => {
       const [RegisterdUsers] = await Promise.all([
@@ -41,6 +43,7 @@ const FilterInputVlaue=ImportedVendors.filter((each:any)=>each.VendorName.includ
         <div className="flex items-center gap-4">
           <img
             src="Icons/Curate-logoq.png"
+            onClick={()=>Router.push("/DashBoard")} 
             className="h-16 w-16 object-contain drop-shadow-md"
             alt="Logo"
           />

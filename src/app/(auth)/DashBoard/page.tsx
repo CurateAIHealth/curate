@@ -37,7 +37,7 @@ import useSWR from "swr";
 
 const fetcher = async () => {
   const data = await GetRegidterdUsers();
-const FiltersHCPS=data.filter((each:any)=>each.userType==="healthcare-assistant")
+const FiltersHCPS=data.filter((each:any)=>each.userType==="healthcare-assistant"&&each.Email!=='admin@curatehealth.in')
   return FiltersHCPS;
 };
 
