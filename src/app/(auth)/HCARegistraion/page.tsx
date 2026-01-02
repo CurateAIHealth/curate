@@ -537,7 +537,7 @@ useEffect(() => {
         const localValue = userId?userId:localStorage.getItem('UserId');
     
    const UpdateUserType=CurrentUserType==="HCA"?"healthcare-assistant":CurrentUserType
-if (CurrentUserType) {
+
  
   const payload: any = {
     userType: UpdateUserType,
@@ -560,10 +560,8 @@ if (CurrentUserType) {
     Password:form.Password||''
   };
 const result: any = await HCARegistration(payload);
-if(result.success){
 
-}
-}
+
 
         const FinelForm = { ...form, Documents: Docs, UserId: generatedUserId, DocumentSkipReason: ReasonValue, userType: CurrentUserType==="HCA"?"healthcare-assistant":CurrentUserType };
            
