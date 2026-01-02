@@ -38,7 +38,7 @@ export default function DoctorProfileForm() {
 
     const userId = useSelector((state: any) => state?.UserDetails);
   const CurrentUserType=useSelector((state:any)=>state.RegisteredUserType)
-  console.log('Check User Type------',CurrentUserType)
+  
 interface FormState {
   HomeAssistance: any;
   // title: any;
@@ -494,6 +494,8 @@ useEffect(() => {
 
   return age;
 };
+
+
    const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -561,17 +563,16 @@ useEffect(() => {
   };
 const result: any = await HCARegistration(payload);
 
+        if (result.success===true) {
+          const FinelForm = { ...form, Documents: Docs, UserId: generatedUserId, DocumentSkipReason: ReasonValue, userType: CurrentUserType === "HCA" ? "healthcare-assistant" : CurrentUserType };
 
-
-        const FinelForm = { ...form, Documents: Docs, UserId: generatedUserId, DocumentSkipReason: ReasonValue, userType: CurrentUserType==="HCA"?"healthcare-assistant":CurrentUserType };
-           
-      const PostResult = await PostHCAFullRegistration(FinelForm)
-      const Result=await UpdateFinelVerification(localValue)
-       await axios.post("/api/MailSend", {
-            to: "tsiddu805@gmail.com",
+          const PostResult = await PostHCAFullRegistration(FinelForm)
+          const Result = await UpdateFinelVerification(localValue)
+          await axios.post("/api/MailSend", {
+            to: form.emailId || "tsiddu805@gmail.com",
             subject:
               "Welcome to Curate Health Care – Your Login Credentials",
-         html:`<div style="
+            html: `<div style="
   width:100%;
   max-width:680px;
   margin:auto;
@@ -682,23 +683,34 @@ const result: any = await HCARegistration(payload);
   </div>
 </div>
 `,
-      
-           
-          });
-      
-      distpatch(UpdateRefresh(1))
-        setUpdatedStatusMessage('Successfully Updated Your Information.');
-        SetUpdateingStatus(true);
 
+
+          });
+
+          distpatch(UpdateRefresh(1))
+          setUpdatedStatusMessage('Successfully Updated Your Information.');
+          SetUpdateingStatus(true);
+
+          const Timer = setInterval(() => {
+            router.push("/AdminPage")
+          }, 1000)
+          return () => clearInterval(Timer)
+
+        }else{
+           setUpdatedStatusMessage('Try Again');
+        }
+
+
+
+          
        
-        const Timer = setInterval(() => {
-          router.push("/AdminPage")
-        }, 1000)
-        return () => clearInterval(Timer)
       }, 0);
+    
     },
     [form, completion, Docs, ReasonValue, router]
   );
+
+
     const handleLogout = async () => {
     localStorage.removeItem("UserId");
     await router.prefetch("/");
