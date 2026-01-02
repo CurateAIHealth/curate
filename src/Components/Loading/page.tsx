@@ -21,7 +21,7 @@ export const LoadingData=()=>{
 
    
         <span className="text-[#50c896] font-semibold tracking-wide text-sm">
-          Loading...
+          Loading.....
         </span>
       </div>
     </div>
