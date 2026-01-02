@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { Upload, User, CalendarDays, Droplet, Building2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function EmployRegistration() {
-  
+  const Router=useRouter()
 
   return (
     <div className=" bg-white rounded-3xl shadow-xl p-4 border border-gray-100">
@@ -37,6 +38,7 @@ export default function EmployRegistration() {
 >
   <img
     src="/Icons/Curate-logoq.png"
+    onClick={()=>Router.push("/DashBoard")} 
     alt="Curate Company Logo"
     className="w-14 h-14 object-contain"
   />

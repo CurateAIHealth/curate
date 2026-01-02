@@ -1,6 +1,7 @@
 "use client";
 
 import { BadgeCheck, Phone, Users, Calendar } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function VendorProfileView() {
   const vendor = {
@@ -17,6 +18,8 @@ export default function VendorProfileView() {
     ],
   };
 
+  const Router=useRouter()
+
   return (
     <div className="min-h-screen bg-[#f9fafb] p-6">
       <div className="w-full mx-auto bg-white rounded-2xl shadow-md border border-[#e6f4f1] p-8 space-y-8">
@@ -29,6 +32,7 @@ export default function VendorProfileView() {
     <div className="w-14 h-14 rounded-full border border-[#e6f4f1] bg-white shadow-sm flex items-center justify-center">
       <img
         src="/Icons/Curate-logoq.png"
+        onClick={()=>Router.push("/DashBoard")} 
         alt="Curate Health Care"
         className="h-8 w-auto"
       />

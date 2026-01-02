@@ -9,7 +9,8 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
-
+import { useRouter } from "next/navigation";
+const Router=useRouter()
 const initialEmployees = [
   {
     id: 1,
@@ -145,7 +146,8 @@ export default function ManagementEmployees() {
               Curate Internal employee directory
             </p>
           </div>
-          <img src="Icons/Curate-logoq.png" className="h-14 w-14" />
+
+          <img src="Icons/Curate-logoq.png" onClick={()=>Router.push("/DashBoard")} className="h-14 w-14" />
         </div>
       </div>
 

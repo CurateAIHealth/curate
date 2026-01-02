@@ -15,6 +15,7 @@ export const LoadingData=()=>{
        
           <img
             src="Icons/Curate-logoq.png"
+            onClick={()=>Router.push("/DashBoard")} 
             className="h-20 w-20 object-contain"
           />
         </div>

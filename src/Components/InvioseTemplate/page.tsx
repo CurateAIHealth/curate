@@ -332,7 +332,7 @@ const recalcTotals = () => {
             <h1 style={{ fontSize: "32px", fontWeight: "bold", letterSpacing: "2px", margin: 0, color: colors.primary }}>INVOICE</h1>
             <p style={{ marginTop: "6px", color: "#475569", fontSize: "16px" }}>Invoice ID: #{invoice.number}</p>
           </div>
-          <img src="https://curate-pearl.vercel.app/Icons/Curate-logoq.png" style={{ height: 70 }} />
+          <img src="https://curate-pearl.vercel.app/Icons/Curate-logoq.png" onClick={()=>Router.push("/DashBoard")}  style={{ height: 70 }} />
         </div>
       </div>
 

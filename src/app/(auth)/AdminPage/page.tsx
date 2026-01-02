@@ -112,7 +112,8 @@ const UpdatedFilterUserType = useMemo(() => {
   return Finel.filter((each) => {
     const matchesType = !UpdateduserType || each.userType === UpdateduserType;
     const matchesSearch = !search || each.ClientStatus === search;
-    return matchesType && matchesSearch;
+    const NotAdmin=each.Email!=='admin@curatehealth.in'
+    return matchesType && matchesSearch&&NotAdmin;
   });
 }, [Finel, UpdateduserType, search]);
 
@@ -547,7 +548,7 @@ console.log('Test Registerd Userss---',users)
       <div className="sticky top-0 z-50 bg-opacity-90 backdrop-blur-lg mb-3">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-white/90 rounded-xl p-3 shadow-2xl border border-gray-100">
           <div className="flex items-center gap-3">
-            <img src="/Icons/Curate-logo.png" alt="Logo" className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl" />
+            <img src="/Icons/Curate-logo.png" onClick={()=>router.push("/DashBoard")}  alt="Logo" className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl" />
             <h1 className="text-lg sm:text-2xl font-extrabold text-[#007B7F] tracking-tight leading-tight">
               Hi,<span className="text-[#ff1493]">{UserFirstName}</span>
             </h1>
