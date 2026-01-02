@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-const Router=useRouter()
+
 const initialEmployees = [
   {
     id: 1,
@@ -119,7 +119,7 @@ export default function ManagementEmployees() {
   const [employees, setEmployees] = useState(initialEmployees);
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState<any>(null);
-
+const Router=useRouter()
   const openModal = (emp: any) => {
     setCurrent({ ...emp });
     setOpen(true);
