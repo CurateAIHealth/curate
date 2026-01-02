@@ -4,7 +4,7 @@ import HCAMobileView from '@/Components/HCAMobileView/page';
 import { IndianLanguages, PROFESSIONAL_SKILL_OPTIONS, Relations } from '@/Lib/Content';
 import { v4 as uuidv4 } from 'uuid';
 import { GetUserInformation, HCARegistration, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
-import { UpdateDocmentSkipReason, UpdateRefresh } from '@/Redux/action';
+import { Update_Main_Filter_Status, UpdateDocmentSkipReason, UpdateRefresh } from '@/Redux/action';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { stringify } from 'querystring';
@@ -688,7 +688,10 @@ const result: any = await HCARegistration(payload);
           });
 
           distpatch(UpdateRefresh(1))
-          setUpdatedStatusMessage('Successfully Updated Your Information.');
+         
+          distpatch(Update_Main_Filter_Status("HCP List")); 
+          distpatch(UpdateUserType("healthcare-assistant"));
+           setUpdatedStatusMessage('Successfully Updated Your Information.');
           SetUpdateingStatus(true);
 
           const Timer = setInterval(() => {
