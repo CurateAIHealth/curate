@@ -139,11 +139,18 @@ const BalanceDue = FetchedInfo
   ?.filter((each: any) => each?.PaymentStatus === false)
   .map((each: any) => Number(each?.balanceDue) || 0)
   .reduce((total: number, value: number) => total + value, 0);
-
 const BalancePaid = FetchedInfo
   ?.filter((each: any) => each?.PaymentStatus === true)
-  .map((each: any) => Number(each?.balanceDue) || 0)
-  .reduce((total: number, value: number) => total + value, 0);
+  .reduce((total: number, each: any) => {
+    const balance = Number(each?.balanceDue) || 0;
+    const advance =
+      Number(each?.AdvanceReceived) ||
+      Number(each?.AdvancePaid) ||
+      0;
+
+    return total + balance + advance;
+  }, 0);
+
 
 const RefundAmount = FetchedInfo
   ?.filter((each: any) => 
