@@ -51,6 +51,7 @@ type Props = {
 };
 
 const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
+  console.log('Check for Log---',clients)
   const [selectedClientIndex, setSelectedClientIndex] = useState<number>(0);
   const [ExsitingInformedUsers, setExsitingInformedUsers] = useState<any[]>([]);
   const [StatusMessage, setStatusMessage] = useState('Test StatusMessage');
@@ -555,15 +556,30 @@ window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, 
   const UpdateNewSearchItem=(A:any)=>{
     setSearchFilter(A)
   }
+const filteredHcps = hcps.filter((hcp: any) =>
+  !Array.isArray(hcp?.Status) ||
+  !hcp.Status.includes("Assigned")
+);
 
 const suitableHcps = hcps.filter((hcp: any) => {
   const client = clients[selectedClientIndex];
-    if (!client || loading) return [];
+  if (!client || loading) return false;
 
-  const hasDiaperSkill = hcp.HomeAssistance?.some((each: string) => each === "Diaper")
-  const available = !hcp.Status?.some((each: string) => each === "Assigned");
+  const hasDiaperSkill =
+    Array.isArray(hcp?.HomeAssistance) &&
+    hcp.HomeAssistance.includes("Diaper");
 
-const matchesClientAssistance = hcp.HandledSkills?.some((skill: string) => client.patientType?.includes(skill) );
+  const available =
+    !Array.isArray(hcp?.Status) ||
+    !hcp.Status.includes("Assigned");
+
+  const matchesClientAssistance =
+    Array.isArray(hcp?.HandledSkills) &&
+    Array.isArray(client?.patientType) &&
+    hcp.HandledSkills.some((skill: any) =>
+      client.patientType.includes(skill)
+    );
+
   return hasDiaperSkill && matchesClientAssistance && available;
 });
 
@@ -575,25 +591,44 @@ const isAvailable = (hcp: any) =>
   !hcp.Status?.some((value: string) => value === "Assigned");
 
 
-const ShowAdditionHCPs = hcps?.filter((each: HcpType) =>
-  isAvailable(each) && (
-    form?.hcpType?.some((type: any) => type === each?.Type) ||
+const ShowAdditionHCPs = hcps.filter((each: HcpType) => {
+  if (!isAvailable(each)) return false;
 
-    form?.qualification?.some((qual: any) => qual === each?.["Professional Education"]) ||
+  const hcpTypeMatch =
+    form.hcpType.length === 0 ||
+    form.hcpType.includes(each.Type);
 
-    (form?.experience &&
-      each?.Experience?.toLowerCase()?.includes(form?.experience?.toLowerCase())) ||
+  const qualificationMatch =
+    form.qualification.length === 0 ||
+    form.qualification.includes(each["Professional Education"]);
 
-    form?.healthConditions?.some((condition: string) =>
+  const experienceMatch =
+    !form.experience ||
+    Number(each.Experience) >= Number(form.experience);
+
+  const healthMatch =
+    form.healthConditions.length === 0 ||
+    form.healthConditions.some(condition =>
       each?.HandledSkills?.some((skill: string) =>
-        skill?.toLowerCase()?.includes(condition.toLowerCase())
+        skill.toLowerCase().includes(condition.toLowerCase())
       )
-    ) ||
+    );
 
-    (form?.location &&
-      each?.["Current Address"]?.toLowerCase()?.includes(form?.location?.toLowerCase()))
-  )
-);
+  const locationMatch =
+    !form.location ||
+    each?.["Current Address"]
+      ?.toLowerCase()
+      .includes(form.location.toLowerCase());
+
+  return (
+    hcpTypeMatch &&
+    qualificationMatch &&
+    experienceMatch &&
+    healthMatch &&
+    locationMatch
+  );
+});
+
 
 
 
@@ -677,12 +712,18 @@ console.log("Test Client id----",hcps)
           📧 <span className="font-medium">{client.Email}</span>
         </p>
 
-        <p className="mt-2 text-sm leading-relaxed text-[#00695c] bg-[#f1faf8] px-3 py-2 rounded-xl">
-          🏥 Assistance:{" "}
-          <span className="font-medium">
-            {client.patientHomeAssistance.join(", ")}
-          </span>
-        </p>
+     <div className="mt-3 max-w-md rounded-lg bg-[#f1faf8] px-4 py-3">
+  <p className="text-xs font-semibold uppercase tracking-wide text-[#00796b] mb-1">
+    Home Assistance
+  </p>
+
+  <p className="text-sm leading-relaxed text-[#004d40]">
+    {client.patientHomeAssistance.join(", ")}
+  </p>
+</div>
+
+
+
          <p className="mt-2 text-sm leading-relaxed text-[#00695c] bg-[#f1faf8] px-3 py-2 rounded-xl">
            Patient Type:{" "}
           <span className="font-medium">
@@ -807,209 +848,213 @@ Search For HCP Criteria
 
 
         <div className="w-full lg:w-4/5 mx-auto py-0">
-        
-          <div className="mb-2 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-teal-700 dark:text-teal-400 tracking-tight drop-shadow-sm">
-              Friendly Care Matches
-            </h1>
-          
-         
-<div className=" flex flex-wrap gap-3 items-center">
-            <div className="px-3 py-1.5 bg-green-100 border border-green-200 rounded-full shadow-sm text-sm text-gray-800 flex items-center gap-1">
-              Total: <span className="font-semibold">{suitableHcps.length}</span>
-            </div>
-            <div className="px-3 py-1.5 bg-blue-100 border border-blue-200 rounded-full shadow-sm text-sm text-gray-800 flex items-center gap-1">
-              Informed: <span className="font-semibold">{ExsitingInformedUsers.length}</span>
-            </div>
-          </div>
-          </div>
-          
-<div className="flex flex-col md:flex-row w-full justify-between items-center md:items-start gap-4 md:gap-6 px-2 sm:px-4">
-  {suitableHcps.length === 0 ? (
-    <p className="text-gray-400 text-center py-12 w-full">
-      No suitable HCPs found for this client.
-    </p>
-  ) : (
-    <div className="max-h-[394px] w-full md:w-[800px] overflow-y-auto flex flex-wrap justify-center md:justify-start gap-3 md:gap-2 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 p-2">
-      {suitableHcps.map((hcp: any, idx: number) => {
-        const alreadyInformed = ExsitingInformedUsers.some(
-          (each) =>
-            each.InformedHCPID === hcp.UserId &&
-            each.InformedClientID === clients[0].userId
-        );
-        const isCurrent = CurrentUserId === hcp.UserId;
+         {SearchOptions===false&& 
+            <div>
+              <div className="mb-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-teal-700 dark:text-teal-400 tracking-tight drop-shadow-sm">
+                  Friendly Care Matches
+                </h1>
 
-        return (
-          <article
-            key={idx}
-            ref={(el) => {
-              cardRefs.current[hcp.UserId] = el;
-            }}
-            className="relative flex flex-col items-center bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 w-[140px] sm:w-[160px] md:w-[180px] lg:w-[190px] min-h-[220px]"
-          >
 
-            <div className="bg-teal-600 w-full h-[50px] flex items-center justify-center relative rounded-t-2xl">
-              <div className="w-12 sm:w-14 h-12 sm:h-14 rounded-full border-2 border-white overflow-hidden shadow-md absolute bottom-[-20px]">
-                <img
-                  src={hcp.ProfilePic || "/Icons/DefaultProfileIcon.png"}
-                  alt={hcp.HCPFirstName}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-
-    
-            <div className="pt-6 pb-3 px-2 sm:px-3 text-center w-full">
-              <h3 className="text-[12px] sm:text-[13px] font-semibold text-gray-800 truncate">
-                {hcp.HCPFirstName} {hcp.HCPSurName}
-              </h3>
-              <p className="text-[10px] text-gray-500 truncate mt-0.5">
-                +91{hcp.HCPContactNumber}
-              </p>
-              <p className="text-[10px] text-gray-500 truncate">
-                {hcp["Current Address"] || "-"}
-              </p>
-
-      
-              <div className="flex justify-center gap-1 mt-1 flex-wrap">
-                <span className="text-[9px] px-2 py-1 bg-green-50 border border-green-200 text-green-700 rounded-full">
-                  Age:{" "}
-                  {hcp["Date of Birth"]
-                    ? calculateAgeIndianFormat(
-                        new Date(hcp["Date of Birth"]).toLocaleDateString(
-                          "en-IN"
-                        )
-                      )
-                    : "-"}
-                </span>
-                <span className="text-[9px] px-2 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full">
-                  Exp: {hcp.Experience || 0} yrs
-                </span>
+                <div className=" flex flex-wrap gap-3 items-center">
+                  <div className="px-3 py-1.5 bg-green-100 border border-green-200 rounded-full shadow-sm text-sm text-gray-800 flex items-center gap-1">
+                    Total: <span className="font-semibold">{suitableHcps.length}</span>
+                  </div>
+                  <div className="px-3 py-1.5 bg-blue-100 border border-blue-200 rounded-full shadow-sm text-sm text-gray-800 flex items-center gap-1">
+                    Informed: <span className="font-semibold">{ExsitingInformedUsers.length}</span>
+                  </div>
+                </div>
               </div>
 
-            
-              <h4 className="text-[9px] font-semibold text-gray-700 uppercase mt-1">
-                Skills
-              </h4>
-              <div className="flex flex-wrap justify-center gap-[2px] mt-1">
-                {PROFESSIONAL_SKILL_OPTIONS.map(
-                  (skill: string, sidx: number) => {
-                    const hasSkill = hcp.ProfessionalSkills.includes(skill);
-                    return (
-                      <span
-                        key={sidx}
-                        className={`text-[8px] px-1 py-1 rounded-full border ${
-                          hasSkill
-                            ? "bg-green-50 border-green-200 text-green-700"
-                            : "bg-red-50 border-red-200 text-red-600"
-                        }`}
-                      >
-                        {skill} {hasSkill ? "✓" : "✖"}
-                      </span>
-                    );
-                  }
-                )}
-              </div>
-
-        
-              <div className="mt-2 flex justify-center gap-2 flex-wrap">
-                {clients[0]?.SuitableHCP === hcp.UserId ? (
-                  <button
-                    className="bg-green-600 text-white cursor-pointer px-3 py-1 rounded-full text-[10px] font-medium shadow-sm hover:bg-green-700 transition-colors"
-                    onClick={() =>
-                      UpdateAssignHca(
-                        clients[0].userId,
-                        hcp.UserId,
-                        clients[0].FirstName,
-                        clients[0].Email,
-                        clients[0].ContactNumber,
-                        clients[0].serviceLocation,
-                        hcp.HCPFirstName,
-                        hcp.HCPContactNumber,
-                        clients[0].patientName,
-                        clients[0].patientPhone,
-                        clients[0].Source,
-                        clients[0].hcpType
-
-
-                      )
-                    }
-                  >
-                    Assign
-                  </button>
+              <div className="flex flex-col md:flex-row w-full justify-between items-center md:items-start gap-4 md:gap-6 px-2 sm:px-4">
+                {filteredHcps.length === 0 ? (
+                  <p className="text-gray-400 text-center py-12 w-full">
+                    No suitable HCPs found for this client.
+                  </p>
                 ) : (
-                  <div className="flex justify-between gap-3 sm:gap-6">
-                    <button
-                      onClick={() => handleShare(hcp, clients[0].userId)}
-                      disabled={alreadyInformed}
-                      className={`px-3 py-1 text-[9px] cursor-pointer font-medium rounded-full transition-all duration-200 ${
-                        alreadyInformed
-                          ? "bg-red-500/90 text-white cursor-not-allowed"
-                          : "bg-teal-600 text-white hover:bg-teal-700"
-                      }`}
-                    >
-                      {alreadyInformed ? "Informed✓" : "Confirm"}
-                    </button>
+                  <div className=" overflow-y-auto flex flex-wrap justify-center md:justify-start gap-3 md:gap-2 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 p-2">
+                    {filteredHcps.map((hcp: any, idx: number) => {
+                      const alreadyInformed = ExsitingInformedUsers.some(
+                        (each) =>
+                          each.InformedHCPID === hcp.UserId &&
+                          each.InformedClientID === clients[0].userId
+                      );
+                      const isCurrent = CurrentUserId === hcp.UserId;
 
-                    {alreadyInformed &&
-                      clients.some(
-                        (client) => client.SuitableHCP !== hcp.UserId
-                      ) && (
-                        <p
-                          className="px-3 py-1 text-[9px] font-medium rounded-full bg-[#40c9a2] text-white hover:bg-teal-700 cursor-pointer"
-                          onClick={() =>
-                            UpdateHCPIntrest(clients[0].userId, hcp.UserId)
-                          }
+                      return (
+                        <article
+                          key={idx}
+                          ref={(el) => {
+                            cardRefs.current[hcp.UserId] = el;
+                          }}
+                          className="relative flex flex-col items-center bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 w-[140px] sm:w-[160px] md:w-[180px] lg:w-[190px] min-h-[220px]"
                         >
-                          Interested
-                        </p>
-                      )}
+
+                          <div className="bg-teal-600 w-full h-[50px] flex items-center justify-center relative rounded-t-2xl">
+                            <div className="w-12 sm:w-14 h-12 sm:h-14 rounded-full border-2 border-white overflow-hidden shadow-md absolute bottom-[-20px]">
+                              <img
+                                src={hcp.ProfilePic || "/Icons/DefaultProfileIcon.png"}
+                                alt={hcp.HCPFirstName}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </div>
+
+
+                          <div className="pt-6 pb-3 px-2 sm:px-3 text-center w-full">
+                            <h3 className="text-[12px] sm:text-[13px] font-semibold text-gray-800 truncate">
+                              {hcp.HCPFirstName} {hcp.HCPSurName}
+                            </h3>
+                            <p className="text-[10px] text-gray-500 truncate mt-0.5">
+                              +91{hcp.HCPContactNumber}
+                            </p>
+                            <p className="text-[10px] text-gray-500 truncate">
+                              {hcp["Current Address"] || "-"}
+                            </p>
+
+
+                            <div className="flex justify-center gap-1 mt-1 flex-wrap">
+                              <span className="text-[9px] px-2 py-1 bg-green-50 border border-green-200 text-green-700 rounded-full">
+                                Age:{" "}
+                                {hcp["Date of Birth"]
+                                  ? calculateAgeIndianFormat(
+                                    new Date(hcp["Date of Birth"]).toLocaleDateString(
+                                      "en-IN"
+                                    )
+                                  )
+                                  : "-"}
+                              </span>
+                              <span className="text-[9px] px-2 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full">
+                                Exp: {hcp.Experience || 0} yrs
+                              </span>
+                            </div>
+
+
+                            <h4 className="text-[9px] font-semibold text-gray-700 uppercase mt-1">
+                              Skills
+                            </h4>
+                            <div className="flex flex-wrap justify-center gap-[1px] mt-1">
+                              {PROFESSIONAL_SKILL_OPTIONS.map((skill: string, sidx: number) => {
+                                const hasSkill =
+                                  Array.isArray(hcp?.ProfessionalSkills) &&
+                                  hcp.ProfessionalSkills.includes(skill);
+
+                                return (
+                                  <span
+                                    key={sidx}
+                                    className={`text-[8px] px-1 py-1 rounded-full border ${hasSkill
+                                        ? "bg-green-50 border-green-200 text-green-700"
+                                        : "bg-red-50 border-red-200 text-red-600"
+                                      }`}
+                                  >
+                                    {skill} {hasSkill ? "✓" : "✖"}
+                                  </span>
+                                );
+                              })}
+                            </div>
+
+
+
+                            <div className="mt-2 flex justify-center gap-2 flex-wrap">
+                              {clients[0]?.SuitableHCP === hcp.UserId ? (
+                                <button
+                                  className="bg-green-600 text-white cursor-pointer px-3 py-1 rounded-full text-[10px] font-medium shadow-sm hover:bg-green-700 transition-colors"
+                                  onClick={() =>
+                                    UpdateAssignHca(
+                                      clients[0].userId,
+                                      hcp.UserId,
+                                      clients[0].FirstName,
+                                      clients[0].Email,
+                                      clients[0].ContactNumber,
+                                      clients[0].serviceLocation,
+                                      hcp.HCPFirstName,
+                                      hcp.HCPContactNumber,
+                                      clients[0].patientName,
+                                      clients[0].patientPhone,
+                                      clients[0].Source,
+                                      clients[0].hcpType
+
+
+                                    )
+                                  }
+                                >
+                                  Assign
+                                </button>
+                              ) : (
+                                <div className="flex justify-between gap-3 sm:gap-6">
+                                  <button
+                                    onClick={() => handleShare(hcp, clients[0].userId)}
+                                    disabled={alreadyInformed}
+                                    className={`px-3 py-1 text-[9px] cursor-pointer font-medium rounded-full transition-all duration-200 ${alreadyInformed
+                                        ? "bg-red-500/90 text-white cursor-not-allowed"
+                                        : "bg-teal-600 text-white hover:bg-teal-700"
+                                      }`}
+                                  >
+                                    {alreadyInformed ? "Informed✓" : "Confirm"}
+                                  </button>
+
+                                  {alreadyInformed &&
+                                    clients.some(
+                                      (client) => client.SuitableHCP !== hcp.UserId
+                                    ) && (
+                                      <p
+                                        className="px-3 py-1 text-[9px] font-medium rounded-full bg-[#40c9a2] text-white hover:bg-teal-700 cursor-pointer"
+                                        onClick={() =>
+                                          UpdateHCPIntrest(clients[0].userId, hcp.UserId)
+                                        }
+                                      >
+                                        Interested
+                                      </p>
+                                    )}
+                                </div>
+                              )}
+                            </div>
+                            {alreadyInformed && <p className="px-3 py-1 text-[9px] mt-2 font-medium rounded-full bg-pink-500 text-white hover:bg-teal-700 cursor-pointer" onClick={() => SendBVR(hcp)}>
+                              Send BVR
+                            </p>}
+
+                            <div className="absolute top-2 right-2">
+                              <button
+                                onClick={() =>
+                                  ShowDompleteInformation(hcp.UserId, hcp.HCPFirstName)
+                                }
+                                className="p-1 bg-white rounded-full shadow border hover:scale-105 transition-transform"
+                              >
+                                <Eye size={12} className="text-teal-600" />
+                              </button>
+                            </div>
+
+
+                            {isCurrent && (
+                              <p
+                                className={`text-[9px] text-center mt-1 font-semibold ${StatusMessage === "Confirmation Send" ||
+                                    StatusMessage === "Now You Can Assign" ||
+                                    StatusMessage ===
+                                    "HCA Assigned Successfully, For More Information Check in Deployments"
+                                    ? "text-green-700"
+                                    : "text-gray-500"
+                                  }`}
+                              >
+                                {StatusMessage}
+                              </p>
+                            )}
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {clients[0].PhysioScore > 0 && (
+                  <div className="w-full md:w-auto mt-4 md:mt-0">
+                    <PhysioList />
                   </div>
                 )}
               </div>
- {alreadyInformed&&   <p      className="px-3 py-1 text-[9px] mt-2 font-medium rounded-full bg-pink-500 text-white hover:bg-teal-700 cursor-pointer" onClick={()=>SendBVR(hcp)}>
-  Send BVR
-</p>}
-         
-              <div className="absolute top-2 right-2">
-                <button
-                  onClick={() =>
-                    ShowDompleteInformation(hcp.UserId, hcp.HCPFirstName)
-                  }
-                  className="p-1 bg-white rounded-full shadow border hover:scale-105 transition-transform"
-                >
-                  <Eye size={12} className="text-teal-600" />
-                </button>
-              </div>
-
-      
-              {isCurrent && (
-                <p
-                  className={`text-[9px] text-center mt-1 font-semibold ${
-                    StatusMessage === "Confirmation Send" ||
-                    StatusMessage === "Now You Can Assign" ||
-                    StatusMessage ===
-                      "HCA Assigned Successfully, For More Information Check in Deployments"
-                      ? "text-green-700"
-                      : "text-gray-500"
-                  }`}
-                >
-                  {StatusMessage}
-                </p>
-              )}
             </div>
-          </article>
-        );
-      })}
-    </div>
-  )}
+}
 
-  {clients[0].PhysioScore > 0 && (
-    <div className="w-full md:w-auto mt-4 md:mt-0">
-      <PhysioList />
-    </div>
-  )}
-</div>
+{SearchOptions&&<div>
 
           {ShowAdditionHCPs.length!==0&& <h1 className="text-2xl sm:text-3xl mt-1 font-extrabold text-teal-700 dark:text-teal-400 tracking-tight drop-shadow-sm">
               Search Results
@@ -1025,7 +1070,7 @@ Search For HCP Criteria
       </p>
     </div>
   </div>}
-          <div className="max-h-[394px] overflow-y-auto  mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
+          <div className=" overflow-y-auto  mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
               {ShowAdditionHCPs.map((hcp: any, idx: number) => {
                 const alreadyInformed = ExsitingInformedUsers.some(
                   (each) => each.InformedHCPID === hcp.UserId&&each.InformedClientID===clients[0].userId
@@ -1070,20 +1115,25 @@ Search For HCP Criteria
        
 
                         <div className="flex flex-wrap justify-center gap-[1px] mt-1">
-                        {PROFESSIONAL_SKILL_OPTIONS.map((skill: string, sidx: number) => {
-                          const hasSkill = hcp.ProfessionalSkills.includes(skill);
-                          return (
-                            <span
-                              key={sidx}
-                              className={`text-[8px] px-1 py-1 rounded-full border ${hasSkill
-                                ? "bg-green-50 border-green-200 text-green-700"
-                                : "bg-red-50 border-red-200 text-red-600"
-                                }`}
-                            >
-                              {skill} {hasSkill ? "✓" : "✖"}
-                            </span>
-                          );
-                        })}
+                       {PROFESSIONAL_SKILL_OPTIONS.map((skill: string, sidx: number) => {
+  const hasSkill =
+    Array.isArray(hcp?.ProfessionalSkills) &&
+    hcp.ProfessionalSkills.includes(skill);
+
+  return (
+    <span
+      key={sidx}
+      className={`text-[8px] px-1 py-1 rounded-full border ${
+        hasSkill
+          ? "bg-green-50 border-green-200 text-green-700"
+          : "bg-red-50 border-red-200 text-red-600"
+      }`}
+    >
+      {skill} {hasSkill ? "✓" : "✖"}
+    </span>
+  );
+})}
+
                       </div>
                  
   
@@ -1162,6 +1212,7 @@ Search For HCP Criteria
                 );
               })}
             </div>
+            </div>}
         </div>
        
       </div>

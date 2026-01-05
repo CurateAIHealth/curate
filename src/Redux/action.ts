@@ -177,3 +177,10 @@ export const UpdateInvoiceIntialStatus=(CurrentStaus:any)=>{
         payload:CurrentStaus
     }
 }
+
+export const UpdateAdminRegistrationStatus=(AdminStatus:any)=>{
+    return {
+        type:"UpdateAdminRegistration",
+        payload:AdminStatus
+    }
+}

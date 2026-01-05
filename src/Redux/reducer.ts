@@ -241,3 +241,13 @@ export const UpdateInvoicePageStatus=(state:any=true,action:any)=>{
 
     }
 }
+
+export const RegisterByAdmin=(state:any=false,action:any)=>{
+    switch(action.type){
+        case "UpdateAdminRegistration":
+        return action.payload;
+
+        default :
+        return state
+    }
+}
