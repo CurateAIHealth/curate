@@ -28,7 +28,7 @@ useEffect(() => {
      const localValue = localStorage.getItem('UserId');
   
         const Sign_in_UserInfo = await GetUserInformation(localValue)
-  console.log("Check Admin Email.........000",Sign_in_UserInfo.Email)
+  
      
   if (Sign_in_UserInfo) {
     

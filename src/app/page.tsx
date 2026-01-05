@@ -10,7 +10,7 @@ import { Sparkles, Star, Settings, User, LogIn, BriefcaseMedical, CircleEllipsis
 import FreeConsultationForm from '@/Components/Contactfill/page';
 import ContactSection from '@/Components/Contact/page';
 import ModernFooter from '@/Components/Footer/page';
-import { UpdateTimeStamp } from '@/Redux/action';
+import { UpdateRegisterdType, UpdateTimeStamp } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
 import { LoadingData } from '@/Components/Loading/page';
 
@@ -43,6 +43,7 @@ export default function StaticInfoPage() {
     const [mobileOptsOpen, setMobileOptsOpen] = useState(false);
     const [ShowPopUp,setShowPopUp]=useState(false)
   const router = useRouter();
+  const dispatch=useDispatch()
 const [showAllReviews, setShowAllReviews] = useState(false);
 const INITIAL_REVIEWS_COUNT = 4;
 const visibleReviews = showAllReviews
@@ -56,7 +57,7 @@ const visibleReviews = showAllReviews
    
     try {
       const ProfileInformation = await GetUserInformation(localValue);
-   
+  
 
       const email = ProfileInformation?.Email?.toLowerCase();
       if (["admin@curatehealth.in", "info@curatehealth.in", "gouricurate@gmail.com"].includes(email)) {
@@ -66,6 +67,7 @@ const visibleReviews = showAllReviews
 
       if (ProfileInformation?.FinelVerification === false) {
         if (ProfileInformation?.userType === "healthcare-assistant") {
+          dispatch(UpdateRegisterdType(ProfileInformation?.userType ))
           router.push("/HCARegistraion");
           return;
         }else{
