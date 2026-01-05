@@ -362,7 +362,7 @@ const NavigatetoInvoices=()=>{
     
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-2 ">
-         <img src="Icons/Curate-logoq.png" className="h-20 w-auto"/>
+         <img src="Icons/Curate-logoq.png" onClick={()=>Router.push("/DashBoard")}  className="h-20 w-auto"/>
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
               Curate Health Services • Invoice

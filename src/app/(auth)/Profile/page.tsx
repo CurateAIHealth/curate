@@ -103,6 +103,7 @@ export default function HCPHome() {
           <div className="flex items-center gap-3">
             <img
               src="/Icons/Curate-logoq.png"
+              onClick={()=>router.push("/DashBoard")} 
               alt="Curate Logo"
               className="h-10"
             />

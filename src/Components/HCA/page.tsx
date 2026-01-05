@@ -27,7 +27,7 @@ export default function HealthcareAssistantForm() {
     VerificationStatus: 'Success',
     TermsAndConditions: 'Accepted',
     FinelVerification:false,
-    EmailVerification:false,
+    EmailVerification:true,
     CurrentStatus:"Active",
     StaffType:"",
     
@@ -215,7 +215,7 @@ const VendorId=useSelector((state:any)=>state.ReferdUserId)
         StaffType:""
       });
 
-      router.push('/SuccessfulRegistration');
+      router.push('/sign-in');
     } catch {
       setStatusMessage('Unexpected error. Please try again.');
     } finally {

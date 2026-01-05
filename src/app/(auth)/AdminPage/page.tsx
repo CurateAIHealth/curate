@@ -460,12 +460,14 @@ const ClientEnquiryUserInterFace = () => {
 
                     )}
                       <td className="px-2 py-2">
+                        {user?.DetailedVerification === false?<p>FillFullInfo</p>:
                         <button
                           className="w-full text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition cursor-pointer text-xs sm:text-sm"
                           onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
                         >
                           {user.DetailedVerification ? "View" : "Preview"}
-                        </button>
+                        </button>}
+                     
                       </td>
                          {UpdateduserType==='patient'&&
                       <td className="md:px-8 md:py-2">
@@ -503,6 +505,7 @@ onClick={()=>UpdateNavigattosuggetions(user.userId)}
 
 
   const ShowDompleteInformation = (userId: any, ClientName: any) => {
+   
     if (userId) {
       dispatch(UpdateClient(ClientName));
       dispatch(UpdateUserInformation(userId));
@@ -525,7 +528,7 @@ const handleLogout = () => {
 
 
 
-console.log("Test Cases---",UpdatedFilterUserType)
+
 const Filter_HCA = Finel.filter((each:any) => {
   const isHCA = each.userType === "healthcare-assistant"; 
   const isAvailable = each.Status !== "Assigned";         
@@ -542,12 +545,18 @@ const UpdateNavigattosuggetions=(D:any)=>{
   dispatch(UpdateClientSuggetion(D))
 }
 
-const GetPermanentAddress=(A:any)=>{
-  const FilterProfilePic: any = UserFullInfo.map((each: any) => { return each?.HCAComplitInformation });
-  const AdressInfo=FilterProfilePic.filter((each:any)=>each.UserId===A)
-  console.log("Check Adress-------",AdressInfo)
-  return AdressInfo[0]['Permanent Address']||"Not Enterd"
-}
+const GetPermanentAddress = (A: any) => {
+  if (!UserFullInfo?.length || !A) return "Not Entered";
+
+  const address =
+    UserFullInfo
+      ?.map((each: any) => each?.HCAComplitInformation)
+      ?.find((info: any) => info?.UserId === A)
+      ?.["Permanent Address"];
+
+  return address ?? "Not Entered";
+};
+
 
 
 
