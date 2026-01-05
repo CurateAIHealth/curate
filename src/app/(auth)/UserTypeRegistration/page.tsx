@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { User, Building2, GraduationCap, FileText, ClipboardList, CircleHelp, Hospital, Stethoscope, UserCog, HeartPlus, UserCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { UpdateRegisterdType, UpdateVendorPopUpStatus } from "@/Redux/action";
+import { UpdateAdminRegistrationStatus, UpdateRegisterdType, UpdateVendorPopUpStatus } from "@/Redux/action";
 import CommonSection from "@/Components/StaffRegistration/page";
 import CommonFormSection from "@/Components/StaffRegistration/page";
 import CommonMedicalSection from "@/Components/StaffRegistration/page";
@@ -45,7 +45,7 @@ useEffect(() => {
   const redirectTypes = ["HCA", "HCP", "HCN"];
   if (UpdateStatus === false && redirectTypes.includes(selected)) {
     dispatch(UpdateRegisterdType(selected))
-   
+   dispatch(UpdateAdminRegistrationStatus(true))
     router.push("/HCARegistraion");
   }
 }, [selected, UpdateStatus, router]);

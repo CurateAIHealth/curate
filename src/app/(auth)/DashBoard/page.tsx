@@ -32,9 +32,12 @@ import {
   UpdateUserInformation,
   UpdateUserType,
 } from "@/Redux/action";
-import { GetRegidterdUsers, GetUserInformation } from "@/Lib/user.action";
+import { GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetUserInformation, GetUsersFullInfo } from "@/Lib/user.action";
 import useSWR from "swr";
-
+let cachedUserInfo: any = null;
+let cachedRegisteredUsers: any[] | null = null;
+let cachedFullInfo: any[] | null = null;
+let DeployedInfo:any[] 
 const fetcher = async () => {
   const data = await GetRegidterdUsers();
 const FiltersHCPS=data.filter((each:any)=>each.userType==="healthcare-assistant"&&each.Email!=='admin@curatehealth.in')
@@ -44,59 +47,122 @@ const FiltersHCPS=data.filter((each:any)=>each.userType==="healthcare-assistant"
 
 import { UserCheck } from "lucide-react";
 
+
+
+
+
+
+export default function Dashboard() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const updatedRefresh = useSelector((afterEach: any) => afterEach.updatedCount);
+    const [isManagement, setIsManagement] = useState<boolean | null>(null);
+    const [showAccessDenied, setShowAccessDenied] = useState(false);
+const [registeredUsers, setRegisteredUsers] = useState<number>(0);
+const [deployedLength, setDeployedLength] = useState<number>(0);
+const [timesheetCount, setTimesheetCount] = useState<number>(0);
+const [referralPayCount, setReferralPayCount] = useState<number>(0);
+const [paymentsCount, setPaymentsCount] = useState<number>(0);
+const [hcpListCount, setHcpListCount] = useState<number>(0);
+const [pendingPdrCount, setPendingPdrCount] = useState<number>(0);
+const [vendorsCount, setVendorsCount] = useState<number>(0);
+const [trainingCount, setTrainingCount] = useState<number>(0);
+const [documentComplianceCount, setDocumentComplianceCount] = useState<number>(0);
+const [registrationCount, setRegistrationCount] = useState<number>(0);
+const [invoiceCount, setInvoiceCount] = useState<any>(0);
+const [notificationCount, setNotificationCount] = useState<number>(0);
+const [hostelAttendanceCount, setHostelAttendanceCount] = useState<number>(0);
+const [employeesCount, setEmployeesCount] = useState<number>(0);
+
+
+
+useEffect(() => {
+  
+   const fetch=async()=>{
+    const [registeredUsersData,deployedData,Invoice] =
+        await Promise.all([
+          GetRegidterdUsers(),
+          GetDeploymentInfo(),
+         GetInvoiceInfo()
+        ]);
+
+      setRegisteredUsers(registeredUsersData.filter((each:any)=>each.userType==='patient').length);
+      setHcpListCount(registeredUsersData.filter((each:any)=>each.userType==='healthcare-assistant').length)
+      setVendorsCount(registeredUsersData.filter((each:any)=>each.userType==='Vendor').length)
+      setInvoiceCount(Invoice?.length)
+      
+      
+      setDeployedLength(deployedData?.length ?? 0);
+
+
+     const localValue = localStorage.getItem('UserId');
+  
+        const Sign_in_UserInfo = await GetUserInformation(localValue)
+ 
+     
+  if (Sign_in_UserInfo) {
+    
+    setIsManagement(Sign_in_UserInfo.Email === "admin@curatehealth.in");
+  } else {
+    setIsManagement(false);
+  }
+   }
+   fetch()
+}, []);
+
 const tabs = [
   {
     name: "Client Enquiry",
-    count: 121,
+    count: registeredUsers,
     growth: "+15%",
     icon: Bell,
     color: "bg-gradient-to-tr from-blue-500 to-indigo-500",
   },
   {
     name: "Deployment",
-    count: 42,
+    count: deployedLength,
     growth: "-3%",
     icon: Calendar,
     color: "bg-gradient-to-tr from-pink-500 to-rose-500",
   },
   {
     name: "Timesheet",
-    count: 18,
+    count: deployedLength,
     growth: "+5%",
     icon: User,
     color: "bg-gradient-to-tr from-teal-500 to-green-500",
   },
   {
     name: "Referral Pay",
-    count: 76,
+    count: 0,
     growth: "+9%",
     icon: IndianRupee,
     color: "bg-gradient-to-tr from-amber-500 to-orange-500",
   },
   {
     name: "Payments",
-    count: 22,
+    count: 0,
     growth: "-2%",
     icon: Wallet,
     color: "bg-gradient-to-tr from-indigo-500 to-violet-500",
   },
   {
     name: "HCP List",
-    count: 5,
+    count: hcpListCount,
     growth: "+1%",
     icon: Users,
     color: "bg-gradient-to-tr from-red-500 to-rose-600",
   },
   {
     name: "Pending PDR",
-    count: 12,
+    count: 0,
     growth: "+4%",
     icon: FileClock,
     color: "bg-gradient-to-tr from-sky-500 to-cyan-600",
   },
   {
     name: "Vendors",
-    count: 24,
+    count: vendorsCount,
     growth: "+6%",
     icon: Building2,
     color: "bg-gradient-to-tr from-purple-500 to-indigo-600",
@@ -124,7 +190,7 @@ const tabs = [
   },
   {
     name: "Invoices",
-    count: 30,
+    count: invoiceCount,
     growth: "+12%",
     icon: ReceiptIndianRupee,
     color: "bg-gradient-to-tr from-lime-500 to-green-600",
@@ -152,37 +218,6 @@ const tabs = [
     color: "bg-gradient-to-tr from-[#1392d3] to-[#50c896]",
   },
 ];
-
-
-
-
-export default function Dashboard() {
-  const router = useRouter();
-  const dispatch = useDispatch();
-  const updatedRefresh = useSelector((afterEach: any) => afterEach.updatedCount);
-    const [isManagement, setIsManagement] = useState<boolean | null>(null);
-    const [showAccessDenied, setShowAccessDenied] = useState(false);
-
-
-useEffect(() => {
-  
-   const fetch=async()=>{
-     const localValue = localStorage.getItem('UserId');
-  
-        const Sign_in_UserInfo = await GetUserInformation(localValue)
- 
-     
-  if (Sign_in_UserInfo) {
-    
-    setIsManagement(Sign_in_UserInfo.Email === "admin@curatehealth.in");
-  } else {
-    setIsManagement(false);
-  }
-   }
-   fetch()
-}, []);
-
-
 
   const { data: BenchList = [], isLoading, mutate } = useSWR(
     "bench-list",
@@ -401,7 +436,7 @@ console.log('Check Email Status-----',isManagement)
 
             
                   <div className="mt-2 flex flex-wrap justify-center gap-2">
-                    <div className="relative group inline-block">
+                    {/* <div className="relative group inline-block">
                       <span
                         className={`text-xs px-2 py-0.5 rounded-full font-medium cursor-pointer ${tab.growth.startsWith("+")
                             ? "bg-green-100 text-green-700"
@@ -415,7 +450,7 @@ console.log('Check Email Status-----',isManagement)
                           ? "Growth compared to the previous month 📈"
                           : "Fall compared to the previous month 📉"}
                       </div>
-                    </div>
+                    </div> */}
 
                     {tab.name === "Client Enquiry" && (
                       <button

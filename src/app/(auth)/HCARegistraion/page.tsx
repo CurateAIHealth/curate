@@ -138,6 +138,7 @@ useEffect(() => {
 
 
   const ReasonValue = useSelector((state: any) => state.DocumentReson)
+  const RegisterfromAdmin=useSelector((state:any)=>state.AdminRegister)
   const [heightInCm, setHeightInCm] = useState("");
 
   const distpatch = useDispatch()
@@ -234,63 +235,55 @@ useEffect(() => {
   const [isuserIdAvailable, setisuserIdAvailable] = useState<any>(null)
 
 useEffect(() => {
+ 
+  if (RegisterfromAdmin === undefined) return;
+
+
+  if (RegisterfromAdmin === true) {
+    setisuserIdAvailable(null);
+    setForm((prev) => ({
+      ...prev,
+      emailId: "",
+      mobileNumber: "",
+      firstName: "",
+      surname: "",
+    }));
+    setIsChecking(false);
+    return;
+  }
+
+  // ✅ Normal user flow ONLY
   const fetchProfile = async () => {
-    try {
-      const localValue = userId ?? localStorage.getItem('UserId');
-
-      if (!localValue) {
-        console.warn('No UserId found');
-        return;
-      }
-
-      setisuserIdAvailable(localValue);
-
-      const profile = await GetUserInformation(localValue);
-      console.log('Check Information-----',localValue)
-
-      if (!profile) {
-        console.warn("No user profile found for ID:", localValue);
-        return;
-      }
-
-      SetProfileName(profile.FirstName ?? '');
-
-      setDocs(prev => ({
-        ...prev,
-        ProfilePic: profile.ProfilePic ?? DEFAULT_PROFILE_PIC,
-        PanCard: profile.PanCard ?? '',
-        AdharCard: profile.AadharCard ?? '',
-        AccountPassBook: profile.AccountPassBook ?? '',
-        CertificatOne: profile.CertificatOne ?? '',
-        CertificatTwo: profile.CertificatTwo ?? '',
-      }));
-
-      setForm(prev => ({
-        ...prev,
-        firstName: profile.FirstName ?? '',
-        surname: profile.LastName ?? '',
-        fatherName: profile.FatherName ?? '',
-        motherName: profile.MotherName ?? '',
-        gender: profile.Gender,
-        dateOfBirth: profile.DateOfBirth,
-        maritalStatus: profile.MaritalStatus ?? '',
-        emailId: profile.Email,
-        mobileNumber: profile.ContactNumber,
-        aadharCardNo: profile.AadharNumber,
-        professionalSkill: Array.isArray(profile.ProfessionalSkill)
-          ? profile.ProfessionalSkill
-          : [],
-      }));
-
-    } catch (err) {
-      console.error('Error fetching user information:', err);
-    } finally {
+    const localValue = localStorage.getItem("UserId");
+    if (!localValue) {
       setIsChecking(false);
+      return;
     }
+
+    setisuserIdAvailable(localValue);
+
+    const profile = await GetUserInformation(localValue);
+    if (!profile) {
+      setIsChecking(false);
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      firstName: profile.FirstName ?? "",
+      surname: profile.LastName ?? "",
+      emailId: profile.Email ?? "",
+      mobileNumber: profile.ContactNumber ?? "",
+    }));
+
+    setIsChecking(false);
   };
 
   fetchProfile();
-}, []);
+}, [RegisterfromAdmin]);
+
+
+
 
 
 
@@ -709,6 +702,7 @@ if (CurrentUserType === null) return null;
               <h1 className="text-xl sm:text-4xl font-bold text-gray-800 mb-3 leading-snug">
                 Healthcare Professional Registration
               </h1>
+             
               <p className="text-gray-600 text-base text-[14px] leading-relaxed max-w-2xl">
                 Kindly fill out the complete information below to register your profile.
                 Ensure that all details are accurate to facilitate faster verification and onboarding.

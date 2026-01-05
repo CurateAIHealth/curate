@@ -611,7 +611,7 @@ CheckPaymentStatus:CurrentPaymentStatus
  +
         Number(inv.RegistrationFee);
 
-      const balance = total - Number(inv.AdvanceReceived);
+      const balance = Number(total) - Number(inv.AdvanceReceived);
 
       return (
         <div
@@ -658,9 +658,9 @@ CheckPaymentStatus:CurrentPaymentStatus
 
           <div className="hidden md:block">₹{total}/-</div>
 
-          <div className="hidden md:block">₹{inv.AdvanceReceived}/-</div>
+          <div className="hidden md:block">₹{Number(inv.AdvanceReceived)||0}/-</div>
 
-          <div className="hidden md:block">₹{balance}/-</div>
+          <div className="hidden md:block">₹{Number(balance)}/-</div>
 
           <div className="hidden lg:block">
             <input
