@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   User,
@@ -32,7 +32,7 @@ import {
   UpdateUserInformation,
   UpdateUserType,
 } from "@/Redux/action";
-import { GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetUserInformation, GetUsersFullInfo } from "@/Lib/user.action";
+import { GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo } from "@/Lib/user.action";
 import useSWR from "swr";
 let cachedUserInfo: any = null;
 let cachedRegisteredUsers: any[] | null = null;
@@ -47,6 +47,14 @@ const FiltersHCPS=data.filter((each:any)=>each.userType==="healthcare-assistant"
 
 import { UserCheck } from "lucide-react";
 
+const DOCUMENT_KEYS = [
+  "AadharAttachmentURL",
+  "PANAttachmentURL",
+  "BankProofURL",
+  "CompanyPANAttachmentURL",
+  "VideoFileURL",
+  "CertificateURL",
+];
 
 
 
@@ -58,41 +66,58 @@ export default function Dashboard() {
   const updatedRefresh = useSelector((afterEach: any) => afterEach.updatedCount);
     const [isManagement, setIsManagement] = useState<boolean | null>(null);
     const [showAccessDenied, setShowAccessDenied] = useState(false);
-const [registeredUsers, setRegisteredUsers] = useState<number>(0);
-const [deployedLength, setDeployedLength] = useState<number>(0);
-const [timesheetCount, setTimesheetCount] = useState<number>(0);
-const [referralPayCount, setReferralPayCount] = useState<number>(0);
-const [paymentsCount, setPaymentsCount] = useState<number>(0);
-const [hcpListCount, setHcpListCount] = useState<number>(0);
-const [pendingPdrCount, setPendingPdrCount] = useState<number>(0);
-const [vendorsCount, setVendorsCount] = useState<number>(0);
-const [trainingCount, setTrainingCount] = useState<number>(0);
-const [documentComplianceCount, setDocumentComplianceCount] = useState<number>(0);
-const [registrationCount, setRegistrationCount] = useState<number>(0);
-const [invoiceCount, setInvoiceCount] = useState<any>(0);
-const [notificationCount, setNotificationCount] = useState<number>(0);
-const [hostelAttendanceCount, setHostelAttendanceCount] = useState<number>(0);
-const [employeesCount, setEmployeesCount] = useState<number>(0);
+const [registeredUsers, setRegisteredUsers] = useState<any>('Loading...');
+const [deployedLength, setDeployedLength] = useState<any>('Loading...');
+const [timesheetCount, setTimesheetCount] = useState<any>('Loading...');
+const [referralPayCount, setReferralPayCount] = useState<any>(0);
+const [paymentsCount, setPaymentsCount] = useState<any>('Loading...');
+const [hcpListCount, setHcpListCount] = useState<any>('Loading...');
+const [pendingPdrCount, setPendingPdrCount] = useState<any>('Loading...');
+const [vendorsCount, setVendorsCount] = useState<any>('Loading...');
+const [trainingCount, setTrainingCount] = useState<any>(0);
+const [documentComplianceCount, setDocumentComplianceCount] = useState<any>('Loading...');
+const [registrationCount, setRegistrationCount] = useState<any>('Loading...');
+const [invoiceCount, setInvoiceCount] = useState<any>('Loading...');
+const [notificationCount, setNotificationCount] = useState<any>(0);
+const [hostelAttendanceCount, setHostelAttendanceCount] = useState<any>('Loading...');
+const [employeesCount, setEmployeesCount] = useState<any>(7);
 
 
 
 useEffect(() => {
   
    const fetch=async()=>{
-    const [registeredUsersData,deployedData,Invoice] =
+    const [registeredUsersData,HCPFullInfo,deployedData,Invoice,TimesheetInformation] =
         await Promise.all([
           GetRegidterdUsers(),
+          GetUsersFullInfo(),
           GetDeploymentInfo(),
-         GetInvoiceInfo()
+         GetInvoiceInfo(),
+         GetTimeSheetInfo()
         ]);
 
-      setRegisteredUsers(registeredUsersData.filter((each:any)=>each.userType==='patient').length);
+      setRegisteredUsers(registeredUsersData.filter((each:any)=>each.userType==='patient'&&each.ClientStatus!=="Placed").length);
       setHcpListCount(registeredUsersData.filter((each:any)=>each.userType==='healthcare-assistant').length)
       setVendorsCount(registeredUsersData.filter((each:any)=>each.userType==='Vendor').length)
       setInvoiceCount(Invoice?.length)
-      
+      setPendingPdrCount(TimesheetInformation?.filter((each:any)=>each.PDRStatus===false).length)
+      setHostelAttendanceCount(registeredUsersData.filter((each:any)=>each.CurrentStatus === "Active").length)
       
       setDeployedLength(deployedData?.length ?? 0);
+const missingDocsCount = HCPFullInfo.filter((each: any) => {
+  const docs = each?.HCAComplitInformation?.Documents || {};
+
+  return Object.entries(docs).some(
+    ([_, value]) =>
+      value === "" || value === null || value === undefined
+  );
+}).length-3;
+
+setDocumentComplianceCount(missingDocsCount);
+
+
+
+    setDocumentComplianceCount(missingDocsCount);
 
 
      const localValue = localStorage.getItem('UserId');
@@ -134,7 +159,7 @@ const tabs = [
   },
   {
     name: "Referral Pay",
-    count: 0,
+    count: referralPayCount,
     growth: "+9%",
     icon: IndianRupee,
     color: "bg-gradient-to-tr from-amber-500 to-orange-500",
@@ -155,7 +180,7 @@ const tabs = [
   },
   {
     name: "Pending PDR",
-    count: 0,
+    count: pendingPdrCount,
     growth: "+4%",
     icon: FileClock,
     color: "bg-gradient-to-tr from-sky-500 to-cyan-600",
@@ -169,21 +194,21 @@ const tabs = [
   },
   {
     name: "Training",
-    count: 14,
+    count: trainingCount,
     growth: "+10%",
     icon: GraduationCap,
     color: "bg-gradient-to-tr from-emerald-500 to-teal-600",
   },
   {
     name: "Document Compliance",
-    count: 8,
+    count: documentComplianceCount,
     growth: "+3%",
     icon: FileCheck,
     color: "bg-gradient-to-tr from-yellow-500 to-orange-600",
   },
   {
     name: "Registration",
-    count: 19,
+    count: 21,
     growth: "+7%",
     icon: FileText,
     color: "bg-gradient-to-tr from-fuchsia-500 to-pink-600",
@@ -197,14 +222,14 @@ const tabs = [
   },
   {
     name: "Notifications",
-    count: 34,
+    count: notificationCount,
     growth: "+8%",
     icon: BellRing,
     color: "bg-gradient-to-tr from-cyan-500 to-sky-600",
   },
   {
     name: "Hostel Attendance",
-    count: 61,
+    count: hostelAttendanceCount,
     growth: "+11%",
     icon: ClipboardCheck,
     color: "bg-gradient-to-tr from-green-500 to-emerald-600",
@@ -212,7 +237,7 @@ const tabs = [
 
   {
     name: "Employees",
-    count: 47,
+    count: employeesCount,
     growth: "+6%",
     icon: UserCheck,
     color: "bg-gradient-to-tr from-[#1392d3] to-[#50c896]",
@@ -355,6 +380,9 @@ console.log('Check Email Status-----',isManagement)
  
     router.push("/AdminPage");
   };
+
+
+  
 
   return (
     <div className="flex h-screen bg-gray-100 relative">
