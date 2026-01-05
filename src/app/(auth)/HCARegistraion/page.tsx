@@ -683,7 +683,7 @@ if (CurrentUserType === null) return null;
                     accept="image/*"
                     className="hidden"
                     onChange={handleImageChange}
-                    required
+                    
                   />
                 </label>
               </div>
@@ -1055,7 +1055,7 @@ if (CurrentUserType === null) return null;
               onChange={handleChange}
               placeholder="City & Postcode (Current)"
               className="input-field border border-gray-300 p-3 h-8 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-              required
+              
             />
           </section>
 
@@ -1090,7 +1090,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Higher Education ex:Tenth,inter"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="text"
@@ -1099,7 +1099,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Profetional Qualification ex:GDA, ANM Etc....."
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
 
               <input
@@ -1109,7 +1109,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Ongoing Study Ex:ANM, GNM, BSC(Nurseig)"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
 
 
@@ -1124,7 +1124,7 @@ if (CurrentUserType === null) return null;
                     onChange={handleChange}
                     placeholder="Higher Education (e.g., MBBS, MD)"
                     className="input-field w-full mb-3 h-8 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                    required
+                    
                   />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <input
@@ -1134,7 +1134,7 @@ if (CurrentUserType === null) return null;
                       onChange={handleChange}
                       placeholder="Higher Ed. Year Start"
                       className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                      required
+                      
                     />
                     <input
                       type="number"
@@ -1143,7 +1143,7 @@ if (CurrentUserType === null) return null;
                       onChange={handleChange}
                       placeholder="Higher Ed. Year End"
                       className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                      required
+                      
                     />
                   </div>
                 </div>
@@ -1155,7 +1155,7 @@ if (CurrentUserType === null) return null;
                     onChange={handleChange}
                     placeholder="Professional Education (e.g., Fellowship)"
                     className="input-field w-full mb-3 border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                    required
+                    
                   />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <input
@@ -1165,7 +1165,7 @@ if (CurrentUserType === null) return null;
                       onChange={handleChange}
                       placeholder="Professional Ed. Year Start"
                       className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                      required
+                      
                     />
                     <input
                       type="number"
@@ -1174,7 +1174,7 @@ if (CurrentUserType === null) return null;
                       onChange={handleChange}
                       placeholder="Professional Ed. Year End"
                       className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                      required
+                      
                     />
                   </div>
                 </div>
@@ -1185,7 +1185,7 @@ if (CurrentUserType === null) return null;
                   onChange={handleChange}
                   placeholder="Registration Council"
                   className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
+                  
                 />
                 <input
                   type="text"
@@ -1194,7 +1194,7 @@ if (CurrentUserType === null) return null;
                   onChange={handleChange}
                   placeholder="Registration No."
                   className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
+                  
                 />
 
                 <input
@@ -1204,7 +1204,7 @@ if (CurrentUserType === null) return null;
                   onChange={handleChange}
                   placeholder="Certified By (e.g., Medical Council of India)"
                   className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
+                  
                 />
                 <input
                   type="text"
@@ -1213,7 +1213,7 @@ if (CurrentUserType === null) return null;
                   onChange={handleChange}
                   placeholder="Professional Work 1 (e.g., Sr. Consultant, AIIMS)"
                   className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
+                  
                 />
                 <input
                   type="text"
@@ -1230,7 +1230,7 @@ if (CurrentUserType === null) return null;
                   onChange={handleChange}
                   placeholder="Experience in Years"
                   className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
+                  
                 />
               </div>}
           </section>
@@ -1387,7 +1387,7 @@ if (CurrentUserType === null) return null;
                   onChange={handleChange}
                   placeholder="Hair Colour"
                   className="border border-gray-300 p-3 h-10 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
+                  
                 />
                 <input
                   type="text"
@@ -1396,7 +1396,7 @@ if (CurrentUserType === null) return null;
                   onChange={handleChange}
                   placeholder="Eye Colour"
                   className="border border-gray-300 p-3 h-10 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
+                  
                 />
                 <input
                   type="text"
@@ -1405,7 +1405,7 @@ if (CurrentUserType === null) return null;
                   onChange={handleChange}
                   placeholder="Complexion"
                   className="border border-gray-300 p-3 h-10 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
+                  
                 />
                 <input
                   type="text"
@@ -1460,7 +1460,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Report Previous Health Problems"
                 className="resize-y h-20 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <textarea
                 name="reportCurrentHealthProblems"
@@ -1468,7 +1468,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Report Current Health Problems"
                 className="resize-y h-20 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
             </div>
 
@@ -1600,7 +1600,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Source of Referral"
                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="date"
@@ -1609,7 +1609,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Date of Referral"
                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
             </div>
             <div className="space-y-5 mt-5">
@@ -1621,7 +1621,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Reference 1 Name"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="text"
@@ -1630,7 +1630,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Reference 1 Aadhar No."
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="tel"
@@ -1639,7 +1639,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Reference 1 Mobile"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <textarea
                 name="reference1Address"
@@ -1647,7 +1647,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Reference 1 Address"
                 className="input-field resize-y h-18 w-full border border-gray-300 p-3  rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="text"
@@ -1656,7 +1656,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Reference 1 Relationship"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
             </div>
             <div className="space-y-5 mt-5">
@@ -1668,7 +1668,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Reference 2 Name"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="text"
@@ -1677,7 +1677,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Reference 2 Aadhar No."
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="tel"
@@ -1686,7 +1686,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Reference 2 Mobile"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <textarea
                 name="reference2Address"
@@ -1694,7 +1694,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Reference 2 Address"
                 className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
             </div>
           </section>
@@ -1753,7 +1753,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Preferred Service (e.g., OPD, Home Visit)"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="text"
@@ -1762,7 +1762,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Payment Service (e.g., Online, Cash)"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="text"
@@ -1771,7 +1771,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Bank Name for Payments"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="text"
@@ -1780,7 +1780,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Bank Account Number"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="text"
@@ -1789,7 +1789,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="IFSC Code"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <textarea
                 name="bankBranchAddress"
@@ -1797,7 +1797,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Bank Branch Address"
                 className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="text"
@@ -1806,7 +1806,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Bank Branch Name"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="text"
@@ -1815,7 +1815,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Branch City"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="text"
@@ -1824,7 +1824,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Branch State"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
               <input
                 type="text"
@@ -1833,7 +1833,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Branch Pincode"
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
             </div>
           </section>
@@ -1884,7 +1884,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Type (e.g., General Physician, Specialist)"
                 className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
 
               <input
@@ -1894,7 +1894,7 @@ if (CurrentUserType === null) return null;
                 onChange={handleChange}
                 placeholder="Specialties (comma-separated)"
                 className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+                
               />
 
             </div>
