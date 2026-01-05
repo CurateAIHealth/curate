@@ -46,22 +46,21 @@ export default function MedicalGlassDashboardTable() {
 
 
 
-  useEffect(() => {
-    const Fetch = async () => {
-      const [Registerd, Full] = await Promise.all([
-        GetRegidterdUsers(),
-        GetUsersFullInfo(),
-      ]);
-    
-   
+ useEffect(() => {
+  const Fetch = async () => {
+    const [Registerd, Full] = await Promise.all([
+      GetRegidterdUsers(),
+      GetUsersFullInfo(),
+    ]);
 
-  setFullInfo(Full);
+    setFullInfo(Full);
+    setRegisterdInfo(Registerd);
+    setisChecking(false);
+  };
 
-      setRegisterdInfo(Registerd);
-      setisChecking(false)
-    };
-    Fetch();
-  }, [selectedRecord]);
+  Fetch();
+}, []);
+
 
   const handleChange = useCallback(
     (index: number, field: keyof PreviewRow, value: string) => {
@@ -161,10 +160,18 @@ setSelectedRecord(true)
     );
   }, [RegisterdInfo]);
 
-  const FinelPreviewData = useMemo(
-    () => [...result, ...Valueresult],
-    [result, Valueresult]
-  );
+const FinelPreviewData = useMemo(() => {
+  const map = new Map();
+
+  [...result, ...Valueresult].forEach((item: any) => {
+    if (!map.has(item.UserId)) {
+      map.set(item.UserId, item);
+    }
+  });
+
+  return Array.from(map.values());
+}, [result, Valueresult]);
+
   useEffect(() => {
     if (FinelPreviewData.length === 0) return;
 
@@ -297,7 +304,7 @@ setSelectedRecord(true)
 
 
         {PreviwData.map((p: any, i: any) => (
-          <div key={i} className="grid grid-cols-1 md:grid-cols-9 items-center">
+          <div key={p.UserId} className="grid grid-cols-1 md:grid-cols-9 items-center">
 
 
             <div className="hidden md:flex justify-center items-center py-6">

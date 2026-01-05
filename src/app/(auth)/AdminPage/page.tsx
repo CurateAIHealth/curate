@@ -6,6 +6,9 @@ import {
   GetUserInformation,
   GetUsersFullInfo,
   InserTimeSheet,
+  UpdatedClientPriority,
+  UpdatedServiceArea,
+  UpdatedUserJoingDate,
   UpdateHCAnstatus,
   UpdateUserContactVerificationstatus,
   UpdateUserCurrentstatus,
@@ -13,10 +16,10 @@ import {
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { CircleCheckBig, LogOut } from 'lucide-react';
+import { CircleCheckBig, LogOut, Pencil } from 'lucide-react';
 import {  Update_Main_Filter_Status, UpdateClient, UpdateClientSuggetion, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
-import { ClientEnquiry_Filters, filterColors, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
+import { ClientEnquiry_Filters, filterColors, hyderabadAreas, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
 
 import { select, tr } from 'framer-motion/client';
 import ClientTable from '@/Components/Placements/page';
@@ -37,7 +40,7 @@ export default function UserTableList() {
   const [users, setUsers] = useState<any[]>([]);
   const [isChecking, setIsChecking] = useState(true);
   const [UserFirstName, setUserFirstName] = useState("");
-
+const [SearchDate,SetSearchDate]=useState<any>(null)
   const [search, setSearch] = useState('');
   const [AsignStatus,setAsignStatus]=useState("")
   const [LoginEmail, setLoginEmail] = useState("");
@@ -53,6 +56,8 @@ const UpdateMainFilter=useSelector((state:any)=>state.Main_Filter)
 const CurrentClientStatus=useSelector((state:any)=>state.Submitted_Current_Status)
 const UpdateduserType=useSelector((state:any)=>state.ViewHCPList)
 const CurrentCount=useSelector((state:any)=>state.updatedCount)
+const [editingUserId, setEditingUserId] = useState<string | null>(null);
+
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
     setUpdatedStatusMsg(`Updating ${first} Contact Status....`);
     try {
@@ -105,15 +110,22 @@ console.log("Check Permanent Adress0=--",users)
     EmailVerification: each.EmailVerification,
     ClientStatus: each.ClientStatus,
     Status:each.Status,
-    CurrentStatus:each.CurrentStatus
+    CurrentStatus:each.CurrentStatus,
+    LeadSource:each.Source,
+    ClientPriority:each.ClientPriority,
+    LeadDate:each.LeadDate,
+    ServiceArea:each.ServiceArea,
+    ServiceLocation:each.ServiceArea
   }));
 
 const UpdatedFilterUserType = useMemo(() => {
   return Finel.filter((each) => {
     const matchesType = !UpdateduserType || each.userType === UpdateduserType;
     const matchesSearch = !search || each.ClientStatus === search;
+    const matchesDate =
+      !SearchDate || each.LeadDate === SearchDate;
     const NotAdmin=each.Email!=='admin@curatehealth.in'
-    return matchesType && matchesSearch&&NotAdmin;
+    return matchesDate&&matchesType && matchesSearch&&NotAdmin;
   });
 }, [Finel, UpdateduserType, search]);
 
@@ -235,7 +247,9 @@ useEffect(() => {
   const UpdateFilterHCA=(e:any)=>{
 setAsignStatus(e.target.value)
   }
-  
+  if(isChecking){
+  return <LoadingData/>
+}
   const ContetUserInterface=()=>{
       switch (UpdateMainFilter) {
       case "Client Enquiry":
@@ -265,7 +279,47 @@ const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
 
 };
 
+const UpdateClientPriority=async(ClientName:any,ClientUserId:any,UpdatedValue:any)=>{
+try{
+   setUpdatedStatusMsg(`Please Wait,${ClientName} Priority Updateding...`);
+const PriorityResult:any=await UpdatedClientPriority(ClientUserId,UpdatedValue)
 
+if(PriorityResult.success===true){
+ setUpdatedStatusMsg(`${ClientName} Priority Updated Successfully`);
+}
+}catch(err:any){
+
+}
+}
+
+const UpdateClientServiceLocation=async(ClientName:any,ClientUserId:any,UpdatedValue:any)=>{
+try{
+   setUpdatedStatusMsg(`Please Wait,${ClientName} Priority Updateding...`);
+const AreaUpdateResult:any=await UpdatedServiceArea(ClientUserId,UpdatedValue)
+
+if(AreaUpdateResult.success===true){
+ setUpdatedStatusMsg(`${ClientName} Priority Updated Successfully`);
+}
+}catch(err:any){
+
+}
+}
+
+
+
+
+const UpdateJoiningDate=async(ClientName:any,ClientUserId:any,UpdatedValue:any)=>{
+try{
+   setUpdatedStatusMsg(`Please Wait,${ClientName} Priority Updateding...`);
+const PriorityResult:any=await UpdatedUserJoingDate(ClientUserId,UpdatedValue)
+
+if(PriorityResult.success===true){
+ setUpdatedStatusMsg(`${ClientName} Priority Updated Successfully`);
+}
+}catch(err:any){
+
+}
+}
 
   const UpdateAssignHca = async (UserIDClient: any, UserIdHCA: any, ClientName: any, ClientEmail: any, ClientContact: any,Adress:any, HCAName: any, HCAContact: any) => {
     setUpdatedStatusMsg("Please Wait Assigning HCA...")
@@ -313,8 +367,14 @@ const ClientEnquiryUserInterFace = () => {
               <table className="table-fixed w-full min-w-[800px] text-[11px] sm:text-[13px] text-left text-gray-700 border-collapse">
                 <thead className="bg-[#f5faff] sticky top-0 z-10">
                   <tr>
+                    {UpdateduserType === "patient"&&
+                      <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Date</th>}
+                      {UpdateduserType === "patient"&&
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Lead Source</th>}
+                    {UpdateduserType === "patient"&&
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client Priority</th>}
                     <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Name</th>
-                    <th className="px-2 py-2 sm:px-4 sm:py-3 w-[18%]">Email</th>
+                    {/* <th className="px-2 py-2 sm:px-4 sm:py-3 w-[18%]">Email</th> */}
                     <th className="px-2 py-2 w-[12%]">Contact</th>
                     {/* <th className="px-2 py-2 w-[10%]">Role</th>
                     <th className="px-2 py-2 w-[12%]">Aadhar</th> */}
@@ -340,6 +400,60 @@ const ClientEnquiryUserInterFace = () => {
                       key={index}
                       className="border-b border-gray-400 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors"
                     >
+                       {UpdateduserType === "patient"&&    <td><input
+  type="date"
+  value={user.LeadDate||''}
+  className="
+    h-11 w-[150px] px-4
+    rounded-xl
+    bg-white
+    border border-slate-300
+    text-sm font-semibold text-slate-700
+    shadow-sm
+
+    transition-all duration-200 ease-in-out
+
+    hover:border-slate-400 hover:shadow-md
+    focus:outline-none
+    focus:border-[#62e0d9]
+    focus:ring-2 focus:ring-[#caf0f8]
+
+    disabled:bg-slate-100 disabled:cursor-not-allowed
+
+  "
+  onChange={(e:any)=>UpdateJoiningDate(user.FirstName,user.userId,e.target.value)}
+/>
+</td>}
+                   {UpdateduserType === "patient"&&
+                      <td className='pl-6'>{user.LeadSource||"Not Mentioned"}</td>}
+                      {UpdateduserType === "patient"&&
+                      <td>
+                        <select
+  className={`
+    h-11 w-[150px] px-3
+    ml-auto cursor-pointer
+    rounded-xl bg-white
+    border border-slate-300
+    text-sm font-semibold text-slate-700
+    shadow-sm
+    transition-all duration-200 ease-in-out
+
+    hover:border-slate-400 hover:shadow-md
+    focus:outline-none
+    focus:border-[#62e0d9]
+    focus:ring-2 focus:ring-[#caf0f8]
+  `}
+  value={user?.ClientPriority ?? "Stable"}
+
+  onChange={(e)=>UpdateClientPriority(user.FirstName,user.userId,e.target.value)}
+>
+  <option value="Important">⭐Important</option>
+  <option value="stable">🟢 Stable</option>
+  <option value="VIP">👑VIP</option>
+  <option value="Critical">🔴 Critical </option>
+</select>
+                      </td>}
+
                       <td className="px-2 py-2 truncate">
                         <div className="flex items-center gap-2">
                           {/* <img
@@ -356,7 +470,7 @@ const ClientEnquiryUserInterFace = () => {
 
                         </div>
                       </td>
-                      <td className="px-2 py-2 break-words">{user?.Email?.toLowerCase()||"Not Provided"}</td>
+                      {/* <td className="px-2 py-2 break-words">{user?.Email?.toLowerCase()||"Not Provided"}</td> */}
                       <td className="px-2 py-2">+91{user.Contact}</td>
                       {/* <td className="px-2 py-2">
                         <span className="px-2 sm:px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-[9px] sm:text-xs">
@@ -366,8 +480,87 @@ const ClientEnquiryUserInterFace = () => {
                       <td className="px-2 py-2">
                         {user.AadharNumber ? user.AadharNumber : "Aadhaar Pending"}
                       </td> */}
-                        {UpdateduserType==="patient"?
-                      <td className="px-2 py-2 break-words">{user.Location}</td>: <td className="px-2 py-2 break-words">{GetPermanentAddress(user.userId)}</td>}
+<td className="px-2 py-2 break-words">
+  {UpdateduserType === "patient" ? (
+    <div className="flex items-center gap-2">
+      {/* Display Value */}
+      <span
+        className={`text-sm ${
+          user.ServiceLocation
+            ? "text-slate-700 font-medium"
+            : "italic text-slate-400"
+        }`}
+      >
+        {user.ServiceLocation || "Not mentioned"}
+      </span>
+
+      {/* Pencil Icon */}
+      <button
+        onClick={() => setEditingUserId(user.userId)}
+        className="
+          rounded-lg p-1
+          text-slate-500
+          transition-all
+          hover:bg-slate-100 hover:text-slate-700
+        "
+        title="Edit service area"
+      >
+        <Pencil size={14} />
+      </button>
+
+  
+    {editingUserId === user.userId && (
+  <div
+    className="
+      absolute z-50
+      mt-2
+      w-56
+      rounded-xl
+      bg-white
+      border border-slate-200
+      shadow-[0_12px_30px_rgba(0,0,0,0.12)]
+      p-2
+      animate-in fade-in zoom-in-95
+    "
+  >
+    <select
+      autoFocus
+      onChange={(e) => {
+        UpdateClientServiceLocation(user.FirstName,user.userId,e.target.value)
+        setEditingUserId(null);
+      }}
+      onBlur={() => setEditingUserId(null)}
+      className="
+        h-10 w-full px-3
+        rounded-lg
+        border border-slate-300
+        bg-[#f8fafc]
+        text-sm font-medium text-slate-700
+        cursor-pointer
+
+        focus:outline-none
+        focus:border-[#62e0d9]
+        focus:ring-2 focus:ring-[#caf0f8]
+      "
+    >
+      <option value="">Select area</option>
+      {hyderabadAreas.map((area: any) => (
+        <option key={area} value={area}>
+          {area}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
+    </div>
+  ) : (
+    <span className="text-sm text-slate-700">
+      {GetPermanentAddress(user.userId)}
+    </span>
+  )}
+</td>
+
                       <td className="px-2 py-2">
                         <select
                           className="w-full text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200 cursor-pointer text-xs sm:text-sm"
@@ -400,6 +593,7 @@ const ClientEnquiryUserInterFace = () => {
                               </option>
                             ))}
                           </select>
+                    
                         </td>
                       )}
                       {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
@@ -460,7 +654,7 @@ const ClientEnquiryUserInterFace = () => {
 
                     )}
                       <td className="px-2 py-2">
-                        {user?.DetailedVerification === false?<p>FillFullInfo</p>:
+                        {(user?.DetailedVerification === false&&UpdateduserType === "healthcare-assistant")?<p>FillFullInfo</p>:
                         <button
                           className="w-full text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition cursor-pointer text-xs sm:text-sm"
                           onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
@@ -490,7 +684,60 @@ onClick={()=>UpdateNavigattosuggetions(user.userId)}
           </div>
         </div>
       ) : (
-<LoadingData/>
+<div className="flex items-center justify-center py-20">
+  <div className="
+    w-full max-w-md
+    rounded-3xl
+    bg-white/70 backdrop-blur-xl
+    border border-slate-200
+    shadow-[0_20px_50px_rgba(0,0,0,0.08)]
+    px-8 py-10
+    text-center
+    transition-all
+  ">
+    <div className="
+      mx-auto mb-5
+      flex h-16 w-16
+      items-center justify-center
+      rounded-full
+      bg-gradient-to-br from-[#e0f7f5] to-[#f1faf8]
+      shadow-inner
+    ">
+      <span className="text-3xl">🗂️</span>
+    </div>
+
+   
+    <h3 className="text-lg font-semibold tracking-tight text-slate-800">
+      No data available
+    </h3>
+
+ 
+    <p className="mt-2 text-sm leading-relaxed text-slate-500">
+      We couldn’t find any records matching your current selection.
+      Try changing filters or come back later.
+    </p>
+
+    <button
+      onClick={() => window.location.reload()}
+      className="
+        mt-6
+        inline-flex items-center justify-center
+        rounded-xl
+        bg-gradient-to-r from-[#62e0d9] to-[#3bcfc8]
+        px-6 py-2.5
+        text-sm font-semibold text-white
+        shadow-md
+
+        transition-all duration-200
+        hover:scale-[1.03] hover:shadow-lg
+        active:scale-[0.97]
+      "
+    >
+      Refresh
+    </button>
+  </div>
+</div>
+
       )}
 
       {updatedStatusMsg && (
@@ -674,29 +921,33 @@ onClick={()=>UpdateNavigattosuggetions()}
             Show Placement Suggetions
           </button> */}
           {(UpdateMainFilter!=="Deployment")&&(UpdateMainFilter!=="Timesheet") &&(UpdateduserType!=='healthcare-assistant')&&
-          <select
-  className={`
-    h-11 w-[150px] px-3
-    ${UpdateduserType === "patient" ? "mt-6" : "mt-0"}
-    ml-auto cursor-pointer
-    rounded-xl bg-white
-    border border-slate-300
-    text-sm font-semibold text-slate-700
-    shadow-sm
-    transition-all duration-200 ease-in-out
+<div className="relative">
+  <input
+    type="date"
+    className="
+      peer w-full rounded-xl border border-[#cce5e1]
+      bg-[#f1faf8] px-4 pt-5 pb-2 text-sm text-[#004d40]
+      focus:border-[#00796b] focus:bg-white
+      focus:ring-2 focus:ring-[#00796b]/30 focus:outline-none
+    "
+    onChange={(e:any)=>SetSearchDate(e.target.value)}
+    value={SearchDate||''}
+  />
+  <label
+    className="
+      pointer-events-none absolute left-4 top-2
+      text-xs text-[#00796b]
+      transition-all
+      peer-focus:text-[#00695c]
+    "
+  >
+ Search By Date
+  </label>
+</div>
 
-    hover:border-slate-400 hover:shadow-md
-    focus:outline-none
-    focus:border-[#62e0d9]
-    focus:ring-2 focus:ring-[#caf0f8]
-  `}
->
-  <option value="priority">⭐ Priority</option>
-  <option value="stable">🟢 Stable</option>
-  <option value="monitor">🟡 Monitor</option>
-  <option value="critical">🔴 Critical Attention</option>
-</select>
+
 }
+
         </div>
       </div>
 

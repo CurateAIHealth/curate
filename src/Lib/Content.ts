@@ -422,7 +422,7 @@ export const HYDERABAD_LOCATIONS = [
 // ];
 export const Main_Filters = ["Client Enquiry", "Placements", "Timesheet", "Referral Pay", "Payments"];
 
-export const ClientEnquiry_Filters = ["Processing", "Converted", "Waiting List", "Lost", 'Deployment'];
+export const ClientEnquiry_Filters = ["Processing", "Converted", "Waiting List", "Lost", ];
 
 export const Placements_Filters = ["On Service", "Replacements", "Termination"];
 
@@ -2020,4 +2020,50 @@ export  const serviceOptions = [
   { name: "Healthcare Assistant Service", code: "HCAS", amount: 20000 },
   { name: "Nursing Care Service", code: "NURS", amount: 35000 },
   { name: "Bedside Attendant", code: "BSA", amount: 15000 }
+];
+
+
+export const hyderabadAreas = [
+  "Banjara Hills",
+  "Jubilee Hills",
+  "HITEC City",
+  "Gachibowli",
+  "Madhapur",
+  "Kukatpally",
+  "Ameerpet",
+  "Begumpet",
+  "Somajiguda",
+  "Secunderabad",
+  "Mehdipatnam",
+  "Miyapur",
+  "Manikonda",
+  "Uppal",
+  "Nallakunta",
+  "Chandanagar",
+  "Nampally",
+  "Abids",
+  "Ashok Nagar",
+  "Asif Nagar",
+  "Bahadurpura",
+  "Aliabad",
+  "Aghapura",
+  "Sainikpuri",
+  "Amberpet",
+  "Badichowdi",
+  "Balkampet",
+  "Barkatpura",
+  "Bagh Lingampally",
+  "Adikmet",
+  "Koti",
+  "Tolichowki",
+  "Dilsukhnagar",
+  "LB Nagar",
+  "Himayat Nagar",
+  "Khairatabad",
+  "Kondapur",
+  "Nizampet",
+  "Shamshabad",
+  "Medchal",
+  "Tellapur",
+  "Narsingi"
 ];

@@ -634,6 +634,8 @@ TreatmentRemarks:FinelPostingData.TreatmentRemarks,
       userId: FinelPostingData.userId,
       SuitableHCP: FinelPostingData.SuitableHCP,
       TimeStampInfo: FinelPostingData.TimeStamp,
+      LeadDate:FinelPostingData.LeadDate,
+      ServiceArea:FinelPostingData.ServiceArea,
       createdAt: new Date().toISOString(),
     };
 
@@ -3116,6 +3118,164 @@ export const UpdateUserEmailVerificationstatus = async (UserId: string, UpdatedS
     return err
   }
 }
+
+
+
+export const UpdatedClientPriority = async (
+  UserId: string,
+  UpdatedStatus: string
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const result = await collection.updateOne(
+      { userId: UserId }, 
+      {
+        $set: {
+          ClientPriority: UpdatedStatus, 
+        
+        },
+      },
+      {
+        upsert: true, 
+      }
+    );
+
+   
+    if (result.upsertedCount > 0) {
+      return {
+        success: true,
+        message: "Client priority created successfully.",
+      };
+    }
+
+    
+    if (result.modifiedCount > 0) {
+      return {
+        success: true,
+        message: "Client priority updated successfully.",
+      };
+    }
+
+    
+    return {
+      success: true,
+      message: "Client priority already up to date.",
+    };
+  } catch (err: any) {
+    console.error("UpdatedClientPriority Error:", err);
+    return {
+      success: false,
+      message: "Internal server error",
+    };
+  }
+};
+export const UpdatedServiceArea = async (
+  UserId: string,
+  UpdatedStatus: string
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const result = await collection.updateOne(
+      { userId: UserId }, 
+      {
+        $set: {
+          ServiceArea: UpdatedStatus, 
+        
+        },
+      },
+      {
+        upsert: true, 
+      }
+    );
+
+   
+    if (result.upsertedCount > 0) {
+      return {
+        success: true,
+        message: "Client priority created successfully.",
+      };
+    }
+
+    
+    if (result.modifiedCount > 0) {
+      return {
+        success: true,
+        message: "Client priority updated successfully.",
+      };
+    }
+
+    
+    return {
+      success: true,
+      message: "Client priority already up to date.",
+    };
+  } catch (err: any) {
+    console.error("UpdatedClientPriority Error:", err);
+    return {
+      success: false,
+      message: "Internal server error",
+    };
+  }
+};
+
+export const UpdatedUserJoingDate = async (
+  UserId: string,
+  UpdatedStatus: string
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const result = await collection.updateOne(
+      { userId: UserId }, 
+      {
+        $set: {
+          LeadDate: UpdatedStatus, 
+        
+        },
+      },
+      {
+        upsert: true, 
+      }
+    );
+
+   
+    if (result.upsertedCount > 0) {
+      return {
+        success: true,
+        message: "Client priority created successfully.",
+      };
+    }
+
+    
+    if (result.modifiedCount > 0) {
+      return {
+        success: true,
+        message: "Client priority updated successfully.",
+      };
+    }
+
+    
+    return {
+      success: true,
+      message: "Client priority already up to date.",
+    };
+  } catch (err: any) {
+    console.error("UpdatedClientPriority Error:", err);
+    return {
+      success: false,
+      message: "Internal server error",
+    };
+  }
+};
+
 export const UpdateUserCurrentstatus = async (UserId: string, UpdatedStatus: string) => {
   try {
     const Cluster = await clientPromise
