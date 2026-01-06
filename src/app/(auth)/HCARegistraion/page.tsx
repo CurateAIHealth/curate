@@ -120,7 +120,10 @@ export default function DoctorProfileForm() {
     specialties: string;
     Password: any;
     ConfirmPassword: any;
-    PreviewUserType:any
+    PreviewUserType:any;
+    fatherNameContact:any;
+    motherContact:any;
+    Husbend:any
     // website?: string; // optional if commented
   }
 
@@ -157,7 +160,10 @@ useEffect(() => {
     firstName: '',
     surname: '',
     fatherName: '',
+    fatherNameContact:'',
+    motherContact:'',
     motherName: '',
+    Husbend:'',
     gender: '',
     dateOfBirth: '',
     maritalStatus: '',
@@ -534,7 +540,10 @@ useEffect(() => {
             FinelVerification: true,
             EmailVerification: true,
             Password: form.Password || "",
-            PreviewUserType:form.PreviewUserType
+            PreviewUserType:form.PreviewUserType,
+            fatherNameContact:form.fatherNameContact,
+            motherContact:form.motherContact,
+            Husbend:form.Husbend
           };
 
 
@@ -601,7 +610,20 @@ useEffect(() => {
     ]
   );
 
+  const FullForms = (UserType: any) => {
+    switch (UserType) {
+      case "HCA":
+        return "Health Care Assistant";
+      case "HCP":
+        return "Health Care Professional";
 
+      case "HCN":
+        return "Health Care Nurse";
+        default:
+          return null
+
+    }
+  }
 
   const handleLogout = async () => {
     localStorage.removeItem("UserId");
@@ -703,7 +725,7 @@ if (CurrentUserType === null) return null;
 
             <div className="flex-1 p-4  text-center md:text-left flex flex-col justify-center">
               <h1 className="text-xl sm:text-4xl font-bold text-gray-800 mb-3 leading-snug">
-                Healthcare Professional Registration
+              {FullForms(CurrentUserType)} Registration
               </h1>
              
               <p className="text-gray-600 text-base text-[14px] leading-relaxed max-w-2xl">
@@ -771,6 +793,17 @@ if (CurrentUserType === null) return null;
                   className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                   required
                 /> */}
+
+                    <input
+                type="text"
+                name="surname"
+                value={form.surname || ''}
+                onChange={handleChange}
+                placeholder="Surname"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                
+              />
+
               <input
                 type="text"
                 name="firstName"
@@ -780,21 +813,22 @@ if (CurrentUserType === null) return null;
                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
-              <input
-                type="text"
-                name="surname"
-                value={form.surname || ''}
-                onChange={handleChange}
-                placeholder="Surname"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
-              />
+          
               <input
                 type="text"
                 name="fatherName"
                 value={form.fatherName || ''}
                 onChange={handleChange}
                 placeholder="Father's Name"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                required
+              />
+                <input
+                type="text"
+                name="fatherNameContact"
+                value={form.fatherNameContact || ''}
+                onChange={handleChange}
+                placeholder="Father's Contact"
                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
@@ -806,6 +840,24 @@ if (CurrentUserType === null) return null;
                 placeholder="Mother's Name"
                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
+              />
+              <input
+                type="text"
+                name="motherContact"
+                value={form.motherContact || ''}
+                onChange={handleChange}
+                placeholder="Mother's Contact"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                
+              />
+                <input
+                type="text"
+                name="Husbend"
+                value={form.Husbend || ''}
+                onChange={handleChange}
+                placeholder="Enter Husbend Name"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                
               />
               {/* <input
                   type="text"
@@ -859,10 +911,10 @@ if (CurrentUserType === null) return null;
                 required
               >
                 <option value="">Select Marital Status</option>
-                <option value="Single">Single</option>
+                <option value="unmarried">unmarried</option>
                 <option value="Married">Married</option>
-                <option value="Divorced">Divorced</option>
-                <option value="Widowed">Widowed</option>
+                <option value="divorcee">divorcee</option>
+                <option value="widower">widower</option>
               </select>
               <input
                 type="email"
