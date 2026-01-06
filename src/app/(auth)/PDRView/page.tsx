@@ -314,7 +314,7 @@ const handleLogout = () => {
   <div className="flex flex-col sm:flex-row justify-between items-center gap-6 bg-white/90 backdrop-blur-xl rounded-2xl shadow-[0_6px_30px_rgba(0,0,0,0.08)] border border-gray-100 px-8 py-6">
     <div>
       <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">🩺 Patient Daily Record</h1>
-      <p className="text-gray-500 text-sm mt-1">Monitor, manage, and complete pending PDRs with ease</p>
+      <p className="text-gray-500 text-sm mt-1">Monitor, manage, and complete pending PDRs with ease.</p>
     </div>
     <div className="relative w-full sm:w-[320px]">
       <input
