@@ -81,60 +81,131 @@ const [invoiceCount, setInvoiceCount] = useState<any>('Loading...');
 const [notificationCount, setNotificationCount] = useState<any>(0);
 const [hostelAttendanceCount, setHostelAttendanceCount] = useState<any>('Loading...');
 const [employeesCount, setEmployeesCount] = useState<any>(7);
+const [Fix,setFix]=useState([])
 
 
 
-useEffect(() => {
+ useEffect(() => {
+  let isMounted = true;
+
+  const fetchData = async () => {
+    try {
+      const [
+        registeredUsersData,
+        HCPFullInfo,
+        deployedData,
+        invoiceData,
+        timesheetData,
+      ] = await Promise.all([
+        GetRegidterdUsers(),
+        GetUsersFullInfo(),
+        GetDeploymentInfo(),
+        GetInvoiceInfo(),
+        GetTimeSheetInfo(),
+      ]);
+
+      if (!isMounted) return;
+
   
-   const fetch=async()=>{
-    const [registeredUsersData,HCPFullInfo,deployedData,Invoice,TimesheetInformation] =
-        await Promise.all([
-          GetRegidterdUsers(),
-          GetUsersFullInfo(),
-          GetDeploymentInfo(),
-         GetInvoiceInfo(),
-         GetTimeSheetInfo()
-        ]);
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
 
-      setRegisteredUsers(registeredUsersData.filter((each:any)=>each.userType==='patient'&&each.ClientStatus!=="Placed").length);
-      setHcpListCount(registeredUsersData.filter((each:any)=>each.userType==='healthcare-assistant').length)
-      setVendorsCount(registeredUsersData.filter((each:any)=>each.userType==='Vendor').length)
-      setInvoiceCount(Invoice?.length)
-      setPendingPdrCount(TimesheetInformation?.filter((each:any)=>each.PDRStatus===false).length)
-      setHostelAttendanceCount(registeredUsersData.filter((each:any)=>each.CurrentStatus === "Active").length)
-      
-      setDeployedLength(deployedData?.length ?? 0);
-const missingDocsCount = HCPFullInfo.filter((each: any) => {
-  const docs = each?.HCAComplitInformation?.Documents || {};
-
-  return Object.entries(docs).some(
-    ([_, value]) =>
-      value === "" || value === null || value === undefined
-  );
-}).length-3;
-
-setDocumentComplianceCount(missingDocsCount);
+   
+      let patientCount = 0;
+      let hcpCount = 0;
+      let vendorCount = 0;
+      let activeCount = 0;
+      let currentMonthRegistrations = 0;
 
 
+      for (const user of registeredUsersData ?? []) {
+        if (user?.userType === "patient" && user?.ClientStatus !== "Placed") {
+          patientCount++;
+        }
 
-    setDocumentComplianceCount(missingDocsCount);
+        if (user?.userType === "healthcare-assistant") {
+          hcpCount++;
+        }
 
+        if (user?.userType === "Vendor") {
+          vendorCount++;
+        }
 
-     const localValue = localStorage.getItem('UserId');
-  
-        const Sign_in_UserInfo = await GetUserInformation(localValue)
+        if (user?.CurrentStatus === "Active") {
+          activeCount++;
+        }
+
+        if (user?.createdAt) {
+          const createdDate = new Date(user.createdAt);
+          if (
+            createdDate.getFullYear() === currentYear &&
+            createdDate.getMonth() === currentMonth
+          ) {
+            currentMonthRegistrations++;
+          }
+        }
+      }
+
+      setRegisteredUsers(patientCount);
+      setHcpListCount(hcpCount);
+      setVendorsCount(vendorCount);
+      setHostelAttendanceCount(activeCount);
+      setRegistrationCount(currentMonthRegistrations);
+
  
-     
-  if (Sign_in_UserInfo) {
-    
-    setIsManagement(Sign_in_UserInfo.Email === "admin@curatehealth.in");
-  } else {
-    setIsManagement(false);
-  }
-   }
-   fetch()
+      setInvoiceCount(invoiceData?.length ?? 0);
+      setDeployedLength(deployedData?.length ?? 0);
+
+      setPendingPdrCount(
+        timesheetData?.filter((t: any) => t?.PDRStatus === false).length ?? 0
+      );
+
+      const hcpInfoList =
+        HCPFullInfo?.map((each: any) => each?.HCAComplitInformation).filter(Boolean) ?? [];
+
+   
+      const hcpWithoutStatusSet = new Set(
+        hcpInfoList
+          .filter((hcp: any) => !("Status" in hcp))
+          .map((hcp: any) => hcp?.UserId)
+      );
+
+      const activeHCPsWithoutStatus = registeredUsersData?.filter(
+        (user: any) =>
+          user?.CurrentStatus === "Active" &&
+          hcpWithoutStatusSet.has(user?.UserId)
+      );
+
+      const incompleteDocumentsCount = hcpInfoList.filter((info: any) => {
+        const documents = info?.Documents;
+        if (!documents) return true;
+
+        return Object.values(documents).some(
+          (value) => value === null || value === undefined || value === ""
+        );
+      }).length;
+
+      setDocumentComplianceCount(incompleteDocumentsCount);
+
+
+      const localValue = localStorage.getItem("UserId");
+      const signInUser = await GetUserInformation(localValue);
+
+      setIsManagement(signInUser?.Email === "admin@curatehealth.in");
+    } catch (error) {
+      console.error("Dashboard fetch error:", error);
+    }
+  };
+
+  fetchData();
+
+  return () => {
+    isMounted = false;
+  };
 }, []);
 
+console.log("Check Fix=====",Fix)
 const tabs = [
   {
     name: "Client Enquiry",
@@ -208,7 +279,7 @@ const tabs = [
   },
   {
     name: "Registration",
-    count: 21,
+    count: registrationCount,
     growth: "+7%",
     icon: FileText,
     color: "bg-gradient-to-tr from-fuchsia-500 to-pink-600",
@@ -436,7 +507,7 @@ console.log('Check Email Status-----',isManagement)
                   className="flex flex-col items-center justify-center bg-white rounded-xl shadow-md border border-gray-100 p-3 sm:p-1"
                 >
                   <div
-                    className={`w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full shadow-md ${tab.color}`}
+                    className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full shadow-md ${tab.color}`}
                   >
                     <tab.icon size={20} className="text-white" />
                   </div>
@@ -533,7 +604,7 @@ console.log('Check Email Status-----',isManagement)
 )}
 
 
-          <div className="lg:col-span-4 space-y-4">
+           <div className="lg:col-span-4 space-y-4">
             <div className="bg-white flex flex-col p-2 sm:p-4 rounded-xl shadow-md">
               <h2 className="text-base sm:text-lg font-semibold mb-3 text-gray-700">
                 Active Bench List
@@ -583,7 +654,9 @@ console.log('Check Email Status-----',isManagement)
                 </button>
               </div>
             </div>
-          </div>
+          </div> 
+      
+
         </main>
       </div>
     </div>
