@@ -430,16 +430,16 @@ console.log("Data of Birth---",user.dateOfBirth)
     />
     <div>
       <h2 className="text-xl font-bold text-[#ff1493]">
-        {user.title} {user.firstName} {user.surname}
+       {user.firstName} {user.surname}
       </h2>
       <p className="text-gray-500 text-sm">{user.emailId}</p>
-    <button className="relative inline-flex items-center px-2 m-2 py-2 bg-[#ff1493] text-white text-[10px] font-semi-bold 
+    {/* <button className="relative inline-flex items-center px-2 m-2 py-2 bg-[#ff1493] text-white text-[10px] font-semi-bold 
                border cursor-pointer rounded-lg shadow-sm 
                hover:bg-[#50c896] hover:text-white 
                transition-colors duration-300 ease-in-out 
                focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50">
   Assign Placement
-</button>
+</button> */}
 
     </div>
     <p className={ `${SubmitstatusMessage==="Profile Updated Succesfully"?"text-green-800":"text-black"} text-center font-semibold ml-15 mt-10`}>{SubmitstatusMessage}</p>
