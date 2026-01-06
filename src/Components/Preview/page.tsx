@@ -26,20 +26,42 @@ interface PreviewProps {
 const F = (v: any) =>
   v !== null && v !== "" && v !== undefined ? v : "Not Provided";
 
-const BadgeList = ({ list }: { list: any[] }) => (
-  <div className="flex flex-wrap gap-2 mt-1">
-    {list?.length > 0
-      ? list.map((item, i) => (
-          <span
-            key={i}
-            className="px-3 py-1 bg-pink-100 text-pink-700 text-xs rounded-full border border-pink-300"
-          >
-            {item}
-          </span>
-        ))
-      : "Not Provided"}
-  </div>
-);
+type BadgeListProps = {
+  list?: any;
+};
+
+function BadgeList({ list }: BadgeListProps) {
+  // Normalize data safely
+  const safeList: string[] = Array.isArray(list)
+    ? list
+    : typeof list === "string"
+    ? [list]
+    : [];
+
+  if (safeList.length === 0) {
+    return (
+      <span className="text-gray-400 text-sm">
+        Not specified
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2 mt-1">
+      {safeList.map((item: string, i: number) => (
+        <span
+          key={i}
+          className="px-3 py-1 bg-pink-100 text-pink-700 text-xs rounded-full border border-pink-300"
+        >
+          {item}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+
+
 
 const InfoItem = ({ label, value }: { label: string; value: any }) => (
   <div className="flex justify-between gap-3 min-w-0 text-sm py-1">
