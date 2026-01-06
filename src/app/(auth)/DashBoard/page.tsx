@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   User,
@@ -63,262 +63,217 @@ export default function Dashboard() {
   const updatedRefresh = useSelector((afterEach: any) => afterEach.updatedCount);
     const [isManagement, setIsManagement] = useState<boolean | null>(null);
     const [showAccessDenied, setShowAccessDenied] = useState(false);
-const [registeredUsers, setRegisteredUsers] = useState<any>('Loading...');
-const [deployedLength, setDeployedLength] = useState<any>('Loading...');
-const [timesheetCount, setTimesheetCount] = useState<any>('Loading...');
-const [referralPayCount, setReferralPayCount] = useState<any>(0);
-const [paymentsCount, setPaymentsCount] = useState<any>('Loading...');
-const [hcpListCount, setHcpListCount] = useState<any>('Loading...');
-const [pendingPdrCount, setPendingPdrCount] = useState<any>('Loading...');
-const [vendorsCount, setVendorsCount] = useState<any>('Loading...');
-const [trainingCount, setTrainingCount] = useState<any>(0);
-const [documentComplianceCount, setDocumentComplianceCount] = useState<any>('Loading...');
-const [registrationCount, setRegistrationCount] = useState<any>('Loading...');
-const [invoiceCount, setInvoiceCount] = useState<any>('Loading...');
-const [notificationCount, setNotificationCount] = useState<any>(0);
-const [hostelAttendanceCount, setHostelAttendanceCount] = useState<any>('Loading...');
-const [employeesCount, setEmployeesCount] = useState<any>(7);
-const [Fix,setFix]=useState([])
+  const [stats, setStats] = useState<any>({
+    registeredUsers: "Loading...",
+    timesheetcount:'Loading....',
+    ReferalCount:"0",
+    PaymentCount:"0",
+    hcpListCount: "Loading...",
+    vendorsCount: "Loading...",
+    hostelAttendanceCount: "Loading...",
+    registrationCount: "Loading...",
+    invoiceCount: "Loading...",
+    deployedLength: "Loading...",
+    pendingPdrCount: "Loading...",
+    documentComplianceCount: "Loading...",
+    Notifications:"Loading...",
+    Employs:"Loading..."
+  });
 
 
 
 useEffect(() => {
-  let isMounted = true;
+    let mounted = true;
 
-  const fetchData = async () => {
-    try {
-      const [
-        registeredUsersData = [],
-        HCPFullInfo = [],
-        deployedData = [],
-        invoiceData = [],
-        timesheetData = [],
-      ] = await Promise.all([
-        GetRegidterdUsers(),
-        GetUsersFullInfo(),
-        GetDeploymentInfo(),
-        GetInvoiceInfo(),
-        GetTimeSheetInfo(),
-      ]);
+    const fetchDashboard = async () => {
+      try {
+        const [
+          registeredUsersData = [],
+          HCPFullInfo = [],
+          deployedData = [],
+          invoiceData = [],
+          timesheetData = [],
+        ] = await Promise.all([
+          GetRegidterdUsers(),
+          GetUsersFullInfo(),
+          GetDeploymentInfo(),
+          GetInvoiceInfo(),
+          GetTimeSheetInfo(),
+        ]);
 
-      if (!isMounted) return;
+        if (!mounted) return;
 
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth();
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = now.getMonth();
 
-      let patientCount = 0;
-      let hcpCount = 0;
-      let vendorCount = 0;
-      let activeCount = 0;
-      let currentMonthRegistrations = 0;
+        let patient = 0, hcp = 0, vendor = 0, active = 0, monthReg = 0;
+        const activeSet = new Set<string>();
 
-      const activeUserIdSet = new Set<string>();
+        for (const u of registeredUsersData) {
+          if (!u) continue;
+          if (u.userType === "patient" && u.ClientStatus !== "Placed") patient++;
+          if (u.userType === "healthcare-assistant") hcp++;
+          if (u.userType === "Vendor") vendor++;
 
-   
-      for (const user of registeredUsersData) {
-        if (!user) continue;
+          if (u.CurrentStatus === "Active") {
+            active++;
+            u.userId && activeSet.add(u.userId);
+          }
 
-        const {
-          userType,
-          ClientStatus,
-          CurrentStatus,
-          createdAt,
-          userId,
-        } = user;
-
-        if (userType === "patient" && ClientStatus !== "Placed") {
-          patientCount++;
-        }
-
-        if (userType === "healthcare-assistant") hcpCount++;
-        if (userType === "Vendor") vendorCount++;
-
-        if (CurrentStatus === "Active") {
-          activeCount++;
-          if (userId) activeUserIdSet.add(userId);
-        }
-
-        if (createdAt) {
-          const createdDate = new Date(createdAt);
-          if (
-            createdDate.getFullYear() === currentYear &&
-            createdDate.getMonth() === currentMonth
-          ) {
-            currentMonthRegistrations++;
+          if (u.createdAt) {
+            const d = new Date(u.createdAt);
+            if (d.getFullYear() === y && d.getMonth() === m) monthReg++;
           }
         }
-      }
 
- 
-      const hcaWithoutStatusUserIds = new Set<string>();
-
-      for (const each of HCPFullInfo) {
-        const info = each?.HCAComplitInformation;
-        if (info?.UserId && !("Status" in info)) {
-          hcaWithoutStatusUserIds.add(info.UserId);
+        const missingDocSet = new Set<string>();
+        for (const e of HCPFullInfo) {
+          const info = e?.HCAComplitInformation;
+          if (info?.UserId && !("Status" in info)) {
+            missingDocSet.add(info.UserId);
+          }
         }
-      }
 
-    
-      let documentComplianceCount = 0;
-      for (const userId of activeUserIdSet) {
-        if (hcaWithoutStatusUserIds.has(userId)) {
-          documentComplianceCount++;
+        let docCompliance = 0;
+        for (const id of activeSet) {
+          if (missingDocSet.has(id)) docCompliance++;
         }
-      }
 
-      if (!isMounted) return;
-
-   
-      setRegisteredUsers(patientCount);
-      setHcpListCount(hcpCount);
-      setVendorsCount(vendorCount);
-      setHostelAttendanceCount(activeCount);
-      setRegistrationCount(currentMonthRegistrations);
-
-      setInvoiceCount(invoiceData.length);
-      setDeployedLength(deployedData.length);
-
-      setPendingPdrCount(
-        timesheetData.reduce(
-          (count: number, t: any) => count + (t?.PDRStatus === false ? 1 : 0),
+        const pendingPdr = timesheetData.reduce(
+          (c: number, t: any) => c + (t?.PDRStatus === false ? 1 : 0),
           0
-        )
-      );
+        );
 
-      setDocumentComplianceCount(documentComplianceCount);
+        setStats({
+          registeredUsers: patient,
+          hcpListCount: hcp,
+          timesheetcount:timesheetData.length,
+          vendorsCount: vendor,
+          hostelAttendanceCount: active,
+          registrationCount: monthReg,
+          invoiceCount: invoiceData.length,
+          deployedLength: deployedData.length,
+          pendingPdrCount: pendingPdr,
+          documentComplianceCount: docCompliance,
+          Notifications:0,
+          Employs:0
+        });
 
-   
-      const localUserId = localStorage.getItem("UserId");
-      if (localUserId) {
-        const signInUser = await GetUserInformation(localUserId);
-        if (isMounted) {
-          setIsManagement(signInUser?.Email === "admin@curatehealth.in");
+        const userId = localStorage.getItem("UserId");
+        if (userId) {
+          const user = await GetUserInformation(userId);
+          mounted && setIsManagement(user?.Email === "admin@curatehealth.in");
         }
+      } catch (e) {
+        console.error("Dashboard Error:", e);
       }
-    } catch (error) {
-      console.error("Dashboard fetch error:", error);
-    }
-  };
+    };
 
-  fetchData();
-
-  return () => {
-    isMounted = false;
-  };
-}, []);
+    fetchDashboard();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
 
-console.log("Check Fix=====",Fix)
-const tabs = [
-  {
-    name: "Client Enquiry",
-    count: registeredUsers,
-    growth: "+15%",
-    icon: Bell,
-    color: "bg-gradient-to-tr from-blue-500 to-indigo-500",
-  },
-  {
-    name: "Deployment",
-    count: deployedLength,
-    growth: "-3%",
-    icon: Calendar,
-    color: "bg-gradient-to-tr from-pink-500 to-rose-500",
-  },
-  {
-    name: "Timesheet",
-    count: deployedLength,
-    growth: "+5%",
-    icon: User,
-    color: "bg-gradient-to-tr from-teal-500 to-green-500",
-  },
-  {
-    name: "Referral Pay",
-    count: referralPayCount,
-    growth: "+9%",
-    icon: IndianRupee,
-    color: "bg-gradient-to-tr from-amber-500 to-orange-500",
-  },
-  {
-    name: "Payments",
-    count: 0,
-    growth: "-2%",
-    icon: Wallet,
-    color: "bg-gradient-to-tr from-indigo-500 to-violet-500",
-  },
-  {
-    name: "HCP List",
-    count: hcpListCount,
-    growth: "+1%",
-    icon: Users,
-    color: "bg-gradient-to-tr from-red-500 to-rose-600",
-  },
-  {
-    name: "Pending PDR",
-    count: pendingPdrCount,
-    growth: "+4%",
-    icon: FileClock,
-    color: "bg-gradient-to-tr from-sky-500 to-cyan-600",
-  },
-  {
-    name: "Vendors",
-    count: vendorsCount,
-    growth: "+6%",
-    icon: Building2,
-    color: "bg-gradient-to-tr from-purple-500 to-indigo-600",
-  },
-  {
-    name: "Training",
-    count: trainingCount,
-    growth: "+10%",
-    icon: GraduationCap,
-    color: "bg-gradient-to-tr from-emerald-500 to-teal-600",
-  },
-  {
-    name: "Document Compliance",
-    count: documentComplianceCount,
-    growth: "+3%",
-    icon: FileCheck,
-    color: "bg-gradient-to-tr from-yellow-500 to-orange-600",
-  },
-  {
-    name: "Registration",
-    count: registrationCount,
-    growth: "+7%",
-    icon: FileText,
-    color: "bg-gradient-to-tr from-fuchsia-500 to-pink-600",
-  },
-  {
-    name: "Invoices",
-    count: invoiceCount,
-    growth: "+12%",
-    icon: ReceiptIndianRupee,
-    color: "bg-gradient-to-tr from-lime-500 to-green-600",
-  },
-  {
-    name: "Notifications",
-    count: notificationCount,
-    growth: "+8%",
-    icon: BellRing,
-    color: "bg-gradient-to-tr from-cyan-500 to-sky-600",
-  },
-  {
-    name: "Hostel Attendance",
-    count: hostelAttendanceCount,
-    growth: "+11%",
-    icon: ClipboardCheck,
-    color: "bg-gradient-to-tr from-green-500 to-emerald-600",
-  },
 
-  {
-    name: "Employees",
-    count: employeesCount,
-    growth: "+6%",
-    icon: UserCheck,
-    color: "bg-gradient-to-tr from-[#1392d3] to-[#50c896]",
-  },
-];
+const tabs = useMemo(
+  () => [
+    {
+      name: "Client Enquiry",
+      count: stats.registeredUsers,
+      icon: Bell,
+      bg: "bg-blue-500",
+    },
+    {
+      name: "Deployment",
+      count: stats.deployedLength,
+      icon: Calendar,
+      bg: "bg-pink-500",
+    },
+    {
+      name: "Timesheet",
+      count: stats.timesheetcount,
+      icon: User,
+      bg: "bg-green-500",
+    },
+    {
+      name: "Referral Pay",
+      count: stats.ReferalCount,
+      icon: IndianRupee,
+      bg: "bg-orange-500",
+    },
+    {
+      name: "Payments",
+      count: stats.PaymentCount,
+      icon: Wallet,
+      bg: "bg-purple-500",
+    },
+    {
+      name: "HCP List",
+      count: stats.hcpListCount,
+      icon: Users,
+      bg: "bg-red-500",
+    },
+    {
+      name: "Pending PDR",
+      count: stats.pendingPdrCount,
+      icon: FileClock,
+      bg: "bg-cyan-500",
+    },
+    {
+      name: "Vendors",
+      count: stats.vendorsCount,
+      icon: Building2,
+      bg: "bg-indigo-500",
+    },
+    {
+      name: "Training",
+      count: 0,
+      icon: GraduationCap,
+      bg: "bg-emerald-500",
+    },
+    {
+      name: "Document Compliance",
+      count: stats.documentComplianceCount,
+      icon: FileCheck,
+      bg: "bg-amber-500",
+    },
+    {
+      name: "Registration",
+      count: stats.registrationCount,
+      icon: FileText,
+      bg: "bg-fuchsia-500",
+    },
+    {
+      name: "Invoices",
+      count: stats.invoiceCount,
+      icon: ReceiptIndianRupee,
+      bg: "bg-lime-500",
+    },
+    {
+      name: "Notifications",
+      count: stats.Notifications,
+      icon: BellRing,
+      bg: "bg-sky-500",
+    },
+    {
+      name: "Hostel Attendance",
+      count: stats.hostelAttendanceCount,
+      icon: ClipboardCheck,
+      bg: "bg-green-600",
+    },
+    {
+      name: "Employees",
+      count: stats.Employs,
+      icon: UserCheck,
+      bg: "bg-teal-500",
+    },
+  ],
+  [stats]
+);
+
 
   const { data: BenchList = [], isLoading, mutate } = useSWR(
     "bench-list",
@@ -394,42 +349,76 @@ console.log('Check Email Status-----',isManagement)
   router.push("/Payments")
   }
 
-  const Switching = (A: string) => {
-    switch (A) {
-      case "Client Enquiry":
-      case "Deployment":
-      case "Timesheet":
-        return RoutToAdminPage(A);
+  // const Switching = (A: string) => {
+  //   switch (A) {
+  //     case "Client Enquiry":
+  //     case "Deployment":
+  //     case "Timesheet":
+  //       return RoutToAdminPage(A);
 
-      case "Registration":
-        return navigateToRegistration();
+  //     case "Registration":
+  //       return navigateToRegistration();
 
-      case "HCP List":
-        return navigateToHCPList();
+  //     case "HCP List":
+  //       return navigateToHCPList();
 
-      case "Pending PDR":
-        return navigateToPDRView();
+  //     case "Pending PDR":
+  //       return navigateToPDRView();
 
-      case "Vendors":
-        return navigateToVendors();
+  //     case "Vendors":
+  //       return navigateToVendors();
 
-      case "Document Compliance":
-        return navigateToDocuments();
+  //     case "Document Compliance":
+  //       return navigateToDocuments();
 
-      case "Invoices":
-        return navigateToInvoices();
+  //     case "Invoices":
+  //       return navigateToInvoices();
 
-      case "Hostel Attendance":
-        return navigateToHostel();
-      case "Employees":
-        return navigateToEmployes();
-      case "Payments":
-        return navigateToPayments();
+  //     case "Hostel Attendance":
+  //       return navigateToHostel();
+  //     case "Employees":
+  //       return navigateToEmployes();
+  //     case "Payments":
+  //       return navigateToPayments();
 
-      default:
-        return;
-    }
-  };
+  //     default:
+  //       return;
+  //   }
+  // };
+
+  const Switching = useCallback(
+    (name: string) => {
+      switch (name) {
+        case "Client Enquiry":
+        case "Deployment":
+          dispatch(Update_Main_Filter_Status(name));
+          dispatch(UpdateUserType("patient"));
+          router.push("/AdminPage");
+          break;
+        case "HCP List":
+          dispatch(Update_Main_Filter_Status("HCP List"));
+          dispatch(UpdateUserType("healthcare-assistant"));
+          router.push("/AdminPage");
+          break;
+        case "Pending PDR":
+          router.push("/PDRView");
+          break;
+        case "Vendors":
+          router.push("/VendorsPanel");
+          break;
+        case "Document Compliance":
+          router.push("/Documents");
+          break;
+        case "Invoices":
+          router.push("/Invoices");
+          break;
+        case "Hostel Attendance":
+          router.push("/HostelAttendence");
+          break;
+      }
+    },
+    [dispatch, router]
+  );
   const UpdateNewLead = async () => {
     router.prefetch("/NewLead");
     router.push("/NewLead");
@@ -458,7 +447,7 @@ console.log('Check Email Status-----',isManagement)
   };
 
 
-  
+
 
   return (
     <div className="flex h-screen bg-gray-100 relative">
@@ -468,7 +457,7 @@ console.log('Check Email Status-----',isManagement)
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="user" className="w-8 h-8" />
             <span className="inline text-[15px] uppercase truncate">
-              Hi Admin – Welcome to Admin Dashboard
+              Hi Admin – Welcome to Admin Dashboard.
             </span>
           </div>
 
@@ -502,7 +491,7 @@ console.log('Check Email Status-----',isManagement)
           <div className="lg:col-span-8 space-y-6">
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-              {tabs.map((tab, index) => (
+              {tabs.map((tab:any, index) => (
                 <motion.div
                   key={tab.name}
                   initial={{ opacity: 0, y: 30 }}
@@ -511,11 +500,13 @@ console.log('Check Email Status-----',isManagement)
                   whileHover={{ scale: 1.05 }}
                   className="flex flex-col items-center justify-center bg-white rounded-xl shadow-md border border-gray-100 p-3 sm:p-1"
                 >
-                  <div
-                    className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full shadow-md ${tab.color}`}
-                  >
-                    <tab.icon size={20} className="text-white" />
-                  </div>
+                 <div
+  className={`w-10 h-10 flex items-center justify-center rounded-full shadow-md ${tab.bg}`}
+>
+  <tab.icon size={20} className="text-white" />
+</div>
+
+
 
                   <p
                     className="mt-2 sm:mt-3 text-xs sm:text-sm hover:underline font-semibold cursor-pointer text-gray-900 text-center"
@@ -529,7 +520,7 @@ console.log('Check Email Status-----',isManagement)
 
                   <div className="relative group inline-block">
                     <h2 className="text-base sm:text-lg font-bold text-gray-700 mt-1 cursor-pointer">
-                      {tab.count.toLocaleString()}
+                      {tab.count}
                     </h2>
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-max max-w-xs rounded-md bg-gray-800 text-white text-[10px] px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap text-center">
                       {tab.count > 0
