@@ -45,7 +45,7 @@ const [SearchDate,SetSearchDate]=useState<any>(null)
   const [AsignStatus,setAsignStatus]=useState("")
   const [LoginEmail, setLoginEmail] = useState("");
 
-  const Status = ['Deployed', 'Processing', 'Converted', 'Waiting List', 'Lost'];
+  const Status =["Processing", "Converted", "Waiting List", "Lost", ];
   const EmailVerificationStatus = ['Verified', 'Pending'];
   const CurrentStatusOptions = ["Active", "Sick", "Leave", "Terminated"];
 
@@ -94,7 +94,7 @@ const [editingUserId, setEditingUserId] = useState<string | null>(null);
       console.error(err);
     }
   };
-console.log("Check Permanent Adress0=--",users)
+
   const Finel = users.map((each: any) => ({
     id: each.userId,
     FirstName: each.FirstName,
@@ -119,24 +119,29 @@ console.log("Check Permanent Adress0=--",users)
   }));
 
 const UpdatedFilterUserType = useMemo(() => {
-  return Finel.filter((each) => {
-    const matchesType = !UpdateduserType || each.userType === UpdateduserType;
-    const matchesSearch = !search || each.ClientStatus === search;
-    const matchesDate =
-      !SearchDate || each.LeadDate === SearchDate;
-    const NotAdmin=each.Email!=='admin@curatehealth.in'
-    return matchesDate&&matchesType && matchesSearch&&NotAdmin;
-  });
-}, [Finel, UpdateduserType, search]);
+  return Finel
+    .filter((each) => {
+      const matchesType = !UpdateduserType || each.userType === UpdateduserType;
+      const matchesSearch = !search || each.ClientStatus === search;
+      const matchesDate = !SearchDate || each.LeadDate === SearchDate;
+      const notAdmin = each.Email !== "admin@curatehealth.in";
+
+      return matchesType && matchesSearch && matchesDate && notAdmin;
+    })
+    .slice()   
+    .reverse(); 
+}, [Finel, UpdateduserType, search, SearchDate]);
 
 
+
+console.log("Check For Issues-----",UpdatedFilterUserType)
 useEffect(() => {
   const Fetch = async () => {
     try {
       const localValue = localStorage.getItem("UserId");
       if (!localValue) return;
 
-      // Reset cache only if userType updated
+  
       if (UpdateduserType) {
         cachedUserInfo = null;
         cachedRegisteredUsers = null;
@@ -162,7 +167,7 @@ useEffect(() => {
       setUserFirstName(profile.FirstName);
       setLoginEmail(profile.Email);
       setFullInfo(fullInfo);
-      setSearch(CurrentClientStatus);
+    
 
       const email = profile?.Email?.toLowerCase();
 
@@ -199,7 +204,7 @@ useEffect(() => {
 
  const FilterUserType = (e: any) => {
   if (e.target.value !== "patient") {
-    setSearch("");
+
   }
   dispatch(UpdateUserType(e.target.value));
 };
@@ -207,8 +212,8 @@ useEffect(() => {
 
   const UpdateFilterValue = (UpdatedValue: any) => {
     setSearch(UpdatedValue)
-    dispatch(UpdateSubHeading(UpdatedValue))
-    dispatch(Update_Main_Filter_Status(UpdatedValue))
+    // dispatch(UpdateSubHeading(UpdatedValue))
+    // dispatch(Update_Main_Filter_Status(UpdatedValue))
   };
 
   const UpdateMainFilterValue=(Z:any)=>{
@@ -217,13 +222,10 @@ useEffect(() => {
     dispatch(Update_Main_Filter_Status(Z))
   }
 
-useEffect(() => {
-  if (UpdateMainFilter === "Client Enquiry") {
-    setSearch(""); 
-  }
-}, [UpdateMainFilter, CurrentCount]);
 
+  
 
+console.log("Set Searchhhh------",search)
   const UpdateMainFilterValues = () => {
     switch (UpdateMainFilter) {
       case "Client Enquiry":
@@ -386,16 +388,16 @@ const ClientEnquiryUserInterFace = () => {
                     {UpdateduserType === "healthcare-assistant" && (
                       <th className="px-4 py-2 w-[14%]">Current Status</th>
                     )}
-                    {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
+                    {/* {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
                       <th className="px-2 py-2 w-[14%]">Designate</th>
-                    )}
+                    )} */}
                     <th className="px-4 py-2 w-[10%]">Action</th>
                     {UpdateduserType==='patient'&&<th className="px-2 py-2 w-[10%]">Suitable HCP</th>}
                        
                   </tr>
                 </thead>
                 <tbody>
-                  {UpdatedFilterUserType.reverse().map((user, index) => (
+                  {UpdatedFilterUserType.map((user, index) => (
                     <tr
                       key={index}
                       className="border-b border-gray-400 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors"
@@ -430,7 +432,7 @@ const ClientEnquiryUserInterFace = () => {
                       <td>
                         <select
   className={`
-    h-11 w-[150px] px-3
+    h-11 w-[130px] px-3
     ml-auto cursor-pointer
     rounded-xl bg-white
     border border-slate-300
@@ -596,7 +598,7 @@ const ClientEnquiryUserInterFace = () => {
                     
                         </td>
                       )}
-                      {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
+                      {/* {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
                         <td className="px-2 py-2">
                           <select
                             onChange={(e) => {
@@ -618,11 +620,11 @@ const ClientEnquiryUserInterFace = () => {
                           >
                             <option>Assign HCA</option>
                             {Filter_HCA.map((each) => (
-                              <option key={each.FirstName}>{each.FirstName}</option>
+                              <option key={each.userId}>{each.FirstName}</option>
                             ))}
                           </select>
                         </td>
-                      )}
+                      )} */}
                       {UpdateduserType === "healthcare-assistant" && (
         <td className="px-8 py-2 w-[14%]">
   <select
@@ -891,7 +893,7 @@ const GetPermanentAddress = (A: any) => {
     ? `${each} (${
         UpdatedFilterUserType?.filter(
           (Try) => Try.ClientStatus === each
-        )?.length || Deployed?.length||0
+        )?.length ||0
       })`
     : each 
 }
@@ -901,14 +903,14 @@ const GetPermanentAddress = (A: any) => {
     ))}
   </div>
 
-  
+{/*   
   {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
     <input
       placeholder="Search HCA..."
       className="text-center border-2 rounded-md w-[150px] ml-auto"
       onChange={UpdateFilterHCA}
     />
-  )}
+  )} */}
 </div>
 
              
