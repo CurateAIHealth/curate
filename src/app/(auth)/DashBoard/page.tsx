@@ -34,10 +34,7 @@ import {
 } from "@/Redux/action";
 import { GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo } from "@/Lib/user.action";
 import useSWR from "swr";
-let cachedUserInfo: any = null;
-let cachedRegisteredUsers: any[] | null = null;
-let cachedFullInfo: any[] | null = null;
-let DeployedInfo:any[] 
+
 const fetcher = async () => {
   const data = await GetRegidterdUsers();
 const FiltersHCPS=data.filter((each:any)=>each.userType==="healthcare-assistant"&&each.Email!=='admin@curatehealth.in')
@@ -161,32 +158,38 @@ const [Fix,setFix]=useState([])
         timesheetData?.filter((t: any) => t?.PDRStatus === false).length ?? 0
       );
 
-      const hcpInfoList =
-        HCPFullInfo?.map((each: any) => each?.HCAComplitInformation).filter(Boolean) ?? [];
-
    
-      const hcpWithoutStatusSet = new Set(
-        hcpInfoList
-          .filter((hcp: any) => !("Status" in hcp))
-          .map((hcp: any) => hcp?.UserId)
-      );
+const activeRegisteredUsers =
+  registeredUsersData?.filter(
+    (user: any) =>
+      user?.CurrentStatus === "Active" && user?.userId
+  ) ?? [];
 
-      const activeHCPsWithoutStatus = registeredUsersData?.filter(
-        (user: any) =>
-          user?.CurrentStatus === "Active" &&
-          hcpWithoutStatusSet.has(user?.UserId)
-      );
 
-      const incompleteDocumentsCount = hcpInfoList.filter((info: any) => {
-        const documents = info?.Documents;
-        if (!documents) return true;
+const hcaWithoutStatus =
+  HCPFullInfo
+    ?.map((each: any) => each?.HCAComplitInformation)
+    ?.filter(
+      (info: any) =>
+        info &&
+        info?.UserId &&             
+        !("Status" in info)       
+    ) ?? [];
 
-        return Object.values(documents).some(
-          (value) => value === null || value === undefined || value === ""
-        );
-      }).length;
+const hcaUserIdSet = new Set(
+  hcaWithoutStatus.map((hcp: any) => hcp.UserId)
+);
 
-      setDocumentComplianceCount(incompleteDocumentsCount);
+
+const finalCommonData =
+  activeRegisteredUsers.filter(
+    (user: any) => hcaUserIdSet.has(user.userId)
+  );
+
+
+
+
+setDocumentComplianceCount(finalCommonData.length);
 
 
       const localValue = localStorage.getItem("UserId");
@@ -485,7 +488,7 @@ console.log('Check Email Status-----',isManagement)
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-lg sm:rounded-xl font-semibold shadow-lg transition-all duration-150 text-sm sm:text-base"
-            >
+            >Logout
               <LogOut size={18} className="flex-shrink-0" />
               <span className="hidden xs:inline">Logout</span>
             </button>
