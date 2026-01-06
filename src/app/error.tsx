@@ -1,26 +1,28 @@
 'use client';
 
-export default function GlobalError({ error, reset }: any) {
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error;
+  reset: () => void;
+}) {
   return (
-    <html>
-      <body>
-        <div className="min-h-screen flex flex-col items-center justify-center text-center px-4">
-          <h2 className="text-xl font-bold mb-2">
-            Something went wrong
-          </h2>
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="text-center space-y-4">
+        <h2 className="text-xl font-bold text-red-600">
+          Something went wrong
+        </h2>
 
-          <p className="text-gray-600 mb-4">
-            Please refresh the page
-          </p>
+        <p className="text-gray-600">{error.message}</p>
 
-          <button
-            onClick={() => reset()}
-            className="px-4 py-2 bg-teal-600 text-white rounded"
-          >
-            Retry
-          </button>
-        </div>
-      </body>
-    </html>
+        <button
+          onClick={reset}
+          className="px-4 py-2 bg-teal-600 text-white rounded"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
   );
 }

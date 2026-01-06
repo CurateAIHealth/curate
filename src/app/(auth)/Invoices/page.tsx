@@ -610,7 +610,7 @@ CheckPaymentStatus:CurrentPaymentStatus
       </div>
     </div>
 
-    {paginatedData.map((inv, i) => {
+    {paginatedData.map((inv, index) => {
       const dueInfo = getDueStatus(inv.StartDate);
       const total =
         getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
@@ -622,7 +622,7 @@ CheckPaymentStatus:CurrentPaymentStatus
 
       return (
         <div
-          key={inv.id}
+           key={`${inv.id}-${inv.createdAt || index}`}
           className="
           grid px-4 py-3 border-b text-sm gap-2 hover:bg-[#f7f9fd] transition
           grid-cols-3 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-12
