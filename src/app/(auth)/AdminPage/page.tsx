@@ -7,6 +7,7 @@ import {
   GetUsersFullInfo,
   InserTimeSheet,
   UpdatedClientPriority,
+  UpdatedPreviewUserType,
   UpdatedServiceArea,
   UpdatedUserJoingDate,
   UpdateHCAnstatus,
@@ -115,7 +116,8 @@ const [editingUserId, setEditingUserId] = useState<string | null>(null);
     ClientPriority:each.ClientPriority,
     LeadDate:each.LeadDate,
     ServiceArea:each.ServiceArea,
-    ServiceLocation:each.ServiceArea
+    ServiceLocation:each.ServiceArea,
+    PreviewUserType:each.PreviewUserType
   }));
 
 const UpdatedFilterUserType = useMemo(() => {
@@ -307,6 +309,18 @@ if(AreaUpdateResult.success===true){
 }
 }
 
+const UpdatePreviewUserType=async(ClientName:any,ClientUserId:any,UpdatedValue:any)=>{
+try{
+   setUpdatedStatusMsg(`Please Wait,${ClientName} Priority Updateding...`);
+const AreaUpdateResult:any=await UpdatedPreviewUserType(ClientUserId,UpdatedValue)
+
+if(AreaUpdateResult.success===true){
+ setUpdatedStatusMsg(`${ClientName} Priority Updated Successfully`);
+}
+}catch(err:any){
+
+}
+}
 
 
 
@@ -364,7 +378,7 @@ const ClientEnquiryUserInterFace = () => {
     <div className="w-full">
       {UpdatedFilterUserType.length > 0 ? (
         <div className="bg-white/90 rounded-2xl shadow-2xl border border-gray-100">
-          <div className="max-h-[540px] overflow-y-auto">
+          <div className=" overflow-y-auto">
             <div className="w-full overflow-x-auto sm:overflow-x-hidden">
               <table className="table-fixed w-full min-w-[800px] text-[11px] sm:text-[13px] text-left text-gray-700 border-collapse">
                 <thead className="bg-[#f5faff] sticky top-0 z-10">
@@ -375,6 +389,8 @@ const ClientEnquiryUserInterFace = () => {
                     <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Lead Source</th>}
                     {UpdateduserType === "patient"&&
                     <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client Priority</th>}
+                     {UpdateduserType === "healthcare-assistant"&&
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">User type</th>}
                     <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Name</th>
                     {/* <th className="px-2 py-2 sm:px-4 sm:py-3 w-[18%]">Email</th> */}
                     <th className="px-2 py-2 w-[12%]">Contact</th>
@@ -455,6 +471,84 @@ const ClientEnquiryUserInterFace = () => {
   <option value="Critical">🔴 Critical </option>
 </select>
                       </td>}
+ {UpdateduserType === "healthcare-assistant"&&
+<td className="px-6 py-2 break-words">
+ 
+    <div className="flex items-center gap-2">
+    
+      <span
+        className={`text-sm ${
+          user.PreviewUserType
+            ? "text-slate-700 font-medium"
+            : "italic text-slate-400"
+        }`}
+      >
+        {user.PreviewUserType || "Not mentioned"}
+      </span>
+
+  
+      <button
+        onClick={() => setEditingUserId(user.userId)}
+        className="
+          rounded-lg p-1
+          text-slate-500
+          transition-all
+          hover:bg-slate-100 hover:text-slate-700
+        "
+        title="Edit service area"
+      >
+        <Pencil size={14} />
+      </button>
+
+  
+    {editingUserId === user.userId && (
+  <div
+    className="
+      absolute z-50
+      mt-2
+      w-56
+      rounded-xl
+      bg-white
+      border border-slate-200
+      shadow-[0_12px_30px_rgba(0,0,0,0.12)]
+      p-2
+      animate-in fade-in zoom-in-95
+    "
+  >
+    <select
+      autoFocus
+      onChange={(e) => {
+        UpdatePreviewUserType(user.FirstName,user.userId,e.target.value)
+        setEditingUserId(null);
+      }}
+      onBlur={() => setEditingUserId(null)}
+      className="
+        h-10 w-full px-3
+        rounded-lg
+        border border-slate-300
+        bg-[#f8fafc]
+        text-sm font-medium text-slate-700
+        cursor-pointer
+
+        focus:outline-none
+        focus:border-[#62e0d9]
+        focus:ring-2 focus:ring-[#caf0f8]
+      "
+    >
+      <option value="">Select Type</option>
+      {["HCA", "HCP", "HCN"].map((area: any) => (
+        <option key={area} value={area}>
+          {area}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
+    </div>
+  
+</td>
+ }
 
                       <td className="px-2 py-2 truncate">
                         <div className="flex items-center gap-2">

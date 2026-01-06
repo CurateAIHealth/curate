@@ -120,6 +120,7 @@ export default function DoctorProfileForm() {
     specialties: string;
     Password: any;
     ConfirmPassword: any;
+    PreviewUserType:any
     // website?: string; // optional if commented
   }
 
@@ -229,7 +230,8 @@ useEffect(() => {
     type: '',
     specialties: '',
     Password: '',
-    ConfirmPassword: ''
+    ConfirmPassword: '',
+    PreviewUserType:CurrentUserType
   });
 
   const [isuserIdAvailable, setisuserIdAvailable] = useState<any>(null)
@@ -532,6 +534,7 @@ useEffect(() => {
             FinelVerification: true,
             EmailVerification: true,
             Password: form.Password || "",
+            PreviewUserType:form.PreviewUserType
           };
 
 

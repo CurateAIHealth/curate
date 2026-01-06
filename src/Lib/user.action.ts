@@ -989,6 +989,7 @@ export interface HCAInfo {
   CurrentStatus:any,
   StaffType:any,
   ReferdVedorId:any
+  PreviewUserType:any
 }
 
 export const HCARegistration = async (HCA: HCAInfo) => {
@@ -1044,6 +1045,7 @@ StaffType:HCA.StaffType,
       TermsAndConditions: HCA.TermsAndConditions,
       FinelVerification: HCA.FinelVerification,
       EmailVerification: HCA.EmailVerification,
+      PreviewUserType:HCA.PreviewUserType,
 
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -3186,6 +3188,57 @@ export const UpdatedServiceArea = async (
       {
         $set: {
           ServiceArea: UpdatedStatus, 
+        
+        },
+      },
+      {
+        upsert: true, 
+      }
+    );
+
+   
+    if (result.upsertedCount > 0) {
+      return {
+        success: true,
+        message: "Client priority created successfully.",
+      };
+    }
+
+    
+    if (result.modifiedCount > 0) {
+      return {
+        success: true,
+        message: "Client priority updated successfully.",
+      };
+    }
+
+    
+    return {
+      success: true,
+      message: "Client priority already up to date.",
+    };
+  } catch (err: any) {
+    console.error("UpdatedClientPriority Error:", err);
+    return {
+      success: false,
+      message: "Internal server error",
+    };
+  }
+};
+export const UpdatedPreviewUserType= async (
+  UserId: string,
+  UpdatedStatus: string
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const result = await collection.updateOne(
+      { userId: UserId }, 
+      {
+        $set: {
+          PreviewUserType: UpdatedStatus, 
         
         },
       },
