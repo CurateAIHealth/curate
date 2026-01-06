@@ -82,17 +82,17 @@ const [Fix,setFix]=useState([])
 
 
 
- useEffect(() => {
+useEffect(() => {
   let isMounted = true;
 
   const fetchData = async () => {
     try {
       const [
-        registeredUsersData,
-        HCPFullInfo,
-        deployedData,
-        invoiceData,
-        timesheetData,
+        registeredUsersData = [],
+        HCPFullInfo = [],
+        deployedData = [],
+        invoiceData = [],
+        timesheetData = [],
       ] = await Promise.all([
         GetRegidterdUsers(),
         GetUsersFullInfo(),
@@ -103,38 +103,44 @@ const [Fix,setFix]=useState([])
 
       if (!isMounted) return;
 
-  
       const now = new Date();
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth();
 
-   
       let patientCount = 0;
       let hcpCount = 0;
       let vendorCount = 0;
       let activeCount = 0;
       let currentMonthRegistrations = 0;
 
+      const activeUserIdSet = new Set<string>();
 
-      for (const user of registeredUsersData ?? []) {
-        if (user?.userType === "patient" && user?.ClientStatus !== "Placed") {
+   
+      for (const user of registeredUsersData) {
+        if (!user) continue;
+
+        const {
+          userType,
+          ClientStatus,
+          CurrentStatus,
+          createdAt,
+          userId,
+        } = user;
+
+        if (userType === "patient" && ClientStatus !== "Placed") {
           patientCount++;
         }
 
-        if (user?.userType === "healthcare-assistant") {
-          hcpCount++;
-        }
+        if (userType === "healthcare-assistant") hcpCount++;
+        if (userType === "Vendor") vendorCount++;
 
-        if (user?.userType === "Vendor") {
-          vendorCount++;
-        }
-
-        if (user?.CurrentStatus === "Active") {
+        if (CurrentStatus === "Active") {
           activeCount++;
+          if (userId) activeUserIdSet.add(userId);
         }
 
-        if (user?.createdAt) {
-          const createdDate = new Date(user.createdAt);
+        if (createdAt) {
+          const createdDate = new Date(createdAt);
           if (
             createdDate.getFullYear() === currentYear &&
             createdDate.getMonth() === currentMonth
@@ -144,58 +150,53 @@ const [Fix,setFix]=useState([])
         }
       }
 
+ 
+      const hcaWithoutStatusUserIds = new Set<string>();
+
+      for (const each of HCPFullInfo) {
+        const info = each?.HCAComplitInformation;
+        if (info?.UserId && !("Status" in info)) {
+          hcaWithoutStatusUserIds.add(info.UserId);
+        }
+      }
+
+    
+      let documentComplianceCount = 0;
+      for (const userId of activeUserIdSet) {
+        if (hcaWithoutStatusUserIds.has(userId)) {
+          documentComplianceCount++;
+        }
+      }
+
+      if (!isMounted) return;
+
+   
       setRegisteredUsers(patientCount);
       setHcpListCount(hcpCount);
       setVendorsCount(vendorCount);
       setHostelAttendanceCount(activeCount);
       setRegistrationCount(currentMonthRegistrations);
 
- 
-      setInvoiceCount(invoiceData?.length ?? 0);
-      setDeployedLength(deployedData?.length ?? 0);
+      setInvoiceCount(invoiceData.length);
+      setDeployedLength(deployedData.length);
 
       setPendingPdrCount(
-        timesheetData?.filter((t: any) => t?.PDRStatus === false).length ?? 0
+        timesheetData.reduce(
+          (count: number, t: any) => count + (t?.PDRStatus === false ? 1 : 0),
+          0
+        )
       );
 
+      setDocumentComplianceCount(documentComplianceCount);
+
    
-const activeRegisteredUsers =
-  registeredUsersData?.filter(
-    (user: any) =>
-      user?.CurrentStatus === "Active" && user?.userId
-  ) ?? [];
-
-
-const hcaWithoutStatus =
-  HCPFullInfo
-    ?.map((each: any) => each?.HCAComplitInformation)
-    ?.filter(
-      (info: any) =>
-        info &&
-        info?.UserId &&             
-        !("Status" in info)       
-    ) ?? [];
-
-const hcaUserIdSet = new Set(
-  hcaWithoutStatus.map((hcp: any) => hcp.UserId)
-);
-
-
-const finalCommonData =
-  activeRegisteredUsers.filter(
-    (user: any) => hcaUserIdSet.has(user.userId)
-  );
-
-
-
-
-setDocumentComplianceCount(finalCommonData.length);
-
-
-      const localValue = localStorage.getItem("UserId");
-      const signInUser = await GetUserInformation(localValue);
-
-      setIsManagement(signInUser?.Email === "admin@curatehealth.in");
+      const localUserId = localStorage.getItem("UserId");
+      if (localUserId) {
+        const signInUser = await GetUserInformation(localUserId);
+        if (isMounted) {
+          setIsManagement(signInUser?.Email === "admin@curatehealth.in");
+        }
+      }
     } catch (error) {
       console.error("Dashboard fetch error:", error);
     }
@@ -207,6 +208,7 @@ setDocumentComplianceCount(finalCommonData.length);
     isMounted = false;
   };
 }, []);
+
 
 console.log("Check Fix=====",Fix)
 const tabs = [
