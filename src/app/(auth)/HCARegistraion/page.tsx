@@ -1,9 +1,9 @@
 'use client';
 
 import HCAMobileView from '@/Components/HCAMobileView/page';
-import { EducationLevels, IndianLanguages, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, PROFESSIONAL_SKILL_OPTIONS, Relations } from '@/Lib/Content';
+import { EducationLevels, IndianLanguages, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, PROFESSIONAL_SKILL_OPTIONS, REFERRAL_SOURCE_TYPES, Relations } from '@/Lib/Content';
 import { v4 as uuidv4 } from 'uuid';
-import { GetUserInformation, HCARegistration, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
+import { GetRegidterdUsers, GetUserInformation, HCARegistration, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
 import { Update_Main_Filter_Status, UpdateDocmentSkipReason, UpdateRefresh, UpdateUserType } from '@/Redux/action';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
@@ -22,11 +22,16 @@ const DEFAULT_DOCUMENT_ICON = '/Icons/DefaultDocumentIcon.png';
 export default function DoctorProfileForm() {
   const [ProfileName, SetProfileName] = useState('');
   const [isOther, setIsOther] = useState(false);
+  const [IsOtherReferal, setIsOtherReferal] = useState(false);
   const [isOtherProfetionalEducation, setIsOtherProfetionalEducation] = useState(false);
   const [isOtherOngoingEducation, setIsOtherOngoingEducation] = useState(false);
   const [isOtherPreviousHealthProblems, setIsOtherPreviousHealthProblems] = useState(false);
-  // const [isOther, setIsOther] = useState(false);
+  const [isOtherReferralSourceType, setIsOtherReferralSourceType] = useState(false);
+  const [sameAddress, setSameAddress] = useState(false);
 
+
+  // const [isOther, setIsOther] = useState(false);
+const [ImportedVendors, setImportedVendors] = useState<any>([])
   const [PictureUploading, setPictureUploading] = useState(false);
   const [UpdateingStatus, SetUpdateingStatus] = useState(true);
   const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
@@ -64,8 +69,8 @@ export default function DoctorProfileForm() {
     panNumber: string;
     // voterIdNo?: string;
     // rationCardNo?: string;
-    permanentAddress: string;
-    currentAddress: string;
+    permanentAddress: any;
+    currentAddress: any;
     cityPostcodePermanent: string;
     cityPostcodeCurrent: string;
     SiblingsInfo: any,
@@ -130,7 +135,8 @@ export default function DoctorProfileForm() {
     fatherNameContact:any;
     motherContact:any;
     Husbend:any;
-    HusbendContact:any
+    HusbendContact:any;
+    referralSourceType:any
     // website?: string; // optional if commented
   }
 
@@ -145,6 +151,10 @@ useEffect(() => {
     router.replace("/UserTypeRegistration");
   }
 }, []);
+
+
+const isValidAadhaar = (value: string) => /^\d{12}$/.test(value);
+const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
 
 
 
@@ -246,10 +256,25 @@ useEffect(() => {
     specialties: '',
     Password: '',
     ConfirmPassword: '',
-    PreviewUserType:CurrentUserType
+    PreviewUserType:CurrentUserType,
+    referralSourceType:''
   });
 
   const [isuserIdAvailable, setisuserIdAvailable] = useState<any>(null)
+
+ useEffect(()=>{
+  const GetInfo=async()=>{
+    try{
+
+     const RegisterdUsers = await GetRegidterdUsers()
+         setImportedVendors(RegisterdUsers.filter((each: any) => each.userType === "Vendor"))
+
+    }catch(err:any){
+
+    }
+  }
+  GetInfo()
+ },[])
 
 useEffect(() => {
  
@@ -269,7 +294,7 @@ useEffect(() => {
     return;
   }
 
-  // ✅ Normal user flow ONLY
+ 
   const fetchProfile = async () => {
     const localValue = localStorage.getItem("UserId");
     if (!localValue) {
@@ -279,7 +304,9 @@ useEffect(() => {
 
     setisuserIdAvailable(localValue);
 
-    const profile = await GetUserInformation(localValue);
+     const profile = await GetUserInformation(localValue)
+          
+  
     if (!profile) {
       setIsChecking(false);
       return;
@@ -560,7 +587,8 @@ const HEIGHT_OPTIONS = Array.from(
             fatherNameContact:form.fatherNameContact,
             motherContact:form.motherContact,
             Husbend:form.Husbend,
-            HusbendContact:form.HusbendContact
+            HusbendContact:form.HusbendContact,
+            referralSourceType:form.referralSourceType
           };
 
 
@@ -788,7 +816,9 @@ const HEIGHT_OPTIONS = Array.from(
 if (CurrentUserType === null) return null;
 
 
-console.log("check Update----",Docs.HCPform)
+console.log("check Update----",form.currentAddress)
+console.log("check Seconds Update----",form.permanentAddress)
+  const FilterdImportedVendorName = ImportedVendors.map((each: any) => each.VendorName)
 
   return (
 
@@ -1362,6 +1392,27 @@ console.log("check Update----",Docs.HCPform)
               className="input-field border border-gray-300 p-3 h-8 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
               required
             />
+            <label className="flex items-center gap-2 mb-4 text-sm text-gray-700">
+  <input
+    type="checkbox"
+    checked={sameAddress}
+    onChange={(e) => {
+      const checked = e.target.checked;
+      setSameAddress(checked);
+
+      if (checked) {
+        setForm((prev: any) => ({
+          ...prev,
+          currentAddress: prev.permanentAddress,
+          cityPostcodeCurrent: prev.cityPostcodePermanent,
+        }));
+      }
+    }}
+    className="accent-blue-600"
+  />
+  Current address is same as permanent address
+</label>
+
             <textarea
               name="currentAddress"
               value={form.currentAddress || ''}
@@ -2203,15 +2254,104 @@ console.log("check Update----",Docs.HCPform)
               Referral Details
             </h3>
             <div className="grid grid-cols-1 md:flex justify-between items-center">
-              <input
-                type="text"
-                name="sourceOfReferral"
-                value={form.sourceOfReferral || ''}
-                onChange={handleChange}
-                placeholder="Source of Referral"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
+            <div className="flex flex-col gap-1">
+  <label className="text-sm font-medium text-gray-600">
+    Source of Referral
+  </label>
+{!IsOtherReferal?
+  <select
+    name="sourceOfReferral"
+    value={form?.sourceOfReferral ?? ""}
+       onChange={(e) => {
+      const value = e.target.value;
+      setForm({ ...form, sourceOfReferral: value });
+      if (value === 'Other'){
+         setForm({ ...form, sourceOfReferral: '' });
+setIsOtherReferal(true);
+      }
+        
+        
+      }}
+    className="border border-gray-300 p-2 h-10 rounded-lg
+               focus:ring-2 focus:ring-blue-300 focus:border-transparent
+               transition-all bg-white"
+  >
+    <option value="">Select Source of Referral</option>
+
+    {[...FilterdImportedVendorName,"Other"].map((source:any) => (
+      <option key={source} value={source}>
+        {source}
+      </option>
+    ))}
+  </select>:
+    <input
+    id="sourceOfReferral"
+    type="Text"
+    name="sourceOfReferral"
+    value={form?.sourceOfReferral ?? ""}
+    placeholder='Enter Source Name'
+    onChange={handleChange}
+    className="border border-gray-300 p-3 h-10 rounded-lg
+               focus:ring-2 focus:ring-blue-300 focus:border-transparent
+               transition-all"
+  />
+  }
+
+
+</div>
+<div className="flex flex-col gap-1">
+  <label className="text-sm font-medium text-gray-600">
+    Referral Source Type
+  </label>
+
+  {!isOtherReferralSourceType ? (
+    <select
+      name="referralSourceType"
+      value={form?.referralSourceType ?? ""}
+      onChange={(e) => {
+        const value = e.target.value;
+
+        setForm((prev: any) => ({
+          ...prev,
+          referralSourceType: value,
+        }));
+
+        if(value==="Other"){
+          setForm((prev: any) => ({
+          ...prev,
+          referralSourceType: "",
+        }));
+          setIsOtherReferralSourceType(true)
+        }
+      }}
+      className="w-full border border-gray-300 p-2 h-10 rounded-lg
+                 focus:ring-2 focus:ring-blue-300 focus:border-transparent
+                 transition-all bg-white"
+    >
+      <option value="">Select Referral Source Type</option>
+
+      {REFERRAL_SOURCE_TYPES.map((type) => (
+        <option key={type} value={type}>
+          {type}
+        </option>
+      ))}
+    </select>
+  ) : (
+    <input
+      type="text"
+      name="referralSourceType"
+      value={form?.referralSourceType ?? ""}
+      onChange={handleChange}
+      placeholder="Specify referral source type"
+      className="w-full border border-gray-300 p-3 h-10 rounded-lg
+                 focus:ring-2 focus:ring-blue-300 focus:border-transparent
+                 transition-all"
+    />
+  )}
+
+ 
+</div>
+
              <div className="flex flex-col gap-1">
   <label
     htmlFor="dateOfReferral"
@@ -2244,24 +2384,85 @@ console.log("check Update----",Docs.HCPform)
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
               />
-              <input
-                type="text"
-                name="reference1Aadhar"
-                value={form.reference1Aadhar || ''}
-                onChange={handleChange}
-                placeholder="Reference 1 Aadhar No."
-                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
-              <input
-                type="tel"
-                name="reference1Mobile"
-                value={form.reference1Mobile || ''}
-                onChange={handleChange}
-                placeholder="Reference 1 Mobile"
-                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
+             <div className="flex flex-col gap-1">
+  <label className="text-sm font-medium text-gray-600">
+    Reference 1 Aadhaar Number
+  </label>
+
+  <input
+    type="text"
+    name="reference1Aadhar"
+    value={form?.reference1Aadhar ?? ""}
+    inputMode="numeric"
+    maxLength={12}
+    placeholder="Enter 12-digit Aadhaar number"
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, ""); 
+
+      setForm((prev: any) => ({
+        ...prev,
+        reference1Aadhar: value,
+      }));
+    }}
+    className={`w-full border p-3 h-10 rounded-lg text-sm
+      focus:ring-2 focus:border-transparent transition-all
+      ${
+        form.reference1Aadhar &&
+        !isValidAadhaar(form.reference1Aadhar)
+          ? "border-red-400 focus:ring-red-300"
+          : "border-gray-300 focus:ring-blue-300"
+      }
+    `}
+  />
+
+  {form.reference1Aadhar &&
+    !isValidAadhaar(form.reference1Aadhar) && (
+      <p className="text-xs text-red-500 mt-1">
+        Aadhaar number must be exactly 12 digits.
+      </p>
+    )}
+</div>
+
+             <div className="flex flex-col gap-1">
+  <label className="text-sm font-medium text-gray-600">
+    Reference 1 Mobile Number
+  </label>
+
+  <input
+    type="tel"
+    name="reference1Mobile"
+    value={form?.reference1Mobile ?? ""}
+    inputMode="numeric"
+    maxLength={10}
+    placeholder="Enter 10-digit mobile number"
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, "");
+
+      setForm((prev: any) => ({
+        ...prev,
+        reference1Mobile: value,
+      }));
+    }}
+    className={`w-full border p-3 h-10 rounded-lg text-sm
+      focus:ring-2 focus:border-transparent transition-all
+      ${
+        form.reference1Mobile &&
+        !isValidIndianMobile(form.reference1Mobile)
+          ? "border-red-400 focus:ring-red-300"
+          : "border-gray-300 focus:ring-blue-300"
+      }
+    `}
+    required
+  />
+
+  {form.reference1Mobile &&
+    !isValidIndianMobile(form.reference1Mobile) && (
+      <p className="text-xs text-red-500 mt-1">
+        Enter a valid 10-digit Indian mobile number.
+      </p>
+    )}
+</div>
+
               <textarea
                 name="reference1Address"
                 value={form.reference1Address || ''}
@@ -2291,24 +2492,86 @@ console.log("check Update----",Docs.HCPform)
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
               />
-              <input
-                type="text"
-                name="reference2Aadhar"
-                value={form.reference2Aadhar || ''}
-                onChange={handleChange}
-                placeholder="Reference 2 Aadhar No."
-                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
-              <input
-                type="tel"
-                name="reference2Mobile"
-                value={form.reference2Mobile || ''}
-                onChange={handleChange}
-                placeholder="Reference 2 Mobile"
-                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
+             <div className="flex flex-col gap-1">
+  <label className="text-sm font-medium text-gray-600">
+    Reference 2 Aadhaar Number
+
+  </label>
+
+  <input
+    type="text"
+    name="reference2Aadhar"
+    value={form?.reference2Aadhar ?? ""}
+    inputMode="numeric"
+    maxLength={12}
+    placeholder="Enter 12-digit Aadhaar number"
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, "");
+
+      setForm((prev: any) => ({
+        ...prev,
+        reference2Aadhar: value,
+      }));
+    }}
+    className={`w-full border p-3 h-10 rounded-lg text-sm
+      focus:ring-2 focus:border-transparent transition-all
+      ${
+        form.reference2Aadhar &&
+        !isValidAadhaar(form.reference2Aadhar)
+          ? "border-red-400 focus:ring-red-300"
+          : "border-gray-300 focus:ring-blue-300"
+      }
+    `}
+  />
+
+  {form.reference2Aadhar &&
+    !isValidAadhaar(form.reference2Aadhar) && (
+      <p className="text-xs text-red-500 mt-1">
+        Aadhaar number must be exactly 12 digits.
+      </p>
+    )}
+</div>
+
+            <div className="flex flex-col gap-1">
+  <label className="text-sm font-medium text-gray-600">
+    Reference 2 Mobile Number
+   
+  </label>
+
+  <input
+    type="tel"
+    name="reference2Mobile"
+    value={form?.reference2Mobile ?? ""}
+    inputMode="numeric"
+    maxLength={10}
+    placeholder="Enter 10-digit mobile number"
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, "");
+
+      setForm((prev: any) => ({
+        ...prev,
+        reference2Mobile: value,
+      }));
+    }}
+    className={`w-full border p-3 h-10 rounded-lg text-sm
+      focus:ring-2 focus:border-transparent transition-all
+      ${
+        form.reference2Mobile &&
+        !isValidIndianMobile(form.reference2Mobile)
+          ? "border-red-400 focus:ring-red-300"
+          : "border-gray-300 focus:ring-blue-300"
+      }
+    `}
+  />
+
+  {form.reference2Mobile &&
+    !isValidIndianMobile(form.reference2Mobile) && (
+      <p className="text-xs text-red-500 mt-1">
+        Enter a valid 10-digit Indian mobile number.
+      </p>
+    )}
+</div>
+
               <textarea
                 name="reference2Address"
                 value={form.reference2Address || ''}
@@ -2385,15 +2648,28 @@ console.log("check Update----",Docs.HCPform)
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
               />
-              <input
-                type="text"
-                name="paymentBankName"
-                value={form.paymentBankName || ''}
-                onChange={handleChange}
-                placeholder="Bank Name for Payments"
-                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
+              <div className="flex flex-col gap-1">
+  <label className="text-sm font-medium text-gray-600">
+    Account Holder Name
+  </label>
+
+  <input
+    type="text"
+    name="paymentBankName"
+    value={form?.paymentBankName ?? ""}
+    onChange={handleChange}
+    placeholder="Enter account holder name"
+    className="input-field w-full border border-gray-300 p-3 h-10 rounded-lg
+               focus:ring-2 focus:ring-blue-300 focus:border-transparent
+               transition-all"
+  />
+
+  <p className="text-xs text-gray-500 leading-snug mt-1">
+    <strong>Note:</strong> Name should be exactly as mentioned in the bank
+    passbook. This will be used for payment processing.
+  </p>
+</div>
+
               <input
                 type="text"
                 name="paymentBankAccountNumber"
