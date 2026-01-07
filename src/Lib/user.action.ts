@@ -1237,7 +1237,7 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "UserId": Info.UserId,
       "DocumentSkipReason":Info.DocumentSkipReason,
       "ProfilePic": Info.Documents.ProfilePic || null,
-      "Documents":Info. Documents,
+      "Documents":Info.Documents,
     };
 
     
