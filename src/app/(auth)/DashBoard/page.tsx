@@ -460,7 +460,7 @@ console.log('Check Email Status-----',isManagement)
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="user" className="w-8 h-8" />
             <span className="inline text-[15px] uppercase truncate">
-              Hi Admin – Welcome to Admin Dashboard.
+              Hi Admin – Welcome to Admin Dashboard
             </span>
           </div>
 

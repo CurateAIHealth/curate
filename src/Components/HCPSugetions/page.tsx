@@ -88,14 +88,19 @@ const updatedRefresh=useSelector((afterEach:any)=>afterEach.updatedCount)
 const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
 console.log("Test Informed Information-----",ExsitingInformedUsers)
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const informedUsers: any = await GetInformedUsers();
-      setExsitingInformedUsers(informedUsers);
-      setLoading(false);
-    };
-    fetchUsers();
-  }, [updatedRefresh]);
+ useEffect(() => {
+  let mounted = true;
+
+  const fetchUsers = async () => {
+    const informedUsers:any = await GetInformedUsers();
+    if (!mounted) return;
+    setExsitingInformedUsers(informedUsers);
+    setLoading(false);
+  };
+
+  fetchUsers();
+  return () => { mounted = false };
+}, [updatedRefresh]);
 
   const ShowDompleteInformation = (userId: any, ClientName: any) => {
     if (userId) {
@@ -632,8 +637,16 @@ const ShowAdditionHCPs = hcps.filter((each: HcpType) => {
 
 
 
-console.log("Test Client id----",hcps)
 
+const activeClient = clients[0];
+
+if (!activeClient) {
+  return (
+    <div className="text-center text-gray-500 py-10">
+      No client selected
+    </div>
+  );
+}
 
  
   if (loading) {
@@ -877,7 +890,7 @@ Search For HCP Criteria
                       const alreadyInformed = ExsitingInformedUsers.some(
                         (each) =>
                           each.InformedHCPID === hcp.UserId &&
-                          each.InformedClientID === clients[0].userId
+                          each.InformedClientID === activeClient?.userId
                       );
                       const isCurrent = CurrentUserId === hcp.UserId;
 
@@ -925,7 +938,7 @@ Search For HCP Criteria
                                   : "-"}
                               </span>
                               <span className="text-[9px] px-2 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full">
-                                Exp: {hcp.Experience || 0} yrs
+                                Exp: {hcp?.Experience || 0} yrs
                               </span>
                             </div>
 
@@ -937,7 +950,7 @@ Search For HCP Criteria
                               {PROFESSIONAL_SKILL_OPTIONS.map((skill: string, sidx: number) => {
                                 const hasSkill =
                                   Array.isArray(hcp?.ProfessionalSkills) &&
-                                  hcp.ProfessionalSkills.includes(skill);
+                                  hcp?.ProfessionalSkills.includes(skill);
 
                                 return (
                                   <span
@@ -956,23 +969,23 @@ Search For HCP Criteria
 
 
                             <div className="mt-2 flex justify-center gap-2 flex-wrap">
-                              {clients[0]?.SuitableHCP === hcp.UserId ? (
+                              {activeClient?.SuitableHCP === hcp?.UserId ? (
                                 <button
                                   className="bg-green-600 text-white cursor-pointer px-3 py-1 rounded-full text-[10px] font-medium shadow-sm hover:bg-green-700 transition-colors"
                                   onClick={() =>
                                     UpdateAssignHca(
-                                      clients[0].userId,
-                                      hcp.UserId,
-                                      clients[0].FirstName,
-                                      clients[0].Email,
-                                      clients[0].ContactNumber,
-                                      clients[0].serviceLocation,
+                                      activeClient.userId,
+                                      hcp?.UserId,
+                                     activeClient.FirstName,
+                                      activeClient.Email,
+                                      activeClient.ContactNumber,
+                                      activeClient.serviceLocation,
                                       hcp.HCPFirstName,
                                       hcp.HCPContactNumber,
-                                      clients[0].patientName,
-                                      clients[0].patientPhone,
-                                      clients[0].Source,
-                                      clients[0].hcpType
+                                      activeClient.patientName,
+                                     activeClient.patientPhone,
+                                      activeClient.Source,
+                                      activeClient.hcpType
 
 
                                     )
@@ -983,7 +996,7 @@ Search For HCP Criteria
                               ) : (
                                 <div className="flex justify-between gap-3 sm:gap-6">
                                   <button
-                                    onClick={() => handleShare(hcp, clients[0].userId)}
+                                    onClick={() => handleShare(hcp, activeClient.userId)}
                                     disabled={alreadyInformed}
                                     className={`px-3 py-1 text-[9px] cursor-pointer font-medium rounded-full transition-all duration-200 ${alreadyInformed
                                         ? "bg-red-500/90 text-white cursor-not-allowed"
@@ -1000,7 +1013,7 @@ Search For HCP Criteria
                                       <p
                                         className="px-3 py-1 text-[9px] font-medium rounded-full bg-[#40c9a2] text-white hover:bg-teal-700 cursor-pointer"
                                         onClick={() =>
-                                          UpdateHCPIntrest(clients[0].userId, hcp.UserId)
+                                          UpdateHCPIntrest(activeClient.userId, hcp.UserId)
                                         }
                                       >
                                         Interested
@@ -1045,7 +1058,7 @@ Search For HCP Criteria
                   </div>
                 )}
 
-                {clients[0].PhysioScore > 0 && (
+                {activeClient.PhysioScore > 0 && (
                   <div className="w-full md:w-auto mt-4 md:mt-0">
                     <PhysioList />
                   </div>
@@ -1073,7 +1086,7 @@ Search For HCP Criteria
           <div className=" overflow-y-auto  mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
               {ShowAdditionHCPs.map((hcp: any, idx: number) => {
                 const alreadyInformed = ExsitingInformedUsers.some(
-                  (each) => each.InformedHCPID === hcp.UserId&&each.InformedClientID===clients[0].userId
+                  (each) => each.InformedHCPID === hcp.UserId&&each.InformedClientID===activeClient.userId
                 );
                 const isCurrent = CurrentUserId === hcp.UserId;
 
@@ -1141,22 +1154,22 @@ Search For HCP Criteria
 
 
                       <div className="mt-2 flex justify-center gap-2 flex-wrap">
-                        {clients[0]?.SuitableHCP === hcp.UserId ? (
+                        {activeClient?.SuitableHCP === hcp.UserId ? (
                           <button className="bg-green-600 text-white cursor-pointer px-3 py-1 rounded-full text-[10px] font-medium shadow-sm hover:bg-green-700 transition-colors" 
                            onClick={() =>
                       UpdateAssignHca(
-                        clients[0].userId,
+                        activeClient.userId,
                         hcp.UserId,
-                        clients[0].FirstName,
-                        clients[0].Email,
-                        clients[0].ContactNumber,
-                        clients[0].serviceLocation,
+                       activeClient.FirstName,
+                        activeClient.Email,
+                        activeClient.ContactNumber,
+                        activeClient.serviceLocation,
                         hcp.HCPFirstName,
                         hcp.HCPContactNumber,
-                        clients[0].patientName,
-                        clients[0].patientPhone,
-                        clients[0].Source,
-                        clients[0].hcpType
+                        activeClient.patientName,
+                        activeClient.patientPhone,
+                      activeClient.Source,
+                        activeClient.hcpType
 
 
                       )
@@ -1167,7 +1180,7 @@ Search For HCP Criteria
 
                       <div className="flex justify-between gap-6">
                           <button
-                            onClick={() => handleShare(hcp,clients[0].userId)}
+                            onClick={() => handleShare(hcp,activeClient.userId)}
                             disabled={alreadyInformed}
                             className={`px-3 py-1 text-[8px]  font-medium rounded-full cursor Pointer transition-all duration-200 ${alreadyInformed
                               ? "bg-red-500/90 text-white cursor-not-allowed"
@@ -1177,7 +1190,7 @@ Search For HCP Criteria
                             {alreadyInformed ? "Informed ✓" : "Confirm"}
                           </button>
                           
-                          {alreadyInformed && clients.some(client => client.SuitableHCP !== hcp.UserId) && <p  className={`px-3 py-1 text-[10px] cursor-pointer font-medium rounded-full cursor Pointer transition-all duration-200  bg-[#40c9a2]  text-white hover:bg-teal-700`} onClick={()=>UpdateHCPIntrest(clients[0].userId,hcp.UserId)}> Intrested</p>}
+                          {alreadyInformed && clients.some(client => client.SuitableHCP !== hcp.UserId) && <p  className={`px-3 py-1 text-[10px] cursor-pointer font-medium rounded-full cursor Pointer transition-all duration-200  bg-[#40c9a2]  text-white hover:bg-teal-700`} onClick={()=>UpdateHCPIntrest(activeClient.userId,hcp.UserId)}> Intrested</p>}
 
                             </div>
                            
