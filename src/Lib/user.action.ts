@@ -1146,7 +1146,7 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "Gender": Info.gender,
       "Date of Birth": Info.dateOfBirth,
       "Marital Status": Info.maritalStatus,
-      
+      "referralSourceType":Info.referralSourceType,
       'SiblingsInfo':Info.SiblingsInfo,
       'earningSource':Info.earningSource,
 

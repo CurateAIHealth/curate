@@ -1285,6 +1285,16 @@ export const LeadSources = [
   "Google",
   "Other"
 ];
+export const REFERRAL_SOURCE_TYPES: string[] = [
+  "Institute",
+  "Individual",
+  "Curate Staff",
+  "HCA",
+  "HCN",
+  "HCP",
+  "Other",
+];
+
 export const indianFamilyRelations = [
   "Self",
   "Father",
