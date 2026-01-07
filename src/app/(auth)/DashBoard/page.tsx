@@ -412,6 +412,9 @@ console.log('Check Email Status-----',isManagement)
         case "Invoices":
           router.push("/Invoices");
           break;
+           case "Registration":
+          router.push("/UserTypeRegistration");
+          break;
         case "Hostel Attendance":
           router.push("/HostelAttendence");
           break;
