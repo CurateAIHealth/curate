@@ -1,7 +1,7 @@
 'use client';
 
 import HCAMobileView from '@/Components/HCAMobileView/page';
-import { EducationLevels, IndianLanguages, PROFESSIONAL_SKILL_OPTIONS, Relations } from '@/Lib/Content';
+import { EducationLevels, IndianLanguages, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, PROFESSIONAL_SKILL_OPTIONS, Relations } from '@/Lib/Content';
 import { v4 as uuidv4 } from 'uuid';
 import { GetUserInformation, HCARegistration, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
 import { Update_Main_Filter_Status, UpdateDocmentSkipReason, UpdateRefresh, UpdateUserType } from '@/Redux/action';
@@ -22,12 +22,16 @@ const DEFAULT_DOCUMENT_ICON = '/Icons/DefaultDocumentIcon.png';
 export default function DoctorProfileForm() {
   const [ProfileName, SetProfileName] = useState('');
   const [isOther, setIsOther] = useState(false);
+  const [isOtherProfetionalEducation, setIsOtherProfetionalEducation] = useState(false);
+  const [isOtherOngoingEducation, setIsOtherOngoingEducation] = useState(false);
+  const [isOtherPreviousHealthProblems, setIsOtherPreviousHealthProblems] = useState(false);
+  // const [isOther, setIsOther] = useState(false);
 
   const [PictureUploading, setPictureUploading] = useState(false);
   const [UpdateingStatus, SetUpdateingStatus] = useState(true);
   const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
   const [addedheight, setaddedheight] = useState<any>(null);
-  const [addingWeight, setaddingWeight] = useState("");
+  const [addingWeight, setaddingWeight] = useState<any>(null);
   const [isChecking, setIsChecking] = useState(true);
   const [siblings, setSiblings] = useState([
     { relation: "Elder Brother", count: 0 },
@@ -125,7 +129,8 @@ export default function DoctorProfileForm() {
     PreviewUserType:any;
     fatherNameContact:any;
     motherContact:any;
-    Husbend:any
+    Husbend:any;
+    HusbendContact:any
     // website?: string; // optional if commented
   }
 
@@ -156,7 +161,8 @@ useEffect(() => {
     CertificatOne: '',
     CertificatTwo: '',
     VideoFile: '',
-    BVR: ''
+    BVR: '',
+    HCPform:""
   });
   const [form, setForm] = useState<FormState>({
     firstName: '',
@@ -166,6 +172,7 @@ useEffect(() => {
     motherContact:'',
     motherName: '',
     Husbend:'',
+    HusbendContact:'',
     gender: '',
     dateOfBirth: '',
     maritalStatus: '',
@@ -324,15 +331,15 @@ useEffect(() => {
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       const { name, value, type } = e.target;
 
-      if (type === 'checkbox') {
-        if (name === 'serviceHours12hrs' && (e.target as HTMLInputElement).checked) {
-          setForm((prev) => ({ ...prev, serviceHours12hrs: true, serviceHours24hrs: false }));
-        } else if (name === 'serviceHours24hrs' && (e.target as HTMLInputElement).checked) {
-          setForm((prev) => ({ ...prev, serviceHours24hrs: true, serviceHours12hrs: false }));
-        } else {
-          setForm((prev) => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
-        }
-      } else {
+      if (type === "checkbox") {
+  const checked = (e.target as HTMLInputElement).checked;
+
+  setForm((prev) => ({
+    ...prev,
+    [name]: checked,
+  }));
+}
+ else {
         setForm((prev) => ({ ...prev, [name]: value }));
 
         if (name === 'dateOfBirth') {
@@ -458,6 +465,13 @@ useEffect(() => {
 
     return age;
   };
+const HEIGHT_OPTIONS = Array.from(
+  { length: (6 * 30.48 - 4 * 30.48) / 2 + 1 },
+  (_, i) => {
+    const cm = Math.round(4 * 30.48 + i * 2); // step = 2 cm
+    return cm;
+  }
+);
 
 
   const handleSubmit = useCallback(
@@ -545,7 +559,8 @@ useEffect(() => {
             PreviewUserType:form.PreviewUserType,
             fatherNameContact:form.fatherNameContact,
             motherContact:form.motherContact,
-            Husbend:form.Husbend
+            Husbend:form.Husbend,
+            HusbendContact:form.HusbendContact
           };
 
 
@@ -578,11 +593,118 @@ useEffect(() => {
 
 
           await axios.post("/api/MailSend", {
-            to: form.emailId || "tsiddu805@gmail.com",
-            subject:
-              "Welcome to Curate Health Care – Your Login Credentials",
-            html: `YOUR_EXISTING_HTML_MAIL_TEMPLATE`,
-          });
+  to: form.emailId || "tsiddu805@gmail.com",
+  subject: "Welcome to Curate Health Care – Your Login Credentials",
+  html: `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Welcome to Curate Health Care</title>
+    </head>
+
+    <body style="margin:0; padding:0; background-color:#f4f6f8; font-family: Arial, Helvetica, sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td align="center" style="padding:30px 10px;">
+            
+            <!-- Main Card -->
+            <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.08); overflow:hidden;">
+              
+              <!-- Header -->
+              <tr>
+                <td style="background:#1392d3; padding:20px; text-align:center;">
+                  <h1 style="margin:0; color:#ffffff; font-size:24px;">
+                    Curate Health Care
+                  </h1>
+                  <p style="margin:6px 0 0; color:#e3f2fd; font-size:14px;">
+                    Caring Beyond Boundaries
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Body -->
+              <tr>
+                <td style="padding:30px;">
+                  <h2 style="margin-top:0; color:#333333; font-size:20px;">
+                    Welcome 👋
+                  </h2>
+
+                  <p style="color:#555555; font-size:14px; line-height:1.6;">
+                    We are delighted to have you onboard with 
+                    <strong>Curate Health Care Services</strong>.
+                  </p>
+
+                  <p style="color:#555555; font-size:14px; line-height:1.6;">
+                    Below are your login credentials. Please keep them safe and
+                    do not share them with anyone.
+                  </p>
+
+                  <!-- Credentials Box -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0; background:#f8fbff; border:1px solid #dbeafe; border-radius:8px;">
+                    <tr>
+                      <td style="padding:16px;">
+                        <p style="margin:0 0 8px; font-size:14px; color:#333;">
+                          <strong>Email:</strong> ${form?.emailId}
+                        </p>
+                        <p style="margin:0; font-size:14px; color:#333;">
+                          <strong>Password:</strong> ${form?.Password}
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- CTA -->
+                  <div style="text-align:center; margin-top:25px;">
+                    <a
+                      href="https://curatehealthservices.com"
+                      style="
+                        display:inline-block;
+                        padding:12px 26px;
+                        background:#1392d3;
+                        color:#ffffff;
+                        text-decoration:none;
+                        border-radius:30px;
+                        font-size:14px;
+                        font-weight:bold;
+                      "
+                    >
+                      Login to Dashboard
+                    </a>
+                  </div>
+
+                  <p style="margin-top:25px; color:#777777; font-size:13px; line-height:1.5;">
+                    If you face any issues while logging in, feel free to contact
+                    our support team.
+                  </p>
+
+                  <p style="color:#555555; font-size:14px;">
+                    Warm regards,<br />
+                    <strong>Curate Health Care Team</strong>
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background:#f1f5f9; padding:15px; text-align:center;">
+                  <p style="margin:0; font-size:12px; color:#666666;">
+                    © ${new Date().getFullYear()} Curate Health Care Services.
+                    All rights reserved.
+                  </p>
+                </td>
+              </tr>
+
+            </table>
+
+          </td>
+        </tr>
+      </table>
+    </body>
+  </html>
+  `,
+});
 
 
           distpatch(UpdateRefresh(1));
@@ -666,7 +788,8 @@ useEffect(() => {
 if (CurrentUserType === null) return null;
 
 
-console.log("check Update----",form.OngoingStudy)
+console.log("check Update----",Docs.HCPform)
+
   return (
 
     <div className=" md:flex md:min-h-[100vh] md:h-[86.5vh] bg-white flex-col items-center justify-center overflow-hidden">
@@ -858,6 +981,15 @@ console.log("check Update----",form.OngoingStudy)
                 value={form.Husbend || ''}
                 onChange={handleChange}
                 placeholder="Enter Husbend Name"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                
+              />
+               <input
+                type="text"
+                name="HusbendContact"
+                value={form.HusbendContact || ''}
+                onChange={handleChange}
+                placeholder="Enter HusbendContact"
                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
               />
@@ -1280,7 +1412,7 @@ console.log("check Update----",form.OngoingStudy)
   className="
     input-field w-full
     border border-gray-300
-    p-2 h-11
+    p-2 h-10
     rounded-lg
     bg-white
     text-sm text-gray-700
@@ -1300,19 +1432,19 @@ console.log("check Update----",form.OngoingStudy)
   ))}
 </select>
 
-     {!isOther?        <select
+     {!isOtherProfetionalEducation?        <select
   name="professionalEducation"
   value={form.professionalEducation || ''}
 
     onChange={(e) => {
                             const value = e.target.value;
                             setForm({ ...form, professionalEducation: value });
-                            if (value === 'Other') setIsOther(true);
+                            if (value === 'Other') setIsOtherProfetionalEducation(true);
                           }}
   className="
     input-field w-full
     border border-gray-300
-    p-2 h-11
+    p-2 h-10
     rounded-lg
     bg-white
     text-sm text-gray-700
@@ -1357,12 +1489,12 @@ console.log("check Update----",form.OngoingStudy)
 
              <div className="space-y-3">
 
- {!isOther? <select
+ {!isOtherOngoingEducation? <select
     name="OngoingStudy"
     value={form.OngoingStudy||''}
     onChange={(e) => {
       const value = e.target.value;
-       if (value === 'Other') setIsOther(true);
+       if (value === 'Other') setIsOtherOngoingEducation(true);
       setForm({
         ...form,
         OngoingStudy: value === "Other" ? "" : value,
@@ -1371,7 +1503,7 @@ console.log("check Update----",form.OngoingStudy)
     className="
       input-field w-full
       border border-gray-300
-      p-2 h-11
+      p-2 h-10
       rounded-lg
       bg-white
       text-sm text-gray-700
@@ -1572,7 +1704,7 @@ console.log("check Update----",form.OngoingStudy)
                           Number(form.height) === Number(h) ||
                           Number(form.height) === Number(h) + Number(addedheight)
                         }
-                        onChange={() => handleHeightChange("height", h)}
+                        onChange={() =>{setaddedheight(null); handleHeightChange("height", h)}}
                         className="mr-2 accent-purple-600"
                       />
                       {h} ft
@@ -1616,25 +1748,32 @@ console.log("check Update----",form.OngoingStudy)
                   )}
                 </div>
                 <div className="mt-4 flex flex-col sm:flex-row items-center gap-3">
-                  <label className="text-sm font-medium text-gray-600">
-                    Enter Height (cm)
-                  </label>
+  <label className="text-sm font-medium text-gray-600">
+    Height
+  </label>
 
-                  <input
-                    type="number"
-                    placeholder="Eg: 170"
-                    value={heightInCm}
-                    onChange={(e) => handleHeightFromCm(e.target.value)}
-                    className="w-32 px-3 py-2 border border-gray-300 rounded-md
+  <select
+    value={heightInCm || ""}
+    onChange={(e) => handleHeightFromCm(e.target.value)}
+    className="w-40 px-3 py-2 border border-gray-300 rounded-md
                focus:ring-2 focus:ring-teal-400 focus:outline-none text-sm"
-                  />
+  >
+    <option value="">Select height (cm)</option>
 
-                  {heightInCm && form.height && (
-                    <span className="text-xs text-gray-500">
-                      ≈ {form.height} ft
-                    </span>
-                  )}
-                </div>
+    {HEIGHT_OPTIONS.map((cm:any) => (
+      <option key={cm} value={cm}>
+        {cm} cm ({(cm / 30.48).toFixed(1)} ft)
+      </option>
+    ))}
+  </select>
+
+  {heightInCm && form.height && (
+    <span className="text-xs text-gray-500">
+      ≈ {form.height} ft
+    </span>
+  )}
+</div>
+
               </div>
 
 
@@ -1644,7 +1783,7 @@ console.log("check Update----",form.OngoingStudy)
                 <h2 className="text-lg font-semibold text-teal-600">Weight</h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-                  {["<40", "40", "50", "60", "70", "80", "90", "100", "110", "120", "120+"].map((w) => (
+                  {["30", "40", "50", "60", "70", "80", "90", "100", "110", "120", "120+"].map((w) => (
                     <label key={w} className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
                       <input
                         type="radio"
@@ -1655,7 +1794,7 @@ console.log("check Update----",form.OngoingStudy)
                           Number(form.weight) === Number(w) + Number(addingWeight) ||
                           form.weight === w
                         }
-                        onChange={() => handleHeightChange("weight", w)}
+                        onChange={() =>{setaddingWeight(null); handleHeightChange("weight", w)}}
                         className="mr-2 accent-purple-600"
                       />
                       {w} kg
@@ -1665,21 +1804,35 @@ console.log("check Update----",form.OngoingStudy)
 
                 {form.weight !== "<40" && form.weight !== "120+" && (
                   <div className="flex flex-wrap gap-2 items-center justify-center">
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((each: any) => (
-                      <button
-                        type="button"
-                        key={each}
-                        onClick={() => {
-                          setaddingWeight(each);
-                          const current = parseInt(form.weight || "0", 10) || 0;
-                          handleHeightChange("weight", String(current + each));
-                        }}
-                        className="mt-3 px-2 py-1 bg-gray-400 text-white rounded-md text-[10px] sm:text-xs"
-                      >
-                        + {each} kg
-                      </button>
-                    ))}
-                  </div>
+  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((each: number) => {
+    const isActiveWeight = addingWeight === each;
+
+    return (
+      <button
+        type="button"
+        key={each}
+        onClick={() => {
+          setaddingWeight(each);
+          const current = parseInt(form.weight || "0", 10) || 0;
+          handleHeightChange("weight", String(current + each));
+        }}
+        className={`
+          mt-3 px-2 py-1 text-[10px] sm:text-xs rounded-md
+          transition-all duration-200
+
+          ${
+            isActiveWeight
+              ? "bg-white text-blue-600 border-2 border-blue-600 shadow-sm"
+              : "bg-gray-500 text-white border border-transparent hover:bg-gray-600"
+          }
+        `}
+      >
+        + {each} kg
+      </button>
+    );
+  })}
+</div>
+
                 )}
 
                 {form.weight && (
@@ -1693,57 +1846,156 @@ console.log("check Update----",form.OngoingStudy)
 
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:col-span-3">
-                <input
-                  type="text"
-                  name="hairColour"
-                  value={form.hairColour || ""}
-                  onChange={handleChange}
-                  placeholder="Hair Colour"
-                  className="border border-gray-300 p-3 h-10 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  
-                />
-                <input
-                  type="text"
-                  name="eyeColour"
-                  value={form.eyeColour || ""}
-                  onChange={handleChange}
-                  placeholder="Eye Colour"
-                  className="border border-gray-300 p-3 h-10 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  
-                />
-                <input
-                  type="text"
-                  name="complexion"
-                  value={form.complexion || ""}
-                  onChange={handleChange}
-                  placeholder="Complexion"
-                  className="border border-gray-300 p-3 h-10 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  
-                />
+               <select
+  name="hairColour"
+  value={form.hairColour || ""}
+  onChange={handleChange}
+  className="border border-gray-300 p-2 h-10 rounded-lg
+             focus:ring-2 focus:ring-blue-300
+             focus:border-transparent transition-all bg-white"
+>
+  <option value="">Select Hair Colour</option>
+
+  <option value="Black">Black</option>
+  <option value="Dark Brown">Dark Brown</option>
+  <option value="Brown">Brown</option>
+  <option value="Light Brown">Light Brown</option>
+  <option value="Grey">Grey</option>
+  <option value="White">White</option>
+  <option value="Salt & Pepper">Salt & Pepper</option>
+  <option value="Dyed">Dyed (Henna / Colour)</option>
+  <option value="Bald">Bald</option>
+</select>
+
+               <select
+  name="eyeColour"
+  value={form?.eyeColour ?? ""}
+  onChange={handleChange}
+  className="border border-gray-300 p-2 h-10 rounded-lg
+             focus:ring-2 focus:ring-blue-300 focus:border-transparent
+             transition-all bg-white"
+>
+  <option value="">Select Eye Colour</option>
+
+  {[
+    "Black",
+    "Dark Brown",
+    "Brown",
+    "Light Brown",
+    "Hazel",
+    "Amber",
+    "Grey",
+    "Green",
+  ].map((colour) => (
+    <option key={colour} value={colour}>
+      {colour}
+    </option>
+  ))}
+</select>
+
+               <select
+  name="complexion"
+  value={form?.complexion ?? ""}
+  onChange={handleChange}
+  className="border border-gray-300 p-2 h-10 rounded-lg
+             focus:ring-2 focus:ring-blue-300 focus:border-transparent
+             transition-all bg-white"
+>
+  <option value="">Select Complexion</option>
+
+  {[
+    "Very Fair",
+    "Fair",
+    "Wheatish",
+    "Medium",
+    "Dusky",
+    "Dark",
+  ].map((tone) => (
+    <option key={tone} value={tone}>
+      {tone}
+    </option>
+  ))}
+</select>
+
                 <input
                   type="text"
                   name="anyDeformity"
-                  value={form.anyDeformity || ""}
+                  value={form?.anyDeformity || ""}
                   onChange={handleChange}
                   placeholder="Any Deformity (if any)"
                   className="border border-gray-300 p-3 h-10 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 />
-                <input
-                  type="text"
-                  name="moleBodyMark1"
-                  value={form.moleBodyMark1 || ""}
-                  onChange={handleChange}
-                  placeholder="Mole/Body Mark 1"
-                  className="border border-gray-300 p-3 h-10 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                />
-                <input
-                  type="text"
-                  name="moleBodyMark2"
-                  value={form.moleBodyMark2 || ""}
-                  onChange={handleChange}
-                  placeholder="Mole/Body Mark 2 (Optional)"
-                  className="border border-gray-300 p-3 h-10 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                />
+              
+<select
+  name="moleBodyMark1"
+  value={form?.moleBodyMark1 ?? ""}
+  onChange={handleChange}
+  className="border border-gray-300 p-2 h-10 rounded-lg
+             focus:ring-2 focus:ring-blue-300 focus:border-transparent
+             transition-all bg-white"
+>
+  <option value="">Select Mole / Body Mark 1</option>
+
+  {[
+    "None",
+    "Forehead",
+    "Left Cheek",
+    "Right Cheek",
+    "Chin",
+    "Nose",
+    "Neck",
+    "Left Hand",
+    "Right Hand",
+    "Left Arm",
+    "Right Arm",
+    "Left Leg",
+    "Right Leg",
+    "Back",
+    "Chest",
+    "Abdomen",
+  ].map((mark) => (
+    <option key={mark} value={mark}>
+      {mark}
+    </option>
+  ))}
+</select>
+
+
+<select
+  name="moleBodyMark2"
+  value={form?.moleBodyMark2 ?? ""}
+  onChange={handleChange}
+  className="border border-gray-300 p-2 h-10 rounded-lg
+             focus:ring-2 focus:ring-blue-300 focus:border-transparent
+             transition-all bg-white"
+>
+  <option value="">Select Mole / Body Mark 2 (Optional)</option>
+
+  {[
+    "None",
+    "Forehead",
+    "Left Cheek",
+    "Right Cheek",
+    "Chin",
+    "Nose",
+    "Neck",
+    "Left Hand",
+    "Right Hand",
+    "Left Arm",
+    "Right Arm",
+    "Left Leg",
+    "Right Leg",
+    "Back",
+    "Chest",
+    "Abdomen",
+    "Other"
+  ].map((mark) => (
+    <option key={mark} value={mark}>
+      {mark}
+    </option>
+  ))}
+</select>
+
               </div>
             </div>
 
@@ -1767,21 +2019,66 @@ console.log("check Update----",form.OngoingStudy)
             </h3>
 
             <div className="space-y-5">
-              <textarea
-                name="reportPreviousHealthProblems"
-                value={form.reportPreviousHealthProblems || ""}
-                onChange={handleChange}
-                placeholder="Report Previous Health Problems"
-                className="resize-y h-20 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
+
+              {!isOtherPreviousHealthProblems ?
+                <select
+                  name="reportPreviousHealthProblems"
+                  value={form?.reportPreviousHealthProblems ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm({ ...form, reportPreviousHealthProblems: value });
+                    if (value === 'Other')
+                    {setIsOtherPreviousHealthProblems(true);
+                        setForm({ ...form, reportPreviousHealthProblems: '' });
+                    }
+                      
+                  }}
+                  className="w-full border border-gray-300 p-2 h-10 rounded-lg
+             focus:ring-2 focus:ring-blue-300 focus:border-transparent
+             transition-all bg-white"
+                >
+                  <option value="">Select Previous Health Issue</option>
+
+                  {[
+                    "None",
+                    "fever",
+                    "fits",
+                    "Diabetes",
+                    "Hypertension",
+                    "Asthma",
+                    "Thyroid Disorder",
+                    "Heart Disease",
+                    "Stroke History",
+                    "Arthritis",
+                    "Epilepsy",
+                    "Chronic Kidney Disease",
+                    "Chronic Liver Disease",
+                    "Tuberculosis (Past)",
+                    "COVID-19 (Past)",
+                    "Other",
+                  ].map((issue) => (
+                    <option key={issue} value={issue}>
+                      {issue}
+                    </option>
+                  ))}
+                </select> :
+
+
+                <input
+                  name="reportPreviousHealthProblems"
+                  value={form.reportPreviousHealthProblems || ""}
+                  onChange={handleChange}
+                  placeholder="Report Previous Health Problems"
+                  className="resize-y  w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+
+                />}
               <textarea
                 name="reportCurrentHealthProblems"
                 value={form.reportCurrentHealthProblems || ""}
                 onChange={handleChange}
                 placeholder="Report Current Health Problems"
                 className="resize-y h-20 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
+
               />
             </div>
 
@@ -1827,8 +2124,8 @@ console.log("check Update----",form.OngoingStudy)
               <div className="flex flex-col items-center justify-center text-center">
                 <h3 className="text-md font-semibold mb-3">Patient Types You Handled</h3>
                 <div className="space-y-2">
-                  {["Bed Ridden", "Semi Bed Ridden", "Wheel Chair", "Full Mobile", "Post Operative"].map(
-                    (skill) => (
+                  {PatientTypes.map(
+                    (skill:any) => (
                       <label key={skill} className="flex items-center text-sm">
                         <input
                           type="checkbox"
@@ -1905,7 +2202,7 @@ console.log("check Update----",form.OngoingStudy)
               </svg>
               Referral Details
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:flex justify-between items-center">
               <input
                 type="text"
                 name="sourceOfReferral"
@@ -1915,15 +2212,26 @@ console.log("check Update----",form.OngoingStudy)
                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
               />
-              <input
-                type="date"
-                name="dateOfReferral"
-                value={form.dateOfReferral || ''}
-                onChange={handleChange}
-                placeholder="Date of Referral"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
+             <div className="flex flex-col gap-1">
+  <label
+    htmlFor="dateOfReferral"
+    className="text-sm font-medium text-gray-600"
+  >
+    Referral Date
+  </label>
+
+  <input
+    id="dateOfReferral"
+    type="date"
+    name="dateOfReferral"
+    value={form?.dateOfReferral ?? ""}
+    onChange={handleChange}
+    className="border border-gray-300 p-3 h-10 rounded-lg
+               focus:ring-2 focus:ring-blue-300 focus:border-transparent
+               transition-all"
+  />
+</div>
+
             </div>
             <div className="space-y-5 mt-5">
               <h4 className="text-md font-semibold text-gray-700">Reference 1:</h4>
@@ -2178,7 +2486,7 @@ console.log("check Update----",form.OngoingStudy)
               <select name="languages"
                 value={form.languages || ''}
                 onChange={handleChange}
-                className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                className="w-full border h-[31px] border-gray-300  rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               >
                 <option value="">Select Language</option>
 
@@ -2189,26 +2497,57 @@ console.log("check Update----",form.OngoingStudy)
                 ))}
 
               </select>
+{CurrentUserType==="HCN"&&
+<div>
+<div className="flex flex-col gap-1">
+  <label className="text-sm font-medium text-gray-600">
+    Nurse Type
+  </label>
 
-              <input
-                type="text"
-                name="type"
-                value={form.type || ''}
-                onChange={handleChange}
-                placeholder="Type (e.g., General Physician, Specialist)"
-                className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
+  <select
+    name="type"
+    value={form?.type ?? ""}
+    onChange={handleChange}
+    className="w-full border border-gray-300 p-3 rounded-lg text-sm
+               focus:ring-2 focus:ring-blue-300 focus:border-transparent
+               transition-all bg-white"
+  >
+    <option value="">Select Nurse Type</option>
 
-              <input
-                type="text"
-                name="specialties"
-                value={form.specialties || ''}
-                onChange={handleChange}
-                placeholder="Specialties (comma-separated)"
-                className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
+    {NURSE_TYPES.map((nurseType) => (
+      <option key={nurseType} value={nurseType}>
+        {nurseType}
+      </option>
+    ))}
+  </select>
+</div>
+
+
+           <div className="flex flex-col gap-1">
+  <label className="text-sm font-medium text-gray-600">
+    Nurse Specialty
+  </label>
+
+  <select
+    name="specialties"
+    value={form?.specialties ?? ""}
+    onChange={handleChange}
+    className="w-full border border-gray-300 p-3 rounded-lg text-sm
+               focus:ring-2 focus:ring-blue-300 focus:border-transparent
+               transition-all bg-white"
+  >
+    <option value="">Select Nurse Specialty</option>
+
+    {NURSE_SPECIALTIES.map((specialty) => (
+      <option key={specialty} value={specialty}>
+        {specialty}
+      </option>
+    ))}
+  </select>
+</div>
+
+</div>}
+             
 
             </div>
             <div className="space-y-4 mt-2">
@@ -2282,7 +2621,7 @@ console.log("check Update----",form.OngoingStudy)
             </h3>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 justify-items-center">
-              {['AdharCard', 'PanCard', 'CertificatOne', 'CertificatTwo', 'AccountPassBook', 'BVR'].map((docKey) => (
+              {['AdharCard', 'PanCard', 'CertificatOne', 'CertificatTwo', 'AccountPassBook', 'BVR','HCPform'].map((docKey) => (
                 <div
                   key={docKey}
                   className="flex flex-col items-center justify-between p-2 border border-blue-300 rounded-lg bg-gray-50 shadow-sm w-36 sm:w-40 h-40"

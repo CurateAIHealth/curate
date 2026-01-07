@@ -466,14 +466,16 @@ export const filterColors: Record<string, string> = {
   "Expenses": "bg-red-200 hover:bg-red-400 text-gray-800",
 };
 
+
+
 export const PROFESSIONAL_SKILL_OPTIONS: string[] = [
-  "Surgery",
-  "Diagnosis",
-  "Counseling",
-  "Examination",
-  "Prescription",
-  "ENT",
+  "Diaper",
+  "Bedsore Management",
+  "Food Preparation",
+  "Vitals Monitoring",
+  "Oxygen Monitoring",
 ];
+
 export const TestData = [
   {
     AadharCardNo: { iv: "d12f6b8a3c9e4f71", content: "97c3d5b2a1f48e6c3b2e4f9a8d7c1b0e" },
@@ -1865,6 +1867,52 @@ export const patientCategories = [
 ];
 
 
+export const PatientTypes=[ "Independent Patients",
+  "Support Care Patients",
+  "Wheel Chair - self propel",
+  "Wheel Chair - Dependent",
+  "Semi Bedridden - Limited Mobility",
+  "Completely Bedridden",
+  "Paralysis/Stroke Patients",
+  "Post Surgery care",
+  "Fractures/Injury"]
+
+export const NURSE_SPECIALTIES: string[] = [
+  "General Nursing",
+  "ICU Care",
+  "Emergency Care",
+  "Post-Operative Care",
+  "Geriatric (Elderly) Care",
+  "Palliative Care",
+  "Wound & Bedsore Care",
+  "Diabetes Care",
+  "Cardiac Care",
+  "Respiratory Care",
+  "Ventilator Care",
+  "Tracheostomy Care",
+  "Catheter Care",
+  "IV Therapy",
+  "Injection Administration",
+  "Medication Management",
+  "Pain Management",
+  "Mother & Baby Care",
+  "Home Nursing",
+];
+export const NURSE_TYPES: string[] = [
+  "General Nurse (GNM)",
+  "Auxiliary Nurse Midwife (ANM)",
+  "Registered Nurse (RN)",
+  "Staff Nurse",
+  "ICU Nurse",
+  "Home Care Nurse",
+  "Pediatric Nurse",
+  "Geriatric Nurse",
+  "Psychiatric Nurse",
+  "Community Health Nurse",
+  "Critical Care Nurse",
+  "Emergency Nurse",
+  "Midwife",
+];
 
 export const Patient_Home_Supply_Needs=[
   "Diaper",
