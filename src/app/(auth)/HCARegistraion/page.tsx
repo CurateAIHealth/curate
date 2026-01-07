@@ -1,7 +1,7 @@
 'use client';
 
 import HCAMobileView from '@/Components/HCAMobileView/page';
-import { IndianLanguages, PROFESSIONAL_SKILL_OPTIONS, Relations } from '@/Lib/Content';
+import { EducationLevels, IndianLanguages, PROFESSIONAL_SKILL_OPTIONS, Relations } from '@/Lib/Content';
 import { v4 as uuidv4 } from 'uuid';
 import { GetUserInformation, HCARegistration, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
 import { Update_Main_Filter_Status, UpdateDocmentSkipReason, UpdateRefresh, UpdateUserType } from '@/Redux/action';
@@ -21,10 +21,12 @@ const DEFAULT_DOCUMENT_ICON = '/Icons/DefaultDocumentIcon.png';
 
 export default function DoctorProfileForm() {
   const [ProfileName, SetProfileName] = useState('');
+  const [isOther, setIsOther] = useState(false);
+
   const [PictureUploading, setPictureUploading] = useState(false);
   const [UpdateingStatus, SetUpdateingStatus] = useState(true);
   const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
-  const [addedheight, setaddedheight] = useState<any>();
+  const [addedheight, setaddedheight] = useState<any>(null);
   const [addingWeight, setaddingWeight] = useState("");
   const [isChecking, setIsChecking] = useState(true);
   const [siblings, setSiblings] = useState([
@@ -664,7 +666,7 @@ useEffect(() => {
 if (CurrentUserType === null) return null;
 
 
-
+console.log("check Update----",form.OngoingStudy)
   return (
 
     <div className=" md:flex md:min-h-[100vh] md:h-[86.5vh] bg-white flex-col items-center justify-center overflow-hidden">
@@ -879,30 +881,48 @@ if (CurrentUserType === null) return null;
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
               </select>
-              <div className="relative">
-                <input
-                  type="date"
-                  name="dateOfBirth"
-                  value={form.dateOfBirth || ''}
-                  onChange={handleChange}
-                  className="input-field border p-3 h-8 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
-                />
-                {form.dateOfBirth && (
-                  <p className="absolute  left-0 text-xs text-gray-500">
-                    Age:{' '}
-                    {(() => {
-                      const dob = new Date(form.dateOfBirth);
-                      const today = new Date();
-                      let a = today.getFullYear() - dob.getFullYear();
-                      const m = today.getMonth() - dob.getMonth();
-                      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) a--;
-                      return a;
-                    })()}{' '}
-                    years
-                  </p>
-                )}
-              </div>
+           <div className="relative mt-4">
+
+  <label
+    htmlFor="dateOfBirth"
+    className="absolute -top-2 left-3 bg-white px-1 text-xs font-medium text-gray-600"
+  >
+    Date of Birth
+  </label>
+
+  <input
+    id="dateOfBirth"
+    type="date"
+    name="dateOfBirth"
+    value={form.dateOfBirth || ''}
+    onChange={handleChange}
+    className="
+      input-field
+      border p-3 h-10 rounded-lg w-full
+      focus:ring-2 focus:ring-blue-300
+      focus:border-transparent
+      transition-all
+    "
+    required
+  />
+
+
+  {form.dateOfBirth && (
+    <p className="mt-1 text-xs text-gray-500">
+      Age:{' '}
+      {(() => {
+        const dob = new Date(form.dateOfBirth);
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const m = today.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+        return age;
+      })()}{' '}
+      years
+    </p>
+  )}
+</div>
+
               <select
                 name="maritalStatus"
                 value={form.maritalStatus || ''}
@@ -916,15 +936,44 @@ if (CurrentUserType === null) return null;
                 <option value="divorcee">divorcee</option>
                 <option value="widower">widower</option>
               </select>
-              <input
-                type="email"
-                name="emailId"
-                value={form.emailId || ''}
-                onChange={handleChange}
-                placeholder="Email ID"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
-              />
+            <div className="space-y-2">
+  <input
+    type="email"
+    name="emailId"
+    value={form.emailId || ''}
+    onChange={handleChange}
+    placeholder="Email ID"
+    className="
+      input-field
+      border border-gray-300
+      p-3 h-10 w-full
+      rounded-lg
+      focus:ring-2 focus:ring-blue-300
+      focus:border-transparent
+      transition-all
+    "
+    required
+  />
+
+ 
+  <div className="flex justify-end">
+    <a
+      href="https://accounts.google.com/signup"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="
+        text-xs 
+        text-blue-600
+        hover:text-blue-700
+        hover:underline
+        transition
+      "
+    >
+      Don’t have an email? Create a Gmail account
+    </a>
+  </div>
+</div>
+
               <input
                 type="tel"
                 name="mobileNumber"
@@ -961,12 +1010,12 @@ if (CurrentUserType === null) return null;
                   Family Background
                 </h3>
 
-                {/* Earning Source Section */}
+    
                 <div className="rounded-2xl border border-gray-100">
                   <h3 className="flex justify-start text-grey-400 mb-2 text-center">
                     Earning Source
                   </h3>
-
+{!isOther ?
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {Relations.map((each) => (
                       <div
@@ -979,7 +1028,11 @@ if (CurrentUserType === null) return null;
                           id={each}
                           value={each}
                           className="w-5 h-5 accent-indigo-600 cursor-pointer"
-                          onChange={handleChange}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setForm({ ...form, earningSource: value });
+                            if (value === 'Other') setIsOther(true);
+                          }}
                         />
                         <label
                           htmlFor={each}
@@ -989,7 +1042,36 @@ if (CurrentUserType === null) return null;
                         </label>
                       </div>
                     ))}
-                  </div>
+       
+
+                  </div>:
+                           <input
+  type="text"
+  placeholder="If any other..."
+    name="earningSource"
+  className="
+    w-full
+    h-10
+    px-4
+    rounded-xl
+    border border-slate-300
+    bg-white
+    text-sm text-slate-700
+    placeholder-slate-400
+
+    shadow-sm
+    transition-all duration-200
+
+    hover:border-slate-400
+    focus:outline-none
+    focus:ring-2 focus:ring-gray-400
+    focus:border-gray-400
+
+    disabled:bg-slate-100
+    disabled:cursor-not-allowed
+  "
+  onChange={handleChange}
+/>}
                 </div>
 
                 {/* Siblings Section */}
@@ -1042,23 +1124,76 @@ if (CurrentUserType === null) return null;
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
               <input
-                type="text"
-                name="aadharCardNo"
-                value={form.aadharCardNo || ''}
-                onChange={handleChange}
-                placeholder="Aadhar Card No."
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
-              />
-              <input
-                type="text"
-                name="panNumber"
-                value={form.panNumber.toUpperCase() || ''}
-                onChange={handleChange}
-                placeholder="PAN Number"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
-              />
+  type="text"
+  name="aadharCardNo"
+  value={form.aadharCardNo || ''}
+  placeholder="Aadhaar Card No."
+  maxLength={14} 
+  onChange={(e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    value = value.slice(0, 12);
+
+  
+    const formatted = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+
+    setForm({
+      ...form,
+      aadharCardNo: formatted,
+    });
+  }}
+  className="
+    input-field
+    border border-gray-300
+    p-3 h-10 w-full
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent
+    transition-all
+  "
+  required
+/>
+
+             <input
+  type="text"
+  name="panNumber"
+  value={form.panNumber || ''}
+  placeholder="PAN Number"
+  maxLength={10}
+  onChange={(e) => {
+    let value = e.target.value.toUpperCase();
+
+   
+    value = value.replace(/[^A-Z0-9]/g, '');
+
+    
+    if (value.length <= 5) {
+      value = value.replace(/[^A-Z]/g, '');
+    } else if (value.length <= 9) {
+      value =
+        value.slice(0, 5) +
+        value.slice(5).replace(/[^0-9]/g, '');
+    } else {
+      value =
+        value.slice(0, 9) +
+        value.slice(9).replace(/[^A-Z]/g, '');
+    }
+
+    setForm({ ...form, panNumber: value });
+  }}
+  className="
+    input-field
+    border border-gray-300
+    p-3 h-10 w-full
+    rounded-lg
+    uppercase tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent
+    transition-all
+  "
+  required
+/>
+
               {/* <input
                   type="text"
                   name="voterIdNo"
@@ -1132,40 +1267,149 @@ if (CurrentUserType === null) return null;
                   d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                 />
               </svg>
-              Education & Professional Experience
+              Education & Professional Qualification
             </h3>
 
             {CurrentUserType === "HCA" ? <div className="space-y-5">
 
 
-              <input
-                type="text"
-                name="higherEducation"
-                value={form.higherEducation || ''}
-                onChange={handleChange}
-                placeholder="Higher Education ex:Tenth,inter"
-                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
-              <input
-                type="text"
-                name="professionalEducation"
-                value={form.professionalEducation || ''}
-                onChange={handleChange}
-                placeholder="Profetional Qualification ex:GDA, ANM Etc....."
-                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
+            <select
+  name="higherEducation"
+  value={form.higherEducation || ''}
+  onChange={handleChange}
+  className="
+    input-field w-full
+    border border-gray-300
+    p-2 h-11
+    rounded-lg
+    bg-white
+    text-sm text-gray-700
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent
+    transition-all
+  "
+>
+  <option value="" disabled>
+    Select Higher Education
+  </option>
 
-              <input
-                type="text"
-                name="OngoingStudy"
-                value={form.OngoingStudy || ''}
-                onChange={handleChange}
-                placeholder="Ongoing Study Ex:ANM, GNM, BSC(Nurseig)"
-                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
+  {EducationLevels.map((edu:any) => (
+    <option key={edu} value={edu}>
+      {edu}
+    </option>
+  ))}
+</select>
+
+     {!isOther?        <select
+  name="professionalEducation"
+  value={form.professionalEducation || ''}
+
+    onChange={(e) => {
+                            const value = e.target.value;
+                            setForm({ ...form, professionalEducation: value });
+                            if (value === 'Other') setIsOther(true);
+                          }}
+  className="
+    input-field w-full
+    border border-gray-300
+    p-2 h-11
+    rounded-lg
+    bg-white
+    text-sm text-gray-700
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent
+    transition-all
+  "
+>
+  <option value="" disabled>
+    Select Professional Qualification
+  </option>
+  <option value="General Duty Assistant (GDA)">
+    General Duty Assistant (GDA)
+  </option>
+  <option value="Other">Other</option>
+</select>
+:
+  <input
+    type="text"
+    name="professionalEducation"
+    placeholder="Enter Professional Qualification"
+    onChange={(e) =>
+      handleChange({
+        target: {
+          name: 'professionalEducation',
+          value: e.target.value,
+        },
+      } as any)
+    }
+    className="
+      input-field w-full mt-2
+      border border-gray-300
+      p-3 h-10
+      rounded-lg
+      focus:ring-2 focus:ring-blue-300
+      focus:border-transparent
+      transition-all
+    "
+  />}
+
+
+
+             <div className="space-y-3">
+
+ {!isOther? <select
+    name="OngoingStudy"
+    value={form.OngoingStudy||''}
+    onChange={(e) => {
+      const value = e.target.value;
+       if (value === 'Other') setIsOther(true);
+      setForm({
+        ...form,
+        OngoingStudy: value === "Other" ? "" : value,
+      });
+    }}
+    className="
+      input-field w-full
+      border border-gray-300
+      p-2 h-11
+      rounded-lg
+      bg-white
+      text-sm text-gray-700
+      focus:ring-2 focus:ring-blue-300
+      focus:border-transparent
+      transition-all
+    "
+  >
+    <option value="" disabled>
+      Select Ongoing Study
+    </option>
+    <option value="ANM">ANM</option>
+    <option value="GNM">GNM</option>
+    <option value="BSc (Nursing)">BSc (Nursing)</option>
+    <option value="Other">Other</option>
+  </select>:
+<input
+      type="text"
+      placeholder="Please specify ongoing study"
+      value={form.OngoingStudy}
+      onChange={(e) =>
+        setForm({ ...form, OngoingStudy: e.target.value })
+      }
+      className="
+        input-field w-full
+        border border-gray-300
+        p-3 h-10
+        rounded-lg
+        text-sm
+        focus:ring-2 focus:ring-blue-300
+        focus:border-transparent
+        transition-all
+      "
+      autoFocus
+    />}
+ 
+</div>
+
 
 
 
@@ -1337,20 +1581,34 @@ if (CurrentUserType === null) return null;
                 </div>
 
                 <div className="flex flex-wrap gap-2 items-center justify-center">
-                  {[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9].map((each: any) => (
-                    <button
-                      type="button"
-                      key={each}
-                      onClick={() => {
-                        setaddedheight(each);
-                        const current = parseFloat(form.height || "0") || 0;
-                        handleHeightChange("height", (current + each).toFixed(1));
-                      }}
-                      className="mt-3 px-2 py-1 bg-gray-500 text-white rounded-md text-[10px] sm:text-xs"
-                    >
-                      +{each} ft
-                    </button>
-                  ))}
+                 {[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9].map((each, index) => {
+  const isActive = addedheight === each;
+
+  return (
+    <button
+      type="button"
+      key={index}
+      onClick={() => {
+        setaddedheight(each);
+        const current = parseFloat(form.height || "0") || 0;
+        handleHeightChange("height", (current + each).toFixed(1));
+      }}
+      className={`
+        mt-3 px-2 py-1 text-[10px] sm:text-xs rounded-md
+        transition-all duration-200
+
+        ${
+          isActive
+            ? "bg-white text-blue-600 border-2 border-blue-600 shadow-sm"
+            : "bg-gray-500 text-white border border-transparent hover:bg-gray-600"
+        }
+      `}
+    >
+      +{each} ft
+    </button>
+  );
+})}
+
                   {form.height && (
                     <p className="mt-3 bg-pink-400 p-2 text-white rounded-md text-xs sm:text-sm text-center">
                       {form.height}ft {CurrentUserType} Height

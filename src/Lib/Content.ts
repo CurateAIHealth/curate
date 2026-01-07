@@ -1460,7 +1460,8 @@ export const Relations = [
   "Mother",
   "Brother",
   "Sister",
-  "Grandfather"
+  "Grandfather",
+  "Other"
 ];
 
 export const HyderabadAreas = [
@@ -2066,4 +2067,13 @@ export const hyderabadAreas = [
   "Medchal",
   "Tellapur",
   "Narsingi"
+];
+
+export const EducationLevels = [
+  "10th (Secondary School)",
+  "12th (Higher Secondary)",
+  "ITI",
+  "Diploma",
+  "Under Graduate (UG)",
+  "Post Graduate (PG)",
 ];

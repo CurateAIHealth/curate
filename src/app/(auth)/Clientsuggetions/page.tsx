@@ -75,8 +75,7 @@ const ClientSuggetions = () => {
         (each: any) =>
           each &&
           (each.userType === "HCA" ||
-            each.userType === "healthcare-assistant") &&
-          (each.ProfessionalSkills || each["Professional Skill"])
+          each.userType === "healthcare-assistant")
       );
 
       console.log("Filtered HCP Data:", filterHCP);
