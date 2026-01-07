@@ -51,7 +51,7 @@ type Props = {
 };
 
 const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
-  console.log('Check for Log---',hcps.length)
+ 
   const [selectedClientIndex, setSelectedClientIndex] = useState<number>(0);
   const [ExsitingInformedUsers, setExsitingInformedUsers] = useState<any[]>([]);
   const [StatusMessage, setStatusMessage] = useState('Test StatusMessage');
@@ -561,7 +561,7 @@ const filteredHcps = hcps.filter((hcp: any) =>
   !hcp.Status.includes("Assigned")
 );
 
-const suitableHcps = hcps.filter((hcp: any) => {
+const suitableHcps = filteredHcps.filter((hcp: any) => {
   const client = clients[selectedClientIndex];
   if (!client || loading) return false;
 
@@ -872,7 +872,7 @@ Search For HCP Criteria
                     No suitable HCPs found for this client.
                   </p>
                 ) : (
-                  <div className=" overflow-y-auto flex flex-wrap justify-center md:justify-start gap-3 md:gap-2 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 p-2">
+                  <div className="md:h-[550px] overflow-y-auto flex flex-wrap justify-center md:justify-start gap-3 md:gap-2 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 p-2">
                     {filteredHcps.map((hcp: any, idx: number) => {
                       const alreadyInformed = ExsitingInformedUsers.some(
                         (each) =>
