@@ -51,7 +51,7 @@ type Props = {
 };
 
 const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
-  console.log('Check for Log---',clients)
+  console.log('Check for Log---',hcps.length)
   const [selectedClientIndex, setSelectedClientIndex] = useState<number>(0);
   const [ExsitingInformedUsers, setExsitingInformedUsers] = useState<any[]>([]);
   const [StatusMessage, setStatusMessage] = useState('Test StatusMessage');
