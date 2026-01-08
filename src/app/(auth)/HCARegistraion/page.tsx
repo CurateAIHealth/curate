@@ -1,7 +1,7 @@
 'use client';
 
 import HCAMobileView from '@/Components/HCAMobileView/page';
-import { EducationLevels, Home_Assistance_Needs, IndianLanguages, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, PROFESSIONAL_SKILL_OPTIONS, REFERRAL_SOURCE_TYPES, Relations } from '@/Lib/Content';
+import { EducationLevels, Home_Assistance_Needs, IndianLanguages, mostPopularIndianCities, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, PROFESSIONAL_SKILL_OPTIONS, REFERRAL_SOURCE_TYPES, Relations } from '@/Lib/Content';
 import { v4 as uuidv4 } from 'uuid';
 import { GetRegidterdUsers, GetUserInformation, HCARegistration, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
 import { Update_Main_Filter_Status, UpdateDocmentSkipReason, UpdateRefresh, UpdateUserType } from '@/Redux/action';
@@ -144,7 +144,12 @@ const [ImportedVendors, setImportedVendors] = useState<any>([])
     motherContact:any;
     Husbend:any;
     HusbendContact:any;
-    referralSourceType:any
+    referralSourceType:any;
+    PermanentHouseNo:any;
+    PermanentCity:any;
+    CurrentCity:any;
+    CurrentHouseNo:any
+   
     // website?: string; // optional if commented
   }
 
@@ -201,8 +206,12 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
     earningSource: '',
     aadharCardNo: '',
     panNumber: '',
+    PermanentHouseNo:'',
+    PermanentCity:'',
     permanentAddress: '',
     currentAddress: '',
+    CurrentCity:'',
+    CurrentHouseNo:'',
     cityPostcodePermanent: '',
     cityPostcodeCurrent: '',
 
@@ -267,6 +276,7 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
     ConfirmPassword: '',
     PreviewUserType:CurrentUserType,
     referralSourceType:''
+    
   });
 
   const [isuserIdAvailable, setisuserIdAvailable] = useState<any>(null)
@@ -642,7 +652,9 @@ const HEIGHT_OPTIONS = Array.from(
             motherContact:form.motherContact,
             Husbend:form.Husbend,
             HusbendContact:form.HusbendContact,
-            referralSourceType:form.referralSourceType
+            referralSourceType:form.referralSourceType,
+            PermanentHouseNo:form.PermanentHouseNo,
+            PermanentCity:form.PermanentCity
           };
 
 
@@ -870,7 +882,7 @@ const HEIGHT_OPTIONS = Array.from(
 if (CurrentUserType === null) return null;
 
 
-console.log("check Update----",form.moleBodyMark2)
+console.log("check Update----",form.cityPostcodePermanent)
 
   const FilterdImportedVendorName = ImportedVendors.map((each: any) => each.VendorName)
 
@@ -1463,7 +1475,24 @@ console.log("check Update----",form.moleBodyMark2)
   "
   required
 />
-
+          <input
+  type="text"
+  name="PermanentHouseNo"
+  value={form.PermanentHouseNo || ''}
+  placeholder="House Number"
+  maxLength={10}
+  onChange={handleChange}
+  className="
+    input-field
+    border border-gray-300
+    p-3 h-10 w-full
+    rounded-lg
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent
+    transition-all
+  "
+  required
+/>
               {/* <input
                   type="text"
                   name="voterIdNo"
@@ -1491,16 +1520,46 @@ console.log("check Update----",form.moleBodyMark2)
               className="input-field resize-y h-18 border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
               required
             />
-            <input
-              type="text"
-              name="cityPostcodePermanent"
-              value={form.cityPostcodePermanent || ''}
-              onChange={handleChange}
-              placeholder="City & Postcode (Permanent)"
-              className="input-field border border-gray-300 p-3 h-8 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
-              required
-            />
-            <label className="flex items-center gap-2 mb-4 text-sm text-gray-700">
+           <select
+  name="PermanentCity"
+  value={form.PermanentCity || ""}
+  onChange={handleChange}
+  className="
+    input-field
+    border border-gray-300
+    p-2 h-11
+    rounded-lg
+    w-full
+    bg-white
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent
+    transition-all
+    mb-5
+  "
+  required
+>
+  <option value="" disabled>
+    Select City (Permanent)
+  </option>
+
+  {mostPopularIndianCities.map((city) => (
+    <option key={city} value={city}>
+      {city}
+    </option>
+  ))}
+</select>
+
+
+<input
+                  type="text"
+                  name="cityPostcodePermanent"
+                  value={form.cityPostcodePermanent}
+                  onChange={handleChange}
+                  placeholder="Post Code"
+                  className="input-field border border-gray-300 p-3 h-8 mb-1 w-full rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                  required
+                /> 
+<label className="flex items-center gap-2 mb-4 text-sm text-gray-700">
   <input
     type="checkbox"
     checked={sameAddress}
@@ -1511,8 +1570,10 @@ console.log("check Update----",form.moleBodyMark2)
       if (checked) {
         setForm((prev: any) => ({
           ...prev,
-          currentAddress: prev.permanentAddress,
-          cityPostcodeCurrent: prev.cityPostcodePermanent,
+          CurrentHouseNo: prev.PermanentHouseNo || '',
+          currentAddress: prev.permanentAddress || '',
+          CurrentCity: prev.PermanentCity || '',
+          cityPostcodeCurrent: prev.cityPostcodePermanent || '',
         }));
       }
     }}
@@ -1521,6 +1582,24 @@ console.log("check Update----",form.moleBodyMark2)
   Current address is same as permanent address
 </label>
 
+<input
+  type="text"
+  name="CurrentHouseNo"
+  value={form.CurrentHouseNo || ''}
+  placeholder="House Number"
+  maxLength={10}
+  onChange={handleChange}
+  className="
+    input-field
+    border border-gray-300
+    p-3 h-10 w-full
+    rounded-lg mb-2
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent
+    transition-all
+  "
+  required
+/>
             <textarea
               name="currentAddress"
               value={form.currentAddress || ''}
@@ -1529,12 +1608,42 @@ console.log("check Update----",form.moleBodyMark2)
               className="input-field resize-y h-18 border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
               required
             />
+
+                     <select
+  name="CurrentCity"
+  value={form.CurrentCity || ""}
+  onChange={handleChange}
+  className="
+    input-field
+    border border-gray-300
+    p-2 h-11
+    rounded-lg
+    w-full
+    bg-white
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent
+    transition-all
+    mb-5
+  "
+  required
+>
+  <option value="" disabled>
+    Select City (Permanent)
+  </option>
+
+  {mostPopularIndianCities.map((city) => (
+    <option key={city} value={city}>
+      {city}
+    </option>
+  ))}
+</select>
+
             <input
               type="text"
               name="cityPostcodeCurrent"
               value={form.cityPostcodeCurrent || ''}
               onChange={handleChange}
-              placeholder="City & Postcode (Current)"
+              placeholder="Postcode (Current)"
               className="input-field border border-gray-300 p-3 h-8 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               
             />

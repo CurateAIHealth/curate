@@ -1156,11 +1156,14 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "Mobile Number": encrypt(Info.mobileNumber),
       "Aadhar Card No": encrypt(Info.aadharCardNo),
       "PAN Number": Info.panNumber ? encrypt(Info.panNumber) : null,
+      "PermanentHouseNo":Info.PermanentHouseNo||"Not Provided",
+      "PermanentCity":Info.PermanentCity||"",
       "Voter ID No": Info.voterIdNo ? encrypt(Info.voterIdNo) : null,
       "Ration Card No": Info.rationCardNo ? encrypt(Info.rationCardNo) : null,
 
-      
+      "CurrentCity":Info.CurrentCity||'',
       "Permanent Address": Info.permanentAddress,
+      "CurrentHouseNo":Info.CurrentHouseNo||'',
       "Current Address": Info.currentAddress,
       "City/Postcode Permanent": Info.cityPostcodePermanent,
       "City/Postcode Current": Info.cityPostcodeCurrent,
