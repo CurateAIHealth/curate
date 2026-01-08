@@ -24,9 +24,9 @@ const green = "#50c896";
 
 const mainMenu = [
 
-    { label: "Home Health", icon: <BriefcaseMedical size={18} />, href: "/" },
-    { label: "Occupational Health", icon: <User size={18} />, href: "/occupational" },
-    { label: "Digital AI Health", icon: <User size={18} />, href: "/DigitalAI" },
+    { label: "Home Health", icon: <BriefcaseMedical size={18} />, href: "/ComeingSoon" },
+    { label: "Occupational Health", icon: <User size={18} />, href: "/ComeingSoon" },
+    { label: "Digital AI Health", icon: <User size={18} />, href: "/ComeingSoon" },
     { label: "About US", icon: <User size={18} />, href: "/AboutUS" },
     { label: "Login", icon: <LogIn size={18} />, href: "/sign-in" },
 ];
@@ -128,9 +128,9 @@ const ViewContactInfo=()=>{
                     </a>
                 </div>
                 <div className="hidden md:flex gap-7 items-center">
-                    {mainMenu.map((item) => (
+                    {mainMenu.map((item,Index) => (
                         <a
-                            key={item.href}
+                            key={Index}
                             href={item.href}
                             className="px-2 py-1 text-lg font-medium text-[#275f72] relative inline-block after:block after:h-[2px] after:bg-[#ff1493] after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300 after:origin-left"
                         >
