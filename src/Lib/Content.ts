@@ -469,12 +469,30 @@ export const filterColors: Record<string, string> = {
 
 
 export const PROFESSIONAL_SKILL_OPTIONS: string[] = [
-  "Diaper",
-  "Bedsore Management",
-  "Food Preparation",
-  "Vitals Monitoring",
+  "Diaper Care",
+  "Emergency Care",
+  "CPR",
+  "Ryle’s Tube Feeding",
+  "BiPAP Care",
+  "CPAP Care",
   "Oxygen Monitoring",
+  "Catheter Care",
+  "Stoma Bag Care",
+  "Infection Control",
+  "Other",
 ];
+
+export const Home_Assistance_Needs = [
+  "Emotional Support",
+  "Basic Medical Knowledge",
+  "Personal Care",
+  "Hygiene",
+  "Basic First Aid",
+  "Vital Sign Monitoring",
+  "Mobility Assistance",
+  "Other",
+];
+
 
 export const TestData = [
   {
@@ -1885,7 +1903,10 @@ export const PatientTypes=[ "Independent Patients",
   "Completely Bedridden",
   "Paralysis/Stroke Patients",
   "Post Surgery care",
-  "Fractures/Injury"]
+  "Fractures/Injury",
+  "Other"
+
+]
 
 export const NURSE_SPECIALTIES: string[] = [
   "General Nursing",

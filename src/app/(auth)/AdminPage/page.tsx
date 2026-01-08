@@ -367,10 +367,14 @@ sendWhatsApp("+919347877159","+919347877159");
 setUpdatedStatusMsg(err)
     }
   }
-  const toCamelCase = (value: string = "") =>
-  value
+const toCamelCase = (value?: string | null) => {
+  if (!value) return "Not Provided"; 
+
+  return value
     .toLowerCase()
     .replace(/\b\w/g, char => char.toUpperCase());
+};
+
 
 
 const ClientEnquiryUserInterFace = () => {
@@ -567,7 +571,7 @@ const ClientEnquiryUserInterFace = () => {
                         </div>
                       </td>
                       {/* <td className="px-2 py-2 break-words">{user?.Email?.toLowerCase()||"Not Provided"}</td> */}
-                      <td className="px-2 py-2">+91{user.Contact}</td>
+                      <td className="px-2 py-2">+91{user?.Contact||"Not Provided"}</td>
                       {/* <td className="px-2 py-2">
                         <span className="px-2 sm:px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-[9px] sm:text-xs">
                           {user.userType === "healthcare-assistant" ? "HCA" : user.userType}

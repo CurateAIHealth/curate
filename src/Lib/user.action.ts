@@ -1136,6 +1136,7 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "Title": Info.title,
       "First Name": encrypt(Info.firstName),
       "Surname": encrypt(Info.surname),
+      "LastName":Info.lastName,
       "Father Name":Info.fatherName? encrypt(Info.fatherName):null,
       'FatherContact':Info.fatherNameContact||null,
       "MotherContact":Info.motherContact||null,
