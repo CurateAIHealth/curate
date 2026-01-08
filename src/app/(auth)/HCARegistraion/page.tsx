@@ -1,7 +1,7 @@
 'use client';
 
 import HCAMobileView from '@/Components/HCAMobileView/page';
-import { EducationLevels, Home_Assistance_Needs, IndianLanguages, mostPopularIndianCities, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, PROFESSIONAL_SKILL_OPTIONS, REFERRAL_SOURCE_TYPES, Relations } from '@/Lib/Content';
+import { EducationLevels, Home_Assistance_Needs, IndianCapitalCities, IndianLanguages, IndianStates, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, PROFESSIONAL_SKILL_OPTIONS, REFERRAL_SOURCE_TYPES, Relations } from '@/Lib/Content';
 import { v4 as uuidv4 } from 'uuid';
 import { GetRegidterdUsers, GetUserInformation, HCARegistration, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
 import { Update_Main_Filter_Status, UpdateDocmentSkipReason, UpdateRefresh, UpdateUserType } from '@/Redux/action';
@@ -24,9 +24,13 @@ export default function DoctorProfileForm() {
   const [isOther, setIsOther] = useState(false);
   const [IsOtherReferal, setIsOtherReferal] = useState(false);
   const [isOtherProfetionalEducation, setIsOtherProfetionalEducation] = useState(false);
+  const [isOtherhigherEducation,setisOtherhigherEducation]=useState(false)
   const [isOtherOngoingEducation, setIsOtherOngoingEducation] = useState(false);
   const [isOtherPreviousHealthProblems, setIsOtherPreviousHealthProblems] = useState(false);
   const [OtherDeformity,setOtherDeformity]=useState(false)
+  const [OtherPermanentCity,setOtherPermanentCity]=useState(false)
+  const [OtherCurrentCity,setOtherCurrentCity]=useState(false)
+  const [isOtherCurrentHealthProblems,setisOtherCurrentHealthProblems]=useState(false)
   const [isOtherReferralSourceType, setIsOtherReferralSourceType] = useState(false);
   const [isOtherProfessionalSkills,setisOtherProfessionalSkills]=useState(false)
     const [isOtherHairColour,setisOtherHairColour]=useState(false)
@@ -79,6 +83,7 @@ const [ImportedVendors, setImportedVendors] = useState<any>([])
     // rationCardNo?: string;
     permanentAddress: any;
     currentAddress: any;
+    CurrentState:any;
     cityPostcodePermanent: string;
     cityPostcodeCurrent: string;
     SiblingsInfo: any,
@@ -123,7 +128,7 @@ const [ImportedVendors, setImportedVendors] = useState<any>([])
     serviceHours12hrs: boolean;
     serviceHours24hrs: boolean;
     preferredService: string;
-    paymentService: string;
+    PaymentforStaff: string;
     paymentBankName: string;
     paymentBankAccountNumber: string;
     ifscCode: string;
@@ -148,7 +153,11 @@ const [ImportedVendors, setImportedVendors] = useState<any>([])
     PermanentHouseNo:any;
     PermanentCity:any;
     CurrentCity:any;
-    CurrentHouseNo:any
+    CurrentHouseNo:any;
+    Guardian:any;
+    GuardianContact:any;
+    PermanentState:any;
+    NotedDtaeForHike:any;
    
     // website?: string; // optional if commented
   }
@@ -211,6 +220,7 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
     permanentAddress: '',
     currentAddress: '',
     CurrentCity:'',
+    CurrentState:'',
     CurrentHouseNo:'',
     cityPostcodePermanent: '',
     cityPostcodeCurrent: '',
@@ -258,7 +268,7 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
     serviceHours12hrs: true,
     serviceHours24hrs: false,
     preferredService: '',
-    paymentService: '',
+    PaymentforStaff: '',
     paymentBankName: '',
     paymentBankAccountNumber: '',
     ifscCode: '',
@@ -275,7 +285,11 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
     Password: '',
     ConfirmPassword: '',
     PreviewUserType:CurrentUserType,
-    referralSourceType:''
+    referralSourceType:'',
+    Guardian:'',
+    GuardianContact:'',
+    PermanentState:'',
+    NotedDtaeForHike:'',
     
   });
 
@@ -882,7 +896,7 @@ const HEIGHT_OPTIONS = Array.from(
 if (CurrentUserType === null) return null;
 
 
-console.log("check Update----",form.cityPostcodePermanent)
+console.log("check Update----",form.higherEducation)
 
   const FilterdImportedVendorName = ImportedVendors.map((each: any) => each.VendorName)
 
@@ -984,8 +998,10 @@ console.log("check Update----",form.cityPostcodePermanent)
         className="md:w-full p-8 space-y-8 overflow-y-auto custom-scrollbar h-full"
       >
 
-        <div className='md:flex  justify-center gap-2'>
-          <section className="md:w-1/2  pl-4 mt-2 p-2 rounded-xl shadow-xl border border-gray-400">
+     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-[1600px] mx-auto px-4">
+
+         <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
+
 
             <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
               <svg
@@ -1004,7 +1020,7 @@ console.log("check Update----",form.cityPostcodePermanent)
               </svg>
               Personal Information
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+         
               {/* <input
                   type="text"
                   name="title"
@@ -1015,14 +1031,23 @@ console.log("check Update----",form.cityPostcodePermanent)
                   required
                 /> */}
 
-                    <input
+              <input
                 type="text"
                 name="surname"
                 value={form.surname || ''}
                 onChange={handleChange}
                 placeholder="Surname"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
+              className="
+    input-field md:w-[200px] w-full
+    border border-gray-300
+    p-1 h-10 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
+
               />
 
               <input
@@ -1031,7 +1056,16 @@ console.log("check Update----",form.cityPostcodePermanent)
                 value={form.firstName || ''}
                 onChange={handleChange}
                 placeholder="First Name"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+ className="
+    input-field  md:w-[200px] w-full
+    border border-gray-300
+    p-1 h-10 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
                 required
               />
               <input
@@ -1040,77 +1074,217 @@ console.log("check Update----",form.cityPostcodePermanent)
                 value={form.lastName || ''}
                 onChange={handleChange}
                 placeholder="Last Name"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+className="
+    input-field md:w-[200px] w-full
+    border border-gray-300
+    p-1 h-10 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
                 required
               />
-          
+
               <input
                 type="text"
                 name="fatherName"
                 value={form.fatherName || ''}
                 onChange={handleChange}
                 placeholder="Father's Name"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
+className="
+    input-field md:w-[200px] w-full
+    border border-gray-300
+    p-1 h-10 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent
+    transition-all m-1
+  "
               />
-                <input
-                type="text"
+              <input
+                type="tel"
                 name="fatherNameContact"
-                value={form.fatherNameContact || ''}
-                onChange={handleChange}
+        className="
+    input-field md:w-[200px] w-full
+    border border-gray-300
+    p-1 h-10 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
+                value={form.fatherNameContact || ""}
+                onChange={(e) => {
+
+                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setForm({ ...form, fatherNameContact: value });
+                }}
                 placeholder="Father's Contact"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+           
                 required
               />
+              {form.fatherNameContact &&
+                !/^[6-9]\d{9}$/.test(form.fatherNameContact) && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Enter a valid Indian mobile number
+                  </p>
+                )}
+
               <input
                 type="text"
                 name="motherName"
                 value={form.motherName || ''}
                 onChange={handleChange}
                 placeholder="Mother's Name"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                       className="
+    input-field md:w-[200px] w-full
+    border border-gray-300
+    p-1 h-10 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
                 required
               />
               <input
-                type="text"
+                type="tel"
                 name="motherContact"
-                value={form.motherContact || ''}
-                onChange={handleChange}
+                value={form.motherContact || ""}
+                onChange={(e) => {
+
+                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setForm({ ...form, motherContact: value });
+                }}
                 placeholder="Mother's Contact"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
+        className="
+    input-field md:w-[200px] w-full
+    border border-gray-300
+    p-1 h-10 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
               />
-                <input
+              {form.motherContact &&
+                !/^[6-9]\d{9}$/.test(form.motherContact) && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Enter a valid Indian mobile number
+                  </p>
+                )}
+
+              <input
                 type="text"
                 name="Husbend"
                 value={form.Husbend || ''}
                 onChange={handleChange}
                 placeholder="Husband Name"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
+        className="
+    input-field md:w-[200px] w-full
+    border border-gray-300
+    p-1 h-10 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
+
               />
-               <input
-                type="text"
+              <input
+                type="tel"
                 name="HusbendContact"
-                value={form.HusbendContact || ''}
-                onChange={handleChange}
+                value={form.HusbendContact || ""}
+                onChange={(e) => {
+
+                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setForm({ ...form, HusbendContact: value });
+                }}
                 placeholder="Husband Contact"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
+                   className="
+    input-field md:w-[200px] w-full
+    border border-gray-300
+    p-1 h-10 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
               />
-              {/* <input
-                  type="text"
-                  name="husbandName"
-                  value={form.husbandName}
-                  onChange={handleChange}
-                  placeholder="Husband's Name"
-                  className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                /> */}
+              {form.HusbendContact &&
+                !/^[6-9]\d{9}$/.test(form.HusbendContact) && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Enter a valid Indian mobile number
+                  </p>
+                )}
+
+              <input
+                type="text"
+                name="Guardian"
+                value={form.Guardian}
+                onChange={handleChange}
+                placeholder="Guardian Name"
+        className="
+    input-field md:w-[200px] w-full
+    border border-gray-300
+    p-1 h-10 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
+              />
+              <input
+                type="tel"
+                name="GuardianContact"
+                value={form.GuardianContact || ""}
+                onChange={(e) => {
+
+                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setForm({ ...form, GuardianContact: value });
+                }}
+                placeholder="Guardian Contact "
+        className="
+    input-field md:w-[200px] w-full
+    border border-gray-300
+    p-1 h-10 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
+              />
+              {form.GuardianContact &&
+                !/^[6-9]\d{9}$/.test(form.GuardianContact) && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Enter a valid Indian mobile number
+                  </p>
+                )}
+
               <select
                 name="gender"
                 value={form.gender || ''}
                 onChange={handleChange}
-                className="input-field border h-8 border-gray-300 pl-2 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all appearance-none bg-white pr-8"
+        className="
+    input-field md:w-[200px] w-full
+    border border-gray-300
+    p-1 h-10 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
                 required
               >
                 <option value="">Select Gender</option>
@@ -1118,53 +1292,21 @@ console.log("check Update----",form.cityPostcodePermanent)
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
               </select>
-           <div className="relative mt-4">
-
-  <label
-    htmlFor="dateOfBirth"
-    className="absolute -top-2 left-3 bg-white px-1 text-xs font-medium text-gray-600"
-  >
-    Date of Birth
-  </label>
-
-  <input
-    id="dateOfBirth"
-    type="date"
-    name="dateOfBirth"
-    value={form.dateOfBirth || ''}
-    onChange={handleChange}
-    className="
-      input-field
-      border p-3 h-10 rounded-lg w-full
-      focus:ring-2 focus:ring-blue-300
-      focus:border-transparent
-      transition-all
-    "
-    required
-  />
-
-
-  {form.dateOfBirth && (
-    <p className="mt-1 text-xs text-gray-500">
-      Age:{' '}
-      {(() => {
-        const dob = new Date(form.dateOfBirth);
-        const today = new Date();
-        let age = today.getFullYear() - dob.getFullYear();
-        const m = today.getMonth() - dob.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-        return age;
-      })()}{' '}
-      years
-    </p>
-  )}
-</div>
 
               <select
                 name="maritalStatus"
                 value={form.maritalStatus || ''}
                 onChange={handleChange}
-                className="input-field border border-gray-300 h-8 pl-2 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all appearance-none bg-white pr-8"
+        className="
+    input-field w-full
+    border border-gray-300
+    p-1 h-8 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
                 required
               >
                 <option value="">Select Marital Status</option>
@@ -1173,94 +1315,99 @@ console.log("check Update----",form.cityPostcodePermanent)
                 <option value="Divorcee">Divorcee</option>
                 <option value="Widower">Widower</option>
               </select>
-            <div className="space-y-2">
-  <input
-    type="email"
-    name="emailId"
-    value={form.emailId || ''}
-    onChange={handleChange}
-    placeholder="Email ID"
-    className="
-      input-field
+              <div className="space-y-2 p-1 w-full">
+                <input
+                  type="email"
+                  name="emailId"
+                  value={form.emailId || ''}
+                  onChange={handleChange}
+                  placeholder="Email ID"
+                  className="
+      input-field 
       border border-gray-300
-      p-3 h-10 w-full
+      p-3 h-8 w-full
       rounded-lg
       focus:ring-2 focus:ring-blue-300
       focus:border-transparent
       transition-all
     "
-    required
-  />
+                  required
+                />
 
- 
-  <div className="flex justify-end">
-    <a
-      href="https://accounts.google.com/signup"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="
-        text-xs 
+
+                <div className="flex justify-end">
+                  <a
+                    href="https://accounts.google.com/signup"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="
+        text-xs  
         text-blue-600
         hover:text-blue-700
         hover:underline
         transition
       "
-    >
-      Don’t have an email? Create a Gmail account
-    </a>
-  </div>
-</div>
+                  >
+                    Don’t have an email? Create a Gmail account
+                  </a>
+                </div>
+              </div>
 
-              <div className="flex flex-col gap-1">
-  <label className="text-sm font-medium text-gray-600">
-    Mobile Number
-  </label>
+              <div className="flex flex-col gap-1 p-1 h-10">
 
-  <input
-    type="tel"
-    name="mobileNumber"
-    value={form?.mobileNumber ?? ""}
-    inputMode="numeric"
-    autoComplete="tel"
-    maxLength={10}
-    placeholder="Enter 10-digit mobile number"
-    onChange={(e) => {
-      const digitsOnly = e.target.value.replace(/\D/g, "");
+                <input
+                  type="tel"
+                  name="mobileNumber"
+                  value={form?.mobileNumber ?? ""}
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  maxLength={10}
+                  placeholder="Enter 10-digit mobile number"
+                  onChange={(e) => {
+                    const digitsOnly = e.target.value.replace(/\D/g, "");
 
-      // 🔒 hard guard (anti-collapse)
-      if (digitsOnly.length > 10) return;
+               
+                    if (digitsOnly.length > 10) return;
 
-      setForm((prev: any) => ({
-        ...prev,
-        mobileNumber: digitsOnly,
-      }));
-    }}
-    className={`
-      input-field p-3 h-8 rounded-lg transition-all
+                    setForm((prev: any) => ({
+                      ...prev,
+                      mobileNumber: digitsOnly,
+                    }));
+                  }}
+                  className={`
+      input-field  p-1 h-11 rounded-lg transition-all  w-full
       focus:outline-none focus:border-transparent
-      ${
-        form.mobileNumber &&
-        !isValidIndianMobile(form.mobileNumber)
-          ? "border border-red-400 focus:ring-2 focus:ring-red-300"
-          : "border border-gray-300 focus:ring-2 focus:ring-blue-300"
-      }
+      ${form.mobileNumber &&
+                      !isValidIndianMobile(form.mobileNumber)
+                      ? "border border-red-400 focus:ring-2 focus:ring-red-300"
+                      : "border border-gray-300 focus:ring-2 focus:ring-blue-300"
+                    }
     `}
-    required
-  />
+                  required
+                />
 
-  {form.mobileNumber &&
-    !isValidIndianMobile(form.mobileNumber) && (
-      <p className="text-xs text-red-500 mt-1">
-        Enter a valid 10-digit Indian mobile number.
-      </p>
-    )}
-</div>
+                {form.mobileNumber &&
+                  !isValidIndianMobile(form.mobileNumber) && (
+                    <p className="text-xs text-red-500 mt-1">
+                      Enter a valid 10-digit Indian mobile number.
+                    </p>
+                  )}
+              </div>
 
-              
+
               <select name="languages"
                 value={form.languages || ''}
                 onChange={handleChange}
-                className="w-full border h-[31px] border-gray-300  rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+        className="
+    input-field w-full mb-1
+    border border-gray-300
+    p-1 h-8
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
               >
                 <option value="">Select Language</option>
 
@@ -1271,10 +1418,55 @@ console.log("check Update----",form.cityPostcodePermanent)
                 ))}
 
               </select>
-            </div>
+              <div className="relative w-full">
+
+                <label
+                  htmlFor="dateOfBirth"
+                  className="absolute left-3 bg-white px-1 text-xs font-medium text-gray-600"
+                >
+                  Date of Birth
+                </label>
+
+                <input
+                  id="dateOfBirth"
+                  type="date"
+                  name="dateOfBirth"
+                  value={form.dateOfBirth || ''}
+                  onChange={handleChange}
+               className="
+    input-field w-full mt-4
+    border border-gray-300
+    p-1 h-8 
+    rounded-lg
+    tracking-widest
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent m-1
+    transition-all
+  "
+                  required
+                />
+
+
+                {form.dateOfBirth && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Age:{' '}
+                    {(() => {
+                      const dob = new Date(form.dateOfBirth);
+                      const today = new Date();
+                      let age = today.getFullYear() - dob.getFullYear();
+                      const m = today.getMonth() - dob.getMonth();
+                      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+                      return age;
+                    })()}{' '}
+                    years
+                  </p>
+                )}
+              </div>
+
+            
             {((CurrentUserType === "HCA") || (CurrentUserType === "HCN")) && (
               <div>
-              
+
                 <h3 className="text-md font-semibold text-[#ff1493] mt-3 pb-3 border-b border-blue-200 flex items-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -1298,50 +1490,50 @@ console.log("check Update----",form.cityPostcodePermanent)
                   Family Background
                 </h3>
 
-    
+
                 <div className="rounded-2xl border border-gray-100">
                   <h3 className="flex justify-start text-grey-400 mb-2 text-center">
                     Earning Source
                   </h3>
-<div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-  {Relations.map((each) => (
-    <label
-      key={each}
-      className="flex items-center space-x-2 bg-white border hover:bg-indigo-100 p-2 rounded-lg transition-all duration-200 cursor-pointer"
-    >
-      <input
-        type="radio"
-        name="earningSource"
-        value={each}
-        checked={form.earningSource === each}
-        className="w-5 h-5 accent-indigo-600"
-        onChange={(e) => {
-          const value = e.target.value;
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {Relations.map((each) => (
+                      <label
+                        key={each}
+                        className="flex items-center space-x-2 bg-white border hover:bg-indigo-100 p-2 rounded-lg transition-all duration-200 cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          name="earningSource"
+                          value={each}
+                          checked={form.earningSource === each}
+                          className="w-5 h-5 accent-indigo-600"
+                          onChange={(e) => {
+                            const value = e.target.value;
 
-          setForm((prev: any) => ({
-            ...prev,
-            earningSource: value === "Other" ? "" : value,
-          }));
+                            setForm((prev: any) => ({
+                              ...prev,
+                              earningSource: value === "Other" ? "" : value,
+                            }));
 
-          setIsOther(value === "Other");
-        }}
-      />
-      <span className="text-gray-700 font-medium text-[13px]">
-        {each}
-      </span>
-    </label>
-  ))}
-</div>
+                            setIsOther(value === "Other");
+                          }}
+                        />
+                        <span className="text-gray-700 font-medium text-[13px]">
+                          {each}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
 
 
-{isOther && (
-  <div className="mt-3">
-    <input
-      type="text"
-      name="earningSource"
-      placeholder="Please specify..."
-      value={form.earningSource || ""}
-      className="
+                  {isOther && (
+                    <div className="mt-3">
+                      <input
+                        type="text"
+                        name="earningSource"
+                        placeholder="Please specify..."
+                        value={form.earningSource || ""}
+                        className="
         w-full h-10 px-4 rounded-xl
         border border-slate-300 bg-white
         text-sm text-slate-700
@@ -1349,14 +1541,14 @@ console.log("check Update----",form.cityPostcodePermanent)
         shadow-sm transition-all duration-200
         focus:outline-none focus:ring-2 focus:ring-gray-400
       "
-      onChange={handleChange}
-    />
-  </div>
-)}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  )}
 
                 </div>
 
-              
+
                 <div className="mt-2 rounded-2xl border border-gray-100">
                   <h3 className="flex justify-start text-grey-400 mb-2 text-center">
                     Siblings
@@ -1386,7 +1578,8 @@ console.log("check Update----",form.cityPostcodePermanent)
 
           </section>
 
-          <section className="md:w-1/2  pl-4 mt-2 p-2 rounded-xl shadow-xl border border-gray-400">
+          <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
+
             <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -1406,24 +1599,24 @@ console.log("check Update----",form.cityPostcodePermanent)
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
               <input
-  type="text"
-  name="aadharCardNo"
-  value={form.aadharCardNo || ''}
-  placeholder="Aadhaar Card No."
-  maxLength={14} 
-  onChange={(e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    value = value.slice(0, 12);
+                type="text"
+                name="aadharCardNo"
+                value={form.aadharCardNo || ''}
+                placeholder="Aadhaar Card No."
+                maxLength={14}
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, '');
+                  value = value.slice(0, 12);
 
-  
-    const formatted = value.replace(/(\d{4})(?=\d)/g, '$1 ');
 
-    setForm({
-      ...form,
-      aadharCardNo: formatted,
-    });
-  }}
-  className="
+                  const formatted = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+
+                  setForm({
+                    ...form,
+                    aadharCardNo: formatted,
+                  });
+                }}
+                className="
     input-field
     border border-gray-300
     p-3 h-10 w-full
@@ -1433,37 +1626,37 @@ console.log("check Update----",form.cityPostcodePermanent)
     focus:border-transparent
     transition-all
   "
-  required
-/>
+                required
+              />
 
-             <input
-  type="text"
-  name="panNumber"
-  value={form.panNumber || ''}
-  placeholder="PAN Number"
-  maxLength={10}
-  onChange={(e) => {
-    let value = e.target.value.toUpperCase();
+              <input
+                type="text"
+                name="panNumber"
+                value={form.panNumber || ''}
+                placeholder="PAN Number"
+                maxLength={10}
+                onChange={(e) => {
+                  let value = e.target.value.toUpperCase();
 
-   
-    value = value.replace(/[^A-Z0-9]/g, '');
 
-    
-    if (value.length <= 5) {
-      value = value.replace(/[^A-Z]/g, '');
-    } else if (value.length <= 9) {
-      value =
-        value.slice(0, 5) +
-        value.slice(5).replace(/[^0-9]/g, '');
-    } else {
-      value =
-        value.slice(0, 9) +
-        value.slice(9).replace(/[^A-Z]/g, '');
-    }
+                  value = value.replace(/[^A-Z0-9]/g, '');
 
-    setForm({ ...form, panNumber: value });
-  }}
-  className="
+
+                  if (value.length <= 5) {
+                    value = value.replace(/[^A-Z]/g, '');
+                  } else if (value.length <= 9) {
+                    value =
+                      value.slice(0, 5) +
+                      value.slice(5).replace(/[^0-9]/g, '');
+                  } else {
+                    value =
+                      value.slice(0, 9) +
+                      value.slice(9).replace(/[^A-Z]/g, '');
+                  }
+
+                  setForm({ ...form, panNumber: value });
+                }}
+                className="
     input-field
     border border-gray-300
     p-3 h-10 w-full
@@ -1473,26 +1666,9 @@ console.log("check Update----",form.cityPostcodePermanent)
     focus:border-transparent
     transition-all
   "
-  required
-/>
-          <input
-  type="text"
-  name="PermanentHouseNo"
-  value={form.PermanentHouseNo || ''}
-  placeholder="House Number"
-  maxLength={10}
-  onChange={handleChange}
-  className="
-    input-field
-    border border-gray-300
-    p-3 h-10 w-full
-    rounded-lg
-    focus:ring-2 focus:ring-blue-300
-    focus:border-transparent
-    transition-all
-  "
-  required
-/>
+                required
+              />
+
               {/* <input
                   type="text"
                   name="voterIdNo"
@@ -1512,6 +1688,24 @@ console.log("check Update----",form.cityPostcodePermanent)
                   required
                 /> */}
             </div>
+            <input
+              type="text"
+              name="PermanentHouseNo"
+              value={form.PermanentHouseNo || ''}
+              placeholder="House Number"
+              maxLength={10}
+              onChange={handleChange}
+              className="
+    input-field w-full mb-4
+    border border-gray-300
+    p-3 h-10 w-full
+    rounded-lg
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent
+    transition-all
+  "
+              required
+            />
             <textarea
               name="permanentAddress"
               value={form.permanentAddress || ''}
@@ -1520,11 +1714,18 @@ console.log("check Update----",form.cityPostcodePermanent)
               className="input-field resize-y h-18 border border-gray-300 p-3 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all mb-5"
               required
             />
-           <select
-  name="PermanentCity"
-  value={form.PermanentCity || ""}
-  onChange={handleChange}
-  className="
+            <select
+              name="PermanentCity"
+              value={form.PermanentCity || ""}
+
+              onChange={(e) => {
+                const value = e.target.value;
+                setForm({ ...form, PermanentCity: value === "Other" ? '' : value });
+                setOtherPermanentCity(value === 'Other')
+
+
+              }}
+              className="
     input-field
     border border-gray-300
     p-2 h-11
@@ -1536,60 +1737,106 @@ console.log("check Update----",form.cityPostcodePermanent)
     transition-all
     mb-5
   "
-  required
->
-  <option value="" disabled>
-    Select City (Permanent)
-  </option>
+              required
+            >
+              <option value="Select City " >
+                Select City
+              </option>
 
-  {mostPopularIndianCities.map((city) => (
-    <option key={city} value={city}>
-      {city}
-    </option>
-  ))}
-</select>
+              {IndianCapitalCities.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
+
+            {OtherPermanentCity && <input
+              type="text"
+              name="PermanentCity"
+              placeholder="Please specify Other"
+              className="w-full mb-2 border border-gray-300 p-2 h-11 rounded-lg
+                 focus:ring-2 focus:ring-blue-300 focus:border-transparent
+                 transition-all"
+              onChange={(e) =>
+                setForm((prev: any) => ({
+                  ...prev,
+                  PermanentCity: e.target.value,
+                }))
+
+              }
+            />}
+
+            <select
+              name="PermanentState"
+              value={form.PermanentState || ""}
+              onChange={handleChange}
+              className="
+    input-field
+    border border-gray-300
+    p-2 h-11
+    rounded-lg
+    w-full
+    bg-white
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent
+    transition-all
+    mb-5
+  "
+              required
+            >
+              <option value="" disabled>
+                Select State
+              </option>
+
+              {IndianStates.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
 
 
-<input
-                  type="text"
-                  name="cityPostcodePermanent"
-                  value={form.cityPostcodePermanent}
-                  onChange={handleChange}
-                  placeholder="Post Code"
-                  className="input-field border border-gray-300 p-3 h-8 mb-1 w-full rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  required
-                /> 
-<label className="flex items-center gap-2 mb-4 text-sm text-gray-700">
-  <input
-    type="checkbox"
-    checked={sameAddress}
-    onChange={(e) => {
-      const checked = e.target.checked;
-      setSameAddress(checked);
+            <input
+              type="text"
+              name="cityPostcodePermanent"
+              value={form.cityPostcodePermanent}
+              onChange={handleChange}
+              placeholder="Post Code"
+              className="input-field border border-gray-300 p-3 h-8 mb-1 w-full rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+              required
+            />
+            <label className="flex items-center gap-2 mb-4 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={sameAddress}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setSameAddress(checked);
 
-      if (checked) {
-        setForm((prev: any) => ({
-          ...prev,
-          CurrentHouseNo: prev.PermanentHouseNo || '',
-          currentAddress: prev.permanentAddress || '',
-          CurrentCity: prev.PermanentCity || '',
-          cityPostcodeCurrent: prev.cityPostcodePermanent || '',
-        }));
-      }
-    }}
-    className="accent-blue-600"
-  />
-  Current address is same as permanent address
-</label>
+                  if (checked) {
+                    setForm((prev: any) => ({
+                      ...prev,
+                      CurrentHouseNo: prev.PermanentHouseNo || '',
+                      currentAddress: prev.permanentAddress || '',
+                      CurrentCity: prev.PermanentCity || '',
+                      cityPostcodeCurrent: prev.cityPostcodePermanent || '',
+                      CurrentState: prev.PermanentState || '',
+                    }));
+                  }
+                }}
+                className="accent-blue-600"
+              />
+              Current address is same as permanent address
+            </label>
 
-<input
-  type="text"
-  name="CurrentHouseNo"
-  value={form.CurrentHouseNo || ''}
-  placeholder="House Number"
-  maxLength={10}
-  onChange={handleChange}
-  className="
+            <input
+              type="text"
+              name="CurrentHouseNo"
+              value={form.CurrentHouseNo || ''}
+              placeholder="House Number"
+              maxLength={10}
+              onChange={handleChange}
+              className="
     input-field
     border border-gray-300
     p-3 h-10 w-full
@@ -1598,8 +1845,8 @@ console.log("check Update----",form.cityPostcodePermanent)
     focus:border-transparent
     transition-all
   "
-  required
-/>
+              required
+            />
             <textarea
               name="currentAddress"
               value={form.currentAddress || ''}
@@ -1609,11 +1856,17 @@ console.log("check Update----",form.cityPostcodePermanent)
               required
             />
 
-                     <select
-  name="CurrentCity"
-  value={form.CurrentCity || ""}
-  onChange={handleChange}
-  className="
+            <select
+              name="CurrentCity"
+              value={form.CurrentCity || ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                setForm({ ...form, CurrentCity: value === "Other" ? '' : value });
+                setOtherCurrentCity(value === 'Other')
+
+
+              }}
+              className="
     input-field
     border border-gray-300
     p-2 h-11
@@ -1625,33 +1878,291 @@ console.log("check Update----",form.cityPostcodePermanent)
     transition-all
     mb-5
   "
-  required
->
-  <option value="" disabled>
-    Select City (Permanent)
-  </option>
+              required
+            >
+              <option value="" disabled>
+                Select City
+              </option>
 
-  {mostPopularIndianCities.map((city) => (
-    <option key={city} value={city}>
-      {city}
-    </option>
-  ))}
-</select>
+              {IndianCapitalCities.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
+
+            {OtherCurrentCity && <input
+              type="text"
+              name="CurrentCity"
+              value={form.CurrentCity || ''}
+              onChange={handleChange}
+              placeholder="City (Current)"
+              className="input-field border border-gray-300 p-3 h-8 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+
+            />}
+            <select
+              name="CurrentState"
+              value={form.CurrentState || ""}
+              onChange={handleChange}
+              className="
+    input-field
+    border border-gray-300
+    p-2 h-11
+    rounded-lg
+    w-full
+    bg-white
+    focus:ring-2 focus:ring-blue-300
+    focus:border-transparent
+    transition-all
+    mb-5
+  "
+              required
+            >
+              <option value="" disabled>
+                Select State
+              </option>
+
+              {IndianStates.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
 
             <input
               type="text"
               name="cityPostcodeCurrent"
-              value={form.cityPostcodeCurrent || ''}
+              value={form.cityPostcodeCurrent}
               onChange={handleChange}
-              placeholder="Postcode (Current)"
-              className="input-field border border-gray-300 p-3 h-8 rounded-lg w-full focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-              
+              placeholder="Post Code"
+              className="input-field border border-gray-300 p-3 h-8 mb-1 w-full rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+              required
             />
           </section>
+          <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
 
-        </div>
-        <div className='md:flex  justify-center gap-2'>
-          <section className="md:w-1/2  pl-4 mt-2 p-2 rounded-xl shadow-xl border border-gray-400">
+            <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2 text-[#6366f1]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Professional Skills
+            </h3>
+
+
+
+            <div className="space-y-3">
+              {PROFESSIONAL_SKILL_OPTIONS.map((skill) => (
+                <label
+                  key={skill}
+                  className="flex items-start gap-2 text-sm text-gray-700"
+                >
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 accent-purple-600 shrink-0"
+                    checked={form.professionalSkill.includes(skill)}
+                    onChange={() => handleprofessionalSkillChange(skill)}
+                  />
+                  <span className="leading-snug">{skill}</span>
+                </label>
+              ))}
+            </div>
+
+            {isOtherSelected && (
+              <input
+                type="text"
+                placeholder="Please specify other professional skill"
+                className="w-full mt-3 border border-gray-300 p-3 h-10 rounded-lg
+               focus:ring-2 focus:ring-blue-300 focus:border-transparent
+               transition-all"
+                value={
+                  form.professionalSkill.find((s: any) => s.startsWith("Other:"))?.replace("Other:", "") || ""
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  setForm((prev: any) => {
+                    const withoutOldOther = prev.professionalSkill.filter(
+                      (s: string) => !s.startsWith("Other:")
+                    );
+
+                    return {
+                      ...prev,
+                      professionalSkill: value
+                        ? [...withoutOldOther, `Other:${value}`]
+                        : withoutOldOther,
+                    };
+                  });
+                }}
+              />
+            )}
+
+
+
+
+
+
+
+
+          </section>
+
+        <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
+
+            <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2 text-[#6366f1]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Home Assistance
+            </h3>
+
+
+
+            <div className="space-y-3">
+              {Home_Assistance_Needs.map((skill) => (
+                <label
+                  key={skill}
+                  className="flex items-start gap-2 text-sm text-gray-700"
+                >
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 accent-purple-600 shrink-0"
+                    checked={form.HomeAssistance.includes(skill)}
+                    onChange={() => handleHomeAssistanceChange(skill)}
+                  />
+                  <span className="leading-snug">{skill}</span>
+                </label>
+              ))}
+            </div>
+
+
+            {form.HomeAssistance.includes("Other") && (
+              <input
+                type="text"
+                placeholder="Please specify other home assistance"
+                className="w-full mt-4 border border-gray-300 p-3 h-10 rounded-lg
+               focus:ring-2 focus:ring-blue-300 transition-all"
+                value={
+                  form.HomeAssistance.find((s: any) => s.startsWith("Other:"))
+                    ?.replace("Other:", "")
+                    .trim() || ""
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  setForm((prev: any) => {
+                    const withoutCustom = prev.HomeAssistance.filter(
+                      (s: string) => !s.startsWith("Other:")
+                    );
+
+                    return {
+                      ...prev,
+                      HomeAssistance: value
+                        ? [...withoutCustom, `Other: ${value}`]
+                        : withoutCustom,
+                    };
+                  });
+                }}
+              />
+            )}
+
+
+          </section>
+
+          <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
+
+
+            <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 mr-2 text-[#6366f1]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Patient Types You Handled
+            </h3>
+
+            <div className="space-y-3">
+              {PatientTypes.map((skill: string) => (
+                <label
+                  key={skill}
+                  className="flex items-start gap-2 text-sm text-gray-700"
+                >
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 accent-purple-600 shrink-0"
+                    checked={form.HandledSkills.includes(skill)}
+                    onChange={() => UpdateHandledSkills(skill)}
+                  />
+                  <span className="leading-snug">{skill}</span>
+                </label>
+              ))}
+            </div>
+
+            {form.HandledSkills.includes("Other") && (
+              <input
+                type="text"
+                placeholder="Please specify other patient type"
+                className="w-full mt-4 border border-gray-300 p-3 h-10 rounded-lg
+                 focus:ring-2 focus:ring-blue-300 transition-all"
+                value={
+                  form.HandledSkills.find((s: any) => s.startsWith("Other:"))
+                    ?.replace("Other:", "")
+                    .trim() || ""
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  setForm((prev: any) => {
+                    const withoutCustom = prev.HandledSkills.filter(
+                      (s: string) => !s.startsWith("Other:")
+                    );
+
+                    return {
+                      ...prev,
+                      HandledSkills: value
+                        ? [...withoutCustom, `Other: ${value}`]
+                        : withoutCustom,
+                    };
+                  });
+                }}
+              />
+            )}
+
+          </section>
+
+
+       
+      
+            <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
             <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -1676,7 +2187,11 @@ console.log("check Update----",form.cityPostcodePermanent)
             <select
   name="higherEducation"
   value={form.higherEducation || ''}
-  onChange={handleChange}
+  onChange={(e) => {
+                            const value = e.target.value;
+                            setForm({ ...form, higherEducation: (value==="Other"||value==="Diploma")?"Other":value });
+                           setisOtherhigherEducation ((value==="Other"||value==="Diploma"))
+                          }}
   className="
     input-field w-full
     border border-gray-300
@@ -1699,6 +2214,31 @@ console.log("check Update----",form.cityPostcodePermanent)
     </option>
   ))}
 </select>
+{isOtherhigherEducation&&
+  <input
+    type="text"
+    name="higherEducation"
+    placeholder="Enter higherEducation Qualification"
+    onChange={(e) =>
+      handleChange({
+        target: {
+          name: 'higherEducation',
+          value: e.target.value,
+        },
+      } as any)
+    }
+    className="
+      input-field w-full mt-2
+      border border-gray-300
+      p-3 h-10
+      rounded-lg
+      focus:ring-2 focus:ring-blue-300
+      focus:border-transparent
+      transition-all
+    "
+  />}
+
+
 
             <select
   name="professionalEducation"
@@ -1706,7 +2246,7 @@ console.log("check Update----",form.cityPostcodePermanent)
 
     onChange={(e) => {
                             const value = e.target.value;
-                            setForm({ ...form, professionalEducation: value==="Other"?"Other":value });
+                            setForm({ ...form, professionalEducation: value==="Other"?"":value });
                            setIsOtherProfetionalEducation (value === 'Other')
                           }}
   className="
@@ -1936,7 +2476,7 @@ console.log("check Update----",form.cityPostcodePermanent)
               </div>}
           </section>
 
-          <section className="w-full md:w-1/2 pl-2 md:pl-4 mt-2 p-2 rounded-xl shadow-xl border border-gray-400">
+       <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
 
             <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
               <svg
@@ -2121,7 +2661,7 @@ console.log("check Update----",form.cityPostcodePermanent)
   value={form.hairColour || ""}
  onChange={(e) => {
                     const value = e.target.value;
-                    setForm({ ...form, hairColour: value==="Other"?'Other':value });
+                    setForm({ ...form, hairColour: value==="Other"?'':value });
                     setisOtherHairColour (value === 'Other')
                    
                       
@@ -2164,7 +2704,7 @@ console.log("check Update----",form.cityPostcodePermanent)
   value={form?.eyeColour ?? ""}
   onChange={(e) => {
                     const value = e.target.value;
-                    setForm({ ...form, eyeColour: value==="Other"?'Other':value });
+                    setForm({ ...form, eyeColour: value==="Other"?'':value });
                     setisOtherEyeColour (value === 'Other')
                    
                       
@@ -2263,7 +2803,7 @@ console.log("check Update----",form.cityPostcodePermanent)
 
        onChange={(e) => {
                     const value = e.target.value;
-                    setForm({ ...form, anyDeformity: value==="Other"?'Other':value });
+                    setForm({ ...form, anyDeformity: value==="Other"?'':value });
                     setOtherDeformity (value === 'Other')
                    
                       
@@ -2301,7 +2841,7 @@ console.log("check Update----",form.cityPostcodePermanent)
   value={form?.moleBodyMark1 ?? ""}
    onChange={(e) => {
                     const value = e.target.value;
-                    setForm({ ...form, moleBodyMark1: value==="Other"?'Other':value });
+                    setForm({ ...form, moleBodyMark1: value==="Other"?'':value });
                     setisOtherMoleOnBody1 (value === 'Other')
                    
                       
@@ -2360,7 +2900,7 @@ console.log("check Update----",form.cityPostcodePermanent)
 
          onChange={(e) => {
                     const value = e.target.value;
-                    setForm({ ...form, moleBodyMark2: value==="Other"?'Other':value });
+                    setForm({ ...form, moleBodyMark2: value==="Other"?'':value });
                     setisOtherMoleOnBody2 (value === 'Other')
                    
                       
@@ -2443,7 +2983,7 @@ console.log("check Update----",form.cityPostcodePermanent)
                   value={form?.reportPreviousHealthProblems ?? ""}
                   onChange={(e) => {
                     const value = e.target.value;
-                    setForm({ ...form, reportPreviousHealthProblems: value==="Other"?'Other':value });
+                    setForm({ ...form, reportPreviousHealthProblems: value==="Other"?'':value });
                     setIsOtherPreviousHealthProblems (value === 'Other')
                    
                       
@@ -2487,192 +3027,73 @@ console.log("check Update----",form.cityPostcodePermanent)
                   className="resize-y  w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
 
                 />}
-              <textarea
+              {/* <textarea
                 name="reportCurrentHealthProblems"
                 value={form.reportCurrentHealthProblems || ""}
                 onChange={handleChange}
                 placeholder="Report Current Health Problems"
                 className="resize-y h-20 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
 
-              />
+              /> */}
+
+              <select
+                  name="reportCurrentHealthProblems"
+                  value={form?.reportCurrentHealthProblems ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm({ ...form, reportCurrentHealthProblems: value==="Other"?'':value });
+                    setisOtherCurrentHealthProblems (value === 'Other')
+                   
+                      
+                  }}
+                  className="w-full border border-gray-300 p-2 h-10 rounded-lg
+             focus:ring-2 focus:ring-blue-300 focus:border-transparent
+             transition-all bg-white"
+                >
+                  <option value="">Select Current HealthProblems</option>
+
+                  {[
+                    "None",
+                    "fever",
+                    "fits",
+                    "Diabetes",
+                    "Hypertension",
+                    "Asthma",
+                    "Thyroid Disorder",
+                    "Heart Disease",
+                    "Stroke History",
+                    "Arthritis",
+                    "Epilepsy",
+                    "Chronic Kidney Disease",
+                    "Chronic Liver Disease",
+                    "Tuberculosis (Past)",
+                    "COVID-19 (Past)",
+                    "Other",
+                  ].map((issue) => (
+                    <option key={issue} value={issue}>
+                      {issue}
+                    </option>
+                  ))}
+                </select> 
+
+{isOtherCurrentHealthProblems&&
+                <input
+                  name="reportCurrentHealthProblems"
+                  value={form.reportCurrentHealthProblems || ""}
+                  onChange={handleChange}
+                  placeholder="Report Current Health Problems"
+                  className="resize-y  w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+
+                />}
             </div>
 
-<section className="w-full p-4 sm:p-6">
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
-  
-    <div className="bg-white rounded-xl border p-4">
-      <h3 className="text-sm font-semibold mb-4 text-gray-800 border-b pb-2">
-        Professional Skills
-      </h3>
-
-      <div className="space-y-3">
-        {PROFESSIONAL_SKILL_OPTIONS.map((skill) => (
-          <label
-            key={skill}
-            className="flex items-start gap-2 text-sm text-gray-700"
-          >
-            <input
-              type="checkbox"
-              className="mt-0.5 accent-purple-600 shrink-0"
-              checked={form.professionalSkill.includes(skill)}
-              onChange={() => handleprofessionalSkillChange(skill)}
-            />
-            <span className="leading-snug">{skill}</span>
-          </label>
-        ))}
-      </div>
-
-    {isOtherSelected && (
-  <input
-    type="text"
-    placeholder="Please specify other professional skill"
-    className="w-full mt-3 border border-gray-300 p-3 h-10 rounded-lg
-               focus:ring-2 focus:ring-blue-300 focus:border-transparent
-               transition-all"
-    value={
-      form.professionalSkill.find((s:any) => s.startsWith("Other:"))?.replace("Other:", "") || ""
-    }
-    onChange={(e) => {
-      const value = e.target.value;
-
-      setForm((prev: any) => {
-        const withoutOldOther = prev.professionalSkill.filter(
-          (s: string) => !s.startsWith("Other:")
-        );
-
-        return {
-          ...prev,
-          professionalSkill: value
-            ? [...withoutOldOther, `Other:${value}`]
-            : withoutOldOther,
-        };
-      });
-    }}
-  />
-)}
-
-    </div>
-
-    <div className="bg-white rounded-xl border p-4">
-  <h3 className="text-sm font-semibold mb-4 text-gray-800 border-b pb-2">
-    Home Assistance
-  </h3>
-
-  <div className="space-y-3">
-    {Home_Assistance_Needs.map((skill) => (
-      <label
-        key={skill}
-        className="flex items-start gap-2 text-sm text-gray-700"
-      >
-        <input
-          type="checkbox"
-          className="mt-0.5 accent-purple-600 shrink-0"
-          checked={form.HomeAssistance.includes(skill)}
-          onChange={() => handleHomeAssistanceChange(skill)}
-        />
-        <span className="leading-snug">{skill}</span>
-      </label>
-    ))}
-  </div>
-
-
-  {form.HomeAssistance.includes("Other") && (
-  <input
-    type="text"
-    placeholder="Please specify other home assistance"
-    className="w-full mt-4 border border-gray-300 p-3 h-10 rounded-lg
-               focus:ring-2 focus:ring-blue-300 transition-all"
-    value={
-      form.HomeAssistance.find((s:any) => s.startsWith("Other:"))
-        ?.replace("Other:", "")
-        .trim() || ""
-    }
-    onChange={(e) => {
-      const value = e.target.value;
-
-      setForm((prev: any) => {
-        const withoutCustom = prev.HomeAssistance.filter(
-          (s: string) => !s.startsWith("Other:")
-        );
-
-        return {
-          ...prev,
-          HomeAssistance: value
-            ? [...withoutCustom, `Other: ${value}`]
-            : withoutCustom,
-        };
-      });
-    }}
-  />
-)}
-
-</div>
-
-
-   
-    <div className="bg-white rounded-xl border p-4">
-  <h3 className="text-sm font-semibold mb-4 text-gray-800 border-b pb-2">
-    Patient Types You Handled
-  </h3>
-
-  <div className="space-y-3">
-    {PatientTypes.map((skill: string) => (
-      <label
-        key={skill}
-        className="flex items-start gap-2 text-sm text-gray-700"
-      >
-        <input
-          type="checkbox"
-          className="mt-0.5 accent-purple-600 shrink-0"
-          checked={form.HandledSkills.includes(skill)}
-          onChange={() => UpdateHandledSkills(skill)}
-        />
-        <span className="leading-snug">{skill}</span>
-      </label>
-    ))}
-  </div>
-
-  {form.HandledSkills.includes("Other") && (
-    <input
-      type="text"
-      placeholder="Please specify other patient type"
-      className="w-full mt-4 border border-gray-300 p-3 h-10 rounded-lg
-                 focus:ring-2 focus:ring-blue-300 transition-all"
-      value={
-        form.HandledSkills.find((s:any) => s.startsWith("Other:"))
-          ?.replace("Other:", "")
-          .trim() || ""
-      }
-      onChange={(e) => {
-        const value = e.target.value;
-
-        setForm((prev: any) => {
-          const withoutCustom = prev.HandledSkills.filter(
-            (s: string) => !s.startsWith("Other:")
-          );
-
-          return {
-            ...prev,
-            HandledSkills: value
-              ? [...withoutCustom, `Other: ${value}`]
-              : withoutCustom,
-          };
-        });
-      }}
-    />
-  )}
-</div>
-
-
-  </div>
-</section>
 
           </section>
 
 
 
-        </div>
+       
         {/* <section className="bg-blue-50 p-3 rounded-xl shadow-md">
             <h3 className="text-md font-semibold text-[#ff1493] mb-5 pb-3 border-b border-blue-200 flex items-center">
               <svg
@@ -2710,9 +3131,9 @@ console.log("check Update----",form.cityPostcodePermanent)
               />
             </div>
           </section> */}
-        <div className='md:flex  justify-center gap-4'>
+   
 
-          <section className="md:w-1/2  pl-4 mt-2 p-2 rounded-xl shadow-xl border border-gray-400">
+            <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
             <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -2846,7 +3267,7 @@ console.log("check Update----",form.cityPostcodePermanent)
             
           </section>
 
-           <section className="md:w-1/2  pl-4 mt-2 p-2 rounded-xl shadow-xl border border-gray-400">
+             <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
             <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
              <svg
   xmlns="http://www.w3.org/2000/svg"
@@ -3075,8 +3496,7 @@ console.log("check Update----",form.cityPostcodePermanent)
             </div>
           </section>
 
-
-          <section className="md:w-1/2  pl-4 mt-2 p-2 rounded-xl shadow-xl border border-gray-400">
+  <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
             <h3 className="text-2md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -3155,15 +3575,51 @@ console.log("check Update----",form.cityPostcodePermanent)
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
               />
-              <input
-                type="text"
-                name="paymentService"
-                value={form.paymentService || ''}
-                onChange={handleChange}
-                placeholder="Payment Service (e.g., Online, Cash)"
-                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
+             <div className="flex flex-col gap-1">
+
+  <input
+    type="number"
+    name="PaymentforStaff"
+    value={form.PaymentforStaff || ''}
+    onChange={handleChange}
+    placeholder="Payment for Staff – Monthly (₹)"
+    className="input-field w-full border border-gray-300 p-3 h-10 rounded-lg
+               focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+  />
+
+  
+  {form.PaymentforStaff && Number(form.PaymentforStaff) > 0 && (
+    <p className="text-xs text-gray-600">
+      Per day amount:{" "}
+      <span className="font-semibold text-green-600">
+        ₹{Math.round(Number(form.PaymentforStaff) / 30)}
+      </span>
+    </p>
+  )}
+
+</div>
+
+<div className="relative w-full">
+  <label
+    htmlFor="NotedDtaeForHike"
+    className="absolute -top-2 left-3 bg-white px-1 text-xs font-medium text-gray-600"
+  >
+    Joining Date
+  </label>
+
+  <input
+    id="NotedDtaeForHike"
+    type="date"
+    name="NotedDtaeForHike"
+    value={form?.NotedDtaeForHike ?? ""}
+    onChange={handleChange}
+    className="input-field w-full border border-gray-300 p-3 h-10 rounded-lg
+               focus:ring-2 focus:ring-blue-300 focus:border-transparent
+               transition-all"
+    required
+  />
+</div>
+
               <div className="flex flex-col gap-1">
   <label className="text-sm font-medium text-gray-600">
     Account Holder Name
@@ -3251,10 +3707,10 @@ console.log("check Update----",form.cityPostcodePermanent)
             </div>
           </section>
 
-        </div>
-        <section className="flex flex-col md:flex-row justify-center gap-4 p-4 border border-gray-400 rounded-xl shadow-xl bg-white">
+       
+        <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
 
-          <div className="w-full md:w-1/2 p-2">
+         
             <h3 className="text-lg md:text-xl font-semibold text-[#ff1493] pb-3 mb-3 border-b border-blue-200 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -3273,7 +3729,7 @@ console.log("check Update----",form.cityPostcodePermanent)
               Additional Information
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+           
 
 {CurrentUserType==="HCN"&&
 <div className="w-full">
@@ -3327,7 +3783,7 @@ console.log("check Update----",form.cityPostcodePermanent)
 </div>}
              
 
-            </div>
+           
             <div className="space-y-4 mt-2">
 
               <div className="relative">
@@ -3391,15 +3847,20 @@ console.log("check Update----",form.cityPostcodePermanent)
                 </p>
               )}
             </div>
-          </div>
+          
 
-          <div className="w-full md:w-1/2 p-2">
-            <h3 className="text-lg md:text-xl font-semibold text-[#ff1493] mb-4 border-b border-blue-300 pb-2">
+         
+            
+         
+        </section>
+
+       <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
+          <h3 className="text-lg md:text-xl font-semibold text-[#ff1493] mb-4 border-b border-blue-300 pb-2">
               Your Documents
             </h3>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 justify-items-center">
-              {['AdharCard', 'PanCard', 'Certificat One', 'Certificat Two', 'Account Pass Book', 'BVR','HCP form'].map((docKey) => (
+              {['AadharCard', 'PanCard', 'Certificate One', 'Certificate Two', 'Account Pass Book', 'BVR','HCP form'].map((docKey) => (
                 <div
                   key={docKey}
                   className="flex flex-col items-center justify-between p-2 border border-blue-300 rounded-lg bg-gray-50 shadow-sm w-36 sm:w-40 h-40"
@@ -3481,7 +3942,6 @@ console.log("check Update----",form.cityPostcodePermanent)
                 </button>
               </div>
             </div>
-          </div>
         </section>
 
 
@@ -3539,7 +3999,7 @@ console.log("check Update----",form.cityPostcodePermanent)
                             </section>
                         </div>
                      */}
-
+ </div>
         <div className="flex justify-center mt-8">
           <button
             type="submit"

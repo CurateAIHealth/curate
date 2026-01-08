@@ -43,6 +43,7 @@ const FiltersHCPS=data.filter((each:any)=>each.userType==="healthcare-assistant"
 
 
 import { UserCheck } from "lucide-react";
+import { hyderabadAreas } from "@/Lib/Content";
 
 const DOCUMENT_KEYS = [
   "AadharAttachmentURL",
@@ -63,6 +64,8 @@ export default function Dashboard() {
   const updatedRefresh = useSelector((afterEach: any) => afterEach.updatedCount);
     const [isManagement, setIsManagement] = useState<boolean | null>(null);
     const [showAccessDenied, setShowAccessDenied] = useState(false);
+    const [showCallEnquiry, setShowCallEnquiry] = useState(false);
+
   const [stats, setStats] = useState<any>({
     registeredUsers: "Loading...",
     timesheetcount:'Loading....',
@@ -550,14 +553,30 @@ console.log('Check Email Status-----',isManagement)
                       </div>
                     </div> */}
 
-                    {tab.name === "Client Enquiry" && (
-                      <button
-                        onClick={UpdateNewLead}
-                        className="rounded-md cursor-pointer text-xs px-2 py-1 bg-gradient-to-r from-blue-400 to-blue-500 text-white font-medium hover:from-teal-400 transition"
-                      >
-                        + New Lead
-                      </button>
-                    )}
+                   {tab.name === "Client Enquiry" && (
+  <div className="flex items-center gap-2">
+    <button
+      onClick={UpdateNewLead}
+      className="rounded-md cursor-pointer text-xs px-2 py-1
+      bg-gradient-to-r from-blue-400 to-blue-500
+      text-white font-medium
+      hover:from-teal-400 transition"
+    >
+      + New Lead
+    </button>
+
+    <button
+      onClick={() => setShowCallEnquiry(true)}
+      className="rounded-md cursor-pointer text-xs px-2 py-1
+      bg-gradient-to-r from-green-400 to-green-500
+      text-white font-medium
+      hover:from-emerald-400 transition"
+    >
+      📞 Call Enquiry
+    </button>
+  </div>
+)}
+
                   </div>
                 </motion.div>
               ))}
@@ -600,6 +619,117 @@ console.log('Check Email Status-----',isManagement)
   </div>
 </div>
 
+)}
+
+{showCallEnquiry && (
+  <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+
+ 
+    <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
+
+  
+      <div className="px-6 py-4 border-b flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <img src="Icons/Curate-logoq.png" className="h-9" alt="CompanyLogo"/>
+          <div>
+          
+          <h3 className="text-lg font-semibold text-gray-800">
+            Call Enquiry
+          </h3>
+          <p className="text-xs text-gray-500">
+            Log a quick enquiry from a phone call
+          </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowCallEnquiry(false)}
+          className="h-8 w-8 rounded-full flex items-center justify-center
+          text-gray-500 hover:bg-gray-100 hover:text-red-500 transition"
+        >
+          ✕
+        </button>
+      </div>
+
+      
+      <div className="px-6 py-5 space-y-4">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              Customer Name
+            </label>
+            <input
+              type="text"
+              placeholder="Full name"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3
+              text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              Mobile Number
+            </label>
+            <input
+              type="tel"
+              maxLength={10}
+              placeholder="10-digit number"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3
+              text-sm tracking-widest focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+    
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">
+            Area
+          </label>
+          <select
+            className="w-full rounded-lg border border-gray-300 px-4 py-3
+            text-sm bg-white focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+          >
+            <option value="">Select Area</option>
+            {hyderabadAreas.map((city) => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
+        </div>
+
+    
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">
+            Notes
+          </label>
+          <textarea
+            placeholder="Short call summary"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3
+            text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+          />
+        </div>
+
+      </div>
+
+  
+      <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
+        <button
+          onClick={() => setShowCallEnquiry(false)}
+          className="px-4 py-2 text-sm rounded-lg border border-gray-300
+          text-gray-600 hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+
+        <button
+          className="px-5 py-2 text-sm rounded-lg font-medium text-white
+          bg-gray-900 hover:bg-gray-800 transition"
+        >
+          Save Enquiry
+        </button>
+      </div>
+
+    </div>
+  </div>
 )}
 
 
