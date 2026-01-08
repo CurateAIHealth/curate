@@ -1,7 +1,7 @@
 'use client';
 
 import HCAMobileView from '@/Components/HCAMobileView/page';
-import { EducationLevels, IndianLanguages, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, PROFESSIONAL_SKILL_OPTIONS, REFERRAL_SOURCE_TYPES, Relations } from '@/Lib/Content';
+import { EducationLevels, Home_Assistance_Needs, IndianLanguages, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, PROFESSIONAL_SKILL_OPTIONS, REFERRAL_SOURCE_TYPES, Relations } from '@/Lib/Content';
 import { v4 as uuidv4 } from 'uuid';
 import { GetRegidterdUsers, GetUserInformation, HCARegistration, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
 import { Update_Main_Filter_Status, UpdateDocmentSkipReason, UpdateRefresh, UpdateUserType } from '@/Redux/action';
@@ -26,7 +26,14 @@ export default function DoctorProfileForm() {
   const [isOtherProfetionalEducation, setIsOtherProfetionalEducation] = useState(false);
   const [isOtherOngoingEducation, setIsOtherOngoingEducation] = useState(false);
   const [isOtherPreviousHealthProblems, setIsOtherPreviousHealthProblems] = useState(false);
+  const [OtherDeformity,setOtherDeformity]=useState(false)
   const [isOtherReferralSourceType, setIsOtherReferralSourceType] = useState(false);
+  const [isOtherProfessionalSkills,setisOtherProfessionalSkills]=useState(false)
+    const [isOtherHairColour,setisOtherHairColour]=useState(false)
+    const [isOtherEyeColour,setisOtherEyeColour]=useState(false)
+      const [isOtherComplexion,setisOtherComplexion]=useState(false)
+        const [isOtherMoleOnBody1,setisOtherMoleOnBody1]=useState(false)
+          const [isOtherMoleOnBody2,setisOtherMoleOnBody2]=useState(false)
   const [sameAddress, setSameAddress] = useState(false);
 
 
@@ -54,6 +61,7 @@ const [ImportedVendors, setImportedVendors] = useState<any>([])
     HomeAssistance: any;
     // title: any;
     firstName: any;
+    lastName:any;
     surname: string;
     fatherName: string;
     motherName: string;
@@ -176,6 +184,7 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
   });
   const [form, setForm] = useState<FormState>({
     firstName: '',
+    lastName:'',
     surname: '',
     fatherName: '',
     fatherNameContact:'',
@@ -406,32 +415,76 @@ useEffect(() => {
       return updated;
     });
   }
-  const handleSkillChange = (skill: any) => {
-    setForm((prev: any) => {
-      const skills: any = prev.HomeAssistance || [];
-      return skills.includes(skill)
-        ? { ...prev, HomeAssistance: skills.filter((s: any) => s !== skill) }
-        : { ...prev, HomeAssistance: [...skills, skill] };
-    });
-  };
+const handleHomeAssistanceChange = (skill: string) => {
+  setForm((prev: any) => {
+    const exists = prev.HomeAssistance.includes(skill);
+
+    let updated = exists
+      ? prev.HomeAssistance.filter((s: string) => s !== skill)
+      : [...prev.HomeAssistance, skill];
+
+    // If user UNCHECKS "Other" → remove custom value
+    if (skill === "Other" && exists) {
+      updated = updated.filter(
+        (s: string) => !s.startsWith("Other:")
+      );
+    }
+
+    return {
+      ...prev,
+      HomeAssistance: updated,
+    };
+  });
+};
 
 
-  const UpdateHandledSkills = (skill: any) => {
-    setForm((prev: any) => {
-      const skills: any = prev.HandledSkills || [];
-      return skills.includes(skill)
-        ? { ...prev, HandledSkills: skills.filter((s: any) => s !== skill) }
-        : { ...prev, HandledSkills: [...skills, skill] };
-    });
-  };
-  const handleprofessionalSkillChange = (skill: any) => {
-    setForm((prev: any) => {
-      const skills: any = prev.professionalSkill || [];
-      return skills.includes(skill)
-        ? { ...prev, professionalSkill: skills.filter((s: any) => s !== skill) }
-        : { ...prev, professionalSkill: [...skills, skill] };
-    });
-  };
+
+
+const UpdateHandledSkills = (skill: string) => {
+  setForm((prev: any) => {
+    const exists = prev.HandledSkills.includes(skill);
+
+    let updated = exists
+      ? prev.HandledSkills.filter((s: string) => s !== skill)
+      : [...prev.HandledSkills, skill];
+
+    // If user UNCHECKS "Other" → remove custom value
+    if (skill === "Other" && exists) {
+      updated = updated.filter(
+        (s: string) => !s.startsWith("Other:")
+      );
+    }
+
+    return {
+      ...prev,
+      HandledSkills: updated,
+    };
+  });
+};
+
+ const handleprofessionalSkillChange = (skill: string) => {
+  setForm((prev: any) => {
+    const exists = prev.professionalSkill.includes(skill);
+
+    let updatedSkills = exists
+      ? prev.professionalSkill.filter((s: string) => s !== skill)
+      : [...prev.professionalSkill, skill];
+
+    // If "Other" is unchecked → remove any custom other value
+    if (skill === "Other" && exists) {
+      updatedSkills = updatedSkills.filter(
+        (s: string) => !s.startsWith("Other:")
+      );
+    }
+
+    return {
+      ...prev,
+      professionalSkill: updatedSkills,
+    };
+  });
+};
+
+const isOtherSelected = form.professionalSkill.includes("Other");
 
   const handleImageChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -565,7 +618,8 @@ const HEIGHT_OPTIONS = Array.from(
           const payload: any = {
             userType: UpdateCurrentUserType,
             FirstName: form.firstName || "",
-            LastName: form.surname || "",
+            SurName: form.surname || "",
+            LastName:form.lastName||'',
             Gender: form.gender || "",
             DateOfBirth: form.dateOfBirth || "",
             MaritalStatus: form.maritalStatus || "",
@@ -816,8 +870,8 @@ const HEIGHT_OPTIONS = Array.from(
 if (CurrentUserType === null) return null;
 
 
-console.log("check Update----",form.currentAddress)
-console.log("check Seconds Update----",form.permanentAddress)
+console.log("check Update----",form.moleBodyMark2)
+
   const FilterdImportedVendorName = ImportedVendors.map((each: any) => each.VendorName)
 
   return (
@@ -968,6 +1022,15 @@ console.log("check Seconds Update----",form.permanentAddress)
                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 required
               />
+              <input
+                type="text"
+                name="lastName"
+                value={form.lastName || ''}
+                onChange={handleChange}
+                placeholder="Last Name"
+                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                required
+              />
           
               <input
                 type="text"
@@ -1010,7 +1073,7 @@ console.log("check Seconds Update----",form.permanentAddress)
                 name="Husbend"
                 value={form.Husbend || ''}
                 onChange={handleChange}
-                placeholder="Enter Husbend Name"
+                placeholder="Husband Name"
                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
               />
@@ -1019,7 +1082,7 @@ console.log("check Seconds Update----",form.permanentAddress)
                 name="HusbendContact"
                 value={form.HusbendContact || ''}
                 onChange={handleChange}
-                placeholder="Enter HusbendContact"
+                placeholder="Husband Contact"
                 className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
               />
@@ -1093,10 +1156,10 @@ console.log("check Seconds Update----",form.permanentAddress)
                 required
               >
                 <option value="">Select Marital Status</option>
-                <option value="unmarried">unmarried</option>
+                <option value="Unmarried">Unmarried</option>
                 <option value="Married">Married</option>
-                <option value="divorcee">divorcee</option>
-                <option value="widower">widower</option>
+                <option value="Divorcee">Divorcee</option>
+                <option value="Widower">Widower</option>
               </select>
             <div className="space-y-2">
   <input
@@ -1136,19 +1199,70 @@ console.log("check Seconds Update----",form.permanentAddress)
   </div>
 </div>
 
-              <input
-                type="tel"
-                name="mobileNumber"
-                value={form.mobileNumber || ''}
+              <div className="flex flex-col gap-1">
+  <label className="text-sm font-medium text-gray-600">
+    Mobile Number
+  </label>
+
+  <input
+    type="tel"
+    name="mobileNumber"
+    value={form?.mobileNumber ?? ""}
+    inputMode="numeric"
+    autoComplete="tel"
+    maxLength={10}
+    placeholder="Enter 10-digit mobile number"
+    onChange={(e) => {
+      const digitsOnly = e.target.value.replace(/\D/g, "");
+
+      // 🔒 hard guard (anti-collapse)
+      if (digitsOnly.length > 10) return;
+
+      setForm((prev: any) => ({
+        ...prev,
+        mobileNumber: digitsOnly,
+      }));
+    }}
+    className={`
+      input-field p-3 h-8 rounded-lg transition-all
+      focus:outline-none focus:border-transparent
+      ${
+        form.mobileNumber &&
+        !isValidIndianMobile(form.mobileNumber)
+          ? "border border-red-400 focus:ring-2 focus:ring-red-300"
+          : "border border-gray-300 focus:ring-2 focus:ring-blue-300"
+      }
+    `}
+    required
+  />
+
+  {form.mobileNumber &&
+    !isValidIndianMobile(form.mobileNumber) && (
+      <p className="text-xs text-red-500 mt-1">
+        Enter a valid 10-digit Indian mobile number.
+      </p>
+    )}
+</div>
+
+              
+              <select name="languages"
+                value={form.languages || ''}
                 onChange={handleChange}
-                placeholder="Mobile Number"
-                className="input-field border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                required
-              />
+                className="w-full border h-[31px] border-gray-300  rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+              >
+                <option value="">Select Language</option>
+
+                {IndianLanguages.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+
+              </select>
             </div>
             {((CurrentUserType === "HCA") || (CurrentUserType === "HCN")) && (
               <div>
-                {/* Family Background */}
+              
                 <h3 className="text-md font-semibold text-[#ff1493] mt-3 pb-3 border-b border-blue-200 flex items-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -1177,66 +1291,60 @@ console.log("check Seconds Update----",form.permanentAddress)
                   <h3 className="flex justify-start text-grey-400 mb-2 text-center">
                     Earning Source
                   </h3>
-{!isOther ?
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {Relations.map((each) => (
-                      <div
-                        key={each}
-                        className="flex items-center space-x-2 bg-white border hover:bg-indigo-100 p-2 rounded-lg transition-all duration-200"
-                      >
-                        <input
-                          type="radio"
-                          name="earningSource"
-                          id={each}
-                          value={each}
-                          className="w-5 h-5 accent-indigo-600 cursor-pointer"
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            setForm({ ...form, earningSource: value });
-                            if (value === 'Other') setIsOther(true);
-                          }}
-                        />
-                        <label
-                          htmlFor={each}
-                          className="text-gray-700 font-medium text-[13px] cursor-pointer"
-                        >
-                          {each}
-                        </label>
-                      </div>
-                    ))}
-       
+<div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+  {Relations.map((each) => (
+    <label
+      key={each}
+      className="flex items-center space-x-2 bg-white border hover:bg-indigo-100 p-2 rounded-lg transition-all duration-200 cursor-pointer"
+    >
+      <input
+        type="radio"
+        name="earningSource"
+        value={each}
+        checked={form.earningSource === each}
+        className="w-5 h-5 accent-indigo-600"
+        onChange={(e) => {
+          const value = e.target.value;
 
-                  </div>:
-                           <input
-  type="text"
-  placeholder="If any other..."
-    name="earningSource"
-  className="
-    w-full
-    h-10
-    px-4
-    rounded-xl
-    border border-slate-300
-    bg-white
-    text-sm text-slate-700
-    placeholder-slate-400
+          setForm((prev: any) => ({
+            ...prev,
+            earningSource: value === "Other" ? "" : value,
+          }));
 
-    shadow-sm
-    transition-all duration-200
+          setIsOther(value === "Other");
+        }}
+      />
+      <span className="text-gray-700 font-medium text-[13px]">
+        {each}
+      </span>
+    </label>
+  ))}
+</div>
 
-    hover:border-slate-400
-    focus:outline-none
-    focus:ring-2 focus:ring-gray-400
-    focus:border-gray-400
 
-    disabled:bg-slate-100
-    disabled:cursor-not-allowed
-  "
-  onChange={handleChange}
-/>}
+{isOther && (
+  <div className="mt-3">
+    <input
+      type="text"
+      name="earningSource"
+      placeholder="Please specify..."
+      value={form.earningSource || ""}
+      className="
+        w-full h-10 px-4 rounded-xl
+        border border-slate-300 bg-white
+        text-sm text-slate-700
+        placeholder-slate-400
+        shadow-sm transition-all duration-200
+        focus:outline-none focus:ring-2 focus:ring-gray-400
+      "
+      onChange={handleChange}
+    />
+  </div>
+)}
+
                 </div>
 
-                {/* Siblings Section */}
+              
                 <div className="mt-2 rounded-2xl border border-gray-100">
                   <h3 className="flex justify-start text-grey-400 mb-2 text-center">
                     Siblings
@@ -1483,14 +1591,14 @@ console.log("check Seconds Update----",form.permanentAddress)
   ))}
 </select>
 
-     {!isOtherProfetionalEducation?        <select
+            <select
   name="professionalEducation"
   value={form.professionalEducation || ''}
 
     onChange={(e) => {
                             const value = e.target.value;
-                            setForm({ ...form, professionalEducation: value });
-                            if (value === 'Other') setIsOtherProfetionalEducation(true);
+                            setForm({ ...form, professionalEducation: value==="Other"?"Other":value });
+                           setIsOtherProfetionalEducation (value === 'Other')
                           }}
   className="
     input-field w-full
@@ -1512,7 +1620,7 @@ console.log("check Seconds Update----",form.permanentAddress)
   </option>
   <option value="Other">Other</option>
 </select>
-:
+{isOtherProfetionalEducation&&
   <input
     type="text"
     name="professionalEducation"
@@ -1540,16 +1648,17 @@ console.log("check Seconds Update----",form.permanentAddress)
 
              <div className="space-y-3">
 
- {!isOtherOngoingEducation? <select
+ <select
     name="OngoingStudy"
     value={form.OngoingStudy||''}
     onChange={(e) => {
       const value = e.target.value;
-       if (value === 'Other') setIsOtherOngoingEducation(true);
+       
       setForm({
         ...form,
         OngoingStudy: value === "Other" ? "" : value,
       });
+       setIsOtherOngoingEducation(value === 'Other')
     }}
     className="
       input-field w-full
@@ -1570,7 +1679,8 @@ console.log("check Seconds Update----",form.permanentAddress)
     <option value="GNM">GNM</option>
     <option value="BSc (Nursing)">BSc (Nursing)</option>
     <option value="Other">Other</option>
-  </select>:
+  </select>
+  {isOtherOngoingEducation&&
 <input
       type="text"
       placeholder="Please specify ongoing study"
@@ -1889,7 +1999,7 @@ console.log("check Seconds Update----",form.permanentAddress)
                 {form.weight && (
                   <div className="flex justify-center">
                     <p className="mt-3 w-[200px] text-center bg-pink-400 p-2 text-white rounded-md text-xs sm:text-sm">
-                      {form.weight}kg {CurrentUserType} Weight
+                      {form.weight} {CurrentUserType}  Weight (kg)
                     </p>
                   </div>
                 )}
@@ -1900,7 +2010,13 @@ console.log("check Seconds Update----",form.permanentAddress)
                <select
   name="hairColour"
   value={form.hairColour || ""}
-  onChange={handleChange}
+ onChange={(e) => {
+                    const value = e.target.value;
+                    setForm({ ...form, hairColour: value==="Other"?'Other':value });
+                    setisOtherHairColour (value === 'Other')
+                   
+                      
+                  }}
   className="border border-gray-300 p-2 h-10 rounded-lg
              focus:ring-2 focus:ring-blue-300
              focus:border-transparent transition-all bg-white"
@@ -1916,12 +2032,34 @@ console.log("check Seconds Update----",form.permanentAddress)
   <option value="Salt & Pepper">Salt & Pepper</option>
   <option value="Dyed">Dyed (Henna / Colour)</option>
   <option value="Bald">Bald</option>
+   <option value="Other">Other</option>
 </select>
+
+{isOtherHairColour&&<input
+      type="text"
+      name="anyDeformityOther"
+      placeholder="Please specify Other"
+      className="w-full border border-gray-300 p-2 h-11 rounded-lg
+                 focus:ring-2 focus:ring-blue-300 focus:border-transparent
+                 transition-all"
+      onChange={(e) =>
+        setForm((prev: any) => ({
+          ...prev,
+          hairColour: `Other: ${e.target.value}`,
+        }))
+      }
+    />}
 
                <select
   name="eyeColour"
   value={form?.eyeColour ?? ""}
-  onChange={handleChange}
+  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm({ ...form, eyeColour: value==="Other"?'Other':value });
+                    setisOtherEyeColour (value === 'Other')
+                   
+                      
+                  }}
   className="border border-gray-300 p-2 h-10 rounded-lg
              focus:ring-2 focus:ring-blue-300 focus:border-transparent
              transition-all bg-white"
@@ -1937,6 +2075,7 @@ console.log("check Seconds Update----",form.permanentAddress)
     "Amber",
     "Grey",
     "Green",
+    "Other"
   ].map((colour) => (
     <option key={colour} value={colour}>
       {colour}
@@ -1944,43 +2083,120 @@ console.log("check Seconds Update----",form.permanentAddress)
   ))}
 </select>
 
-               <select
-  name="complexion"
-  value={form?.complexion ?? ""}
-  onChange={handleChange}
-  className="border border-gray-300 p-2 h-10 rounded-lg
+{isOtherEyeColour&&<input
+      type="text"
+      name="anyDeformityOther"
+      placeholder="Please specify Other"
+      className="w-full border border-gray-300 p-2 h-11 rounded-lg
+                 focus:ring-2 focus:ring-blue-300 focus:border-transparent
+                 transition-all"
+      onChange={(e) =>
+        setForm((prev: any) => ({
+          ...prev,
+          eyeColour: `Other: ${e.target.value}`,
+        }))
+      }
+    />}
+
+                <select
+                  name="complexion"
+                  value={form?.complexion ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm({ ...form, complexion: value === "Other" ? '' : value });
+                    setisOtherComplexion(value === 'Other')
+
+
+                  }}
+                  className="border border-gray-300 p-2 h-10 rounded-lg
              focus:ring-2 focus:ring-blue-300 focus:border-transparent
              transition-all bg-white"
->
-  <option value="">Select Complexion</option>
+                >
+                  <option value="">Select Complexion</option>
 
-  {[
-    "Very Fair",
-    "Fair",
-    "Wheatish",
-    "Medium",
-    "Dusky",
-    "Dark",
-  ].map((tone) => (
-    <option key={tone} value={tone}>
-      {tone}
-    </option>
-  ))}
-</select>
+                  {[
+                    "Very Fair",
+                    "Fair",
+                    "Wheatish",
+                    "Medium",
+                    "Dusky",
+                    "Dark",
+                    "Other"
+                  ].map((tone) => (
+                    <option key={tone} value={tone}>
+                      {tone}
+                    </option>
+                  ))}
+                </select>
 
-                <input
+                {isOtherComplexion && <input
                   type="text"
-                  name="anyDeformity"
-                  value={form?.anyDeformity || ""}
-                  onChange={handleChange}
-                  placeholder="Any Deformity (if any)"
-                  className="border border-gray-300 p-3 h-10 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                />
+                  name="anyDeformityOther"
+                  placeholder="Please specify Other"
+                  className="w-full border border-gray-300 p-2 h-11 rounded-lg
+                 focus:ring-2 focus:ring-blue-300 focus:border-transparent
+                 transition-all"
+                  onChange={(e) =>
+                    setForm((prev: any) => ({
+                      ...prev,
+                      complexion: `Other: ${e.target.value}`,
+                    }))
+                  }
+                />}
+
+                <div className="space-y-3">
+
+
+  <select
+    name="anyDeformity"
+    value={form.anyDeformity || "Select Deformity"}
+  
+
+       onChange={(e) => {
+                    const value = e.target.value;
+                    setForm({ ...form, anyDeformity: value==="Other"?'Other':value });
+                    setOtherDeformity (value === 'Other')
+                   
+                      
+                  }}
+    className="border border-gray-300 p-2 h-10 w-full rounded-lg
+             focus:ring-2 focus:ring-blue-300 focus:border-transparent
+             transition-all bg-white"
+  >
+    <option value="Not Selected">Select Deformity</option>
+    <option value="None">None</option>
+    <option value="Other">Other</option>
+  </select>
+  {OtherDeformity&&<input
+      type="text"
+      name="anyDeformityOther"
+      placeholder="Please specify Other"
+      className="w-full border border-gray-300 p-2 h-11 rounded-lg
+                 focus:ring-2 focus:ring-blue-300 focus:border-transparent
+                 transition-all"
+      onChange={(e) =>
+        setForm((prev: any) => ({
+          ...prev,
+          anyDeformity: `Other: ${e.target.value}`,
+        }))
+      }
+    />}
+
+
+  
+</div>
+
               
 <select
   name="moleBodyMark1"
   value={form?.moleBodyMark1 ?? ""}
-  onChange={handleChange}
+   onChange={(e) => {
+                    const value = e.target.value;
+                    setForm({ ...form, moleBodyMark1: value==="Other"?'Other':value });
+                    setisOtherMoleOnBody1 (value === 'Other')
+                   
+                      
+                  }}
   className="border border-gray-300 p-2 h-10 rounded-lg
              focus:ring-2 focus:ring-blue-300 focus:border-transparent
              transition-all bg-white"
@@ -2004,18 +2220,42 @@ console.log("check Seconds Update----",form.permanentAddress)
     "Back",
     "Chest",
     "Abdomen",
+    "Other"
   ].map((mark) => (
     <option key={mark} value={mark}>
       {mark}
     </option>
   ))}
 </select>
+{isOtherMoleOnBody1&& (
+    <input
+      type="text"
+      name="anyDeformityOther"
+      placeholder="Please specify Other"
+      className="w-full border border-gray-300 p-2 h-11 rounded-lg
+                 focus:ring-2 focus:ring-blue-300 focus:border-transparent
+                 transition-all"
+      onChange={(e) =>
+        setForm((prev: any) => ({
+          ...prev,
+          moleBodyMark1: `Other: ${e.target.value}`,
+        }))
+      }
+    />
+  )}
 
 
 <select
   name="moleBodyMark2"
   value={form?.moleBodyMark2 ?? ""}
-  onChange={handleChange}
+
+         onChange={(e) => {
+                    const value = e.target.value;
+                    setForm({ ...form, moleBodyMark2: value==="Other"?'Other':value });
+                    setisOtherMoleOnBody2 (value === 'Other')
+                   
+                      
+                  }}
   className="border border-gray-300 p-2 h-10 rounded-lg
              focus:ring-2 focus:ring-blue-300 focus:border-transparent
              transition-all bg-white"
@@ -2047,6 +2287,23 @@ console.log("check Seconds Update----",form.permanentAddress)
   ))}
 </select>
 
+ {isOtherMoleOnBody2&& (
+    <input
+      type="text"
+      name="anyDeformityOther"
+      placeholder="Please specify Other"
+      className="w-full border border-gray-300 p-2 h-11 rounded-lg
+                 focus:ring-2 focus:ring-blue-300 focus:border-transparent
+                 transition-all"
+      onChange={(e) =>
+        setForm((prev: any) => ({
+          ...prev,
+          moleBodyMark2: `Other: ${e.target.value}`,
+        }))
+      }
+    />
+  )}
+
               </div>
             </div>
 
@@ -2071,24 +2328,22 @@ console.log("check Seconds Update----",form.permanentAddress)
 
             <div className="space-y-5">
 
-              {!isOtherPreviousHealthProblems ?
+           
                 <select
                   name="reportPreviousHealthProblems"
                   value={form?.reportPreviousHealthProblems ?? ""}
                   onChange={(e) => {
                     const value = e.target.value;
-                    setForm({ ...form, reportPreviousHealthProblems: value });
-                    if (value === 'Other')
-                    {setIsOtherPreviousHealthProblems(true);
-                        setForm({ ...form, reportPreviousHealthProblems: '' });
-                    }
+                    setForm({ ...form, reportPreviousHealthProblems: value==="Other"?'Other':value });
+                    setIsOtherPreviousHealthProblems (value === 'Other')
+                   
                       
                   }}
                   className="w-full border border-gray-300 p-2 h-10 rounded-lg
              focus:ring-2 focus:ring-blue-300 focus:border-transparent
              transition-all bg-white"
                 >
-                  <option value="">Select Previous Health Issue</option>
+                  <option value="">Select Previous Health Issues</option>
 
                   {[
                     "None",
@@ -2112,9 +2367,9 @@ console.log("check Seconds Update----",form.permanentAddress)
                       {issue}
                     </option>
                   ))}
-                </select> :
+                </select> 
 
-
+{isOtherPreviousHealthProblems&&
                 <input
                   name="reportPreviousHealthProblems"
                   value={form.reportPreviousHealthProblems || ""}
@@ -2133,64 +2388,177 @@ console.log("check Seconds Update----",form.permanentAddress)
               />
             </div>
 
+<section className="w-full p-4 sm:p-6">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
-            <section className="flex flex-col md:flex-row items-center justify-between p-4 sm:p-6 gap-6 md:gap-2">
+  
+    <div className="bg-white rounded-xl border p-4">
+      <h3 className="text-sm font-semibold mb-4 text-gray-800 border-b pb-2">
+        Professional Skills
+      </h3>
 
-              <div className="flex flex-col items-center justify-center text-center">
-                <h3 className="text-md font-semibold mb-3">Professional Skills</h3>
-                <div className="space-y-2">
-                  {PROFESSIONAL_SKILL_OPTIONS.map((skill) => (
-                    <label key={skill} className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        className="mr-2 accent-purple-600"
-                        checked={form.professionalSkill.includes(skill) || false}
-                        onChange={() => handleprofessionalSkillChange(skill)}
-                      />
-                      {skill}
-                    </label>
-                  ))}
-                </div>
-              </div>
+      <div className="space-y-3">
+        {PROFESSIONAL_SKILL_OPTIONS.map((skill) => (
+          <label
+            key={skill}
+            className="flex items-start gap-2 text-sm text-gray-700"
+          >
+            <input
+              type="checkbox"
+              className="mt-0.5 accent-purple-600 shrink-0"
+              checked={form.professionalSkill.includes(skill)}
+              onChange={() => handleprofessionalSkillChange(skill)}
+            />
+            <span className="leading-snug">{skill}</span>
+          </label>
+        ))}
+      </div>
+
+    {isOtherSelected && (
+  <input
+    type="text"
+    placeholder="Please specify other professional skill"
+    className="w-full mt-3 border border-gray-300 p-3 h-10 rounded-lg
+               focus:ring-2 focus:ring-blue-300 focus:border-transparent
+               transition-all"
+    value={
+      form.professionalSkill.find((s:any) => s.startsWith("Other:"))?.replace("Other:", "") || ""
+    }
+    onChange={(e) => {
+      const value = e.target.value;
+
+      setForm((prev: any) => {
+        const withoutOldOther = prev.professionalSkill.filter(
+          (s: string) => !s.startsWith("Other:")
+        );
+
+        return {
+          ...prev,
+          professionalSkill: value
+            ? [...withoutOldOther, `Other:${value}`]
+            : withoutOldOther,
+        };
+      });
+    }}
+  />
+)}
+
+    </div>
+
+    <div className="bg-white rounded-xl border p-4">
+  <h3 className="text-sm font-semibold mb-4 text-gray-800 border-b pb-2">
+    Home Assistance
+  </h3>
+
+  <div className="space-y-3">
+    {Home_Assistance_Needs.map((skill) => (
+      <label
+        key={skill}
+        className="flex items-start gap-2 text-sm text-gray-700"
+      >
+        <input
+          type="checkbox"
+          className="mt-0.5 accent-purple-600 shrink-0"
+          checked={form.HomeAssistance.includes(skill)}
+          onChange={() => handleHomeAssistanceChange(skill)}
+        />
+        <span className="leading-snug">{skill}</span>
+      </label>
+    ))}
+  </div>
 
 
-              <div className="flex flex-col items-center justify-center text-center">
-                <h3 className="text-md font-semibold mb-3">Home Assistance</h3>
-                <div className="space-y-2">
-                  {["Diaper", "Bathing", "Bedding", "Brushing"].map((skill) => (
-                    <label key={skill} className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        className="mr-2 accent-purple-600"
-                        checked={form.HomeAssistance.includes(skill) || false}
-                        onChange={() => handleSkillChange(skill)}
-                      />
-                      {skill}
-                    </label>
-                  ))}
-                </div>
-              </div>
+  {form.HomeAssistance.includes("Other") && (
+  <input
+    type="text"
+    placeholder="Please specify other home assistance"
+    className="w-full mt-4 border border-gray-300 p-3 h-10 rounded-lg
+               focus:ring-2 focus:ring-blue-300 transition-all"
+    value={
+      form.HomeAssistance.find((s:any) => s.startsWith("Other:"))
+        ?.replace("Other:", "")
+        .trim() || ""
+    }
+    onChange={(e) => {
+      const value = e.target.value;
+
+      setForm((prev: any) => {
+        const withoutCustom = prev.HomeAssistance.filter(
+          (s: string) => !s.startsWith("Other:")
+        );
+
+        return {
+          ...prev,
+          HomeAssistance: value
+            ? [...withoutCustom, `Other: ${value}`]
+            : withoutCustom,
+        };
+      });
+    }}
+  />
+)}
+
+</div>
 
 
-              <div className="flex flex-col items-center justify-center text-center">
-                <h3 className="text-md font-semibold mb-3">Patient Types You Handled</h3>
-                <div className="space-y-2">
-                  {PatientTypes.map(
-                    (skill:any) => (
-                      <label key={skill} className="flex items-center text-sm">
-                        <input
-                          type="checkbox"
-                          className="mr-2 accent-purple-600"
-                          checked={form.HandledSkills.includes(skill) || false}
-                          onChange={() => UpdateHandledSkills(skill)}
-                        />
-                        {skill}
-                      </label>
-                    )
-                  )}
-                </div>
-              </div>
-            </section>
+   
+    <div className="bg-white rounded-xl border p-4">
+  <h3 className="text-sm font-semibold mb-4 text-gray-800 border-b pb-2">
+    Patient Types You Handled
+  </h3>
+
+  <div className="space-y-3">
+    {PatientTypes.map((skill: string) => (
+      <label
+        key={skill}
+        className="flex items-start gap-2 text-sm text-gray-700"
+      >
+        <input
+          type="checkbox"
+          className="mt-0.5 accent-purple-600 shrink-0"
+          checked={form.HandledSkills.includes(skill)}
+          onChange={() => UpdateHandledSkills(skill)}
+        />
+        <span className="leading-snug">{skill}</span>
+      </label>
+    ))}
+  </div>
+
+  {form.HandledSkills.includes("Other") && (
+    <input
+      type="text"
+      placeholder="Please specify other patient type"
+      className="w-full mt-4 border border-gray-300 p-3 h-10 rounded-lg
+                 focus:ring-2 focus:ring-blue-300 transition-all"
+      value={
+        form.HandledSkills.find((s:any) => s.startsWith("Other:"))
+          ?.replace("Other:", "")
+          .trim() || ""
+      }
+      onChange={(e) => {
+        const value = e.target.value;
+
+        setForm((prev: any) => {
+          const withoutCustom = prev.HandledSkills.filter(
+            (s: string) => !s.startsWith("Other:")
+          );
+
+          return {
+            ...prev,
+            HandledSkills: value
+              ? [...withoutCustom, `Other: ${value}`]
+              : withoutCustom,
+          };
+        });
+      }}
+    />
+  )}
+</div>
+
+
+  </div>
+</section>
+
           </section>
 
 
@@ -2253,25 +2621,22 @@ console.log("check Seconds Update----",form.permanentAddress)
               </svg>
               Referral Details
             </h3>
-            <div className="grid grid-cols-1 md:flex justify-between items-center">
-            <div className="flex flex-col gap-1">
+            <div className=" md:flex flex-col ">
+            <div className="flex flex-col gap-1 p-1">
   <label className="text-sm font-medium text-gray-600">
     Source of Referral
   </label>
-{!IsOtherReferal?
+
   <select
     name="sourceOfReferral"
     value={form?.sourceOfReferral ?? ""}
-       onChange={(e) => {
-      const value = e.target.value;
-      setForm({ ...form, sourceOfReferral: value });
-      if (value === 'Other'){
-         setForm({ ...form, sourceOfReferral: '' });
-setIsOtherReferal(true);
-      }
-        
-        
-      }}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm({ ...form, sourceOfReferral: value === "Other" ? '' : value });
+                    setIsOtherReferal(value === 'Other')
+
+
+                  }}
     className="border border-gray-300 p-2 h-10 rounded-lg
                focus:ring-2 focus:ring-blue-300 focus:border-transparent
                transition-all bg-white"
@@ -2283,28 +2648,30 @@ setIsOtherReferal(true);
         {source}
       </option>
     ))}
-  </select>:
+  </select>
+
+  {IsOtherReferal&&
     <input
     id="sourceOfReferral"
     type="Text"
     name="sourceOfReferral"
     value={form?.sourceOfReferral ?? ""}
-    placeholder='Enter Source Name'
+    placeholder='Enter Other Source Name'
     onChange={handleChange}
-    className="border border-gray-300 p-3 h-10 rounded-lg
+    className="border border-gray-300 p-3 h-10 mt-1 rounded-lg
                focus:ring-2 focus:ring-blue-300 focus:border-transparent
                transition-all"
-  />
-  }
+  />}
+  
 
 
 </div>
-<div className="flex flex-col gap-1">
+<div className="flex flex-col gap-1 p-1">
   <label className="text-sm font-medium text-gray-600">
     Referral Source Type
   </label>
 
-  {!isOtherReferralSourceType ? (
+  
     <select
       name="referralSourceType"
       value={form?.referralSourceType ?? ""}
@@ -2313,16 +2680,10 @@ setIsOtherReferal(true);
 
         setForm((prev: any) => ({
           ...prev,
-          referralSourceType: value,
+          referralSourceType: value==="Other"?'':value,
         }));
 
-        if(value==="Other"){
-          setForm((prev: any) => ({
-          ...prev,
-          referralSourceType: "",
-        }));
-          setIsOtherReferralSourceType(true)
-        }
+      setIsOtherReferralSourceType(value==="Other")
       }}
       className="w-full border border-gray-300 p-2 h-10 rounded-lg
                  focus:ring-2 focus:ring-blue-300 focus:border-transparent
@@ -2336,18 +2697,18 @@ setIsOtherReferal(true);
         </option>
       ))}
     </select>
-  ) : (
+  {isOtherReferralSourceType&&
     <input
       type="text"
       name="referralSourceType"
       value={form?.referralSourceType ?? ""}
       onChange={handleChange}
       placeholder="Specify referral source type"
-      className="w-full border border-gray-300 p-3 h-10 rounded-lg
+      className="w-full mt-2 border border-gray-300 p-3 h-10 rounded-lg
                  focus:ring-2 focus:ring-blue-300 focus:border-transparent
                  transition-all"
-    />
-  )}
+    />}
+  
 
  
 </div>
@@ -2373,6 +2734,28 @@ setIsOtherReferal(true);
 </div>
 
             </div>
+            
+          </section>
+
+           <section className="md:w-1/2  pl-4 mt-2 p-2 rounded-xl shadow-xl border border-gray-400">
+            <h3 className="text-md font-semibold text-[#ff1493] mb-3 pb-3 border-b border-blue-200 flex items-center">
+             <svg
+  xmlns="http://www.w3.org/2000/svg"
+  className="h-6 w-6 mr-2 text-[#6366f1]"
+  fill="none"
+  viewBox="0 0 24 24"
+  stroke="currentColor"
+  strokeWidth={2}
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"
+  />
+</svg>
+
+              Reference Details
+            </h3>
             <div className="space-y-5 mt-5">
               <h4 className="text-md font-semibold text-gray-700">Reference 1:</h4>
               <input
@@ -2608,28 +2991,52 @@ setIsOtherReferal(true);
               Service & Payment Details
             </h3>
             <div className="space-y-5">
-              <div className="flex items-center space-x-4">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="serviceHours12hrs"
-                    checked={form.serviceHours12hrs || false}
-                    onChange={handleChange}
-                    className="form-checkbox h-4 w-4 text-blue-600 rounded"
-                  />
-                  <span className="ml-2 text-gray-700">12 Hours Service</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="serviceHours24hrs"
-                    checked={form.serviceHours24hrs || false}
-                    onChange={handleChange}
-                    className="form-checkbox h-4 w-4 text-blue-600 rounded"
-                  />
-                  <span className="ml-2 text-gray-700">24 Hours Service</span>
-                </label>
-              </div>
+              <div className="flex flex-col gap-3">
+
+  <div className="flex flex-wrap items-center gap-4">
+    
+    <label className="flex items-center gap-3 px-4 py-2 rounded-lg border 
+                      bg-white cursor-pointer hover:border-blue-400
+                      transition-all">
+      <input
+        type="checkbox"
+        name="serviceHours12hrs"
+        checked={form.serviceHours12hrs || false}
+        onChange={handleChange}
+        className="h-5 w-5 accent-blue-600"
+      />
+      <span className="text-sm font-medium text-gray-700">
+        12-Hour Service
+      </span>
+    </label>
+
+  
+    <label className="flex items-center gap-3 px-4 py-2 rounded-lg border 
+                      bg-white cursor-pointer hover:border-blue-400
+                      transition-all">
+      <input
+        type="checkbox"
+        name="serviceHours24hrs"
+        checked={form.serviceHours24hrs || false}
+        onChange={handleChange}
+        className="h-5 w-5 accent-blue-600"
+      />
+      <span className="text-sm font-medium text-gray-700">
+        24-Hour Service
+      </span>
+    </label>
+  </div>
+
+ 
+  {form.serviceHours12hrs && form.serviceHours24hrs && (
+    <div className="inline-flex items-center gap-2 text-xs font-medium
+                    text-blue-700 bg-blue-50 border border-blue-200
+                    px-3 py-1 rounded-full w-fit">
+      Both services selected
+    </div>
+  )}
+</div>
+
               <input
                 type="text"
                 name="preferredService"
@@ -2759,23 +3166,9 @@ setIsOtherReferal(true);
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-              <select name="languages"
-                value={form.languages || ''}
-                onChange={handleChange}
-                className="w-full border h-[31px] border-gray-300  rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-              >
-                <option value="">Select Language</option>
-
-                {IndianLanguages.map((l) => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                ))}
-
-              </select>
 {CurrentUserType==="HCN"&&
-<div>
-<div className="flex flex-col gap-1">
+<div className="w-full">
+<div className="w-[200px] flex  flex-col gap-1">
   <label className="text-sm font-medium text-gray-600">
     Nurse Type
   </label>
@@ -2799,7 +3192,7 @@ setIsOtherReferal(true);
 </div>
 
 
-           <div className="flex flex-col gap-1">
+           <div className="w-[200px] flex flex-col gap-1">
   <label className="text-sm font-medium text-gray-600">
     Nurse Specialty
   </label>
@@ -2897,7 +3290,7 @@ setIsOtherReferal(true);
             </h3>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 justify-items-center">
-              {['AdharCard', 'PanCard', 'CertificatOne', 'CertificatTwo', 'AccountPassBook', 'BVR','HCPform'].map((docKey) => (
+              {['AdharCard', 'PanCard', 'Certificat One', 'Certificat Two', 'Account Pass Book', 'BVR','HCP form'].map((docKey) => (
                 <div
                   key={docKey}
                   className="flex flex-col items-center justify-between p-2 border border-blue-300 rounded-lg bg-gray-50 shadow-sm w-36 sm:w-40 h-40"
@@ -2950,7 +3343,7 @@ setIsOtherReferal(true);
                     className="cursor-pointer text-center text-[10px] sm:text-[11px] text-white bg-teal-600 hover:bg-teal-500 px-3 py-1 rounded-full transition-colors duration-300"
                   >
                     {Docs[docKey as keyof typeof Docs] ? 'Update' : 'Upload'}{' '}
-                    {docKey.replace(/([A-Z])/g, ' $1').replace('Card', ' Card').replace('Book', ' Book').trim()}
+                    {docKey.replace('Card', ' Card').replace('Book', ' Book').trim() }
                   </label>
 
                   <input

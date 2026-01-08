@@ -148,7 +148,7 @@ useEffect(() => {
         setStats({
           registeredUsers: patient,
           hcpListCount: hcp,
-          timesheetcount:timesheetData.length,
+          timesheetcount:deployedData.length,
           vendorsCount: vendor,
           hostelAttendanceCount: active,
           registrationCount: monthReg,
