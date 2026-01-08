@@ -17,12 +17,12 @@ import {
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { CircleCheckBig, LogOut, Pencil } from 'lucide-react';
+import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 } from 'lucide-react';
 import {  Update_Main_Filter_Status, UpdateClient, UpdateClientSuggetion, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
 import { ClientEnquiry_Filters, filterColors, hyderabadAreas, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
 
-import { select, tr } from 'framer-motion/client';
+import { select, thead, tr } from 'framer-motion/client';
 import ClientTable from '@/Components/Placements/page';
 import { HCAList } from '@/Redux/reducer';
 import WorkingOn from '@/Components/CurrentlyWoring/page';
@@ -45,7 +45,7 @@ const [SearchDate,SetSearchDate]=useState<any>(null)
   const [search, setSearch] = useState('');
   const [AsignStatus,setAsignStatus]=useState("")
   const [LoginEmail, setLoginEmail] = useState("");
-
+const [ShowDeletePopUp,setShowDeletePopUp]=useState(false)
   const Status =["Processing", "Converted", "Waiting List", "Lost", ];
   const EmailVerificationStatus = ['Verified', 'Pending'];
   const CurrentStatusOptions = ["Active", "Sick", "Leave", "Terminated"];
@@ -380,6 +380,59 @@ const toCamelCase = (value?: string | null) => {
 const ClientEnquiryUserInterFace = () => {
   return (
     <div className="w-full">
+      {ShowDeletePopUp && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">
+
+  <div className="w-full max-w-md bg-white rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.35)] animate-fadeIn">
+
+    {/* Icon */}
+    <div className="flex justify-center pt-8">
+      <div className="h-14 w-14 rounded-full border border-red-200 bg-red-50 flex items-center justify-center">
+        <Trash2 size={22} className="text-red-600" />
+      </div>
+    </div>
+
+    {/* Content */}
+    <div className="px-8 pt-6 pb-8 text-center">
+      <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
+        Delete Client
+      </h2>
+
+      <p className="mt-3 text-sm text-gray-600 leading-relaxed">
+        This client and all associated data will be permanently deleted.
+        This action cannot be undone.
+      </p>
+
+      <p className="mt-4 text-sm font-medium text-gray-900">
+        Do you want to continue?
+      </p>
+    </div>
+
+   
+    <div className="flex border-t border-gray-200">
+      <button
+        onClick={() => setShowDeletePopUp(false)}
+        className="flex-1 py-4 text-sm font-medium text-gray-700
+        hover:bg-gray-50 transition rounded-bl-[28px]"
+      >
+        Cancel
+      </button>
+
+      <div className="w-px bg-gray-200" />
+
+      <button
+     
+        className="flex-1 py-4 text-sm font-semibold text-red-600
+        hover:bg-red-50 transition rounded-br-[28px]"
+      >
+        Delete
+      </button>
+    </div>
+
+  </div>
+</div>
+
+)}
       {UpdatedFilterUserType.length > 0 ? (
         <div className="bg-white/90 rounded-2xl shadow-2xl border border-gray-100">
           <div className=" overflow-y-auto">
@@ -413,7 +466,7 @@ const ClientEnquiryUserInterFace = () => {
                     )} */}
                     <th className="px-4 py-2 w-[10%]">Action</th>
                     {UpdateduserType==='patient'&&<th className="px-2 py-2 w-[10%]">Suitable HCP</th>}
-                       
+                        {UpdateduserType==='patient'&&<th className="px-2 py-2 w-[10%]">Delete</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -776,6 +829,18 @@ onClick={()=>UpdateNavigattosuggetions(user.userId)}
             
           </button>
                       </td>}
+                       {UpdateduserType==='patient'&&
+                      <td className="md:px-8 md:py-2">
+                     
+                         <button
+
+            className="flex   cursor-pointer items-center gap-2 w-full sm:w-auto justify-center  py-2
+    h-10 text-[9px] transition-all duration-150"
+          >
+            <Trash onClick={()=>setShowDeletePopUp(true)}/>
+            
+          </button>
+                      </td>}
                     </tr>
                   ))}
                 </tbody>
@@ -848,6 +913,7 @@ onClick={()=>UpdateNavigattosuggetions(user.userId)}
     </div>
   );
 };
+
 
 
 

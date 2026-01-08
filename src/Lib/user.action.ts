@@ -1144,6 +1144,8 @@ export const PostHCAFullRegistration = async (Info: any) => {
       'HusbendContact':Info.HusbendContact,
       "Mother Name":Info.motherName? encrypt(Info.motherName):null,
       "Husband Name": Info.husbandName ? encrypt(Info.husbandName) : null,
+      "Guardian":Info.Guardian||"",
+      "GuardianContact":Info.GuardianContact||"",
       "Gender": Info.gender,
       "Date of Birth": Info.dateOfBirth,
       "Marital Status": Info.maritalStatus,
@@ -1158,10 +1160,12 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "PAN Number": Info.panNumber ? encrypt(Info.panNumber) : null,
       "PermanentHouseNo":Info.PermanentHouseNo||"Not Provided",
       "PermanentCity":Info.PermanentCity||"",
+      "PermanentState":Info.PermanentState||"",
       "Voter ID No": Info.voterIdNo ? encrypt(Info.voterIdNo) : null,
       "Ration Card No": Info.rationCardNo ? encrypt(Info.rationCardNo) : null,
 
       "CurrentCity":Info.CurrentCity||'',
+      "CurrentState":Info.CurrentState||'',
       "Permanent Address": Info.permanentAddress,
       "CurrentHouseNo":Info.CurrentHouseNo||'',
       "Current Address": Info.currentAddress,
@@ -1221,7 +1225,8 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "Preferred Service": Info.preferredService,
 
    
-      "Payment Service": Info.paymentService,
+      "PaymentforStaff": Info.PaymentforStaff,
+      "NotedDtaeForHike":Info.NotedDtaeForHike,
       "Payment Bank Name":  encrypt(Info.paymentBankName),
       "Payment Bank Account Number": encrypt(Info.paymentBankAccountNumber),
       "IFSC Code": encrypt( Info.ifscCode),
