@@ -23,6 +23,7 @@ import {
   BellRing,
   ClipboardCheck,
 } from "lucide-react";
+import { v4 as uuidv4 } from 'uuid';
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -32,7 +33,7 @@ import {
   UpdateUserInformation,
   UpdateUserType,
 } from "@/Redux/action";
-import { GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo } from "@/Lib/user.action";
+import { CallEnquiryRegistration, GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo } from "@/Lib/user.action";
 import useSWR from "swr";
 
 const fetcher = async () => {
@@ -44,6 +45,7 @@ const FiltersHCPS=data.filter((each:any)=>each.userType==="healthcare-assistant"
 
 import { UserCheck } from "lucide-react";
 import { hyderabadAreas } from "@/Lib/Content";
+import { form } from "framer-motion/client";
 
 const DOCUMENT_KEYS = [
   "AadharAttachmentURL",
@@ -65,6 +67,14 @@ export default function Dashboard() {
     const [isManagement, setIsManagement] = useState<boolean | null>(null);
     const [showAccessDenied, setShowAccessDenied] = useState(false);
     const [showCallEnquiry, setShowCallEnquiry] = useState(false);
+    const [EnquiryMessage,setEnquiryMessage]=useState<any>(null)
+    const [EnquiryForm,setEnquiryForm]=useState<any>({
+      ClientName:"",
+      CliecntContact:'',
+      ClientEmail:'',
+      ClientArea:'',
+      ClientNote:""
+    })
 
   const [stats, setStats] = useState<any>({
     registeredUsers: "Loading...",
@@ -179,7 +189,15 @@ useEffect(() => {
     };
   }, []);
 
+const handleChange=(e:any)=>{
+  try{
+    const name=e.target.name
+    const value=e.target.value
+setEnquiryForm({...EnquiryForm,[name]:value})
+  }catch(err:any){
 
+  }
+}
 
 const tabs = useMemo(
   () => [
@@ -277,7 +295,35 @@ const tabs = useMemo(
   [stats]
 );
 
+  const UpdateCallEnquiry = async () => {
+    setEnquiryMessage("Please Wait.....")
+    try {
+      const generatedUserId = uuidv4()
+      const payload: any = {
+        userType: "CallEnquiry",
+        FirstName: EnquiryForm.ClientName || "",
+        ContactNumber: EnquiryForm.ClientContact || "",
+        Email:EnquiryForm.ClientEmail||"",
+        Location: EnquiryForm.ClientArea || "",
+        ClientNote: EnquiryForm.ClientNote || "",
+        userId: generatedUserId,
 
+      };
+       
+      const registrationResult = await CallEnquiryRegistration(payload);
+    
+  if (registrationResult.success === true) {
+  setEnquiryMessage("Client Enquiry Registered Successfully");
+
+  setTimeout(() => {
+    setShowCallEnquiry(false);
+  }, 3500);
+}
+
+    } catch (err: any) {
+
+    }
+  }
   const { data: BenchList = [], isLoading, mutate } = useSWR(
     "bench-list",
     fetcher,
@@ -660,6 +706,8 @@ console.log('Check Email Status-----',isManagement)
             </label>
             <input
               type="text"
+              name="ClientName"
+              onChange={handleChange}
               placeholder="Full name"
               className="w-full rounded-lg border border-gray-300 px-4 py-3
               text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
@@ -672,22 +720,47 @@ console.log('Check Email Status-----',isManagement)
             </label>
             <input
               type="tel"
+              name="ClientContact"
+          onChange={handleChange}
               maxLength={10}
               placeholder="10-digit number"
               className="w-full rounded-lg border border-gray-300 px-4 py-3
               text-sm tracking-widest focus:ring-2 focus:ring-gray-800 focus:border-transparent"
             />
           </div>
-        </div>
+        <div className="w-full">
+  <label className="block text-xs font-semibold text-gray-600 mb-1">
+    Email Address
+  </label>
 
-    
-        <div>
+  <input
+    type="email"
+    name="ClientEmail"
+    onChange={handleChange}
+    placeholder="example@email.com"
+    className="
+      w-full
+      rounded-xl
+      border border-gray-300
+      px-4 py-3
+      text-sm text-gray-800
+      placeholder-gray-400
+      focus:outline-none
+      focus:ring-2 focus:ring-indigo-500
+      focus:border-transparent
+      transition-all
+    "
+  />
+</div>
+ <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">
             Area
           </label>
           <select
+            name="ClientArea"
             className="w-full rounded-lg border border-gray-300 px-4 py-3
             text-sm bg-white focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+            onChange={handleChange}
           >
             <option value="">Select Area</option>
             {hyderabadAreas.map((city) => (
@@ -695,6 +768,10 @@ console.log('Check Email Status-----',isManagement)
             ))}
           </select>
         </div>
+        </div>
+
+    
+       
 
     
         <div>
@@ -702,15 +779,35 @@ console.log('Check Email Status-----',isManagement)
             Notes
           </label>
           <textarea
+          name="ClientNote"
+          onChange={handleChange}
             placeholder="Short call summary"
             className="w-full rounded-lg border border-gray-300 px-4 py-3
             text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800 focus:border-transparent"
           />
         </div>
+{EnquiryMessage && (
+  <p
+    className="
+      flex items-center gap-2
+      px-4 py-2 mt-3
+      rounded-lg
+      text-sm font-medium
+      shadow-sm
+      transition-all duration-300
+      bg-blue-50 text-blue-700 border border-blue-200
+    "
+  >
+  
+    <span className="h-2 w-2 bg-blue-600 rounded-full animate-pulse" />
+
+    {EnquiryMessage}
+  </p>
+)}
 
       </div>
 
-  
+
       <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
         <button
           onClick={() => setShowCallEnquiry(false)}
@@ -721,6 +818,7 @@ console.log('Check Email Status-----',isManagement)
         </button>
 
         <button
+        onClick={UpdateCallEnquiry}
           className="px-5 py-2 text-sm rounded-lg font-medium text-white
           bg-gray-900 hover:bg-gray-800 transition"
         >

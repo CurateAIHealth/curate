@@ -1017,7 +1017,7 @@ export default function CallEnquiryForm() {
             <div className="flex flex-col gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-200">
 
               <p className="text-gray-700 text-sm font-medium">
-                Care Taker Charge Per Day:{" "}
+               Charge Per Day:{" "}
                 <span className="font-semibold text-teal-700">
                   {formData.serviceCharges}
                 </span>
