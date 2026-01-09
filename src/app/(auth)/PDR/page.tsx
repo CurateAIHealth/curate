@@ -494,6 +494,7 @@ if (url) {
                   selected={formData?.Mobility_Aids}
                   editable={isEditing.AdditionalInformation}
                   onChange={(val) => handleChange("Mobility_Aids", val)}
+                  multiple = {true}
 
                 />
 
