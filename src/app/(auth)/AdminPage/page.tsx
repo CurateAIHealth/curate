@@ -42,11 +42,14 @@ export default function UserTableList() {
   const [isChecking, setIsChecking] = useState(true);
   const [UserFirstName, setUserFirstName] = useState("");
 const [SearchDate,SetSearchDate]=useState<any>(null)
+const [SearchMonth, setSearchMonth] = useState("");
+const [SearchYear, setSearchYear] = useState("");
+
   const [search, setSearch] = useState('');
   const [AsignStatus,setAsignStatus]=useState("")
   const [LoginEmail, setLoginEmail] = useState("");
 const [ShowDeletePopUp,setShowDeletePopUp]=useState(false)
-  const Status =["Processing", "Converted", "Waiting List", "Lost", ];
+  const Status =["None","Processing", "Converted", "Waiting List", "Lost", ];
   const EmailVerificationStatus = ['Verified', 'Pending'];
   const CurrentStatusOptions = ["Active", "Sick", "Leave", "Terminated"];
 
@@ -70,7 +73,11 @@ const [editingUserId, setEditingUserId] = useState<string | null>(null);
       console.error(err);
     }
   };
-
+const pillStyles: Record<string, string> = {
+  HCA: "bg-yellow-200 text-yellow-900",
+  HCP: "bg-green-200 text-green-900",
+  HCN: "bg-purple-200 text-purple-900",
+};
   const UpdateEmailVerificationStatus = async (first: string, e: string, UserId: any) => {
     setUpdatedStatusMsg(`Updating ${first} Email Verification Status....`);
     try {
@@ -109,9 +116,9 @@ const [editingUserId, setEditingUserId] = useState<string | null>(null);
     VerificationStatus: each.VerificationStatus,
     DetailedVerification: each.FinelVerification,
     EmailVerification: each.EmailVerification,
-    ClientStatus: each.ClientStatus||"Processing",
+    ClientStatus: each.ClientStatus||"None",
     Status:each.Status,
-    CurrentStatus:each.CurrentStatus||"Sick",
+    CurrentStatus:each.CurrentStatus||"None",
     LeadSource:each.Source,
     ClientPriority:each.ClientPriority,
     LeadDate:each.LeadDate,
@@ -123,16 +130,38 @@ const [editingUserId, setEditingUserId] = useState<string | null>(null);
 const UpdatedFilterUserType = useMemo(() => {
   return Finel
     .filter((each) => {
-      const matchesType = !UpdateduserType || each.userType === UpdateduserType;
-      const matchesSearch = !search || each.ClientStatus === search;
-      const matchesDate = !SearchDate || each.LeadDate === SearchDate;
-      const notAdmin = each.Email !== "admin@curatehealth.in";
+      const matchesType =
+        !UpdateduserType || each.userType === UpdateduserType;
 
-      return matchesType && matchesSearch && matchesDate && notAdmin;
+      const matchesSearch =
+        !search || each.ClientStatus === search;
+
+      const notAdmin =
+        each.Email !== "admin@curatehealth.in";
+
+      const date = each.LeadDate ? new Date(each.LeadDate) : null;
+
+      const matchesMonth =
+        !SearchMonth ||
+        (date &&
+          date.toLocaleString("default", { month: "long" }) === SearchMonth);
+
+      const matchesYear =
+        !SearchYear ||
+        (date && date.getFullYear() === Number(SearchYear));
+
+      return (
+        matchesType &&
+        matchesSearch &&
+        matchesMonth &&
+        matchesYear &&
+        notAdmin
+      );
     })
-    .slice()   
-    .reverse(); 
-}, [Finel, UpdateduserType, search, SearchDate]);
+    .slice()
+    .reverse();
+}, [Finel, UpdateduserType, search, SearchMonth, SearchYear]);
+
 
 
 
@@ -227,7 +256,7 @@ useEffect(() => {
 
   
 
-console.log("Set Searchhhh------",search)
+
   const UpdateMainFilterValues = () => {
     switch (UpdateMainFilter) {
       case "Client Enquiry":
@@ -797,10 +826,13 @@ const ClientEnquiryUserInterFace = () => {
       UpdateCurrentstatus(user.FirstName, e.target.value, user.userId)
     }
   >
-    <option value="Active">🟢 Active</option>
-    <option value="Sick">🟡 Sick</option>
-    <option value="Leave">🔵 Leave</option>
-    <option value="Terminated">🔴 Terminated</option>
+ 
+      <option value="Active">🟢 Active</option>
+      <option value="Sick">🟡 Sick</option>
+      <option value="Leave">🔵 Leave</option>
+      <option value="Bench">🟣 Bench</option>
+      <option value="None">⚪ None</option>
+      <option value="Terminated">🔴 Terminated</option>
   </select>
 </td>
 
@@ -1055,7 +1087,7 @@ const GetPermanentAddress = (A: any) => {
         {
   UpdateMainFilter === "Client Enquiry"
     ? `${each} (${
-        UpdatedFilterUserType?.filter(
+        Finel?.filter(
           (Try) => Try.ClientStatus === each
         )?.length ||0
       })`
@@ -1065,7 +1097,7 @@ const GetPermanentAddress = (A: any) => {
         
       </button>
     ))}
-  </div>
+</div>
 
 {/*   
   {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
@@ -1079,6 +1111,25 @@ const GetPermanentAddress = (A: any) => {
 
              
             </div>}
+
+
+            {UpdateduserType === "healthcare-assistant"&&  <div className="flex gap-3 flex-wrap items-center">
+  {["HCA", "HCP", "HCN"].map((each, index) => (
+    <span
+      key={index}
+      className={`
+        px-4 py-1.5
+        rounded-full
+        text-sm font-semibold
+        shadow-sm
+        ${pillStyles[each]}
+      `}
+    >
+      {each}(0)
+    </span>
+  ))}
+</div>
+}
           {/* <button
 onClick={()=>UpdateNavigattosuggetions()}
             className="flex mt-7 cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-2 py-2 bg-gradient-to-br from-[#10b981] to-[#065f46] hover:from-[#34d399] hover:to-[#064e3b]
@@ -1086,30 +1137,64 @@ onClick={()=>UpdateNavigattosuggetions()}
           >
             Show Placement Suggetions
           </button> */}
-          {(UpdateMainFilter!=="Deployment")&&(UpdateMainFilter!=="Timesheet") &&(UpdateduserType!=='healthcare-assistant')&&
-<div className="relative">
-  <input
-    type="date"
-    className="
-      peer w-full rounded-xl border border-[#cce5e1]
-      bg-[#f1faf8] px-4 pt-5 pb-2 text-sm text-[#004d40]
-      focus:border-[#00796b] focus:bg-white
-      focus:ring-2 focus:ring-[#00796b]/30 focus:outline-none
-    "
-    onChange={(e:any)=>SetSearchDate(e.target.value)}
-    value={SearchDate||''}
-  />
-  <label
-    className="
-      pointer-events-none absolute left-4 top-2
-      text-xs text-[#00796b]
-      transition-all
-      peer-focus:text-[#00695c]
-    "
-  >
- Search By Date
-  </label>
+          {(UpdateMainFilter==="Deployment")&&(UpdateMainFilter!=="Timesheet") &&(UpdateduserType!=='healthcare-assistant')&&
+<div className="flex justify-between gap-3 md:w-[330px]">
+
+
+  <div >
+    <label className="block text-xs font-semibold text-gray-600 mb-1">
+      Month
+    </label>
+
+    <select
+      value={SearchMonth}
+      onChange={(e) => setSearchMonth(e.target.value)}
+      className="
+        w-full rounded-xl border border-gray-300
+        px-4 py-3 text-sm bg-white text-gray-800
+        focus:outline-none focus:ring-2 focus:ring-indigo-500
+        focus:border-transparent transition-all
+      "
+    >
+      <option value="">All Months</option>
+      {[
+        "January","February","March","April","May","June",
+        "July","August","September","October","November","December"
+      ].map((month) => (
+        <option key={month} value={month}>
+          {month}
+        </option>
+      ))}
+    </select>
+  </div>
+
+
+<div >
+    <label className="block text-xs font-semibold text-gray-600 mb-1">
+      Year
+    </label>
+
+    <select
+      value={SearchYear}
+      onChange={(e) => setSearchYear(e.target.value)}
+      className="
+        w-full rounded-xl border border-gray-300
+        px-4 py-3 text-sm bg-white text-gray-800
+        focus:outline-none focus:ring-2 focus:ring-indigo-500
+        focus:border-transparent transition-all
+      "
+    >
+      <option value="">All Years</option>
+      {[2024, 2025, 2026].map((year) => (
+        <option key={year} value={year}>
+          {year}
+        </option>
+      ))}
+    </select>
+  </div>
+
 </div>
+
 
 
 }

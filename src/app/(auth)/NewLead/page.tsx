@@ -160,9 +160,9 @@ export default function CallEnquiryForm() {
   const [DiscountPrice, setDiscountPrice] = useState<any>(1500)
   const [ClientDiscount, SetClientDiscount] = useState<any>(0)
   const [PhysioScore, SetPhysioScore] = useState(0)
-  const [addingWeight, setaddingWeight] = useState("");
+  const [addingWeight, setaddingWeight] = useState<any>("");
   const [statusMessage, setStatusMessage] = useState("");
-  const [addedheight, setaddedheight] = useState();
+  const [addedheight, setaddedheight] = useState<any>();
   const [TimeStameDetails, setTimeStameDetails] = useState("setTimeStameDetails")
   const [showTooltip, setShowTooltip] = useState(false);
   const [ImportedVendors, setImportedVendors] = useState<any>([])
@@ -676,31 +676,47 @@ export default function CallEnquiryForm() {
                       formData.patientWeight === w
 
                     }
-                    onChange={() => handleChange("patientWeight", w)}
+                    onChange={() =>{setaddingWeight(""); handleChange("patientWeight", w)}}
                     className="mr-2 accent-purple-600"
                   />
                   {w} kg
                 </label>
               ))}
             </div>
-            {formData.patientWeight !== '<40' && formData.patientWeight !== '120+' &&
-              <div className="flex flex-wrap gap-2 items-center justify-center">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((each: any) => (
-                  <button
-                    type="button"
-                    key={each}
-                    onClick={() => {
-                      setaddingWeight(each);
-                      const current = parseInt(formData.patientWeight || "0", 10) || 0;
-                      handleChange("patientWeight", String(current + each));
-                    }}
-                    className="mt-3 px-2 py-1 bg-gray-400 text-white rounded-md text-[10px] sm:text-xs"
-                  >
-                    + {each} kg
-                  </button>
-                ))}
+          {formData.patientWeight !== "<40" && formData.patientWeight !== "120+" && (
+  <div className="flex flex-wrap gap-2 items-center justify-center">
+    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((each: number) => {
+      const isActive = addingWeight === each;
 
-              </div>}
+      return (
+        <button
+          type="button"
+          key={each}
+          onClick={() => {
+            setaddingWeight(each);
+            const current =
+              parseInt(formData.patientWeight || "0", 10) || 0;
+            handleChange("patientWeight", String(current + each));
+          }}
+          className={`
+            mt-3 px-3 py-1.5
+            rounded-lg text-[10px] sm:text-xs font-semibold
+            transition-all duration-200
+
+           ${
+            isActive
+              ? "bg-white text-gray-800 border border-gray-400 shadow-sm"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          }
+          `}
+        >
+          + {each} kg
+        </button>
+      );
+    })}
+  </div>
+)}
+
             {formData.patientWeight && (
               <div className="flex justify-center">
                 <p className="mt-3 w-[200px] text-center bg-pink-400  p-2 text-white rounded-md text-xs sm:text-sm">
@@ -732,7 +748,7 @@ export default function CallEnquiryForm() {
                       Number(formData.patientHeight) === Number(h) ||
                       Number(formData.patientHeight) === Number(h) + Number(addedheight)
                     }
-                    onChange={() => handleChange("patientHeight", h)}
+                    onChange={() =>{setaddedheight(""); handleChange("patientHeight", h)}}
                     className="mr-2 accent-purple-600"
                   />
                   {h} ft
@@ -740,20 +756,41 @@ export default function CallEnquiryForm() {
               ))}
             </div>
             <div className="flex flex-wrap gap-2 items-center justify-center">
-              {[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9].map((each: any) => (
-                <button
-                  type="button"
-                  key={each}
-                  onClick={() => {
-                    setaddedheight(each);
-                    const current = parseFloat(formData.patientHeight || "0") || 0;
-                    handleChange("patientHeight", (current + each).toFixed(1));
-                  }}
-                  className="mt-3 px-2 py-1 bg-gray-500 text-white rounded-md text-[10px] sm:text-xs"
-                >
-                  +{each} ft
-                </button>
-              ))}
+             <div className="flex flex-wrap gap-2 items-center justify-center">
+  {[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9].map((each: number) => {
+    const isActive = addedheight === each;
+
+    return (
+      <button
+        type="button"
+        key={each}
+        onClick={() => {
+          setaddedheight(each);
+          const current =
+            parseFloat(formData.patientHeight || "0") || 0;
+          handleChange(
+            "patientHeight",
+            (current + each).toFixed(1)
+          );
+        }}
+        className={`
+          mt-3 px-3 py-1.5
+          rounded-lg text-[10px] sm:text-xs font-semibold
+          transition-all duration-200
+
+          ${
+            isActive
+              ? "bg-white text-gray-800 border border-gray-400 shadow-sm"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          }
+        `}
+      >
+        +{each} ft
+      </button>
+    );
+  })}
+</div>
+
               {formData.patientHeight && (
                 <p className="mt-3 bg-pink-400 p-2 text-white rounded-md text-xs sm:text-sm">
                   {formData.patientHeight}ft Patient Height
