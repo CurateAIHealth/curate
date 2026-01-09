@@ -1,4 +1,7 @@
 "use client";
+let cachedRegisteredUsers: any[] = [];
+let cachedTimeSheetInfo: any[] = [];
+
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, LogOut, Trash } from "lucide-react";
 import { DeleteTimeSheet, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
@@ -56,18 +59,51 @@ const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
   const SubHeading = useSelector((state: any) => state.SubHeadinList);
   const dispatch = useDispatch();
 const Router=useRouter()
-  useEffect(() => {
-    const Fetch = async () => {
-      const RegisterdUsersResult = await GetRegidterdUsers();
-      setUsers(RegisterdUsersResult || []);
-      const PlacementInformation: any = await GetTimeSheetInfo();
+ useEffect(() => {
+  let mounted = true;
+
+  const fetchData = async (forceFresh = false) => {
+    try {
       
-      setClientsInformation(PlacementInformation);
+      if (!forceFresh && cachedRegisteredUsers.length && cachedTimeSheetInfo.length) {
+        if (!mounted) return;
+
+        setUsers([...cachedRegisteredUsers]);
+        setClientsInformation([...cachedTimeSheetInfo]);
+        dispatch(UpdateSubHeading("On Service"));
+        setIsChecking(false);
+        return;
+      }
+
+  
+      const [usersResult, timesheetInfo] = await Promise.all([
+        GetRegidterdUsers(),
+        GetTimeSheetInfo(),
+      ]);
+
+      if (!mounted) return;
+
+      cachedRegisteredUsers = usersResult ?? [];
+      cachedTimeSheetInfo = timesheetInfo ?? [];
+
+      setUsers(cachedRegisteredUsers);
+      setClientsInformation(cachedTimeSheetInfo);
       dispatch(UpdateSubHeading("On Service"));
-      setIsChecking(false);
-    };
-    Fetch();
-  }, [ActionStatusMessage]);
+    } catch (err) {
+      console.error("Fetch error:", err);
+    } finally {
+      mounted && setIsChecking(false);
+    }
+  };
+
+ 
+  fetchData(!!ActionStatusMessage);
+
+  return () => {
+    mounted = false;
+  };
+}, [ActionStatusMessage, dispatch]);
+
 
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
     const normalizedAttendance =
