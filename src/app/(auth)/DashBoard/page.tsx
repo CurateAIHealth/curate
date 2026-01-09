@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   User,
@@ -95,99 +95,127 @@ export default function Dashboard() {
 
 
 
+const statsCacheRef = useRef<any>(null);
+
 useEffect(() => {
-    let mounted = true;
+  let mounted = true;
 
-    const fetchDashboard = async () => {
-      try {
-        const [
-          registeredUsersData = [],
-          HCPFullInfo = [],
-          deployedData = [],
-          invoiceData = [],
-          timesheetData = [],
-        ] = await Promise.all([
-          GetRegidterdUsers(),
-          GetUsersFullInfo(),
-          GetDeploymentInfo(),
-          GetInvoiceInfo(),
-          GetTimeSheetInfo(),
-        ]);
-
-        if (!mounted) return;
-
-        const now = new Date();
-        const y = now.getFullYear();
-        const m = now.getMonth();
-
-        let patient = 0, hcp = 0, vendor = 0, active = 0, monthReg = 0;
-        const activeSet = new Set<string>();
-
-        for (const u of registeredUsersData) {
-          if (!u) continue;
-          if (u.userType === "patient" && u.ClientStatus !== "Placed") patient++;
-          if (u.userType === "healthcare-assistant") hcp++;
-          if (u.userType === "Vendor") vendor++;
-
-          if (u.CurrentStatus === "Active") {
-            active++;
-            u.userId && activeSet.add(u.userId);
-          }
-
-          if (u.createdAt) {
-            const d = new Date(u.createdAt);
-            if (d.getFullYear() === y && d.getMonth() === m) monthReg++;
-          }
+  const fetchDashboard = async (forceFresh = false) => {
+    try {
+    
+      if (!forceFresh) {
+        const cached = localStorage.getItem("dashboardStats");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          statsCacheRef.current = parsed;
+          mounted && setStats(parsed);
+          return;
         }
-
-        const missingDocSet = new Set<string>();
-        for (const e of HCPFullInfo) {
-          const info = e?.HCAComplitInformation;
-          if (info?.UserId && !("Status" in info)) {
-            missingDocSet.add(info.UserId);
-          }
-        }
-
-        let docCompliance = 0;
-        for (const id of activeSet) {
-          if (missingDocSet.has(id)) docCompliance++;
-        }
-
-        const pendingPdr = timesheetData.reduce(
-          (c: number, t: any) => c + (t?.PDRStatus === false ? 1 : 0),
-          0
-        );
-
-        setStats({
-          registeredUsers: patient,
-          hcpListCount: hcp,
-          timesheetcount:deployedData.length,
-          vendorsCount: vendor,
-          hostelAttendanceCount: active,
-          registrationCount: monthReg,
-          invoiceCount: invoiceData.length,
-          deployedLength: deployedData.length,
-          pendingPdrCount: pendingPdr,
-          documentComplianceCount: docCompliance,
-          Notifications:0,
-          Employs:0
-        });
-
-        const userId = localStorage.getItem("UserId");
-        if (userId) {
-          const user = await GetUserInformation(userId);
-          mounted && setIsManagement(user?.Email === "admin@curatehealth.in");
-        }
-      } catch (e) {
-        console.error("Dashboard Error:", e);
       }
-    };
 
-    fetchDashboard();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+
+      const [
+        registeredUsersData = [],
+        HCPFullInfo = [],
+        deployedData = [],
+        invoiceData = [],
+        timesheetData = [],
+      ] = await Promise.all([
+        GetRegidterdUsers(),
+        GetUsersFullInfo(),
+        GetDeploymentInfo(),
+        GetInvoiceInfo(),
+        GetTimeSheetInfo(),
+      ]);
+
+      if (!mounted) return;
+
+      /* ------------------ STEP 3: CALCULATE COUNTS ------------------ */
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth();
+
+      let patient = 0,
+        hcp = 0,
+        vendor = 0,
+        active = 0,
+        monthReg = 0;
+
+      const activeSet = new Set<string>();
+
+      for (const u of registeredUsersData) {
+        if (!u) continue;
+
+        if (u.userType === "patient" && u.ClientStatus !== "Placed") patient++;
+        if (u.userType === "healthcare-assistant") hcp++;
+        if (u.userType === "Vendor") vendor++;
+
+        if (u.CurrentStatus === "Active") {
+          active++;
+          u.userId && activeSet.add(u.userId);
+        }
+
+        if (u.createdAt) {
+          const d = new Date(u.createdAt);
+          if (d.getFullYear() === y && d.getMonth() === m) monthReg++;
+        }
+      }
+
+      const missingDocSet = new Set<string>();
+      for (const e of HCPFullInfo) {
+        const info = e?.HCAComplitInformation;
+        if (info?.UserId && !("Status" in info)) {
+          missingDocSet.add(info.UserId);
+        }
+      }
+
+      let docCompliance = 0;
+      for (const id of activeSet) {
+        if (missingDocSet.has(id)) docCompliance++;
+      }
+
+      const pendingPdr = timesheetData.reduce(
+        (c: number, t: any) => c + (t?.PDRStatus === false ? 1 : 0),
+        0
+      );
+
+      const finalStats = {
+        registeredUsers: patient,
+        hcpListCount: hcp,
+        timesheetcount: deployedData.length,
+        vendorsCount: vendor,
+        hostelAttendanceCount: active,
+        registrationCount: monthReg,
+        invoiceCount: invoiceData.length,
+        deployedLength: deployedData.length,
+        pendingPdrCount: pendingPdr,
+        documentComplianceCount: docCompliance,
+        Notifications: 0,
+        Employs: 0,
+      };
+
+   
+      statsCacheRef.current = finalStats;
+      localStorage.setItem("dashboardStats", JSON.stringify(finalStats));
+      mounted && setStats(finalStats);
+
+      const userId = localStorage.getItem("UserId");
+      if (userId) {
+        const user = await GetUserInformation(userId);
+        mounted && setIsManagement(user?.Email === "admin@curatehealth.in");
+      }
+    } catch (e) {
+      console.error("Dashboard Error:", e);
+    }
+  };
+
+  fetchDashboard(); 
+
+  return () => {
+    mounted = false;
+  };
+}, []);
+
 
 const handleChange=(e:any)=>{
   try{
