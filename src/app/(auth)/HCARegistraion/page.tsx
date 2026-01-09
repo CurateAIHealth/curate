@@ -9,7 +9,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { stringify } from 'querystring';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LoadingData } from '@/Components/Loading/page';
@@ -158,21 +158,15 @@ const [ImportedVendors, setImportedVendors] = useState<any>([])
     GuardianContact:any;
     PermanentState:any;
     NotedDtaeForHike:any;
+    Remarks:any;
    
     // website?: string; // optional if commented
   }
 
   const router = useRouter();
-const hasRedirected = useRef(false);
-
-useEffect(() => {
 
 
-  if (CurrentUserType===null) {
-  
-    router.replace("/UserTypeRegistration");
-  }
-}, []);
+
 
 
 const isValidAadhaar = (value: string) => /^\d{12}$/.test(value);
@@ -290,10 +284,28 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
     GuardianContact:'',
     PermanentState:'',
     NotedDtaeForHike:'',
+    Remarks:'',
     
   });
 
   const [isuserIdAvailable, setisuserIdAvailable] = useState<any>(null)
+
+const hasRedirected = useRef(false);
+
+useEffect(() => {
+  if (
+    !hasRedirected.current &&
+    isChecking === false &&
+    CurrentUserType === null
+  ) {
+    hasRedirected.current = true;
+    router.replace("/UserTypeRegistration");
+  }
+}, [CurrentUserType, isChecking, router]);
+
+
+
+
 
  useEffect(()=>{
   const GetInfo=async()=>{
@@ -892,8 +904,16 @@ const HEIGHT_OPTIONS = Array.from(
     </div>
   );
 
- if (isChecking) return <LoadingData />;
-if (CurrentUserType === null) return null;
+
+if (isChecking || CurrentUserType === undefined) {
+  return <LoadingData />;
+}
+
+
+if (CurrentUserType === null) {
+  return null;
+}
+
 
 
 console.log("check Update----",form.higherEducation)
@@ -1463,7 +1483,30 @@ className="
                 )}
               </div>
 
-            
+         <div className="w-full">
+  <label className="block text-xs font-semibold text-gray-600 mb-1">
+    Add Remarks
+  </label>
+
+  <textarea
+    rows={4}
+    placeholder="Enter remarks or additional notes..."
+    className="
+      w-full
+      rounded-xl
+      border border-gray-300
+      px-4 py-3
+      text-sm text-gray-800
+      placeholder-gray-400
+      resize-none
+      focus:outline-none
+      focus:ring-2 focus:ring-indigo-500
+      focus:border-transparent
+      transition-all
+    "
+  />
+</div>
+
             {((CurrentUserType === "HCA") || (CurrentUserType === "HCN")) && (
               <div>
 
@@ -3850,7 +3893,33 @@ className="
           
 
          
-            
+            <div className="w-full">
+  <label className="block text-xs font-semibold text-gray-600 mb-1">
+    Add Remarks
+  </label>
+
+  <textarea
+    rows={4}
+    placeholder="Enter remarks or additional notes..."
+    name='Remarks'
+    onChange={handleChange}
+    value={form.Remarks}
+    className="
+      w-full
+      rounded-xl
+      border border-gray-300
+      px-4 py-3
+      text-sm text-gray-800
+      placeholder-gray-400
+      resize-none
+      focus:outline-none
+      focus:ring-2 focus:ring-indigo-500
+      focus:border-transparent
+      transition-all
+    "
+  />
+</div>
+
          
         </section>
 

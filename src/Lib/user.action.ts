@@ -989,7 +989,8 @@ export interface HCAInfo {
   CurrentStatus:any,
   StaffType:any,
   ReferdVedorId:any
-  PreviewUserType:any
+  PreviewUserType:any,
+  ClientNote:any
 }
 
 export const HCARegistration = async (HCA: HCAInfo) => {
@@ -1046,7 +1047,41 @@ StaffType:HCA.StaffType,
       FinelVerification: HCA.FinelVerification,
       EmailVerification: HCA.EmailVerification,
       PreviewUserType:HCA.PreviewUserType,
+      ClientNote:HCA.ClientNote,
 
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const result = await collection.insertOne(encryptedData);
+
+    return {
+      success: true,
+      message: "You registered successfully with Curate Digital AI",
+      insertedId: result.insertedId.toString(),
+    };
+  } catch (err: any) {
+    console.error("Error in HCARegistration:", err);
+    throw err;
+  }
+};
+
+export const CallEnquiryRegistration = async (HCA: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+
+    
+    const encryptedData = {
+   
+      userType: HCA.userType,
+      FirstName:HCA.FirstName? encrypt(HCA.FirstName):'',
+      ContactNumber: encrypt(HCA.ContactNumber),
+      Email: encrypt(HCA.Email),
+      Location:HCA.Location,
+      userId: HCA.userId,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1247,6 +1282,7 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "DocumentSkipReason":Info.DocumentSkipReason,
       "ProfilePic": Info.Documents.ProfilePic || null,
       "Documents":Info.Documents,
+      "Remarks":Info.Remarks
     };
 
     
