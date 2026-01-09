@@ -1,4 +1,8 @@
 'use client';
+let cachedUserInfo: any = null;
+let cachedRegisteredUsers: any = null;
+let cachedFullInfo: any = null;
+let cachedDeployed: any = null;
 
 import {
   GetDeploymentInfo,
@@ -32,10 +36,7 @@ import { decrypt, encrypt } from '@/Lib/Actions';
 import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 import { LoadingData } from '@/Components/Loading/page';
 import ReplacementsTable from '@/Components/ReplacementsTable/page';
-let cachedUserInfo: any = null;
-let cachedRegisteredUsers: any[] | null = null;
-let cachedFullInfo: any[] | null = null;
-let Deployed:any[] 
+
 export default function UserTableList() {
   const [updatedStatusMsg, setUpdatedStatusMsg] = useState('');
   const [users, setUsers] = useState<any[]>([]);
@@ -166,70 +167,133 @@ const UpdatedFilterUserType = useMemo(() => {
 
 
 console.log("Check For Issues-----",UpdatedFilterUserType)
-useEffect(() => {
-  const Fetch = async () => {
-    try {
-      const localValue = localStorage.getItem("UserId");
-      if (!localValue) return;
 
-  
-      if (UpdateduserType) {
-        cachedUserInfo = null;
-        cachedRegisteredUsers = null;
-        cachedFullInfo = null;
-      }
 
-  
-      const [profile, registeredUsers, fullInfo,DeployedLength] = await Promise.all([
-        cachedUserInfo ?? GetUserInformation(localValue),
-        cachedRegisteredUsers ?? GetRegidterdUsers(),
-        cachedFullInfo ?? GetUsersFullInfo(),
-        Deployed?? GetDeploymentInfo()
-      ]);
+// useEffect(() => {
+//   const Fetch = async () => {
+//     try {
+//       const localValue = localStorage.getItem("UserId");
+//       if (!localValue) return;  
+//       const [profile, registeredUsers, fullInfo,DeployedLength] = await Promise.all([
+//         cachedUserInfo ?? GetUserInformation(localValue),
+//         cachedRegisteredUsers ?? GetRegidterdUsers(),
+//         cachedFullInfo ?? GetUsersFullInfo(),
+//         Deployed?? GetDeploymentInfo()
+//       ]);
 
     
+//       cachedUserInfo ||= profile;
+//       cachedRegisteredUsers ||= registeredUsers;
+//       cachedFullInfo ||= fullInfo;
+//       Deployed ||=DeployedLength 
+
+     
+//       setUsers(registeredUsers);
+//       setUserFirstName(profile.FirstName);
+//       setLoginEmail(profile.Email);
+//       setFullInfo(fullInfo);
+    
+
+//       const email = profile?.Email?.toLowerCase();
+
+
+//       if (email === "info@curatehealth.in") {
+//         dispatch(UpdateUserType("patient"));
+//       } else if (email === "gouricurate@gmail.com") {
+//         dispatch(UpdateUserType("healthcare-assistant"));
+//       }
+
+     
+//       const restricted = [
+//         "admin@curatehealth.in",
+//         "info@curatehealth.in",
+//         "gouricurate@gmail.com"
+//       ];
+
+//       if (!restricted.includes(email)) {
+//         router.push("/");
+//         return;
+//       }
+
+//     } catch (err: any) {
+//       console.error("Error fetching data:", err);
+//     } finally {
+//       setIsChecking(false);
+//     }
+//   };
+
+//   Fetch();
+// }, [updatedStatusMsg, CurrentClientStatus, UpdateduserType]);
+
+
+useEffect(() => {
+  let mounted = true;
+
+  const fetchOnce = async () => {
+    try {
+      const userId = localStorage.getItem("UserId");
+      if (!userId) return;
+
+      const [
+        profile,
+        registeredUsers,
+        fullInfo,
+        deployedLength,
+      ] = await Promise.all([
+        cachedUserInfo ?? GetUserInformation(userId),
+        cachedRegisteredUsers ?? GetRegidterdUsers(),
+        cachedFullInfo ?? GetUsersFullInfo(),
+        cachedDeployed ?? GetDeploymentInfo(),
+      ]);
+
+      if (!mounted) return;
+
       cachedUserInfo ||= profile;
       cachedRegisteredUsers ||= registeredUsers;
       cachedFullInfo ||= fullInfo;
-      Deployed ||=DeployedLength 
+      cachedDeployed ||= deployedLength;
 
-     
       setUsers(registeredUsers);
       setUserFirstName(profile.FirstName);
       setLoginEmail(profile.Email);
       setFullInfo(fullInfo);
-    
 
-      const email = profile?.Email?.toLowerCase();
-
-
-      if (email === "info@curatehealth.in") {
-        dispatch(UpdateUserType("patient"));
-      } else if (email === "gouricurate@gmail.com") {
-        dispatch(UpdateUserType("healthcare-assistant"));
-      }
-
-     
-      const restricted = [
-        "admin@curatehealth.in",
-        "info@curatehealth.in",
-        "gouricurate@gmail.com"
-      ];
-
-      if (!restricted.includes(email)) {
-        router.push("/");
-        return;
-      }
-
-    } catch (err: any) {
-      console.error("Error fetching data:", err);
+    } catch (e) {
+      console.error("Fetch error:", e);
     } finally {
-      setIsChecking(false);
+      mounted && setIsChecking(false);
     }
   };
 
-  Fetch();
-}, [updatedStatusMsg, CurrentClientStatus, UpdateduserType]);
+  fetchOnce();
+
+  return () => {
+    mounted = false;
+  };
+}, []); 
+
+
+useEffect(() => {
+  if (!cachedUserInfo) return;
+
+  const email = cachedUserInfo.Email?.toLowerCase();
+
+  if (email === "info@curatehealth.in") {
+    dispatch(UpdateUserType("patient"));
+  } else if (email === "gouricurate@gmail.com") {
+    dispatch(UpdateUserType("healthcare-assistant"));
+  }
+
+  const restricted = [
+    "admin@curatehealth.in",
+    "info@curatehealth.in",
+    "gouricurate@gmail.com",
+  ];
+
+  if (!restricted.includes(email)) {
+    router.push("/");
+  }
+}, [dispatch, router]);
 
 
 

@@ -130,7 +130,7 @@ useEffect(() => {
 
       if (!mounted) return;
 
-      /* ------------------ STEP 3: CALCULATE COUNTS ------------------ */
+    
       const now = new Date();
       const y = now.getFullYear();
       const m = now.getMonth();
@@ -468,6 +468,7 @@ console.log('Check Email Status-----',isManagement)
       switch (name) {
         case "Client Enquiry":
         case "Deployment":
+          case "Timesheet":
           dispatch(Update_Main_Filter_Status(name));
           dispatch(UpdateUserType("patient"));
           router.push("/AdminPage");
@@ -480,6 +481,7 @@ console.log('Check Email Status-----',isManagement)
         case "Pending PDR":
           router.push("/PDRView");
           break;
+          
         case "Vendors":
           router.push("/VendorsPanel");
           break;

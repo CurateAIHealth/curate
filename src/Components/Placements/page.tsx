@@ -1,4 +1,8 @@
 "use client";
+let cachedUsersFullInfo: any;
+let cachedDeploymentInfo: any[] | null = null;
+
+
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Trash } from "lucide-react";
 import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteTimeSheet, GetDeploymentInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReplacmentData, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
@@ -24,12 +28,13 @@ interface AttendanceData {
   status: "Present" | "Absent" | "Leave";
 }
 
-
+type User = any;
+type Deployment = any;
 type AttendanceState = Record<number, AttendanceData>;
 const ClientTable = () => {
-  const [ClientsInformation, setClientsInformation] = useState<any[]>([]);
+  const [ClientsInformation, setClientsInformation] = useState<Deployment[]>([]);
   const [isChecking, setIsChecking] = useState(true);
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [Fineldate, setFineldate] = useState({
     date: '', day: "",
     updatedAt: "",
@@ -58,18 +63,51 @@ const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
   const SubHeading = useSelector((state: any) => state.SubHeadinList);
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    const Fetch = async () => {
-      const RegisterdUsersResult = await GetUsersFullInfo();
-      setUsers(RegisterdUsersResult);
-      const PlacementInformation: any = await GetDeploymentInfo();
-  
-      setClientsInformation(PlacementInformation);
+useEffect(() => {
+  let mounted = true;
+
+  const fetchData = async (forceFresh = false) => {
+    try {
+    
+      if (!forceFresh && cachedUsersFullInfo && cachedDeploymentInfo) {
+        if (!mounted) return;
+
+        setUsers([...cachedUsersFullInfo]);           
+        setClientsInformation([...cachedDeploymentInfo]);
+        dispatch(UpdateSubHeading("On Service"));
+        setIsChecking(false);
+        return;
+      }
+
+      
+      const [usersResult, placementInfo] = await Promise.all([
+        GetUsersFullInfo(),
+        GetDeploymentInfo(),
+      ]);
+
+      if (!mounted) return;
+
+      cachedUsersFullInfo = usersResult ?? [];
+      cachedDeploymentInfo = placementInfo ?? [];
+
+      setUsers(cachedUsersFullInfo);                 
+      setClientsInformation(cachedDeploymentInfo);    
       dispatch(UpdateSubHeading("On Service"));
-      setIsChecking(false);
-    };
-    Fetch();
-  }, [ActionStatusMessage]);
+    } catch (err) {
+      console.error("Fetch error:", err);
+    } finally {
+      mounted && setIsChecking(false);
+    }
+  };
+
+  fetchData(!!ActionStatusMessage);
+
+  return () => {
+    mounted = false;
+  };
+}, [ActionStatusMessage, dispatch]);
+
+
 
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
  const normalizedAttendance =
