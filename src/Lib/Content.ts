@@ -2229,3 +2229,42 @@ export const EducationLevels = [
   "Post Graduate (PG)",
   "Other"
 ];
+
+
+export const StaffEmails = [
+  "admin@curatehealth.in",
+  "tsiddu805@gmail.com",
+  "panducurate@gmail.com",
+  "info@curatehealth.in",
+  "gouricurate@gmail.com",
+  "kirancuratehealth@gmail.com",
+  "srivanikasham@curatehealth.in",
+  "sravanthicurate@gmail.com",
+  "srinivasnew0803@gmail.com",
+  "rpandu823@gmail.com",
+]
+
+
+export const Departments = [
+  "Operations",
+  "Training",
+  "Marketing",
+  "Accounting and Finance",
+  "Management",
+  "Directorship",
+  "Other",
+];
+
+
+
+export const JobTitles = [
+  "Operations Executive",
+  "Business Executive",
+  "Senior Operations & Business",
+  "Senior Business and Operations",
+  "Senior Operations",
+  "Training",
+  "Senior Training",
+  "Accounting and Finance Executive",
+  "Other",
+];

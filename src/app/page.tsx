@@ -13,6 +13,7 @@ import ModernFooter from '@/Components/Footer/page';
 import { UpdateRegisterdType, UpdateTimeStamp } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
 import { LoadingData } from '@/Components/Loading/page';
+import { StaffEmails } from '@/Lib/Content';
 
 
 
@@ -61,7 +62,7 @@ const visibleReviews = showAllReviews
   
 
       const email = ProfileInformation?.Email?.toLowerCase();
-      if (["admin@curatehealth.in", "info@curatehealth.in", "gouricurate@gmail.com"].includes(email)) {
+      if (StaffEmails.includes(email)) {
         router.push("/DashBoard");
         return;
       }

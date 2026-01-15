@@ -166,7 +166,7 @@ const UpdatedFilterUserType = useMemo(() => {
 
 
 
-console.log("Check For Issues-----",UpdatedFilterUserType)
+console.log("Check For Issues-----",UpdateMainFilter)
 
 
 // useEffect(() => {
@@ -285,9 +285,15 @@ useEffect(() => {
   }
 
   const restricted = [
-    "admin@curatehealth.in",
+   
     "info@curatehealth.in",
-    "gouricurate@gmail.com",
+    "admin@curatehealth.in",
+  "tsiddu805@gmail.com",
+ "gouricurate@gmail.com",
+ "srivanikasham@curatehealth.in",
+  "sravanthicurate@gmail.com",
+  "srinivasnew0803@gmail.com",
+
   ];
 
   if (!restricted.includes(email)) {
@@ -311,11 +317,11 @@ useEffect(() => {
     // dispatch(Update_Main_Filter_Status(UpdatedValue))
   };
 
-  const UpdateMainFilterValue=(Z:any)=>{
+  // const UpdateMainFilterValue=(Z:any)=>{
 
-    // SetUpdateMainFilter(Z)
-    dispatch(Update_Main_Filter_Status(Z))
-  }
+  //   // SetUpdateMainFilter(Z)
+  //   dispatch(Update_Main_Filter_Status(Z))
+  // }
 
 
   
@@ -712,12 +718,15 @@ const ClientEnquiryUserInterFace = () => {
                           /> */}
                           <span className="font-semibold text-[#007B7F] truncate">
   {toCamelCase(user.FirstName)}
+
+
 </span>
 
                         </div>
                       </td>
                       {/* <td className="px-2 py-2 break-words">{user?.Email?.toLowerCase()||"Not Provided"}</td> */}
                       <td className="px-2 py-2">+91{user?.Contact||"Not Provided"}</td>
+                      
                       {/* <td className="px-2 py-2">
                         <span className="px-2 sm:px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-[9px] sm:text-xs">
                           {user.userType === "healthcare-assistant" ? "HCA" : user.userType}

@@ -32,7 +32,7 @@ useEffect(() => {
      
   if (Sign_in_UserInfo) {
     
-    setIsManagement(Sign_in_UserInfo.Email === "admin@curatehealth.in");
+    setIsManagement(Sign_in_UserInfo.Email === "sravanthicurate@gmail.com"||Sign_in_UserInfo.Email ==='admin@curatehealth.in');
   } else {
     setIsManagement(false);
   }
@@ -128,11 +128,10 @@ const UpdateView = () => {
                   border border-red-200
                   shadow-[0_20px_40px_-15px_rgba(220,38,38,0.35)]">
 
-    {/* Decorative Glow */}
+
     <div className="absolute -top-10 -right-10 w-28 h-28 bg-red-200 rounded-full blur-3xl opacity-40" />
     <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-rose-300 rounded-full blur-3xl opacity-30" />
 
-    {/* Icon */}
     <div className="mx-auto mb-5 w-16 h-16 rounded-full 
                     bg-red-100 text-red-600 
                     flex items-center justify-center shadow-inner">
@@ -152,7 +151,7 @@ const UpdateView = () => {
       </svg>
     </div>
 
-    {/* Content */}
+ 
     <h2 className="text-2xl font-bold text-gray-800 mb-2">
       Access Restricted
     </h2>
@@ -164,10 +163,10 @@ const UpdateView = () => {
       You do not currently have permission to view this page.
     </p>
 
-    {/* Divider */}
+ 
     <div className="my-6 h-px bg-gradient-to-r from-transparent via-red-200 to-transparent" />
 
-    {/* Action Hint */}
+
     <p className="text-xs text-gray-500">
       If you believe this is a mistake, please contact your administrator.
     </p>

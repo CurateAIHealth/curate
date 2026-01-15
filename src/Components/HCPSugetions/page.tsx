@@ -51,7 +51,7 @@ type Props = {
 };
 
 const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
- 
+
   const [selectedClientIndex, setSelectedClientIndex] = useState<number>(0);
   const [ExsitingInformedUsers, setExsitingInformedUsers] = useState<any[]>([]);
   const [StatusMessage, setStatusMessage] = useState('Test StatusMessage');
@@ -565,7 +565,7 @@ const filteredHcps = hcps.filter((hcp: any) =>
   !Array.isArray(hcp?.Status) ||
   !hcp.Status.includes("Assigned")
 );
-
+ console.log('Check HCO====',filteredHcps)
 const suitableHcps = filteredHcps.filter((hcp: any) => {
   const client = clients[selectedClientIndex];
   if (!client || loading) return false;
