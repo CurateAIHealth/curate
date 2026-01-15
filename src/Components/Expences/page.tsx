@@ -127,7 +127,7 @@ const [ShowOtherExpence,setShowOtherExpence]=useState(false)
               </p>
             </div>
              {ShowOtherExpence&&<div className="col-span-2">
-              <label className="font-medium text-gray-700">Enter Other Expense</label>
+              <label className="font-medium text-gray-700">Enter Other Expenses</label>
               <input
                 name="expenseType"
                 value={form.expenseType}
