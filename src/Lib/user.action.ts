@@ -1065,6 +1065,101 @@ StaffType:HCA.StaffType,
     throw err;
   }
 };
+export const PostEmployInfo = async (EMP: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const encryptedData = {
+    
+      userId: EMP.UserId,
+      userType: "Employee",
+
+    
+      Name: EMP.Name ? encrypt(EMP.Name) : "",
+      Email: EMP.Email ? encrypt(EMP.Email) : "",
+      Contact: EMP.Contact ? encrypt(EMP.Contact) : "",
+      JobTitile:EMP.JobTitile||"",
+      Department: EMP.Department || "",
+      BloodGroup: EMP.BloodGroup || "",
+      JoiningDate: EMP.JoiningDate || "",
+
+    
+      FamilyDetails: {
+        FatherName: EMP.FatherName ? encrypt(EMP.FatherName) : "",
+        FatherContact: EMP.FatherContact
+          ? encrypt(EMP.FatherContact)
+          : "",
+      },
+      EmergencyContact: {
+        Name: EMP.EmergencyName ? encrypt(EMP.EmergencyName) : "",
+        Contact: EMP.EmergencyContact
+          ? encrypt(EMP.EmergencyContact)
+          : "",
+      },
+
+  
+      GovernmentDetails: {
+        Aadhar: EMP.Aadhar ? encrypt(EMP.Aadhar) : "",
+        PAN: EMP.PAN ? encrypt(EMP.PAN) : "",
+      },
+      BankDetails: {
+        BankName: EMP.BankName ? encrypt(EMP.BankName) : "",
+        AccountNumber: EMP.AccountNumber
+          ? encrypt(EMP.AccountNumber)
+          : "",
+        IFSC: EMP.IFSC ? encrypt(EMP.IFSC) : "",
+        BankAddress: EMP.BankAddress
+          ? encrypt(EMP.BankAddress)
+          : "",
+      },
+
+    
+      Address: {
+        house: EMP.Address?.house ? encrypt(EMP.Address.house) : "",
+        landmark: EMP.Address?.landmark
+          ? encrypt(EMP.Address.landmark)
+          : "",
+        city: EMP.Address?.city ? encrypt(EMP.Address.city) : "",
+        state: EMP.Address?.state || "",
+        pincode: EMP.Address?.pincode
+          ? encrypt(EMP.Address.pincode)
+          : "",
+      },
+
+    
+      Documents: {
+        AadharDoc: EMP.AadharDoc || "",
+        PanDoc: EMP.PanDoc || "",
+        BankDoc: EMP.BankDoc || "",
+        AgreementDoc: EMP.AgreementDoc || "",
+      },
+
+   
+      Password: hashValue(EMP.Password),
+      emailHash: hashValue(EMP.Email.toLowerCase()),
+      FinelVerification: true,
+      EmailVerification: true,
+
+      
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const result = await collection.insertOne(encryptedData);
+
+    return {
+      success: true,
+      message: "Employee registered successfully",
+      insertedId: result.insertedId.toString(),
+    };
+  } catch (err: any) {
+    console.error("Error in PostEmployInfo:", err);
+    throw err;
+  }
+};
+
 
 export const CallEnquiryRegistration = async (HCA: any) => {
   try {
@@ -1644,6 +1739,7 @@ export const GetUserPDRInfo = async (UserId: any) => {
 };
 
 import { ObjectId } from "mongodb";
+import EmployRegistration from "@/Components/EmployRegistration/page";
 
 export const UpdateAttendence = async (
   hcpId: string,

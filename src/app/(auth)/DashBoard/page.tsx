@@ -22,6 +22,10 @@ import {
   ReceiptIndianRupee,
   BellRing,
   ClipboardCheck,
+  CircleUser,
+  HelpCircle,
+  Settings,
+  Shield,
 } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from "framer-motion";
@@ -38,7 +42,7 @@ import useSWR from "swr";
 
 const fetcher = async () => {
   const data = await GetRegidterdUsers();
-const FiltersHCPS=data.filter((each:any)=>each.userType==="healthcare-assistant"&&each.Email!=='admin@curatehealth.in')
+  const FiltersHCPS = data.filter((each: any) => each.userType === "healthcare-assistant" && each.Email !== 'admin@curatehealth.in')
   return FiltersHCPS;
 };
 
@@ -46,6 +50,11 @@ const FiltersHCPS=data.filter((each:any)=>each.userType==="healthcare-assistant"
 import { UserCheck } from "lucide-react";
 import { hyderabadAreas } from "@/Lib/Content";
 import { form } from "framer-motion/client";
+import PermissionDeniedPopup from "@/Components/Permission/page";
+import ProfileDrawer from "@/Components/ProfileView/page";
+import MarkAttendance from "@/Components/EmployAttendence/page";
+import axios from "axios";
+import PostExpense from "@/Components/Expences/page";
 
 const DOCUMENT_KEYS = [
   "AadharAttachmentURL",
@@ -64,23 +73,32 @@ export default function Dashboard() {
   const router = useRouter();
   const dispatch = useDispatch();
   const updatedRefresh = useSelector((afterEach: any) => afterEach.updatedCount);
-    const [isManagement, setIsManagement] = useState<boolean | null>(null);
-    const [showAccessDenied, setShowAccessDenied] = useState(false);
-    const [showCallEnquiry, setShowCallEnquiry] = useState(false);
-    const [EnquiryMessage,setEnquiryMessage]=useState<any>(null)
-    const [EnquiryForm,setEnquiryForm]=useState<any>({
-      ClientName:"",
-      CliecntContact:'',
-      ClientEmail:'',
-      ClientArea:'',
-      ClientNote:""
-    })
+  const [isManagement, setIsManagement] = useState<boolean | null>(null);
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
+  const [showCallEnquiry, setShowCallEnquiry] = useState(false);
+  const [EnquiryMessage, setEnquiryMessage] = useState<any>(null)
+  const [showPermissionPopup, setShowPermissionPopup] = useState(false);
+  const [ProfileName,SetProfileName]=useState<any>("")
+  const [openProfile, setOpenProfile] = useState(false);
+  const [AttendeceView,setAttendeceView]=useState(false)
+  const [openExpense,setOpenExpense]=useState<any>(false)
+
+  
+
+  const [loggedInEmail, setloggedInEmail] = useState<any>("")
+  const [EnquiryForm, setEnquiryForm] = useState<any>({
+    ClientName: "",
+    CliecntContact: '',
+    ClientEmail: '',
+    ClientArea: '',
+    ClientNote: ""
+  })
 
   const [stats, setStats] = useState<any>({
     registeredUsers: "Loading...",
-    timesheetcount:'Loading....',
-    ReferalCount:"0",
-    PaymentCount:"0",
+    timesheetcount: 'Loading....',
+    ReferalCount: "0",
+    PaymentCount: "0",
     hcpListCount: "Loading...",
     vendorsCount: "Loading...",
     hostelAttendanceCount: "Loading...",
@@ -89,9 +107,10 @@ export default function Dashboard() {
     deployedLength: "Loading...",
     pendingPdrCount: "Loading...",
     documentComplianceCount: "Loading...",
-    Notifications:"Loading...",
-    Employs:"Loading..."
+    Notifications: "Loading...",
+    Employs: "Loading..."
   });
+
 
 
 
@@ -102,7 +121,13 @@ useEffect(() => {
 
   const fetchDashboard = async (forceFresh = false) => {
     try {
-    
+    const userId = localStorage.getItem("UserId");
+      if (userId) {
+        const user = await GetUserInformation(userId);
+        setloggedInEmail(user?.Email)
+        SetProfileName(user?.Name)
+        mounted && setIsManagement(user?.Email === "admin@curatehealth.in");
+      }
       if (!forceFresh) {
         const cached = localStorage.getItem("dashboardStats");
         if (cached) {
@@ -199,11 +224,7 @@ useEffect(() => {
       localStorage.setItem("dashboardStats", JSON.stringify(finalStats));
       mounted && setStats(finalStats);
 
-      const userId = localStorage.getItem("UserId");
-      if (userId) {
-        const user = await GetUserInformation(userId);
-        mounted && setIsManagement(user?.Email === "admin@curatehealth.in");
-      }
+      
     } catch (e) {
       console.error("Dashboard Error:", e);
     }
@@ -217,111 +238,111 @@ useEffect(() => {
 }, []);
 
 
-const handleChange=(e:any)=>{
-  try{
-    const name=e.target.name
-    const value=e.target.value
-setEnquiryForm({...EnquiryForm,[name]:value})
-  }catch(err:any){
+  const handleChange = (e: any) => {
+    try {
+      const name = e.target.name
+      const value = e.target.value
+      setEnquiryForm({ ...EnquiryForm, [name]: value })
+    } catch (err: any) {
 
+    }
   }
-}
 
-const tabs = useMemo(
-  () => [
-    {
-      name: "Client Enquiry",
-      count: stats.registeredUsers,
-      icon: Bell,
-      bg: "bg-blue-500",
-    },
-    {
-      name: "Deployment",
-      count: stats.deployedLength,
-      icon: Calendar,
-      bg: "bg-pink-500",
-    },
-    {
-      name: "Timesheet",
-      count: stats.timesheetcount,
-      icon: User,
-      bg: "bg-green-500",
-    },
-    {
-      name: "Referral Pay",
-      count: stats.ReferalCount,
-      icon: IndianRupee,
-      bg: "bg-orange-500",
-    },
-    {
-      name: "Payments",
-      count: stats.PaymentCount,
-      icon: Wallet,
-      bg: "bg-purple-500",
-    },
-    {
-      name: "HCP List",
-      count: stats.hcpListCount,
-      icon: Users,
-      bg: "bg-red-500",
-    },
-    {
-      name: "Pending PDR",
-      count: stats.pendingPdrCount,
-      icon: FileClock,
-      bg: "bg-cyan-500",
-    },
-    {
-      name: "Vendors",
-      count: stats.vendorsCount,
-      icon: Building2,
-      bg: "bg-indigo-500",
-    },
-    {
-      name: "Training",
-      count: 0,
-      icon: GraduationCap,
-      bg: "bg-emerald-500",
-    },
-    {
-      name: "Document Compliance",
-      count: stats.documentComplianceCount,
-      icon: FileCheck,
-      bg: "bg-amber-500",
-    },
-    {
-      name: "Registration",
-      count: stats.registrationCount,
-      icon: FileText,
-      bg: "bg-fuchsia-500",
-    },
-    {
-      name: "Invoices",
-      count: stats.invoiceCount,
-      icon: ReceiptIndianRupee,
-      bg: "bg-lime-500",
-    },
-    {
-      name: "Notifications",
-      count: stats.Notifications,
-      icon: BellRing,
-      bg: "bg-sky-500",
-    },
-    {
-      name: "Hostel Attendance",
-      count: stats.hostelAttendanceCount,
-      icon: ClipboardCheck,
-      bg: "bg-green-600",
-    },
-    {
-      name: "Employees",
-      count: stats.Employs,
-      icon: UserCheck,
-      bg: "bg-teal-500",
-    },
-  ],
-  [stats]
-);
+  const tabs = useMemo(
+    () => [
+      {
+        name: "Client Enquiry",
+        count: stats.registeredUsers,
+        icon: Bell,
+        bg: "bg-blue-500",
+      },
+      {
+        name: "Deployment",
+        count: stats.deployedLength,
+        icon: Calendar,
+        bg: "bg-pink-500",
+      },
+      {
+        name: "Timesheet",
+        count: stats.timesheetcount,
+        icon: User,
+        bg: "bg-green-500",
+      },
+      {
+        name: "Referral Pay",
+        count: stats.ReferalCount,
+        icon: IndianRupee,
+        bg: "bg-orange-500",
+      },
+      {
+        name: "Accounts",
+        count: stats.PaymentCount,
+        icon: Wallet,
+        bg: "bg-purple-500",
+      },
+      {
+        name: "HCP List",
+        count: stats.hcpListCount,
+        icon: Users,
+        bg: "bg-red-500",
+      },
+      {
+        name: "Pending PDR",
+        count: stats.pendingPdrCount,
+        icon: FileClock,
+        bg: "bg-cyan-500",
+      },
+      {
+        name: "Vendors",
+        count: stats.vendorsCount,
+        icon: Building2,
+        bg: "bg-indigo-500",
+      },
+      {
+        name: "Training",
+        count: 0,
+        icon: GraduationCap,
+        bg: "bg-emerald-500",
+      },
+      {
+        name: "Document Compliance",
+        count: stats.documentComplianceCount,
+        icon: FileCheck,
+        bg: "bg-amber-500",
+      },
+      {
+        name: "Registration",
+        count: stats.registrationCount,
+        icon: FileText,
+        bg: "bg-fuchsia-500",
+      },
+      {
+        name: "Invoices",
+        count: stats.invoiceCount,
+        icon: ReceiptIndianRupee,
+        bg: "bg-lime-500",
+      },
+      {
+        name: "Notifications",
+        count: stats.Notifications,
+        icon: BellRing,
+        bg: "bg-sky-500",
+      },
+      {
+        name: "Hostel Attendance",
+        count: stats.hostelAttendanceCount,
+        icon: ClipboardCheck,
+        bg: "bg-green-600",
+      },
+      {
+        name: "Employees",
+        count: stats.Employs,
+        icon: UserCheck,
+        bg: "bg-teal-500",
+      },
+    ],
+    [stats]
+  );
 
   const UpdateCallEnquiry = async () => {
     setEnquiryMessage("Please Wait.....")
@@ -331,22 +352,22 @@ const tabs = useMemo(
         userType: "CallEnquiry",
         FirstName: EnquiryForm.ClientName || "",
         ContactNumber: EnquiryForm.ClientContact || "",
-        Email:EnquiryForm.ClientEmail||"",
+        Email: EnquiryForm.ClientEmail || "",
         Location: EnquiryForm.ClientArea || "",
         ClientNote: EnquiryForm.ClientNote || "",
         userId: generatedUserId,
 
       };
-       
-      const registrationResult = await CallEnquiryRegistration(payload);
-    
-  if (registrationResult.success === true) {
-  setEnquiryMessage("Client Enquiry Registered Successfully");
 
-  setTimeout(() => {
-    setShowCallEnquiry(false);
-  }, 3500);
-}
+      const registrationResult = await CallEnquiryRegistration(payload);
+
+      if (registrationResult.success === true) {
+        setEnquiryMessage("Client Enquiry Registered Successfully");
+
+        setTimeout(() => {
+          setShowCallEnquiry(false);
+        }, 3500);
+      }
 
     } catch (err: any) {
 
@@ -362,25 +383,25 @@ const tabs = useMemo(
 
 
 
-    useEffect(() => {
+  useEffect(() => {
     if (updatedRefresh) {
-      mutate(); 
+      mutate();
     }
   }, [updatedRefresh, mutate]);
 
 
-    const RoutToAdminPage = (A: string) => {
-    dispatch(Update_Main_Filter_Status(A)); 
-    dispatch(UpdateUserType("patient"));    
-    router.push("/AdminPage");              
+  const RoutToAdminPage = (A: string) => {
+    dispatch(Update_Main_Filter_Status(A));
+    dispatch(UpdateUserType("patient"));
+    router.push("/AdminPage");
   };
 
- const navigateToRegistration = () => {
+  const navigateToRegistration = () => {
     router.push("/UserTypeRegistration");
   };
 
   const navigateToHCPList = () => {
-    dispatch(Update_Main_Filter_Status("HCP List")); 
+    dispatch(Update_Main_Filter_Status("HCP List"));
     dispatch(UpdateUserType("healthcare-assistant"));
     router.push("/AdminPage");
   };
@@ -401,29 +422,29 @@ const tabs = useMemo(
     router.push("/Invoices");
   };
 
-  const navigateToHostel=()=>{
+  const navigateToHostel = () => {
     router.push("/HostelAttendence")
   }
 
-  const navigateToEmployes=()=>{
-console.log('Check Email Status-----',isManagement)
+  const navigateToEmployes = () => {
+    console.log('Check Email Status-----', isManagement)
 
 
 
-      if (isManagement === false) {
-    setShowAccessDenied(true);
-    return;
-  }
+    if (isManagement === false) {
+      setShowAccessDenied(true);
+      return;
+    }
 
     if (isManagement === true) {
       router.push("/Employes")
     }
- 
-  
+
+
   }
 
-  const navigateToPayments=()=>{
-  router.push("/Payments")
+  const navigateToPayments = () => {
+    router.push("/Payments")
   }
 
   // const Switching = (A: string) => {
@@ -462,45 +483,146 @@ console.log('Check Email Status-----',isManagement)
   //       return;
   //   }
   // };
+const TAB_ACCESS_CONTROL: Record<string, string[]> = {
+  "Client Enquiry": [
+    "tsiddu805@gmail.com",
+    "info@curatehealth.in",
+  ],
 
-  const Switching = useCallback(
-    (name: string) => {
-      switch (name) {
-        case "Client Enquiry":
-        case "Deployment":
-          case "Timesheet":
-          dispatch(Update_Main_Filter_Status(name));
-          dispatch(UpdateUserType("patient"));
-          router.push("/AdminPage");
-          break;
-        case "HCP List":
-          dispatch(Update_Main_Filter_Status("HCP List"));
-          dispatch(UpdateUserType("healthcare-assistant"));
-          router.push("/AdminPage");
-          break;
-        case "Pending PDR":
-          router.push("/PDRView");
-          break;
-          
-        case "Vendors":
-          router.push("/VendorsPanel");
-          break;
-        case "Document Compliance":
-          router.push("/Documents");
-          break;
-        case "Invoices":
-          router.push("/Invoices");
-          break;
-           case "Registration":
-          router.push("/UserTypeRegistration");
-          break;
-        case "Hostel Attendance":
-          router.push("/HostelAttendence");
-          break;
-      }
-    },
-    [dispatch, router]
-  );
+  "Deployment": [
+    "tsiddu805@gmail.com",
+    "panducurate@gmail.com",
+  ],
+
+  "Timesheet": [
+    "panducurate@gmail.com",
+    "srivanikasham@curatehealth.in",
+  ],
+
+  "Referral Pay": [
+    "info@curatehealth.in",
+  ],
+
+  "Payments": [
+    "info@curatehealth.in",
+  ],
+
+  "HCP List": [
+    "sravanthicurate@gmail.com",
+  ],
+
+  "Pending PDR": [
+    "gouricurate@gmail.com",
+    
+  ],
+
+  "Vendors": [
+    "kirancuratehealth@gmail.com",
+  ],
+
+  "Training": [
+    "info@curatehealth.in",
+  ],
+
+  "Document Compliance": [
+    "info@curatehealth.in",
+  ],
+
+  "Registration": [
+    "tsiddu805@gmail.com",
+  ],
+
+  "Invoices": [
+    "rpandu823@gmail.com",
+  ],
+
+  "Notifications": [
+    "info@curatehealth.in",
+  ],
+
+  "Hostel Attendance": [
+    "srinivasnew0803@gmail.com",
+  ],
+
+  "Employees": [
+    "info@curatehealth.in",
+  ],
+
+  ALL: [
+    "admin@curatehealth.in",
+    "sravanthicurate@gmail.com",
+    "srinivasnew0803@gmail.com",
+    "srivanikasham@curatehealth.in",
+    "info@curatehealth.in",
+  ],
+};
+
+const canAccessTab = useCallback(
+  (tab: string, email: string | null) => {
+    if (!email) return false;
+    if (TAB_ACCESS_CONTROL.ALL?.includes(email)) return true;
+    return TAB_ACCESS_CONTROL[tab]?.includes(email);
+  },
+  []
+);
+
+
+const Switching = useCallback(
+  (name: string) => {
+    if (!loggedInEmail) return;
+
+    if (!canAccessTab(name, loggedInEmail)) {
+      setShowPermissionPopup(true);
+      return;
+    }
+
+    switch (name) {
+      case "Client Enquiry":
+      case "Deployment":
+      case "Timesheet":
+        dispatch(Update_Main_Filter_Status(name));
+        dispatch(UpdateUserType("patient"));
+        router.push("/AdminPage");
+        break;
+
+      case "HCP List":
+        dispatch(Update_Main_Filter_Status(name));
+        dispatch(UpdateUserType("healthcare-assistant"));
+        router.push("/AdminPage");
+        break;
+
+      case "Pending PDR":
+        router.push("/PDRView");
+        break;
+
+      case "Vendors":
+        router.push("/VendorsPanel");
+        break;
+
+      case "Document Compliance":
+        router.push("/Documents");
+        break;
+
+      case "Invoices":
+        router.push("/Invoices");
+        break;
+
+      case "Registration":
+        router.push("/UserTypeRegistration");
+        break;
+
+      case "Hostel Attendance":
+        router.push("/HostelAttendence");
+        break;
+    }
+  },
+  [dispatch, router, loggedInEmail, canAccessTab]
+);
+
+
+  
+ 
+
   const UpdateNewLead = async () => {
     router.prefetch("/NewLead");
     router.push("/NewLead");
@@ -508,7 +630,7 @@ console.log('Check Email Status-----',isManagement)
 
   const handleLogout = async () => {
     localStorage.removeItem("UserId");
-     router.prefetch("/");
+    router.prefetch("/");
     router.push("/");
   };
 
@@ -522,9 +644,9 @@ console.log('Check Email Status-----',isManagement)
   };
 
   const NavigatetoFullHCPlIST = () => {
-    dispatch(Update_Main_Filter_Status("HCP List")); 
+    dispatch(Update_Main_Filter_Status("HCP List"));
     dispatch(UpdateUserType("healthcare-assistant"));
- 
+
     router.push("/AdminPage");
   };
 
@@ -534,46 +656,206 @@ console.log('Check Email Status-----',isManagement)
   return (
     <div className="flex h-screen bg-gray-100 relative">
       <div className="flex-1 flex flex-col">
-      
-        <header className="flex flex-wrap justify-between items-center bg-gray-400 text-white px-4 sm:px-6 py-3 shadow-md gap-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <img src="/Icons/Curate-logo.png" alt="user" className="w-8 h-8" />
-            <span className="inline text-[15px] uppercase truncate">
-              Hi Admin – Welcome to Admin Dashboard
-            </span>
-          </div>
 
-          <div className="flex items-center gap-3 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
-            <div className="flex items-center bg-gray-800 px-2 sm:px-3 py-1 rounded-lg flex-1 sm:flex-none">
-              <Search size={18} className="text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="bg-transparent outline-none text-sm px-2 text-white w-full"
-              />
-            </div>
+       <header className="flex flex-wrap justify-between items-center bg-gray-400 text-white px-4 sm:px-6 py-3 shadow-md gap-3">
+    <div className="flex items-center gap-2 min-w-0">
+    <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
+    <span className="text-[15px] uppercase truncate">
+      Hi Admin – Welcome to Admin Dashboard
+    </span>
+  </div>
 
-            <button className="relative">
-              <Bell size={22} />
-              <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-            </button>
+  
+  <div className="flex items-center gap-3 sm:gap-5 w-full sm:w-auto justify-between sm:justify-end">
+ 
+    <div className="flex items-center bg-gray-800 px-2 sm:px-3 py-1 rounded-lg flex-1 sm:flex-none">
+      <Search size={18} className="text-gray-400" />
+      <input
+        type="text"
+        placeholder="Search..."
+        className="bg-transparent outline-none text-sm px-2 text-white w-full"
+      />
+    </div>
 
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-lg sm:rounded-xl font-semibold shadow-lg transition-all duration-150 text-sm sm:text-base"
-            >Logout
-              <LogOut size={18} className="flex-shrink-0" />
-              <span className="hidden xs:inline">Logout</span>
-            </button>
-          </div>
-        </header>
+    
+    <button className="relative">
+      <Bell size={22} />
+      <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+    </button>
+
+ 
+<div className="relative group">
+ 
+  <button
+    className="
+      flex items-center gap-2
+      px-2 py-1
+      bg-gray-800
+      rounded-xl
+    bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e]
+    "
+  >
+    
+      <CircleUser size={18} className="text-gray-200" />
+
+
+    <div className="hidden sm:flex flex-col items-start leading-tight">
+      <span className="text-sm font-semibold text-white">
+        {ProfileName || "Admin"}
+      </span>
+   
+    </div>
+  </button>
+
+  <div
+    className="
+      absolute right-0 mt-3 w-56
+      bg-white text-gray-800
+      rounded-2xl shadow-2xl
+      border border-gray-200
+      opacity-0 scale-95
+      group-hover:opacity-100 group-hover:scale-100
+      transition origin-top-right
+      z-50
+      overflow-hidden
+    "
+  >
+  
+    <div className="px-4 py-3 bg-gray-50 border-b">
+      <p className="text-sm font-semibold text-gray-900">
+        {ProfileName || "Admin User"}
+      </p>
+      <p className="text-xs text-gray-500">
+  {loggedInEmail}
+      </p>
+    </div>
+
+    
+    <div className="py-1 ">
+    <button
+  onClick={() => setOpenProfile(true)}
+  className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+>
+  <User size={16} className="text-slate-500" />
+  <span>My Profile</span>
+</button>
+
+<button
+onClick={()=>setAttendeceView(true)}
+  className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+>
+  <ClipboardCheck size={16} className="text-slate-500" />
+  <span>Attendance</span>
+</button>
+
+<button
+onClick={()=>setOpenExpense(true)}
+  className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+>
+  <IndianRupee size={16} className="text-slate-500" />
+  <span>Post Expense</span>
+</button>
+
+      <button className="w-full px-4 cursor-pointer py-2 text-sm flex items-center gap-2 hover:bg-gray-100">
+        <Shield size={16} /> Security
+      </button>
+
+      <button className="w-full px-4 cursor-pointer py-2 text-sm flex items-center gap-2 hover:bg-gray-100">
+        <Settings size={16} /> Settings
+      </button>
+
+      <button className="w-full px-4 py-2 cursor-pointer text-sm flex items-center gap-2 hover:bg-gray-100">
+        <HelpCircle size={16} /> Help & Support
+      </button>
+    </div>
+
+<div className="h-px bg-gray-200" />
+
+  
+    <button
+      onClick={handleLogout}
+      className="
+        w-full px-4 py-2.5
+        text-sm flex items-center gap-2
+        text-red-600
+        hover:bg-red-50
+        font-medium
+      "
+    >
+      <LogOut size={16} /> Logout
+    </button>
+  </div>
+</div>
+
+
+    {/* Logout Button (optional – can be removed if dropdown logout is used) */}
+    {/* <button
+      onClick={handleLogout}
+      className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150 text-sm"
+    >
+      <LogOut size={18} />
+      Logout
+    </button> */}
+  </div>
+</header>
+
+  <ProfileDrawer
+  open={openProfile}
+  onClose={() => setOpenProfile(false)}
+  profileName={ProfileName}
+  ProfileEmail={loggedInEmail}
+  Designation="Developer"
+/>
+
+
+{AttendeceView && (
+<div
+  className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+  onClick={() => setAttendeceView(false)}
+>
+    
+      <div
+    className="relative w-full max-w-xl mx-4"
+    onClick={(e) => e.stopPropagation()}
+  >
+      <MarkAttendance
+        userId="EMP123"
+        userName={ProfileName}
+        onSubmit={async (data) => {
+          console.log("Attendance Data:", data);
+          await axios.post("/api/attendance", data);
+        }}
+        onClose={() => setAttendeceView(false)}
+      />
+    </div>
+
+  </div>
+)}
+
+    {openExpense && (
+  <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+    <PostExpense
+      employeeId="EMP123"
+      employeeName={ProfileName}
+      expenseTypes={[
+        "Travel",
+        "Food",
+        "Accommodation",
+        "Medical",
+        "Other",
+      ]}
+      onSubmit={(data) => console.log(data)}
+      onClose={() => setOpenExpense(false)}
+    />
+  </div>
+)}
 
 
         <main className="p-4 sm:p-2 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 space-y-6">
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-              {tabs.map((tab:any, index) => (
+              {tabs.map((tab: any, index) => (
                 <motion.div
                   key={tab.name}
                   initial={{ opacity: 0, y: 30 }}
@@ -582,11 +864,11 @@ console.log('Check Email Status-----',isManagement)
                   whileHover={{ scale: 1.05 }}
                   className="flex flex-col items-center justify-center bg-white rounded-xl shadow-md border border-gray-100 p-3 sm:p-1"
                 >
-                 <div
-  className={`w-10 h-10 flex items-center justify-center rounded-full shadow-md ${tab.bg}`}
->
-  <tab.icon size={20} className="text-white" />
-</div>
+                  <div
+                    className={`w-10 h-10 flex items-center justify-center rounded-full shadow-md ${tab.bg}`}
+                  >
+                    <tab.icon size={20} className="text-white" />
+                  </div>
 
 
 
@@ -610,8 +892,12 @@ console.log('Check Email Status-----',isManagement)
                         : "No payments processed this month ❌"}
                     </div>
                   </div>
+                  <PermissionDeniedPopup
+                    open={showPermissionPopup}
+                    onClose={() => setShowPermissionPopup(false)}
+                  />
 
-            
+
                   <div className="mt-2 flex flex-wrap justify-center gap-2">
                     {/* <div className="relative group inline-block">
                       <span
@@ -629,29 +915,29 @@ console.log('Check Email Status-----',isManagement)
                       </div>
                     </div> */}
 
-                   {tab.name === "Client Enquiry" && (
-  <div className="flex items-center gap-2">
-    <button
-      onClick={UpdateNewLead}
-      className="rounded-md cursor-pointer text-xs px-2 py-1
+                    {tab.name === "Client Enquiry" && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={UpdateNewLead}
+                          className="rounded-md cursor-pointer text-xs px-2 py-1
       bg-gradient-to-r from-blue-400 to-blue-500
       text-white font-medium
       hover:from-teal-400 transition"
-    >
-      + New Lead
-    </button>
+                        >
+                          + New Lead
+                        </button>
 
-    <button
-      onClick={() => setShowCallEnquiry(true)}
-      className="rounded-md cursor-pointer text-xs px-2 py-1
+                        <button
+                          onClick={() => setShowCallEnquiry(true)}
+                          className="rounded-md cursor-pointer text-xs px-2 py-1
       bg-gradient-to-r from-green-400 to-green-500
       text-white font-medium
       hover:from-emerald-400 transition"
-    >
-      📞 Call Enquiry
-    </button>
-  </div>
-)}
+                        >
+                          📞 Call Enquiry
+                        </button>
+                      </div>
+                    )}
 
                   </div>
                 </motion.div>
@@ -659,116 +945,116 @@ console.log('Check Email Status-----',isManagement)
             </div>
           </div>
 
-   {showAccessDenied && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-  <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl">
+          {showAccessDenied && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+              <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl">
 
-    <div className="flex items-center justify-center gap-3 rounded-t-xl bg-red-600 px-6 py-4 text-white">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-        <UserX className="h-5 w-5" />
-      </div>
-      <h2 className="text-lg font-semibold tracking-wide">
-        Access Restricted
-      </h2>
-    </div>
-
-
-    <div className="px-6 py-6 text-center">
-      <p className="text-sm leading-relaxed text-gray-700">
-        This section is reserved for{" "}
-        <span className="font-semibold text-red-600">Management</span>.
-        <br />
-        You do not have permission to access Employees.
-      </p>
-    </div>
+                <div className="flex items-center justify-center gap-3 rounded-t-xl bg-red-600 px-6 py-4 text-white">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                    <UserX className="h-5 w-5" />
+                  </div>
+                  <h2 className="text-lg font-semibold tracking-wide">
+                    Access Restricted
+                  </h2>
+                </div>
 
 
-    <div className="flex justify-end border-t border-gray-200 px-6 py-4">
-      <button
-        onClick={() => setShowAccessDenied(false)}
-        className="rounded-lg bg-red-600 px-5 py-2 text-sm cursor-pointer font-semibold text-white
+                <div className="px-6 py-6 text-center">
+                  <p className="text-sm leading-relaxed text-gray-700">
+                    This section is reserved for{" "}
+                    <span className="font-semibold text-red-600">Management</span>.
+                    <br />
+                    You do not have permission to access Employees.
+                  </p>
+                </div>
+
+
+                <div className="flex justify-end border-t border-gray-200 px-6 py-4">
+                  <button
+                    onClick={() => setShowAccessDenied(false)}
+                    className="rounded-lg bg-red-600 px-5 py-2 text-sm cursor-pointer font-semibold text-white
                    shadow transition hover:bg-red-700 active:scale-95"
-      >
-        Close
-      </button>
-    </div>
-  </div>
-</div>
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
 
-)}
+          )}
 
-{showCallEnquiry && (
-  <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+          {showCallEnquiry && (
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
 
- 
-    <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
 
-  
-      <div className="px-6 py-4 border-b flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <img src="Icons/Curate-logoq.png" className="h-9" alt="CompanyLogo"/>
-          <div>
-          
-          <h3 className="text-lg font-semibold text-gray-800">
-            Call Enquiry
-          </h3>
-          <p className="text-xs text-gray-500">
-            Log a quick enquiry from a phone call
-          </p>
-          </div>
-        </div>
-        <button
-          onClick={() => setShowCallEnquiry(false)}
-          className="h-8 w-8 rounded-full flex items-center justify-center
+              <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
+
+
+                <div className="px-6 py-4 border-b flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <img src="Icons/Curate-logoq.png" className="h-9" alt="CompanyLogo" />
+                    <div>
+
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        Call Enquiry
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        Log a quick enquiry from a phone call
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowCallEnquiry(false)}
+                    className="h-8 w-8 rounded-full flex items-center justify-center
           text-gray-500 hover:bg-gray-100 hover:text-red-500 transition"
-        >
-          ✕
-        </button>
-      </div>
+                  >
+                    ✕
+                  </button>
+                </div>
 
-      
-      <div className="px-6 py-5 space-y-4">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Customer Name
-            </label>
-            <input
-              type="text"
-              name="ClientName"
-              onChange={handleChange}
-              placeholder="Full name"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3
+                <div className="px-6 py-5 space-y-4">
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">
+                        Customer Name
+                      </label>
+                      <input
+                        type="text"
+                        name="ClientName"
+                        onChange={handleChange}
+                        placeholder="Full name"
+                        className="w-full rounded-lg border border-gray-300 px-4 py-3
               text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
-            />
-          </div>
+                      />
+                    </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Mobile Number
-            </label>
-            <input
-              type="tel"
-              name="ClientContact"
-          onChange={handleChange}
-              maxLength={10}
-              placeholder="10-digit number"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">
+                        Mobile Number
+                      </label>
+                      <input
+                        type="tel"
+                        name="ClientContact"
+                        onChange={handleChange}
+                        maxLength={10}
+                        placeholder="10-digit number"
+                        className="w-full rounded-lg border border-gray-300 px-4 py-3
               text-sm tracking-widest focus:ring-2 focus:ring-gray-800 focus:border-transparent"
-            />
-          </div>
-        <div className="w-full">
-  <label className="block text-xs font-semibold text-gray-600 mb-1">
-    Email Address
-  </label>
+                      />
+                    </div>
+                    <div className="w-full">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">
+                        Email Address
+                      </label>
 
-  <input
-    type="email"
-    name="ClientEmail"
-    onChange={handleChange}
-    placeholder="example@email.com"
-    className="
+                      <input
+                        type="email"
+                        name="ClientEmail"
+                        onChange={handleChange}
+                        placeholder="example@email.com"
+                        className="
       w-full
       rounded-xl
       border border-gray-300
@@ -780,45 +1066,45 @@ console.log('Check Email Status-----',isManagement)
       focus:border-transparent
       transition-all
     "
-  />
-</div>
- <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">
-            Area
-          </label>
-          <select
-            name="ClientArea"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">
+                        Area
+                      </label>
+                      <select
+                        name="ClientArea"
+                        className="w-full rounded-lg border border-gray-300 px-4 py-3
             text-sm bg-white focus:ring-2 focus:ring-gray-800 focus:border-transparent"
-            onChange={handleChange}
-          >
-            <option value="">Select Area</option>
-            {hyderabadAreas.map((city) => (
-              <option key={city} value={city}>{city}</option>
-            ))}
-          </select>
-        </div>
-        </div>
+                        onChange={handleChange}
+                      >
+                        <option value="">Select Area</option>
+                        {hyderabadAreas.map((city) => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
 
-    
-       
 
-    
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">
-            Notes
-          </label>
-          <textarea
-          name="ClientNote"
-          onChange={handleChange}
-            placeholder="Short call summary"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3
+
+
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">
+                      Notes
+                    </label>
+                    <textarea
+                      name="ClientNote"
+                      onChange={handleChange}
+                      placeholder="Short call summary"
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3
             text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800 focus:border-transparent"
-          />
-        </div>
-{EnquiryMessage && (
-  <p
-    className="
+                    />
+                  </div>
+                  {EnquiryMessage && (
+                    <p
+                      className="
       flex items-center gap-2
       px-4 py-2 mt-3
       rounded-lg
@@ -827,41 +1113,41 @@ console.log('Check Email Status-----',isManagement)
       transition-all duration-300
       bg-blue-50 text-blue-700 border border-blue-200
     "
-  >
-  
-    <span className="h-2 w-2 bg-blue-600 rounded-full animate-pulse" />
+                    >
 
-    {EnquiryMessage}
-  </p>
-)}
+                      <span className="h-2 w-2 bg-blue-600 rounded-full animate-pulse" />
 
-      </div>
+                      {EnquiryMessage}
+                    </p>
+                  )}
+
+                </div>
 
 
-      <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
-        <button
-          onClick={() => setShowCallEnquiry(false)}
-          className="px-4 py-2 text-sm rounded-lg border border-gray-300
+                <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
+                  <button
+                    onClick={() => setShowCallEnquiry(false)}
+                    className="px-4 py-2 text-sm rounded-lg border border-gray-300
           text-gray-600 hover:bg-gray-100"
-        >
-          Cancel
-        </button>
+                  >
+                    Cancel
+                  </button>
 
-        <button
-        onClick={UpdateCallEnquiry}
-          className="px-5 py-2 text-sm rounded-lg font-medium text-white
+                  <button
+                    onClick={UpdateCallEnquiry}
+                    className="px-5 py-2 text-sm rounded-lg font-medium text-white
           bg-gray-900 hover:bg-gray-800 transition"
-        >
-          Save Enquiry
-        </button>
-      </div>
+                  >
+                    Save Enquiry
+                  </button>
+                </div>
 
-    </div>
-  </div>
-)}
+              </div>
+            </div>
+          )}
 
 
-           <div className="lg:col-span-4 space-y-4">
+          <div className="lg:col-span-4 space-y-4">
             <div className="bg-white flex flex-col p-2 sm:p-4 rounded-xl shadow-md">
               <h2 className="text-base sm:text-lg font-semibold mb-3 text-gray-700">
                 Active Bench List
@@ -911,8 +1197,8 @@ console.log('Check Email Status-----',isManagement)
                 </button>
               </div>
             </div>
-          </div> 
-      
+          </div>
+
 
         </main>
       </div>

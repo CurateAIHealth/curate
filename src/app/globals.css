@@ -276,3 +276,23 @@ body {
 .animate-scroll {
   animation: scroll 25s linear infinite;
 }
+
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out;
+}
+.label {
+  @apply text-xs font-semibold text-gray-500 uppercase;
+}
+
+.input {
+  @apply mt-1 w-full rounded-xl border px-4 py-3 text-sm focus:ring-2 focus:ring-[#00A9A5] outline-none;
+}
+
+.upload-box {
+  @apply mt-1 flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-xl cursor-pointer text-sm text-gray-600 hover:bg-gray-50;
+}
