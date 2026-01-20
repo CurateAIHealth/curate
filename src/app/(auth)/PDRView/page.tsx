@@ -324,6 +324,12 @@ const handleLogout = () => {
        
 };
 
+  const handleMainLogout = async () => {
+    localStorage.removeItem("UserId");
+    Router.prefetch("/");
+    Router.push("/");
+  };
+
 
 
   if (isChecking) {
@@ -374,12 +380,26 @@ const handleLogout = () => {
         />
       </svg>
     </div>
-       <button
-                onClick={handleLogout}
-                className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+     <div className='flex items-center'>
+          <button
+            onClick={handleLogout}
+            className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+          >
+          DashBoard
+          </button>
+          <button
+                onClick={handleMainLogout}
+                className="
+                  w-full px-4 py-2.5
+                  text-sm flex items-center gap-2
+                  text-red-600
+                  hover:bg-red-50
+                  font-medium
+                "
               >
-                <LogOut size={20} /> DashBoard
+                <LogOut size={16} /> Logout
               </button>
+              </div>
   </div>
 
 

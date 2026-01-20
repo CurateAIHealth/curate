@@ -1139,6 +1139,8 @@ export const PostEmployInfo = async (EMP: any) => {
    
       Password: hashValue(EMP.Password),
       emailHash: hashValue(EMP.Email.toLowerCase()),
+      Casual:12,
+      Sick:12,
       FinelVerification: true,
       EmailVerification: true,
 
@@ -1176,6 +1178,7 @@ export const CallEnquiryRegistration = async (HCA: any) => {
       ContactNumber: encrypt(HCA.ContactNumber),
       Email: encrypt(HCA.Email),
       Location:HCA.Location,
+      comments:HCA.ClientNote,
       userId: HCA.userId,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -2293,6 +2296,35 @@ export const GetUserInformation = async (UserIdFromLocal: any) => {
 };
 
 
+export const ClearEnquiry = async (userId: string) => {
+  try {
+    const client = await clientPromise;
+    const db = client.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const result = await collection.deleteOne({ userId });
+
+    if (result.deletedCount === 0) {
+      return {
+        success: false,
+        message: "No enquiry found to delete",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Enquiry deleted successfully",
+    };
+  } catch (error) {
+    console.error("Error deleting enquiry:", error);
+    return {
+      success: false,
+      message: "Failed to delete enquiry",
+    };
+  }
+};
+
+
 
 
 export const GetUserCompliteInformation = async (UserIdFromLocal: any) => {
@@ -2739,6 +2771,161 @@ try{
 
 }
 }
+
+
+export const PostEmployeeAttendance = async (EmployInfo: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const attendanceCollection = db.collection("EmployeesAttendance");
+    const notificationCollection = db.collection("Notifications");
+
+    const {
+      userId,
+      userName,
+      status,
+      date,
+      fromDate,
+      toDate,
+    } = EmployInfo;
+    if (status !== "Leave") {
+      const exists = await attendanceCollection.findOne({
+        UserId: userId,
+        AttendanceDate: date,
+      });
+
+      if (exists) {
+        return {
+          success: false,
+          message: "Attendance already marked for today",
+        };
+      }
+
+      const result = await attendanceCollection.insertOne({
+        UserId: userId,
+        EmployeeName: userName,
+        Status: status,
+        AttendanceDate: date,
+        ApprovalStatus: "Approved",
+        CreatedAt: new Date(),
+      });
+
+      return {
+        success: true,
+        message: "Attendance marked successfully",
+        insertedId: result.insertedId.toString(),
+      };
+    }
+
+    /* ================= LEAVE FLOW (ONE RECORD) ================= */
+
+    const start = new Date(fromDate);
+    const end = new Date(toDate);
+
+    if (start > end) {
+      return {
+        success: false,
+        message: "Invalid leave date range",
+      };
+    }
+
+    const totalDays =
+      Math.floor(
+        (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+      ) + 1;
+
+    /* 🔒 BLOCK OVERLAPPING LEAVE */
+    const overlappingLeave = await attendanceCollection.findOne({
+      UserId: userId,
+      Status: "Leave",
+      ApprovalStatus: "Pending",
+      $or: [
+        { FromDate: { $lte: toDate, $gte: fromDate } },
+        { ToDate: { $gte: fromDate, $lte: toDate } },
+        {
+          $and: [
+            { FromDate: { $lte: fromDate } },
+            { ToDate: { $gte: toDate } },
+          ],
+        },
+      ],
+    });
+
+    if (overlappingLeave) {
+      return {
+        success: false,
+        message:
+          "A leave request for the selected dates is already submitted and pending approval.",
+      };
+    }
+
+    /* INSERT SINGLE LEAVE RECORD */
+    const leaveResult = await attendanceCollection.insertOne({
+      UserId: userId,
+      EmployeeName: userName,
+      Status: "Leave",
+      FromDate: fromDate,
+      ToDate: toDate,
+      TotalDays: totalDays,
+      ApprovalStatus: "Pending",
+      ApprovedBy: null,
+      ApprovedAt: null,
+      CreatedAt: new Date(),
+    });
+
+    /* INSERT NOTIFICATION */
+    await notificationCollection.insertOne({
+      Type: "LEAVE_REQUEST",
+      LeaveId: leaveResult.insertedId.toString(),
+      UserId: userId,
+      EmployeeName: userName,
+      FromDate: fromDate,
+      ToDate: toDate,
+      TotalDays: totalDays,
+      Status: "Pending",
+      Message: `${userName} requested leave from ${fromDate} to ${toDate}`,
+      IsRead: false,
+      ActionTaken: false,
+      CreatedAt: new Date(),
+    });
+
+    return {
+      success: true,
+      message: "Leave request sent for manager approval",
+      daysRequested: totalDays,
+    };
+  } catch (err: any) {
+    console.error("PostEmployeeAttendance Error:", err);
+    return {
+      success: false,
+      message: "Failed to submit leave request",
+    };
+  }
+};
+
+
+
+
+export const GetNotificationsInformation=async()=>{
+  try{
+    const Cluster=await clientPromise
+   const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Notifications");
+     const Notifications = await Collection.find().toArray();
+      const PlainNotifications = Notifications.map(each => ({
+  ...each,
+  _id: each._id.toString(),
+}));
+  
+     return PlainNotifications
+  }catch(err:any){
+
+  }
+}
+
+
+
 
 
 export const GetInformedUsers=async()=>{

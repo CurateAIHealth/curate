@@ -101,6 +101,15 @@ setSelectedRecord(true)
     router.push("/DashBoard");
   }, [dispatch, router]);
 
+ 
+  
+    const handleMainLogout = async () => {
+      localStorage.removeItem("UserId");
+      router.prefetch("/");
+      router.push("/");
+    };
+  
+
 
  const result = useMemo(() => {
   return fullInfo
@@ -220,13 +229,26 @@ const FinelPreviewData = useMemo(() => {
             />
           </div>
 
-
+ <div className='flex items-center'>
           <button
             onClick={handleLogout}
-            className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-[#00A9A5] hover:bg-[#008f8b] text-white rounded-xl shadow-md transition"
+            className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
           >
-            <LogOut size={20} /> DashBoard
+          DashBoard
           </button>
+          <button
+                onClick={handleMainLogout}
+                className="
+                  w-full px-4 py-2.5
+                  text-sm flex items-center gap-2
+                  text-red-600
+                  hover:bg-red-50
+                  font-medium
+                "
+              >
+                <LogOut size={16} /> Logout
+              </button>
+              </div>
         </div>
       </div>
 {selectedRecord && (

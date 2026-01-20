@@ -11,10 +11,12 @@ import {
   Filter,
   Pencil,
   Eye,
+  LogOut,
 } from "lucide-react";
 import { GetHostelAttendenceData, GetRegidterdUsers, GetUsersFullInfo, UpdateHostelAttendence, UpdateWholeTeamHostelAttendence } from "@/Lib/user.action";
 import { inflate } from "zlib";
 import { AttendanceCalendarModal } from "@/Components/HostelAttendecePreview/page";
+import { useRouter } from "next/navigation";
 
 
 
@@ -61,7 +63,7 @@ export default function HostelAttendancePage() {
 const [showCalendar, setShowCalendar] = useState(false);
 const [calendarUser, setCalendarUser] = useState<any>(null);
 const [calendarMonth, setCalendarMonth] = useState(new Date());
-
+const Router=useRouter()
 type AttendanceItem = {
   date: any;
   status: any;
@@ -136,7 +138,17 @@ const UpdateAttendence = async (name: any, Id: any, AttendanceVaue: any) => {
 };
 
 console.log("Checkk0-------",Infodata)
+const handleLogout = () => {
 
+  Router.push('/DashBoard'); 
+       
+};
+
+  const handleMainLogout = async () => {
+    localStorage.removeItem("UserId");
+    Router.prefetch("/");
+    Router.push("/");
+  };
 
 const UpdateWholeAttendece=async()=>{
 try{
@@ -168,30 +180,61 @@ try{
   return (
     <div className="min-h-screen bg-slate-50 p-2">
  
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-        <div className="flex items-center gap-3">
-          <BedDouble className="w-7 h-7 text-emerald-600" />
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">
-              Hostel Attendance
-            </h1>
-            <p className="text-sm text-slate-500">
-              Track hostel attendance by specific date
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
 
-   
-          
+  <div className="flex items-center gap-4">
+    <img
+      src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
+      alt="Curate Health Services Logo"
+      className="h-14 md:h-20 w-auto object-contain"
+    />
 
-            <img
-              src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
-              alt="Curate Health Services Logo"
-              className="h-16 md:h-24 w-auto object-contain mx-auto md:mx-0"
-            />
-       
-    
-      </div>
+    <div>
+      <h1 className="text-2xl md:text-3xl font-bold text-slate-800">
+        Hostel Attendance
+      </h1>
+      <p className="text-sm text-slate-500">
+        Track hostel attendance by specific date
+      </p>
+    </div>
+  </div>
+
+
+  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+    <button
+      onClick={handleLogout}
+      className="
+        flex items-center justify-center gap-2
+        px-5 py-2.5
+        bg-gradient-to-br from-[#00A9A5] to-[#005f61]
+        hover:from-[#01cfc7] hover:to-[#00403e]
+        text-white rounded-xl
+        font-semibold shadow-md
+        transition
+      "
+    >
+      Dashboard
+    </button>
+
+    <button
+      onClick={handleMainLogout}
+      className="
+        flex items-center justify-center gap-2
+        px-5 py-2.5
+        text-sm font-medium
+        text-red-600
+        border border-red-200
+        rounded-xl
+        hover:bg-red-50
+        transition
+      "
+    >
+      <LogOut size={16} />
+      Logout
+    </button>
+  </div>
+</div>
+
 
    
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">

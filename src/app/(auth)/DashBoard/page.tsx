@@ -74,6 +74,7 @@ export default function Dashboard() {
   const dispatch = useDispatch();
   const updatedRefresh = useSelector((afterEach: any) => afterEach.updatedCount);
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
+  const [OtherArea,setOtherArea]=useState<any>("")
   const [showAccessDenied, setShowAccessDenied] = useState(false);
   const [showCallEnquiry, setShowCallEnquiry] = useState(false);
   const [EnquiryMessage, setEnquiryMessage] = useState<any>(null)
@@ -82,6 +83,7 @@ export default function Dashboard() {
   const [openProfile, setOpenProfile] = useState(false);
   const [AttendeceView,setAttendeceView]=useState(false)
   const [openExpense,setOpenExpense]=useState<any>(false)
+  const [compliteInfo,setcompliteInfo]=useState<any>()
 
   
 
@@ -124,6 +126,8 @@ useEffect(() => {
     const userId = localStorage.getItem("UserId");
       if (userId) {
         const user = await GetUserInformation(userId);
+        console.log('Check For Employ Complite Info------',user)
+        setcompliteInfo(user)
         setloggedInEmail(user?.Email)
         SetProfileName(user?.Name)
         mounted && setIsManagement(user?.Email === "admin@curatehealth.in");
@@ -549,6 +553,7 @@ const TAB_ACCESS_CONTROL: Record<string, string[]> = {
   ],
 
   ALL: [
+    "tsiddu805@gmail.com",
     "admin@curatehealth.in",
     "sravanthicurate@gmail.com",
     "srinivasnew0803@gmail.com",
@@ -613,6 +618,9 @@ const Switching = useCallback(
 
       case "Hostel Attendance":
         router.push("/HostelAttendence");
+        break;
+        case "Notifications":
+        router.push("/Notifications");
         break;
     }
   },
@@ -819,8 +827,11 @@ onClick={()=>setOpenExpense(true)}
     onClick={(e) => e.stopPropagation()}
   >
       <MarkAttendance
-        userId="EMP123"
+        userId={compliteInfo?.userId}
         userName={ProfileName}
+        SickLeaves={compliteInfo?.Sick}
+        CasualLeaves={compliteInfo?.Casual}
+        usedLeaves={compliteInfo?.UsedLeaves}
         onSubmit={async (data) => {
           console.log("Attendance Data:", data);
           await axios.post("/api/attendance", data);
@@ -1031,19 +1042,45 @@ onClick={()=>setOpenExpense(true)}
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">
-                        Mobile Number
-                      </label>
-                      <input
-                        type="tel"
-                        name="ClientContact"
-                        onChange={handleChange}
-                        maxLength={10}
-                        placeholder="10-digit number"
-                        className="w-full rounded-lg border border-gray-300 px-4 py-3
-              text-sm tracking-widest focus:ring-2 focus:ring-gray-800 focus:border-transparent"
-                      />
-                    </div>
+  <label className="block text-xs font-medium text-gray-500 mb-1">
+    Mobile Number
+  </label>
+
+  <input
+    type="tel"
+    name="ClientContact"
+    value={EnquiryForm.ClientContact || ""}
+    onChange={(e) => {
+     
+      const value = e.target.value.replace(/\D/g, "");
+
+    
+      if (value.length <= 10) {
+        handleChange({
+          target: {
+            name: "ClientContact",
+            value,
+          },
+        } as any);
+      }
+    }}
+    pattern="^[6-9]\d{9}$"
+    maxLength={10}
+    placeholder="10-digit Indian mobile number"
+    className="w-full rounded-lg border border-gray-300 px-4 py-3
+      text-sm tracking-widest focus:ring-2 focus:ring-gray-800
+      focus:border-transparent"
+  />
+
+ 
+  {EnquiryForm.ClientContact &&
+    !/^[6-9]\d{9}$/.test(EnquiryForm.ClientContact) && (
+      <p className="mt-1 text-xs text-red-500">
+        Enter a valid Indian mobile number
+      </p>
+    )}
+</div>
+
                     <div className="w-full">
                       <label className="block text-xs font-semibold text-gray-600 mb-1">
                         Email Address
@@ -1076,13 +1113,39 @@ onClick={()=>setOpenExpense(true)}
                         name="ClientArea"
                         className="w-full rounded-lg border border-gray-300 px-4 py-3
             text-sm bg-white focus:ring-2 focus:ring-gray-800 focus:border-transparent"
-                        onChange={handleChange}
+                    onChange={(e)=>{
+                      setOtherArea(e.target.value==="Other")
+                      setEnquiryForm({ ...EnquiryForm, ClientArea: e.target.value==="Other"?"":e.target.value })
+                    }}
                       >
                         <option value="">Select Area</option>
                         {hyderabadAreas.map((city) => (
                           <option key={city} value={city}>{city}</option>
                         ))}
                       </select>
+                      {OtherArea&&  <input
+   
+                        name="ClientArea"
+                        onChange={handleChange}
+                        placeholder="Enter client area"
+                        className="
+      w-full
+      px-3 py-2
+      text-sm
+      rounded-xl
+      border border-gray-300
+      bg-white
+      text-gray-800
+      placeholder-gray-400
+      mt-2
+      focus:outline-none  
+      focus:ring-2
+      focus:ring-[#1392d3]/40
+      focus:border-[#1392d3]
+hover:border-[#ff1493]
+      transition
+    "
+                      />}
                     </div>
                   </div>
 

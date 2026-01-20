@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { columns, Infodata } from "@/Lib/Content";
-import { Search, Eye, X } from "lucide-react";
+import { Search, Eye, X, LogOut } from "lucide-react";
 import { GetRegidterdUsers } from "@/Lib/user.action";
 import { useRouter } from "next/navigation";
 
@@ -32,6 +32,17 @@ const formatDate = (date?: string) =>
 const AccessInputValues=(e:any)=>{
 setInputValues(e.target.value)
 }
+const handleLogout = () => {
+
+  Router.push('/DashBoard'); 
+       
+};
+
+  const handleMainLogout = async () => {
+    localStorage.removeItem("UserId");
+    Router.prefetch("/");
+    Router.push("/");
+  };
 
 const FilterInputVlaue=ImportedVendors.filter((each:any)=>each.VendorName.includes(InputValues))
 
@@ -55,13 +66,33 @@ const FilterInputVlaue=ImportedVendors.filter((each:any)=>each.VendorName.includ
 
    
         <div className="flex items-center gap-3 w-full md:w-1/3 bg-gray-100 rounded-2xl px-4 py-2 shadow-inner hover:shadow-lg transition">
-          <Search size={18} className="text-gray-700" />
+          <Search size={48} className="text-gray-700" />
           <input
             type="text"
             placeholder="Search vendors..."
             onChange={AccessInputValues}
             className="bg-transparent outline-none text-sm w-full text-gray-800"
           />
+           <div className='flex items-center'>
+                    <button
+                      onClick={handleLogout}
+                      className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+                    >
+                    DashBoard
+                    </button>
+                    <button
+                          onClick={handleMainLogout}
+                          className="
+                            w-full px-4 py-2.5
+                            text-sm flex items-center gap-2
+                            text-red-600
+                            hover:bg-red-50
+                            font-medium
+                          "
+                        >
+                          <LogOut size={16} /> Logout
+                        </button>
+                        </div>
         </div>
       </div>
 
