@@ -134,28 +134,17 @@ const callEnquiryArray=users.filter((each)=>each.userType==='CallEnquiry')
 console.log("Check for Finel Values-----",Finel)
 const UpdatedFilterUserType = useMemo(() => {
   return Finel
-    .filter((each: any) => {
-      /* ---------- USER TYPE FILTER ---------- */
+    .filter((each) => {
+  
       const matchesType =
         !UpdateduserType || each.userType === UpdateduserType;
 
-      /* ---------- GLOBAL SEARCH (Name, Email, Contact) ---------- */
-      const search = SearchResult?.toLowerCase() || "";
-
-      const firstName = each.FirstName?.toLowerCase() || "";
-      const email = each.Email?.toLowerCase() || "";
-      const contact = each.Contact?.toLowerCase() || "";
-
       const matchesSearch =
-        !search ||
-        firstName.includes(search) ||
-        email.includes(search) ||
-        contact.includes(search);
+        !search || each.ClientStatus === search;
 
-      /* ---------- EXCLUDE ADMIN ---------- */
-      const notAdmin = each.Email !== "admin@curatehealth.in";
+      const notAdmin =
+        each.Email !== "admin@curatehealth.in";
 
-      /* ---------- DATE FILTER ---------- */
       const date = each.LeadDate ? new Date(each.LeadDate) : null;
 
       const matchesMonth =
@@ -167,12 +156,24 @@ const UpdatedFilterUserType = useMemo(() => {
         !SearchYear ||
         (date && date.getFullYear() === Number(SearchYear));
 
-      /* ---------- FINAL RETURN ---------- */
+      
+      const matchesSearchResult =
+        !SearchResult ||
+        [each.FirstName, each.Email, each.Contact]
+          .filter(Boolean) 
+          .some((value) =>
+            value
+              .toString()
+              .toLowerCase()
+              .includes(SearchResult.toLowerCase())
+          );
+
       return (
         matchesType &&
         matchesSearch &&
         matchesMonth &&
         matchesYear &&
+        matchesSearchResult && 
         notAdmin
       );
     })
@@ -181,9 +182,10 @@ const UpdatedFilterUserType = useMemo(() => {
 }, [
   Finel,
   UpdateduserType,
-  SearchResult,
+  search,
   SearchMonth,
   SearchYear,
+  SearchResult, 
 ]);
 
 
