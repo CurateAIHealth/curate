@@ -1148,11 +1148,39 @@ className="
                 required
               />
               {form.fatherNameContact &&
-                !/^[6-9]\d{9}$/.test(form.fatherNameContact) && (
-                  <p className="text-xs text-red-500 mt-1">
-                    Enter a valid Indian mobile number
-                  </p>
-                )}
+  form.fatherNameContact !== "Not Available" &&
+  !/^[6-9]\d{9}$/.test(form.fatherNameContact) && (
+    <p className="text-xs text-red-500 mt-1">
+      Enter a valid Indian mobile number
+    </p>
+)}
+
+
+<button
+
+   type="button"
+   onClick={() =>
+    setForm((prev: any) => ({
+      ...prev,
+      fatherNameContact:"Not Available", 
+    }))
+  }
+  className="
+    px-4 py-2
+    rounded-xl
+    bg-amber-50
+    text-amber-700
+    text-sm font-semibold
+    border border-amber-200
+    hover:bg-amber-100
+    hover:border-amber-300
+    transition
+    shadow-sm
+    cursor-pointer
+  "
+>
+  Not Available
+</button>
 
               <input
                 type="text"
@@ -1194,12 +1222,37 @@ className="
   "
               />
               {form.motherContact &&
+             form.motherContact!=="Not Available"&&
                 !/^[6-9]\d{9}$/.test(form.motherContact) && (
                   <p className="text-xs text-red-500 mt-1">
                     Enter a valid Indian mobile number
                   </p>
                 )}
+<button
 
+   type="button"
+   onClick={() =>
+    setForm((prev: any) => ({
+      ...prev,
+      motherContact:"Not Available", 
+    }))
+  }
+  className="
+    px-4 py-2
+    rounded-xl
+    bg-amber-50
+    text-amber-700
+    text-sm font-semibold
+    border border-amber-200
+    hover:bg-amber-100
+    hover:border-amber-300
+    transition
+    shadow-sm
+    cursor-pointer
+  "
+>
+  Not Available
+</button>
               <input
                 type="text"
                 name="Husbend"
@@ -1218,17 +1271,16 @@ className="
   "
 
               />
-              <input
-                type="tel"
-                name="HusbendContact"
-                value={form.HusbendContact || ""}
-                onChange={(e) => {
-
-                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                  setForm({ ...form, HusbendContact: value });
-                }}
-                placeholder="Husband Contact"
-                   className="
+            <input
+  type="tel"
+  name="HusbendContact"
+  value={form.HusbendContact || ""}
+  onChange={(e) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+    setForm({ ...form, HusbendContact: value });
+  }}
+  placeholder="Husband Contact (Optional)"
+  className="
     input-field md:w-[200px] w-full
     border border-gray-300
     p-1 h-10 
@@ -1238,13 +1290,41 @@ className="
     focus:border-transparent m-1
     transition-all
   "
-              />
-              {form.HusbendContact &&
-                !/^[6-9]\d{9}$/.test(form.HusbendContact) && (
-                  <p className="text-xs text-red-500 mt-1">
-                    Enter a valid Indian mobile number
-                  </p>
-                )}
+/>
+
+
+{form.motherContact &&
+form.motherContact!=="Not Available"&&  (
+    <p className="text-xs text-red-500 mt-1">
+      Enter a valid Indian mobile number
+    </p>
+)}
+
+<button
+
+   type="button"
+   onClick={() =>
+    setForm((prev: any) => ({
+      ...prev,
+      HusbendContact:"Not Available", 
+    }))
+  }
+  className="
+    px-4 py-2
+    rounded-xl
+    bg-amber-50
+    text-amber-700
+    text-sm font-semibold
+    border border-amber-200
+    hover:bg-amber-100
+    hover:border-amber-300
+    transition
+    shadow-sm
+    cursor-pointer
+  "
+>
+  Not Available
+</button>
 
               <input
                 type="text"
@@ -2229,7 +2309,7 @@ className="
 
             <select
   name="higherEducation"
-  value={form.higherEducation || ''}
+  value={isOtherhigherEducation?'Other':form.higherEducation || ''}
   onChange={(e) => {
                             const value = e.target.value;
                             setForm({ ...form, higherEducation: (value==="Other"||value==="Diploma")?"Other":value });
@@ -2285,13 +2365,14 @@ className="
 
             <select
   name="professionalEducation"
-  value={form.professionalEducation || ''}
+   value={isOtherProfetionalEducation? 'Other': form.professionalEducation || ''}
+   
 
-    onChange={(e) => {
-                            const value = e.target.value;
-                            setForm({ ...form, professionalEducation: value==="Other"?"":value });
-                           setIsOtherProfetionalEducation (value === 'Other')
-                          }}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setForm({ ...form, professionalEducation: value });
+                  setIsOtherProfetionalEducation(value === 'Other')
+                }}
   className="
     input-field w-full
     border border-gray-300
@@ -2342,7 +2423,8 @@ className="
 
  <select
     name="OngoingStudy"
-    value={form.OngoingStudy||''}
+    value={isOtherOngoingEducation?"Other":form.OngoingStudy||''}
+    
     onChange={(e) => {
       const value = e.target.value;
        
