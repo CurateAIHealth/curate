@@ -1166,7 +1166,7 @@ className="
     }))
   }
   className="
-    px-4 py-2
+    px-4 py-2 md:ml-[20px]
     rounded-xl
     bg-amber-50
     text-amber-700
@@ -1238,7 +1238,7 @@ className="
     }))
   }
   className="
-    px-4 py-2
+    px-4 py-2 md:ml-[20px]
     rounded-xl
     bg-amber-50
     text-amber-700
@@ -1310,7 +1310,7 @@ form.motherContact!=="Not Available"&&  (
     }))
   }
   className="
-    px-4 py-2
+    px-4 py-2 md:ml-[20px]
     rounded-xl
     bg-amber-50
     text-amber-700

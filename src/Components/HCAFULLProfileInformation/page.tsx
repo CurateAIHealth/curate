@@ -167,7 +167,13 @@ useEffect(()=>{
       PanCard: FilterValue.Documents.PanCard||'/Icons/PatientDefault.png',
       AccountPassBook:FilterValue.Documents. AccountPassBook||'/Icons/PatientDefault.png',
       CertificatOne:FilterValue.Documents.CertificatOne||'/Icons/PatientDefault.png',
-      CertificatTwo: FilterValue.Documents.CertificatTwo||'/Icons/PatientDefault.png'
+      CertificatTwo: FilterValue.Documents.CertificatTwo||'/Icons/PatientDefault.png',
+      BVR:FilterValue.BVR||'/Icons/PatientDefault.png',
+      HCPform:FilterValue.HCPform||'/Icons/PatientDefault.png'
+
+
+
+
 
         },
 
@@ -262,7 +268,7 @@ setSubmitstatusMessage("Profile Updated Succesfully")
         : { ...prev, ProfetionSkill: [...skills, skill] };
     });
   };
-console.log("Checkkkkk------", user)
+console.log("Checkkkkk------", user.Documents)
   const renderTabContent = () => {
   switch (activeTab) {
     case 'Personal Info':
