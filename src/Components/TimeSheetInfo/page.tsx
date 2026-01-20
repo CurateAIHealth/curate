@@ -29,7 +29,7 @@ const [billingRecord, setBillingRecord] = useState<any>(null);
   const [showPendingCalendar, setShowPendingCalendar] = useState(false);
    const [showMissingCalendar, setShowMissingCalendar] = useState(false);
   const [StatusMessage,SetStatusMessage]=useState<any>("")
-
+const [SearchResult,setSearchResult]=useState("")
   const dispatch = useDispatch();
   const router = useRouter();
   const getMonthKey = (record: any) => {
@@ -208,14 +208,30 @@ const [billingRecord, setBillingRecord] = useState<any>(null);
     return categoryColors[index];
   };
 
-  // Processed table data
-  const processedData = useMemo(() => {
-    return data.map((record: any) => {
+ console.log("Check for test Data-----",data)
+const processedData = useMemo(() => {
+  const search = SearchResult?.toLowerCase().trim() || "";
+
+  return data
+   
+    .filter((record: any) => {
+      if (!search) return true;
+
+      const name = record.clientName?.toLowerCase() || "";
+      const phone = record.clientPhone?.toString() || "";
+
+      return (
+        name.includes(search) ||
+        phone.includes(search)
+      );
+    })
+
+   
+    .map((record: any) => {
       const dayStatusArray = Array.from({ length: 31 }, () => "-");
 
       (record.days || []).forEach((att: any) => {
-        let d = att.AttendenceDate;
-        const dateObj = new Date(d);
+        const dateObj = new Date(att.AttendenceDate);
         const day = dateObj.getDate();
 
         const hcp = att.HCPAttendence === true;
@@ -223,13 +239,8 @@ const [billingRecord, setBillingRecord] = useState<any>(null);
 
         let status: DayStatus = "A";
 
-        if (hcp && admin) {
-          status = "P";
-        } else if (hcp || admin) {
-          status = "HP";
-        } else {
-          status = "A";
-        }
+        if (hcp && admin) status = "P";
+        else if (hcp || admin) status = "HP";
 
         if (day >= 1 && day <= 31) {
           dayStatusArray[day - 1] = status;
@@ -246,9 +257,14 @@ const [billingRecord, setBillingRecord] = useState<any>(null);
         { pd: 0, ad: 0, hp: 0 }
       );
 
-      return { ...record, days: dayStatusArray, ...counts };
+      return {
+        ...record,
+        days: dayStatusArray,
+        ...counts,
+      };
     });
-  }, [data]);
+}, [data, SearchResult]);
+
 
   const RouteToClient = (A: any, ClientName: any) => {
     if (A) {
@@ -257,10 +273,10 @@ const [billingRecord, setBillingRecord] = useState<any>(null);
       router.push("/UserInformation");
     }
   };
-console.log("Check Info-----",ClientsInformation)
+
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 p-6">
-      {/* HEADER */}
+
       <header className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 gap-4">
         <div>
           <h1 className="text-3xl font-semibold text-gray-800 tracking-tight flex items-center gap-3">
@@ -273,23 +289,58 @@ console.log("Check Info-----",ClientsInformation)
 
         
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
            <button
           onClick={() => setShowMissingCalendar(true)}
-          className="px-4 py-2 bg-blue-500 cursor-pointer text-white rounded-lg shadow hover:bg-blue-800 self-start"
+          className="px-4 py-2 text-sm bg-blue-500 cursor-pointer text-white rounded-lg shadow hover:bg-blue-800 self-start"
         >
           View Missing Attendance
         </button>
           <button
           onClick={() => setShowPendingCalendar(true)}
-          className="px-4 py-2 bg-teal-600 cursor-pointer text-white rounded-lg shadow hover:bg-teal-800 self-start"
+          className="px-4 py-2 text-sm bg-teal-600 cursor-pointer text-white rounded-lg shadow hover:bg-teal-800 self-start"
         >
           View Pending Attendance
         </button>
+        <div
+    className="
+      flex items-center bg-white shadow-md rounded-xl
+      px-4 h-[36px]
+      border border-gray-200
+      focus-within:border-indigo-500
+      transition
+       md:w-[220px]
+    "
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="1.5"
+      stroke="currentColor"
+      className="w-5 h-5 text-gray-500 mr-2"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"
+      />
+    </svg>
+
+    <input
+      type="search"
+      placeholder="Search..."
+      onChange={(e: any) => setSearchResult(e.target.value)}
+      className="
+        w-full bg-transparent outline-none
+        text-sm text-gray-700 placeholder-gray-400
+      "
+    />
+  </div>
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="rounded-xl border border-gray-300 p-2 bg-white shadow-sm hover:border-green-400 focus:border-green-500 focus:ring-1 focus:ring-green-400"
+            className="rounded-xl border  border-gray-300 p-2 bg-white shadow-sm hover:border-green-400 focus:border-green-500 focus:ring-1 focus:ring-green-400"
           >
             {months.map((m) => (
               <option key={m.value} value={m.value}>
@@ -323,7 +374,7 @@ console.log("Check Info-----",ClientsInformation)
     }}
   />
 )}
-      {/* MAIN TABLE (unchanged) */}
+    
       <div className="overflow-x-auto bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md rounded-2xl">
         <table className="min-w-[2800px] border-collapse text-sm text-gray-800 rounded-lg overflow-hidden">
           <thead>
@@ -453,7 +504,7 @@ console.log("Check Info-----",ClientsInformation)
         </table>
       </div>
 
-      {/* DETAIL MODAL (unchanged) */}
+  
       {selectedRecord && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"

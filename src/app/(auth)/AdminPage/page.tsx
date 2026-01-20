@@ -47,7 +47,7 @@ export default function UserTableList() {
 const [SearchDate,SetSearchDate]=useState<any>(null)
 const [SearchMonth, setSearchMonth] = useState("");
 const [SearchYear, setSearchYear] = useState("");
-
+ const [SearchResult,setSearchResult]=useState("")
   const [search, setSearch] = useState('');
   const [AsignStatus,setAsignStatus]=useState("")
   const [LoginEmail, setLoginEmail] = useState("");
@@ -131,19 +131,31 @@ const callEnquiryArray=users.filter((each)=>each.userType==='CallEnquiry')
     ServiceLocation:each.ServiceArea,
     PreviewUserType:each.PreviewUserType
   }));
-
+console.log("Check for Finel Values-----",Finel)
 const UpdatedFilterUserType = useMemo(() => {
   return Finel
-    .filter((each) => {
+    .filter((each: any) => {
+      /* ---------- USER TYPE FILTER ---------- */
       const matchesType =
         !UpdateduserType || each.userType === UpdateduserType;
 
+      /* ---------- GLOBAL SEARCH (Name, Email, Contact) ---------- */
+      const search = SearchResult?.toLowerCase() || "";
+
+      const firstName = each.FirstName?.toLowerCase() || "";
+      const email = each.Email?.toLowerCase() || "";
+      const contact = each.Contact?.toLowerCase() || "";
+
       const matchesSearch =
-        !search || each.ClientStatus === search;
+        !search ||
+        firstName.includes(search) ||
+        email.includes(search) ||
+        contact.includes(search);
 
-      const notAdmin =
-        each.Email !== "admin@curatehealth.in";
+      /* ---------- EXCLUDE ADMIN ---------- */
+      const notAdmin = each.Email !== "admin@curatehealth.in";
 
+      /* ---------- DATE FILTER ---------- */
       const date = each.LeadDate ? new Date(each.LeadDate) : null;
 
       const matchesMonth =
@@ -155,6 +167,7 @@ const UpdatedFilterUserType = useMemo(() => {
         !SearchYear ||
         (date && date.getFullYear() === Number(SearchYear));
 
+      /* ---------- FINAL RETURN ---------- */
       return (
         matchesType &&
         matchesSearch &&
@@ -165,7 +178,14 @@ const UpdatedFilterUserType = useMemo(() => {
     })
     .slice()
     .reverse();
-}, [Finel, UpdateduserType, search, SearchMonth, SearchYear]);
+}, [
+  Finel,
+  UpdateduserType,
+  SearchResult,
+  SearchMonth,
+  SearchYear,
+]);
+
 
 
 
@@ -1108,7 +1128,44 @@ const GetPermanentAddress = (A: any) => {
               Hi,<span className="text-[#ff1493]">{UserFirstName}</span>
             </h1>
           </div>
-         <div className='flex items-center'>
+          
+         <div className='flex gap-2 items-center'>
+       {(UpdateMainFilter==="Client Enquiry"||UpdateMainFilter==="HCP List")
+           && <div
+    className="
+      flex items-center bg-white shadow-md rounded-xl
+      px-4 h-[44px]
+      border border-gray-200
+      focus-within:border-indigo-500
+      transition
+      w-full sm:w-[320px]
+    "
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="1.5"
+      stroke="currentColor"
+      className="w-5 h-5 text-gray-500 mr-2"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"
+      />
+    </svg>
+
+    <input
+      type="search"
+      placeholder="Search..."
+      onChange={(e: any) => setSearchResult(e.target.value)}
+      className="
+        w-full bg-transparent outline-none
+        text-sm text-gray-700 placeholder-gray-400
+      "
+    />
+  </div>}
           <button
             onClick={handleLogout}
             className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
@@ -1118,7 +1175,7 @@ const GetPermanentAddress = (A: any) => {
           <button
                 onClick={handleMainLogout}
                 className="
-                  w-full px-4 py-2.5
+                   px-4 py-2.5
                   text-sm flex items-center gap-2
                   text-red-600
                   hover:bg-red-50
@@ -1240,11 +1297,14 @@ onClick={()=>UpdateNavigattosuggetions()}
           >
             Show Placement Suggetions
           </button> */}
-          
+ {((UpdateMainFilter!=="Timesheet")&&(UpdateMainFilter!=='Deployment'))&&         
 <div className="flex justify-between gap-3 md:w-[330px]">
 
 
-  <div >
+
+
+
+  <div className="w-full sm:w-[130px]">
     <label className="block text-xs font-semibold text-gray-600 mb-1">
       Month
     </label>
@@ -1253,8 +1313,9 @@ onClick={()=>UpdateNavigattosuggetions()}
       value={SearchMonth}
       onChange={(e) => setSearchMonth(e.target.value)}
       className="
-        w-full rounded-xl border border-gray-300
-        px-4 py-3 text-sm bg-white text-gray-800
+        w-full h-[44px] rounded-xl
+        border border-gray-300
+        px-4 text-sm bg-white text-gray-800
         focus:outline-none focus:ring-2 focus:ring-indigo-500
         focus:border-transparent transition-all
       "
@@ -1270,6 +1331,8 @@ onClick={()=>UpdateNavigattosuggetions()}
       ))}
     </select>
   </div>
+
+
 
 
 <div >
@@ -1296,7 +1359,7 @@ onClick={()=>UpdateNavigattosuggetions()}
     </select>
   </div>
 
-</div>
+</div>}
 
 
 

@@ -43,7 +43,8 @@ const ClientTable = () => {
   const [HCPName,setHCPName]=useState("")
  const [updatedAttendance, setUpdatedAttendance] = useState<AttendanceState>({});
  const [SaveButton,setSaveButton]=useState(false)
-
+const [SearchMonth, setSearchMonth] = useState("");
+const [SearchYear, setSearchYear] = useState("");
 const [enableStatus,setenableStatus]=useState(false)
   const [TimeSheet_UserId, setTimeSheet_UserId] = useState("");
   const [selectedReason, setSelectedReason] = useState("");
@@ -139,6 +140,7 @@ useEffect(() => {
     HCA_Name: each.HCAName,
     location: each.Address,
     TimeSheet: normalizedAttendance,
+    StartDate:each.StartDate,
     PatientName: each.patientName,
     Patient_PhoneNumber: each.patientPhone,
     RreferralName: each.referralName,
@@ -319,21 +321,50 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
     setDeleteTargetId(null);
   };
 
-
-const FilterFinelTimeSheet = FinelTimeSheet.filter((each:any) => {
+console.log("Check for Time Dates-----",FinelTimeSheet)
+const FilterFinelTimeSheet = FinelTimeSheet.filter((each: any) => {
+  
   const search = SearchResult?.toLowerCase() || "";
+
   const name = each.name?.toLowerCase() || "";
   const email = each.email?.toLowerCase() || "";
   const contact = each.contact?.toLowerCase() || "";
-  const role=each.role?.toLowerCase() || "";
+  const role = each.role?.toLowerCase() || "";
 
-  return (
+  const matchesSearch =
     name.includes(search) ||
     email.includes(search) ||
-    contact.includes(search)||
-    role.includes(search)
-  );
+    contact.includes(search) ||
+    role.includes(search);
+
+ 
+  const startDate = each.StartDate || "";
+
+  let matchesMonth = true;
+  let matchesYear = true;
+
+  if (startDate) {
+    const [day, month, year] = startDate.split("/");
+
+
+    const monthName = new Date(
+      Number(year),
+      Number(month) - 1
+    ).toLocaleString("default", { month: "long" });
+
+    if (SearchMonth) {
+      matchesMonth = monthName === SearchMonth;
+    }
+
+    if (SearchYear) {
+      matchesYear = year === SearchYear;
+    }
+  }
+
+  /* ---------- FINAL RETURN ---------- */
+  return matchesSearch && matchesMonth && matchesYear;
 });
+
 const today:any = new Date().getDate();
 const isInvoiceDay = [ 28, 29, 30, 31].includes(today);
 console.log("Test Today------",isInvoiceDay
@@ -382,32 +413,120 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
 
   {ClientsInformation.length > 0 && (
     <div className="overflow-x-auto flex flex-col">
-     <div className="flex items-center justify-end w-full mb-2">
-    <button  className="px-5 py-2 text-xs cursor-pointer font-medium bg-gradient-to-r from-teal-600 to-emerald-500 hover:from-teal-700 hover:to-emerald-600 text-white rounded-lg shadow-md transition mr-2" onClick={()=>setenableStatus(!enableStatus)}>{enableStatus?"Disable Genarate Bill":"Enable Genarate Bill"}</button>
-  <div className="flex items-center bg-white shadow-lg rounded-full px-4 py-2 w-[350px] border border-gray-200 focus-within:border-blue-500 transition duration-300">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth="1.5"
-      stroke="currentColor"
-      className="w-5 h-5 text-gray-500 mr-2"
+<div className="w-full mb-3">
+  <div className="
+    flex flex-col gap-3
+    lg:flex-row lg:items-end lg:justify-end
+  ">
+    
+    <button
+      onClick={() => setenableStatus(!enableStatus)}
+      className="
+        px-5 py-2.5 text-xs font-semibold
+        bg-gradient-to-r from-teal-600 to-emerald-500
+        hover:from-teal-700 hover:to-emerald-600
+        text-white rounded-xl shadow-md
+        transition whitespace-nowrap
+        w-full sm:w-auto
+      "
     >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"
-      />
-    </svg>
+      {enableStatus ? "Disable Generate Bill" : "Enable Generate Bill"}
+    </button>
 
-    <input
-      type="search"
-      placeholder="Search..."
-      className="w-full outline-none text-gray-700 placeholder-gray-400 bg-transparent"
-      onChange={(e:any)=>setSearchResult(e.target.value)}
-    />
+ 
+    <div
+      className="
+        flex items-center bg-white shadow-md rounded-xl
+        px-4 h-[44px]
+        border border-gray-200
+        focus-within:border-indigo-500
+        transition
+        w-full sm:w-[320px]
+      "
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor"
+        className="w-5 h-5 text-gray-500 mr-2"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"
+        />
+      </svg>
+
+      <input
+        type="search"
+        placeholder="Search..."
+        onChange={(e: any) => setSearchResult(e.target.value)}
+        className="w-full bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
+      />
+    </div>
+
+    
+    <div
+      className="
+        grid grid-cols-1 sm:grid-cols-2 gap-3
+        w-full sm:w-auto
+      "
+    >
+   
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">
+          Month
+        </label>
+        <select
+          value={SearchMonth}
+          onChange={(e) => setSearchMonth(e.target.value)}
+          className="
+            w-full h-[44px] rounded-xl
+            border border-gray-300
+            px-4 text-sm bg-white text-gray-800
+            focus:outline-none focus:ring-2 focus:ring-indigo-500
+          "
+        >
+          <option value="">All Months</option>
+          {[
+            "January","February","March","April","May","June",
+            "July","August","September","October","November","December"
+          ].map((month) => (
+            <option key={month} value={month}>
+              {month}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">
+          Year
+        </label>
+        <select
+          value={SearchYear}
+          onChange={(e) => setSearchYear(e.target.value)}
+          className="
+            w-full h-[44px] rounded-xl
+            border border-gray-300
+            px-4 text-sm bg-white text-gray-800
+            focus:outline-none focus:ring-2 focus:ring-indigo-500
+          "
+        >
+          <option value="">All Years</option>
+          {[2024, 2025, 2026].map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
   </div>
 </div>
+
 
 {showPaymentModal && billingRecord && (
   <PaymentModal
