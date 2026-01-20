@@ -873,6 +873,9 @@ onClick={()=>setOpenExpense(true)}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   whileHover={{ scale: 1.05 }}
+                   onClick={
+                      () => {if(tab.name!=="Client Enquiry"){Switching(tab.name)}}
+                    }
                   className="flex flex-col items-center justify-center bg-white rounded-xl shadow-md border border-gray-100 p-3 sm:p-1"
                 >
                   <div
@@ -886,7 +889,7 @@ onClick={()=>setOpenExpense(true)}
                   <p
                     className="mt-2 sm:mt-3 text-xs sm:text-sm hover:underline font-semibold cursor-pointer text-gray-900 text-center"
                     onClick={
-                      () => Switching(tab.name)
+                      () => {if(tab.name==="Client Enquiry"){Switching(tab.name)}}
                     }
                   >
                     {tab.name}
