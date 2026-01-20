@@ -22,13 +22,13 @@ const transporter = nodemailer.createTransport({
       to,
       subject,
       html,
-      attachments: [
-        {
-          filename: "invoice.pdf",
-          content: pdfBase64,
-          encoding: "base64",
-        },
-      ],
+      // attachments: [
+      //   {
+      //     filename: "invoice.pdf",
+      //     content: pdfBase64,
+      //     encoding: "base64",
+      //   },
+      // ],
     };
 
     await transporter.sendMail(mailOptions);

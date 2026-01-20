@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical } from "lucide-react";
+import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { GetInvoiceInfo, GetSentInvoiceData, UpdateStatusPayment } from "@/Lib/user.action";
@@ -302,7 +302,17 @@ setStatus("Payment Status Updated Successfully")
   return `${year}-${month}-${day}`;
 }
 
+const handleLogout = () => {
+  
+  Router.push('/DashBoard'); 
+       
+};
 
+  const handleMainLogout = async () => {
+    localStorage.removeItem("UserId");
+    Router.prefetch("/");
+    Router.push("/");
+  };
 
  function getDueStatus(placementDate: any) {
   const iso = convertToISO(placementDate);
@@ -405,29 +415,65 @@ CheckPaymentStatus:CurrentPaymentStatus
         <div className="min-h-screen bg-[#f5f7fb] p-2 md:p-2">
 
 
-          <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 md:gap-0">
+         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
 
+  <div className="flex items-center gap-4">
+    <img
+      src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
+      alt="Curate Health Services Logo"
+      className="h-14 md:h-20 w-auto object-contain"
+    />
 
-            <div className="flex flex-col gap-2">
-              <h1
-                className="text-2xl md:text-3xl font-semibold tracking-tight"
-                style={{ color: "#ff1493" }}
-              >
-                Invoice Management
-              </h1>
+    <div className="flex flex-col">
+      <h1
+        className="text-2xl md:text-3xl font-semibold tracking-tight"
+        style={{ color: "#ff1493" }}
+      >
+        Invoice Management
+      </h1>
 
-              <p className="text-gray-500 text-sm">
-                Billing overview for patients & clients
-              </p>
-            </div>
+      <p className="text-gray-500 text-sm">
+        Billing overview for patients & clients
+      </p>
+    </div>
+  </div>
 
+  {/* Right: Actions */}
+  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+    <button
+      onClick={handleLogout}
+      className="
+        flex items-center justify-center gap-2
+        px-5 py-2.5
+        bg-gradient-to-br from-[#00A9A5] to-[#005f61]
+        hover:from-[#01cfc7] hover:to-[#00403e]
+        text-white rounded-xl
+        font-semibold shadow-md
+        transition
+      "
+    >
+      Dashboard
+    </button>
 
-            <img
-              src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
-              alt="Curate Health Services Logo"
-              className="h-16 md:h-24 w-auto object-contain mx-auto md:mx-0"
-            />
-          </div>
+    <button
+      onClick={handleMainLogout}
+      className="
+        flex items-center justify-center gap-2
+        px-5 py-2.5
+        text-sm font-medium
+        text-red-600
+        border border-red-200
+        rounded-xl
+        hover:bg-red-50
+        transition
+      "
+    >
+      <LogOut size={16} />
+      Logout
+    </button>
+  </div>
+</div>
+
 
 
           <div className="flex flex-col gap-4 mt-4">

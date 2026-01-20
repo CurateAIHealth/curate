@@ -36,6 +36,8 @@ import { decrypt, encrypt } from '@/Lib/Actions';
 import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 import { LoadingData } from '@/Components/Loading/page';
 import ReplacementsTable from '@/Components/ReplacementsTable/page';
+import CallEnquiryList from '@/Components/CallEnquiry/page';
+
 
 export default function UserTableList() {
   const [updatedStatusMsg, setUpdatedStatusMsg] = useState('');
@@ -104,6 +106,8 @@ const pillStyles: Record<string, string> = {
     }
   };
 
+
+const callEnquiryArray=users.filter((each)=>each.userType==='CallEnquiry')
   const Finel = users.map((each: any) => ({
     id: each.userId,
     FirstName: each.FirstName,
@@ -478,7 +482,12 @@ const toCamelCase = (value?: string | null) => {
 
 const ClientEnquiryUserInterFace = () => {
   return (
-    <div className="w-full">
+    <div>
+{search==="CallEnquiry"?<CallEnquiryList
+  data={callEnquiryArray}
+  title="Recent Call Enquiries"
+/>
+: <div className="w-full">
       {ShowDeletePopUp && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">
 
@@ -1015,7 +1024,9 @@ onClick={()=>UpdateNavigattosuggetions(user.userId)}
           {updatedStatusMsg}
         </div>
       )}
+    </div>}
     </div>
+   
   );
 };
 
@@ -1038,6 +1049,12 @@ const handleLogout = () => {
   router.push('/DashBoard'); 
        
 };
+
+  const handleMainLogout = async () => {
+    localStorage.removeItem("UserId");
+    router.prefetch("/");
+    router.push("/");
+  };
 
 
   if (isChecking) {
@@ -1091,13 +1108,26 @@ const GetPermanentAddress = (A: any) => {
               Hi,<span className="text-[#ff1493]">{UserFirstName}</span>
             </h1>
           </div>
-         
+         <div className='flex items-center'>
           <button
             onClick={handleLogout}
             className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
           >
-            <LogOut size={20} /> DashBoard
+          DashBoard
           </button>
+          <button
+                onClick={handleMainLogout}
+                className="
+                  w-full px-4 py-2.5
+                  text-sm flex items-center gap-2
+                  text-red-600
+                  hover:bg-red-50
+                  font-medium
+                "
+              >
+                <LogOut size={16} /> Logout
+              </button>
+              </div>
         </div>
 
        
@@ -1161,7 +1191,7 @@ const GetPermanentAddress = (A: any) => {
   UpdateMainFilter === "Client Enquiry"
     ? `${each} (${
         Finel?.filter(
-          (Try) => Try.ClientStatus === each
+          (Try) => Try.ClientStatus === each ||Try.userType===each
         )?.length ||0
       })`
     : each 
@@ -1210,7 +1240,7 @@ onClick={()=>UpdateNavigattosuggetions()}
           >
             Show Placement Suggetions
           </button> */}
-          {(UpdateMainFilter==="Deployment")&&(UpdateMainFilter!=="Timesheet") &&(UpdateduserType!=='healthcare-assistant')&&
+          
 <div className="flex justify-between gap-3 md:w-[330px]">
 
 
@@ -1270,7 +1300,7 @@ onClick={()=>UpdateNavigattosuggetions()}
 
 
 
-}
+
 
         </div>
       </div>
