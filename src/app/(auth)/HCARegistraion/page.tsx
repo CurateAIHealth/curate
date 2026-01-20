@@ -616,26 +616,30 @@ const HEIGHT_OPTIONS = Array.from(
 
         
           const requiredFields: (keyof typeof Docs)[] = [
-            "ProfilePic",
-            "PanCard",
-            "AdharCard",
-            "AccountPassBook",
-            "CertificatOne",
-            "CertificatTwo",
-          ];
+  "ProfilePic",
+  "PanCard",
+  "AdharCard",
+  "AccountPassBook",
+  "CertificatOne",
+  "CertificatTwo",
+  "BVR",
+  "HCPform",
+];
 
-          const isAnyFieldEmpty = requiredFields.some(
-            (key) => Docs[key]?.trim?.() === ""
-          );
+const isAnyFieldEmpty = requiredFields.some(
+  (key) => Docs[key]?.trim?.() === ""
+);
 
-          const isReasonEmpty = ReasonValue.trim() === "";
-          if (isAnyFieldEmpty && isReasonEmpty) {
-            alert(
-              "Upload all the required documents. Or else provide a reason for not uploading them."
-            );
-            SetUpdateingStatus(true);
-            return;
-          }
+const isReasonEmpty = ReasonValue.trim() === "";
+
+if (!isAnyFieldEmpty && !isReasonEmpty) {
+  alert(
+    "Upload all the required documents OR provide a reason for not uploading them."
+  );
+  SetUpdateingStatus(true);
+  return;
+}
+
 
           setUpdatedStatusMessage("Please Wait Updating.....");
 
@@ -684,14 +688,15 @@ const HEIGHT_OPTIONS = Array.from(
           };
 
 
-          let registrationResult = { success: true };
+          let registrationResult:any = { success: true };
 
           if (isNewUser) {
             registrationResult = await HCARegistration(payload);
+            console.log("Check for Issues-----",registrationResult)
           }
 
           if (registrationResult.success !== true) {
-            setUpdatedStatusMessage("Try Again");
+            setUpdatedStatusMessage(registrationResult.message);
             return;
           }
 
@@ -1104,7 +1109,7 @@ className="
     focus:border-transparent m-1
     transition-all
   "
-                required
+                
               />
 
               <input
@@ -1291,10 +1296,11 @@ className="
     transition-all
   "
 />
+ 
 
-
-{form.motherContact &&
-form.motherContact!=="Not Available"&&  (
+{form.HusbendContact &&
+form.HusbendContact!=="Not Available"&&
+  !/^[6-9]\d{9}$/.test(form.HusbendContact) &&  (
     <p className="text-xs text-red-500 mt-1">
       Enter a valid Indian mobile number
     </p>
@@ -3811,15 +3817,22 @@ form.motherContact!=="Not Available"&&  (
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
               />
-              <input
-                type="text"
-                name="Branchstate"
-                value={form.Branchstate || ''}
-                onChange={handleChange}
-                placeholder="Branch State"
-                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                
-              />
+             <select
+  name="Branchstate"
+  value={form.Branchstate || ""}
+  onChange={handleChange}
+  className="input-field w-full border border-gray-300 p-2 h-10 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+>
+  <option value="" disabled>
+    Select Branch State
+  </option>
+
+  {IndianStates.map((state) => (
+    <option key={state} value={state}>
+      {state}
+    </option>
+  ))}
+</select>
               <input
                 type="text"
                 name="Branchpincode"
