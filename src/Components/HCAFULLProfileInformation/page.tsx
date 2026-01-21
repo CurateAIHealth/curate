@@ -206,7 +206,7 @@ useEffect(()=>{
       return;
     }
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg','application/pdf'];
     if (!allowedTypes.includes(file.type)) {
       alert('Only image or video files are allowed.');
       return;
