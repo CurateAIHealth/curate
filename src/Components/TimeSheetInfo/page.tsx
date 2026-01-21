@@ -275,7 +275,7 @@ const processedData = useMemo(() => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 p-6">
+    <div className="relative  bg-gradient-to-br from-green-50 via-white to-blue-50 p-6">
 
       <header className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 gap-4">
         <div>
@@ -375,134 +375,122 @@ const processedData = useMemo(() => {
   />
 )}
     
-      <div className="overflow-x-auto bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md rounded-2xl">
-        <table className="min-w-[2800px] border-collapse text-sm text-gray-800 rounded-lg overflow-hidden">
-          <thead>
-            <tr className="bg-gradient-to-r from-green-600 to-blue-600 text-white text-left">
-              <Th>View</Th>
-              <Th>Invoice</Th>
-              <Th>Start Date</Th>
-              <Th>End Date</Th>
-              <Th>Client Name</Th>
-              <Th>Patient Name</Th>
-              <Th>Referral Name</Th>
-              <Th>HCP Name</Th>
-              <Th>HCP Referral</Th>
-              <Th>Vendor</Th>
-              <Th>Type</Th>
-               {/* <Th className="bg-amber-400 text-center">Payment Info</Th> */}
-              <Th className="bg-amber-400 text-center">PD</Th>
-              <Th className="bg-amber-400 text-center">AD</Th>
-              <Th className="bg-amber-400 text-center">HP</Th>
-             
-              {Array.from({ length: 31 }, (_, i) => (
-                <Th key={i} className="text-center bg-cyan-500 text-white">
-                  {i + 1}
-                </Th>
-              ))}
-            </tr>
-          </thead>
-
-          <tbody>
-            {processedData.map((r: any, idx: any) => (
-              <tr
-                key={idx}
-                className={`border-t border-gray-200 ${
-                  idx % 2 ? "bg-white" : "bg-green-50/40"
-                } hover:bg-green-100/40 transition-colors`}
-              >
-                <Td>
-                  <Eye
-                    className="cursor-pointer text-blue-600 hover:text-blue-800 transition"
-                    onClick={() => setSelectedRecord(r)}
-                  />
-                </Td>
-                <Td>{r.invoice}</Td>
-                <Td>{r.startDate}</Td>
-                <Td>{r.endDate}</Td>
-                <td
-                  className="px-4 py-2 whitespace-nowrap font-medium hover:underline cursor-pointer hover:text-blue-600"
-                  onClick={() => RouteToClient(r.ClientId, r.clientName)}
-                >
-                  {r.clientName}
-                </td>
-
-                <Td>{r.patientName}</Td>
-                <Td
-                  className={`${
-                    r.referralName
-                      ? "text-green-800 font-bold"
-                      : "text-red-800 font-bold"
-                  }`}
-                >
-                  {r.referralName}
-                </Td>
-
-                <td
-                  className="px-4 py-2 whitespace-nowrap font-medium hover:underline cursor-pointer hover:text-blue-600"
-                  onClick={() => RouteToClient(r.hcpId, r.hcpName)}
-                >
-                  {r.hcpName}
-                </td>
-
-                <Td
-                  className={`${
-                    r.hcpSource
-                      ? "text-green-800 font-bold"
-                      : "text-red-800 font-bold"
-                  }`}
-                >
-                  {r.hcpSource}
-                </Td>
-                <Td
-                  className={`${
-                    r.VendorName
-                      ? "text-green-800 font-bold"
-                      : "text-red-800 font-bold"
-                  }`}
-                >
-                  {r.VendorName}
-                </Td>
-                <Td>{r.Type}</Td>
-{/* <Td>
-  <button
-    className="p-2 text-center text-white bg-teal-700 rounded-full w-fit cursor-pointer"
-    onClick={() => {
-      setBillingRecord(r);
-      setShowPaymentModal(true);
-    }}
-  >
-    Generate Bill
-  </button>
-</Td> */}
 
 
-                <Td className="bg-amber-50 text-center font-bold text-gray-800">
-                  {r.pd}
-                </Td>
-                <Td className="bg-amber-50 text-center font-bold text-gray-800">
-                  {r.ad}
-                </Td>
-                <Td className="bg-amber-50 text-center font-bold text-gray-800">
-                  {r.hp}
-                </Td>
-                {Array.from({ length: 31 }, (_, i) => {
-                  const dayStatus = r.days && r.days[i] ? r.days[i] : "-";
-                  return (
-                    <Td key={i} className="text-center">
-                      {dayStatus === "-" ? (
-                        <span className="text-gray-400">-</span>
-                      ) : (
-                        <DayBadge status={dayStatus as DayStatus} />
-                      )}
-                    </Td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+<div className="relative max-h-[64vh] overflow-y-auto overflow-x-auto bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md rounded-2xl">
+
+  <table className="min-w-[2800px] border-collapse text-sm text-gray-800">
+
+ 
+    <thead className="sticky top-0 z-30 bg-blue-400 shadow-md">
+      <tr className="text-left">
+        <Th>View</Th>
+        <Th>Invoice</Th>
+        <Th>Start Date</Th>
+        <Th>End Date</Th>
+        <Th>Client Name</Th>
+        <Th>Patient Name</Th>
+        <Th>Referral Name</Th>
+        <Th>HCP Name</Th>
+        <Th>HCP Referral</Th>
+        <Th>Vendor</Th>
+        <Th>Type</Th>
+
+        <Th className="bg-amber-500 text-center">PD</Th>
+        <Th className="bg-amber-500 text-center">AD</Th>
+        <Th className="bg-amber-500 text-center">HP</Th>
+
+        {Array.from({ length: 31 }, (_, i) => (
+          <Th key={i} className="text-center bg-cyan-600">
+            {i + 1}
+          </Th>
+        ))}
+      </tr>
+    </thead>
+
+    
+    <tbody>
+      {processedData.map((r: any, idx: number) => (
+        <tr
+          key={idx}
+          className={`border-t border-gray-200 ${
+            idx % 2 ? "bg-white" : "bg-green-50/40"
+          } hover:bg-green-100/40 transition-colors`}
+        >
+          <Td>
+            <Eye
+              className="cursor-pointer text-blue-600 hover:text-blue-800 transition"
+              onClick={() => setSelectedRecord(r)}
+            />
+          </Td>
+
+          <Td>{r.invoice}</Td>
+          <Td>{r.startDate}</Td>
+          <Td>{r.endDate}</Td>
+
+          <td
+            className="px-4 py-2 font-medium cursor-pointer hover:underline hover:text-blue-600"
+            onClick={() => RouteToClient(r.ClientId, r.clientName)}
+          >
+            {r.clientName}
+          </td>
+
+          <Td>{r.patientName}</Td>
+
+          <Td
+            className={`font-bold ${
+              r.referralName ? "text-green-800" : "text-red-800"
+            }`}
+          >
+            {r.referralName}
+          </Td>
+
+          <td
+            className="px-4 py-2 font-medium cursor-pointer hover:underline hover:text-blue-600"
+            onClick={() => RouteToClient(r.hcpId, r.hcpName)}
+          >
+            {r.hcpName}
+          </td>
+
+          <Td
+            className={`font-bold ${
+              r.hcpSource ? "text-green-800" : "text-red-800"
+            }`}
+          >
+            {r.hcpSource}
+          </Td>
+
+          <Td
+            className={`font-bold ${
+              r.VendorName ? "text-green-800" : "text-red-800"
+            }`}
+          >
+            {r.VendorName}
+          </Td>
+
+          <Td>{r.Type}</Td>
+
+          <Td className="bg-amber-50 text-center font-bold">{r.pd}</Td>
+          <Td className="bg-amber-50 text-center font-bold">{r.ad}</Td>
+          <Td className="bg-amber-50 text-center font-bold">{r.hp}</Td>
+
+          {Array.from({ length: 31 }, (_, i) => {
+            const dayStatus = r.days?.[i] ?? "-";
+            return (
+              <Td key={i} className="text-center">
+                {dayStatus === "-" ? (
+                  <span className="text-gray-400">-</span>
+                ) : (
+                  <DayBadge status={dayStatus as DayStatus} />
+                )}
+              </Td>
+            );
+          })}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
 
   
       {selectedRecord && (

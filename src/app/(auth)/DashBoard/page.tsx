@@ -84,6 +84,7 @@ export default function Dashboard() {
   const [AttendeceView,setAttendeceView]=useState(false)
   const [openExpense,setOpenExpense]=useState<any>(false)
   const [compliteInfo,setcompliteInfo]=useState<any>()
+  const [showProfileOptions,setShowProfileOptions]=useState(false)
 
   
 
@@ -692,108 +693,164 @@ const Switching = useCallback(
     </button>
 
  
-<div className="relative group">
- 
+<div className="relative inline-block">
+
+
+<div className="relative inline-block group">
+
+  {/* Profile Button */}
   <button
+    type="button"
+    onClick={() => setShowProfileOptions(prev => !prev)}
     className="
       flex items-center gap-2
       px-2 py-1
-      bg-gray-800
       rounded-xl
-    bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e]
+      bg-gradient-to-br from-[#00A9A5] to-[#005f61]
+      hover:from-[#01cfc7] hover:to-[#00403e]
+      focus:outline-none
+      cursor-pointer
     "
   >
-    
-      <CircleUser size={18} className="text-gray-200" />
-
+    <CircleUser size={18} className="text-gray-200" />
 
     <div className="hidden sm:flex flex-col items-start leading-tight">
       <span className="text-sm font-semibold text-white">
         {ProfileName || "Admin"}
       </span>
-   
     </div>
   </button>
 
+  {/* Bottom Tooltip */}
   <div
     className="
-      absolute right-0 mt-3 w-56
-      bg-white text-gray-800
-      rounded-2xl shadow-2xl
-      border border-gray-200
+      absolute left-1/2 -translate-x-1/2 top-full mt-2
+      whitespace-nowrap
+      rounded-md
+      bg-gray-900 text-white
+      text-xs font-medium
+      px-2 py-1
+
       opacity-0 scale-95
-      group-hover:opacity-100 group-hover:scale-100
-      transition origin-top-right
+      pointer-events-none
+
+      group-hover:opacity-100
+      group-hover:scale-100
+
+      transition-all duration-200
       z-50
-      overflow-hidden
     "
   >
-  
-    <div className="px-4 py-3 bg-gray-50 border-b">
-      <p className="text-sm font-semibold text-gray-900">
-        {ProfileName || "Admin User"}
-      </p>
-      <p className="text-xs text-gray-500">
-  {loggedInEmail}
-      </p>
-    </div>
+    Click to get options
 
-    
-    <div className="py-1 ">
-    <button
-  onClick={() => setOpenProfile(true)}
-  className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
->
-  <User size={16} className="text-slate-500" />
-  <span>My Profile</span>
-</button>
-
-<button
-onClick={()=>setAttendeceView(true)}
-  className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
->
-  <ClipboardCheck size={16} className="text-slate-500" />
-  <span>Attendance</span>
-</button>
-
-<button
-onClick={()=>setOpenExpense(true)}
-  className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
->
-  <IndianRupee size={16} className="text-slate-500" />
-  <span>Post Expense</span>
-</button>
-
-      <button className="w-full px-4 cursor-pointer py-2 text-sm flex items-center gap-2 hover:bg-gray-100">
-        <Shield size={16} /> Security
-      </button>
-
-      <button className="w-full px-4 cursor-pointer py-2 text-sm flex items-center gap-2 hover:bg-gray-100">
-        <Settings size={16} /> Settings
-      </button>
-
-      <button className="w-full px-4 py-2 cursor-pointer text-sm flex items-center gap-2 hover:bg-gray-100">
-        <HelpCircle size={16} /> Help & Support
-      </button>
-    </div>
-
-<div className="h-px bg-gray-200" />
-
-  
-    <button
-      onClick={handleLogout}
+    {/* Arrow (Top pointing) */}
+    <div
       className="
-        w-full px-4 py-2.5
-        text-sm flex items-center gap-2
-        text-red-600
-        hover:bg-red-50
-        font-medium
+        absolute left-1/2 -translate-x-1/2 -top-1
+        w-2 h-2
+        bg-gray-900
+        rotate-45
       "
-    >
-      <LogOut size={16} /> Logout
-    </button>
+    />
   </div>
 </div>
+
+
+  {showProfileOptions && (
+    <div
+      className="
+        absolute right-0 mt-3 w-56
+        bg-white text-gray-800
+        rounded-2xl shadow-xl
+        border border-gray-200
+        z-50 overflow-hidden
+      "
+    >
+ 
+      <div className="px-4 py-3 bg-gray-50 border-b">
+        <p className="text-sm font-semibold text-gray-900">
+          {ProfileName || "Admin User"}
+        </p>
+        <p className="text-xs text-gray-500 truncate">
+          {loggedInEmail}
+        </p>
+      </div>
+
+     
+      <div className="py-1">
+        <button
+          onClick={() => {
+            setOpenProfile(true);
+            setShowProfileOptions(false);
+          }}
+          className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+        >
+          <User size={16} className="text-slate-500" />
+          My Profile
+        </button>
+
+        <button
+          onClick={() => {
+            setAttendeceView(true);
+            setShowProfileOptions(false);
+          }}
+          className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+        >
+          <ClipboardCheck size={16} className="text-slate-500" />
+          Attendance
+        </button>
+
+        <button
+          onClick={() => {
+            setOpenExpense(true);
+            setShowProfileOptions(false);
+          }}
+          className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+        >
+          <IndianRupee size={16} className="text-slate-500" />
+          Post Expense
+        </button>
+
+        <button className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
+          <Shield size={16} className="text-slate-500" />
+          Security
+        </button>
+
+        <button className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
+          <Settings size={16} className="text-slate-500" />
+          Settings
+        </button>
+
+        <button className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
+          <HelpCircle size={16} className="text-slate-500" />
+          Help & Support
+        </button>
+      </div>
+
+      <div className="h-px bg-gray-200" />
+
+    
+      <button
+        onClick={() => {
+          handleLogout();
+          setShowProfileOptions(false);
+        }}
+        className="
+          w-full px-4 py-2.5
+          flex items-center gap-3
+          text-sm font-medium
+          text-red-600
+          hover:bg-red-50
+        "
+      >
+        <LogOut size={16} />
+        Logout
+      </button>
+    </div>
+  )}
+</div>
+
+
 
 
     {/* Logout Button (optional – can be removed if dropdown logout is used) */}
@@ -876,7 +933,7 @@ onClick={()=>setOpenExpense(true)}
                    onClick={
                       () => {if(tab.name!=="Client Enquiry"){Switching(tab.name)}}
                     }
-                  className="flex flex-col items-center justify-center bg-white rounded-xl shadow-md border border-gray-100 p-3 sm:p-1"
+                  className="flex flex-col items-center cursor-pointer hover:shadow-lg justify-center bg-white rounded-xl shadow-md border border-gray-100 p-3 sm:p-1"
                 >
                   <div
                     className={`w-10 h-10 flex items-center justify-center rounded-full shadow-md ${tab.bg}`}
@@ -1241,6 +1298,26 @@ hover:border-[#ff1493]
                           </p>
                         </div>
                       </div>
+                      <div className="flex items-center gap-4">
+                     <button
+  className="
+    px-4 py-2
+    rounded-md
+    border border-gray-300
+    bg-white
+    text-gray-700 text-sm font-medium
+cursor-pointer
+    hover:bg-gray-50
+    transition
+hover:shadow-lg
+hover:rounded-md
+    focus:outline-none focus:ring-2
+    focus:ring-gray-400 focus:ring-offset-1
+  "
+>
+  Send Profile
+</button>
+
                       <button
                         className="px-2 sm:px-3 py-1 text-xs bg-green-100 text-green-600 rounded-lg cursor-pointer whitespace-nowrap"
                         onClick={() =>
@@ -1249,6 +1326,7 @@ hover:border-[#ff1493]
                       >
                         <Eye />
                       </button>
+                      </div>
                     </li>
                   ))}
                 </ul>

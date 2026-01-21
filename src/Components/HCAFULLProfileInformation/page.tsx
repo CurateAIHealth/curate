@@ -383,7 +383,7 @@ console.log("Checkkkkk------", user.Documents)
                 id={key}
                 type="file"
                 name={key}
-                accept="image/*"
+               accept={key === 'BVR' ? 'application/pdf' : 'image/*'}
                 className="hidden"
                 onChange={(e) => handleImageChange(e, key as DocumentKeys)}
               />

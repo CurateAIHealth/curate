@@ -111,6 +111,7 @@ const callEnquiryArray=users.filter((each)=>each.userType==='CallEnquiry')
   const Finel = users.map((each: any) => ({
     id: each.userId,
     FirstName: each.FirstName,
+    PatientName:each.patientName||"Not Mentioned",
     AadharNumber: each.AadharNumber,
     Age: each.Age,
     userType: each.userType,
@@ -131,7 +132,7 @@ const callEnquiryArray=users.filter((each)=>each.userType==='CallEnquiry')
     ServiceLocation:each.ServiceArea,
     PreviewUserType:each.PreviewUserType
   }));
-console.log("Check for Finel Values-----",Finel)
+console.log("Check for Finel Values-----",users)
 const UpdatedFilterUserType = useMemo(() => {
   return Finel
     .filter((each) => {
@@ -578,6 +579,8 @@ const ClientEnquiryUserInterFace = () => {
                     <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client Priority</th>}
                      {UpdateduserType === "healthcare-assistant"&&
                     <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">User type</th>}
+                      {UpdateduserType === "patient"&&
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Patient Name</th>}
                     <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Name</th>
                     {/* <th className="px-2 py-2 sm:px-4 sm:py-3 w-[18%]">Email</th> */}
                     <th className="px-2 py-2 w-[12%]">Contact</th>
@@ -736,7 +739,25 @@ const ClientEnquiryUserInterFace = () => {
   
 </td>
  }
+<td className="px-2 py-2 truncate">
+                        <div className="flex items-center gap-2">
+                          {/* <img
+                            src={
+                              FilterProfilePic.filter((each:any) => each.UserId === user.id)[0]?.Documents?.ProfilePic ||
+                              FilterProfilePic.filter((each:any) => each.UserId === user.id)[0]?.ProfilePic ||
+                              "Icons/DefaultProfileIcon.png"
+                            }
+                            className="rounded-full h-7 w-7 sm:h-10 sm:w-10 object-cover"
+                          /> */}
+                          
+                          <span className="font-semibold text-[#007B7F] truncate">
+  {toCamelCase(user.FirstName)}
 
+
+</span>
+
+                        </div>
+                      </td>
                       <td className="px-2 py-2 truncate">
                         <div className="flex items-center gap-2">
                           {/* <img
@@ -747,8 +768,9 @@ const ClientEnquiryUserInterFace = () => {
                             }
                             className="rounded-full h-7 w-7 sm:h-10 sm:w-10 object-cover"
                           /> */}
+                          
                           <span className="font-semibold text-[#007B7F] truncate">
-  {toCamelCase(user.FirstName)}
+  {toCamelCase(user.PatientName)}
 
 
 </span>
@@ -914,7 +936,7 @@ const ClientEnquiryUserInterFace = () => {
   <select
     className={` text-center px-2 py-1 rounded-lg border cursor-pointer text-xs sm:text-sm transition-all duration-200 font-semibold
       ${
-        user.CurrentStatus === "Active"
+        user.CurrentStatus === "Available"
           ? "bg-green-100 border-green-300 text-green-800"
           : user.CurrentStatus === "Sick"
           ? "bg-yellow-100 border-yellow-300 text-yellow-800"
@@ -931,12 +953,13 @@ const ClientEnquiryUserInterFace = () => {
     }
   >
  
-      <option value="Active">🟢 Active</option>
-      <option value="Sick">🟡 Sick</option>
-      <option value="Leave">🔵 Leave</option>
-      <option value="Bench">🟣 Bench</option>
-      <option value="None">⚪ None</option>
-      <option value="Terminated">🔴 Terminated</option>
+                            <option value="Active">🟢 Active</option>
+                            <option value="Available">🟢 Available for Work</option>
+                            <option value="Sick">🟡 Sick</option>
+                            <option value="Leave">🔵 Leave</option>
+                            <option value="Bench">🟣 Bench</option>
+                            <option value="None">⚪ None</option>
+                            <option value="Terminated">🔴 Terminated</option>
   </select>
 </td>
 
