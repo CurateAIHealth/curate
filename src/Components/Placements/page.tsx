@@ -412,229 +412,132 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
 
 
   {ClientsInformation.length > 0 && (
-    <div className="overflow-x-auto flex flex-col">
-<div className="w-full mb-3">
-  <div className="
-    flex flex-col gap-3
-    lg:flex-row lg:items-end lg:justify-end
-  ">
+    <div className="w-full max-h-[75vh] overflow-y-auto rounded-2xl shadow-xl">
+  <table className="w-full table-fixed border-collapse bg-white">
     
-    <button
-      onClick={() => setenableStatus(!enableStatus)}
-      className="
-        px-5 py-2.5 text-xs font-semibold
-        bg-gradient-to-r from-teal-600 to-emerald-500
-        hover:from-teal-700 hover:to-emerald-600
-        text-white rounded-xl shadow-md
-        transition whitespace-nowrap
-        w-full sm:w-auto
-      "
-    >
-      {enableStatus ? "Disable Generate Bill" : "Enable Generate Bill"}
-    </button>
+    {/* TABLE HEADER */}
+    <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white uppercase text-xs font-semibold">
+      <tr>
+        <th className="px-3 py-3 text-left break-words">Client Name</th>
+        <th className="px-3 py-3 text-left break-words">Patient Name</th>
+        <th className="px-3 py-3 text-left break-words">Contact</th>
+        <th className="px-3 py-3 text-left break-words">Location</th>
+        <th className="px-3 py-3 text-left break-words">HCA Name</th>
+        <th className="px-3 py-3 text-left break-words">Status</th>
+        <th className="px-3 py-3 text-left break-words">Replacement</th>
+        <th className="px-3 py-3 text-center break-words">Time Sheet</th>
 
- 
-    <div
-      className="
-        flex items-center bg-white shadow-md rounded-xl
-        px-4 h-[44px]
-        border border-gray-200
-        focus-within:border-indigo-500
-        transition
-        w-full sm:w-[320px]
-      "
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth="1.5"
-        stroke="currentColor"
-        className="w-5 h-5 text-gray-500 mr-2"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"
-        />
-      </svg>
+        {(isInvoiceDay || enableStatus) && (
+          <th className="px-3 py-3 text-center break-words">Invoice</th>
+        )}
 
-      <input
-        type="search"
-        placeholder="Search..."
-        onChange={(e: any) => setSearchResult(e.target.value)}
-        className="w-full bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
-      />
-    </div>
+        <th className="px-3 py-3 text-center break-words">Service Continue</th>
+        <th className="px-3 py-3 text-center break-words">Terminate</th>
+      </tr>
+    </thead>
 
-    
-    <div
-      className="
-        grid grid-cols-1 sm:grid-cols-2 gap-3
-        w-full sm:w-auto
-      "
-    >
-   
-      <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1">
-          Month
-        </label>
-        <select
-          value={SearchMonth}
-          onChange={(e) => setSearchMonth(e.target.value)}
-          className="
-            w-full h-[44px] rounded-xl
-            border border-gray-300
-            px-4 text-sm bg-white text-gray-800
-            focus:outline-none focus:ring-2 focus:ring-indigo-500
-          "
-        >
-          <option value="">All Months</option>
-          {[
-            "January","February","March","April","May","June",
-            "July","August","September","October","November","December"
-          ].map((month) => (
-            <option key={month} value={month}>
-              {month}
-            </option>
-          ))}
-        </select>
-      </div>
+    {/* TABLE BODY */}
+    <tbody className="bg-white divide-y divide-gray-200">
+      {[...FilterFinelTimeSheet].reverse().map((c, i) => (
+        <tr key={i} className="hover:bg-teal-50/30 transition-all">
+          
+          <td className="px-3 py-3 font-semibold text-gray-900 break-words">
+            {c.name}
+          </td>
 
-      <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1">
-          Year
-        </label>
-        <select
-          value={SearchYear}
-          onChange={(e) => setSearchYear(e.target.value)}
-          className="
-            w-full h-[44px] rounded-xl
-            border border-gray-300
-            px-4 text-sm bg-white text-gray-800
-            focus:outline-none focus:ring-2 focus:ring-indigo-500
-          "
-        >
-          <option value="">All Years</option>
-          {[2024, 2025, 2026].map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
-  </div>
+          <td className="px-3 py-3 font-semibold text-gray-900 break-words">
+            {c.PatientName}
+          </td>
+
+          <td className="px-3 py-3 text-gray-700 break-words">
+            {c.contact}
+          </td>
+
+          <td className="px-3 py-3 text-gray-600 break-words">
+            {c.location}
+          </td>
+
+         <td className="px-3 py-3 w-auto text-center">
+  <span className="inline-flex items-center justify-center px-1 py-1 text-[11px] rounded-md font-medium border bg-white gap-1">
+    🩺 {c.HCA_Name}
+  </span>
+</td>
+
+
+          <td className="px-3 py-3 break-words">
+            <div className="flex items-center gap-2 rounded-full bg-green-100 px-3 py-1">
+              <CircleCheckBig className="w-4 h-4 text-emerald-600" />
+              <p className="text-xs font-medium text-emerald-700">Active</p>
+            </div>
+          </td>
+
+          <td className="px-3 py-3 break-words">
+            <select
+              className="w-full p-2 text-sm border rounded-lg cursor-pointer"
+              onChange={(e) => {
+                const selected = HCA_List.find(
+                  (hca) => hca.FirstName === e.target.value
+                );
+                selected && UpdateReplacement(selected, c);
+              }}
+            >
+              <option>Assign New HCA</option>
+              {HCA_List.map((each: any, index: any) => (
+                <option key={index}>{each.FirstName}</option>
+              ))}
+            </select>
+          </td>
+
+          <td className="px-3 py-3 text-center break-words">
+            <button
+              className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+              onClick={() => UpdateClient_UserId(c.Client_Id, c.name)}
+            >
+              View
+            </button>
+          </td>
+
+          {(isInvoiceDay || enableStatus) && (
+            <td className="px-3 py-3 text-center break-words">
+              <button
+                className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+                onClick={() => {
+                  setBillingRecord(c);
+                  setShowPaymentModal(true);
+                }}
+              >
+                Generate Bill
+              </button>
+            </td>
+          )}
+
+          <td className="px-3 py-3 text-center break-words">
+            <button
+              className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+              onClick={() => UpdatePopup(c)}
+            >
+              Extend
+            </button>
+          </td>
+
+          <td className="px-3 py-3 text-center break-words">
+            <button
+              className="px-3 py-2 text-xs font-medium rounded-lg hover:bg-gray-100"
+              onClick={() => handleDeleteClick(c)}
+            >
+              <Trash />
+            </button>
+          </td>
+
+        </tr>
+      ))}
+    </tbody>
+
+  </table>
 </div>
 
 
-{showPaymentModal && billingRecord && (
-  <PaymentModal
-                record={billingRecord}
-
-                onClose={() => { setShowPaymentModal(false); setBillingRecord(null); } } onConfirm={function (billingResult: any): void {
-                  throw new Error("Function not implemented.");
-                } }    
-  />
-)}
-      <table className="w-full border-collapse rounded-2xl shadow-xl overflow-hidden bg-white">
-        <thead className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white uppercase text-xs font-semibold sticky top-0 shadow-md">
-          <tr>
-            <th className="px-6 py-4 text-left">Client Name</th>
-            <th className="px-6 py-4 text-left">Contact</th>
-            <th className="px-6 py-4 text-left">Location</th>
-            <th className="px-8 py-4 text-left">HCA Name</th>
-            <th className="px-9 py-4 text-left">Status</th>
-            <th className="px-8 py-4 text-left">Replacement</th>
-           
-            <th className="px-6 py-4 text-center">Time Sheet</th>
-          {(isInvoiceDay || enableStatus) && (
-  <th className="px-6 py-4 text-center">Invoice</th>
-)}
-             <th className="px-6 py-4 text-left">Service Continue</th>
-
-            <th className="px-6 py-4 text-center">Terminate</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-100">
-          {FilterFinelTimeSheet.reverse().map((c, i) => (
-            <tr
-              key={i}
-              className="hover:bg-teal-50/30 transition-all border-b border-gray-400"
-            >
-              <td className="px-6 py-4 font-semibold text-gray-900">{c.name}</td>
-              <td className="px-6 py-4 text-gray-700">{c.contact}</td>
-              <td className="px-6 py-4 text-gray-600 truncate max-w-[200px]">{c.location}</td>
-              <td className="px-4 py-4">
-                <span className="px-3 py-1 text-[12px] rounded-md font-medium shadow-sm bg-white/70 border border-gray-200 flex items-center gap-1">
-                  🩺 {c.HCA_Name} 👚
-                </span>
-              </td>
-              <td className="px-6 py-4">
-                <div className="flex items-center gap-2 rounded-full bg-green-100/50 px-3 py-1 shadow-sm">
-                  <CircleCheckBig className="w-4 h-4 text-emerald-600" />
-                  <p className="text-xs font-medium text-emerald-700">Active</p>
-                </div>
-              </td>
-              <td className="px-6 py-4">
-                <select className="p-2 text-sm border cursor-pointer rounded-lg focus:ring-2 focus:ring-teal-300 outline-none transition w-[150px] bg-white/70 shadow-sm"
-                  onChange={(e) => {
-    const selected = HCA_List.find(hca => hca.FirstName === e.target.value);
-    if (selected) {
-      UpdateReplacement(selected, c);
-    }
-  }}
-                >
-                  <option>Assign New HCA</option>
-                  {HCA_List.map((each: any,index:any) => (
-                    <option key={index} >{each.FirstName}</option>
-                  ))}
-                </select>
-              </td>
-              <td className="px-6 py-4 text-center">
-                <button
-                  className="px-5 py-2 text-xs cursor-pointer font-medium bg-gradient-to-r from-teal-600 to-emerald-500 hover:from-teal-700 hover:to-emerald-600 text-white rounded-lg shadow-md transition"
-                  onClick={() => UpdateClient_UserId(c.Client_Id,c.name)}
-                >
-                  View
-                </button>
-              </td>
- {(isInvoiceDay || enableStatus)&&
-
-                  
-                <td>
-  <button
- className="px-5 py-2 text-xs cursor-pointer font-medium bg-gradient-to-r from-teal-600 to-emerald-500 hover:from-teal-700 hover:to-emerald-600 text-white rounded-lg shadow-md transition"
-    onClick={() => {
-      console.log('Check Resulted Info--------',c)
-      setBillingRecord(c);
-      setShowPaymentModal(true);
-    }}
-  >
-   Generate Bill 
-  </button>
-</td>}
- <td className="px-6 py-4 text-center">
-                <button
-                  className="px-5 py-2 text-xs cursor-pointer font-medium bg-gradient-to-r from-teal-600 to-emerald-500 hover:from-teal-700 hover:to-emerald-600 text-white rounded-lg shadow-md transition"
-                  onClick={() =>UpdatePopup(c)}
-                >
-                  Extend
-                </button>
-              </td>
-              <td className="px-6 py-4 text-center">
-                <button
-                  className="px-5 py-2 text-xs font-medium text-gray-800 rounded-lg shadow-md hover:bg-gray-100 transition"
-                  onClick={() => handleDeleteClick(c)}
-                >
-                  <Trash />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+  
   )}
    {ActionStatusMessage && (
           <div className="flex flex-col items-center justify-center gap-4 mt-4 bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 px-4 py-4">

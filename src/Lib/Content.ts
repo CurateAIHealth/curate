@@ -1878,7 +1878,9 @@ export const HomeAssistance = [
   "Handling oxygen concentrator",
   "Bedding",
   "Small injury dressing",
-  "Small food preparation for patient (e.g., Maggie, boiled egg, hot water, tea, coffee, daliya, khichdi, sabudana etc.)"
+  "Small food preparation for patient (e.g., Maggie, boiled egg, hot water, tea, coffee, daliya, khichdi, sabudana etc.)",
+  "Other"
+
 ];
 
 
@@ -1891,8 +1893,97 @@ export const patientCategories = [
   "Completely Bedridden",
   "Paralysis/Stroke Patients",
   "Post Surgery care",
-  "Fractures/Injury"
+  "Fractures/Injury",
+  'Other'
 ];
+
+export const services = [
+  "Healthcare Assistant Service - HCAS",
+  "Sub types - Assessment, Consultation and Treatment",
+
+  "Healthcare Nursing Service - HCNS",
+  "Sub types - Assessment, Consultation and Treatment",
+
+  "Physiotherapy Service - PTS",
+  "Sub types - Assessment, Consultation and Treatment",
+
+  "Medical Equipment Service - MES",
+
+  "Oncall Service - OCS",
+
+  "Lab Service - LABS",
+
+  "Occupational Health Service - OHS",
+
+  "Digital Health Service - DHS",
+
+  "AI Health Service - AIHS",
+
+  "Speech & Language Therapy Service - SPTS",
+
+  "Occupational Therapy Service - OTS",
+
+  "Behaviour Health Service - BHS",
+
+  "Healthcare Consulting Service - HCS",
+
+  "Behaviour Therapy",
+  "Sub types - Assessment, Consultation and Treatment",
+
+  "Occupational Therapy",
+  "Sub types - Assessment, Consultation and Treatment",
+
+  "Speech and Language Therapy",
+  "Sub types - Assessment, Consultation and Treatment",
+  "Others"
+];
+
+
+
+export const healthcareServices = [
+  "Healthcare Assistant Service (HCAS)",
+  "Healthcare Nursing Service (HCNS)",
+  "Physiotherapy Service (PTS)",
+  "Medical Equipment Service (MES)",
+  "Oncall Service (OCS)",
+  "Lab Service (LABS)",
+  "Occupational Health Service (OHS)",
+  "Digital Health Service (DHS)",
+  "AI Health Service (AIHS)",
+  "Speech & Language Therapy Service (SPTS)",
+  "Occupational Therapy Service (OTS)",
+  "Behaviour Health Service (BHS)",
+  "Healthcare Consulting Service (HCS)",
+  "Baby Care",
+  "Other"
+];
+
+
+export const SERVICE_SUBTYPE_MAP = {
+  "Physiotherapy Service (PTS)": [
+    "Assessment",
+    "Consultation",
+    "Treatment"
+  ],
+  "Behaviour Health Service (BHS)": [
+    "Therapy",
+    "Counselling"
+  ],
+  "Occupational Therapy Service (OTS)": [
+    "Assessment",
+    "Rehabilitation"
+  ],
+  "Speech & Language Therapy Service (SPTS)": [
+    "Speech Therapy",
+    "Language Therapy",
+    "Swallowing Therapy"
+  ]
+} 
+
+
+
+
+
 
 
 export const PatientTypes=[ "Independent Patients",
@@ -2043,7 +2134,8 @@ export const Patient_Home_Supply_Needs=[
   "Sanitizer bottle",
   "Nebilizer machine",
   "Steam Inhaler machine",
-  "Instant cold pack"
+  "Instant cold pack",
+  "Other"
 ]
 
 
@@ -2070,7 +2162,8 @@ export const Health_Card = [
   "Post Orthopedic Surgeries - Hip/Knee Replacement, Spine Surgery",
   "Cancers",
   "Palliative Care - End of Life Care",
-  "Geriatric Patients"
+  "Geriatric Patients",
+  "Other"
 ];
 
 export const paymentData = [

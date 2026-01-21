@@ -2,7 +2,7 @@
 
 import MobileMedicationSchedule from "@/Components/MedicationMobileView/page";
 import MedicationSchedule from "@/Components/Medications/page";
-import { ClientEnquiry_Filters, filterColors, Headings, Health_Card, HomeAssistance, hyderabadAreas, indianFamilyRelations, IndianLanguages, LeadSources, Main_Filters, medicalSpecializations, Patient_Home_Supply_Needs, patientCategories, physioSpecializations } from "@/Lib/Content";
+import { ClientEnquiry_Filters, filterColors, Headings, Health_Card, healthcareServices, HomeAssistance, hyderabadAreas, indianFamilyRelations, IndianLanguages, LeadSources, Main_Filters, medicalSpecializations, Patient_Home_Supply_Needs, patientCategories, physioSpecializations, SERVICE_SUBTYPE_MAP,  } from "@/Lib/Content";
 import { GetRegidterdUsers, GetUserInformation, UpdateNewLeadInformation } from "@/Lib/user.action";
 import { Update_Current_Client_Status } from "@/Redux/action";
 import { AlertCircle, Info, ListFilter, LogOut, PhoneCall, X } from "lucide-react";
@@ -11,6 +11,12 @@ import { stringify } from "querystring";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
+type ServiceWithSubType = keyof typeof SERVICE_SUBTYPE_MAP;
+
+type FormData = {
+  hcpType: string[];
+  serviceSubTypes: Partial<Record<ServiceWithSubType, string>>;
+};
 
 type RemarkStatusType = {
   Hygiene: boolean;
@@ -58,6 +64,10 @@ export default function CallEnquiryForm() {
     patientDrNeeds: [],
     patientHealthCard: [],
     hcpType: [],
+    serviceSubTypes:{},
+    NumberOfCareTakers:{},
+    OnCallSerive:'',
+    sessions:{},
     AbhaId: "",
     PhysiotherapySpecialisation: "",
     MedicalDrSpecialisation: "",
@@ -196,6 +206,48 @@ export default function CallEnquiryForm() {
       return updated;
     });
   };
+const extractOtherValue = (value: string) =>
+  value.startsWith("Other:")
+    ? value.slice(6)
+    : "";
+
+const handleOtherChange = (field: string, value: string) => {
+  setFormData((prev: any) => {
+    const raw = prev[field];
+    const values = Array.isArray(raw)
+      ? raw
+      : Array.isArray(raw?.values)
+      ? raw.values
+      : [];
+
+    const filtered = values.filter((v: string) => !v.startsWith("Other:"));
+
+    return {
+      ...prev,
+      [field]: value
+        ? [...filtered, `Other: ${value}`]
+        : [...filtered, "Other:"],
+    };
+  });
+};
+const toProperCaseLive = (value: string) => {
+  const endsWithSpace = value.endsWith(" ");
+
+  const formatted = value
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .map(word =>
+      word ? word.charAt(0).toUpperCase() + word.slice(1) : ""
+    )
+    .join(" ");
+
+  return endsWithSpace ? formatted + " " : formatted;
+};
+
+
+
+
   useEffect(() => {
     const Fetch = async () => {
       const localValue = localStorage.getItem('UserId');
@@ -208,16 +260,35 @@ export default function CallEnquiryForm() {
     }
     Fetch()
   }, [])
-  const handleCheckboxChange = (section: string, value: string) => {
-    setFormData((prev: any) => {
-      const current = prev[section] || [];
-      if (current.includes(value)) {
-        return { ...prev, [section]: current.filter((item: string) => item !== value) };
-      } else {
-        return { ...prev, [section]: [...current, value] };
-      }
-    });
-  };
+const handleCheckboxChange = (field: string, option: string) => {
+  setFormData((prev: any) => {
+    const raw = prev[field];
+    const values = Array.isArray(raw)
+      ? raw
+      : Array.isArray(raw?.values)
+      ? raw.values
+      : [];
+
+    if (option === "Other") {
+      const hasOther = values.some((v: string) => v.startsWith("Other:"));
+
+      return {
+        ...prev,
+        [field]: hasOther
+          ? values.filter((v: string) => !v.startsWith("Other:"))
+          : [...values, "Other:"],
+      };
+    }
+
+    return {
+      ...prev,
+      [field]: values.includes(option)
+        ? values.filter((v: string) => v !== option)
+        : [...values, option],
+    };
+  });
+};
+
 
 
   const UpdatePreview = (A: string) => {
@@ -256,8 +327,22 @@ export default function CallEnquiryForm() {
       return () => clearInterval(Timer)
     }
   };
+const requiresSubType = (hcpTypes = []) => {
+  const servicesWithSubTypes = [
+    "Physiotherapy Service (PTS)",
+    "Behaviour Health Service (BHS)",
+    "Occupational Therapy Service (OTS)",
+    "Speech & Language Therapy Service (SPTS)"
+  ];
 
-  console.log('Check for Post Datat-----', formData.ServiceArea)
+  return hcpTypes.some(type => servicesWithSubTypes.includes(type));
+};
+const hasSubTypes = (service: string): service is ServiceWithSubType => {
+  return service in SERVICE_SUBTYPE_MAP;
+};
+
+  console.log('Check for Post Datat-----', formData.NumberOfCareTakers
+)
   const FilterdImportedVendorName = ImportedVendors.map((each: any) => each.VendorName)
   return (
     <div
@@ -328,13 +413,17 @@ export default function CallEnquiryForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 overflow-y-auto pr-1 sm:pr-2">
           <div id="Client Card – ID" className="bg-white rounded-lg shadow p-4 space-y-3">
             <h2 className="text-lg font-semibold text-teal-600">Client Card – ID</h2>
-            <input
-              type="text"
-              placeholder="Client Name"
-              className="w-full border rounded-lg p-2"
-              value={formData.clientName}
-              onChange={(e) => handleChange("clientName", e.target.value)}
-            />
+           <input
+  type="text"
+  placeholder="Client Name"
+  className="w-full border rounded-lg p-2"
+  value={formData.clientName || ""}
+  onChange={(e) =>
+    handleChange("clientName", toProperCaseLive(e.target.value))
+  }
+/>
+
+
             <input
               type="text"
               placeholder="Client Phone"
@@ -464,7 +553,7 @@ export default function CallEnquiryForm() {
               placeholder="Enter your remarks here..."
               className="w-[400px] p-3 border-1 ml-2 border-gray-300 rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 text-sm"
               value={formData.ClientCardRemarks || ""}
-              onChange={(e) => handleChange("ClientCardRemarks", e.target.value)}
+              onChange={(e) => handleChange("ClientCardRemarks", toProperCaseLive(e.target.value))}
             />
             }
           </div>
@@ -476,7 +565,7 @@ export default function CallEnquiryForm() {
               placeholder="Patient Name"
               className="w-full border rounded-lg p-2"
               value={formData.patientName}
-              onChange={(e) => handleChange("patientName", e.target.value)}
+              onChange={(e) => handleChange("patientName", toProperCaseLive(e.target.value))}
 
             />
             <input
@@ -553,7 +642,7 @@ export default function CallEnquiryForm() {
                 placeholder="Enter your remarks here..."
                 className="w-[400px] p-3 mt-2  border-1 ml-2 border-gray-300 rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 text-sm"
                 value={formData.PatientCardCardRemarks || ""}
-                onChange={(e) => handleChange("PatientCardCardRemarks", e.target.value)}
+                onChange={(e) => handleChange("PatientCardCardRemarks", toProperCaseLive(e.target.value))}
               />
               }
             </div>
@@ -564,43 +653,111 @@ export default function CallEnquiryForm() {
             <h2 className="text-lg font-semibold text-teal-600">Patient Details</h2>
             <div>
               <h3 className="font-medium text-sm">Patient Type</h3>
-              <div className="flex flex-col gap-1">
-                {patientCategories.map(
-                  (t) => (
-                    <label key={t} className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={formData.patientType === t}
+             <div className="flex flex-col gap-2">
+  {patientCategories.map((t) => {
+    const isOther = t === "Other";
+    const isSelected =
+      isOther
+        ? formData.patientType?.startsWith("Other:")
+        : formData.patientType === t;
 
-                        onChange={() => setFormData((prev: any) => ({ ...prev, patientType: t }))}
-                        className="mr-2 accent-purple-600"
-                      />
-                      {t}
-                    </label>
-                  )
-                )}
-              </div>
+    return (
+      <div key={t} className="space-y-1">
+        <label className="flex items-center text-sm">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() =>
+              setFormData((prev: any) => ({
+                ...prev,
+                patientType: isOther ? "Other:" : t,
+              }))
+            }
+            className="mr-2 accent-purple-600"
+          />
+          {t}
+        </label>
+
+      
+        {isOther && isSelected && (
+          <div className="ml-6 flex items-center border border-gray-300 rounded-md overflow-hidden w-[90%]">
+            <span className="bg-gray-100 px-3 py-1.5 text-sm text-gray-600">
+              Other:
+            </span>
+            <input
+              type="text"
+              placeholder="Enter value"
+              value={formData.patientType.replace("Other:", "")}
+              onChange={(e) =>
+                setFormData((prev: any) => ({
+                  ...prev,
+                  patientType: `Other: ${e.target.value.trimStart()}`,
+                }))
+              }
+              className="flex-1 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+          </div>
+        )}
+      </div>
+    );
+  })}
+</div>
+
             </div>
             <div>
               <h3 className="font-medium text-sm">Current Location</h3>
-              <div className="flex flex-col gap-1">
-                {["Hospital", "Rehab", "Home"].map((loc) => (
-                  <label key={loc} className="flex items-center text-sm">
-                    <input
-                      type="checkbox"
-                      checked={formData.patientCurrentLocation === loc}
-                      onChange={() =>
-                        setFormData((prev: any) => ({
-                          ...prev,
-                          patientCurrentLocation: loc,
-                        }))
-                      }
-                      className="mr-2 accent-purple-600"
-                    />
-                    {loc}
-                  </label>
-                ))}
-              </div>
+          <div className="flex flex-col gap-2">
+  {["Hospital", "Rehab", "Home", "Other"].map((loc) => {
+    const rawLocation = formData.patientCurrentLocation;
+    const locationValue =
+      typeof rawLocation === "string" ? rawLocation : "";
+
+    const isOther = loc === "Other";
+    const isSelected = isOther
+      ? locationValue.startsWith("Other:")
+      : locationValue === loc;
+
+    return (
+      <div key={loc} className="space-y-1">
+        <label className="flex items-center text-sm">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() =>
+              setFormData((prev: any) => ({
+                ...prev,
+                patientCurrentLocation: isOther ? "Other:" : loc,
+              }))
+            }
+            className="mr-2 accent-purple-600"
+          />
+          {loc}
+        </label>
+
+        {isOther && isSelected && (
+          <div className="ml-6 flex items-center border border-gray-300 rounded-md overflow-hidden w-[90%]">
+            <span className="bg-gray-100 px-3 py-1.5 text-sm text-gray-600">
+              Other:
+            </span>
+            <input
+              type="text"
+              placeholder="Enter location"
+              value={locationValue.replace("Other:", "")}
+              onChange={(e) =>
+                setFormData((prev: any) => ({
+                  ...prev,
+                  patientCurrentLocation: `Other: ${e.target.value.trimStart()}`,
+                }))
+              }
+              className="flex-1 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+          </div>
+        )}
+      </div>
+    );
+  })}
+</div>
+
             </div>
             <div>
               <h3 className="font-medium text-sm">Service Location</h3>
@@ -609,7 +766,7 @@ export default function CallEnquiryForm() {
                 placeholder="Enter Service Location"
                 className="w-full border rounded-lg p-2"
                 value={formData.serviceLocation}
-                onChange={(e) => handleChange("serviceLocation", e.target.value)}
+                onChange={(e) => handleChange("serviceLocation", toProperCaseLive(e.target.value))}
               />
             </div>
             <div className="flex flex-col gap-2 max-w-xs">
@@ -653,7 +810,7 @@ export default function CallEnquiryForm() {
               placeholder="Enter your remarks here..."
               className="w-[400px] p-3 mt-2  border-1 ml-2 border-gray-300 rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 text-sm"
               value={formData.PatientDetailsCardRemarks || ""}
-              onChange={(e) => handleChange("PatientDetailsCardRemarks", e.target.value)}
+              onChange={(e) => handleChange("PatientDetailsCardRemarks", toProperCaseLive(e.target.value))}
             />
             }
 
@@ -730,7 +887,7 @@ export default function CallEnquiryForm() {
               placeholder="Enter your remarks here..."
               className="w-[400px] p-3 mt-2  border-1 ml-2 border-gray-300 rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 text-sm"
               value={formData.WeightRemarks || ""}
-              onChange={(e) => handleChange("WeightRemarks", e.target.value)}
+              onChange={(e) => handleChange("WeightRemarks", toProperCaseLive(e.target.value))}
             />
             }
           </div>
@@ -803,7 +960,7 @@ export default function CallEnquiryForm() {
               placeholder="Enter your remarks here..."
               className="w-[400px] p-3 mt-2  border-1 ml-2 border-gray-300 rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 text-sm"
               value={formData.HeightRemarks || ""}
-              onChange={(e) => handleChange("HeightRemarks", e.target.value)}
+              onChange={(e) => handleChange("HeightRemarks", toProperCaseLive(e.target.value))}
             />
             }
           </div>
@@ -910,7 +1067,7 @@ export default function CallEnquiryForm() {
             {
               title: "Doctor Needs",
               field: "patientDrNeeds",
-              options: ["Medical Dr.", "Physio", "SLT", "BT", "OT"],
+              options: ["Medical Dr.", "Physio", "SLT", "BT", "OT","Other"],
             },
             {
               title: "Health Card",
@@ -918,24 +1075,265 @@ export default function CallEnquiryForm() {
               options: Health_Card,
             },
             {
-              title: "HCP Type",
+              title: "Service Type",
               field: "hcpType",
-              options: ["HCA", "HCN", "Physio", "SLT", "BT", "OT", "Medical Equipment"],
+              options: healthcareServices,
             },
           ].map((section: any) => (
             <div key={section.field} id={section.title} className="bg-white rounded-lg shadow p-4 space-y-2">
+          
               <h2 className="text-lg font-semibold text-teal-600">{section.title}</h2>
-              {section.options.map((opt: any) => (
-                <label key={opt} className="flex items-center text-sm">
-                  <input
-                    type="checkbox"
-                    checked={formData[section.field]?.includes(opt)}
-                    onChange={() => handleCheckboxChange(section.field, opt)}
-                    className="mr-2 accent-purple-600"
-                  />
-                  {opt}
-                </label>
-              ))}
+
+ {section.options.map((opt: string) => {
+  const raw = formData[section.field];
+  const values = Array.isArray(raw)
+    ? raw
+    : Array.isArray(raw?.values)
+    ? raw.values
+    : [];
+
+  const isOther = opt === "Other";
+  const otherValue = values.find(
+    (v: string) => typeof v === "string" && v.startsWith("Other:")
+  );
+
+  return (
+    <div key={opt} className="flex gap-2 items-center space-y-2">
+      <label className="flex items-center text-sm gap-2">
+        <input
+          type="checkbox"
+          checked={
+            isOther
+              ? Boolean(otherValue)
+              : values.includes(opt)
+          }
+          onChange={() => handleCheckboxChange(section.field, opt)}
+          className="accent-purple-600"
+        />
+        {opt}
+      </label>
+       {formData.hcpType.includes(opt)&&
+<div>
+  {opt === "Oncall Service (OCS)" ? 
+    <div>
+      
+      <select
+  className="
+    mt-2 w-full
+    text-xs font-medium text-gray-700
+    bg-white
+    border border-gray-200
+    rounded-xl
+    px-3 py-2
+    shadow-sm
+    cursor-pointer
+    transition-all duration-200
+ ml-auto
+  flex flex-col items-center justify-center
+    focus:outline-none
+    focus:ring-2 focus:ring-blue-500
+    focus:border-blue-500
+
+    hover:border-blue-400
+  "
+  onChange={(e)=>handleChange("OnCallSerive",e.target.value)}
+>
+  <option value="">Choose Service Type</option>
+  <option value="Injection12">Injection</option>
+  <option value="Dressing">Dressing</option>
+  <option value="Other">Other</option>
+</select>
+{formData.OnCallSerive === "Other" && (
+  <input
+    type="text"
+    placeholder="Specify other service"
+     onChange={(e)=>handleChange("OnCallSerive",e.target.value)}
+    className="
+      mt-2 w-full
+      text-xs font-medium text-gray-700
+      bg-white
+      border border-gray-200
+      rounded-xl
+      px-3 py-2
+      shadow-sm
+      transition-all duration-200
+
+      placeholder:text-gray-400
+      hover:border-blue-400
+
+      focus:outline-none
+      focus:ring-2 focus:ring-blue-500
+      focus:border-blue-500
+    "
+  />
+)}
+
+</div>
+:
+       <div className="
+  ml-auto
+  flex flex-col items-center justify-center
+  p-4
+  rounded-2xl
+  bg-white
+  border border-gray-100
+  shadow-[0_15px_45px_rgba(0,0,0,0.25)]
+  hover:-translate-y-0.5
+  transition-all duration-200
+">
+
+     <div className="flex items-center gap-2 text-xs bg-gray-50 border rounded-md px-2 py-1">
+        <span className="whitespace-nowrap text-[10px]">No. of People</span>
+        <input
+          type="number"
+          value={formData.NumberOfCareTakers?.[opt] ?? 0}
+          onChange={(e) =>
+            setFormData((prev: any) => ({
+              ...prev,
+              NumberOfCareTakers: {
+                ...prev.NumberOfCareTakers,
+                [opt]: Number(e.target.value),
+              },
+            }))
+          }
+          className="w-14 text-center border rounded px-1 py-0.5 text-sm"
+        />
+      </div>
+      <div className="flex gap-2 mt-1">
+  <label className="flex items-center gap-2 px-1 py-1.5 rounded-full border 
+                    bg-white cursor-pointer hover:bg-gray-100 transition">
+    <input
+      type="checkbox"
+      className="h-4 w-4 accent-blue-600"
+    />
+    <span className="text-[10px] font-semibold">
+      12-Hr
+    </span>
+  </label>
+
+  <label className="flex items-center gap-2 px-1 py-1.5 rounded-full border 
+                    bg-white cursor-pointer hover:bg-gray-100 transition">
+    <input
+      type="checkbox"
+      className="h-4 w-4 accent-blue-600"
+    />
+    <span className="text-[10px] font-semibold">
+      24-Hr
+    </span>
+  </label>
+</div>
+
+      </div>
+      
+    }
+
+</div>
+
+     
+      }
+     
+
+      {isOther && otherValue && (
+  <div className="ml-6 flex items-center w-[90%] border border-gray-300 rounded-md overflow-hidden">
+    
+    {/* Prefix */}
+    <span className="bg-gray-100 px-3 py-1.5 text-sm text-gray-600 whitespace-nowrap">
+      Other:
+    </span>
+
+    {/* Input */}
+    <input
+      type="text"
+      value={extractOtherValue(otherValue)}
+      onChange={(e) =>
+        handleOtherChange(
+          section.field,
+          toProperCaseLive(e.target.value)
+        )
+      }
+      placeholder="Enter value"
+      className="
+        flex-1 px-3 py-1.5
+        text-sm
+        focus:outline-none
+        focus:ring-2 focus:ring-teal-500
+      "
+    />
+  </div>
+)}
+
+    </div>
+  );
+
+ 
+})}
+
+
+{section.title==="Service Type"&&
+<div>
+  {formData.hcpType.map((service: any) => {
+    if (!hasSubTypes(service)) return null;
+
+    const subTypes = SERVICE_SUBTYPE_MAP[service];
+    const selectedValue = formData.serviceSubTypes?.[service] || "";
+
+    return (
+      <div
+        key={service}
+        className="mt-5 border p-1 flex flex-col items-center rounded-md shadow-lg"
+      >
+        <p className="text-sm font-semibold mb-2">
+          {service} – Sub Type
+        </p>
+
+        <div className="flex flex-wrap items-center gap-4">
+          {subTypes.map((type: any) => (
+            <label
+              key={type}
+              className="flex items-center gap-1 text-[12px]"
+            >
+              <input
+                type="checkbox"
+                checked={selectedValue === type}
+                onChange={() =>
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    serviceSubTypes: {
+                      ...prev.serviceSubTypes,
+                      [service]: type,
+                    },
+                  }))
+                }
+              />
+              {type}
+            </label>
+          ))}
+        </div>
+
+           <div className="mt-3 flex items-center gap-2 text-sm">
+          <span>Number Of Sessions</span>
+          <input
+            type="number"
+            value={formData.sessions?.[service] ?? 0}
+            onChange={(e) =>
+              setFormData((prev: any) => ({
+                ...prev,
+                sessions: {
+                  ...prev.sessions,
+                  [service]: Number(e.target.value),
+                },
+              }))
+            }
+            className="w-15 text-center border rounded px-2 py-1 text-sm"
+          />
+        </div>
+      </div>
+    );
+  })}
+</div>
+
+}
+
 
               <button
                 className="bg-white/30 backdrop-blur-md mt-5 border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200"
@@ -957,7 +1355,7 @@ export default function CallEnquiryForm() {
                   placeholder="Enter your remarks here..."
                   className="w-[400px] p-3 mt-2 border-1 ml-2 border-gray-300 rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 text-sm"
                   value={formData[`${section.field}Remarks`] || ""}
-                  onChange={(e) => handleChange(`${section.field}Remarks`, e.target.value)}
+                  onChange={(e) => handleChange(`${section.field}Remarks`, toProperCaseLive(e.target.value))}
                 />
               )}
 
@@ -1091,12 +1489,19 @@ export default function CallEnquiryForm() {
 
 
             <label className="font-bold mb-2 text-teal-600">Additional Comments</label>
-            <textarea
-              onChange={(e) => handleChange("AdditionalComments", e.target.value)}
-              className="border-2 border-gray-400 rounded-md p-2 "
-              rows={4}
-              placeholder="Enter your comments here..."
-            />
+           <textarea
+  value={formData.AdditionalComments || ""}
+  onChange={(e) =>
+    handleChange(
+      "AdditionalComments",
+      toProperCaseLive(e.target.value)
+    )
+  }
+  className="border-2 border-gray-400 rounded-md p-2 w-full"
+  rows={4}
+  placeholder="Enter your comments here..."
+/>
+
           </div>
 
           <div className="flex flex-col flex-wrap items-center justify-center">
