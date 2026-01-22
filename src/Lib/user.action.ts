@@ -538,8 +538,11 @@ export const UpdateNewLeadInformation = async (FinelPostingData: any) => {
       patientHealthCard: FinelPostingData.patientHealthCard,
       ServiceType: FinelPostingData.hcpType,
       NumberOfCareTakers:FinelPostingData.NumberOfCareTakers,
+      OnCallSerive:FinelPostingData.OnCallSerive,
       Sessions:FinelPostingData.sessions,
       serviceSubTypes:FinelPostingData.serviceSubTypes,
+      ServiceTypeWorkingHours:FinelPostingData.ServiceWorkingHours,
+    
       PhysiotherapySpecialisation: FinelPostingData.PhysiotherapySpecialisation,
       MedicalDrSpecialisation: FinelPostingData.MedicalDrSpecialisation,
       PatientBathRoomCleaning: FinelPostingData.PatientBathRoomCleaning,

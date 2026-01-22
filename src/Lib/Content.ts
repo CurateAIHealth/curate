@@ -1966,18 +1966,26 @@ export const SERVICE_SUBTYPE_MAP = {
     "Treatment"
   ],
   "Behaviour Health Service (BHS)": [
-    "Therapy",
-    "Counselling"
+      "Assessment",
+    "Consultation",
+    "Treatment"
   ],
   "Occupational Therapy Service (OTS)": [
-    "Assessment",
-    "Rehabilitation"
+      "Assessment",
+    "Consultation",
+    "Treatment"
   ],
   "Speech & Language Therapy Service (SPTS)": [
-    "Speech Therapy",
-    "Language Therapy",
-    "Swallowing Therapy"
-  ]
+     "Assessment",
+    "Consultation",
+    "Treatment"
+  ],
+  "Occupational Health Service (OHS)": [
+      "Assessment",
+    "Consultation",
+    "Treatment"
+  ],
+  
 } 
 
 

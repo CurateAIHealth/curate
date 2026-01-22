@@ -68,6 +68,7 @@ export default function CallEnquiryForm() {
     NumberOfCareTakers:{},
     OnCallSerive:'',
     sessions:{},
+    ServiceWorkingHours:{},
     AbhaId: "",
     PhysiotherapySpecialisation: "",
     MedicalDrSpecialisation: "",
@@ -171,6 +172,8 @@ export default function CallEnquiryForm() {
   const [ClientDiscount, SetClientDiscount] = useState<any>(0)
   const [PhysioScore, SetPhysioScore] = useState(0)
   const [addingWeight, setaddingWeight] = useState<any>("");
+  const [ShowOtherOnGoinCall,setShowOtherOnGoinCall]=useState(false)
+  const [ShowOtherServiceArea,setShowOtherServiceArea]=useState(false)
   const [statusMessage, setStatusMessage] = useState("");
   const [addedheight, setaddedheight] = useState<any>();
   const [TimeStameDetails, setTimeStameDetails] = useState("setTimeStameDetails")
@@ -210,6 +213,11 @@ const extractOtherValue = (value: string) =>
   value.startsWith("Other:")
     ? value.slice(6)
     : "";
+const allowedServices = [
+  "Healthcare Assistant Service (HCAS)",
+  "Healthcare Nursing Service (HCNS)",
+  "Oncall Service (OCS)",
+];
 
 const handleOtherChange = (field: string, value: string) => {
   setFormData((prev: any) => {
@@ -341,7 +349,7 @@ const hasSubTypes = (service: string): service is ServiceWithSubType => {
   return service in SERVICE_SUBTYPE_MAP;
 };
 
-  console.log('Check for Post Datat-----', formData.NumberOfCareTakers
+  console.log('Check for Post Datat-----', formData.serviceSubTypes
 )
   const FilterdImportedVendorName = ImportedVendors.map((each: any) => each.VendorName)
   return (
@@ -767,6 +775,8 @@ const hasSubTypes = (service: string): service is ServiceWithSubType => {
                 className="w-full border rounded-lg p-2"
                 value={formData.serviceLocation}
                 onChange={(e) => handleChange("serviceLocation", toProperCaseLive(e.target.value))}
+
+             
               />
             </div>
             <div className="flex flex-col gap-2 max-w-xs">
@@ -776,7 +786,11 @@ const hasSubTypes = (service: string): service is ServiceWithSubType => {
               </label>
 
               <select
-                onChange={(e: any) => handleChange("ServiceArea", e.target.value)}
+               
+                   onChange={(e)=>{
+setShowOtherServiceArea(e.target.value==="Other")
+                  setFormData({...formData,ServiceArea:e.target.value==="Other"?'':e.target.value})
+                }}
                 className="
       h-11 w-full px-4
       rounded-xl
@@ -802,6 +816,16 @@ const hasSubTypes = (service: string): service is ServiceWithSubType => {
                   </option>
                 ))}
               </select>
+              {ShowOtherServiceArea&&
+               <input
+            type="text"
+            placeholder="Specify other Service Area"
+            onChange={(e) =>
+              handleChange("ServiceArea", toProperCaseLive(e.target.value))
+            }
+            className="mt-2 w-full text-xs font-medium text-gray-700 bg-white
+            border border-gray-200 rounded-xl px-3 py-2"
+          />}
             </div>
 
             <button type="button" className="bg-white/30 backdrop-blur-md mt-20 border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, PatientDetails: !RemarkStatus.PatientDetails }))} > {RemarkStatus.PatientDetails ? "SAVE Remark" : "Add Remarks"} </button>
@@ -1098,7 +1122,7 @@ const hasSubTypes = (service: string): service is ServiceWithSubType => {
   );
 
   return (
-    <div key={opt} className="flex gap-2 items-center space-y-2">
+    <div key={opt} className="flex flex-col gap-2  space-y-2">
       <label className="flex items-center text-sm gap-2">
         <input
           type="checkbox"
@@ -1112,136 +1136,180 @@ const hasSubTypes = (service: string): service is ServiceWithSubType => {
         />
         {opt}
       </label>
-       {formData.hcpType.includes(opt)&&
-<div>
-  {opt === "Oncall Service (OCS)" ? 
-    <div>
-      
-      <select
-  className="
-    mt-2 w-full
-    text-xs font-medium text-gray-700
-    bg-white
-    border border-gray-200
-    rounded-xl
-    px-3 py-2
-    shadow-sm
-    cursor-pointer
-    transition-all duration-200
- ml-auto
-  flex flex-col items-center justify-center
-    focus:outline-none
-    focus:ring-2 focus:ring-blue-500
-    focus:border-blue-500
+    
+{section.title === "Service Type" &&
+  hasSubTypes(opt) &&
+  formData.hcpType.includes(opt) && (
+    <div
+      className="ml-6 mt-3 pl-4 border-l-2 border-teal-200"
+    >
+      {/* <p className="text-sm font-medium text-gray-800 mb-2">
+        {opt} <span className="text-gray-500">– Sub Type</span>
+      </p> */}
 
-    hover:border-blue-400
-  "
-  onChange={(e)=>handleChange("OnCallSerive",e.target.value)}
->
-  <option value="">Choose Service Type</option>
-  <option value="Injection12">Injection</option>
-  <option value="Dressing">Dressing</option>
-  <option value="Other">Other</option>
-</select>
-{formData.OnCallSerive === "Other" && (
-  <input
-    type="text"
-    placeholder="Specify other service"
-     onChange={(e)=>handleChange("OnCallSerive",e.target.value)}
-    className="
-      mt-2 w-full
-      text-xs font-medium text-gray-700
-      bg-white
-      border border-gray-200
-      rounded-xl
-      px-3 py-2
-      shadow-sm
-      transition-all duration-200
+      <div className="flex flex-wrap gap-5">
+        {SERVICE_SUBTYPE_MAP[opt].map((type: string) => (
+          <label key={type} className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={formData.serviceSubTypes?.[opt] === type}
+              onChange={() =>
+                setFormData((prev: any) => ({
+                  ...prev,
+                  serviceSubTypes: {
+                    ...prev.serviceSubTypes,
+                    [opt]: type,
+                  },
+                }))
+              }
+              className="accent-teal-600"
+            />
+            {type}
+          </label>
+        ))}
+      </div>
 
-      placeholder:text-gray-400
-      hover:border-blue-400
-
-      focus:outline-none
-      focus:ring-2 focus:ring-blue-500
-      focus:border-blue-500
-    "
-  />
-)}
-
-</div>
-:
-       <div className="
-  ml-auto
-  flex flex-col items-center justify-center
-  p-4
-  rounded-2xl
-  bg-white
-  border border-gray-100
-  shadow-[0_15px_45px_rgba(0,0,0,0.25)]
-  hover:-translate-y-0.5
-  transition-all duration-200
-">
-
-     <div className="flex items-center gap-2 text-xs bg-gray-50 border rounded-md px-2 py-1">
-        <span className="whitespace-nowrap text-[10px]">No. of People</span>
+      <div className="mt-3 flex items-center gap-3 text-sm">
+        <span className="text-gray-700">Number of Sessions</span>
         <input
           type="number"
-          value={formData.NumberOfCareTakers?.[opt] ?? 0}
+          value={formData.sessions?.[opt] ?? 0}
           onChange={(e) =>
             setFormData((prev: any) => ({
               ...prev,
-              NumberOfCareTakers: {
-                ...prev.NumberOfCareTakers,
+              sessions: {
+                ...prev.sessions,
                 [opt]: Number(e.target.value),
               },
             }))
           }
-          className="w-14 text-center border rounded px-1 py-0.5 text-sm"
+          className="w-20 border border-gray-300 rounded-md px-2 py-1 text-center"
         />
       </div>
-      <div className="flex gap-2 mt-1">
-  <label className="flex items-center gap-2 px-1 py-1.5 rounded-full border 
-                    bg-white cursor-pointer hover:bg-gray-100 transition">
-    <input
-      type="checkbox"
-      className="h-4 w-4 accent-blue-600"
-    />
-    <span className="text-[10px] font-semibold">
-      12-Hr
-    </span>
-  </label>
+    </div>
+  )}
 
-  <label className="flex items-center gap-2 px-1 py-1.5 rounded-full border 
-                    bg-white cursor-pointer hover:bg-gray-100 transition">
-    <input
-      type="checkbox"
-      className="h-4 w-4 accent-blue-600"
-    />
-    <span className="text-[10px] font-semibold">
-      24-Hr
-    </span>
-  </label>
-</div>
+      {allowedServices.includes(opt) &&
+ formData.hcpType.includes(opt) && (
+  <div>
+    {opt === "Oncall Service (OCS)" ? (
+      <div>
+        <select
+          className="mt-2 w-full text-xs font-medium text-gray-700 bg-white
+          border border-gray-200 rounded-xl px-3 py-2 shadow-sm"
+          // onChange={(e) =>
+          //   handleChange("OnCallSerive", e.target.value)
+          // }
 
+          onChange={
+            (e:any)=>{
+              setShowOtherOnGoinCall(e.target.value==="Other")
+              setFormData({...formData,OnCallSerive:e.target.value==="Other"?'':e.target.value})
+            }
+          }
+        >
+          <option value="">Choose Service Type</option>
+          <option value="Injection">Injection</option>
+          <option value="Dressing">Dressing</option>
+          <option value="Other">Other</option>
+        </select>
+
+        {ShowOtherOnGoinCall && (
+          <input
+            type="text"
+            placeholder="Specify other service"
+            onChange={(e) =>
+              handleChange("OnCallSerive", e.target.value)
+            }
+            className="mt-2 w-full text-xs font-medium text-gray-700 bg-white
+            border border-gray-200 rounded-xl px-3 py-2"
+          />
+        )}
       </div>
+    ) : (
+  <div className="flex gap-3 text-sm items-center justify-center rounded-md
+  transition-all duration-200 ease-out border-l-3 border-teal-200 shadow-lg p-1
+  hover:bg-gray-50 hover:rounded-md hover:px-2">
+
+
+  
+  <div className="flex items-center gap-2">
+    <span className="text-gray-700">No. of People</span>
+    <input
+      type="number"
       
-    }
+      value={formData.NumberOfCareTakers?.[opt] ?? 0}
+      onChange={(e) =>
+        setFormData((prev: any) => ({
+          ...prev,
+          NumberOfCareTakers: {
+            ...prev.NumberOfCareTakers,
+            [opt]: Number(e.target.value),
+          },
+        }))
+      }
+      className="w-16 border cursor-pointer border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
+    />
+  </div>
+
+  
+ <div className="flex gap-6">
+  {/* 12-Hr */}
+  <label className="flex items-center gap-2">
+    <input
+      type="checkbox"
+      className="cursor-pointer accent-teal-600"
+      checked={formData.ServiceWorkingHours?.[opt] === "12-Hr"}
+      onChange={(e) =>
+        setFormData((prev: any) => ({
+          ...prev,
+          ServiceWorkingHours: {
+            ...prev.ServiceWorkingHours,
+            [opt]: e.target.checked ? "12-Hr" : "",
+          },
+        }))
+      }
+    />
+    <span>12-Hr</span>
+  </label>
+
+  {/* 24-Hr */}
+  <label className="flex items-center gap-2">
+    <input
+      type="checkbox"
+      className="cursor-pointer accent-teal-600"
+      checked={formData.ServiceWorkingHours?.[opt] === "24-Hr"}
+      onChange={(e) =>
+        setFormData((prev: any) => ({
+          ...prev,
+          ServiceWorkingHours: {
+            ...prev.ServiceWorkingHours,
+            [opt]: e.target.checked ? "24-Hr" : "",
+          },
+        }))
+      }
+    />
+    <span>24-Hr</span>
+  </label>
+</div>
+
 
 </div>
 
-     
-      }
+    )}
+  </div>
+)}
+
      
 
       {isOther && otherValue && (
   <div className="ml-6 flex items-center w-[90%] border border-gray-300 rounded-md overflow-hidden">
     
-    {/* Prefix */}
+ 
     <span className="bg-gray-100 px-3 py-1.5 text-sm text-gray-600 whitespace-nowrap">
       Other:
     </span>
 
-    {/* Input */}
     <input
       type="text"
       value={extractOtherValue(otherValue)}
@@ -1269,70 +1337,6 @@ const hasSubTypes = (service: string): service is ServiceWithSubType => {
 })}
 
 
-{section.title==="Service Type"&&
-<div>
-  {formData.hcpType.map((service: any) => {
-    if (!hasSubTypes(service)) return null;
-
-    const subTypes = SERVICE_SUBTYPE_MAP[service];
-    const selectedValue = formData.serviceSubTypes?.[service] || "";
-
-    return (
-      <div
-        key={service}
-        className="mt-5 border p-1 flex flex-col items-center rounded-md shadow-lg"
-      >
-        <p className="text-sm font-semibold mb-2">
-          {service} – Sub Type
-        </p>
-
-        <div className="flex flex-wrap items-center gap-4">
-          {subTypes.map((type: any) => (
-            <label
-              key={type}
-              className="flex items-center gap-1 text-[12px]"
-            >
-              <input
-                type="checkbox"
-                checked={selectedValue === type}
-                onChange={() =>
-                  setFormData((prev: any) => ({
-                    ...prev,
-                    serviceSubTypes: {
-                      ...prev.serviceSubTypes,
-                      [service]: type,
-                    },
-                  }))
-                }
-              />
-              {type}
-            </label>
-          ))}
-        </div>
-
-           <div className="mt-3 flex items-center gap-2 text-sm">
-          <span>Number Of Sessions</span>
-          <input
-            type="number"
-            value={formData.sessions?.[service] ?? 0}
-            onChange={(e) =>
-              setFormData((prev: any) => ({
-                ...prev,
-                sessions: {
-                  ...prev.sessions,
-                  [service]: Number(e.target.value),
-                },
-              }))
-            }
-            className="w-15 text-center border rounded px-2 py-1 text-sm"
-          />
-        </div>
-      </div>
-    );
-  })}
-</div>
-
-}
 
 
               <button
