@@ -4,7 +4,7 @@ import { Stethoscope, Shirt, CircleX, Search, X } from "lucide-react";
 import { GetTerminationInfo } from "@/Lib/user.action";
 import { LoadingData } from "../Loading/page";
 import { Placements_Filters, filterColors } from "@/Lib/Content";
-
+let terminationCache: any[] | null = null;
 interface TerminationData {
   id: string;
   clientName: string;
@@ -20,30 +20,39 @@ const TerminationTable: React.FC = () => {
      const [month, setMonth] = useState("");
      const [year, setYear] = useState("");
 const [isChecking, setIsChecking] = useState(true);
-  useEffect(()=>{
-    const Fetch=async()=>{
-try{
-   const FetchData=await GetTerminationInfo()
-   console.log("Test Time Sheet---",FetchData)
-   const Result:any=FetchData?.map((each:any)=>(
-    {
-      clientName: each.ClientName,
-      contact: each.HCAContact,
-      location: each.Adress,
-      hcaName: each.HCAName,
-      TimeSheetAttendence:each.Attendence,
-      status: "Terminated",
-   }
-   ))
-   setIsChecking(false)
-    setPlacements(Result)
-}catch(err:any){
 
-}
+
+useEffect(() => {
+  const Fetch = async () => {
+    try {
+      if (terminationCache) {
+        setPlacements(terminationCache);
+        setIsChecking(false);
+        return;
+      }
+
+      const FetchData = await GetTerminationInfo();
+
+      const Result:any = FetchData?.map((each: any) => ({
+        clientName: each.ClientName,
+        contact: each.HCAContact,
+        location: each.Adress,
+        hcaName: each.HCAName,
+        TimeSheetAttendence: each.Attendence,
+        status: "Terminated",
+      }));
+
+      terminationCache = Result;
+      setPlacements(Result);
+      setIsChecking(false);
+    } catch (err) {
+      setIsChecking(false);
     }
+  };
 
-    Fetch()
-  },[])
+  Fetch();
+}, []);
+
 console.log("Check------",placements)
   const handleDelete = (id: string) => {
     setPlacements((prev) => prev.filter((placement) => placement.id !== id));

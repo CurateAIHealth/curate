@@ -579,9 +579,9 @@ const ClientEnquiryUserInterFace = () => {
                     <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client Priority</th>}
                      {UpdateduserType === "healthcare-assistant"&&
                     <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">User type</th>}
-                      {UpdateduserType === "patient"&&
-                    <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Patient Name</th>}
-                    <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Name</th>
+               
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client Name</th>
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Patient Name</th>
                     {/* <th className="px-2 py-2 sm:px-4 sm:py-3 w-[18%]">Email</th> */}
                     <th className="px-2 py-2 w-[12%]">Contact</th>
                     {/* <th className="px-2 py-2 w-[10%]">Role</th>
@@ -778,7 +778,10 @@ const ClientEnquiryUserInterFace = () => {
                         </div>
                       </td>
                       {/* <td className="px-2 py-2 break-words">{user?.Email?.toLowerCase()||"Not Provided"}</td> */}
-                      <td className="px-2 py-2">+91{user?.Contact||"Not Provided"}</td>
+                  <td className="px-2 py-2">
+  {user?.Contact ? `+91${user.Contact}` : "Not Provided"}
+</td>
+
                       
                       {/* <td className="px-2 py-2">
                         <span className="px-2 sm:px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-[9px] sm:text-xs">
@@ -932,9 +935,9 @@ const ClientEnquiryUserInterFace = () => {
                         </td>
                       )} */}
                       {UpdateduserType === "healthcare-assistant" && (
-        <td className="px-8 py-2 w-[14%]">
+        <td className="">
   <select
-    className={` text-center px-2 py-1 rounded-lg border cursor-pointer text-xs sm:text-sm transition-all duration-200 font-semibold
+    className={` text-center  px-2 py-1 rounded-lg border cursor-pointer text-xs sm:text-sm transition-all duration-200 font-semibold
       ${
         user.CurrentStatus === "Available"
           ? "bg-green-100 border-green-300 text-green-800"

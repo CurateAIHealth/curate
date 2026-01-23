@@ -3,7 +3,7 @@ import { filterColors, Placements_Filters } from "@/Lib/Content";
 import { GetReplacementInfo } from "@/Lib/user.action";
 import React, { useEffect, useMemo, useState } from "react";
 
-
+let ReplacementCach : any[] | null = null;
 const ReplacementTable = ({ StatusMessage }: any) => {
   const [rawData, setRawData] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -14,10 +14,15 @@ const ReplacementTable = ({ StatusMessage }: any) => {
 
   useEffect(() => {
     const Fetch = async () => {
+
+      if(ReplacementCach){
+        setRawData(ReplacementCach);
+        return
+      }
       const PlacementInformation: any = await GetReplacementInfo();
       if (!PlacementInformation || PlacementInformation.length === 0) return;
 
-      console.log("Check for Data-", PlacementInformation);
+   
 
       const formatted = PlacementInformation.map((record: any) => ({
         Month: record.Month || "Unknown",
@@ -48,7 +53,7 @@ const ReplacementTable = ({ StatusMessage }: any) => {
 
         days: record.Attendance || [],
       }));
-
+ReplacementCach=formatted
       setRawData(formatted);
     };
 
