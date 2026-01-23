@@ -446,6 +446,7 @@ const handleLogout = () => {
                 key={i}
                 className="border-b border-gray-400 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-cyan-50 transition-all duration-300"
               >
+                
                 <td className="px-6 py-4 font-semibold text-gray-900">{c.name}</td>
                 <td className="px-6 py-4">{c.contact}</td>
                 <td className="px-6 py-4 text-gray-600 truncate max-w-[200px]">{c.location}</td>

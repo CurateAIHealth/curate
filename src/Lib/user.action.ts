@@ -2021,6 +2021,7 @@ return safeUsers
 
   }
 }
+
 export const GetReplacementInfo=async()=>{
   try{
 const cluster=await clientPromise
@@ -2107,6 +2108,39 @@ export const UpdateReplacmentData = async (
       success: true,
       message: "Replacement updated successfully",
       update: UpdateReplasementInfo
+    };
+
+  } catch (err: any) {
+    console.error("Error updating replacement:", err);
+    return { success: false, message: "Error occurred", error: err };
+  }
+};
+
+
+
+
+export const UpdateReason = async (
+  Available_HCP: any,
+  Exsting_HCP: any,
+  selectedReason: any,
+  otherReason: any
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const replacementCollection = db.collection("TerminationandReplacementReasons");
+    const ReasonData = {
+      ExistingHCP: Exsting_HCP,
+      AvailableHCP: Available_HCP,
+      Reason: selectedReason,
+      EnterdReason: otherReason
+    };
+    await replacementCollection.insertOne(ReasonData);
+
+    return {
+      success: true,
+      message: "Replacement updated successfully",
+
     };
 
   } catch (err: any) {
