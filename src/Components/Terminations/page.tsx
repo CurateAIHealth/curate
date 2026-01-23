@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Stethoscope, Shirt, CircleX } from "lucide-react";
+import { Stethoscope, Shirt, CircleX, Search, X } from "lucide-react";
 import { GetTerminationInfo } from "@/Lib/user.action";
 import { LoadingData } from "../Loading/page";
 import { Placements_Filters, filterColors } from "@/Lib/Content";
@@ -16,7 +16,9 @@ interface TerminationData {
 
 const TerminationTable: React.FC = () => {
   const [placements, setPlacements] = useState<any[]>([]);
-   const [search, setSearch] = useState("Termination");
+   const [search, setSearch] = useState("");
+     const [month, setMonth] = useState("");
+     const [year, setYear] = useState("");
 const [isChecking, setIsChecking] = useState(true);
   useEffect(()=>{
     const Fetch=async()=>{
@@ -52,13 +54,85 @@ console.log("Check------",placements)
 
     );
   }
+
+const FilterValues = placements.filter((each: any) => {
+  if (!search) return true;
+
+  const name = each?.clientName?.toLowerCase() || "";
+  const contact = String(each?.contact || "");
+
+  const searchValue = search.toLowerCase();
+
+  return (
+    name.includes(searchValue) ||
+    contact.includes(searchValue)
+  );
+});
+
   return (
     <div className="p-2 bg-gray-50">
       
-      <div className="flex items-center justify-end mb-2">
-        <span className="bg-emerald-100 text-emerald-700 px-4 py-1 rounded-full text-sm font-medium shadow-sm">
-          {placements.length} Records
-        </span>
+  <div className="flex flex-wrap gap-3 items-center justify-end">
+       
+
+<div className="relative w-auto m-1">
+
+  <Search
+    size={16}
+    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+  />
+
+
+  <input
+    type="text"
+    placeholder="Search client / phone"
+    className="w-full border border-gray-300 rounded-md py-2 pl-9 pr-9 text-sm 
+               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+               transition"
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+  />
+
+
+  {search && (
+    <button
+      onClick={() => setSearch("")}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+    >
+      <X size={14} />
+    </button>
+  )}
+</div>
+
+
+        {/* <select
+          className="border px-3 py-2 rounded-md text-sm"
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+        >
+          <option value="">All Months</option>
+          {[...Array(12)].map((_, i) => (
+            <option key={i} value={`${i + 1}`}>
+              {new Date(0, i).toLocaleString("default", { month: "long" })}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="border px-3 py-2 rounded-md text-sm"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+        >
+          <option value="">All Years</option>
+          {[...new Set(Result.map((d) => d.Month?.split("-")[0]))].map(
+            (y) =>
+              y && (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              )
+          )}
+        </select> */}
       </div>
 
      
@@ -94,7 +168,7 @@ console.log("Check------",placements)
 
       {/* ===== BODY ===== */}
       <tbody>
-        {placements.map((placement, idx) => (
+        {FilterValues.map((placement, idx) => (
           <tr
             key={idx}
             className="group transition-colors hover:bg-gray-50"
