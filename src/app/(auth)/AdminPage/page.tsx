@@ -1256,8 +1256,7 @@ const GetPermanentAddress = (A: any) => {
 </div> */}
 
            <div className="flex gap-2 flex-wrap w-full items-center">
-
-  <div className="flex gap-2 flex-wrap">
+{ UpdateMainFilter === "Client Enquiry"&&  <div className="flex gap-2 flex-wrap">
 
     {UpdateMainFilterValues().map((each: any, index: any) => (
       <button
@@ -1282,7 +1281,8 @@ const GetPermanentAddress = (A: any) => {
         
       </button>
     ))}
-</div>
+</div>}
+
 
 {/*   
   {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (

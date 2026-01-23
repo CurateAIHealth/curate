@@ -1,16 +1,20 @@
 "use client";
 let cachedUsersFullInfo: any;
 let cachedDeploymentInfo: any[] | null = null;
+let cachedReplacementInfo:any[]
+let cachedTermination:any[]
 
 
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Trash } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteTimeSheet, GetDeploymentInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReplacmentData, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteTimeSheet, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateSubHeading } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
 import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
+import { filterColors, months, Placements_Filters, years } from "@/Lib/Content";
+import ReplacementsTable from "../ReplacementsTable/page";
 
 
 type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday";
@@ -30,9 +34,13 @@ interface AttendanceData {
 
 type User = any;
 type Deployment = any;
+type Replace = any;
+type Termination=any;
 type AttendanceState = Record<number, AttendanceData>;
 const ClientTable = () => {
   const [ClientsInformation, setClientsInformation] = useState<Deployment[]>([]);
+  const [ReplacementInformation,setReplacementInformation]=useState<Replace[]>([])
+  const [terminationInfo,SetterminationInfo]=useState<Termination[]>([])
   const [isChecking, setIsChecking] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
   const [Fineldate, setFineldate] = useState({
@@ -41,6 +49,7 @@ const ClientTable = () => {
     status: ""
   })
   const [HCPName,setHCPName]=useState("")
+  const [ShowReassignmentPopUp,setShowReassignmentPopUp]=useState(false)
  const [updatedAttendance, setUpdatedAttendance] = useState<AttendanceState>({});
  const [SaveButton,setSaveButton]=useState(false)
 const [SearchMonth, setSearchMonth] = useState("");
@@ -59,9 +68,10 @@ const [enableStatus,setenableStatus]=useState(false)
   const [ActionStatusMessage,SetActionStatusMessage]= useState<any>();
   const [SearchResult,setSearchResult]=useState("")
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [search, setSearch] = useState("On Service");
   const [billingRecord, setBillingRecord] = useState<any>(null);
 const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
-  const SubHeading = useSelector((state: any) => state.SubHeadinList);
+  
   const dispatch = useDispatch();
 
 useEffect(() => {
@@ -75,21 +85,27 @@ useEffect(() => {
 
         setUsers([...cachedUsersFullInfo]);           
         setClientsInformation([...cachedDeploymentInfo]);
+        setReplacementInformation([...cachedReplacementInfo])
+        SetterminationInfo([...cachedTermination])
         dispatch(UpdateSubHeading("On Service"));
         setIsChecking(false);
         return;
       }
 
       
-      const [usersResult, placementInfo] = await Promise.all([
+      const [usersResult, placementInfo,ReplacementInfo,TerminationInformation] = await Promise.all([
         GetUsersFullInfo(),
         GetDeploymentInfo(),
+        GetReplacementInfo(),
+        GetTerminationInfo()
       ]);
 
       if (!mounted) return;
 
       cachedUsersFullInfo = usersResult ?? [];
       cachedDeploymentInfo = placementInfo ?? [];
+      cachedReplacementInfo=ReplacementInfo ?? [];
+      cachedTermination=TerminationInformation?? [];
 
       setUsers(cachedUsersFullInfo);                 
       setClientsInformation(cachedDeploymentInfo);    
@@ -321,7 +337,7 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
     setDeleteTargetId(null);
   };
 
-console.log("Check for Time Dates-----",FinelTimeSheet)
+
 const FilterFinelTimeSheet = FinelTimeSheet.filter((each: any) => {
   
   const search = SearchResult?.toLowerCase() || "";
@@ -376,7 +392,8 @@ const UpdateReplacement=async(Available_HCP:any,Exsting_HCP:any)=>{
 try{
     const localValue = localStorage.getItem('UserId');
   const Sign_in_UserInfo:any = await GetUserInformation(localValue)
-   
+ 
+   const PostReason=await UpdateReason(Available_HCP,Exsting_HCP,selectedReason,otherReason)
    const TimeStampData=   `${Sign_in_UserInfo.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`
 const UpdateReplacmentInfo=await UpdateReplacmentData(Available_HCP,Exsting_HCP,TimeStampData)
 console.log("Find Mistake--",UpdateReplacmentInfo)
@@ -396,9 +413,113 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
 
   const OmServiceView = () => {
     return (
-      <div className="w-full flex flex-col gap-8 p-6 bg-gray-50">
+      <div className="w-full flex flex-col gap-8 p-2 bg-gray-50">
+         <div className="flex gap-3">
+          {Placements_Filters.map((each:any,Index:any)=>
+        <button
+         key={Index}
+         onClick={()=>setSearch(each)}
+                className={`cursor-pointer px-1 py-1 text-xs flex-1 sm:flex-none sm:min-w-[100px] ${
+                  search === each && "border-3"
+                } rounded-xl shadow-md font-medium transition-all duration-200 ${
+                  filterColors[each]
+                }`}
+              >
+              
+        {each}
+                
+              </button>)}
+      </div>
+     
+           
+        <div className="flex itemcs-center gap-2 justify-end">
+            <div
+    className="
+      flex items-center bg-white shadow-md rounded-xl
+      px-4 h-[36px]
+      border border-gray-200
+      focus-within:border-indigo-500
+      transition
+       md:w-[220px]
+    "
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="1.5"
+      stroke="currentColor"
+      className="w-5 h-5 text-gray-500 mr-2"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"
+      />
+    </svg>
 
+    <input
+      type="search"
+      placeholder="Search..."
+      onChange={(e: any) => setSearchResult(e.target.value)}
+      className="
+        w-full bg-transparent outline-none
+        text-sm text-gray-700 placeholder-gray-400
+      "
+    />
+  </div>
+  <div className="w-full sm:w-[130px]">
+    {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
+      Month
+    </label> */}
 
+    <select
+      value={SearchMonth}
+      onChange={(e) => setSearchMonth(e.target.value)}
+      className="
+        w-full h-[44px] rounded-xl
+        border border-gray-300
+        px-4 text-sm bg-white text-gray-800
+        focus:outline-none focus:ring-2 focus:ring-indigo-500
+        focus:border-transparent transition-all
+      "
+    >
+      <option value="">All Months</option>
+      {[
+        "January","February","March","April","May","June",
+        "July","August","September","October","November","December"
+      ].map((month) => (
+        <option key={month} value={month}>
+          {month}
+        </option>
+      ))}
+    </select>
+  </div>
+<div >
+    {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
+      Year
+    </label> */}
+
+    <select
+      value={SearchYear}
+      onChange={(e) => setSearchYear(e.target.value)}
+      className="
+        w-full rounded-xl border border-gray-300
+        px-4 py-3 text-sm bg-white text-gray-800
+        focus:outline-none focus:ring-2 focus:ring-indigo-500
+        focus:border-transparent transition-all
+      "
+    >
+      <option value="">All Years</option>
+      {[2024, 2025, 2026].map((year) => (
+        <option key={year} value={year}>
+          {year}
+        </option>
+      ))}
+    </select>
+  </div>
+  </div>
+  
   {ClientsInformation.length === 0 && (
     <div className="flex flex-col items-center justify-center gap-6 h-[60vh] mt-10 rounded-3xl bg-white/60 backdrop-blur-lg border border-gray-200 shadow-2xl p-12">
       <p className="text-3xl font-extrabold text-gray-900 text-center">
@@ -472,7 +593,106 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
           </td>
 
           <td className="px-3 py-3 break-words">
-            <select
+         <button
+  className="
+    px-2 py-2.5
+    text-xs font-semibold
+    text-teal-600
+    border-2 border-teal-500
+    rounded-lg
+    shadow-[0_0_0_0_rgba(20,184,166,0.5)]
+    transition-all duration-300
+    hover:shadow-[0_0_12px_2px_rgba(20,184,166,0.6)]
+    hover:bg-teal-50
+    active:scale-95
+    cursor-pointer
+  "
+  onClick={()=>setShowReassignmentPopUp(!ShowReassignmentPopUp)}
+>
+  Reassignment
+</button>
+
+{ShowReassignmentPopUp&&<div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[1px]">
+  
+
+  <div
+    className="
+      w-[500px]
+      rounded-2xl
+      bg-white/80
+     
+      border border-white/60
+      overflow-hidden
+    "
+  >
+  
+    <div className="h-1.5 bg-gradient-to-r from-cyan-400 to-blue-500" />
+
+
+    <div className="px-7 py-6 space-y-6">
+      <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-lg font-bold text-gray-800">
+          Request Replacement
+        </h2>
+        <p className="text-sm text-gray-600 mt-1">
+          Let us know the reason to proceed
+        </p>
+      </div>
+     <img src='Icons/Curate-logoq.png' className="h-8" alt="Company Logo"/>
+</div>
+    
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Reason for Replacement
+        </label>
+
+        <select
+          value={selectedReason}
+          onChange={(e) => setSelectedReason(e.target.value)}
+          className="
+            w-full
+            rounded-xl
+            bg-white/90
+            border border-gray-300
+            px-4 py-2.5
+            text-sm
+            focus:outline-none
+            focus:ring-2 focus:ring-blue-400
+          "
+        >
+          <option value="">Choose reason</option>
+          <option value="Service Quality Issue">Service Quality Issue</option>
+          <option value="Staff Unavailable">Staff Unavailable</option>
+          <option value="Schedule Mismatch">Schedule Mismatch</option>
+          <option value="Patient Recovered">Patient Recovered</option>
+          <option value="Cost Concern">Cost Concern</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      {selectedReason === "Other" && (
+        <textarea
+          rows={3}
+          placeholder="Please specify"
+          value={otherReason}
+          onChange={(e) => setOtherReason(e.target.value)}
+          className="
+            w-full
+            rounded-xl
+            bg-white/90
+            border border-gray-300
+            px-4 py-2.5
+            text-sm
+            resize-none
+            focus:outline-none
+            focus:ring-2 focus:ring-blue-400
+          "
+        />
+      )}
+{selectedReason &&
+  (selectedReason !== "Other" || otherReason)&& 
+  <select
               className="w-full p-2 text-sm border rounded-lg cursor-pointer"
               onChange={(e) => {
                 const selected = HCA_List.find(
@@ -485,7 +705,60 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
               {HCA_List.map((each: any, index: any) => (
                 <option key={index}>{each.FirstName}</option>
               ))}
-            </select>
+            </select> }
+  
+      <div className="flex justify-end gap-4 pt-2">
+        <button
+          onClick={() => setShowReassignmentPopUp(!ShowReassignmentPopUp)}
+          className="
+            text-sm font-medium
+            text-gray-600
+            hover:text-gray-800
+            transition cursor-pointer
+          "
+        >
+          Cancel
+        </button>
+
+    {/* <button
+  onClick={handleDelete}
+
+  className={`
+    inline-flex items-center justify-center
+    px-7 py-3
+    text-sm font-semibold
+    rounded-full
+    transition-all duration-300 ease-out
+
+    ${
+      selectedReason && (selectedReason !== "Other" || otherReason)
+        ?
+         `
+          text-white
+          bg-gradient-to-r from-blue-600 to-cyan-600
+          shadow-[0_10px_30px_-10px_rgba(59,130,246,0.7)]
+          hover:from-blue-700 hover:to-cyan-700
+          hover:shadow-[0_14px_40px_-12px_rgba(59,130,246,0.9)]
+          active:scale-95
+          cursor-pointer
+        `: `
+          bg-gray-200
+          text-gray-500
+          cursor-not-allowed
+          shadow-none
+        `
+    }
+  `}
+>
+  Confirm Replacement
+</button> */}
+
+      </div>
+    </div>
+  </div>
+</div>
+}
+          
           </td>
 
           <td className="px-3 py-3 text-center break-words">
@@ -581,61 +854,107 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
 }
 
   {showDeletePopup && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-3xl shadow-2xl p-8 w-[400px] text-center backdrop-blur-md border border-gray-200">
-        <h2 className="text-xl font-bold mb-5">Confirm Delete Placement</h2>
-
- 
-        <div className="mb-6">
-          <label className="block text-gray-700 font-semibold mb-2">
-            Select Reason:
-          </label>
-          <select
-            value={selectedReason}
-            onChange={(e) => setSelectedReason(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="">-- Choose a Reason --</option>
-            <option value="Patient Expiry">Patient Expiry</option>
-            <option value="Price Issue">Price Issue</option>
-            <option value="Recovery">Recovery</option>
-            <option value="Other">Other</option>
-          </select>
-
-          
-          {selectedReason === "Other" && (
-            <input
-              type="text"
-              placeholder="Enter custom reason"
-              value={otherReason}
-              onChange={(e) => setOtherReason(e.target.value)}
-              className="w-full mt-3 border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-          )}
-        </div>
-
- 
-        <div className="flex justify-center gap-5 mt-6">
-          {!isDeleteDisabled && (
-            <button
-              onClick={handleDelete}
-              className="px-5 py-2 bg-red-500 text-white rounded-xl shadow hover:bg-red-600 transition"
-            >
-              Yes
-            </button>
-          )}
-          <button
-            onClick={() => setShowDeletePopup(false)}
-            className="px-5 py-2 bg-gray-200 text-gray-800 rounded-xl shadow hover:bg-gray-300 transition"
-          >
-            No
-          </button>
-        </div>
-
-  
-     
-      </div>
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div className="bg-white rounded-2xl shadow-2xl w-[420px] p-7 border border-gray-200">
+    
+   
+    <div className="text-center mb-6">
+      <h2 className="text-xl font-bold text-gray-800">
+        Request Replacement
+      </h2>
+      <p className="text-sm text-gray-500 mt-1">
+        Please select a reason for requesting a replacement
+      </p>
     </div>
+
+    {/* Reason Selection */}
+    <div className="space-y-4">
+      <label className="block text-sm font-semibold text-gray-700">
+        Reason for Replacement
+      </label>
+
+      <select
+        value={selectedReason}
+        onChange={(e) => setSelectedReason(e.target.value)}
+        className="
+          w-full
+          rounded-xl
+          border border-gray-300
+          px-4 py-2.5
+          text-sm
+          focus:outline-none
+          focus:ring-2 focus:ring-teal-500
+        "
+      >
+        <option value="">-- Select Reason --</option>
+        <option value="Service Quality Issue">Service Quality Issue</option>
+        <option value="Staff Unavailable">Staff Unavailable</option>
+        <option value="Schedule Mismatch">Schedule Mismatch</option>
+        <option value="Patient Recovered">Patient Recovered</option>
+        <option value="Cost Concern">Cost Concern</option>
+        <option value="Other">Other</option>
+      </select>
+
+      {/* Custom Reason */}
+      {selectedReason === "Other" && (
+        <textarea
+          rows={3}
+          placeholder="Please specify the reason"
+          value={otherReason}
+          onChange={(e) => setOtherReason(e.target.value)}
+          className="
+            w-full
+            rounded-xl
+            border border-gray-300
+            px-4 py-2.5
+            text-sm
+            resize-none
+            focus:outline-none
+            focus:ring-2 focus:ring-teal-500
+          "
+        />
+      )}
+    </div>
+
+    {/* Actions */}
+    <div className="flex justify-end gap-4 mt-8">
+      <button
+        onClick={() => setShowDeletePopup(false)}
+        className="
+          px-5 py-2.5
+          text-sm font-medium
+          text-gray-700
+          bg-gray-100
+          rounded-xl
+          hover:bg-gray-200
+          transition
+        "
+      >
+        Cancel
+      </button>
+
+      <button
+        onClick={handleDelete}
+        disabled={!selectedReason}
+        className="
+          px-5 py-2.5
+          text-sm font-semibold
+          text-white
+          bg-teal-600
+          rounded-xl
+          shadow-md
+          hover:bg-teal-700
+          disabled:opacity-50
+          disabled:cursor-not-allowed
+          transition
+        "
+      >
+        Confirm Replacement
+      </button>
+    </div>
+  </div>
+</div>
+
   )}
 
 
@@ -826,13 +1145,13 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
   };
 
   const CurrentUserInterfacevIew = () => {
-    switch (SubHeading) {
+    switch (search) {
       case "On Service":
         return OmServiceView();
       case "Termination":
         return <TerminationTable/>;
       case "Replacements":
-        return <p>Currently Working</p>;
+        return <ReplacementsTable/>;
       default:
         return null;
     }
