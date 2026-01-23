@@ -411,6 +411,8 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
 }
 }
 
+
+
   const OmServiceView = () => {
     return (
       <div className="w-full flex flex-col gap-8 p-2 bg-gray-50">
@@ -1128,7 +1130,19 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
 
     );
   };
+const GetFilterCount=(A:any)=>{
+  switch(A){
+     case "On Service":
+        return cachedDeploymentInfo?.length;
+      case "Termination":
+        return cachedTermination.length;
+      case "Replacements":
+        return cachedReplacementInfo.length;
+      default:
+        return null;
 
+  }
+}
   const CurrentUserInterfacevIew = () => {
     switch (search) {
       case "On Service":
@@ -1166,7 +1180,8 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
                 }`}
               >
               
-        {each}
+        {`${each} (${GetFilterCount(each) || 0})`}
+
                 
               </button>)}
       </div>
