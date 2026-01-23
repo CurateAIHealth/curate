@@ -172,13 +172,15 @@ const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
 
     if (PostTimeSheet.success === true) {
 
-      setStatusMessage("HCA Assigned Successfully, For More Information Check in Deployments");
+      setStatusMessage(PostTimeSheet.message);
 
       setTimeout(() => {
         dispatch(UpdateRefresh(1));
         router.push("/PDRView");
         dispatch(Update_Main_Filter_Status("Deployment"));
       }, 3000);
+    }else{
+      setStatusMessage(PostTimeSheet.message);
     }
 
   } catch (err: any) {

@@ -1544,62 +1544,74 @@ export const TestInsertTimeSheet = async (
   Month: any,
   TimeSheetArray: any,
   UpdatedBy: any,
-  invoice:any,
-  Type:any,
-
+  invoice: any,
+  Type: any
 ) => {
   try {
-   
-
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("TimeSheet");
 
+
+    const alreadyExists = await collection.findOne({
+      ClientId: ClientId,
+      HCAId: hcpId,
+    });
+
+    if (alreadyExists) {
+      return {
+        success: false,
+        message: "Duplicate entry",
+      };
+    }
+
     const TimeSheetData = {
-      StartDate:StartDate,
-      EndDate:EndDate,
-      Status:Status,
-      ClientId:ClientId,
+      StartDate,
+      EndDate,
+      Status,
+      ClientId,
       HCAId: hcpId,
       ClientName: clientName,
-      patientName:patientName,
-      patientPhone:patientPhone,
+      patientName,
+      patientPhone,
       ClientContact: clientPhone,
       Address: location,
       HCAName: hcpName,
       HCAContact: hcpPhone,
-      referralName:referralName,
-      hcpSource:hcpSource,
-      provider:provider,
-      payTerms:payTerms,
-      cTotal:cTotal,
-      cPay:cPay,
-      hcpTotal:hcpTotal,
-      hcpPay:hcpPay,
-      Month:Month,
+      referralName,
+      hcpSource,
+      provider,
+      payTerms,
+      cTotal,
+      cPay,
+      hcpTotal,
+      hcpPay,
+      Month,
       Attendance: TimeSheetArray,
       UpdatedAt: new Date(),
-      UpdatedBy: UpdatedBy,
-      invoice:invoice,
-      Type:Type,
-      PDRStatus:false
+      UpdatedBy,
+      invoice,
+      Type,
+      PDRStatus: false,
     };
 
-  const TimeSheetDataInsert=await collection.insertOne(TimeSheetData)
+    const result = await collection.insertOne(TimeSheetData);
 
-return {
+    return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
-      insertedId: TimeSheetDataInsert.insertedId.toString(),
+      message: "HCA Assigned Successfully, For More Information Check in Deployments",
+      insertedId: result.insertedId.toString(),
     };
+
   } catch (error: any) {
-    console.error("❌ Error inserting/updating timesheet:", error.message);
+    console.error("❌ Error inserting timesheet:", error.message);
     return {
       success: false,
-      message: "Error inserting/updating timesheet: " + error.message,
+      message: "Error inserting timesheet: " + error.message,
     };
   }
 };
+
 
 export const InsertDeployment = async (
   StartDate: any,

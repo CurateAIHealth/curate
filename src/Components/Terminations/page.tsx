@@ -22,10 +22,12 @@ const TerminationTable: React.FC = () => {
 const [isChecking, setIsChecking] = useState(true);
 
 
+
+
 useEffect(() => {
   const Fetch = async () => {
     try {
-      if (terminationCache) {
+      if (terminationCache?.length) {
         setPlacements(terminationCache);
         setIsChecking(false);
         return;
@@ -33,17 +35,23 @@ useEffect(() => {
 
       const FetchData = await GetTerminationInfo();
 
-      const Result:any = FetchData?.map((each: any) => ({
+      const Result = FetchData?.map((each: any) => ({
         clientName: each.ClientName,
         contact: each.HCAContact,
         location: each.Adress,
         hcaName: each.HCAName,
         TimeSheetAttendence: each.Attendence,
         status: "Terminated",
-      }));
+      })) ?? [];
 
-      terminationCache = Result;
-      setPlacements(Result);
+      terminationCache = [
+        ...new Map(
+          [...(terminationCache ?? []), ...Result]
+            .map(item => [item.contact, item])
+        ).values()
+      ];
+console.log("Checking Count------",terminationCache)
+      setPlacements(terminationCache);
       setIsChecking(false);
     } catch (err) {
       setIsChecking(false);
@@ -52,6 +60,7 @@ useEffect(() => {
 
   Fetch();
 }, []);
+
 
 console.log("Check------",placements)
   const handleDelete = (id: string) => {
