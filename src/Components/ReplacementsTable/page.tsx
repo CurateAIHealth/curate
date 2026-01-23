@@ -75,24 +75,9 @@ const ReplacementTable = ({ StatusMessage }: any) => {
 
   return (
     <div className="space-y-4">
-<div className="flex items-center justify-between">
-<div className="flex gap-3">
-          {Placements_Filters.map((each:any,Index:any)=>
-        <button
-         key={Index}
-         onClick={()=>setHeadingSearch(each)}
-                className={`cursor-pointer px-1 py-1 text-xs flex-1 sm:flex-none sm:min-w-[100px] ${
-                  HeadingSearch === each && "border-3"
-                } rounded-xl shadow-md font-medium transition-all duration-200 ${
-                  filterColors[each]
-                }`}
-              >
-              
-        {each}
-                
-              </button>)}
-      </div>
-      <div className="flex flex-wrap gap-3 items-center">
+
+
+      <div className="flex flex-wrap gap-3 items-center justify-end">
         <input
           type="text"
           placeholder="Search client / patient / invoice / phone"
@@ -130,7 +115,7 @@ const ReplacementTable = ({ StatusMessage }: any) => {
           )}
         </select>
       </div>
-</div>
+
  
       <div className="overflow-x-auto border rounded-lg">
         <table className="min-w-full text-sm">
