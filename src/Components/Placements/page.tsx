@@ -80,36 +80,70 @@ useEffect(() => {
 
   const fetchData = async (forceFresh = false) => {
     try {
-    
-      if (!forceFresh && cachedUsersFullInfo && cachedDeploymentInfo) {
+      if (
+        !forceFresh &&
+        cachedUsersFullInfo?.length &&
+        cachedDeploymentInfo?.length &&
+        cachedReplacementInfo?.length &&
+        cachedTermination?.length
+      ) {
         if (!mounted) return;
 
-        setUsers([...cachedUsersFullInfo]);           
+        setUsers([...cachedUsersFullInfo]);
         setClientsInformation([...cachedDeploymentInfo]);
-        setReplacementInformation([...cachedReplacementInfo])
-        SetterminationInfo([...cachedTermination])
+        setReplacementInformation([...cachedReplacementInfo]);
+        SetterminationInfo([...cachedTermination]);
         dispatch(UpdateSubHeading("On Service"));
         setIsChecking(false);
         return;
       }
 
-      
-      const [usersResult, placementInfo,ReplacementInfo,TerminationInformation] = await Promise.all([
+      const [
+        usersResult,
+        placementInfo,
+        ReplacementInfo,
+        TerminationInformation,
+      ] = await Promise.all([
         GetUsersFullInfo(),
         GetDeploymentInfo(),
         GetReplacementInfo(),
-        GetTerminationInfo()
+        GetTerminationInfo(),
       ]);
 
       if (!mounted) return;
 
-      cachedUsersFullInfo = usersResult ?? [];
-      cachedDeploymentInfo = placementInfo ?? [];
-      cachedReplacementInfo=ReplacementInfo ?? [];
-      cachedTermination=TerminationInformation?? [];
+      cachedUsersFullInfo = [
+        ...new Map(
+          [...(cachedUsersFullInfo ?? []), ...(usersResult ?? [])]
+            .map((item) => [item.UserId, item])
+        ).values(),
+      ];
 
-      setUsers(cachedUsersFullInfo);                 
-      setClientsInformation(cachedDeploymentInfo);    
+      cachedDeploymentInfo = [
+        ...new Map(
+          [...(cachedDeploymentInfo ?? []), ...(placementInfo ?? [])]
+            .map((item) => [item.ClientId, item])
+        ).values(),
+      ];
+
+      cachedReplacementInfo = [
+        ...new Map(
+          [...(cachedReplacementInfo ?? []), ...(ReplacementInfo ?? [])]
+            .map((item) => [item.ReplacementId, item])
+        ).values(),
+      ];
+
+      cachedTermination = [
+        ...new Map(
+          [...(cachedTermination ?? []), ...(TerminationInformation ?? [])]
+            .map((item) => [item.HCAContact, item])
+        ).values(),
+      ];
+
+      setUsers([...cachedUsersFullInfo]);
+      setClientsInformation([...cachedDeploymentInfo]);
+      setReplacementInformation([...cachedReplacementInfo]);
+      SetterminationInfo([...cachedTermination]);
       dispatch(UpdateSubHeading("On Service"));
     } catch (err) {
       console.error("Fetch error:", err);
@@ -124,6 +158,7 @@ useEffect(() => {
     mounted = false;
   };
 }, [ActionStatusMessage, dispatch]);
+
 
 
 
@@ -778,7 +813,7 @@ const OmServiceView = () => {
 
           <td className="px-3 py-3 text-center break-words">
             <button
-              className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+              className="px-4 cursor-pointer py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
               onClick={() => UpdateClient_UserId(c.Client_Id, c.name)}
             >
               View
@@ -788,7 +823,7 @@ const OmServiceView = () => {
           {(isInvoiceDay || enableStatus) && (
             <td className="px-3 py-3 text-center break-words">
               <button
-                className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+                className="px-4 py-2 text-xs font-medium cursor-pointer bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
                 onClick={() => {
                   setBillingRecord(c);
                   setShowPaymentModal(true);
@@ -801,7 +836,7 @@ const OmServiceView = () => {
 
           <td className="px-3 py-3 text-center break-words">
             <button
-              className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+              className="px-4 py-2 text-xs font-medium cursor-pointer bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
               onClick={() => UpdatePopup(c)}
             >
               Extend
@@ -810,7 +845,7 @@ const OmServiceView = () => {
 
           <td className="px-3 py-3 text-center break-words">
             <button
-              className="px-3 py-2 text-xs font-medium rounded-lg hover:bg-gray-100"
+              className="px-3 py-2 text-xs font-medium cursor-pointer rounded-lg hover:bg-gray-100"
               onClick={() => handleDeleteClick(c)}
             >
               <Trash />

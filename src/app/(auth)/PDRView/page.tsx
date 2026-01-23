@@ -84,7 +84,15 @@ const Router=useRouter()
       if (!mounted) return;
 
       cachedRegisteredUsers = usersResult ?? [];
-      cachedTimeSheetInfo = timesheetInfo ?? [];
+      // cachedTimeSheetInfo = timesheetInfo ?? [];
+
+      cachedTimeSheetInfo = [
+        ...new Map(
+          [...(cachedTimeSheetInfo ?? []), ...(timesheetInfo ?? [])]
+            .map((item) => [item.ClientId, item])
+        ).values(),
+      ];
+
 
       setUsers(cachedRegisteredUsers);
       setClientsInformation(cachedTimeSheetInfo);
