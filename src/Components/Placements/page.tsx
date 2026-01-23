@@ -414,722 +414,165 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
 
 
   const OmServiceView = () => {
-    return (
-      <div className="w-full flex flex-col gap-8 p-2 bg-gray-50">
-       
-     
-           
-        <div className="flex itemcs-center gap-2 justify-end">
-            <div
-    className="
-      flex items-center bg-white shadow-md rounded-xl
-      px-4 h-[36px]
-      border border-gray-200
-      focus-within:border-indigo-500
-      transition
-       md:w-[220px]
-    "
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth="1.5"
-      stroke="currentColor"
-      className="w-5 h-5 text-gray-500 mr-2"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"
-      />
-    </svg>
-
-    <input
-      type="search"
-      placeholder="Search..."
-      onChange={(e: any) => setSearchResult(e.target.value)}
-      className="
-        w-full bg-transparent outline-none
-        text-sm text-gray-700 placeholder-gray-400
-      "
-    />
-  </div>
-  <div className="w-full sm:w-[130px]">
-    {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
-      Month
-    </label> */}
-
-    <select
-      value={SearchMonth}
-      onChange={(e) => setSearchMonth(e.target.value)}
-      className="
-        w-full h-[44px] rounded-xl
-        border border-gray-300
-        px-4 text-sm bg-white text-gray-800
-        focus:outline-none focus:ring-2 focus:ring-indigo-500
-        focus:border-transparent transition-all
-      "
-    >
-      <option value="">All Months</option>
-      {[
-        "January","February","March","April","May","June",
-        "July","August","September","October","November","December"
-      ].map((month) => (
-        <option key={month} value={month}>
-          {month}
-        </option>
-      ))}
-    </select>
-  </div>
-<div >
-    {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
-      Year
-    </label> */}
-
-    <select
-      value={SearchYear}
-      onChange={(e) => setSearchYear(e.target.value)}
-      className="
-        w-full rounded-xl border border-gray-300
-        px-4 py-3 text-sm bg-white text-gray-800
-        focus:outline-none focus:ring-2 focus:ring-indigo-500
-        focus:border-transparent transition-all
-      "
-    >
-      <option value="">All Years</option>
-      {[2024, 2025, 2026].map((year) => (
-        <option key={year} value={year}>
-          {year}
-        </option>
-      ))}
-    </select>
-  </div>
-  </div>
-  
-  {ClientsInformation.length === 0 && (
-    <div className="flex flex-col items-center justify-center gap-6 h-[60vh] mt-10 rounded-3xl bg-white/60 backdrop-blur-lg border border-gray-200 shadow-2xl p-12">
-      <p className="text-3xl font-extrabold text-gray-900 text-center">
-        ✨ Sorry to Inform You, <span className="text-emerald-600">No Placements Available</span>
-      </p>
-      <p className="bg-gradient-to-r from-emerald-200 to-teal-200 text-emerald-900 px-8 py-3 rounded-full shadow-lg font-semibold text-sm tracking-wide">
-        🔎 Check <span className="font-bold text-emerald-800">Terminations</span> for Previous Placements
-      </p>
-    </div>
-  )}
-
-
-  {ClientsInformation.length > 0 && (
-    <div className="w-full max-h-[75vh] overflow-y-auto rounded-2xl shadow-xl">
-  <table className="w-full table-fixed border-collapse bg-white">
-    
-    {/* TABLE HEADER */}
-    <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white uppercase text-xs font-semibold">
-      <tr>
-        <th className="px-3 py-3 text-left break-words">Client Name</th>
-        <th className="px-3 py-3 text-left break-words">Patient Name</th>
-        <th className="px-3 py-3 text-left break-words">Contact</th>
-        <th className="px-3 py-3 text-left break-words">Location</th>
-        <th className="px-3 py-3 text-left break-words">HCA Name</th>
-        <th className="px-3 py-3 text-left break-words">Status</th>
-        <th className="px-3 py-3 text-left break-words">Replacement</th>
-        <th className="px-3 py-3 text-center break-words">Time Sheet</th>
-
-        {(isInvoiceDay || enableStatus) && (
-          <th className="px-3 py-3 text-center break-words">Invoice</th>
-        )}
-
-        <th className="px-3 py-3 text-center break-words">Service Continue</th>
-        <th className="px-3 py-3 text-center break-words">Terminate</th>
-      </tr>
-    </thead>
-
-    {/* TABLE BODY */}
-    <tbody className="bg-white divide-y divide-gray-200">
-      {[...FilterFinelTimeSheet].reverse().map((c, i) => (
-        <tr key={i} className="hover:bg-teal-50/30 transition-all">
-          
-          <td className="px-3 py-3 font-semibold text-gray-900 break-words">
-            {c.name}
-          </td>
-
-          <td className="px-3 py-3 font-semibold text-gray-900 break-words">
-            {c.PatientName}
-          </td>
-
-          <td className="px-3 py-3 text-gray-700 break-words">
-            {c.contact}
-          </td>
-
-          <td className="px-3 py-3 text-gray-600 break-words">
-            {c.location}
-          </td>
-
-         <td className="px-3 py-3 w-auto text-center">
-  <span className="inline-flex items-center justify-center px-1 py-1 text-[11px] rounded-md font-medium border bg-white gap-1">
-    🩺 {c.HCA_Name}
-  </span>
-</td>
-
-
-          <td className="px-3 py-3 break-words">
-            <div className="flex items-center gap-2 rounded-full bg-green-100 px-3 py-1">
-              <CircleCheckBig className="w-4 h-4 text-emerald-600" />
-              <p className="text-xs font-medium text-emerald-700">Active</p>
-            </div>
-          </td>
-
-          <td className="px-3 py-3 break-words">
-         <button
-  className="
-    px-2 py-2.5
-    text-xs font-semibold
-    text-teal-600
-    border-2 border-teal-500
-    rounded-lg
-    shadow-[0_0_0_0_rgba(20,184,166,0.5)]
-    transition-all duration-300
-    hover:shadow-[0_0_12px_2px_rgba(20,184,166,0.6)]
-    hover:bg-teal-50
-    active:scale-95
-    cursor-pointer
-  "
-  onClick={()=>setShowReassignmentPopUp(!ShowReassignmentPopUp)}
->
-  Reassignment
-</button>
-
-{ShowReassignmentPopUp&&<div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[1px]">
-  
-
-  <div
-    className="
-      w-[500px]
-      rounded-2xl
-      bg-white/80
-     
-      border border-white/60
-      overflow-hidden
-    "
-  >
-  
-    <div className="h-1.5 bg-gradient-to-r from-cyan-400 to-blue-500" />
-
-
-    <div className="px-7 py-6 space-y-6">
-      <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-lg font-bold text-gray-800">
-          Request Replacement
-        </h2>
-        <p className="text-sm text-gray-600 mt-1">
-          Let us know the reason to proceed
-        </p>
-      </div>
-     <img src='Icons/Curate-logoq.png' className="h-8" alt="Company Logo"/>
-</div>
-    
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Reason for Replacement
-        </label>
+  return (
+    <div className="w-full flex flex-col gap-8 p-2 bg-gray-50">
+      <div className="w-full flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+        <div className="flex items-center bg-white shadow-md rounded-xl px-4 h-[40px] border border-gray-200 focus-within:border-indigo-500 transition w-full sm:w-[220px]">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+            className="w-5 h-5 text-gray-500 mr-2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"
+            />
+          </svg>
+          <input
+            type="search"
+            placeholder="Search..."
+            onChange={(e: any) => setSearchResult(e.target.value)}
+            className="w-full bg-transparent outline-none text-sm text-gray-700"
+          />
+        </div>
 
         <select
-          value={selectedReason}
-          onChange={(e) => setSelectedReason(e.target.value)}
-          className="
-            w-full
-            rounded-xl
-            bg-white/90
-            border border-gray-300
-            px-4 py-2.5
-            text-sm
-            focus:outline-none
-            focus:ring-2 focus:ring-blue-400
-          "
+          value={SearchMonth}
+          onChange={(e) => setSearchMonth(e.target.value)}
+          className="w-full sm:w-[140px] h-[40px] rounded-xl border border-gray-300 px-3 text-sm bg-white focus:ring-2 focus:ring-indigo-500"
         >
-          <option value="">Choose reason</option>
-          <option value="Service Quality Issue">Service Quality Issue</option>
-          <option value="Staff Unavailable">Staff Unavailable</option>
-          <option value="Schedule Mismatch">Schedule Mismatch</option>
-          <option value="Patient Recovered">Patient Recovered</option>
-          <option value="Cost Concern">Cost Concern</option>
-          <option value="Other">Other</option>
+          <option value="">All Months</option>
+          {[
+            "January","February","March","April","May","June",
+            "July","August","September","October","November","December"
+          ].map((month) => (
+            <option key={month} value={month}>{month}</option>
+          ))}
+        </select>
+
+        <select
+          value={SearchYear}
+          onChange={(e) => setSearchYear(e.target.value)}
+          className="w-full sm:w-[120px] h-[40px] rounded-xl border border-gray-300 px-3 text-sm bg-white focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="">All Years</option>
+          {[2024, 2025, 2026].map((year) => (
+            <option key={year} value={year}>{year}</option>
+          ))}
         </select>
       </div>
 
-      {selectedReason === "Other" && (
-        <textarea
-          rows={3}
-          placeholder="Please specify"
-          value={otherReason}
-          onChange={(e) => setOtherReason(e.target.value)}
-          className="
-            w-full
-            rounded-xl
-            bg-white/90
-            border border-gray-300
-            px-4 py-2.5
-            text-sm
-            resize-none
-            focus:outline-none
-            focus:ring-2 focus:ring-blue-400
-          "
-        />
+      {ClientsInformation.length === 0 && (
+        <div className="flex flex-col items-center justify-center gap-6 h-[60vh] mt-10 rounded-3xl bg-white/60 backdrop-blur-lg border border-gray-200 shadow-2xl p-6 sm:p-12">
+          <p className="text-xl sm:text-3xl font-extrabold text-gray-900 text-center">
+            ✨ Sorry to Inform You, <span className="text-emerald-600">No Placements Available</span>
+          </p>
+          <p className="bg-gradient-to-r from-emerald-200 to-teal-200 text-emerald-900 px-6 py-3 rounded-full shadow-lg font-semibold text-sm text-center">
+            🔎 Check <span className="font-bold">Terminations</span> for Previous Placements
+          </p>
+        </div>
       )}
-{selectedReason &&
-  (selectedReason !== "Other" || otherReason)&& 
-  <select
-              className="w-full p-2 text-sm border rounded-lg cursor-pointer"
-              onChange={(e) => {
-                const selected = HCA_List.find(
-                  (hca) => hca.FirstName === e.target.value
-                );
-                selected && UpdateReplacement(selected, c);
-              }}
-            >
-              <option>Assign New HCA</option>
-              {HCA_List.map((each: any, index: any) => (
-                <option key={index}>{each.FirstName}</option>
-              ))}
-            </select> }
-  
-      <div className="flex justify-end gap-4 pt-2">
-        <button
-          onClick={() => setShowReassignmentPopUp(!ShowReassignmentPopUp)}
-          className="
-            text-sm font-medium
-            text-gray-600
-            hover:text-gray-800
-            transition cursor-pointer
-          "
-        >
-          Cancel
-        </button>
 
-    {/* <button
-  onClick={handleDelete}
+      {ClientsInformation.length > 0 && (
+        <div className="w-full overflow-x-auto rounded-2xl shadow-xl">
+          <div className="min-w-[1100px]">
+            <table className="w-full border-collapse bg-white">
+              <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white text-xs font-semibold">
+                <tr>
+                  <th className="px-3 py-3 text-left">Client Name</th>
+                  <th className="px-3 py-3 text-left">Patient Name</th>
+                  <th className="px-3 py-3 text-left">Contact</th>
+                  <th className="px-3 py-3 text-left">Location</th>
+                  <th className="px-3 py-3 text-center">HCA Name</th>
+                  <th className="px-3 py-3 text-left">Status</th>
+                  <th className="px-3 py-3 text-left">Replacement</th>
+                  <th className="px-3 py-3 text-center">Time Sheet</th>
+                  {(isInvoiceDay || enableStatus) && (
+                    <th className="px-3 py-3 text-center">Invoice</th>
+                  )}
+                  <th className="px-3 py-3 text-center">Service Continue</th>
+                  <th className="px-3 py-3 text-center">Terminate</th>
+                </tr>
+              </thead>
 
-  className={`
-    inline-flex items-center justify-center
-    px-7 py-3
-    text-sm font-semibold
-    rounded-full
-    transition-all duration-300 ease-out
-
-    ${
-      selectedReason && (selectedReason !== "Other" || otherReason)
-        ?
-         `
-          text-white
-          bg-gradient-to-r from-blue-600 to-cyan-600
-          shadow-[0_10px_30px_-10px_rgba(59,130,246,0.7)]
-          hover:from-blue-700 hover:to-cyan-700
-          hover:shadow-[0_14px_40px_-12px_rgba(59,130,246,0.9)]
-          active:scale-95
-          cursor-pointer
-        `: `
-          bg-gray-200
-          text-gray-500
-          cursor-not-allowed
-          shadow-none
-        `
-    }
-  `}
->
-  Confirm Replacement
-</button> */}
-
-      </div>
-    </div>
-  </div>
-</div>
-}
-          
-          </td>
-
-          <td className="px-3 py-3 text-center break-words">
-            <button
-              className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
-              onClick={() => UpdateClient_UserId(c.Client_Id, c.name)}
-            >
-              View
-            </button>
-          </td>
-
-          {(isInvoiceDay || enableStatus) && (
-            <td className="px-3 py-3 text-center break-words">
-              <button
-                className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
-                onClick={() => {
-                  setBillingRecord(c);
-                  setShowPaymentModal(true);
-                }}
-              >
-                Generate Bill
-              </button>
-            </td>
-          )}
-
-          <td className="px-3 py-3 text-center break-words">
-            <button
-              className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
-              onClick={() => UpdatePopup(c)}
-            >
-              Extend
-            </button>
-          </td>
-
-          <td className="px-3 py-3 text-center break-words">
-            <button
-              className="px-3 py-2 text-xs font-medium rounded-lg hover:bg-gray-100"
-              onClick={() => handleDeleteClick(c)}
-            >
-              <Trash />
-            </button>
-          </td>
-
-        </tr>
-      ))}
-    </tbody>
-
-  </table>
-</div>
-
-
-  
-  )}
-   {ActionStatusMessage && (
-          <div className="flex flex-col items-center justify-center gap-4 mt-4 bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 px-4 py-4">
-          {ActionStatusMessage!=="Replacement Updated Sucessfull"&&  <div className="w-5 h-5 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>}
-            <p className={`text-center ${ActionStatusMessage==="Replacement Updated Sucessfull"?"text-green-800":"text-red-500"} font-semibold`}>
-              {ActionStatusMessage}
-            </p>
+              <tbody className="divide-y divide-gray-200">
+                {[...FilterFinelTimeSheet].reverse().map((c, i) => (
+                  <tr key={i} className="hover:bg-teal-50/30 transition">
+                    <td className="px-3 py-3 font-semibold">{c.name}</td>
+                    <td className="px-3 py-3 font-semibold">{c.PatientName}</td>
+                    <td className="px-3 py-3">{c.contact}</td>
+                    <td className="px-3 py-3">{c.location}</td>
+                    <td className="px-3 py-3 text-center">
+                      <span className="inline-flex items-center px-2 py-1 text-[11px] rounded-md border bg-white">
+                        🩺 {c.HCA_Name}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1">
+                        <CircleCheckBig className="w-4 h-4 text-emerald-600" />
+                        <span className="text-xs font-medium text-emerald-700">Active</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3">
+                      <button
+                        className="px-3 py-2 text-xs font-semibold text-teal-600 border-2 border-teal-500 rounded-lg hover:bg-teal-50 transition"
+                        onClick={() => setShowReassignmentPopUp(!ShowReassignmentPopUp)}
+                      >
+                        Reassignment
+                      </button>
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <button
+                        className="px-3 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg"
+                        onClick={() => UpdateClient_UserId(c.Client_Id, c.name)}
+                      >
+                        View
+                      </button>
+                    </td>
+                    {(isInvoiceDay || enableStatus) && (
+                      <td className="px-3 py-3 text-center">
+                        <button
+                          className="px-3 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg"
+                          onClick={() => {
+                            setBillingRecord(c);
+                            setShowPaymentModal(true);
+                          }}
+                        >
+                          Generate Bill
+                        </button>
+                      </td>
+                    )}
+                    <td className="px-3 py-3 text-center">
+                      <button
+                        className="px-3 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg"
+                        onClick={() => UpdatePopup(c)}
+                      >
+                        Extend
+                      </button>
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <button
+                        className="px-3 py-2 rounded-lg hover:bg-gray-100"
+                        onClick={() => handleDeleteClick(c)}
+                      >
+                        <Trash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-{showExtendPopup&&
- <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-[350px] p-6 text-center border border-gray-200">
-     
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
-          Are you sure you want to extend?
-        </h2>
-
-   
-        <div className="border-t border-gray-200 mb-4"></div>
-
-    
-        <div className="flex justify-center gap-4">
-          <button
-        onClick={()=>setshowExtendPopup(false)}
-            className="px-5 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 transition-all"
-          >
-            No
-          </button>
-          <button
-            onClick={ExtendTimeSheet}
-            className="px-5 py-2 rounded-full bg-green-600 text-white hover:bg-green-700 transition-all"
-          >
-            Yes
-          </button>
         </div>
-        
-        
-      </div>
-      
-    </div>
-}
-
-  {showDeletePopup && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-  <div className="bg-white rounded-2xl shadow-2xl w-[420px] p-7 border border-gray-200">
-    
-   
-    <div className="text-center mb-6">
-      <h2 className="text-xl font-bold text-gray-800">
-        Request Replacement
-      </h2>
-      <p className="text-sm text-gray-500 mt-1">
-        Please select a reason for requesting a replacement
-      </p>
-    </div>
-
-    {/* Reason Selection */}
-    <div className="space-y-4">
-      <label className="block text-sm font-semibold text-gray-700">
-        Reason for Replacement
-      </label>
-
-      <select
-        value={selectedReason}
-        onChange={(e) => setSelectedReason(e.target.value)}
-        className="
-          w-full
-          rounded-xl
-          border border-gray-300
-          px-4 py-2.5
-          text-sm
-          focus:outline-none
-          focus:ring-2 focus:ring-teal-500
-        "
-      >
-        <option value="">-- Select Reason --</option>
-        <option value="Service Quality Issue">Service Quality Issue</option>
-        <option value="Staff Unavailable">Staff Unavailable</option>
-        <option value="Schedule Mismatch">Schedule Mismatch</option>
-        <option value="Patient Recovered">Patient Recovered</option>
-        <option value="Cost Concern">Cost Concern</option>
-        <option value="Other">Other</option>
-      </select>
-
-      {/* Custom Reason */}
-      {selectedReason === "Other" && (
-        <textarea
-          rows={3}
-          placeholder="Please specify the reason"
-          value={otherReason}
-          onChange={(e) => setOtherReason(e.target.value)}
-          className="
-            w-full
-            rounded-xl
-            border border-gray-300
-            px-4 py-2.5
-            text-sm
-            resize-none
-            focus:outline-none
-            focus:ring-2 focus:ring-teal-500
-          "
-        />
       )}
     </div>
+  );
+};
 
-    {/* Actions */}
-    <div className="flex justify-end gap-4 mt-8">
-      <button
-        onClick={() => setShowDeletePopup(false)}
-        className="
-          px-5 py-2.5
-          text-sm font-medium
-          text-gray-700
-          bg-gray-100
-          rounded-xl
-          hover:bg-gray-200
-          transition
-        "
-      >
-        Cancel
-      </button>
-
-      <button
-        onClick={handleDelete}
-        disabled={!selectedReason}
-        className="
-          px-5 py-2.5
-          text-sm font-semibold
-          text-white
-          bg-teal-600
-          rounded-xl
-          shadow-md
-          hover:bg-teal-700
-          disabled:opacity-50
-          disabled:cursor-not-allowed
-          transition
-        "
-      >
-        Confirm Replacement
-      </button>
-    </div>
-  </div>
-</div>
-
-  )}
-
-
-{showTimeSheet && TimeSheet_Info && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-    <div className="bg-white rounded-3xl shadow-2xl p-6 w-[750px] max-h-[90vh] overflow-y-auto backdrop-blur-md border border-gray-200">
-
-    
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold">
-          📅 Attendance - {monthNames[selectedMonth]} {selectedYear}
-        </h2>
-
-        <div className="flex gap-3">
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="border p-2 rounded-md"
-          >
-            {monthNames.map((m, i) => (
-              <option key={i} value={i}>{m}</option>
-            ))}
-          </select>
-
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="border p-2 rounded-md"
-          >
-            {Array.from({ length: 5 }).map((_, i) => {
-              const year = new Date().getFullYear() - 2 + i;
-              return <option key={year} value={year}>{year}</option>;
-            })}
-          </select>
-        </div>
-      </div>
-
-
-      
-      <div className="grid grid-cols-7 gap-3 text-center">
-
-        {Array.from({ length: daysInMonth }).map((_, dayIndex) => {
-          const day = dayIndex + 1;
-
-          
-          const record = TimeSheet_Info.TimeSheet?.find((t:any) => {
-            let d = t.date;
-
-     
-            if (d instanceof Date) {
-              return (
-                d.getDate() === day &&
-                d.getMonth() === selectedMonth &&
-                d.getFullYear() === selectedYear
-              );
-            }
-
-          
-            const parsed = new Date(d);
-            return (
-              parsed.getDate() === day &&
-              parsed.getMonth() === selectedMonth &&
-              parsed.getFullYear() === selectedYear
-            );
-          });
-
-     
-          const today = new Date();
-          const currentDateObj = new Date(selectedYear, selectedMonth, day);
-          const isFuture = currentDateObj > today;
-
-      
-          const currentStatus =
-            updatedAttendance?.[day]?.status ??
-            record?.status ??
-            "Absent";
-
-      
-          const statusColor =
-            currentStatus === "Present"
-              ? "bg-green-100 text-green-700 border-green-300"
-              : currentStatus === "Absent"
-              ? "bg-red-100 text-red-700 border-red-300"
-              : "bg-yellow-100 text-yellow-700 border-yellow-300";
-
-          
-          const handleStatusClick = (day:any) => {
-            if (isFuture) return;
-
-            setSaveButton(true);
-
-            setUpdatedAttendance((prev) => {
-              const current = prev?.[day]?.status || record?.status || "Absent";
-
-              const nextStatus =
-                current === "Absent"
-                  ? "Present"
-                  : current === "Present"
-                  ? "Leave"
-                  : "Absent";
-
-              const currentDate = new Date(selectedYear, selectedMonth, day);
-
-              const formattedDate = currentDate.toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-                timeZone: "Asia/Kolkata",
-              });
-
-              const formattedDay = currentDate.toLocaleDateString("en-IN", {
-                weekday: "long",
-                timeZone: "Asia/Kolkata",
-              });
-
-              const updateTime = new Date().toLocaleTimeString("en-IN", {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                hour12: true,
-                timeZone: "Asia/Kolkata",
-              });
-
-              setFineldate({
-                ...Fineldate,
-                date: formattedDate,
-                day: formattedDay,
-                updatedAt: updateTime,
-                status: nextStatus,
-              });
-
-              return {
-                ...prev,
-                [day]: {
-                  date: formattedDate,
-                  day: formattedDay,
-                  updatedAt: updateTime,
-                  status: nextStatus,
-                },
-              };
-            });
-          };
-
-          return (
-            <div
-              key={day}
-              onClick={() => handleStatusClick(day)}
-              className={`p-3 border rounded-lg flex flex-col items-center justify-center 
-                ${
-                  isFuture
-                    ? "opacity-40 blur-[1px] cursor-not-allowed"
-                    : "cursor-pointer hover:scale-105"
-                } 
-                ${statusColor}
-                transition-transform`}
-            >
-              <span className="text-sm font-semibold">{day}</span>
-              <span className="text-xs font-medium">{currentStatus}</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {SaveButton && (
-        <p
-          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-green-600 text-white font-medium text-sm hover:bg-green-900 md:mt-2 transition-colors cursor-pointer select-none"
-          onClick={UpdateInformation}
-        >
-          Save Attendance
-        </p>
-      )}
-
-      <div className="mt-5 text-right">
-        <button
-          onClick={() => setShowTimeSheet(false)}
-          className="px-4 py-2 bg-red-500 text-white cursor-pointer rounded-xl shadow hover:bg-red-600 transition"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-</div>
-
-    );
-  };
 const GetFilterCount=(A:any)=>{
   switch(A){
      case "On Service":
