@@ -414,22 +414,7 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
   const OmServiceView = () => {
     return (
       <div className="w-full flex flex-col gap-8 p-2 bg-gray-50">
-         <div className="flex gap-3">
-          {Placements_Filters.map((each:any,Index:any)=>
-        <button
-         key={Index}
-         onClick={()=>setSearch(each)}
-                className={`cursor-pointer px-1 py-1 text-xs flex-1 sm:flex-none sm:min-w-[100px] ${
-                  search === each && "border-3"
-                } rounded-xl shadow-md font-medium transition-all duration-200 ${
-                  filterColors[each]
-                }`}
-              >
-              
-        {each}
-                
-              </button>)}
-      </div>
+       
      
            
         <div className="flex itemcs-center gap-2 justify-end">
@@ -1168,7 +1153,25 @@ SetActionStatusMessage("Replacement Updated Sucessfull")
     new Date(0, i).toLocaleString("default", { month: "long" })
   );
 
-  return <div>{CurrentUserInterfacevIew()}</div>;
+  return <div>
+      <div className="flex gap-3">
+          {Placements_Filters.map((each:any,Index:any)=>
+        <button
+         key={Index}
+         onClick={()=>setSearch(each)}
+                className={`cursor-pointer px-1 py-1 text-xs flex-1 sm:flex-none sm:min-w-[100px] ${
+                  search === each && "border-3"
+                } rounded-xl shadow-md font-medium transition-all duration-200 ${
+                  filterColors[each]
+                }`}
+              >
+              
+        {each}
+                
+              </button>)}
+      </div>
+    {CurrentUserInterfacevIew()}
+    </div>;
 };
 
 export default ClientTable;

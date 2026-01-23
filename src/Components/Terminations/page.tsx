@@ -54,22 +54,7 @@ console.log("Check------",placements)
   }
   return (
     <div className="p-2 bg-gray-50">
-      <div className="flex gap-3">
-                {Placements_Filters.map((each:any,Index:any)=>
-              <button
-               key={Index}
-               onClick={()=>setSearch(each)}
-                      className={`cursor-pointer px-1 py-1 text-xs flex-1 sm:flex-none sm:min-w-[100px] ${
-                        search === each && "border-3"
-                      } rounded-xl shadow-md font-medium transition-all duration-200 ${
-                        filterColors[each]
-                      }`}
-                    >
-                    
-              {each}
-                      
-                    </button>)}
-            </div>
+      
       <div className="flex items-center justify-end mb-2">
         <span className="bg-emerald-100 text-emerald-700 px-4 py-1 rounded-full text-sm font-medium shadow-sm">
           {placements.length} Records
