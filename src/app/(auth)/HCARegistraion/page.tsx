@@ -3568,12 +3568,13 @@ form.HusbendContact!=="Not Available"&&
     `}
   />
 
-  {form.reference2Aadhar &&
+  {/* {form.reference2Aadhar &&
     !isValidAadhaar(form.reference2Aadhar) && (
       <p className="text-xs text-red-500 mt-1">
         Aadhaar number must be exactly 12 digits.
       </p>
-    )}
+    )} */}
+    
 </div>
 
             <div className="flex flex-col gap-1">
@@ -3608,12 +3609,12 @@ form.HusbendContact!=="Not Available"&&
     `}
   />
 
-  {form.reference2Mobile &&
+  {/* {form.reference2Mobile &&
     !isValidIndianMobile(form.reference2Mobile) && (
       <p className="text-xs text-red-500 mt-1">
         Enter a valid 10-digit Indian mobile number.
       </p>
-    )}
+    )} */}
 </div>
 
               <textarea
