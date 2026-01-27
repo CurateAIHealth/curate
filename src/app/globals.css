@@ -296,3 +296,24 @@ body {
 .upload-box {
   @apply mt-1 flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-xl cursor-pointer text-sm text-gray-600 hover:bg-gray-50;
 }
+
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

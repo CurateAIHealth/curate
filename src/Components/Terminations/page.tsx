@@ -20,6 +20,8 @@ const TerminationTable: React.FC = () => {
      const [month, setMonth] = useState("");
      const [year, setYear] = useState("");
 const [isChecking, setIsChecking] = useState(true);
+const [showPopup, setShowPopup] = useState(false);
+const [popupInfo, setPopupInfo] = useState("");
 
 
 
@@ -171,7 +173,7 @@ const FilterValues = placements.filter((each: any) => {
 
 
         <tr className="border-b border-gray-300">
-          {["Client", "Contact", "Location", "HCA", "Status", "Action"].map(
+          {["Client", "Contact", "Location", "HCA", "Status", "Reason", "Action"].map(
             (head) => (
               <th
                 key={head}
@@ -227,7 +229,29 @@ const FilterValues = placements.filter((each: any) => {
                 {placement.status}
               </span>
             </td>
-
+  <td className="px-3 py-2">
+  <button
+    onClick={() => {
+      setPopupInfo("Termination reasons generally fall into involuntary");
+      setShowPopup(true);
+    }}
+    className="
+      px-3 py-1.5
+      text-sm font-medium
+      text-blue-600
+      border border-blue-600/60
+      rounded-md
+      cursor-pointer
+      bg-transparent
+      hover:bg-blue-600/10
+      hover:border-blue-600
+      transition
+      duration-200
+    "
+  >
+    Show
+  </button>
+</td>
             {/* ACTION */}
             <td className="px-6 py-4 text-center">
               <button
@@ -254,6 +278,61 @@ const FilterValues = placements.filter((each: any) => {
         )}
       </tbody>
     </table>
+{showPopup && (
+  <div
+    className="
+      fixed top-24 right-6 z-50
+      w-[400px] max-w-[94%]
+      animate-[slideInRight_0.25s_ease-out]
+    "
+  >
+    <div
+      className="
+        rounded-2xl bg-white
+        border border-gray-200
+        shadow-xl
+        overflow-hidden
+      "
+    >
+      
+      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <h4 className="text-sm font-semibold text-gray-900">
+          Information
+        </h4>
+
+        <button
+          className="text-gray-400 cursor-pointer hover:text-gray-700 transition"
+          onClick={() => setShowPopup(false)}
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="px-5 py-4">
+        <p className="text-sm text-gray-600 leading-relaxed">
+          {popupInfo}
+        </p>
+      </div>
+
+      
+      <div className="px-5 py-3 bg-gray-50 flex justify-end">
+        <button
+          className="
+            px-4 py-1.5 text-sm font-medium
+            rounded-md
+            bg-gray-900 text-white
+            hover:bg-black
+            transition cursor-pointer
+          "
+          onClick={() => setShowPopup(false)}
+        >
+          Okay
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
   </div>
 </div>
 

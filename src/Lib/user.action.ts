@@ -2050,6 +2050,23 @@ return safeUsers
 
   }
 }
+
+export const GetReasonsInfoInfo=async()=>{
+  try{
+const cluster=await clientPromise
+const db=cluster.db("CurateInformation")
+const collection=db.collection("TerminationandReplacementReasons")
+const TimeSheetInfoData=await collection.find().toArray()
+
+const safeUsers = TimeSheetInfoData.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+return safeUsers
+  }catch(e){
+
+  }
+}
 export const UpdateReplacmentData = async (
   Available_HCP: any,
   Exsting_HCP: any,
