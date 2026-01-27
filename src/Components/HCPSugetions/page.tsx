@@ -57,6 +57,7 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
   const [StatusMessage, setStatusMessage] = useState('Test StatusMessage');
   const [CurrentUserId, setCurrentUserId] = useState<any>('');
   const [SearchFilter,setSearchFilter]=useState("")
+  const [SearchReasult,setSearchReasult]=useState("")
   const [SearchOptions,setSearchOptions]=useState(false)
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
@@ -251,6 +252,14 @@ Curate Health Care Service
 };
 
 
+const filteredHcps = hcps.filter((each: any) => {
+  const query = SearchReasult.trim().toLowerCase();
+
+  return (
+    each?.HCPFirstName?.toLowerCase().includes(query) ||
+    each?.HCPSurName?.toLowerCase().includes(query)
+  );
+});
 
 
 
@@ -563,12 +572,8 @@ window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, 
   const UpdateNewSearchItem=(A:any)=>{
     setSearchFilter(A)
   }
-const filteredHcps = hcps.filter((hcp: any) =>
-  !Array.isArray(hcp?.Status) ||
-  !hcp.Status.includes("Assigned")
-);
- console.log('Check HCO====',filteredHcps)
-const suitableHcps = filteredHcps.filter((hcp: any) => {
+
+const suitableHcps = hcps.filter((hcp: any) => {
   const client = clients[selectedClientIndex];
   if (!client || loading) return false;
 
@@ -869,6 +874,13 @@ Search For HCP Criteria
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-teal-700 dark:text-teal-400 tracking-tight drop-shadow-sm">
                   Friendly Care Matches
                 </h1>
+                <input
+  type="search"
+  placeholder="Search..."
+  onChange={(e:any)=>setSearchReasult(e.target.value)}
+  className="w-full max-w-sm rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/30"
+/>
+
 
 
                 <div className=" flex flex-wrap gap-3 items-center">
@@ -882,7 +894,7 @@ Search For HCP Criteria
               </div>
 
               <div className="flex flex-col md:flex-row w-full justify-between items-center md:items-start gap-4 md:gap-6 px-2 sm:px-4">
-                {filteredHcps.length === 0 ? (
+                {hcps.length === 0 ? (
                   <p className="text-gray-400 text-center py-12 w-full">
                     No suitable HCPs found for this client.
                   </p>
@@ -895,6 +907,8 @@ Search For HCP Criteria
                           each.InformedClientID === activeClient?.userId
                       );
                       const isCurrent = CurrentUserId === hcp.UserId;
+const isAssigned =
+  Array.isArray(hcp?.Status) && hcp.Status.includes("Assigned");
 
                       return (
                         <article
@@ -917,6 +931,7 @@ Search For HCP Criteria
 
 
                           <div className="pt-6 pb-3 px-2 sm:px-3 text-center w-full">
+    
                             <h3 className="text-[12px] sm:text-[13px] font-semibold text-gray-800 truncate">
                               {hcp.HCPFirstName} {hcp.HCPSurName}
                             </h3>
@@ -968,6 +983,15 @@ Search For HCP Criteria
                               })}
                             </div>
 
+                        {isAssigned?<p className="group mt-1 inline-flex cursor-not-allowed items-center gap-1.5 rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-2.5 py-0.5 text-[10px] font-semibold text-white shadow-md transition">
+  Assigned
+
+ 
+  <span className="ml-1 hidden items-center text-[11px] opacity-80 group-hover:inline-flex">
+    🚫
+  </span>
+</p>
+:
 
 
                             <div className="mt-2 flex justify-center gap-2 flex-wrap">
@@ -1023,7 +1047,7 @@ Search For HCP Criteria
                                     )}
                                 </div>
                               )}
-                            </div>
+                            </div>}
                             {alreadyInformed && <p className="px-3 py-1 text-[9px] mt-2 font-medium rounded-full bg-pink-500 text-white hover:bg-teal-700 cursor-pointer" onClick={() => SendBVR(hcp)}>
                               Send BVR
                             </p>}
