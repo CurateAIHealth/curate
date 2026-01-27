@@ -161,7 +161,7 @@ useEffect(() => {
 }, [ActionStatusMessage, dispatch]);
 
 
-console.log("Check For Service Location-----",ClientsInformation)
+
 
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
  const normalizedAttendance =
@@ -491,6 +491,7 @@ const OmServiceView = () => {
       "
     />
   </div>
+
   <div className="w-full sm:w-[130px]">
     {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
       Month
@@ -518,6 +519,8 @@ const OmServiceView = () => {
       ))}
     </select>
   </div>
+  
+    
 <div >
     {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
       Year
@@ -541,8 +544,33 @@ const OmServiceView = () => {
       ))}
     </select>
   </div>
+    <button
+      onClick={() => setenableStatus(!enableStatus)}
+      className="
+        px-5 py-2.5 text-xs font-semibold
+        bg-gradient-to-r from-teal-600 to-emerald-500
+        hover:from-teal-700 hover:to-emerald-600
+        text-white rounded-xl shadow-md
+        transition whitespace-nowrap
+        w-full sm:w-auto
+      "
+    >
+      {enableStatus ? "Disable Generate Bill" : "Enable Generate Bill"}
+    </button>
   </div>
-  
+  {showPaymentModal && billingRecord && (
+  <PaymentModal
+    record={billingRecord}
+    onClose={() => {
+      setShowPaymentModal(false);
+      setBillingRecord(null);
+    }}
+    onConfirm={(billingResult: any) => {
+      console.log("Saving billing:", billingResult);
+    }}
+  />
+)}
+
   {ClientsInformation.length === 0 && (
     <div className="flex flex-col items-center justify-center gap-6 h-[60vh] mt-10 rounded-3xl bg-white/60 backdrop-blur-lg border border-gray-200 shadow-2xl p-12">
       <p className="text-3xl font-extrabold text-gray-900 text-center">
@@ -1291,5 +1319,13 @@ const GetFilterCount=(A:any)=>{
     {CurrentUserInterfacevIew()}
     </div>;
 };
+
+function Th({ children, className = "" }: any) {
+  return <th className={`px-3 py-2 whitespace-nowrap ${className}`}>{children}</th>;
+}
+
+function Td({ children, className = "" }: any) {
+  return <td className={`px-3 py-2 whitespace-nowrap ${className}`}>{children}</td>;
+}
 
 export default ClientTable;
