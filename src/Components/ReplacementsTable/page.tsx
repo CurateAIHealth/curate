@@ -1,7 +1,11 @@
 "use client";
 import { filterColors, Placements_Filters } from "@/Lib/Content";
 import { GetReasonsInfoInfo, GetReplacementInfo } from "@/Lib/user.action";
+import { UpdateClient, UpdateUserInformation, UpdateUserType } from "@/Redux/action";
+import { useRouter } from "next/navigation";
+
 import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
 
 let ReplacementCach : any[] | null = null;
 let ReplacementReasonsCache: any[] | null = null;
@@ -14,7 +18,8 @@ const ReplacementTable = ({ StatusMessage }: any) => {
 const [ReplacementReasons,setReplacementReasons]=useState<any[]>([]);
 const [showPopup, setShowPopup] = useState(false);
 const [popupInfo, setPopupInfo] = useState("");
-
+const dispatch=useDispatch()
+const router=useRouter()
   useEffect(() => {
     const Fetch = async () => {
 
@@ -32,7 +37,7 @@ const [popupInfo, setPopupInfo] = useState("");
       // const ReplacementReasons:any= await GetReasonsInfoInfo()
       if (!PlacementInformation || PlacementInformation.length === 0) return;
 
-   
+   console.log("Check for the Datta0000",PlacementInformation)
 
       const formatted = PlacementInformation.map((record: any) => ({
         CurrentHCA_id:record.HCAId||"",
@@ -43,7 +48,7 @@ const [popupInfo, setPopupInfo] = useState("");
         endDate: record.EndDate || "",
         status: record.Status || "Inactive",
         location: record.Address || "N/A",
-
+        NewHCA:record.NewHCAName,
         clientName: record.ClientName || "",
         clientPhone: record.ClientContact || "",
         ClientId: record.ClientId || "",
@@ -74,7 +79,15 @@ ReplacementReasonsCache=ReplacementReasons?? []
 
     Fetch();
   }, [StatusMessage]);
-
+  
+  const ShowDompleteInformation = async (userId: any, ClientName: any) => {
+    if (userId) {
+      dispatch(UpdateClient(ClientName));
+      dispatch(UpdateUserInformation(userId));
+      dispatch(UpdateUserType("patient"));
+      router.push("/UserInformation");
+    }
+  };
 
   const filteredData = useMemo(() => {
     return rawData.filter((item) => {
@@ -100,12 +113,13 @@ const GetReplacementMessage = (A: any, B: any) => {
 
   const firstReason = results[0]?.Reason ?? "";
   const secondReason = results[0]?.EnterdReason ?? "";
+  const DateandTime=results[0]?.DateandTime??""
 
 if (firstReason && secondReason) {
-  return `${firstReason} And ${secondReason}`.trim();
+  return `${firstReason} And ${secondReason}. Replacement Happend On ${DateandTime}`.trim();
 }
 
-return `${firstReason}${secondReason}`.trim();
+return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.trim();
 
 
 };
@@ -165,8 +179,9 @@ console.log("Check For Message----",GetReplacementMessage("a289361b-3601-4ba6-ad
               <th className="px-3 py-2 text-left">Invoice</th>
               <th className="px-3 py-2 text-left">Client</th>
               <th className="px-3 py-2 text-left">Patient</th>
-              <th className="px-3 py-2 text-left">HCA</th>
+              <th className="px-3 py-2 text-left">Previous HCA</th>
               {/* <th className="px-3 py-2 text-left">Status</th> */}
+              <th className="px-3 py-2 text-left">New Assigned HCA</th>
               <th className="px-3 py-2 text-left">Start</th>
               <th className="px-3 py-2 text-left">End</th>
               <th className="px-3 py-2 text-left">Reason</th>
@@ -188,7 +203,13 @@ console.log("Check For Message----",GetReplacementMessage("a289361b-3601-4ba6-ad
                   <td className="px-3 py-2">{item.invoice}</td>
                   <td className="px-3 py-2">{item.clientName}</td>
                   <td className="px-3 py-2">{item.patientName}</td>
-                  <td className="px-3 py-2">{item.hcpName}</td>
+                  <td className="px-3 py-2 hover:underline hover:text-blue-900 cursor-pointer"
+                  onClick={()=>ShowDompleteInformation(item.CurrentHCA_id,item.hcpName)}
+                  >{item.hcpName}</td>
+                      <td className="px-3 py-2 hover:underline hover:text-blue-900 cursor-pointer"
+                  onClick={()=>ShowDompleteInformation(item.AssignedHCA_id,item.NewHCA)}
+                  >{item.NewHCA}</td>
+                  
                   {/* <td className="px-3 py-2">
                     <span
                       className={`px-2 py-1 rounded text-xs ${

@@ -2158,12 +2158,21 @@ export const UpdateReason = async (
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const replacementCollection = db.collection("TerminationandReplacementReasons");
-    const ReasonData = {
-      ExistingHCP: Exsting_HCP,
-      AvailableHCP: Available_HCP,
-      Reason: selectedReason,
-      EnterdReason: otherReason
-    };
+  const ReasonData = {
+  ExistingHCP: Exsting_HCP,
+  AvailableHCP: Available_HCP,
+  Reason: selectedReason,
+  EnterdReason: otherReason,
+  DateandTime: new Date().toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }),
+};
+
     await replacementCollection.insertOne(ReasonData);
 
     return {
