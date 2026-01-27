@@ -67,7 +67,15 @@
     const [isEditing, setIsEditing] = useState({ PatientCardEditing: false, ClientCardEditing: false, PatientDetails: false, AdditionalInformation: false, OtherInformation: false, EquipmentDetails: false, Hygiene: false, Medication: false });
     const dispatch = useDispatch()
     const ShowPreviewData = useSelector((state: any) => state.CurrentPreview)
+const [service, setService] = useState("");
+  const [otherService, setOtherService] = useState("");
 
+  const options = [
+    "Business Vendor",
+    "Baby Care",
+    "Physio Service",
+    "Other",
+  ];
 const reduxFormData = useSelector(
   (state: any) => state.RegisterdUsersFullInformation
 );
@@ -284,6 +292,38 @@ if (url) {
 
                 />
 
+   <div className="w-full max-w-sm flex flex-col gap-3">
+    
+      <label className="text-sm font-medium text-gray-700">
+        Select Service to Skip Follwing Info
+      </label>
+
+      <select
+        value={service}
+        onChange={(e) => {
+          setService(e.target.value);
+          if (e.target.value !== "Other") setOtherService("");
+        }}
+        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">-- Select --</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+
+      {service === "Other" && (
+        <input
+          type="text"
+          placeholder="Enter other service"
+          value={otherService}
+          onChange={(e) => setOtherService(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      )}
+    </div>
 
               </div>
             </div>
@@ -1035,7 +1075,6 @@ if (url) {
                 </p>
 
               )}
-
 
 
 

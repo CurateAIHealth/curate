@@ -206,6 +206,40 @@ export const toProperCaseLive = (value?: string) => {
   return endsWithSpace ? formatted + " " : formatted;
 };
 
+export const extractAreasFromAddress = (address: string): string[] => {
+  if (!address) return [];
+
+  // Common words we DON'T want as areas
+  const ignoreWords = [
+    "flat", "floor", "road", "rd", "street", "st",
+    "lane", "ln", "colony", "colny", "residency",
+    "tower", "villa", "apartment", "apt",
+    "near", "opp", "beside",
+    "hyderabad", "secunderabad", "telangana",
+  ];
+
+  const parts = address
+    .toLowerCase()
+    .split(",")
+    .map(p => p.trim())
+    .filter(Boolean);
+
+  const areas = parts.filter(part => {
+    // remove pincodes & pure numbers
+    if (/\d{3,}/.test(part)) return false;
+
+    // ignore if contains any unwanted keyword
+    return !ignoreWords.some(word => part.includes(word));
+  });
+
+  // Capitalize properly
+  return [...new Set(areas)].map(area =>
+    area
+      .split(" ")
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")
+  );
+};
 
 export const GenerateBillPDF = async (invoiceData: any) => {
   try {

@@ -9,13 +9,15 @@ import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Trash } from "lucide-react";
 import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteTimeSheet, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
-import { UpdateSubHeading } from "@/Redux/action";
+import { UpdateClient, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
 import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
 import { filterColors, months, Placements_Filters, years } from "@/Lib/Content";
 import ReplacementsTable from "../ReplacementsTable/page";
 import { toProperCaseLive } from "@/Lib/Actions";
+import { useRouter } from "next/navigation";
+
 
 
 type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday";
@@ -75,7 +77,7 @@ const [enableStatus,setenableStatus]=useState(false)
 const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
   
   const dispatch = useDispatch();
-
+const router=useRouter()
 useEffect(() => {
   let mounted = true;
 
@@ -112,6 +114,7 @@ useEffect(() => {
       ]);
 
       if (!mounted) return;
+       
 
       cachedUsersFullInfo = [
         ...new Map(
@@ -126,7 +129,7 @@ useEffect(() => {
             .map((item) => [item.ClientId, item])
         ).values(),
       ];
-
+console.log('Cjeck for Count-----',cachedDeploymentInfo?.length)
       cachedReplacementInfo = [
         ...new Map(
           [...(cachedReplacementInfo ?? []), ...(ReplacementInfo ?? [])]
@@ -160,9 +163,16 @@ useEffect(() => {
   };
 }, [ActionStatusMessage, dispatch]);
 
+  const ShowDompleteInformation = async (userId: any, ClientName: any) => {
+    if (userId) {
+      dispatch(UpdateClient(ClientName));
+      dispatch(UpdateUserInformation(userId));
+      dispatch(UpdateUserType("patient"));
+      router.push("/UserInformation");
+    }
+  };
 
-console.log("Check For Service Location-----",ClientsInformation)
-
+console.log('Check-----',ClientsInformation)
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
  const normalizedAttendance =
   Array.isArray(each.Attendance) && each.Attendance.length > 0
@@ -416,12 +426,15 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((each: any) => {
 
   return matchesSearch && matchesMonth && matchesYear;
 });
-
+console.log("Check for ----",FinelTimeSheet)
 const today:any = new Date().getDate();
 const isInvoiceDay = [ 28, 29, 30, 31].includes(today);
 console.log("Test Today------",isInvoiceDay
 
 )
+
+
+
 const UpdateReplacement=async(Available_HCP:any,Exsting_HCP:any)=>{
   SetActionStatusMessage("Please Wait....")
 
@@ -491,6 +504,7 @@ const OmServiceView = () => {
       "
     />
   </div>
+
   <div className="w-full sm:w-[130px]">
     {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
       Month
@@ -518,6 +532,8 @@ const OmServiceView = () => {
       ))}
     </select>
   </div>
+  
+    
 <div >
     {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
       Year
@@ -541,8 +557,33 @@ const OmServiceView = () => {
       ))}
     </select>
   </div>
+    <button
+      onClick={() => setenableStatus(!enableStatus)}
+      className="
+        px-5 py-2.5 text-xs font-semibold
+        bg-gradient-to-r from-teal-600 to-emerald-500
+        hover:from-teal-700 hover:to-emerald-600
+        text-white rounded-xl shadow-md
+        transition whitespace-nowrap cursor-pointer
+        w-full sm:w-auto
+      "
+    >
+      {enableStatus ? "Disable Generate Bill" : "Enable Generate Bill"}
+    </button>
   </div>
-  
+  {showPaymentModal && billingRecord && (
+  <PaymentModal
+    record={billingRecord}
+    onClose={() => {
+      setShowPaymentModal(false);
+      setBillingRecord(null);
+    }}
+    onConfirm={(billingResult: any) => {
+      console.log("Saving billing:", billingResult);
+    }}
+  />
+)}
+
   {ClientsInformation.length === 0 && (
     <div className="flex flex-col items-center justify-center gap-6 h-[60vh] mt-10 rounded-3xl bg-white/60 backdrop-blur-lg border border-gray-200 shadow-2xl p-12">
       <p className="text-3xl font-extrabold text-gray-900 text-center">
@@ -585,25 +626,26 @@ const OmServiceView = () => {
       {[...FilterFinelTimeSheet].reverse().map((c, i) => (
         <tr key={i} className="hover:bg-teal-50/30 transition-all">
           
-          <td className="px-3 py-3 font-semibold text-sm text-gray-900 break-words">
-            {c.name}
+          <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
+            {toProperCaseLive(c.name)}
           </td>
 
-          <td className="px-3 py-3 font-semibold text-sm text-gray-900 break-words">
-            {c.PatientName}
+          <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
+            {toProperCaseLive(c.PatientName)}
           </td>
 
-          <td className="px-3 py-3 text-gray-700 break-words">
+          <td className="px-3 py-3 text-gray-700  text-xs break-words">
             {c.contact}
           </td>
 
-          <td className="px-3 py-3 text-gray-600 break-words">
+          <td className="px-3 py-3 text-gray-600 text-xs break-words">
             {c.location}
           </td>
 
-         <td className="px-3 py-3 w-auto ">
-  <span className="inline-flex items-center justify-center px-1 py-1 text-[11px] rounded-md font-medium border bg-white gap-1">
-    🩺 {c.HCA_Name}
+         <td className="px-3 py-3 w-auto " onClick={()=>ShowDompleteInformation(c.HCA_Id,c.HCA_Name)}>
+          
+  <span className="inline-flex items-center justify-center px-1 py-1 text-[11px] hover:underline hover:text-blue-800 rounded-md font-medium border bg-white cursor-pointer gap-1">
+    🩺 {toProperCaseLive(c.HCA_Name)}
   </span>
 </td>
 
@@ -627,7 +669,7 @@ const OmServiceView = () => {
     transition-all duration-300
     hover:shadow-[0_0_12px_2px_rgba(20,184,166,0.6)]
     hover:bg-teal-50
-    active:scale-95
+    active:scale-95 
     cursor-pointer
   "
   onClick={()=>setShowReassignmentPopUp(!ShowReassignmentPopUp)}
@@ -824,7 +866,7 @@ const OmServiceView = () => {
           {(isInvoiceDay || enableStatus) && (
             <td className="px-3 py-3 text-center break-words">
               <button
-                className="px-4 py-2 text-xs font-medium cursor-pointer bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+                className="px-1 py-2 text-xs font-medium cursor-pointer bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
                 onClick={() => {
                   setBillingRecord(c);
                   setShowPaymentModal(true);
@@ -1291,5 +1333,13 @@ const GetFilterCount=(A:any)=>{
     {CurrentUserInterfacevIew()}
     </div>;
 };
+
+function Th({ children, className = "" }: any) {
+  return <th className={`px-3 py-2 whitespace-nowrap ${className}`}>{children}</th>;
+}
+
+function Td({ children, className = "" }: any) {
+  return <td className={`px-3 py-2 whitespace-nowrap ${className}`}>{children}</td>;
+}
 
 export default ClientTable;
