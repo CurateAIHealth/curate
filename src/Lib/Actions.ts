@@ -191,6 +191,20 @@ export const GeneratePDF = async (invoiceData:any) => {
     console.log("PDF Error ----", err);
   }
 };
+export const toProperCaseLive = (value?: string) => {
+  const endsWithSpace = value?.endsWith(" ");
+
+  const formatted = value
+    ?.toLowerCase()
+    ?.replace(/\s+/g, " ")
+    ?.split(" ")
+    ?.map(word =>
+      word ? word.charAt(0).toUpperCase() + word.slice(1) : ""
+    )
+    ?.join(" ") ?? "";
+
+  return endsWithSpace ? formatted + " " : formatted;
+};
 
 
 export const GenerateBillPDF = async (invoiceData: any) => {
