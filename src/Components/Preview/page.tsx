@@ -185,7 +185,7 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
           DeploymentList.length + 1
         }`;
 
-        await InsertDeployment(
+        const PostDeployment=await InsertDeployment(
           DateofToday,
           LastDateOfMonth,
           "Active",
@@ -215,9 +215,16 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
 
         await PostInvoice(UpdatedData, Advance, InvoiceNo);
         await UpdatePdrStatus(data.userId);
+        if(PostDeployment.success){
+setUpdatingStatus("PDR Updated Successfully");
+        }else{
+           setUpdatingStatus("Something went wrong!");
+           return
+        }
+        
       }
 
-      setUpdatingStatus("Updated Successfully");
+      setUpdatingStatus("PDR Updated Successfully");
     } catch {
       setUpdatingStatus("Something went wrong!");
     }

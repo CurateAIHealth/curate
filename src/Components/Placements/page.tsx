@@ -15,6 +15,7 @@ import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
 import { filterColors, months, Placements_Filters, years } from "@/Lib/Content";
 import ReplacementsTable from "../ReplacementsTable/page";
+import { toProperCaseLive } from "@/Lib/Actions";
 
 
 type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday";
@@ -160,7 +161,7 @@ useEffect(() => {
 }, [ActionStatusMessage, dispatch]);
 
 
-
+console.log("Check For Service Location-----",ClientsInformation)
 
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
  const normalizedAttendance =
@@ -584,11 +585,11 @@ const OmServiceView = () => {
       {[...FilterFinelTimeSheet].reverse().map((c, i) => (
         <tr key={i} className="hover:bg-teal-50/30 transition-all">
           
-          <td className="px-3 py-3 font-semibold text-gray-900 break-words">
+          <td className="px-3 py-3 font-semibold text-sm text-gray-900 break-words">
             {c.name}
           </td>
 
-          <td className="px-3 py-3 font-semibold text-gray-900 break-words">
+          <td className="px-3 py-3 font-semibold text-sm text-gray-900 break-words">
             {c.PatientName}
           </td>
 
@@ -600,7 +601,7 @@ const OmServiceView = () => {
             {c.location}
           </td>
 
-         <td className="px-3 py-3 w-auto text-center">
+         <td className="px-3 py-3 w-auto ">
   <span className="inline-flex items-center justify-center px-1 py-1 text-[11px] rounded-md font-medium border bg-white gap-1">
     🩺 {c.HCA_Name}
   </span>
