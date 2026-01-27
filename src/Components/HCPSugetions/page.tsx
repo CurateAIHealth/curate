@@ -169,7 +169,7 @@ const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
       "900", CurrentMonth, ["P"], TimeStamp, Invoise, Type
     );
 
-    
+ 
 
     if (PostTimeSheet.success === true) {
 
@@ -642,7 +642,7 @@ const ShowAdditionHCPs = hcps.filter((each: HcpType) => {
 });
 
 
-
+   const AssignedHcps = hcps.filter((hcp: any) => !Array.isArray(hcp?.Status) || !hcp.Status.includes("Assigned") );
 
 
 const activeClient = clients[0];
@@ -883,14 +883,23 @@ Search For HCP Criteria
 
 
 
-                <div className=" flex flex-wrap gap-3 items-center">
-                  <div className="px-3 py-1.5 bg-green-100 border border-green-200 rounded-full shadow-sm text-sm text-gray-800 flex items-center gap-1">
-                    Total: <span className="font-semibold">{suitableHcps.length}</span>
-                  </div>
-                  <div className="px-3 py-1.5 bg-blue-100 border border-blue-200 rounded-full shadow-sm text-sm text-gray-800 flex items-center gap-1">
-                    Informed: <span className="font-semibold">{ExsitingInformedUsers.length}</span>
-                  </div>
-                </div>
+               <div className="flex flex-wrap items-center gap-3">
+  <div className="flex items-center gap-2 rounded-full bg-gray-100 px-2 py-2 text-sm text-gray-700 hover:bg-gray-200 transition">
+    📋 Total <span className="font-semibold">{hcps.length}</span>
+  </div>
+
+  <div className="flex items-center gap-2 rounded-full bg-green-100 px-2 py-2 text-sm text-green-700 hover:bg-green-200 transition">
+    ✓ Assigned <span className="font-semibold">{AssignedHcps.length}</span>
+  </div>
+
+  <div className="flex items-center gap-2 rounded-full bg-blue-100 px-2 py-2 text-sm text-blue-700 hover:bg-blue-200 transition">
+    🟢 Available{" "}
+    <span className="font-semibold">
+      {hcps.length - AssignedHcps.length}
+    </span>
+  </div>
+</div>
+
               </div>
 
               <div className="flex flex-col md:flex-row w-full justify-between items-center md:items-start gap-4 md:gap-6 px-2 sm:px-4">
