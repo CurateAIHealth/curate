@@ -1,30 +1,42 @@
 "use client";
 import { filterColors, Placements_Filters } from "@/Lib/Content";
-import { GetReplacementInfo } from "@/Lib/user.action";
+import { GetReasonsInfoInfo, GetReplacementInfo } from "@/Lib/user.action";
 import React, { useEffect, useMemo, useState } from "react";
 
 let ReplacementCach : any[] | null = null;
+let ReplacementReasonsCache: any[] | null = null;
 const ReplacementTable = ({ StatusMessage }: any) => {
   const [rawData, setRawData] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [HeadingSearch,setHeadingSearch]=useState('')
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
-
+const [ReplacementReasons,setReplacementReasons]=useState<any[]>([]);
+const [showPopup, setShowPopup] = useState(false);
+const [popupInfo, setPopupInfo] = useState("");
 
   useEffect(() => {
     const Fetch = async () => {
 
-      if(ReplacementCach){
+      if(ReplacementCach&&ReplacementReasonsCache){
         setRawData(ReplacementCach);
+        setReplacementReasons(ReplacementReasonsCache)
         return
       }
-      const PlacementInformation: any = await GetReplacementInfo();
+      const [PlacementInformation,ReplacementReasons]=await Promise.all([
+        GetReplacementInfo(),
+        GetReasonsInfoInfo()
+
+      ])
+      // const PlacementInformation: any = await GetReplacementInfo();
+      // const ReplacementReasons:any= await GetReasonsInfoInfo()
       if (!PlacementInformation || PlacementInformation.length === 0) return;
 
    
 
       const formatted = PlacementInformation.map((record: any) => ({
+        CurrentHCA_id:record.HCAId||"",
+        AssignedHCA_id:record.NewHCAId||"",
         Month: record.Month || "Unknown",
         invoice: record.invoice || "",
         startDate: record.StartDate || "",
@@ -53,8 +65,11 @@ const ReplacementTable = ({ StatusMessage }: any) => {
 
         days: record.Attendance || [],
       }));
-ReplacementCach=formatted
+      console.log('Check for Ids-------',formatted)
+ReplacementCach=formatted?? [],
+ReplacementReasonsCache=ReplacementReasons?? []
       setRawData(formatted);
+      setReplacementReasons(ReplacementReasons?? [])
     };
 
     Fetch();
@@ -77,7 +92,28 @@ ReplacementCach=formatted
       return matchesSearch && matchesMonth && matchesYear;
     });
   }, [rawData, search, month, year]);
+const GetReplacementMessage = (A: any, B: any) => {
+  const results =
+    ReplacementReasons?.filter(
+      (each: any) => each?.ExistingHCP === A && each?.AvailableHCP === B
+    ) ?? [];
 
+  const firstReason = results[0]?.Reason ?? "";
+  const secondReason = results[0]?.EnterdReason ?? "";
+
+if (firstReason && secondReason) {
+  return `${firstReason} And ${secondReason}`.trim();
+}
+
+return `${firstReason}${secondReason}`.trim();
+
+
+};
+
+
+
+console.log("Check For Message----",GetReplacementMessage("a289361b-3601-4ba6-ad96-191726ad200d","1109de7f-ae0b-41af-a49c-b11f44cae47b")
+)
   return (
     <div className="space-y-4">
 
@@ -133,7 +169,7 @@ ReplacementCach=formatted
               {/* <th className="px-3 py-2 text-left">Status</th> */}
               <th className="px-3 py-2 text-left">Start</th>
               <th className="px-3 py-2 text-left">End</th>
-              <th className="px-3 py-2 text-left">Month</th>
+              <th className="px-3 py-2 text-left">Reason</th>
               <th className="px-3 py-2 text-right">Client Pay</th>
               <th className="px-3 py-2 text-right">HCP Pay</th>
             </tr>
@@ -166,7 +202,32 @@ ReplacementCach=formatted
                   </td> */}
                   <td className="px-3 py-2">{item.startDate}</td>
                   <td className="px-3 py-2">{item.endDate}</td>
-                  <td className="px-3 py-2">{item.Month}</td>
+       <td className="px-3 py-2">
+  <button
+    onClick={() => {
+      setPopupInfo(GetReplacementMessage(item.CurrentHCA_id,item.AssignedHCA_id));
+      setShowPopup(true);
+    }}
+    className="
+      px-3 py-1.5
+      text-sm font-medium
+      text-blue-600
+      border border-blue-600/60
+      rounded-md
+      cursor-pointer
+      bg-transparent
+      hover:bg-blue-600/10
+      hover:border-blue-600
+      transition
+      duration-200
+    "
+  >
+    Show
+  </button>
+</td>
+
+
+
                   <td className="px-3 py-2 text-right">₹{item.cTotal}</td>
                   <td className="px-3 py-2 text-right">₹{item.hcpTotal}</td>
                 </tr>
@@ -174,6 +235,53 @@ ReplacementCach=formatted
             )}
           </tbody>
         </table>
+{showPopup && (
+  <div
+    className="
+      fixed top-20 right-6 z-50
+      w-[380px] max-w-[92%]
+      animate-[floatIn_0.25s_ease-out]
+    "
+  >
+    <div
+      className="
+        relative rounded-xl bg-white
+        shadow-xl border border-gray-200
+        overflow-hidden
+      "
+    >
+      {/* Accent */}
+      <div className="h-1 bg-gradient-to-r from-gray-800 to-gray-500" />
+
+      {/* Content */}
+      <div className="px-5 py-4">
+        <h4 className="text-sm font-semibold text-gray-900 mb-1">
+          Information
+        </h4>
+
+        <p className="text-sm text-gray-600 leading-relaxed">
+          {popupInfo}
+        </p>
+      </div>
+
+      {/* Actions */}
+      <div className="px-5 py-3 flex justify-end bg-gray-50">
+        <button
+          className="
+            text-sm font-medium text-gray-600
+            hover:text-gray-900
+            transition
+          "
+          onClick={() => setShowPopup(false)}
+        >
+          Dismiss
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
       </div>
     </div>
   );
