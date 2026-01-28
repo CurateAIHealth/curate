@@ -7,7 +7,7 @@ let cachedTermination:any[]
 
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Trash } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteTimeSheet, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteTimeSheet, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -52,10 +52,12 @@ const ClientTable = () => {
     updatedAt: "",
     status: ""
   })
+  const [CareTakerName,SetCareTakerName]=useState('')
   const [HCPName,setHCPName]=useState("")
   const [ShowReassignmentPopUp,setShowReassignmentPopUp]=useState(false)
  const [updatedAttendance, setUpdatedAttendance] = useState<AttendanceState>({});
  const [SaveButton,setSaveButton]=useState(false)
+ const [TerminationInfo,SetTerminationInfo]=useState<any>()
 const [SearchMonth, setSearchMonth] = useState("");
 const [SearchYear, setSearchYear] = useState("");
 const [enableStatus,setenableStatus]=useState(false)
@@ -167,7 +169,7 @@ console.log('Cjeck for Count-----',cachedDeploymentInfo?.length)
     }
   };
 
-console.log('Check-----',ClientsInformation)
+
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
  const normalizedAttendance =
   Array.isArray(each.Attendance) && each.Attendance.length > 0
@@ -234,7 +236,7 @@ console.log('Check-----',ClientsInformation)
     provider:each.provider,
     payTerms:each.payTerms
   }));
-console.log("Check For Availavle",users)
+
  const handleDelete = () => {
     if (selectedReason === "Other") {
       confirmDelete(otherReason.trim());
@@ -355,29 +357,77 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
     setClientsInformation([...ClientsInformation]);
   };
 
-  const handleDeleteClick = (clientId: any) => {
-
+  const handleDeleteClick = (Info: any,Name:any) => {
+    SetTerminationInfo(Info)
+SetCareTakerName(Name)
     setShowDeletePopup(true);
   };
 
-  const confirmDelete = async(selectedReason: string) => {
-    if (deleteTargetId) {
-        SetActionStatusMessage("Please Wait Deleting Placement...")
+const confirmDelete = async (selectedReason: string) => {
+  if (!TerminationInfo) {
+    SetActionStatusMessage("Unable to delete. Required information is missing.");
+    return;
+  }
 
-           const UpdateHcaStatus= await UpdateHCAnstatus(deleteTargetId?.HCA_Id,"Available")
-         const UpdateStatus=await UpdateUserContactVerificationstatus(deleteTargetId.Client_Id,"Converted")
-           const DeleteTimeSheetData=await DeleteTimeSheet(deleteTargetId.Client_Id)
-           const PostTimeSheet:any = await InserTerminationData(deleteTargetId.Client_Id, deleteTargetId?.HCA_Id, deleteTargetId.name, deleteTargetId.email, deleteTargetId.contact,deleteTargetId.location, deleteTargetId.role, deleteTargetId.HCAContact, deleteTargetId.TimeSheet)
-                
-                if(DeleteTimeSheetData.success===true){
-          SetActionStatusMessage("Seccessfully Deleted Placement")
+  try {
+    SetActionStatusMessage("Please wait, deleting placement...");
 
-                }
-           
+    // Update HCA status
+    await UpdateHCAnstatus(
+      TerminationInfo.HCA_Id,
+      UpdatedCareTakerStatus
+    );
+
+    // Update client verification status
+    await UpdateUserContactVerificationstatus(
+      TerminationInfo.Client_Id,
+      "Lost"
+    );
+
+    // Delete timesheet
+    const deleteTimeSheetResponse = await DeleteTimeSheet(
+      TerminationInfo.Client_Id
+    );
+
+    // Post termination reason
+    await PostReason(
+      TerminationInfo.HCA_Id,
+      TerminationInfo.Client_Id,
+      selectedReason,
+      otherReason
+    );
+
+    // Insert termination data
+    await InserTerminationData(
+      TerminationInfo.Client_Id,
+      TerminationInfo.HCA_Id,
+      TerminationInfo.name,
+      TerminationInfo.email,
+      TerminationInfo.contact,
+      TerminationInfo.location,
+      TerminationInfo.role,
+      TerminationInfo.HCAContact,
+      TerminationInfo.TimeSheet
+    );
+
+    if (deleteTimeSheetResponse?.success) {
+      SetActionStatusMessage("Placement deleted successfully.");
+    } else {
+      SetActionStatusMessage(
+        "Placement deleted, but some records could not be removed completely."
+      );
     }
+  } catch (error) {
+    console.error("Error while deleting placement:", error);
+    SetActionStatusMessage(
+      "Something went wrong while deleting the placement. Please try again."
+    );
+  } finally {
     setShowDeletePopup(false);
     setDeleteTargetId(null);
-  };
+  }
+};
+
 
 
 const FilterFinelTimeSheet = FinelTimeSheet.filter((each: any) => {
@@ -884,7 +934,7 @@ const OmServiceView = () => {
           <td className="px-3 py-3 text-center break-words">
             <button
               className="px-3 py-2 text-xs font-medium cursor-pointer rounded-lg hover:bg-gray-100"
-              onClick={() => handleDeleteClick(c)}
+              onClick={() => handleDeleteClick(c,c.HCA_Name)}
             >
               <Trash />
             </button>
@@ -1034,7 +1084,7 @@ const OmServiceView = () => {
     value={UpdatedCareTakerStatus||""}
     onChange={(e:any)=>setUpdatedCareTakerStatus(e.target.value)}
   >
- <option >Manage Existing Caregiver Status</option>
+<option >Manage {toProperCaseLive(CareTakerName)} Status</option>
                             <option value="Active">🟢 Active</option>
                             <option value="Available">🟢 Available for Work</option>
                             <option value="Sick">🟡 Sick</option>
