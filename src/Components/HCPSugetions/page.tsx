@@ -992,7 +992,9 @@ const isAssigned =
                               })}
                             </div>
 
-                        {isAssigned?<p className="group mt-1 inline-flex cursor-not-allowed items-center gap-1.5 rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-2.5 py-0.5 text-[10px] font-semibold text-white shadow-md transition">
+                        {isAssigned?
+                        <div className='flex gap-2'>
+                        <p className="group mt-1 inline-flex cursor-not-allowed items-center gap-1.5 rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-2.5 py-0.5 text-[10px] font-semibold text-white shadow-md transition">
   Assigned
 
  
@@ -1000,6 +1002,18 @@ const isAssigned =
     🚫
   </span>
 </p>
+<button   className="bg-blue-600 group mt-1 inline-flex  items-center gap-1.5 rounded-full cursor-pointer px-2.5 py-0.5 text-[10px] font-semibold text-white shadow-md transition"
+onClick={async()=>{
+  
+const UpdateResults=await UpdateHCAnstatus(hcp.UserId,"Available for Work")
+
+  alert(UpdateResults.message)
+
+
+
+}}
+>Update</button>
+</div>
 :
 
 

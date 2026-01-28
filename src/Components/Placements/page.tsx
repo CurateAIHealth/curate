@@ -45,6 +45,7 @@ const ClientTable = () => {
   const [ReplacementInformation,setReplacementInformation]=useState<Replace[]>([])
   const [terminationInfo,SetterminationInfo]=useState<Termination[]>([])
   const [isChecking, setIsChecking] = useState(true);
+  const [selectedHCP,setselectedHCP]=useState<any>()
   const [UpdatedCareTakerStatus,setUpdatedCareTakerStatus]=useState("")
   const [users, setUsers] = useState<User[]>([]);
   const [Fineldate, setFineldate] = useState({
@@ -372,24 +373,23 @@ const confirmDelete = async (selectedReason: string) => {
   try {
     SetActionStatusMessage("Please wait, deleting placement...");
 
-    // Update HCA status
     await UpdateHCAnstatus(
       TerminationInfo.HCA_Id,
       UpdatedCareTakerStatus
     );
 
-    // Update client verification status
+ 
     await UpdateUserContactVerificationstatus(
       TerminationInfo.Client_Id,
       "Lost"
     );
 
-    // Delete timesheet
+
     const deleteTimeSheetResponse = await DeleteTimeSheet(
       TerminationInfo.Client_Id
     );
 
-    // Post termination reason
+  
     await PostReason(
       TerminationInfo.HCA_Id,
       TerminationInfo.Client_Id,
@@ -397,7 +397,7 @@ const confirmDelete = async (selectedReason: string) => {
       otherReason
     );
 
-    // Insert termination data
+ 
     await InserTerminationData(
       TerminationInfo.Client_Id,
       TerminationInfo.HCA_Id,
@@ -480,30 +480,72 @@ console.log("Test Today------",isInvoiceDay
 
 
 
-const UpdateReplacement=async(Available_HCP:any,Exsting_HCP:any)=>{
-  SetActionStatusMessage("Please Wait....")
+const UpdateReplacement = async (
+  Available_HCP: any,
+  Exsting_HCP: any
+) => {
+  try {
+    SetActionStatusMessage("Please wait...");
 
-try{
-    const localValue = localStorage.getItem('UserId');
-  const Sign_in_UserInfo:any = await GetUserInformation(localValue)
+    // 🔐 Basic guards
+    if (!Available_HCP?.userId || !Exsting_HCP?.HCA_Id) {
+      SetActionStatusMessage("Invalid HCP information.");
+      return;
+    }
+
+    const localValue = localStorage.getItem("UserId");
+    if (!localValue) {
+      SetActionStatusMessage("User session expired. Please login again.");
+      return;
+    }
+
+    // 👤 Signed-in user info
+    const Sign_in_UserInfo: any = await GetUserInformation(localValue);
+    if (!Sign_in_UserInfo) {
+      SetActionStatusMessage("Unable to fetch user details.");
+      return;
+    }
+
+    // 📝 Reason update
+    const postReasonRes = await UpdateReason(
+      Available_HCP.userId,
+      Exsting_HCP.HCA_Id,
+      selectedReason,
+      otherReason
+    );
+
+    if (!postReasonRes?.success) {
+      SetActionStatusMessage("Failed to update replacement reason.");
+      return;
+    }
+
  
-   const PostReason=await UpdateReason(Available_HCP,Exsting_HCP,selectedReason,otherReason)
-   const TimeStampData=   `${Sign_in_UserInfo.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`
-const UpdateReplacmentInfo=await UpdateReplacmentData(Available_HCP,Exsting_HCP,TimeStampData)
-console.log("Find Mistake--",UpdateReplacmentInfo)
-if(UpdateReplacmentInfo.success=== true){
-  const UpdateHcaStatus = await UpdateHCAnstatus(Available_HCP?.userId, "Assigned")
-  const reove=await DeleteHCAStatus(Exsting_HCP.HCA_Id)
-const UpdateAssignStatus= await UpdateHCAnstatusInFullInformation(Available_HCP?.userId)
-const RemoveStatus= await DeleteHCAStatusInFullInformation(Exsting_HCP.HCA_Id)
-SetActionStatusMessage("Replacement Updated Sucessfull")
+    const TimeStampData = `${Sign_in_UserInfo.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`;
 
-}
+    const UpdateReplacmentInfo = await UpdateReplacmentData(
+      Available_HCP,
+      Exsting_HCP,
+      TimeStampData
+    );
 
-}catch(err:any){
+    if (!UpdateReplacmentInfo?.success) {
+      SetActionStatusMessage("Replacement update failed.");
+      return;
+    }
 
-}
-}
+  
+    await Promise.all([
+      UpdateHCAnstatus(Exsting_HCP.HCA_Id, UpdatedCareTakerStatus),
+      UpdateHCAnstatusInFullInformation(Available_HCP.userId),
+    ]);
+
+    SetActionStatusMessage("Replacement updated successfully.");
+  } catch (err: any) {
+    console.error("UpdateReplacement Error:", err);
+    SetActionStatusMessage("Something went wrong. Please try again.");
+  }
+};
+
 
 
 
@@ -809,7 +851,7 @@ const OmServiceView = () => {
                 const selected = HCA_List.find(
                   (hca) => hca.FirstName === e.target.value
                 );
-                selected && UpdateReplacement(selected, c);
+                setselectedHCP(selected)
               }}
             >
               <option>Assign New HCA</option>
@@ -858,8 +900,8 @@ const OmServiceView = () => {
           Cancel
         </button>
 
-    {/* <button
-  onClick={handleDelete}
+    <button
+  onClick={()=>UpdateReplacement(selectedHCP, c)}
 
   className={`
     inline-flex items-center justify-center
@@ -889,7 +931,7 @@ const OmServiceView = () => {
   `}
 >
   Confirm Replacement
-</button> */}
+</button>
 
       </div>
     </div>

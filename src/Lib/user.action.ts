@@ -3824,29 +3824,56 @@ export const UpdateUserContactVerificationstatus = async (UserId: string,Contact
     return err
   }
 }
-export const UpdateHCAnstatus = async (UserId: string,AvailableStatus:String) => {
+
+export const UpdateHCAnstatus = async (
+  UserId: string,
+  AvailableStatus: string
+) => {
   try {
-    const Cluster = await clientPromise
-    const Db = Cluster.db("CurateInformation")
-    const Collection = Db.collection("Registration")
-    const UpdateVerificationStatus = await Collection.updateOne(
-      { userId: UserId }, {
-      $set: {
-        Status:AvailableStatus,
-        CurrentStatus:AvailableStatus
-      },
-    
-    }
-    )
-    if (UpdateVerificationStatus.modifiedCount === 0) {
-      return { success: false, message: 'Internal Error Try Again!' };
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+
+    const RegistrationCollection = Db.collection("Registration");
+    const CompliteCollection = Db.collection("CompliteRegistrationInformation");
+
+
+    const updateRegistration = await RegistrationCollection.updateOne(
+      { userId: UserId },
+      {
+        $set: {
+          Status: AvailableStatus,
+          CurrentStatus: AvailableStatus,
+        },
+      }
+    );
+
+  
+    const removeStatusFromComplite = await CompliteCollection.updateOne(
+      { "HCAComplitInformation.UserId": UserId },
+      {
+        $unset: {
+           "HCAComplitInformation.Status": "",
+        },
+      }
+    );
+
+    if (
+      updateRegistration.modifiedCount === 0 &&
+      removeStatusFromComplite.modifiedCount === 0
+    ) {
+      return { success: false, message: "No records were updated." };
     }
 
-    return { success: true, message: 'Verification Status updated successfully.' };
+    return {
+      success: true,
+      message: "Status updated and removed successfully.",
+    };
   } catch (err: any) {
-    return err
+    console.error("UpdateHCAnstatus Error:", err);
+    return { success: false, message: "Internal server error." };
   }
-}
+};
+
 
 export const DeleteHCAStatus = async (UserId: string) => {
   try {
