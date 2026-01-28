@@ -431,7 +431,24 @@ export const Timesheet_Filters = ["Provider Staff", "Co-provider", "Curate"];
 export const ReferralPay_Filters = ["Lead Referral", "Institute Referral", "Staff Referral"];
 
 export const Payments_Filters = ["Invoice Pending", "Collections", "Expenses"];
-
+export const popularBanksInIndia = [
+  "State Bank of India (SBI)",
+  "HDFC Bank",
+  "ICICI Bank",
+  "Axis Bank",
+  "Kotak Mahindra Bank",
+  "Punjab National Bank (PNB)",
+  "Bank of Baroda",
+  "Union Bank of India",
+  "Canara Bank",
+  "IndusInd Bank",
+  "Bank of India",
+  "Indian Bank",
+  "UCO Bank",
+  "Central Bank of India",
+  "IDBI Bank",
+  "Other"
+];
 export const filterColors: Record<string, string> = {
 
   "Client Enquiry": "bg-blue-200 hover:bg-blue-400 text-gray-800",

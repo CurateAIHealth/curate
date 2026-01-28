@@ -1,7 +1,7 @@
 'use client';
 
 import HCAMobileView from '@/Components/HCAMobileView/page';
-import { EducationLevels, Home_Assistance_Needs, IndianCapitalCities, IndianLanguages, IndianStates, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, PROFESSIONAL_SKILL_OPTIONS, REFERRAL_SOURCE_TYPES, Relations } from '@/Lib/Content';
+import { EducationLevels, Home_Assistance_Needs, IndianCapitalCities, IndianLanguages, IndianStates, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, popularBanksInIndia, PROFESSIONAL_SKILL_OPTIONS, REFERRAL_SOURCE_TYPES, Relations } from '@/Lib/Content';
 import { v4 as uuidv4 } from 'uuid';
 import { GetRegidterdUsers, GetUserInformation, HCARegistration, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
 import { Update_Main_Filter_Status, UpdateDocmentSkipReason, UpdateRefresh, UpdateUserType } from '@/Redux/action';
@@ -29,6 +29,7 @@ export default function DoctorProfileForm() {
   const [isOtherPreviousHealthProblems, setIsOtherPreviousHealthProblems] = useState(false);
   const [OtherDeformity,setOtherDeformity]=useState(false)
   const [OtherPermanentCity,setOtherPermanentCity]=useState(false)
+   const [OtherBankName,setOtherBankName]=useState(false)
   const [OtherCurrentCity,setOtherCurrentCity]=useState(false)
   const [isOtherCurrentHealthProblems,setisOtherCurrentHealthProblems]=useState(false)
   const [isOtherReferralSourceType, setIsOtherReferralSourceType] = useState(false);
@@ -129,7 +130,7 @@ const [ImportedVendors, setImportedVendors] = useState<any>([])
     serviceHours24hrs: boolean;
     preferredService: string;
     PaymentforStaff: string;
-    paymentBankName: string;
+    BankAccountHolderName: string;
     paymentBankAccountNumber: string;
     ifscCode: string;
     bankBranchAddress: string;
@@ -159,6 +160,7 @@ const [ImportedVendors, setImportedVendors] = useState<any>([])
     PermanentState:any;
     NotedDtaeForHike:any;
     Remarks:any;
+    BankName:any
    
     // website?: string; // optional if commented
   }
@@ -263,7 +265,8 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
     serviceHours24hrs: false,
     preferredService: '',
     PaymentforStaff: '',
-    paymentBankName: '',
+    BankAccountHolderName: '',
+    BankName:'',
     paymentBankAccountNumber: '',
     ifscCode: '',
     bankBranchAddress: '',
@@ -921,7 +924,7 @@ if (CurrentUserType === null) {
 
 
 
-console.log("check Update----",form.higherEducation)
+console.log("check Update----",form.BankName)
 
   const FilterdImportedVendorName = ImportedVendors.map((each: any) => each.VendorName)
 
@@ -3759,8 +3762,8 @@ form.HusbendContact!=="Not Available"&&
 
   <input
     type="text"
-    name="paymentBankName"
-    value={form?.paymentBankName ?? ""}
+    name="BankAccountHolderName"
+    value={form?.BankAccountHolderName ?? ""}
     onChange={handleChange}
     placeholder="Enter account holder name"
     className="input-field w-full border border-gray-300 p-3 h-10 rounded-lg
@@ -3783,6 +3786,43 @@ form.HusbendContact!=="Not Available"&&
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
               />
+             <select
+  name="BankName"
+   value={OtherBankName ? "Other" : form.BankName || ""}
+   onChange={(e) => {
+                const value = e.target.value;
+                setForm({ ...form, BankName: value === "Other" ? '' : value });
+                setOtherBankName(value === 'Other')
+
+
+              }}
+
+
+                 
+  className="input-field w-full border border-gray-300 p-2 h-10 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+>
+  <option value="" disabled>
+    Select Bank 
+  </option>
+
+  {popularBanksInIndia.map((Bank) => (
+    <option key={Bank} value={Bank}>
+      {Bank}
+    </option>
+  ))}
+</select>
+
+{OtherBankName&&
+ <input
+                type="text"
+                name="BankName"
+                value={form.BankName ?? ''}
+                onChange={handleChange}
+                placeholder="Specify Your Bank"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                
+              />
+}
               <input
                 type="text"
                 name="ifscCode"

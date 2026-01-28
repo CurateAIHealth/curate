@@ -1366,7 +1366,8 @@ export const PostHCAFullRegistration = async (Info: any) => {
    
       "PaymentforStaff": Info.PaymentforStaff,
       "NotedDtaeForHike":Info.NotedDtaeForHike,
-      "Payment Bank Name":  encrypt(Info.paymentBankName),
+      "BankAccountHolderName":  encrypt(Info.BankAccountHolderName),
+      "BankName":Info.BankName,
       "Payment Bank Account Number": encrypt(Info.paymentBankAccountNumber),
       "IFSC Code": encrypt( Info.ifscCode),
       "Bank Branch Address": Info.bankBranchAddress,
@@ -2744,7 +2745,7 @@ export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: an
 
   
   "Payment Service": Info.paymentService || null,
-  "Payment Bank Name": Info.paymentBankName ? encrypt(Info.paymentBankName) : null,
+  "BankAccountHolderName": Info.BankAccountHolderName ? encrypt(Info.BankAccountHolderName) : null,
   "Payment Bank Account Number": Info.paymentBankAccountNumber ? encrypt(Info.paymentBankAccountNumber) : null,
   "IFSC Code": Info.ifscCode ? encrypt(Info.ifscCode) : null,
   "Bank Branch Name": Info.Bankbranchname || null,
