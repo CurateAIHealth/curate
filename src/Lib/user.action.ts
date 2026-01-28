@@ -2188,6 +2188,45 @@ export const UpdateReason = async (
   }
 };
 
+export const PostReason = async (
+  Available_HCP: any,
+  Exsting_HCP: any,
+  selectedReason: any,
+  otherReason: any
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const replacementCollection = db.collection("TerminationandReplacementReasons");
+  const ReasonData = {
+  HCA_id: Exsting_HCP,
+  Client_Id: Available_HCP,
+  Reason: selectedReason,
+  EnterdReason: otherReason,
+  DateandTime: new Date().toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }),
+};
+
+    await replacementCollection.insertOne(ReasonData);
+
+    return {
+      success: true,
+      message: "Replacement updated successfully",
+
+    };
+
+  } catch (err: any) {
+    console.error("Error updating replacement:", err);
+    return { success: false, message: "Error occurred", error: err };
+  }
+};
+
 
 
  export const UpdateAllPendingAttendance = async (selectedYear:any, selectedMonth:any) => {
@@ -3793,7 +3832,8 @@ export const UpdateHCAnstatus = async (UserId: string,AvailableStatus:String) =>
     const UpdateVerificationStatus = await Collection.updateOne(
       { userId: UserId }, {
       $set: {
-        Status:AvailableStatus
+        Status:AvailableStatus,
+        CurrentStatus:AvailableStatus
       },
     
     }
