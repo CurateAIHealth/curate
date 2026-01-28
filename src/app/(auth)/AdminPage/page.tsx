@@ -132,7 +132,7 @@ const callEnquiryArray=users.filter((each)=>each.userType==='CallEnquiry')
     ServiceLocation:each.ServiceArea,
     PreviewUserType:each.PreviewUserType
   }));
-console.log("Check for Finel Values-----",users)
+
 const UpdatedFilterUserType = useMemo(() => {
   return Finel
     .filter((each) => {
@@ -297,7 +297,7 @@ useEffect(() => {
   return () => {
     mounted = false;
   };
-}, []); 
+}, [updatedStatusMsg]); 
 
 
 useEffect(() => {

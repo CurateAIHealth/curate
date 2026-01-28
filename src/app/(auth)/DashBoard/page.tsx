@@ -1,5 +1,5 @@
 "use client";
-let cachedDeploymentInfo: any[] | null = null;
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -86,6 +86,7 @@ export default function Dashboard() {
   const [compliteInfo,setcompliteInfo]=useState<any>()
   const [showProfileOptions,setShowProfileOptions]=useState(false)
 
+  const [loading, setLoading] = useState<boolean>(true);
   
 
   const [loggedInEmail, setloggedInEmail] = useState<any>("")
@@ -114,161 +115,182 @@ export default function Dashboard() {
     Employs: "Loading..."
   });
 
-
-
-
 const DASHBOARD_CACHE_KEY = "dashboardStats";
-const CACHE_TTL = 10 * 60 * 1000; 
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+
+
 
 useEffect(() => {
-  const controller = new AbortController();
+    let isMounted = true;
 
-  const fetchDashboard = async () => {
-    try {
-   
-      const userId = localStorage.getItem("UserId");
+    const fetchDashboard = async () => {
+      try {
+        /* -------------------- USER INFO -------------------- */
+        const userId =
+          typeof window !== "undefined"
+            ? localStorage.getItem("UserId")
+            : null;
 
-      if (userId) {
-        const user = await GetUserInformation(userId);
+        if (userId) {
+          const user = await GetUserInformation(userId);
+          if (!isMounted) return;
 
-        if (controller.signal.aborted) return;
-
-        setcompliteInfo(user);
-        setloggedInEmail(user?.Email);
-        SetProfileName(user?.Name);
-        setIsManagement(user?.Email === "admin@curatehealth.in");
-      }
-
-   
-      const cached = localStorage.getItem(DASHBOARD_CACHE_KEY);
-
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-
-        if (Date.now() - timestamp < CACHE_TTL) {
-          setStats(data);
-          return;
-        }
-      }
-
-      const [
-        registeredUsersData = [],
-        HCPFullInfo = [],
-        deployedData = [],
-        invoiceData = [],
-        timesheetData = [],
-      ] = await Promise.all([
-        GetRegidterdUsers(),
-        GetUsersFullInfo(),
-        GetDeploymentInfo(),
-        GetInvoiceInfo(),
-        GetTimeSheetInfo(),
-      ]);
-
-      if (controller.signal.aborted) return;
-
-
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth();
-
-      let patient = 0;
-      let hcp = 0;
-      let vendor = 0;
-      let active = 0;
-      let monthReg = 0;
-
-      const activeSet = new Set<string>();
-
-      for (const u of registeredUsersData) {
-        if (!u) continue;
-
-        if (u.userType === "patient" && u.ClientStatus !== "Placed") patient++;
-        if (u.userType === "healthcare-assistant") hcp++;
-        if (u.userType === "Vendor") vendor++;
-
-        if (u.CurrentStatus === "Active") {
-          active++;
-          u.userId && activeSet.add(u.userId);
+          setcompliteInfo(user);
+          setloggedInEmail(user?.Email ?? "");
+          SetProfileName(user?.Name ?? "");
+          setIsManagement(user?.Email === "admin@curatehealth.in");
         }
 
-        if (u.createdAt) {
-          const date =
-            typeof u.createdAt === "string" || typeof u.createdAt === "number"
-              ? new Date(u.createdAt)
-              : u.createdAt?.toDate?.();
+        /* -------------------- CACHE -------------------- */
+        const cached =
+          typeof window !== "undefined"
+            ? localStorage.getItem(DASHBOARD_CACHE_KEY)
+            : null;
+
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+
+          if (Date.now() - timestamp < CACHE_TTL) {
+            setStats(data);
+            setLoading(false);
+            return;
+          }
+        }
+
+        /* -------------------- API CALLS -------------------- */
+        const results = await Promise.allSettled([
+          GetRegidterdUsers(),
+          GetUsersFullInfo(),
+          GetDeploymentInfo(),
+          GetInvoiceInfo(),
+          GetTimeSheetInfo(),
+        ]);
+
+        if (!isMounted) return;
+
+        const [
+          registeredUsersData = [],
+          HCPFullInfo = [],
+          deployedData = [],
+          invoiceData = [],
+          timesheetData = [],
+        ] = results.map((r) =>
+          r.status === "fulfilled" && Array.isArray(r.value) ? r.value : []
+        );
+
+        /* -------------------- CALCULATIONS -------------------- */
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+
+        let patient = 0;
+        let hcp = 0;
+        let vendor = 0;
+        let active = 0;
+        let monthReg = 0;
+
+        const activeSet = new Set<string>();
+
+        for (const u of registeredUsersData) {
+          if (!u) continue;
+
+          if (u.userType === "patient" && u.ClientStatus !== "Placed") patient++;
+          if (u.userType === "healthcare-assistant") hcp++;
+          if (u.userType === "Vendor") vendor++;
+
+          if (u.CurrentStatus === "Active") {
+            active++;
+            u.userId && activeSet.add(u.userId);
+          }
+
+          let createdDate: Date | null = null;
+
+          if (u.createdAt instanceof Date) createdDate = u.createdAt;
+          else if (typeof u.createdAt === "string" || typeof u.createdAt === "number")
+            createdDate = new Date(u.createdAt);
+          else if (u.createdAt?.toDate) createdDate = u.createdAt.toDate();
 
           if (
-            date &&
-            date.getFullYear() === currentYear &&
-            date.getMonth() === currentMonth
+            createdDate &&
+            createdDate.getFullYear() === currentYear &&
+            createdDate.getMonth() === currentMonth
           ) {
             monthReg++;
           }
         }
-      }
 
- 
-      const missingDocSet = new Set<string>();
+        /* -------------------- DOCUMENT COMPLIANCE -------------------- */
+        const missingDocSet = new Set<string>();
 
-      for (const e of HCPFullInfo) {
-        const info = e?.HCAComplitInformation;
-        if (info?.UserId && !("Status" in info)) {
-          missingDocSet.add(info.UserId);
+        for (const e of HCPFullInfo) {
+          const info = e?.HCAComplitInformation;
+          if (info?.UserId && !("Status" in info)) {
+            missingDocSet.add(info.UserId);
+          }
         }
+
+        let docCompliance = 0;
+        for (const id of activeSet) {
+          if (missingDocSet.has(id)) docCompliance++;
+        }
+
+        /* -------------------- DEPLOYMENT (DEDUPED) -------------------- */
+        const mergedDeploymentInfo = [
+          ...new Map(
+            [...deployedData].map((item) => [item?.ClientId, item])
+          ).values(),
+        ];
+
+        /* -------------------- TIMESHEET -------------------- */
+        const pendingPdr = timesheetData.reduce(
+          (count: number, t: any) => count + (t?.PDRStatus === false ? 1 : 0),
+          0
+        );
+
+        /* -------------------- FINAL STATS -------------------- */
+        const finalStats = {
+          registeredUsers: patient,
+          hcpListCount: hcp,
+          vendorsCount: vendor,
+          hostelAttendanceCount: active,
+          registrationCount: monthReg,
+          invoiceCount: invoiceData.length,
+          deployedLength: mergedDeploymentInfo.length,
+          timesheetcount: mergedDeploymentInfo.length,
+          pendingPdrCount: pendingPdr,
+          documentComplianceCount: docCompliance,
+          Notifications: 0,
+          Employs: 0,
+        };
+
+        /* -------------------- SAVE CACHE -------------------- */
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            DASHBOARD_CACHE_KEY,
+            JSON.stringify({
+              data: finalStats,
+              timestamp: Date.now(),
+            })
+          );
+        }
+
+        setStats(finalStats);
+      } catch (error) {
+        if (isMounted) {
+          console.error("Dashboard Error:", error);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
       }
+    };
 
-      let docCompliance = 0;
-      for (const id of activeSet) {
-        if (missingDocSet.has(id)) docCompliance++;
-      }
+    fetchDashboard();
 
-     cachedDeploymentInfo = [
-        ...new Map(
-          [...(cachedDeploymentInfo ?? []), ...(deployedData ?? [])]
-            .map((item) => [item.ClientId, item])
-        ).values(),
-      ];
-    const pendingPdr = timesheetData.reduce( (c: number, t: any) => c + (t?.PDRStatus === false ? 1 : 0), 0 );
-
-      const finalStats = {
-        registeredUsers: patient,
-        hcpListCount: hcp,
-        timesheetcount: cachedDeploymentInfo.length, 
-        vendorsCount: vendor,
-        hostelAttendanceCount: active,
-        registrationCount: monthReg,
-        invoiceCount: invoiceData.length,
-        deployedLength: cachedDeploymentInfo.length,
-        pendingPdrCount:pendingPdr,
-        documentComplianceCount: docCompliance,
-        Notifications: 0,
-        Employs: 0,
-      };
-
-      
-      localStorage.setItem(
-        DASHBOARD_CACHE_KEY,
-        JSON.stringify({
-          data: finalStats,
-          timestamp: Date.now(),
-        })
-      );
-
-      setStats(finalStats);
-    } catch (error) {
-      if (!controller.signal.aborted) {
-        console.error("Dashboard Error:", error);
-      }
-    }
-  };
-
-  fetchDashboard();
-
-  return () => {
-    controller.abort();
-  };
-}, []);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
 
   const handleChange = (e: any) => {
@@ -698,7 +720,7 @@ const Switching = useCallback(
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard.
+      Hi Admin – Welcome to Admin Dashboard
     </span>
   </div>
 
