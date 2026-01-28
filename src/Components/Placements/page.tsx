@@ -7,7 +7,7 @@ let cachedTermination:any[]
 
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Trash } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteTimeSheet, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -17,6 +17,7 @@ import { filterColors, months, Placements_Filters, years } from "@/Lib/Content";
 import ReplacementsTable from "../ReplacementsTable/page";
 import { toProperCaseLive } from "@/Lib/Actions";
 import { useRouter } from "next/navigation";
+import { div } from "framer-motion/client";
 
 
 
@@ -84,42 +85,33 @@ const router=useRouter()
 useEffect(() => {
   let mounted = true;
 
-  const fetchData = async (forceFresh = false) => {
-    try {
-      if (
-        !forceFresh &&
-        cachedUsersFullInfo?.length &&
-        cachedDeploymentInfo?.length &&
-        cachedReplacementInfo?.length &&
-        cachedTermination?.length
-      ) {
-        if (!mounted) return;
+const fetchData = async (forceFresh = false) => {
+  try {
+    const [
+      RegisterdUsers,
+      usersResult,
+      placementInfo,
+      ReplacementInfo,
+      TerminationInformation,
+    ] = await Promise.all([
+      GetRegidterdUsers(),
+      GetUsersFullInfo(),
+      GetDeploymentInfo(),
+      GetReplacementInfo(),
+      GetTerminationInfo(),
+    ]);
 
-        setUsers([...cachedUsersFullInfo]);
-        setClientsInformation([...cachedDeploymentInfo]);
-        setReplacementInformation([...cachedReplacementInfo]);
-        SetterminationInfo([...cachedTermination]);
-        dispatch(UpdateSubHeading("On Service"));
-        setIsChecking(false);
-        return;
-      }
+    if (!mounted) return;
 
-      const [
-        usersResult,
-        placementInfo,
-        ReplacementInfo,
-        TerminationInformation,
-      ] = await Promise.all([
-        GetUsersFullInfo(),
-        GetDeploymentInfo(),
-        GetReplacementInfo(),
-        GetTerminationInfo(),
-      ]);
-
-      if (!mounted) return;
-       
-
-      cachedUsersFullInfo = usersResult
+    if (forceFresh) {
+      // ✅ FULL REPLACEMENT
+      cachedUsersFullInfo = usersResult;
+      cachedDeploymentInfo = placementInfo??[];
+      cachedReplacementInfo = ReplacementInfo??[];
+      cachedTermination = TerminationInformation??[];
+    } else {
+      // ✅ MERGE ONLY FOR FIRST LOAD
+      cachedUsersFullInfo ||= usersResult;
 
       cachedDeploymentInfo = [
         ...new Map(
@@ -127,7 +119,7 @@ useEffect(() => {
             .map((item) => [item.ClientId, item])
         ).values(),
       ];
-console.log('Cjeck for Count-----',cachedDeploymentInfo?.length)
+
       cachedReplacementInfo = [
         ...new Map(
           [...(cachedReplacementInfo ?? []), ...(ReplacementInfo ?? [])]
@@ -141,18 +133,21 @@ console.log('Cjeck for Count-----',cachedDeploymentInfo?.length)
             .map((item) => [item.HCAContact, item])
         ).values(),
       ];
-
-      setUsers([...cachedUsersFullInfo]);
-      setClientsInformation([...cachedDeploymentInfo]);
-      setReplacementInformation([...cachedReplacementInfo]);
-      SetterminationInfo([...cachedTermination]);
-      dispatch(UpdateSubHeading("On Service"));
-    } catch (err) {
-      console.error("Fetch error:", err);
-    } finally {
-      mounted && setIsChecking(false);
     }
-  };
+
+    setUsers([...cachedUsersFullInfo]);
+    setClientsInformation([...cachedDeploymentInfo]);
+    setReplacementInformation([...cachedReplacementInfo]);
+    SetterminationInfo([...cachedTermination]);
+    dispatch(UpdateSubHeading("On Service"));
+
+  } catch (err) {
+    console.error("Fetch error:", err);
+  } finally {
+    mounted && setIsChecking(false);
+  }
+};
+
 
   fetchData(!!ActionStatusMessage);
 
@@ -228,6 +223,7 @@ console.log('Cjeck for Count-----',cachedDeploymentInfo?.length)
     Location: each['Permanent Address']||'',
     Email: each.HCPEmail,
     Contact: each.HCPContactNumber,
+    CurrentStatus:each.CurrentStatus,
     userId: each.UserId,
     VerificationStatus: each.VerificationStatus,
     DetailedVerification: each.FinelVerification,
@@ -310,15 +306,17 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
   }
   const HCA_List = Finel.filter((each: any) => {
   const typeMatch =
-    each.userType === "healthcare-assistant" ||
-    each.userType === "HCA" ||
-    each.userType === "HCP" ||
-    each.userType === "HCPT";
+    ["healthcare-assistant", "HCA", "HCP", "HCPT"].includes(each.userType);
 
-  const isNotAssigned = !each.Status?.some((s: string) => s === "Assigned");
+  const isNotAssigned =
+    !each.Status?.some((s: string) => s === "Assigned");
 
-  return typeMatch && isNotAssigned;
+  const isValidCurrentStatus =
+    !["Sick", "Leave", "Terminated"].includes(each.CurrentStatus);
+
+  return typeMatch && isNotAssigned && isValidCurrentStatus;
 });
+
 
 
 
@@ -385,7 +383,7 @@ const confirmDelete = async (selectedReason: string) => {
     );
 
 
-    const deleteTimeSheetResponse = await DeleteTimeSheet(
+    const deleteTimeSheetResponse = await DeleteDeployMent(
       TerminationInfo.Client_Id
     );
 
@@ -401,11 +399,11 @@ const confirmDelete = async (selectedReason: string) => {
     await InserTerminationData(
       TerminationInfo.Client_Id,
       TerminationInfo.HCA_Id,
+      TerminationInfo.HCA_Name,
       TerminationInfo.name,
       TerminationInfo.email,
       TerminationInfo.contact,
       TerminationInfo.location,
-      TerminationInfo.role,
       TerminationInfo.HCAContact,
       TerminationInfo.TimeSheet
     );
@@ -478,7 +476,7 @@ console.log("Test Today------",isInvoiceDay
 
 )
 
-
+console.log("Check for ----",TerminationInfo)
 
 const UpdateReplacement = async (
   Available_HCP: any,
@@ -553,7 +551,14 @@ const OmServiceView = () => {
     return (
       <div className="w-full flex flex-col gap-8 p-2 bg-gray-50">
        
-     
+      {ActionStatusMessage && (
+          <div className="flex flex-col items-center justify-center gap-4 mt-4 bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 px-4 py-4">
+          {ActionStatusMessage!=="Replacement Updated Sucessfull"&&  <div className="w-5 h-5 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>}
+            <p className={`text-center ${ActionStatusMessage==="Replacement Updated Sucessfull"?"text-green-800":"text-red-500"} font-semibold`}>
+              {ActionStatusMessage}
+            </p>
+          </div>
+        )}
            
         <div className="flex itemcs-center gap-2 justify-end">
             <div
@@ -992,14 +997,7 @@ const OmServiceView = () => {
 
   
   )}
-   {ActionStatusMessage && (
-          <div className="flex flex-col items-center justify-center gap-4 mt-4 bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 px-4 py-4">
-          {ActionStatusMessage!=="Replacement Updated Sucessfull"&&  <div className="w-5 h-5 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>}
-            <p className={`text-center ${ActionStatusMessage==="Replacement Updated Sucessfull"?"text-green-800":"text-red-500"} font-semibold`}>
-              {ActionStatusMessage}
-            </p>
-          </div>
-        )}
+  
 {showExtendPopup&&
  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-2xl w-[350px] p-6 text-center border border-gray-200">

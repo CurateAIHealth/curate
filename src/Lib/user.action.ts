@@ -1949,12 +1949,12 @@ console.log("Check Attendece Entry-----",attendanceEntry)
 
 
 
-export const DeleteTimeSheet=async(clientId:any)=>{
+export const DeleteDeployMent=async(clientId:any)=>{
 
   try{
 const Cluster= await clientPromise
 const db=Cluster.db("CurateInformation")
-const collection=db.collection("TimeSheet")
+const collection=db.collection("Deployment")
 const DeleteResult=await collection.deleteMany({ClientId:clientId})
    if (DeleteResult.deletedCount > 0) {
       return {
@@ -1976,19 +1976,19 @@ const DeleteResult=await collection.deleteMany({ClientId:clientId})
   }
 
 }
-export const InserTerminationData=async(ClientUserId:any,HCAUserId:any,Name:any,Email:any,Contact:any,ClientAdress:any,NameHCA:any,Contacthca:any,TimeSheetArray:any)=>{
+export const InserTerminationData=async(ClientUserId:any,HCAUserId:any,HCA_Name:any,Name:any,Email:any,Contact:any,ClientAdress:any,Contacthca:any,TimeSheetArray:any)=>{
   try{
 const cluster=await clientPromise
 const db=cluster.db("CurateInformation")
 const collection=db.collection("Termination")
 const TimeSheetDataInsert=await collection.insertOne({
   ClientId:ClientUserId,
-  HCAiD:HCAUserId,
+  HCAid:HCAUserId,
+  HCAName:HCA_Name,
   ClientName:Name,
   ClientEmail:Email,
   ClientContact:Contact,
   Adress:ClientAdress,
-  HCAName:NameHCA,
   HCAContact:Contacthca,
   Attendence:TimeSheetArray
 })
@@ -3779,27 +3779,73 @@ export const UpdatedUserJoingDate = async (
   }
 };
 
-export const UpdateUserCurrentstatus = async (UserId: string, UpdatedStatus: string) => {
+export const UpdateUserCurrentstatus = async (
+  UserId: string,
+  UpdatedStatus: string
+) => {
   try {
-    const Cluster = await clientPromise
-    const Db = Cluster.db("CurateInformation")
-    const Collection = Db.collection("Registration")
-    const UpdateVerificationStatus = await Collection.updateOne(
-      { userId: UserId }, {
-      $set: {
-        CurrentStatus:UpdatedStatus,
-        }
-    }
-    )
-    if (UpdateVerificationStatus.modifiedCount === 0) {
-      return { success: false, message: 'Internal Error Try Again!' };
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+
+    const RegistrationCollection = Db.collection("Registration");
+    const CompliteCollection = Db.collection("CompliteRegistrationInformation");
+
+   
+    const updateRegistration = await RegistrationCollection.updateOne(
+      { userId: UserId },
+      {
+        $set: {
+          CurrentStatus: UpdatedStatus,
+          UpdatedAt: new Date(),
+        },
+      }
+    );
+
+    if (updateRegistration.matchedCount === 0) {
+      return {
+        success: false,
+        message: "User not found in Registration collection",
+      };
     }
 
-    return { success: true, message: 'Verification Status updated successfully.' };
+
+    const updateComplite = await CompliteCollection.updateOne(
+      { "HCAComplitInformation.UserId": UserId },
+      {
+        $set: {
+          "HCAComplitInformation.CurrentStatus": UpdatedStatus,
+          "HCAComplitInformation.UpdatedAt": new Date(),
+        },
+        $unset: {
+          "HCAComplitInformation.Status": "",
+        },
+        $setOnInsert: {
+          "HCAComplitInformation.UserId": UserId,
+          CreatedAt: new Date(),
+        },
+      },
+      {
+        upsert: true,
+      }
+    );
+
+
+    return {
+      success: true,
+      message:
+        updateComplite.upsertedCount === 1
+          ? "User status created and updated successfully"
+          : "User status updated successfully",
+    };
   } catch (err: any) {
-    return err
+    console.error("UpdateUserCurrentstatus Error:", err);
+    return {
+      success: false,
+      message: "Failed to update user current status",
+    };
   }
-}
+};
+
 
 
 
@@ -3846,16 +3892,22 @@ export const UpdateHCAnstatus = async (
         },
       }
     );
-
   
-    const removeStatusFromComplite = await CompliteCollection.updateOne(
-      { "HCAComplitInformation.UserId": UserId },
-      {
-        $unset: {
-           "HCAComplitInformation.Status": "",
-        },
-      }
-    );
+  
+   const removeStatusFromComplite = await CompliteCollection.updateOne(
+  { "HCAComplitInformation.UserId": UserId },
+  {
+    $set: {
+      "HCAComplitInformation.CurrentStatus": AvailableStatus,
+    },
+    $unset: {
+      "HCAComplitInformation.Status": "",
+    },
+  }
+);
+
+
+
 
     if (
       updateRegistration.modifiedCount === 0 &&

@@ -1,10 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Stethoscope, Shirt, CircleX, Search, X } from "lucide-react";
-import { GetTerminationInfo } from "@/Lib/user.action";
+import { GetReasonsInfoInfo, GetTerminationInfo } from "@/Lib/user.action";
 import { LoadingData } from "../Loading/page";
 import { Placements_Filters, filterColors } from "@/Lib/Content";
 let terminationCache: any[] | null = null;
+let ReplacementReasonsCache: any[] | null = null;
 interface TerminationData {
   id: string;
   clientName: string;
@@ -16,6 +17,7 @@ interface TerminationData {
 
 const TerminationTable: React.FC = () => {
   const [placements, setPlacements] = useState<any[]>([]);
+  const [ReplacementReasons,setReplacementReasons]=useState<any[]>([]);
    const [search, setSearch] = useState("");
      const [month, setMonth] = useState("");
      const [year, setYear] = useState("");
@@ -29,15 +31,23 @@ const [popupInfo, setPopupInfo] = useState("");
 useEffect(() => {
   const Fetch = async () => {
     try {
-      if (terminationCache?.length) {
+      if (terminationCache) {
         setPlacements(terminationCache);
+         setReplacementReasons(ReplacementReasonsCache?? [])
         setIsChecking(false);
         return;
       }
 
-      const FetchData = await GetTerminationInfo();
+       const [FetchData,ReplacementReasons]=await Promise.all([
+              GetTerminationInfo(),
+          GetReasonsInfoInfo()
+      
+            ])
+
+      ReplacementReasonsCache = ReplacementReasons ?? []
 
       const Result = FetchData?.map((each: any) => ({
+        ClientId: each.ClientId,
         clientName: each.ClientName,
         contact: each.HCAContact,
         location: each.Adress,
@@ -52,8 +62,9 @@ useEffect(() => {
             .map(item => [item.contact, item])
         ).values()
       ];
-console.log("Checking Count------",terminationCache)
+
       setPlacements(terminationCache);
+      setReplacementReasons(ReplacementReasons?? [])
       setIsChecking(false);
     } catch (err) {
       setIsChecking(false);
@@ -64,7 +75,7 @@ console.log("Checking Count------",terminationCache)
 }, []);
 
 
-console.log("Check------",placements)
+console.log("Checking Count------",ReplacementReasons)
   const handleDelete = (id: string) => {
     setPlacements((prev) => prev.filter((placement) => placement.id !== id));
   };
@@ -88,6 +99,27 @@ const FilterValues = placements.filter((each: any) => {
     contact.includes(searchValue)
   );
 });
+
+
+const GetReplacementMessage = (A: any) => {
+
+  const results =ReplacementReasons?.filter((each: any) => each?.HCA_id=== A ) ?? [];
+  if(results.length===0){
+    return "No Reasond Found.Try Again"
+  }
+
+  const firstReason = results[0]?.Reason ?? "";
+  const secondReason = results[0]?.EnterdReason ?? "";
+  const DateandTime=results[0]?.DateandTime??""
+
+if (firstReason && secondReason) {
+  return `${firstReason} And ${secondReason}. Replacement Happend On ${DateandTime}`.trim();
+}
+
+return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.trim();
+
+
+};
 
   return (
     <div className="p-2 bg-gray-50">
@@ -232,8 +264,9 @@ const FilterValues = placements.filter((each: any) => {
   <td className="px-3 py-2">
   <button
     onClick={() => {
-      setPopupInfo("Termination reasons generally fall into involuntary");
+ setPopupInfo(GetReplacementMessage(placement.ClientId))
       setShowPopup(true);
+      
     }}
     className="
       px-3 py-1.5
