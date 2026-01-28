@@ -1848,7 +1848,7 @@ form.HusbendContact!=="Not Available"&&
             />
             <select
               name="PermanentCity"
-              value={form.PermanentCity || ""}
+              value={OtherPermanentCity?"Other":form.PermanentCity || ""}
 
               onChange={(e) => {
                 const value = e.target.value;
@@ -1990,7 +1990,7 @@ form.HusbendContact!=="Not Available"&&
 
             <select
               name="CurrentCity"
-              value={form.CurrentCity || ""}
+              value={OtherCurrentCity?"Other":form.CurrentCity || ""}
               onChange={(e) => {
                 const value = e.target.value;
                 setForm({ ...form, CurrentCity: value === "Other" ? '' : value });

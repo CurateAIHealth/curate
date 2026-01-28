@@ -102,7 +102,9 @@ preferredService:"",
       PanCard: "https://res.cloudinary.com/dxhf9ysx4/image/upload/v1754297398/uploads/eyaxfscwthv3u4fwbk3d.jpg",
       AccountPassBook: "https://res.cloudinary.com/dxhf9ysx4/image/upload/v1754297505/uploads/tqqhys7yomtvpv1ad168.jpg",
       CertificatOne: "https://res.cloudinary.com/dxhf9ysx4/image/upload/v1754297478/uploads/vq7q55n84va0zxrcnziz.jpg",
-      CertificatTwo: "https://res.cloudinary.com/dxhf9ysx4/image/upload/v1754297494/uploads/xjjh4r1xqnugpjbtxj7v.jpg"
+      CertificatTwo: "https://res.cloudinary.com/dxhf9ysx4/image/upload/v1754297494/uploads/xjjh4r1xqnugpjbtxj7v.jpg",
+     
+      
     },
     experience: "3",
     professionalWork1: "Lab Technician ( Tata Steel company) Odisha",
@@ -168,7 +170,7 @@ useEffect(()=>{
       AccountPassBook:FilterValue.Documents. AccountPassBook||'/Icons/PatientDefault.png',
       CertificatOne:FilterValue.Documents.CertificatOne||'/Icons/PatientDefault.png',
       CertificatTwo: FilterValue.Documents.CertificatTwo||'/Icons/PatientDefault.png',
-      BVR:FilterValue.BVR||'/Icons/PatientDefault.png',
+      BVR:FilterValue.BVR||'',
       HCPform:FilterValue.HCPform||'/Icons/PatientDefault.png'
 
 
@@ -369,7 +371,17 @@ console.log("Checkkkkk------", user.Documents)
                   <p className="text-sm text-blue-500 animate-pulse">Updating {key}...</p>
                 ) : (
                   <div onClick={() => ShowFullImage(value)} className="cursor-pointer">
-                       <img src={value} alt={key} className="w-full h-40 object-cover rounded border" />
+                    {key==="BVR"&&value?  <div className="w-24 h-24 flex items-center justify-center bg-gray-100 rounded-md shadow-sm mb-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                          className="w-12 h-12 text-red-500"
+                        >
+                          <path d="M12 0C8.686 0 6 2.686 6 6v12c0 3.314 2.686 6 6 6s6-2.686 6-6V6c0-3.314-2.686-6-6-6zm3 18h-6v-2h6v2zm0-4h-6v-2h6v2zm0-4h-6V8h6v2z" />
+                        </svg>
+                      </div>:
+                       <img src={value} alt={key} className="w-full h-40 object-cover rounded border" />}
                   </div>
                 )}
               </div>
