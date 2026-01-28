@@ -116,12 +116,7 @@ useEffect(() => {
       if (!mounted) return;
        
 
-      cachedUsersFullInfo = [
-        ...new Map(
-          [...(cachedUsersFullInfo ?? []), ...(usersResult ?? [])]
-            .map((item) => [item.UserId, item])
-        ).values(),
-      ];
+      cachedUsersFullInfo = usersResult
 
       cachedDeploymentInfo = [
         ...new Map(
@@ -239,7 +234,7 @@ console.log('Check-----',ClientsInformation)
     provider:each.provider,
     payTerms:each.payTerms
   }));
-
+console.log("Check For Availavle",users)
  const handleDelete = () => {
     if (selectedReason === "Other") {
       confirmDelete(otherReason.trim());
@@ -789,7 +784,7 @@ const OmServiceView = () => {
     value={UpdatedCareTakerStatus||""}
     onChange={(e:any)=>setUpdatedCareTakerStatus(e.target.value)}
   >
- <option >Manage Existing Caregiver Status</option>
+ <option >Manage {toProperCaseLive(c.HCA_Name)} Status</option>
                             <option value="Active">🟢 Active</option>
                             <option value="Available">🟢 Available for Work</option>
                             <option value="Sick">🟡 Sick</option>
