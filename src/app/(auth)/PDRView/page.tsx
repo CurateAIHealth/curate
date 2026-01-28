@@ -4,7 +4,7 @@ let cachedTimeSheetInfo: any[] = [];
 
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, LogOut, Trash } from "lucide-react";
-import { DeleteTimeSheet, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
+import { DeleteDeployMent, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { GetCurrentDeploymentData, Update_Main_Filter_Status, UpdateFetchedInformation, UpdateSubHeading } from "@/Redux/action";
 import TerminationTable from "@/Components/Terminations/page";
@@ -296,7 +296,7 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
 
            const UpdateHcaStatus= await UpdateHCAnstatus(deleteTargetId?.HCA_Id,"Available")
          const UpdateStatus=await UpdateUserContactVerificationstatus(deleteTargetId.Client_Id,"Converted")
-           const DeleteTimeSheetData=await DeleteTimeSheet(deleteTargetId.Client_Id)
+           const DeleteTimeSheetData=await DeleteDeployMent(deleteTargetId.Client_Id)
            const PostTimeSheet:any = await InserTerminationData(deleteTargetId.Client_Id, deleteTargetId?.HCA_Id, deleteTargetId.name, deleteTargetId.email, deleteTargetId.contact,deleteTargetId.location, deleteTargetId.role, deleteTargetId.HCAContact, deleteTargetId.TimeSheet)
                 console.log("Compare Data--",DeleteTimeSheetData)
                 if(DeleteTimeSheetData.success===true){

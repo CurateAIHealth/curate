@@ -97,9 +97,7 @@ const pillStyles: Record<string, string> = {
     setUpdatedStatusMsg(`Updating ${first} Current Status....`);
     try {
       const res = await UpdateUserCurrentstatus(UserId, e);
-      if (res?.success === true) {
-        setUpdatedStatusMsg(`${first} Current Status Updated Successfully`);
-      }
+      setUpdatedStatusMsg(res.message)
       
     } catch (err: any) {
       console.error(err);
@@ -256,10 +254,12 @@ console.log("Check For Issues-----",UpdateMainFilter)
 useEffect(() => {
   let mounted = true;
 
-  const fetchOnce = async () => {
+  const fetchData = async () => {
     try {
       const userId = localStorage.getItem("UserId");
       if (!userId) return;
+
+      const forceFresh = !!updatedStatusMsg; // dependency-based refresh
 
       const [
         profile,
@@ -267,18 +267,18 @@ useEffect(() => {
         fullInfo,
         deployedLength,
       ] = await Promise.all([
-        cachedUserInfo ?? GetUserInformation(userId),
-        cachedRegisteredUsers ?? GetRegidterdUsers(),
-        cachedFullInfo ?? GetUsersFullInfo(),
-        cachedDeployed ?? GetDeploymentInfo(),
+        forceFresh ? GetUserInformation(userId) : cachedUserInfo ?? GetUserInformation(userId),
+        forceFresh ? GetRegidterdUsers() : cachedRegisteredUsers ?? GetRegidterdUsers(),
+        forceFresh ? GetUsersFullInfo() : cachedFullInfo ?? GetUsersFullInfo(),
+        forceFresh ? GetDeploymentInfo() : cachedDeployed ?? GetDeploymentInfo(),
       ]);
 
       if (!mounted) return;
 
-      cachedUserInfo ||= profile;
-      cachedRegisteredUsers ||= registeredUsers;
-      cachedFullInfo ||= fullInfo;
-      cachedDeployed ||= deployedLength;
+      cachedUserInfo = profile;
+      cachedRegisteredUsers = registeredUsers;
+      cachedFullInfo = fullInfo;
+      cachedDeployed = deployedLength;
 
       setUsers(registeredUsers);
       setUserFirstName(profile.FirstName);
@@ -292,12 +292,13 @@ useEffect(() => {
     }
   };
 
-  fetchOnce();
+  fetchData();
 
   return () => {
     mounted = false;
   };
-}, [updatedStatusMsg]); 
+}, [updatedStatusMsg]);
+
 
 
 useEffect(() => {
