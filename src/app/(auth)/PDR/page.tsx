@@ -1125,20 +1125,23 @@ if (url) {
           </div>
         )}
       </div>
-      <div className="max-w-md bg-white rounded-2xl shadow-md p-6 space-y-4">
+<div className="max-w-md bg-white rounded-2xl shadow-md p-6 space-y-4">
 
-    <h3 className="text-lg font-semibold text-slate-800">
-      Upload Client Agreement
-    </h3>
+  <h3 className="text-lg font-semibold text-slate-800">
+    Upload Client Agreement
+  </h3>
 
-    <p className="text-sm text-slate-500">
-      Upload the signed agreement document (PDF or Image).
-    </p>
+  <p className="text-sm text-slate-500">
+    Upload the signed agreement document (PDF or Image).
+  </p>
 
-    
+  {/* BEFORE UPLOAD */}
+  {!formData?.ClientAgreement && (
     <label
       htmlFor="agreement"
-      className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-emerald-300 rounded-xl p-6 cursor-pointer hover:bg-emerald-50 transition"
+      className="flex flex-col items-center justify-center gap-2
+                 border-2 border-dashed border-emerald-300 rounded-xl p-6
+                 cursor-pointer hover:bg-emerald-50 transition"
     >
       <svg
         className="w-8 h-8 text-emerald-600"
@@ -1168,10 +1171,54 @@ if (url) {
         accept=".pdf,.jpg,.png"
         className="hidden"
         onChange={handleImageChange}
-
       />
     </label>
+  )}
 
+  {/* AFTER UPLOAD */}
+  {formData?.ClientAgreement && (
+    <div className="flex items-center justify-between
+                    border border-green-200 bg-green-50
+                    rounded-xl p-4">
+      <div className="flex items-center gap-3">
+        <div className="h-9 w-9 rounded-full bg-green-100
+                        flex items-center justify-center">
+          <svg
+            className="w-5 h-5 text-green-600"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        </div>
+
+        <p className="text-sm font-medium text-slate-800">
+          Client agreement uploaded
+        </p>
+      </div>
+
+      <label
+        htmlFor="agreement"
+        className="text-sm font-medium text-emerald-600
+                   cursor-pointer hover:underline"
+      >
+        Replace
+        <input
+          id="agreement"
+          type="file"
+          accept=".pdf,.jpg,.png"
+          className="hidden"
+          onChange={handleImageChange}
+        />
+      </label>
+    </div>
+  )}
   {UploadStatusMessage && (
     <p
       className={`
@@ -1190,9 +1237,8 @@ if (url) {
       {UploadStatusMessage}
     </p>
   )}
+</div>
 
-
-  </div>
 
 
               <button

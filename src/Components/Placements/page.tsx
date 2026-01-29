@@ -59,7 +59,7 @@ const ClientTable = () => {
   const [CareTakerName,SetCareTakerName]=useState('')
   const [HCPName,setHCPName]=useState("")
   const [ShowReassignmentPopUp,setShowReassignmentPopUp]=useState(false)
-
+  const [showAssignPopup, setShowAssignPopup] = useState(false);
  const [updatedAttendance, setUpdatedAttendance] = useState<AttendanceState>({});
  const [SaveButton,setSaveButton]=useState(false)
  const [TerminationInfo,SetTerminationInfo]=useState<any>()
@@ -659,7 +659,7 @@ const OmServiceView = () => {
         hover:from-teal-700 hover:to-emerald-600
         text-white rounded-xl shadow-md
         transition whitespace-nowrap cursor-pointer
-        w-full sm:w-auto
+        w-fit sm:w-auto
       "
     >
       {enableStatus ? "Disable Generate Bill" : "Enable Generate Bill"}
@@ -696,25 +696,26 @@ const OmServiceView = () => {
     
   
     <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white uppercase text-xs font-semibold">
-      <tr>
-        <th className="px-3 py-3 text-left break-words">Client Name</th>
-        <th className="px-3 py-3 text-left break-words">Service Charge</th>
-        <th className="px-3 py-3 text-left break-words">Patient Name</th>
-        <th className="px-3 py-3 text-left break-words">Contact</th>
-        <th className="px-3 py-3 text-left break-words">Location</th>
-        <th className="px-3 py-3 text-left break-words">HCA Name</th>
-        <th className="px-3 py-3 text-left break-words">Status</th>
-        <th className="px-3 py-3 text-left break-words">Replacement</th>
-        <th className="px-3 py-3 text-center break-words">Time Sheet</th>
+  <tr>
+    <th className="w-[160px] px-3 py-3 whitespace-nowrap text-left">Client Name</th>
+    <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">Service Charge</th>
+    <th className="w-[160px] px-3 py-3 whitespace-nowrap text-left">Patient Name</th>
+    <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">Contact</th>
+    <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">Location</th>
+    <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">HCA Name</th>
+    <th className="w-[120px] px-3 py-3 whitespace-nowrap text-center">Status</th>
+    <th className="w-[160px] px-3 py-3 whitespace-nowrap text-center">Replacement</th>
+    <th className="w-[140px] px-3 py-3 whitespace-nowrap_tcp text-center">Time Sheet</th>
+    {(isInvoiceDay || enableStatus) && (
+        <th className="w-[140px] px-3 py-3 whitespace-nowrap text-center">Invoice</th>
+    )}
+    <th className="w-[160px] px-3 py-3 whitespace-nowrap text-center">Service Continue</th>
+     <th className="w-[80px] px-2 py-3 whitespace-nowrap text-left">More</th>
+    <th className="w-[80px] px-3 py-3 whitespace-nowrap text-center">Terminate</th>
+   
+  </tr>
+</thead>
 
-        {(isInvoiceDay || enableStatus) && (
-          <th className="px-3 py-3 text-center break-words">Invoice</th>
-        )}
-
-        <th className="px-3 py-3 text-center break-words">Service Continue</th>
-        <th className="px-3 py-3 text-center break-words">Terminate</th>
-      </tr>
-    </thead>
 
    
     <tbody className="bg-white divide-y divide-gray-200">
@@ -998,17 +999,18 @@ const OmServiceView = () => {
           </td>
 
           {(isInvoiceDay || enableStatus) && (
-            <td className="px-3 py-3 text-center break-words">
-              <button
-                className="px-1 py-2 text-xs font-medium cursor-pointer bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
-                onClick={() => {
-                  setBillingRecord(c);
-                  setShowPaymentModal(true);
-                }}
-              >
-                Generate Bill
-              </button>
-            </td>
+           <td className="px-3 py-3 text-center">
+  <button
+    className="inline-block px-1 py-2 text-xs font-medium cursor-pointer bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+    onClick={() => {
+      setBillingRecord(c);
+      setShowPaymentModal(true);
+    }}
+  >
+    Generate Bill
+  </button>
+</td>
+
           )}
 
           <td className="px-3 py-3 text-center break-words">
@@ -1019,7 +1021,14 @@ const OmServiceView = () => {
               Extend
             </button>
           </td>
-
+ <td     className="inline-block px-1 cursor-pointer py-2 text-xs mt-4 font-medium cursor-pointer bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md">
+            <button
+            className="cursor-pointer"
+             onClick={() => setShowAssignPopup(true)}
+            >
+          Add HCP
+            </button>
+          </td>
           <td className="px-3 py-3 text-center break-words">
             <button
               className="px-3 py-2 text-xs font-medium cursor-pointer rounded-lg hover:bg-gray-100"
@@ -1028,7 +1037,7 @@ const OmServiceView = () => {
               <Trash />
             </button>
           </td>
-
+ 
         </tr>
       ))}
     </tbody>
@@ -1039,7 +1048,106 @@ const OmServiceView = () => {
 
   
   )}
+ {showAssignPopup && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+    
   
+    <div className="relative w-[460px] rounded-lg bg-white border border-gray-200 shadow-lg">
+      
+     
+      <button
+        onClick={() => setShowAssignPopup(false)}
+        className="absolute top-2 cursor-pointer right-4 text-gray-400 hover:text-gray-600
+                   text-lg leading-none"
+        aria-label="Close"
+      >
+        ×
+      </button>
+
+    
+      <div className="px-6 py-4 border-b">
+        <div className="flex w-full items-center justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">
+              Assign Additional HCA
+            </h2>
+            <p className="text-xs text-gray-500">
+              Select a healthcare assistant to assign
+            </p>
+          </div>
+
+          <img
+            src="/Icons/Curate-logoq.png"
+            alt="Curate Logo"
+            className="h-7"
+          />
+        </div>
+      </div>
+
+    
+      <div className="px-6 py-5 space-y-3">
+        <label className="block text-sm font-medium text-gray-700">
+          HCA Name
+        </label>
+
+        <select
+          className="w-full h-10 px-3 text-sm border border-gray-300 rounded-md bg-white
+                     focus:outline-none focus:ring-1 focus:ring-emerald-600
+                     focus:border-emerald-600"
+          value={selectedHCP?.userId || ""}
+          // onChange={(e) => {
+          //   const selected = HCA_List.find(
+          //     (hca) => hca.userId === e.target.value
+          //   );
+          //   setselectedHCP(selected || null);
+          // }}
+        >
+          <option value="">Select HCA</option>
+          {HCA_List.map((each) => (
+            <option key={each.id} value={each.userId}>
+              {each.FirstName}
+            </option>
+          ))}
+        </select>
+
+        {selectedHCP && (
+          <div className="text-xs text-gray-600">
+            Selected:{" "}
+            <span className="font-medium text-gray-900">
+              {selectedHCP.FirstName}
+            </span>
+          </div>
+        )}
+      </div>
+
+    
+      <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
+        <button
+          onClick={() => setShowAssignPopup(false)}
+          className="px-4 py-2 text-sm border rounded-md
+                     text-gray-700 hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+
+        <button
+          disabled={!selectedHCP}
+          className={`px-4 py-2 text-sm rounded-md text-white
+            ${
+              selectedHCP
+                ? "bg-emerald-600 hover:bg-emerald-700"
+                : "bg-gray-300 cursor-not-allowed"
+            }`}
+        >
+          Assign HCA
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
+
+
 {showExtendPopup&&
  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-2xl w-[350px] p-6 text-center border border-gray-200">
