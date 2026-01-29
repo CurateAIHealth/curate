@@ -517,14 +517,13 @@ const ClientEnquiryUserInterFace = () => {
 
   <div className="w-full max-w-md bg-white rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.35)] animate-fadeIn">
 
-    {/* Icon */}
+  
     <div className="flex justify-center pt-8">
       <div className="h-14 w-14 rounded-full border border-red-200 bg-red-50 flex items-center justify-center">
         <Trash2 size={22} className="text-red-600" />
       </div>
     </div>
 
-    {/* Content */}
     <div className="px-8 pt-6 pb-8 text-center">
       <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
         Delete Client

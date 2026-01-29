@@ -401,9 +401,14 @@ const confirmDelete = async (selectedReason: string) => {
       TerminationInfo.TimeSheet
     );
 
-    if (deleteTimeSheetResponse?.success) {
-      SetActionStatusMessage("Placement deleted successfully.");
-    } else {
+   if (deleteTimeSheetResponse?.success) {
+  SetActionStatusMessage("Placement deleted successfully.");
+
+  setTimeout(() => {
+    setShowDeletePopup(false);
+  }, 400);
+}
+ else {
       SetActionStatusMessage(
         "Placement deleted, but some records could not be removed completely."
       );
@@ -535,6 +540,11 @@ const UpdateReplacement = async (
 
 
     SetActionStatusMessage("Replacement updated successfully.");
+      setTimeout(() => {
+    setShowReassignmentPopUp(!ShowReassignmentPopUp)
+  }, 400);
+
+   
   } catch (err: any) {
     console.error("UpdateReplacement Error:", err);
     SetActionStatusMessage("Something went wrong. Please try again.");
@@ -1165,7 +1175,17 @@ const OmServiceView = () => {
           </select>
         </div>
       )}
-
+ {ActionStatusMessage && (
+  <p
+    className={`mt-3 text-center text-sm font-medium ${
+      ActionStatusMessage === "Replacement Updated Sucessfull"|| ActionStatusMessage === "Placement deleted successfully."
+        ? "text-green-700"
+        : "text-gray-700"
+    }`}
+  >
+    {ActionStatusMessage}
+  </p>
+)}
  
       <div className="flex justify-end gap-4 mt-8">
         <button
