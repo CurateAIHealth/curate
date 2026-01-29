@@ -47,6 +47,8 @@ const ClientTable = () => {
   const [terminationInfo,SetterminationInfo]=useState<Termination[]>([])
   const [isChecking, setIsChecking] = useState(true);
   const [selectedHCP,setselectedHCP]=useState<any>()
+  const [selectedCase, setSelectedCase] = useState<any>(null);
+
   const [UpdatedCareTakerStatus,setUpdatedCareTakerStatus]=useState("")
   const [users, setUsers] = useState<User[]>([]);
   const [Fineldate, setFineldate] = useState({
@@ -57,6 +59,7 @@ const ClientTable = () => {
   const [CareTakerName,SetCareTakerName]=useState('')
   const [HCPName,setHCPName]=useState("")
   const [ShowReassignmentPopUp,setShowReassignmentPopUp]=useState(false)
+
  const [updatedAttendance, setUpdatedAttendance] = useState<AttendanceState>({});
  const [SaveButton,setSaveButton]=useState(false)
  const [TerminationInfo,SetTerminationInfo]=useState<any>()
@@ -73,7 +76,7 @@ const [enableStatus,setenableStatus]=useState(false)
   const [showExtendPopup,setshowExtendPopup]=useState(false)
   const [ExtendInfo,setExtendInfo]=useState<any>({})
   const [deleteTargetId, setDeleteTargetId] =  useState<any>();
-  const [ActionStatusMessage,SetActionStatusMessage]= useState<any>();
+  const [ActionStatusMessage,SetActionStatusMessage]= useState<any>("");
   const [SearchResult,setSearchResult]=useState("")
   const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [search, setSearch] = useState("On Service");
@@ -104,13 +107,13 @@ const fetchData = async (forceFresh = false) => {
     if (!mounted) return;
 
     if (forceFresh) {
-      // ✅ FULL REPLACEMENT
+    
       cachedUsersFullInfo = usersResult;
       cachedDeploymentInfo = placementInfo??[];
       cachedReplacementInfo = ReplacementInfo??[];
       cachedTermination = TerminationInformation??[];
     } else {
-      // ✅ MERGE ONLY FOR FIRST LOAD
+   
       cachedUsersFullInfo ||= usersResult;
 
       cachedDeploymentInfo = [
@@ -120,19 +123,9 @@ const fetchData = async (forceFresh = false) => {
         ).values(),
       ];
 
-      cachedReplacementInfo = [
-        ...new Map(
-          [...(cachedReplacementInfo ?? []), ...(ReplacementInfo ?? [])]
-            .map((item) => [item.ReplacementId, item])
-        ).values(),
-      ];
+      cachedReplacementInfo = ReplacementInfo??[];
 
-      cachedTermination = [
-        ...new Map(
-          [...(cachedTermination ?? []), ...(TerminationInformation ?? [])]
-            .map((item) => [item.HCAContact, item])
-        ).values(),
-      ];
+      cachedTermination = TerminationInformation??[];
     }
 
     setUsers([...cachedUsersFullInfo]);
@@ -408,9 +401,14 @@ const confirmDelete = async (selectedReason: string) => {
       TerminationInfo.TimeSheet
     );
 
-    if (deleteTimeSheetResponse?.success) {
-      SetActionStatusMessage("Placement deleted successfully.");
-    } else {
+   if (deleteTimeSheetResponse?.success) {
+  SetActionStatusMessage("Placement deleted successfully.");
+
+  setTimeout(() => {
+    setShowDeletePopup(false);
+  }, 400);
+}
+ else {
       SetActionStatusMessage(
         "Placement deleted, but some records could not be removed completely."
       );
@@ -482,10 +480,11 @@ const UpdateReplacement = async (
   Available_HCP: any,
   Exsting_HCP: any
 ) => {
+
   try {
     SetActionStatusMessage("Please wait...");
 
-    // 🔐 Basic guards
+  
     if (!Available_HCP?.userId || !Exsting_HCP?.HCA_Id) {
       SetActionStatusMessage("Invalid HCP information.");
       return;
@@ -497,14 +496,14 @@ const UpdateReplacement = async (
       return;
     }
 
-    // 👤 Signed-in user info
+
     const Sign_in_UserInfo: any = await GetUserInformation(localValue);
     if (!Sign_in_UserInfo) {
       SetActionStatusMessage("Unable to fetch user details.");
       return;
     }
 
-    // 📝 Reason update
+   
     const postReasonRes = await UpdateReason(
       Available_HCP.userId,
       Exsting_HCP.HCA_Id,
@@ -537,28 +536,31 @@ const UpdateReplacement = async (
       UpdateHCAnstatusInFullInformation(Available_HCP.userId),
     ]);
 
+  const reove=await DeleteHCAStatus(Exsting_HCP.HCA_Id)
+
+
     SetActionStatusMessage("Replacement updated successfully.");
+      setTimeout(() => {
+    setShowReassignmentPopUp(!ShowReassignmentPopUp)
+  }, 400);
+
+   
   } catch (err: any) {
     console.error("UpdateReplacement Error:", err);
     SetActionStatusMessage("Something went wrong. Please try again.");
   }
+
+  
 };
 
-
+console.log('Checkinf HCP Information----',selectedHCP)
 
 
 const OmServiceView = () => {
     return (
       <div className="w-full flex flex-col gap-8 p-2 bg-gray-50">
        
-      {ActionStatusMessage && (
-          <div className="flex flex-col items-center justify-center gap-4 mt-4 bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 px-4 py-4">
-          {ActionStatusMessage!=="Replacement Updated Sucessfull"&&  <div className="w-5 h-5 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>}
-            <p className={`text-center ${ActionStatusMessage==="Replacement Updated Sucessfull"?"text-green-800":"text-red-500"} font-semibold`}>
-              {ActionStatusMessage}
-            </p>
-          </div>
-        )}
+    
            
         <div className="flex itemcs-center gap-2 justify-end">
             <div
@@ -696,6 +698,7 @@ const OmServiceView = () => {
     <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white uppercase text-xs font-semibold">
       <tr>
         <th className="px-3 py-3 text-left break-words">Client Name</th>
+        <th className="px-3 py-3 text-left break-words">Service Charge</th>
         <th className="px-3 py-3 text-left break-words">Patient Name</th>
         <th className="px-3 py-3 text-left break-words">Contact</th>
         <th className="px-3 py-3 text-left break-words">Location</th>
@@ -721,7 +724,9 @@ const OmServiceView = () => {
           <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
             {toProperCaseLive(c.name)}
           </td>
-
+ <td className="px-3 py-3 text-gray-700  text-xs break-words">
+            800 Per Day
+          </td>
           <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
             {toProperCaseLive(c.PatientName)}
           </td>
@@ -734,12 +739,32 @@ const OmServiceView = () => {
             {c.location}
           </td>
 
-         <td className="px-3 py-3 w-auto " onClick={()=>ShowDompleteInformation(c.HCA_Id,c.HCA_Name)}>
-          
-  <span className="inline-flex items-center justify-center px-1 py-1 text-[11px] hover:underline hover:text-blue-800 rounded-md font-medium border bg-white cursor-pointer gap-1">
-    🩺 {toProperCaseLive(c.HCA_Name)}
+    <td
+  className="px-3 py-3 whitespace-nowrap"
+  onClick={() => ShowDompleteInformation(c.HCA_Id, c.HCA_Name)}
+>
+  <span
+    className="
+      inline-flex
+      w-fit
+      items-center
+      gap-1
+      px-1 py-1
+      text-[11px]
+      font-medium
+      rounded-md
+      bg-white
+      cursor-pointer
+      hover:text-blue-800
+    "
+  >
+    🩺
+    <span className="hover:underline">
+      {toProperCaseLive(c.HCA_Name)}
+    </span>
   </span>
 </td>
+
 
 
           <td className="px-3 py-3 break-words">
@@ -764,185 +789,202 @@ const OmServiceView = () => {
     active:scale-95 
     cursor-pointer
   "
-  onClick={()=>setShowReassignmentPopUp(!ShowReassignmentPopUp)}
+  onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setSelectedCase(c)}}
 >
   Reassignment
 </button>
 
-{ShowReassignmentPopUp&&<div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[1px]">
-  
-
+{ShowReassignmentPopUp && (
   <div
-    className="
-      w-[500px]
-      rounded-2xl
-      bg-white/80
-     
-      border border-white/60
-      overflow-hidden
-    "
+    className="fixed inset-0 z-50 flex items-center justify-center "
+    onClick={() => setShowReassignmentPopUp(false)}
   >
-  
-    <div className="h-1.5 bg-gradient-to-r from-cyan-400 to-blue-500" />
-
-
-    <div className="px-7 py-6 space-y-6">
-      <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-lg font-bold text-gray-800">
-          Request Replacement
-        </h2>
-        <p className="text-sm text-gray-600 mt-1">
-          Let us know the reason to proceed
-        </p>
-      </div>
-     <img src='Icons/Curate-logoq.png' className="h-8" alt="Company Logo"/>
-</div>
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="
+      flex
+      flex-col
+        relative
+        w-[500px]
+        rounded-2xl
+        bg-white/80
+        border border-white/60
+        overflow-hidden
+      "
+    >
     
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Reason for Replacement
-        </label>
+      <button
+        onClick={() => setShowReassignmentPopUp(false)}
+        className="ml-auto absolute cursor-pointer top-4 right-4  text-gray-900 hover:text-gray-800 transition"
+      >
+        ✕
+      </button>
 
-        <select
-          value={selectedReason}
-          onChange={(e) => setSelectedReason(e.target.value)}
-          className="
-            w-full
-            rounded-xl
-            bg-white/90
-            border border-gray-300
-            px-4 py-2.5
-            text-sm
-            focus:outline-none
-            focus:ring-2 focus:ring-blue-400
-          "
-        >
-          <option value="">Choose reason</option>
-          <option value="Service Quality Issue">Service Quality Issue</option>
-          <option value="Staff Unavailable">Staff Unavailable</option>
-          <option value="Schedule Mismatch">Schedule Mismatch</option>
-          <option value="Patient Recovered">Patient Recovered</option>
-          <option value="Cost Concern">Cost Concern</option>
-          <option value="Other">Other</option>
-        </select>
-      </div>
 
-      {selectedReason === "Other" && (
-        <textarea
-          rows={3}
-          placeholder="Please specify"
-          value={otherReason}
-          onChange={(e) => setOtherReason(e.target.value)}
-          className="
-            w-full
-            rounded-xl
-            bg-white/90
-            border border-gray-300
-            px-4 py-2.5
-            text-sm
-            resize-none
-            focus:outline-none
-            focus:ring-2 focus:ring-blue-400
-          "
-        />
-      )}
-{selectedReason &&
-  (selectedReason !== "Other" || otherReason)&& 
-  <div>
-  <select
-              className="w-full p-2 text-sm border rounded-lg cursor-pointer text-center"
-              onChange={(e) => {
-                const selected = HCA_List.find(
-                  (hca) => hca.FirstName === e.target.value
-                );
-                setselectedHCP(selected)
-              }}
-            >
-              <option>Assign New HCA</option>
-              {HCA_List.map((each: any, index: any) => (
-                <option key={index}>{each.FirstName}</option>
-              ))}
-            </select>
-              <select
-    className={`w-full p-2 text-sm border rounded-lg cursor-pointer text-center mt-2
-      ${
-        UpdatedCareTakerStatus === "Available"
-          ? "bg-green-100 border-green-300 text-green-800"
-          : UpdatedCareTakerStatus === "Sick"
-          ? "bg-yellow-100 border-yellow-300 text-yellow-800"
-          :UpdatedCareTakerStatus=== "Leave"
-          ? "bg-blue-100 border-blue-300 text-blue-800"
-          : UpdatedCareTakerStatus === "Terminated"
-          ? "bg-red-100 border-red-300 text-red-800"
-          : "bg-gray-100 border-gray-300 text-gray-800"
-      }
-    `}
-    value={UpdatedCareTakerStatus||""}
-    onChange={(e:any)=>setUpdatedCareTakerStatus(e.target.value)}
-  >
- <option >Manage {toProperCaseLive(c.HCA_Name)} Status</option>
-                            <option value="Active">🟢 Active</option>
-                            <option value="Available">🟢 Available for Work</option>
-                            <option value="Sick">🟡 Sick</option>
-                            <option value="Leave">🔵 Leave</option>
-                            <option value="Bench">🟣 Bench</option>
-                            <option value="None">⚪ None</option>
-                            <option value="Terminated">🔴 Terminated</option>
-  </select>
-            </div> }
+      <div className="h-1.5 bg-gradient-to-r from-cyan-400 to-blue-500" />
+
+      <div className="px-7 py-6 space-y-6">
+
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-gray-800">
+              Request Replacement
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Let us know the reason to proceed
+            </p>
+          </div>
+
+          <img
+            src="/Icons/Curate-logoq.png"
+            className="h-8"
+            alt="Company Logo"
+          />
+        </div>
+
   
-      <div className="flex justify-end gap-4 pt-2">
-        <button
-          onClick={() => setShowReassignmentPopUp(!ShowReassignmentPopUp)}
-          className="
-            text-sm font-medium
-            text-gray-600
-            hover:text-gray-800
-            transition cursor-pointer
-          "
-        >
-          Cancel
-        </button>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Reason for Replacement
+          </label>
 
-    <button
-  onClick={()=>UpdateReplacement(selectedHCP, c)}
+          <select
+            value={selectedReason}
+            onChange={(e) => setSelectedReason(e.target.value)}
+            className="
+              w-full rounded-xl bg-white/90 border border-gray-300
+              px-4 py-2.5 text-sm
+              focus:outline-none focus:ring-2 focus:ring-blue-400
+            "
+          >
+            <option value="">Choose reason</option>
+            <option value="Service Quality Issue">Service Quality Issue</option>
+            <option value="Staff Unavailable">Staff Unavailable</option>
+            <option value="Schedule Mismatch">Schedule Mismatch</option>
+            <option value="Patient Recovered">Patient Recovered</option>
+            <option value="Cost Concern">Cost Concern</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
 
-  className={`
-    inline-flex items-center justify-center
-    px-7 py-3
-    text-sm font-semibold
-    rounded-full
-    transition-all duration-300 ease-out
 
-    ${
-      selectedReason && (selectedReason !== "Other" || otherReason)
-        ?
-         `
-          text-white
-          bg-gradient-to-r from-blue-600 to-cyan-600
-          shadow-[0_10px_30px_-10px_rgba(59,130,246,0.7)]
-          hover:from-blue-700 hover:to-cyan-700
-          hover:shadow-[0_14px_40px_-12px_rgba(59,130,246,0.9)]
-          active:scale-95
-          cursor-pointer
-        `: `
-          bg-gray-200
-          text-gray-500
-          cursor-not-allowed
-          shadow-none
-        `
-    }
-  `}
+        {selectedReason === "Other" && (
+          <textarea
+            rows={3}
+            placeholder="Please specify"
+            value={otherReason}
+            onChange={(e) => setOtherReason(e.target.value)}
+            className="
+              w-full rounded-xl bg-white/90 border border-gray-300
+              px-4 py-2.5 text-sm resize-none
+              focus:outline-none focus:ring-2 focus:ring-blue-400
+            "
+          />
+        )}
+
+    
+        {selectedReason &&
+          (selectedReason !== "Other" || otherReason) && (
+            <div>
+              <select
+  className="w-full p-2 text-sm border rounded-lg cursor-pointer text-center"
+   value={selectedHCP?.userId || ""}
+  onChange={(e) => {
+    const selected = HCA_List.find(
+      (hca) => hca.userId === e.target.value
+    );
+    setselectedHCP(selected);
+  }}
 >
-  Confirm Replacement
-</button>
+  <option value="">Assign New HCA</option>
 
+  {HCA_List.map((each) => (
+    <option key={each.id} value={each.userId}>
+      {each.FirstName}
+    </option>
+  ))}
+</select>
+
+
+              <select
+                className={`
+                  w-full p-2 text-sm border rounded-lg cursor-pointer text-center mt-2
+                  ${
+                    UpdatedCareTakerStatus === "Available"
+                      ? "bg-green-100 border-green-300 text-green-800"
+                      : UpdatedCareTakerStatus === "Sick"
+                      ? "bg-yellow-100 border-yellow-300 text-yellow-800"
+                      : UpdatedCareTakerStatus === "Leave"
+                      ? "bg-blue-100 border-blue-300 text-blue-800"
+                      : UpdatedCareTakerStatus === "Terminated"
+                      ? "bg-red-100 border-red-300 text-red-800"
+                      : "bg-gray-100 border-gray-300 text-gray-800"
+                  }
+                `}
+                value={UpdatedCareTakerStatus || ""}
+                onChange={(e) => setUpdatedCareTakerStatus(e.target.value)}
+              >
+                <option>
+            Manage {CareTakerName} Status
+                </option>
+                <option value="Active">🟢 Active</option>
+                <option value="Available">🟢 Available for Work</option>
+                <option value="Sick">🟡 Sick</option>
+                <option value="Leave">🔵 Leave</option>
+                <option value="Bench">🟣 Bench</option>
+                <option value="None">⚪ None</option>
+                <option value="Terminated">🔴 Terminated</option>
+              </select>
+            </div>
+          )}
+
+        {ActionStatusMessage && (
+  <p
+    className={`mt-3 text-center text-sm font-medium ${
+      ActionStatusMessage === "Replacement Updated Sucessfull"
+        ? "text-green-700"
+        : "text-gray-700"
+    }`}
+  >
+    {ActionStatusMessage}
+  </p>
+)}
+
+        <div className="flex justify-end gap-4 pt-2">
+          <button
+            onClick={() => setShowReassignmentPopUp(false)}
+            className="text-sm font-medium text-gray-600 hover:text-gray-800 transition"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={() => UpdateReplacement(selectedHCP, selectedCase)}
+            disabled={
+              !(
+               selectedHCP&& selectedReason &&
+                (selectedReason !== "Other" || otherReason)
+              )
+            }
+            className={`
+              inline-flex items-center justify-center
+              px-7 py-3 text-sm font-semibold rounded-full transition-all
+              ${
+                selectedHCP&&selectedReason &&
+                (selectedReason !== "Other" || otherReason)
+                  ? "text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 active:scale-95"
+                  : "bg-gray-200 text-gray-500 cursor-not-allowed"
+              }
+            `}
+          >
+            Confirm Replacement
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
-}
+)}
+
           
           </td>
 
@@ -1031,148 +1073,150 @@ const OmServiceView = () => {
     </div>
 }
 
-  {showDeletePopup && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-  <div className="bg-white rounded-2xl shadow-2xl w-[420px] p-7 border border-gray-200">
-    
-   
-  <div className="text-center mb-6 flex flex-col items-center gap-2">
-  <img
-    src="/Icons/Curate-logoq.png"
-    alt="Company Logo"
-    className="h-10 w-auto object-contain"
-  />
-
-  <h2 className="text-xl font-bold text-gray-800">
-    Request Termination
-  </h2>
-
-  <p className="text-sm text-gray-500 mt-1">
-    Please select a reason for requesting a termination
-  </p>
-</div>
-
-
-
-    <div className="space-y-4">
-      <label className="block text-sm font-semibold text-gray-700">
-        Reason for Replacement
-      </label>
-
-      <select
-        value={selectedReason}
-        onChange={(e) => setSelectedReason(e.target.value)}
-        className="
-          w-full
-          rounded-xl
-          border border-gray-300
-          px-4 py-2.5
-          text-sm
-          focus:outline-none
-          focus:ring-2 focus:ring-teal-500
-        "
-      >
-        <option value="">-- Select Reason --</option>
-        <option value="Service Quality Issue">Service Quality Issue</option>
-        <option value="Staff Unavailable">Staff Unavailable</option>
-        <option value="Schedule Mismatch">Schedule Mismatch</option>
-        <option value="Patient Recovered">Patient Recovered</option>
-        <option value="Cost Concern">Cost Concern</option>
-        <option value="Other">Other</option>
-      </select>
-
- 
-      {selectedReason === "Other" && (
-        <textarea
-          rows={3}
-          placeholder="Please specify the reason"
-          value={otherReason}
-          onChange={(e) => setOtherReason(e.target.value)}
-          className="
-            w-full
-            rounded-xl
-            border border-gray-300
-            px-4 py-2.5
-            text-sm
-            resize-none
-            focus:outline-none
-            focus:ring-2 focus:ring-teal-500
-          "
-        />
-      )}
-    </div>
-
-
-    {selectedReason &&
-  (selectedReason !== "Other" || otherReason)&& 
-  <div>
-  
-              <select
-    className={`w-full p-2 text-sm border rounded-lg cursor-pointer text-center mt-2
-      ${
-        UpdatedCareTakerStatus === "Available"
-          ? "bg-green-100 border-green-300 text-green-800"
-          : UpdatedCareTakerStatus === "Sick"
-          ? "bg-yellow-100 border-yellow-300 text-yellow-800"
-          :UpdatedCareTakerStatus=== "Leave"
-          ? "bg-blue-100 border-blue-300 text-blue-800"
-          : UpdatedCareTakerStatus === "Terminated"
-          ? "bg-red-100 border-red-300 text-red-800"
-          : "bg-gray-100 border-gray-300 text-gray-800"
-      }
-    `}
-    value={UpdatedCareTakerStatus||""}
-    onChange={(e:any)=>setUpdatedCareTakerStatus(e.target.value)}
-  >
-<option >Manage {toProperCaseLive(CareTakerName)} Status</option>
-                            <option value="Active">🟢 Active</option>
-                            <option value="Available">🟢 Available for Work</option>
-                            <option value="Sick">🟡 Sick</option>
-                            <option value="Leave">🔵 Leave</option>
-                            <option value="Bench">🟣 Bench</option>
-                            <option value="None">⚪ None</option>
-                            <option value="Terminated">🔴 Terminated</option>
-  </select>
-            </div> }
-    <div className="flex justify-end gap-4 mt-8">
+ {showDeletePopup && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="relative bg-white rounded-2xl shadow-2xl w-[420px] p-7 border border-gray-200">
+      
+     
       <button
         onClick={() => setShowDeletePopup(false)}
-        className="
-          px-5 py-2.5
-          text-sm font-medium
-          text-gray-700
-          bg-gray-100
-          rounded-xl
-          hover:bg-gray-200
-          transition
-        "
+        className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 transition cursor-pointer"
+        aria-label="Close"
       >
-        Cancel
+        ✕
       </button>
 
-      <button
-        onClick={handleDelete}
-        disabled={!selectedReason}
-        className="
-          px-5 py-2.5
-          text-sm font-semibold
-          text-white
-          bg-teal-600
-          rounded-xl
-          shadow-md
-          hover:bg-teal-700
-          disabled:opacity-50
-          disabled:cursor-not-allowed
-          transition
-        "
-      >
-        Confirm Termination
-      </button>
+     
+      <div className="text-center mb-6 flex flex-col items-center gap-2">
+        <img
+          src="/Icons/Curate-logoq.png"
+          alt="Company Logo"
+          className="h-10 w-auto object-contain"
+        />
+
+        <h2 className="text-xl font-bold text-gray-800">
+          Request Termination
+        </h2>
+
+        <p className="text-sm text-gray-500 mt-1">
+          Please select a reason for requesting a Termination
+        </p>
+      </div>
+
+   
+      <div className="space-y-4">
+        <label className="block text-sm font-semibold text-gray-700">
+          Reason for Termination
+        </label>
+
+        <select
+          value={selectedReason}
+          onChange={(e) => setSelectedReason(e.target.value)}
+          className="
+            w-full rounded-xl border border-gray-300
+            px-4 py-2.5 text-sm
+            focus:outline-none focus:ring-2 focus:ring-teal-500
+          "
+        >
+          <option value="">-- Select Reason --</option>
+          <option value="Service Quality Issue">Service Quality Issue</option>
+          <option value="Staff Unavailable">Staff Unavailable</option>
+          <option value="Schedule Mismatch">Schedule Mismatch</option>
+          <option value="Patient Recovered">Patient Recovered</option>
+          <option value="Cost Concern">Cost Concern</option>
+          <option value="Other">Other</option>
+        </select>
+
+        {selectedReason === "Other" && (
+          <textarea
+            rows={3}
+            placeholder="Please specify the reason"
+            value={otherReason}
+            onChange={(e) => setOtherReason(e.target.value)}
+            className="
+              w-full rounded-xl border border-gray-300
+              px-4 py-2.5 text-sm resize-none
+              focus:outline-none focus:ring-2 focus:ring-teal-500
+            "
+          />
+        )}
+      </div>
+
+   
+      {selectedReason && (selectedReason !== "Other" || otherReason) && (
+        <div className="mt-4">
+          <select
+            className={`w-full p-2 text-sm border rounded-lg cursor-pointer text-center
+              ${
+                UpdatedCareTakerStatus === "Available"
+                  ? "bg-green-100 border-green-300 text-green-800"
+                  : UpdatedCareTakerStatus === "Sick"
+                  ? "bg-yellow-100 border-yellow-300 text-yellow-800"
+                  : UpdatedCareTakerStatus === "Leave"
+                  ? "bg-blue-100 border-blue-300 text-blue-800"
+                  : UpdatedCareTakerStatus === "Terminated"
+                  ? "bg-red-100 border-red-300 text-red-800"
+                  : "bg-gray-100 border-gray-300 text-gray-800"
+              }
+            `}
+            value={UpdatedCareTakerStatus || ""}
+            onChange={(e) => setUpdatedCareTakerStatus(e.target.value)}
+          >
+            <option>
+              Manage {toProperCaseLive(CareTakerName)} Status
+            </option>
+            <option value="Active">🟢 Active</option>
+            <option value="Available">🟢 Available for Work</option>
+            <option value="Sick">🟡 Sick</option>
+            <option value="Leave">🔵 Leave</option>
+            <option value="Bench">🟣 Bench</option>
+            <option value="None">⚪ None</option>
+            <option value="Terminated">🔴 Terminated</option>
+          </select>
+        </div>
+      )}
+ {ActionStatusMessage && (
+  <p
+    className={`mt-3 text-center text-sm font-medium ${
+      ActionStatusMessage === "Replacement Updated Sucessfull"|| ActionStatusMessage === "Placement deleted successfully."
+        ? "text-green-700"
+        : "text-gray-700"
+    }`}
+  >
+    {ActionStatusMessage}
+  </p>
+)}
+ 
+      <div className="flex justify-end gap-4 mt-8">
+        <button
+          onClick={() => setShowDeletePopup(false)}
+          className="
+            px-5 py-2.5 text-sm font-medium
+            text-gray-700 bg-gray-100 rounded-xl
+            hover:bg-gray-200 transition
+          "
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleDelete}
+          disabled={!selectedReason}
+          className="
+            px-5 py-2.5 text-sm font-semibold
+            text-white bg-teal-600 rounded-xl shadow-md
+            hover:bg-teal-700
+            disabled:opacity-50 disabled:cursor-not-allowed
+            transition
+          "
+        >
+          Confirm Termination
+        </button>
+      </div>
     </div>
   </div>
-</div>
+)}
 
-  )}
 
 
 {showTimeSheet && TimeSheet_Info && (

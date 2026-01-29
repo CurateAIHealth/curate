@@ -56,14 +56,8 @@ useEffect(() => {
         status: "Terminated",
       })) ?? [];
 
-      terminationCache = [
-        ...new Map(
-          [...(terminationCache ?? []), ...Result]
-            .map(item => [item.contact, item])
-        ).values()
-      ];
 
-      setPlacements(terminationCache);
+      setPlacements(Result);
       setReplacementReasons(ReplacementReasons?? [])
       setIsChecking(false);
     } catch (err) {
