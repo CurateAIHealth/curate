@@ -7,7 +7,7 @@ let cachedTermination:any[]
 
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Trash } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -45,6 +45,8 @@ const ClientTable = () => {
   const [ClientsInformation, setClientsInformation] = useState<Deployment[]>([]);
   const [ReplacementInformation,setReplacementInformation]=useState<Replace[]>([])
   const [terminationInfo,SetterminationInfo]=useState<Termination[]>([])
+  const [selectedAssignHCP,setselectedAssignHCP]=useState<any>()
+  const [selectedClient,setselectedClient]=useState<any>()
   const [isChecking, setIsChecking] = useState(true);
   const [selectedHCP,setselectedHCP]=useState<any>()
   const [selectedCase, setSelectedCase] = useState<any>(null);
@@ -234,6 +236,116 @@ const fetchData = async (forceFresh = false) => {
       confirmDelete(selectedReason);
     }
   };
+
+  const UpdateAssignHca = async () => {
+  try {
+   
+    if (!selectedClient || !selectedAssignHCP) {
+      SetActionStatusMessage("Invalid client or HCA selection.");
+      return;
+    }
+
+    const {
+      Client_Id: clientId,
+      name: clientName,
+      email: clientEmail,
+      contact: clientContact,
+      location: address,
+      PatientName: patientName,
+      Patient_PhoneNumber: patientPhone,
+      hcpSource: source,
+    } = selectedClient;
+
+    const {
+      userId: hcaUserId,
+      FirstName: hcaName,
+      Contact: hcaContact,
+      Type = "HCA",
+    } = selectedAssignHCP;
+
+    if (!clientId || !hcaUserId) {
+      SetActionStatusMessage("Missing client or HCA ID.");
+      return;
+    }
+
+    SetActionStatusMessage("Please wait, assigning HCA...");
+
+   
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${now.getMonth() + 1}`;
+    const todayDate = now.toLocaleDateString("en-IN");
+    const timestamp = now.toISOString();
+
+    const lastDateOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0
+    ).toLocaleDateString("en-IN");
+
+    const attendanceRecord = {
+      date: todayDate,
+      checkIn: now.toLocaleTimeString(),
+      status: "Present",
+    };
+
+  
+    await Promise.all([
+      UpdateUserContactVerificationstatus(clientId, "Placed"),
+      UpdateHCAnstatus(hcaUserId, "Assigned"),
+      UpdateHCAnstatusInFullInformation(hcaUserId),
+    ]);
+
+  
+    const placementInfo = await GetTimeSheetInfo();
+    const invoiceNumber = `BSV${now.getFullYear()}_${(placementInfo?.length || 0) + 1}`;
+
+    const response = await TestInsertTimeSheet(
+      todayDate,
+      lastDateOfMonth,
+      "Active",
+      address,
+      clientContact,
+      clientName,
+      patientName,
+      patientPhone,
+      source,
+      hcaUserId,
+      clientId,
+      hcaName,
+      hcaContact,
+      "Google",
+      "Not Provided",
+      "PP",
+      "21000",
+      "700",
+      "1800",
+      "900",
+      currentMonth,
+      ["P"],
+      timestamp,
+      invoiceNumber,
+      Type
+    );
+
+    if (!response?.success) {
+      throw new Error(response?.message || "Failed to assign HCA.");
+    }
+
+    SetActionStatusMessage(response.message);
+
+    // Optional navigation / refresh (enable if needed)
+    // dispatch(UpdateRefresh(1));
+    // router.push("/PDRView");
+    // dispatch(Update_Main_Filter_Status("Deployment"));
+
+  } catch (error: any) {
+    console.error("UpdateAssignHca Error:", error);
+    SetActionStatusMessage(
+      error?.message || "Something went wrong while assigning HCA."
+    );
+  }
+};
+
 
   const isDeleteDisabled =
     !selectedReason || (selectedReason === "Other" && !otherReason.trim());
@@ -1024,7 +1136,7 @@ const OmServiceView = () => {
  <td     className="inline-block px-1 cursor-pointer py-2 text-xs mt-4 font-medium cursor-pointer bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md">
             <button
             className="cursor-pointer"
-             onClick={() => setShowAssignPopup(true)}
+             onClick={() => {setShowAssignPopup(true),setselectedClient(c),setselectedAssignHCP(null)}}
             >
           Add HCP
             </button>
@@ -1069,10 +1181,10 @@ const OmServiceView = () => {
         <div className="flex w-full items-center justify-between">
           <div>
             <h2 className="text-base font-semibold text-gray-900">
-              Assign Additional HCA
+              Assign Additional  HCP general professionals
             </h2>
             <p className="text-xs text-gray-500">
-              Select a healthcare assistant to assign
+           Select a healthcare professional to assign
             </p>
           </div>
 
@@ -1095,19 +1207,20 @@ const OmServiceView = () => {
                      focus:outline-none focus:ring-1 focus:ring-emerald-600
                      focus:border-emerald-600"
           value={selectedHCP?.userId || ""}
-          // onChange={(e) => {
-          //   const selected = HCA_List.find(
-          //     (hca) => hca.userId === e.target.value
-          //   );
-          //   setselectedHCP(selected || null);
-          // }}
-        >
-          <option value="">Select HCA</option>
-          {HCA_List.map((each) => (
-            <option key={each.id} value={each.userId}>
-              {each.FirstName}
-            </option>
-          ))}
+        onChange={(e) => {
+    const selected = HCA_List.find(
+      (hca) => hca.userId === e.target.value
+    );
+    setselectedAssignHCP(selected);
+  }}
+>
+  <option value="">Assign New HCA</option>
+
+  {HCA_List.map((each) => (
+    <option key={each.id} value={each.userId}>
+      {each.FirstName}
+    </option>
+  ))}
         </select>
 
         {selectedHCP && (
@@ -1119,7 +1232,17 @@ const OmServiceView = () => {
           </div>
         )}
       </div>
-
+{ActionStatusMessage && (
+  <p
+    className={`mt-3 text-center text-sm font-medium ${
+      ActionStatusMessage === "Replacement Updated Sucessfull"|| ActionStatusMessage === "Placement deleted successfully."||ActionStatusMessage ===  "HCA Assigned Successfully, For More Information Check in Deployments"
+        ? "text-green-700"
+        : "text-gray-700"
+    }`}
+  >
+    {ActionStatusMessage}
+  </p>
+)}
     
       <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
         <button
@@ -1131,10 +1254,11 @@ const OmServiceView = () => {
         </button>
 
         <button
-          disabled={!selectedHCP}
+        onClick={UpdateAssignHca}
+          disabled={!selectedAssignHCP}
           className={`px-4 py-2 text-sm rounded-md text-white
             ${
-              selectedHCP
+              selectedAssignHCP
                 ? "bg-emerald-600 hover:bg-emerald-700"
                 : "bg-gray-300 cursor-not-allowed"
             }`}

@@ -1554,17 +1554,17 @@ export const TestInsertTimeSheet = async (
     const collection = db.collection("TimeSheet");
 
 
-    const alreadyExists = await collection.findOne({
-      ClientId: ClientId,
-      HCAId: hcpId,
-    });
+    // const alreadyExists = await collection.findOne({
+    //   ClientId: ClientId,
+    //   HCAId: hcpId,
+    // });
 
-    if (alreadyExists) {
-      return {
-        success: false,
-        message: "Duplicate entry",
-      };
-    }
+    // if (alreadyExists) {
+    //   return {
+    //     success: false,
+    //     message: "Duplicate entry",
+    //   };
+    // }
 
     const TimeSheetData = {
       StartDate,

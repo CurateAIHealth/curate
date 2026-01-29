@@ -3,7 +3,7 @@ let cachedRegisteredUsers: any[] = [];
 let cachedTimeSheetInfo: any[] = [];
 
 import React, { useEffect, useState } from "react";
-import { CircleCheckBig, LogOut, Trash } from "lucide-react";
+import { CircleCheckBig, Eye, LogOut, Trash } from "lucide-react";
 import { DeleteDeployMent, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { GetCurrentDeploymentData, Update_Main_Filter_Status, UpdateFetchedInformation, UpdateSubHeading } from "@/Redux/action";
@@ -31,6 +31,7 @@ interface AttendanceData {
 type AttendanceState = Record<number, AttendanceData>;
 const ClientTable = () => {
   const [ClientsInformation, setClientsInformation] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState(true); 
   const [isChecking, setIsChecking] = useState(true);
   const [users, setUsers] = useState<any[]>([]);
   const [Fineldate, setFineldate] = useState({
@@ -351,6 +352,11 @@ const handleLogout = () => {
     new Date(0, i).toLocaleString("default", { month: "long" })
   );
 
+  const filteredClients = FilterFinelTimeSheet.filter(client =>
+ client.PDRStatus === activeTab
+);
+
+
  return (
 <div className="w-full min-h-screen bg-gradient-to-br from-[#f9fbfa] via-[#f0fdfa] to-[#ecfeff] flex flex-col gap-10 p-10 relative overflow-hidden">
 
@@ -430,12 +436,52 @@ const handleLogout = () => {
   {ClientsInformation.length > 0 && (
     <div className="flex flex-col gap-6 bg-white/80 backdrop-blur-xl border border-gray-100 rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.05)] p-8 transition-all hover:shadow-[0_12px_60px_rgba(0,0,0,0.08)]">
 
-      <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-3">
-        <h3 className="text-xl font-bold text-gray-800">Pending PDR List</h3>
-        <span className="text-sm font-medium text-gray-500">
-          Total: <span className="text-emerald-600 font-semibold">{ClientsInformation.length}</span>
-        </span>
-      </div>
+
+<div className="flex flex-col gap-4 mb-6 border-b border-gray-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+
+  <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
+    PDR List
+  </h3>
+
+
+  <div className="flex items-center gap-4">
+ 
+    <div className="flex rounded-lg border border-gray-200 bg-gray-100 p-1">
+      <button
+        onClick={() => setActiveTab(true)}
+        className={`px-4 py-1.5 text-sm font-medium cursor-pointer rounded-md transition
+          ${
+            activeTab
+              ? "bg-emerald-600 text-white shadow"
+              : "text-gray-600 hover:bg-white"
+          }`}
+      >
+        Pending PDRs
+      </button>
+
+      <button
+        onClick={() => setActiveTab(false)}
+        className={`px-4 py-1.5 text-sm font-medium cursor-pointer rounded-md transition
+          ${
+            !activeTab
+              ? "bg-emerald-600 text-white shadow"
+              : "text-gray-600 hover:bg-white"
+          }`}
+      >
+        Completed PDRs
+      </button>
+    </div>
+
+    {/* Count */}
+    <span className="text-sm text-gray-500">
+      Total:
+      <span className="ml-1 font-semibold text-emerald-600">
+        {filteredClients.length}
+      </span>
+    </span>
+  </div>
+</div>
+
 
       <div className="overflow-hidden rounded-2xl border border-gray-100 shadow-inner">
         <table className="w-full text-sm text-left text-gray-700">
@@ -449,7 +495,7 @@ const handleLogout = () => {
             </tr>
           </thead>
           <tbody>
-            {FilterFinelTimeSheet.reverse().map((c, i) => (
+            {filteredClients.reverse().map((c, i) => (
               <tr
                 key={i}
                 className="border-b border-gray-400 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-cyan-50 transition-all duration-300"
@@ -469,7 +515,7 @@ const handleLogout = () => {
                     onClick={() => UpdatePopup(c)}
                     className="px-6 py-2 text-xs cursor-pointer font-semibold bg-gradient-to-r from-emerald-600 to-teal-500 text-white rounded-full shadow-md hover:shadow-lg hover:scale-[1.05] transition-all duration-300"
                   >
-                  {c.PDRStatus?  'Update PDR':'Fill PDR'}
+                  <Eye/>
                   </button>
                 </td>
               </tr>
