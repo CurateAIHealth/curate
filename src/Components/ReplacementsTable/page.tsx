@@ -37,7 +37,7 @@ const router=useRouter()
       // const ReplacementReasons:any= await GetReasonsInfoInfo()
       if (!PlacementInformation || PlacementInformation.length === 0) return;
 
-   console.log("Check for the Datta0000",PlacementInformation)
+
 
       const formatted = PlacementInformation.map((record: any) => ({
         CurrentHCA_id:record.HCAId||"",
