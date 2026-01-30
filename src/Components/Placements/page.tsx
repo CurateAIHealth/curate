@@ -50,7 +50,8 @@ const ClientTable = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [selectedHCP,setselectedHCP]=useState<any>()
   const [selectedCase, setSelectedCase] = useState<any>(null);
-
+const [ReplacementTime,setReplacementTime]=useState("")
+const [ReplacementDate,setReplacementDate]=useState("")
   const [UpdatedCareTakerStatus,setUpdatedCareTakerStatus]=useState("")
   const [users, setUsers] = useState<User[]>([]);
   const [Fineldate, setFineldate] = useState({
@@ -497,7 +498,9 @@ const confirmDelete = async (selectedReason: string) => {
       TerminationInfo.HCA_Id,
       TerminationInfo.Client_Id,
       selectedReason,
-      otherReason
+      otherReason,
+         ReplacementDate,
+      ReplacementTime,
     );
 
  
@@ -586,7 +589,8 @@ console.log("Test Today------",isInvoiceDay
 
 )
 
-console.log("Check for ----",TerminationInfo)
+console.log("Check for ReplacementTime----",ReplacementTime)
+console.log("Check for ReplacementTime-----",new Date(ReplacementDate).toLocaleDateString("En-in"))
 
 const UpdateReplacement = async (
   Available_HCP: any,
@@ -620,7 +624,9 @@ const UpdateReplacement = async (
       Available_HCP.userId,
       Exsting_HCP.HCA_Id,
       selectedReason,
-      otherReason
+      otherReason,
+       ReplacementDate,
+      ReplacementTime,
     );
 
     if (!postReasonRes?.success) {
@@ -634,7 +640,9 @@ const UpdateReplacement = async (
     const UpdateReplacmentInfo = await UpdateReplacmentData(
       Available_HCP,
       Exsting_HCP,
-      TimeStampData
+      TimeStampData,
+      ReplacementDate,
+      ReplacementTime,
     );
 
     if (!UpdateReplacmentInfo?.success) {
@@ -995,7 +1003,35 @@ const OmServiceView = () => {
           />
         )}
 
-    
+ {selectedReason &&
+          (selectedReason !== "Other" || otherReason) && (
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div className="flex flex-col space-y-1">
+    <label className="text-sm font-medium text-gray-700">
+      Replacement Date
+    </label>
+    <input
+      type="date"
+      onChange={(e)=>setReplacementDate(e.target.value)}
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+    />
+  </div>
+
+  <div className="flex flex-col space-y-1">
+    <label className="text-sm font-medium text-gray-700">
+      Replacement Time
+    </label>
+    <input
+      type="time"
+      onChange={(e)=>setReplacementTime(e.target.value)}
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+    />
+  </div>
+</div>
+          )}
+
         {selectedReason &&
           (selectedReason !== "Other" || otherReason) && (
             <div>
@@ -1373,6 +1409,34 @@ const OmServiceView = () => {
           />
         )}
       </div>
+ {selectedReason &&
+          (selectedReason !== "Other" || otherReason) && (
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div className="flex flex-col space-y-1">
+    <label className="text-sm font-medium text-gray-700">
+      Termination Date
+    </label>
+    <input
+      type="date"
+      onChange={(e)=>setReplacementDate(e.target.value)}
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+    />
+  </div>
+
+  <div className="flex flex-col space-y-1">
+    <label className="text-sm font-medium text-gray-700">
+      Termination Time
+    </label>
+    <input
+      type="time"
+      onChange={(e)=>setReplacementTime(e.target.value)}
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+    />
+  </div>
+</div>
+          )}
 
    
       {selectedReason && (selectedReason !== "Other" || otherReason) && (

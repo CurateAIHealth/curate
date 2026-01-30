@@ -21,6 +21,7 @@
   import MedicationSchedule from '@/Components/Medications/page'
   import { CheckboxGroup } from '@/Components/CheckboxGroup'
   import axios from 'axios'
+import { GetUsersFullInfo } from '@/Lib/user.action'
   type EditingKeys = 'PatientCardEditing' | 'ClientCardEditing' | 'PatientDetails' | 'AdditionalInformation' | 'OtherInformation' | 'EquipmentDetails' | 'Hygiene' | 'Medication';
 
 
@@ -57,13 +58,15 @@
 
   type StringMap = Record<string, string>;
   export default function DataCollectionForm() {
-
+  const [users, setUsers] = useState<any>([]);
     const [showRemark, setShowRemark] = useState<Record<string, boolean>>({});
     const [showScanner, setShowScanner] = useState(false);
+    const [EditHealthcareProfessional,setEditHealthcareProfessional]=useState(false)
     const [UploadStatusMessage,setUploadStatusMessage]=useState("")
     const [form, setForm] = useState<StringMap>({});
     const [otherInputs, setOtherInputs] = useState<StringMap>({});
     const [AdvanceAmount,setAdvanceAmount]=useState<any>("")
+      const [selectedHCP,setselectedHCP]=useState<any>()
     const [isEditing, setIsEditing] = useState({ PatientCardEditing: false, ClientCardEditing: false, PatientDetails: false, AdditionalInformation: false, OtherInformation: false, EquipmentDetails: false, Hygiene: false, Medication: false });
     const dispatch = useDispatch()
     const ShowPreviewData = useSelector((state: any) => state.CurrentPreview)
@@ -82,11 +85,21 @@ const reduxFormData = useSelector(
 
 const [formData, setFormData] = useState<any>({});
 
+
 useEffect(() => {
-  if (reduxFormData) {
+  const fetchData = async () => {
+    if (!reduxFormData) return;
+
     setFormData(reduxFormData);
-  }
+
+    const fetchedData = await GetUsersFullInfo();
+    setUsers(fetchedData);
+  };
+
+  fetchData();
 }, [reduxFormData]);
+
+
 
 
     const handleChange = (key: string, value: any) => {
@@ -207,10 +220,45 @@ if (url) {
     //     setMedications(newMeds);
     //   };
 
+ const filterProfilePic = (users || []).map(
+        (each: any) => each?.HCAComplitInformation ?? {}
+      );
+  const Finel = filterProfilePic.map((each: any) => ({
+    id: each.UserId,
+    FirstName: each.HCPFirstName,
+    AadharNumber: each.HCPAdharNumber,
+    Age: each.Age,
+    userType: each.userType,
+    Location: each['Permanent Address']||'',
+    Email: each.HCPEmail,
+    Contact: each.HCPContactNumber,
+    CurrentStatus:each.CurrentStatus,
+    userId: each.UserId,
+    VerificationStatus: each.VerificationStatus,
+    DetailedVerification: each.FinelVerification,
+    EmailVerification: each.EmailVerification,
+    ClientStatus: each.ClientStatus,
+    Status: each.Status,
+    provider:each.provider,
+    payTerms:each.payTerms
+  }));
+const GetHCPName=Finel.filter((each:any)=>each.userId===formData.SuitableHCP)
+console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
+)
 
 
+  const HCA_List = Finel.filter((each: any) => {
+  const typeMatch =
+    ["healthcare-assistant", "HCA", "HCP", "HCPT"].includes(each.userType);
 
+  const isNotAssigned =
+    !each.Status?.some((s: string) => s === "Assigned");
 
+  const isValidCurrentStatus =
+    !["Sick", "Leave", "Terminated"].includes(each.CurrentStatus);
+
+  return typeMatch && isNotAssigned && isValidCurrentStatus;
+});
 
  if (!formData || Object.keys(formData).length === 0) {
   return (
@@ -291,6 +339,52 @@ if (url) {
                   onChange={(val) => handleChange("ClientCardRemarks", val)}
 
                 />
+
+                <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-4">
+  {EditHealthcareProfessional ? (
+    <div className="flex flex-col space-y-1">
+      <label className="text-sm font-medium text-gray-700">
+        Select Healthcare Professional
+      </label>
+      <select
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                     onChange={(e) => {
+    const selected = HCA_List.find(
+      (hca:any) => hca.userId === e.target.value
+    );
+    setselectedHCP(selected);
+  }}
+      >
+        <option value="">Choose an HCP</option>
+  {HCA_List.map((each:any) => (
+    <option key={each.id} value={each.userId}>
+      {each.FirstName}
+    </option>
+  ))}
+      </select>
+    </div>
+  ) : (
+    <div className="space-y-1">
+      <p className="text-xs text-gray-500">
+        Assigned Healthcare Professional
+      </p>
+      <p className="text-sm font-semibold text-gray-800">
+    {GetHCPName[0]?.FirstName||"Loading...."}
+      </p>
+    </div>
+  )}
+
+  <button
+  onClick={()=>setEditHealthcareProfessional(!EditHealthcareProfessional)}
+    className="inline-flex items-center justify-center rounded-lg border border-teal-600
+               px-4 py-2 text-sm font-medium text-teal-600 cursor-pointer
+               hover:bg-teal-50 transition"
+  >
+    Change Healthcare Professional
+  </button>
+</div>
+
 
    <div className="w-full max-w-sm flex flex-col gap-3">
     

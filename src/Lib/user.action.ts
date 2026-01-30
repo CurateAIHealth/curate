@@ -2071,7 +2071,9 @@ return safeUsers
 export const UpdateReplacmentData = async (
   Available_HCP: any,
   Exsting_HCP: any,
-  UpdatedBy: any
+  UpdatedBy: any,
+   ReplacementDate:any,
+      ReplacementTime:any,
 ) => {
   try {
     const cluster = await clientPromise;
@@ -2112,6 +2114,8 @@ export const UpdateReplacmentData = async (
       NewHCAId: Available_HCP?.userId,
       NewHCAName: Available_HCP?.FirstName,
       NewHCAContact: Available_HCP?.Contact,
+       ReplacementDate:ReplacementDate,
+      ReplacementTime:ReplacementTime,
     };
 
     await replacementCollection.insertOne(replacementData);
@@ -2153,7 +2157,9 @@ export const UpdateReason = async (
   Available_HCP: any,
   Exsting_HCP: any,
   selectedReason: any,
-  otherReason: any
+  otherReason: any,
+   ReplacementDate:any,
+      ReplacementTime:any,
 ) => {
   try {
     const cluster = await clientPromise;
@@ -2164,14 +2170,8 @@ export const UpdateReason = async (
   AvailableHCP: Available_HCP,
   Reason: selectedReason,
   EnterdReason: otherReason,
-  DateandTime: new Date().toLocaleString("en-IN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  }),
+  ReplacementDate:ReplacementDate,
+      ReplacementTime:ReplacementTime,
 };
 
     await replacementCollection.insertOne(ReasonData);
@@ -2192,7 +2192,9 @@ export const PostReason = async (
   Available_HCP: any,
   Exsting_HCP: any,
   selectedReason: any,
-  otherReason: any
+  otherReason: any,
+   ReplacementDate:any,
+      ReplacementTime:any,
 ) => {
   try {
     const cluster = await clientPromise;
@@ -2203,14 +2205,8 @@ export const PostReason = async (
   Client_Id: Available_HCP,
   Reason: selectedReason,
   EnterdReason: otherReason,
-  DateandTime: new Date().toLocaleString("en-IN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  }),
+  ReplacementDate:ReplacementDate,
+      ReplacementTime:ReplacementTime,
 };
 
     await replacementCollection.insertOne(ReasonData);
