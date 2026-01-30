@@ -31,7 +31,7 @@ interface AttendanceData {
 type AttendanceState = Record<number, AttendanceData>;
 const ClientTable = () => {
   const [ClientsInformation, setClientsInformation] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState(true); 
+  const [activeTab, setActiveTab] = useState(false); 
   const [isChecking, setIsChecking] = useState(true);
   const [users, setUsers] = useState<any[]>([]);
   const [Fineldate, setFineldate] = useState({
@@ -352,6 +352,8 @@ const handleLogout = () => {
     new Date(0, i).toLocaleString("default", { month: "long" })
   );
 
+  console.log("Check=======1",FilterFinelTimeSheet)
+
   const filteredClients = FilterFinelTimeSheet.filter(client =>
  client.PDRStatus === activeTab
 );
@@ -448,10 +450,10 @@ const handleLogout = () => {
  
     <div className="flex rounded-lg border border-gray-200 bg-gray-100 p-1">
       <button
-        onClick={() => setActiveTab(true)}
+        onClick={() => setActiveTab(false)}
         className={`px-4 py-1.5 text-sm font-medium cursor-pointer rounded-md transition
           ${
-            activeTab
+            !activeTab
               ? "bg-emerald-600 text-white shadow"
               : "text-gray-600 hover:bg-white"
           }`}
@@ -460,10 +462,10 @@ const handleLogout = () => {
       </button>
 
       <button
-        onClick={() => setActiveTab(false)}
+        onClick={() => setActiveTab(true)}
         className={`px-4 py-1.5 text-sm font-medium cursor-pointer rounded-md transition
           ${
-            !activeTab
+            activeTab
               ? "bg-emerald-600 text-white shadow"
               : "text-gray-600 hover:bg-white"
           }`}

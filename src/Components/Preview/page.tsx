@@ -151,6 +151,9 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
       }
 
       const PDRStatus = GetPdrInfo.data.PDRStatus === false;
+
+      console.log("Check PDR Status=======", GetPdrInfo.data.PDRStatus)
+      
       const InvoiceNo = `#INV#${new Date().getFullYear()}_${
         InvoiceList.length + 1
       }`;
@@ -213,10 +216,19 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
           DeploaymentInformation.Type
         );
 
-        await PostInvoice(UpdatedData, Advance, InvoiceNo);
-        await UpdatePdrStatus(data.userId);
+            const [invoiceRes, pdrStatusRes] = await Promise.all([
+        PostInvoice(UpdatedData, Advance, InvoiceNo),
+         UpdatePdrStatus(data.userId)
+      ]);
+         if (!invoiceRes?.success || !pdrStatusRes?.success) {
+        setUpdatingStatus("Invoice or PDR status update failed");
+        return;
+      }
         if(PostDeployment.success){
-setUpdatingStatus("PDR Updated Successfully");
+setUpdatingStatus("PDR updated successfully. Redirecting to invoices...");
+   setTimeout(() => {
+      router.push("/Invoices");
+    }, 3000);
         }else{
            setUpdatingStatus("Something went wrong!");
            return
@@ -224,11 +236,17 @@ setUpdatingStatus("PDR Updated Successfully");
         
       }
 
-      setUpdatingStatus("PDR Updated Successfully");
+      setUpdatingStatus("PDR updated successfully. Redirecting to invoices...");
+        setTimeout(() => {
+      router.push("/Invoices");
+    }, 3000);
     } catch {
       setUpdatingStatus("Something went wrong!");
     }
   };
+
+
+
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden bg-gray-50">
