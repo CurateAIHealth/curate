@@ -108,6 +108,10 @@ export function rupeeToNumber(value:any) {
   return Number(num.toFixed(2));
 }
 
+export const getDaysInMonth = (month: number, year: number) => {
+  return new Date(year, month, 0).getDate(); 
+};
+
 
 
 export const getDaysBetween=(date1: any, date2: any)=> {

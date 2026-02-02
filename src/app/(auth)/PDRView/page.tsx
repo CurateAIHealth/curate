@@ -407,7 +407,7 @@ const handleLogout = () => {
   </div>
 
 
-  {ClientsInformation.length === 0 && (
+  {filteredClients.length === 0 && (
     <div className="flex flex-col items-center justify-center text-center gap-8 h-[65vh] rounded-3xl bg-white/70 backdrop-blur-xl border border-emerald-100 shadow-[0_8px_40px_rgba(16,185,129,0.08)] p-16">
       <h2 className="text-4xl font-extrabold text-gray-800">
         No Pending <span className="text-emerald-600">PDRs</span> Found
@@ -416,8 +416,8 @@ const handleLogout = () => {
         Everything looks clear. You can review past verifications under{" "}
         <span className="font-semibold text-emerald-700">Terminations</span>.
       </p>
-      <button className="mt-4 px-10 py-3 text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-md hover:shadow-lg hover:scale-[1.04] transition-all duration-300">
-        Go to Terminations
+      <button className="mt-4 px-10 cursor-pointer py-3 text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-md hover:shadow-lg hover:scale-[1.04] transition-all duration-300"  onClick={() => setActiveTab(true)}>
+       Check Complited PDR's
       </button>
     </div>
   )}

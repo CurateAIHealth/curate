@@ -675,7 +675,7 @@ const UpdateReplacement = async (
   
 };
 
-console.log('Checkinf HCP Information----',selectedHCP)
+
 
 const UpdateServiceCharge=async(A:any)=>{
   SetActionStatusMessage("Please Wait...")
@@ -683,7 +683,7 @@ const GetInfo=await  GetUserInformation(A)
 console.log('Check for Informatio-----',GetInfo.serviceCharges)
 const { success } = await updateServicePrice(
   A,
-  GetInfo.serviceCharges
+GetInfo.serviceCharges
 );
 
 if (success) {
