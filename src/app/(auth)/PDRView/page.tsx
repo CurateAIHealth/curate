@@ -4,12 +4,13 @@ let cachedTimeSheetInfo: any[] = [];
 
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Eye, LogOut, Trash } from "lucide-react";
-import { DeleteDeployMent, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
+import { DeleteDeployMent, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, InserTerminationData, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { GetCurrentDeploymentData, Update_Main_Filter_Status, UpdateFetchedInformation, UpdateSubHeading } from "@/Redux/action";
 import TerminationTable from "@/Components/Terminations/page";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
+import { normalizeDate } from "@/Lib/Actions";
 
 
 type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday";
@@ -60,23 +61,13 @@ const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
   const SubHeading = useSelector((state: any) => state.SubHeadinList);
   const dispatch = useDispatch();
 const Router=useRouter()
- useEffect(() => {
+useEffect(() => {
   let mounted = true;
 
-  const fetchData = async (forceFresh = false) => {
+  const fetchData = async () => {
     try {
-      
-      if (!forceFresh && cachedRegisteredUsers.length && cachedTimeSheetInfo.length) {
-        if (!mounted) return;
+      setIsChecking(true);
 
-        setUsers([...cachedRegisteredUsers]);
-        setClientsInformation([...cachedTimeSheetInfo]);
-        dispatch(UpdateSubHeading("On Service"));
-        setIsChecking(false);
-        return;
-      }
-
-  
       const [usersResult, timesheetInfo] = await Promise.all([
         GetRegidterdUsers(),
         GetTimeSheetInfo(),
@@ -84,19 +75,8 @@ const Router=useRouter()
 
       if (!mounted) return;
 
-      cachedRegisteredUsers = usersResult ?? [];
-      // cachedTimeSheetInfo = timesheetInfo ?? [];
-
-      cachedTimeSheetInfo = [
-        ...new Map(
-          [...(cachedTimeSheetInfo ?? []), ...(timesheetInfo ?? [])]
-            .map((item) => [item.ClientId, item])
-        ).values(),
-      ];
-
-
-      setUsers(cachedRegisteredUsers);
-      setClientsInformation(cachedTimeSheetInfo);
+      setUsers(usersResult ?? []);
+      setClientsInformation(timesheetInfo ?? []);
       dispatch(UpdateSubHeading("On Service"));
     } catch (err) {
       console.error("Fetch error:", err);
@@ -105,13 +85,13 @@ const Router=useRouter()
     }
   };
 
- 
-  fetchData(!!ActionStatusMessage);
+  fetchData();
 
   return () => {
     mounted = false;
   };
-}, [ActionStatusMessage, dispatch]);
+}, [dispatch,ActionStatusMessage]);
+
 
 
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
@@ -214,14 +194,22 @@ const phoneNumber='919347877159'
   setShowTimeSheet(false);
 }
 
+const UpdatePopup = async (a: any) => {
+  dispatch(GetCurrentDeploymentData(a));
 
-const UpdatePopup=async(a:any)=>{
-dispatch(GetCurrentDeploymentData(a))
-const data = await GetUserInformation(a.Client_Id);
-   dispatch(UpdateFetchedInformation(data))
-   Router.push("/PDR")
+  const data = await GetUserInformation(a.Client_Id);
 
-}
+  dispatch(
+    UpdateFetchedInformation({
+      ...data,
+      updatedAt: normalizeDate(data.updatedAt),
+      createdAt: normalizeDate(data.createdAt),
+    })
+  );
+
+  Router.push("/PDR");
+};
+
 
   const ExtendTimeSheet = async (a: any) => {
 SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
@@ -419,7 +407,7 @@ const handleLogout = () => {
   </div>
 
 
-  {ClientsInformation.length === 0 && (
+  {filteredClients.length === 0 && (
     <div className="flex flex-col items-center justify-center text-center gap-8 h-[65vh] rounded-3xl bg-white/70 backdrop-blur-xl border border-emerald-100 shadow-[0_8px_40px_rgba(16,185,129,0.08)] p-16">
       <h2 className="text-4xl font-extrabold text-gray-800">
         No Pending <span className="text-emerald-600">PDRs</span> Found
@@ -428,8 +416,8 @@ const handleLogout = () => {
         Everything looks clear. You can review past verifications under{" "}
         <span className="font-semibold text-emerald-700">Terminations</span>.
       </p>
-      <button className="mt-4 px-10 py-3 text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-md hover:shadow-lg hover:scale-[1.04] transition-all duration-300">
-        Go to Terminations
+      <button className="mt-4 px-10 cursor-pointer py-3 text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-md hover:shadow-lg hover:scale-[1.04] transition-all duration-300"  onClick={() => setActiveTab(true)}>
+       Check Complited PDR's
       </button>
     </div>
   )}

@@ -7,7 +7,7 @@ let cachedTermination:any[]
 
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Trash } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -15,7 +15,7 @@ import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
 import { filterColors, months, Placements_Filters, years } from "@/Lib/Content";
 import ReplacementsTable from "../ReplacementsTable/page";
-import { toProperCaseLive } from "@/Lib/Actions";
+import { getDaysBetween, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
 import { useRouter } from "next/navigation";
 import { div } from "framer-motion/client";
 
@@ -192,7 +192,6 @@ const fetchData = async (forceFresh = false) => {
     HCA_Name: each.HCAName,
     location: each.Address,
     TimeSheet: normalizedAttendance,
-    StartDate:each.StartDate,
     PatientName: each.patientName,
     Patient_PhoneNumber: each.patientPhone,
     RreferralName: each.referralName,
@@ -204,6 +203,9 @@ const fetchData = async (forceFresh = false) => {
     hcpSource: each.hcpSource,
     hcpTotal: each.hcpTotal,
     invoice: each.invoice,
+    ServiceCharge:each.CareTakerPrice,
+    StartDate:each.StartDate,
+    EndDate:each.EndDate
   };
 });
 
@@ -673,9 +675,24 @@ const UpdateReplacement = async (
   
 };
 
-console.log('Checkinf HCP Information----',selectedHCP)
 
 
+const UpdateServiceCharge=async(A:any)=>{
+  SetActionStatusMessage("Please Wait...")
+const GetInfo=await  GetUserInformation(A)
+console.log('Check for Informatio-----',GetInfo.serviceCharges)
+const { success } = await updateServicePrice(
+  A,
+GetInfo.serviceCharges
+);
+
+if (success) {
+ SetActionStatusMessage("Price updated successfully,Refresh To Get Updated Price");
+} else {
+SetActionStatusMessage("Update failed");
+}
+
+}
 const OmServiceView = () => {
     return (
       <div className="w-full flex flex-col gap-8 p-2 bg-gray-50">
@@ -683,6 +700,16 @@ const OmServiceView = () => {
     
            
         <div className="flex itemcs-center gap-2 justify-end">
+      <p
+  className={`text-xs mt-1 ${
+    ActionStatusMessage?.includes("updated successfully")
+      ? "text-green-600"
+      : "text-red-600 font-bold"
+  }`}
+>
+  {ActionStatusMessage}
+</p>
+
             <div
     className="
       flex items-center bg-white shadow-md rounded-xl
@@ -845,9 +872,63 @@ const OmServiceView = () => {
           <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
             {toProperCaseLive(c.name)}
           </td>
- <td className="px-3 py-3 text-gray-700  text-xs break-words">
-            800 Per Day
-          </td>
+{/* <td className="px-3 py-3 text-gray-700 text-xs">
+  {!c?.ServiceCharge ? (
+    <span className="text-red-600 font-medium">
+      Care Taker Charge Missing
+    </span>
+  ) : (
+    <div className="flex flex-col leading-tight">
+      <span>
+        ₹{(
+          getDaysBetween(c.StartDate, c.EndDate) *
+          rupeeToNumber(c.ServiceCharge)
+        ).toFixed(2)}{" "}
+        <span className="text-gray-500">/ Month</span>
+      </span>
+
+      <span>
+        ₹{rupeeToNumber(c.ServiceCharge).toFixed(2)}{" "}
+        <span className="text-gray-500">/ Day</span>
+      </span>
+    </div>
+  )}
+</td> */}
+<td className="px-3 py-3 text-gray-700 text-xs">
+  {!c?.ServiceCharge ? (
+    <div className="flex flex-col items-center gap-2">
+      <span className="text-red-600 text-[9px] whitespace-nowrap">
+        Care Taker Charge Missing
+      </span>
+
+      <button
+   onClick={()=>UpdateServiceCharge(c.Client_Id)}
+        className="px-2 py-0.5 text-[9px] font-semibold
+                   text-white bg-blue-600 hover:bg-blue-700 cursor-pointer
+                   rounded-md"
+      >
+        Get Price
+      </button>
+    </div>
+  ) : (
+    <div className="flex flex-col leading-tight">
+      <span>
+        ₹{(
+          getDaysBetween(c.StartDate, c.EndDate) *
+          rupeeToNumber(c.ServiceCharge)
+        ).toFixed(2)}{" "}
+        <span className="text-gray-500">/ Month</span>
+      </span>
+
+      <span>
+        ₹{rupeeToNumber(c.ServiceCharge).toFixed(2)}{" "}
+        <span className="text-gray-500">/ Day</span>
+      </span>
+    </div>
+  )}
+</td>
+
+
           <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
             {toProperCaseLive(c.PatientName)}
           </td>

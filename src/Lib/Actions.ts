@@ -12,6 +12,26 @@
   };
 
   export const isValidAadhar = (a: string) => /^\d{12}$/.test(a.replace(/\s/g, ''))
+export const normalizeDate = (value: any) => {
+  if (!value) return null;
+
+  // Firestore Timestamp
+  if (typeof value.toDate === "function") {
+    return value.toDate().toISOString();
+  }
+
+  // JS Date
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  // ISO string or number
+  if (typeof value === "string" || typeof value === "number") {
+    return value;
+  }
+
+  return null;
+};
 
 
 export function calculateAgeIndianFormat(dob:any) {
@@ -75,6 +95,22 @@ export function verifySHA256(password: any, hashed: any) {
 
 
 
+export function rupeeToNumber(value:any) {
+  if (value == null) return 0;
+
+  const num = Number(
+    value
+      .toString()
+      .replace(/[₹,]/g, '')
+      .trim()
+  );
+
+  return Number(num.toFixed(2));
+}
+
+export const getDaysInMonth = (month: number, year: number) => {
+  return new Date(year, month, 0).getDate(); 
+};
 
 
 

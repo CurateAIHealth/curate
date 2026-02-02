@@ -1,6 +1,6 @@
 "use client";
 
-import { GetDeploymentInfo, UpdateAllPendingAttendance } from "@/Lib/user.action";
+import { EditAttendanceByClientId, GetDeploymentInfo, UpdateAllPendingAttendance } from "@/Lib/user.action";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
 import { Eye, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,7 @@ import { useDispatch } from "react-redux";
 import MissingAttendence from "../MissingAttendence/page";
 import PaymentModal from "../PaymentInfoModel/page";
 import { months, years } from "@/Lib/Content";
+import { getDaysInMonth } from "@/Lib/Actions";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -21,33 +22,42 @@ export default function InvoiceMedicalTable() {
 const currentYear = now.getFullYear().toString();
 const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 
+const [AttenseceInformation,setAttenseceInformation]=useState<any>()
 const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 const [selectedYear, setSelectedYear] = useState(currentYear);
 const [showPaymentModal, setShowPaymentModal] = useState(false);
 const [billingRecord, setBillingRecord] = useState<any>(null);
+const [ShowUpdateAttendece,SetShowUpdateAttendece]=useState(false)
   const [ClientsInformation, setClientsInformation] = useState<any>({});
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [showPendingCalendar, setShowPendingCalendar] = useState(false);
    const [showMissingCalendar, setShowMissingCalendar] = useState(false);
+    const [status, setStatus] =useState<any>('')
   const [StatusMessage,SetStatusMessage]=useState<any>("")
 const [SearchResult,setSearchResult]=useState("")
   const dispatch = useDispatch();
   const router = useRouter();
-  const getMonthKey = (record: any) => {
-  // 1️⃣ Already correct format
-  if (record.Month) {
-    const [y, m] = record.Month.split("-");
-    return `${y}-${m.padStart(2, "0")}`;
+const getMonthKey = (record: any): string => {
+  // Prefer StartDate (always string in your data)
+  if (typeof record?.StartDate === "string") {
+    const [d, m, y] = record.StartDate.split("/");
+    if (y && m) {
+      return `${y}-${m.padStart(2, "0")}`;
+    }
   }
 
-  // 2️⃣ From StartDate: DD/MM/YYYY
-  if (record.StartDate) {
-    const [, m, y] = record.StartDate.split("/");
-    return `${y}-${m.padStart(2, "0")}`;
+  // Fallback if StartDate is missing
+  if (record?.UpdatedAt instanceof Date) {
+    const date = record.UpdatedAt;
+    return `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, "0")}`;
   }
 
   return "Unknown";
 };
+
+
 
 
 
@@ -58,6 +68,7 @@ const [SearchResult,setSearchResult]=useState("")
 
       const formattedData: any = {};
       PlacementInformation.forEach((record: any) => {
+        console.log("Checkkkkkkkkkkkk,",record)
       const monthKey = getMonthKey(record);
 
         if (!formattedData[monthKey]) formattedData[monthKey] = [];
@@ -86,6 +97,8 @@ const [SearchResult,setSearchResult]=useState("")
           hcpTotal: Number(record.hcpTotal) || 0,
           hcpPay: Number(record.hcpPay) || 0,
           days: record.Attendance || [],
+          CareTakerPrice:record.
+CareTakerPrice||""
         });
       });
 
@@ -119,12 +132,12 @@ const [SearchResult,setSearchResult]=useState("")
     return { firstDayIndex: firstDay, totalCells: cells };
   }, [selectedYear, selectedMonth, daysInMonth]);
 
-  // Pending summary – ONLY for the selected month/year
+
   const pendingSummary = useMemo(() => {
     const summaryMap: any = {};
     const currentRecords: any[] = ClientsInformation[monthKey] || [];
 
-    // First add ALL HCPs (for this month) even if no pending yet
+
     currentRecords.forEach((rec: any) => {
       const key = rec.hcpId || rec.hcpName;
       if (!summaryMap[key]) {
@@ -137,12 +150,12 @@ const [SearchResult,setSearchResult]=useState("")
       }
     });
 
-    // Now add pending attendance for selected month/year
+
     currentRecords.forEach((rec: any) => {
       const pending = (rec.days || []).filter((a: any) => {
         if (!(a.HCPAttendence === true && a.AdminAttendece === false))
           return false;
-        // make sure the pending date itself is in selected month/year
+    
         const d = new Date(a.AttendenceDate);
         return (
           d.getMonth() + 1 === Number(selectedMonth) &&
@@ -194,7 +207,7 @@ const [SearchResult,setSearchResult]=useState("")
     return categoryColors[index];
   };
 
- console.log("Check for test Data-----",data)
+
 const processedData = useMemo(() => {
   const search = SearchResult?.toLowerCase().trim() || "";
 
@@ -260,6 +273,32 @@ const processedData = useMemo(() => {
     }
   };
 
+  const selectedMonthNumber = Number(selectedMonth); 
+const selectedYearNumber= Number(selectedYear);    
+
+const NumberOfDaysInMonth = getDaysInMonth(
+  Number(selectedMonth),
+  Number(selectedYear)
+);
+
+const EditAttendence=async()=>{
+
+try{
+  SetStatusMessage(`Updateing${status} Day....`)
+const date = new Date();
+
+
+const yearMonth = date.toISOString().slice(0, 7);
+
+
+const fullDate = date.toISOString().slice(0, 10);
+const EditSelectedAttendece=await EditAttendanceByClientId(AttenseceInformation.ClientId,yearMonth,fullDate,status,"Admin")
+SetStatusMessage(`✅${EditSelectedAttendece.message}`);
+
+}catch(err:any){
+
+}
+}
   return (
     <div className="relative  bg-gradient-to-br from-green-50 via-white to-blue-50 p-6">
 
@@ -380,13 +419,13 @@ const processedData = useMemo(() => {
         <Th>HCP Name</Th>
         <Th>HCP Referral</Th>
         <Th>Vendor</Th>
-        <Th>Type</Th>
+        <Th>Service Charge</Th>
 
         <Th className="bg-amber-500 text-center">PD</Th>
         <Th className="bg-amber-500 text-center">AD</Th>
         <Th className="bg-amber-500 text-center">HP</Th>
 
-        {Array.from({ length: 31 }, (_, i) => (
+        {Array.from({ length: NumberOfDaysInMonth }, (_, i) => (
           <Th key={i} className="text-center bg-cyan-600">
             {i + 1}
           </Th>
@@ -407,6 +446,7 @@ const processedData = useMemo(() => {
             <Eye
               className="cursor-pointer text-blue-600 hover:text-blue-800 transition"
               onClick={() => setSelectedRecord(r)}
+            
             />
           </Td>
 
@@ -454,30 +494,104 @@ const processedData = useMemo(() => {
             {r.VendorName}
           </Td>
 
-          <Td>{r.Type}</Td>
+         <Td>
+  {r.CareTakerPrice.includes("₹") ? r.CareTakerPrice: `₹${r.CareTakerPrice}`}/Day
+</Td>
+
 
           <Td className="bg-amber-50 text-center font-bold">{r.pd}</Td>
           <Td className="bg-amber-50 text-center font-bold">{r.ad}</Td>
           <Td className="bg-amber-50 text-center font-bold">{r.hp}</Td>
 
-          {Array.from({ length: 31 }, (_, i) => {
-            const dayStatus = r.days?.[i] ?? "-";
-            return (
-              <Td key={i} className="text-center">
-                {dayStatus === "-" ? (
-                  <span className="text-gray-400">-</span>
-                ) : (
-                  <DayBadge status={dayStatus as DayStatus} />
-                )}
-              </Td>
-            );
-          })}
+{Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
+  const dayStatus = r.days?.[i] ?? "-";
+
+  return (
+    <Td key={i} className="text-center">
+      {dayStatus === "-" ? (
+        <span className="text-gray-400">-</span>
+      ) : (
+        <div>
+          <DayBadge status={dayStatus as DayStatus} />
+        <p className="text-[9px] cursor-pointer hover:text-blue-900 hover:underline" onClick={()=>{SetShowUpdateAttendece(!ShowUpdateAttendece), setAttenseceInformation(r),setStatus("Choose"),SetStatusMessage("")}}>Edit</p>
+        </div>
+      )}
+    </Td>
+  );
+})}
+
         </tr>
       ))}
     </tbody>
   </table>
 </div>
 
+{ShowUpdateAttendece&&
+<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+
+  <div className="w-full max-w-sm rounded-xl bg-white shadow-2xl">
+
+    <div className="flex items-center justify-between border-b px-2 py-3">
+      <p className="text-base font-semibold text-gray-800">
+        Edit Attendance
+      </p>
+      <button
+  onClick={()=>SetShowUpdateAttendece(!ShowUpdateAttendece)}
+  className="flex justify-end cursor-pointer rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-black"
+>
+  <X size={14} />
+</button>
+    </div>
+
+
+
+    <div className="px-5 py-4">
+      <label className="mb-2 block text-sm font-medium text-gray-600">
+        Attendance Status
+      </label>
+
+      <select
+        value={status}
+        onChange={(e) => setStatus(e.target.value as any)}
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
+      ><option value="">Choose Attendence</option>
+        <option value="FULL">Full Day</option>
+        <option value="HALF">Half Day</option>
+        <option value="ABSENT">Absent</option>
+      </select>
+    </div>
+<div className="flex items-center-justify-between">
+   {StatusMessage&&
+            <p
+  className={`mt-2 text-sm font-medium px-1 py-2 text-xs text-center rounded-lg ${
+    StatusMessage?.includes("success") || StatusMessage?.includes("✅")
+      ? " text-green-700  "
+      : "text-red-700  "
+  }`}
+>
+  {StatusMessage}
+</p>
+      }
+    <div className="flex w-full justify-end gap-2 border-t px-5 py-3">
+      <button
+        onClick={()=>SetShowUpdateAttendece(!ShowUpdateAttendece)}
+        className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+      >
+        Cancel
+      </button>
+
+      <button
+        className="rounded-lg bg-black px-5 py-2 text-sm font-medium text-white hover:bg-gray-800"
+
+        onClick={EditAttendence}
+      >
+        Save
+      </button>
+    </div>
+      </div>
+  </div>
+</div>
+}
   
       {selectedRecord && (
         <div
@@ -638,7 +752,7 @@ const processedData = useMemo(() => {
 
              
                   <div className="grid grid-cols-7 gap-1.5 md:gap-2">
-                    {Array.from({ length: totalCells }).map((_, index) => {
+                    {Array.from({ length: NumberOfDaysInMonth }).map((_, index) => {
                       const day = index - firstDayIndex + 1;
 
                       if (day < 1 || day > daysInMonth) {

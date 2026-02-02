@@ -127,123 +127,233 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
       </div>
     );
   }
-
+ const isSuccess = UpdatingStatus === "PDR updated successfully. Redirecting to invoices..."||"PDR created successfully. Redirecting...";
   const UpdateEdit = () => {
     dispatch(UpdatePreviewStatus(true));
   };
 
-  const UpdatePDRInfo = async () => {
-    try {
-      setSelectedRecord(true);
+//   const UpdatePDRInfo = async () => {
+//     try {
+//       setSelectedRecord(true);
 
-      const UpdatePDRInfoInDB = await UpdatePDR(data.userId, UpdatedData);
-      if (!UpdatePDRInfoInDB.success) {
-        setUpdatingStatus("Failed! Try again.");
-        return;
-      }
+//       const UpdatePDRInfoInDB = await UpdatePDR(data.userId, UpdatedData);
+//       if (!UpdatePDRInfoInDB.success) {
+//         setUpdatingStatus("Failed! Try again.");
+//         return;
+//       }
 
-      const InvoiceList: any = await GetInvoiceInfo();
-      const GetPdrInfo = await GetUserPDRInfo(data.userId);
+//       const InvoiceList: any = await GetInvoiceInfo();
+//       const GetPdrInfo = await GetUserPDRInfo(data.userId);
 
-      if (!GetPdrInfo.success || !GetPdrInfo.data) {
-        setUpdatingStatus("Error fetching PDR info");
-        return;
-      }
+//       if (!GetPdrInfo.success || !GetPdrInfo.data) {
+//         setUpdatingStatus("Error fetching PDR info");
+//         return;
+//       }
 
-      const PDRStatus = GetPdrInfo.data.PDRStatus === false;
-
-      console.log("Check PDR Status=======", GetPdrInfo.data.PDRStatus)
+//       const PDRStatus = GetPdrInfo.data.PDRStatus === false;
       
-      const InvoiceNo = `#INV#${new Date().getFullYear()}_${
-        InvoiceList.length + 1
-      }`;
-      const CurrentMonth = `${new Date().getFullYear()}-${
-        new Date().getMonth() + 1
-      }`;
+//       const InvoiceNo = `#INV#${new Date().getFullYear()}_${
+//         InvoiceList.length + 1
+//       }`;
+//       const CurrentMonth = `${new Date().getFullYear()}-${
+//         new Date().getMonth() + 1
+//       }`;
 
-      if (PDRStatus) {
-        const DeploymentList: any = await GetDeploymentInfo();
-        const Today = new Date();
+//       if (PDRStatus) {
+//         const DeploymentList: any = await GetDeploymentInfo();
+//         const Today = new Date();
 
-        const DeploymentAttendence = [
-          {
-            AttendenceDate: Today,
-            HCPAttendence: true,
-            AdminAttendece: true,
-          },
-        ];
+//         const DeploymentAttendence = [
+//           {
+//             AttendenceDate: Today,
+//             HCPAttendence: true,
+//             AdminAttendece: true,
+//           },
+//         ];
 
-        const LastDateOfMonth = new Date(
-          Today.getFullYear(),
-          Today.getMonth() + 1,
-          0
-        ).toLocaleDateString("en-IN");
+//         const LastDateOfMonth = new Date(
+//           Today.getFullYear(),
+//           Today.getMonth() + 1,
+//           0
+//         ).toLocaleDateString("en-IN");
 
-        const DateofToday = Today.toLocaleDateString("en-IN");
-        const CurrentServiceCharge = String(
-          UpdatedData?.serviceCharges || ""
-        ).replace(/,/g, "");
+//         const DateofToday = Today.toLocaleDateString("en-IN");
+//         const CurrentServiceCharge = String(
+//           UpdatedData?.serviceCharges || ""
+//         ).replace(/,/g, "");
 
-        const DeploymentInvoice = `BSV${new Date().getFullYear()}_${
-          DeploymentList.length + 1
-        }`;
+//         const DeploymentInvoice = `BSV${new Date().getFullYear()}_${
+//           DeploymentList.length + 1
+//         }`;
 
-        const PostDeployment=await InsertDeployment(
-          DateofToday,
-          LastDateOfMonth,
-          "Active",
-          DeploaymentInformation.location,
-          DeploaymentInformation.contact,
-          DeploaymentInformation.name,
-          DeploaymentInformation.PatientName,
-          DeploaymentInformation.Patient_PhoneNumber,
-          DeploaymentInformation.RreferralName,
-          DeploaymentInformation.HCA_Id,
-          DeploaymentInformation.Client_Id,
-          DeploaymentInformation.HCA_Name,
-          DeploaymentInformation.HCAContact,
-          "Google",
-          "Not Provided",
-          "PP",
-          "21000",
-          "700",
-          "1800",
-          CurrentServiceCharge,
-          CurrentMonth,
-          DeploymentAttendence,
-          TimeStampInfo,
-          DeploymentInvoice,
-          DeploaymentInformation.Type
-        );
+//         const PostDeployment=await InsertDeployment(
+//           DateofToday,
+//           LastDateOfMonth,
+//           "Active",
+//           DeploaymentInformation.location,
+//           DeploaymentInformation.contact,
+//           DeploaymentInformation.name,
+//           DeploaymentInformation.PatientName,
+//           DeploaymentInformation.Patient_PhoneNumber,
+//           DeploaymentInformation.RreferralName,
+//           DeploaymentInformation.HCA_Id,
+//           DeploaymentInformation.Client_Id,
+//           DeploaymentInformation.HCA_Name,
+//           DeploaymentInformation.HCAContact,
+//           "Google",
+//           "Not Provided",
+//           "PP",
+//           "21000",
+//           "700",
+//           "1800",
+//           CurrentServiceCharge,
+//           CurrentMonth,
+//           DeploymentAttendence,
+//           TimeStampInfo,
+//           DeploymentInvoice,
+//           DeploaymentInformation.Type,
+//           data.serviceCharges,
+//         );
 
-            const [invoiceRes, pdrStatusRes] = await Promise.all([
-        PostInvoice(UpdatedData, Advance, InvoiceNo),
-         UpdatePdrStatus(data.userId)
+//             const [invoiceRes, pdrStatusRes] = await Promise.all([
+//         PostInvoice(UpdatedData, Advance, InvoiceNo),
+//          UpdatePdrStatus(data.userId)
+//       ]);
+//          if (!invoiceRes?.success || !pdrStatusRes?.success) {
+//         setUpdatingStatus("Invoice or PDR status update failed");
+//         return;
+//       }
+//         if(PostDeployment.success){
+// setUpdatingStatus("PDR Created successfully. Redirecting to invoices...");
+//    setTimeout(() => {
+//       router.push("/Invoices");
+//     }, 3000);
+//         }else{
+//            setUpdatingStatus("Something went wrong!");
+//            return
+//         }
+        
+//       }
+
+//       setUpdatingStatus("PDR updated successfully. Redirecting to invoices...");
+//         setTimeout(() => {
+//       router.push("/Invoices");
+//     }, 3000);
+//     } catch {
+//       setUpdatingStatus("Something went wrong!");
+//     }
+//   };
+
+
+const UpdatePDRInfo = async () => {
+  try {
+    setSelectedRecord(true);
+
+    const updateRes = await UpdatePDR(data.userId, UpdatedData);
+    if (!updateRes?.success) {
+      setUpdatingStatus("Failed! Try again.");
+      return;
+    }
+
+
+    const pdrRes = await GetUserPDRInfo(data.userId);
+    if (!pdrRes?.success || !pdrRes?.data) {
+      setUpdatingStatus("Error fetching PDR info");
+      return;
+    }
+
+    const isNewPDR = pdrRes.data.PDRStatus === false;
+
+ 
+    if (isNewPDR) {
+      const [invoiceList, deploymentList] = await Promise.all([
+        GetInvoiceInfo(),
+        GetDeploymentInfo(),
       ]);
-         if (!invoiceRes?.success || !pdrStatusRes?.success) {
+
+      const today = new Date();
+      const currentMonth = `${today.getFullYear()}-${today.getMonth() + 1}`;
+
+      const invoiceNo = `#INV#${today.getFullYear()}_${invoiceList??[].length + 1}`;
+      const deploymentInvoice = `BSV${today.getFullYear()}_${(deploymentList?.length ?? 0) + 1}`;
+
+
+      const attendance = [
+        {
+          AttendenceDate: today,
+          HCPAttendence: true,
+          AdminAttendece: true,
+        },
+      ];
+
+      const lastDateOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() + 1,
+        0
+      ).toLocaleDateString("en-IN");
+
+      const serviceCharge = String(
+        UpdatedData?.serviceCharges || ""
+      ).replace(/,/g, "");
+
+      const deploymentRes = await InsertDeployment(
+        today.toLocaleDateString("en-IN"),
+        lastDateOfMonth,
+        "Active",
+        DeploaymentInformation.location,
+        DeploaymentInformation.contact,
+        DeploaymentInformation.name,
+        DeploaymentInformation.PatientName,
+        DeploaymentInformation.Patient_PhoneNumber,
+        DeploaymentInformation.RreferralName,
+        DeploaymentInformation.HCA_Id,
+        DeploaymentInformation.Client_Id,
+        DeploaymentInformation.HCA_Name,
+        DeploaymentInformation.HCAContact,
+        "Google",
+        "Not Provided",
+        "PP",
+        "21000",
+        "700",
+        "1800",
+        serviceCharge,
+        currentMonth,
+        attendance,
+        TimeStampInfo,
+        deploymentInvoice,
+        DeploaymentInformation.Type,
+        data.serviceCharges
+      );
+
+      if (!deploymentRes?.success) {
+        setUpdatingStatus("Deployment creation failed");
+        return;
+      }
+
+      const [invoiceRes, statusRes] = await Promise.all([
+        PostInvoice(UpdatedData, Advance, invoiceNo),
+        UpdatePdrStatus(data.userId),
+      ]);
+
+      if (!invoiceRes?.success || !statusRes?.success) {
         setUpdatingStatus("Invoice or PDR status update failed");
         return;
       }
-        if(PostDeployment.success){
-setUpdatingStatus("PDR updated successfully. Redirecting to invoices...");
-   setTimeout(() => {
-      router.push("/Invoices");
-    }, 3000);
-        }else{
-           setUpdatingStatus("Something went wrong!");
-           return
-        }
-        
-      }
 
-      setUpdatingStatus("PDR updated successfully. Redirecting to invoices...");
-        setTimeout(() => {
-      router.push("/Invoices");
-    }, 3000);
-    } catch {
-      setUpdatingStatus("Something went wrong!");
+      setUpdatingStatus("PDR created successfully. Redirecting...");
+      setTimeout(() => router.push("/Invoices"), 3000);
+      return;
     }
-  };
+
+  
+    setUpdatingStatus("PDR updated successfully. Redirecting...");
+    setTimeout(() => router.push("/Invoices"), 3000);
+
+  } catch (error) {
+    console.error(error);
+    setUpdatingStatus("Something went wrong!");
+  }
+};
 
 
 
@@ -358,6 +468,15 @@ setUpdatingStatus("PDR updated successfully. Redirecting to invoices...");
               <div className="text-gray-500">No Medications Provided</div>
             )}
           </Section>
+<div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+  <p className="text-sm font-medium text-emerald-800">
+    Care Taker Price
+  </p>
+
+  <p className="text-lg font-bold text-emerald-700">
+    ₹{data?.serviceCharges}
+  </p>
+</div>
 
           <Section title="Remarks">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -391,21 +510,39 @@ setUpdatingStatus("PDR updated successfully. Redirecting to invoices...");
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-[90%] max-w-md">
             <div className="flex flex-col items-center justify-center">
-              {UpdatingStatus !== "Updated Successfully" ? (
-                <>
-                  <div className="relative h-14 w-14 mb-6">
-                    <div className="h-full w-full border-4 border-gray-300 rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-gray-700 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                  <p className="text-lg font-semibold text-gray-700 animate-pulse">
-                    {UpdatingStatus}
-                  </p>
-                </>
-              ) : (
-                <p className="text-xl font-bold text-green-600">
-                  {UpdatingStatus}
-                </p>
-              )}
+            
+
+{!isSuccess ? (
+  <>
+    <div className="relative h-14 w-14 mb-6">
+      <div className="h-full w-full border-4 border-gray-300 rounded-full"></div>
+      <div className="absolute inset-0 border-4 border-gray-700 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+
+    <p className="text-lg font-semibold text-gray-700 animate-pulse">
+      {UpdatingStatus}
+    </p>
+  </>
+) : (
+  <div className="flex flex-col items-center animate-[fadeIn_0.4s_ease-in-out]">
+    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 animate-[scaleIn_0.3s_ease-out]">
+      <svg
+        className="h-8 w-8 text-green-600"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        viewBox="0 0 24 24"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+
+    <p className="text-xl font-bold text-green-600 text-center">
+      {UpdatingStatus}
+    </p>
+  </div>
+)}
+
             </div>
           </div>
         </div>

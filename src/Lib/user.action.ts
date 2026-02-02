@@ -1554,17 +1554,17 @@ export const TestInsertTimeSheet = async (
     const collection = db.collection("TimeSheet");
 
 
-    // const alreadyExists = await collection.findOne({
-    //   ClientId: ClientId,
-    //   HCAId: hcpId,
-    // });
+    const alreadyExists = await collection.findOne({
+      ClientId: ClientId,
+      HCAId: hcpId,
+    });
 
-    // if (alreadyExists) {
-    //   return {
-    //     success: false,
-    //     message: "Duplicate entry",
-    //   };
-    // }
+    if (alreadyExists) {
+      return {
+        success: false,
+        message: "Duplicate entry",
+      };
+    }
 
     const TimeSheetData = {
       StartDate,
@@ -1639,7 +1639,8 @@ export const InsertDeployment = async (
   TimeSheetArray: any,
   UpdatedBy: any,
   invoice: any,
-  Type: any
+  Type: any,
+  CareTakerPrice:any,
 ) => {
   try {
     const cluster = await clientPromise;
@@ -1669,13 +1670,13 @@ export const InsertDeployment = async (
       hcpPay,
       Month,
       Attendance: TimeSheetArray,
-      UpdatedAt: new Date(),
       UpdatedBy,
       invoice,
       Type,
-      PDRStatus: false
+      CareTakerPrice,
+      PDRStatus: true
     };
-console.log("Check Function----",DeploymentData)
+
     const insertResult = await collection.insertOne(DeploymentData);
 
     return {
@@ -1691,6 +1692,7 @@ console.log("Check Function----",DeploymentData)
     };
   }
 };
+
 
 
 export const UpdatePdrStatus = async (UserId: any) => {
@@ -1765,7 +1767,7 @@ import EmployRegistration from "@/Components/EmployRegistration/page";
 
 export const UpdateAttendence = async (
   hcpId: string,
-  Month: string,
+  Month: string, 
   Status: {
     HCPAttendence: boolean;
     AdminAttendece: boolean;
@@ -1773,47 +1775,63 @@ export const UpdateAttendence = async (
   UpdatedBy: string
 ) => {
   try {
+  
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Deployment");
 
-    const normalizedMonth = new Date(Month + "-01")
-      .toISOString()
-      .slice(0, 7); 
+
+    const normalizeMonth = (month: string) => {
+      const [year, m] = month.split("-");
+      return `${year}-${Number(m)}`;
+    };
+
+    const normalizedMonth = normalizeMonth(Month);
+
+
+    const todayKey = new Date().toISOString().slice(0, 10);
 
    
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
-
-
-    const alreadyExist = await collection.findOne({
+    const deploy = await collection.findOne({
       HCAId: hcpId,
-      $or: [
-        { Month: normalizedMonth },
-        { Month: normalizedMonth.replace("-0", "-") }, 
-      ],
-      Attendance: {
-        $elemMatch: {
-          AttendenceDate: {
-            $gte: startOfDay,
-            $lte: endOfDay,
-          },
-        },
-      },
+      Month: normalizedMonth,
     });
 
-    if (alreadyExist) {
+    if (!deploy) {
+      return {
+        success: false,
+        message: "❌ Deployment record not found.",
+      };
+    }
+
+   
+    const cleanedAttendance = Array.isArray(deploy.Attendance)
+      ? deploy.Attendance.filter(
+          (a: any) =>
+            a &&
+            typeof a === "object" &&
+            a.AttendenceDate
+        )
+      : [];
+
+   
+    const alreadyMarked = cleanedAttendance.some(
+      (a: any) =>
+        new Date(a.AttendenceDate)
+          .toISOString()
+          .slice(0, 10) === todayKey
+    );
+
+    if (alreadyMarked) {
       return {
         success: false,
         message: "⚠️ Attendance already marked for today.",
       };
     }
 
-   
+  
     const attendanceEntry = {
+      dateKey: todayKey,
       AttendenceDate: new Date(),
       HCPAttendence: Status.HCPAttendence,
       AdminAttendece: Status.AdminAttendece,
@@ -1821,31 +1839,17 @@ export const UpdateAttendence = async (
       UpdatedBy: UpdatedBy || "",
     };
 
-    
-    const result = await collection.updateOne(
+  
+    await collection.updateOne(
+      { _id: deploy._id },
       {
-        HCAId: hcpId,
-        $or: [
-          { Month: normalizedMonth },
-          { Month: normalizedMonth.replace("-0", "-") },
-        ],
-      },
-      {
-        $push: { Attendance: attendanceEntry } as any,
         $set: {
-          Month: normalizedMonth,
+          Attendance: [...cleanedAttendance, attendanceEntry],
           UpdatedAt: new Date(),
           UpdatedBy: UpdatedBy || "",
         },
       }
     );
-
-    if (result.matchedCount === 0) {
-      return {
-        success: false,
-        message: "❌ Deployment record not found. Attendance not updated.",
-      };
-    }
 
     return {
       success: true,
@@ -1865,9 +1869,10 @@ export const UpdateAttendence = async (
 
 
 
+
 export const UpdateMultipleAttendance = async (
-  hcpIds: string[],    
-  Month: string,
+  hcpIds: string[],
+  Month: string, 
   Status: {
     HCPAttendence: boolean;
     AdminAttendece: boolean;
@@ -1875,77 +1880,112 @@ export const UpdateMultipleAttendance = async (
   UpdatedBy: string
 ) => {
   try {
+  
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Deployment");
 
-    const today = new Date().toISOString().split("T")[0];
-    const todayStart = new Date(today + "T00:00:00.000Z");
-    const todayEnd = new Date(today + "T23:59:59.999Z");
+    
+    const normalizeMonth = (month: string) => {
+      const [year, m] = month.split("-");
+      return `${year}-${Number(m)}`; 
+    };
 
-    let skipped: string[] = [];      
-    let operations: any[] = [];      
+    const normalizedMonth = normalizeMonth(Month);
 
+ 
+    const todayKey = new Date().toISOString().slice(0, 10);
+
+    let skipped: string[] = [];
+    let operations: any[] = [];
+
+  
     for (const hcpId of hcpIds) {
-   
-      const alreadyExist = await collection.findOne({
-        HCAId: hcpId,
-        Month: Month,
-        Attendance: {
-          $elemMatch: {
-            AttendenceDate: { $gte: todayStart, $lte: todayEnd },
-          },
-        },
-      });
+ 
+      const deployments = await collection
+        .find({ HCAId: hcpId, Month: normalizedMonth })
+        .toArray();
 
-      if (alreadyExist) {
+ 
+      if (!deployments.length) {
         skipped.push(hcpId);
-        continue; 
+        continue;
       }
 
-      const attendanceEntry = {
-        AttendenceDate: new Date(),
-        HCPAttendence: Status.HCPAttendence,
-        AdminAttendece: Status.AdminAttendece,
-        UpdatedAt: new Date(),
-        UpdatedBy: UpdatedBy || "",
-      };
-console.log("Check Attendece Entry-----",attendanceEntry)
-      operations.push({
-        updateOne: {
-          filter: { HCAId: hcpId, Month: Month },
-          update: {
-            $push: { Attendance: attendanceEntry },
-            $setOnInsert: {
-              HCAId: hcpId,
-              Month: Month,
-              CreatedAt: new Date(),
+      for (const deploy of deployments) {
+       
+        const cleanedAttendance = Array.isArray(deploy.Attendance)
+          ? deploy.Attendance.filter(
+              (a: any) =>
+                a &&
+                typeof a === "object" &&
+                a.AttendenceDate
+            )
+          : [];
+
+       
+        const alreadyMarked = cleanedAttendance.some(
+          (a: any) =>
+            new Date(a.AttendenceDate)
+              .toISOString()
+              .slice(0, 10) === todayKey
+        );
+
+       
+        if (alreadyMarked) continue;
+
+        
+        const attendanceEntry = {
+          dateKey: todayKey,
+          AttendenceDate: new Date(),
+          HCPAttendence: Status.HCPAttendence,
+          AdminAttendece: Status.AdminAttendece,
+          UpdatedAt: new Date(),
+          UpdatedBy: UpdatedBy || "",
+        };
+
+        
+        operations.push({
+          updateOne: {
+            filter: { _id: deploy._id },
+            update: {
+              $set: {
+                Attendance: [...cleanedAttendance, attendanceEntry],
+                UpdatedAt: new Date(),
+                UpdatedBy: UpdatedBy || "",
+              },
             },
           },
-          upsert: true,
-        },
-      });
+        });
+      }
     }
 
-    // Perform bulk update in a single DB call
-    if (operations.length > 0) {
-      await collection.bulkWrite(operations);
-    }
+
+    const result =
+      operations.length > 0
+        ? await collection.bulkWrite(operations)
+        : null;
 
     return {
       success: true,
-      updated: operations.length,
-      skipped: skipped,
-      message: `Updated: ${operations.length}, Skipped (already marked): ${skipped.length}`,
+      updated: result?.modifiedCount || 0,
+      skipped,
+      message: `Attendance updated for ${
+        result?.modifiedCount || 0
+      } records`,
     };
   } catch (error: any) {
-    console.error("❌ Error updating multiple attendance:", error.message);
+    console.error("❌ Error updating attendance:", error.message);
     return {
       success: false,
-      message: "Error updating multiple attendance: " + error.message,
+      message: error.message,
     };
   }
 };
+
+
+
+
 
 
 
@@ -2280,37 +2320,59 @@ export const PostReason = async (
     return { success: false, message: "Error occurred.", error };
   }
 };
-export const UpdatehcpDailyAttendce = async (selectedYear: any, selectedMonth: any) => {
+export const UpdatehcpDailyAttendce = async (
+  selectedYear: string | number,
+  selectedMonth: string | number
+) => {
   try {
+    
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Deployment");
 
-    const monthKey = `${selectedYear}-${selectedMonth}`;
-    const today = new Date().toISOString().split("T")[0]; 
+    
+    const monthKey = `${selectedYear}-${Number(selectedMonth)}`;
 
+   
+    const todayKey = new Date().toISOString().slice(0, 10);
+
+    
     const records = await collection.find({ Month: monthKey }).toArray();
 
-    if (!records || records.length === 0) {
-      return { success: false, message: "No records found for this month." };
+    if (!records.length) {
+      return {
+        success: false,
+        message: "No records found for this month.",
+      };
     }
 
-    let totalAdded = 0;
+    let operations: any[] = [];
 
-    for (let record of records) {
-      if (!record.Attendance) record.Attendance = [];
+   
+    for (const record of records) {
+      
+      const cleanedAttendance = Array.isArray(record.Attendance)
+        ? record.Attendance.filter(
+            (a: any) =>
+              a &&
+              typeof a === "object" &&
+              a.AttendenceDate
+          )
+        : [];
 
-      const hasToday = record.Attendance.some((att: any) => {
-        if (!att.AttendenceDate) return false;
-        const attDate = new Date(att.AttendenceDate).toISOString().split("T")[0];
-        return attDate === today;
-      });
+     
+      const alreadyMarked = cleanedAttendance.some(
+        (a: any) =>
+          new Date(a.AttendenceDate)
+            .toISOString()
+            .slice(0, 10) === todayKey
+      );
 
-      if (hasToday) continue;
+      if (alreadyMarked) continue;
 
-      totalAdded++;
-
+   
       const attendanceEntry = {
+        dateKey: todayKey,
         AttendenceDate: new Date(),
         HCPAttendence: true,
         AdminAttendece: true,
@@ -2318,22 +2380,108 @@ export const UpdatehcpDailyAttendce = async (selectedYear: any, selectedMonth: a
         UpdatedBy: "Admin",
       };
 
+      
+      operations.push({
+        updateOne: {
+          filter: { _id: record._id },
+          update: {
+            $set: {
+              Attendance: [...cleanedAttendance, attendanceEntry],
+              UpdatedAt: new Date(),
+              UpdatedBy: "Admin",
+            },
+          },
+        },
+      });
+    }
 
-      await collection.updateOne(
-        { _id: record._id },
-        {
-          $push: { Attendance: attendanceEntry }as any,
-        }
-      );
+    
+    const result =
+      operations.length > 0
+        ? await collection.bulkWrite(operations)
+        : null;
+
+    return {
+      success: true,
+      updated: result?.modifiedCount || 0,
+      message: `${result?.modifiedCount || 0} attendance records updated for today.`,
+    };
+  } catch (error: any) {
+    console.error("❌ Error updating attendance:", error);
+    return {
+      success: false,
+      message: "Error occurred while updating attendance.",
+      error: error.message,
+    };
+  }
+};
+
+export const EditAttendanceByClientId = async (
+  clientId: string,
+  Month: string,                // "2026-02" or "2026-2"
+  attendenceDate: string,       // "YYYY-MM-DD"
+  status: "FULL" | "HALF" | "ABSENT",
+  UpdatedBy: string
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    // Normalize Month to DB format (YYYY-M)
+    const normalizeMonth = (month: string) => {
+      const [year, m] = month.split("-");
+      return `${year}-${Number(m)}`;
+    };
+
+    const normalizedMonth = normalizeMonth(Month);
+
+    // Map status to flags
+    const statusMap = {
+      FULL: { HCPAttendence: true, AdminAttendece: true },
+      HALF: { HCPAttendence: true, AdminAttendece: false }, // or flip if needed
+      ABSENT: { HCPAttendence: false, AdminAttendece: false },
+    };
+
+    const flags = statusMap[status];
+
+    // Update attendance for the given date
+    const result = await collection.updateOne(
+      {
+        ClientId: clientId,
+        Month: normalizedMonth,
+        "Attendance.AttendenceDate": {
+          $gte: new Date(`${attendenceDate}T00:00:00.000Z`),
+          $lte: new Date(`${attendenceDate}T23:59:59.999Z`),
+        },
+      },
+      {
+        $set: {
+          "Attendance.$.HCPAttendence": flags.HCPAttendence,
+          "Attendance.$.AdminAttendece": flags.AdminAttendece,
+          "Attendance.$.UpdatedAt": new Date(),
+          "Attendance.$.UpdatedBy": UpdatedBy || "",
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Attendance record not found for this date.",
+      };
     }
 
     return {
       success: true,
-      message: `${totalAdded} new attendance entries added for today.`,
+      message: "Attendance updated successfully.",
     };
-  } catch (error) {
-    console.error("❌ Error updating attendance:", error);
-    return { success: false, message: "Error occurred.", error };
+  } catch (error: any) {
+    console.error("❌ Error editing attendance:", error);
+    return {
+      success: false,
+      message: error.message,
+    };
   }
 };
 
@@ -2408,6 +2556,81 @@ export const GetUserInformation = async (UserIdFromLocal: any) => {
     return null;
   }
 };
+export const updateServicePrice = async (
+  clientId: string,
+  careTakerPrice: number | string
+): Promise<{ success: boolean }> => {
+  try {
+    if (!clientId) {
+      throw new Error("ClientId is required");
+    }
+
+    if (
+      careTakerPrice === null ||
+      careTakerPrice === undefined ||
+      careTakerPrice === ""
+    ) {
+      throw new Error("Care Taker Price is required");
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const result = await collection.updateOne(
+      { ClientId: clientId },
+      {
+        $set: {
+          CareTakerPrice: careTakerPrice,
+          UpdatedAt: new Date()
+        }
+      },
+      { upsert: true }
+    );
+console.log("Check For Price---",careTakerPrice)
+    return {
+      success: result.acknowledged && result.matchedCount > 0
+    };
+  } catch (error) {
+    console.error("updateServicePrice error:", error);
+    return { success: false };
+  }
+};
+
+
+export const SuitableHCPUpdate = async (ClientId: any, HCPId: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const updateResult = await collection.updateOne(
+      { userId: ClientId },
+      {
+        $set: {
+          SuitableHCP: HCPId,
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    return {
+      success: updateResult.modifiedCount > 0,
+      message:
+        updateResult.modifiedCount > 0
+          ?"Successfully assigned healthcare professional"
+          : "No matching client found",
+    };
+  } catch (err) {
+    console.error("Error in SuitableHCPUpdate:", err);
+    return {
+      success: false,
+      message: "Failed to assign healthcare professional",
+    };
+  }
+};
+
+
 
 
 export const ClearEnquiry = async (userId: string) => {
