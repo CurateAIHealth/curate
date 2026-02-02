@@ -7,7 +7,7 @@ import { Update_Main_Filter_Status, UpdateClient, UpdateClientSuggetion, UpdateR
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import * as htmlToImage from 'html-to-image';
-import { GetInformedUsers, GetTimeSheetInfo, InserTimeSheet, IntrestedHCP, PostConfirmationInfo, TestInsertTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateUserContactVerificationstatus } from '@/Lib/user.action';
+import { GetInformedUsers, GetTimeSheetInfo, IntrestedHCP, PostConfirmationInfo, TestInsertTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateUserContactVerificationstatus } from '@/Lib/user.action';
 import axios from 'axios';
 import { calculateAgeIndianFormat } from '@/Lib/Actions';
 import { HyderabadAreas, PROFESSIONAL_SKILL_OPTIONS, TestData } from '@/Lib/Content';
@@ -646,6 +646,8 @@ const ShowAdditionHCPs = hcps.filter((each: HcpType) => {
 
 
 const activeClient = clients[0];
+
+
 
 if (!activeClient) {
   return (

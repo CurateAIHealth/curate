@@ -1554,17 +1554,17 @@ export const TestInsertTimeSheet = async (
     const collection = db.collection("TimeSheet");
 
 
-    // const alreadyExists = await collection.findOne({
-    //   ClientId: ClientId,
-    //   HCAId: hcpId,
-    // });
+    const alreadyExists = await collection.findOne({
+      ClientId: ClientId,
+      HCAId: hcpId,
+    });
 
-    // if (alreadyExists) {
-    //   return {
-    //     success: false,
-    //     message: "Duplicate entry",
-    //   };
-    // }
+    if (alreadyExists) {
+      return {
+        success: false,
+        message: "Duplicate entry",
+      };
+    }
 
     const TimeSheetData = {
       StartDate,
@@ -1634,6 +1634,7 @@ export const InsertDeployment = async (
   cTotal: any,
   cPay: any,
   hcpTotal: any,
+  CareTakerPrice:any,
   hcpPay: any,
   Month: any,
   TimeSheetArray: any,
@@ -1673,9 +1674,10 @@ export const InsertDeployment = async (
       UpdatedBy,
       invoice,
       Type,
+      CareTakerPrice,
       PDRStatus: false
     };
-console.log("Check Function----",DeploymentData)
+
     const insertResult = await collection.insertOne(DeploymentData);
 
     return {
@@ -2408,6 +2410,81 @@ export const GetUserInformation = async (UserIdFromLocal: any) => {
     return null;
   }
 };
+export const updateServicePrice = async (
+  clientId: string,
+  careTakerPrice: number | string
+): Promise<{ success: boolean }> => {
+  try {
+    if (!clientId) {
+      throw new Error("ClientId is required");
+    }
+
+    if (
+      careTakerPrice === null ||
+      careTakerPrice === undefined ||
+      careTakerPrice === ""
+    ) {
+      throw new Error("Care Taker Price is required");
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const result = await collection.updateOne(
+      { ClientId: clientId },
+      {
+        $set: {
+          CareTakerPrice: careTakerPrice,
+          UpdatedAt: new Date()
+        }
+      },
+      { upsert: false }
+    );
+
+    return {
+      success: result.acknowledged && result.matchedCount > 0
+    };
+  } catch (error) {
+    console.error("updateServicePrice error:", error);
+    return { success: false };
+  }
+};
+
+
+export const SuitableHCPUpdate = async (ClientId: any, HCPId: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const updateResult = await collection.updateOne(
+      { userId: ClientId },
+      {
+        $set: {
+          SuitableHCP: HCPId,
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    return {
+      success: updateResult.modifiedCount > 0,
+      message:
+        updateResult.modifiedCount > 0
+          ?"Successfully assigned healthcare professional"
+          : "No matching client found",
+    };
+  } catch (err) {
+    console.error("Error in SuitableHCPUpdate:", err);
+    return {
+      success: false,
+      message: "Failed to assign healthcare professional",
+    };
+  }
+};
+
+
 
 
 export const ClearEnquiry = async (userId: string) => {

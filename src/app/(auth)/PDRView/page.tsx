@@ -4,12 +4,13 @@ let cachedTimeSheetInfo: any[] = [];
 
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Eye, LogOut, Trash } from "lucide-react";
-import { DeleteDeployMent, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, InserTerminationData, InserTimeSheet, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
+import { DeleteDeployMent, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, InserTerminationData, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { GetCurrentDeploymentData, Update_Main_Filter_Status, UpdateFetchedInformation, UpdateSubHeading } from "@/Redux/action";
 import TerminationTable from "@/Components/Terminations/page";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
+import { normalizeDate } from "@/Lib/Actions";
 
 
 type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday";
@@ -60,23 +61,13 @@ const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
   const SubHeading = useSelector((state: any) => state.SubHeadinList);
   const dispatch = useDispatch();
 const Router=useRouter()
- useEffect(() => {
+useEffect(() => {
   let mounted = true;
 
-  const fetchData = async (forceFresh = false) => {
+  const fetchData = async () => {
     try {
-      
-      if (!forceFresh && cachedRegisteredUsers.length && cachedTimeSheetInfo.length) {
-        if (!mounted) return;
+      setIsChecking(true);
 
-        setUsers([...cachedRegisteredUsers]);
-        setClientsInformation([...cachedTimeSheetInfo]);
-        dispatch(UpdateSubHeading("On Service"));
-        setIsChecking(false);
-        return;
-      }
-
-  
       const [usersResult, timesheetInfo] = await Promise.all([
         GetRegidterdUsers(),
         GetTimeSheetInfo(),
@@ -84,19 +75,8 @@ const Router=useRouter()
 
       if (!mounted) return;
 
-      cachedRegisteredUsers = usersResult ?? [];
-      // cachedTimeSheetInfo = timesheetInfo ?? [];
-
-      cachedTimeSheetInfo = [
-        ...new Map(
-          [...(cachedTimeSheetInfo ?? []), ...(timesheetInfo ?? [])]
-            .map((item) => [item.ClientId, item])
-        ).values(),
-      ];
-
-
-      setUsers(cachedRegisteredUsers);
-      setClientsInformation(cachedTimeSheetInfo);
+      setUsers(usersResult ?? []);
+      setClientsInformation(timesheetInfo ?? []);
       dispatch(UpdateSubHeading("On Service"));
     } catch (err) {
       console.error("Fetch error:", err);
@@ -105,13 +85,13 @@ const Router=useRouter()
     }
   };
 
- 
-  fetchData(!!ActionStatusMessage);
+  fetchData();
 
   return () => {
     mounted = false;
   };
-}, [ActionStatusMessage, dispatch]);
+}, [dispatch,ActionStatusMessage]);
+
 
 
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
@@ -214,14 +194,22 @@ const phoneNumber='919347877159'
   setShowTimeSheet(false);
 }
 
+const UpdatePopup = async (a: any) => {
+  dispatch(GetCurrentDeploymentData(a));
 
-const UpdatePopup=async(a:any)=>{
-dispatch(GetCurrentDeploymentData(a))
-const data = await GetUserInformation(a.Client_Id);
-   dispatch(UpdateFetchedInformation(data))
-   Router.push("/PDR")
+  const data = await GetUserInformation(a.Client_Id);
 
-}
+  dispatch(
+    UpdateFetchedInformation({
+      ...data,
+      updatedAt: normalizeDate(data.updatedAt),
+      createdAt: normalizeDate(data.createdAt),
+    })
+  );
+
+  Router.push("/PDR");
+};
+
 
   const ExtendTimeSheet = async (a: any) => {
 SetActionStatusMessage("Please Wait Working On Time Sheet Extention")

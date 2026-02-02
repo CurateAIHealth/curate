@@ -21,7 +21,7 @@
   import MedicationSchedule from '@/Components/Medications/page'
   import { CheckboxGroup } from '@/Components/CheckboxGroup'
   import axios from 'axios'
-import { GetUsersFullInfo } from '@/Lib/user.action'
+import { GetUsersFullInfo, SuitableHCPUpdate, UpdateHCAnstatus } from '@/Lib/user.action'
   type EditingKeys = 'PatientCardEditing' | 'ClientCardEditing' | 'PatientDetails' | 'AdditionalInformation' | 'OtherInformation' | 'EquipmentDetails' | 'Hygiene' | 'Medication';
 
 
@@ -63,6 +63,7 @@ import { GetUsersFullInfo } from '@/Lib/user.action'
     const [showScanner, setShowScanner] = useState(false);
     const [EditHealthcareProfessional,setEditHealthcareProfessional]=useState(false)
     const [UploadStatusMessage,setUploadStatusMessage]=useState("")
+    const [StatusMessage,setStatusMessage]=useState("")
     const [form, setForm] = useState<StringMap>({});
     const [otherInputs, setOtherInputs] = useState<StringMap>({});
     const [AdvanceAmount,setAdvanceAmount]=useState<any>("")
@@ -100,7 +101,7 @@ useEffect(() => {
 }, [reduxFormData]);
 
 
-
+console.log("Check for Selected HCP Infromation-----",formData.serviceCharges)
 
     const handleChange = (key: string, value: any) => {
       setFormData((prev: any) => ({ ...prev, [key]: value }));
@@ -349,12 +350,35 @@ console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
       <select
         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
                    focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                     onChange={(e) => {
-    const selected = HCA_List.find(
-      (hca:any) => hca.userId === e.target.value
-    );
-    setselectedHCP(selected);
-  }}
+                        onChange={async (e) => {
+                          try {
+                            setStatusMessage("Please wait, assigning healthcare professional...");
+                            const selectedHCP = HCA_List.find(
+                              (hca: any) => hca.userId === e.target.value
+                            );
+                            if (!selectedHCP) {
+                              setStatusMessage("Invalid healthcare professional selected");
+                              return;
+                            }
+                            setselectedHCP(selectedHCP);
+                            if (formData?.SuitableHCP) {
+                              await UpdateHCAnstatus(formData.SuitableHCP, "Available");
+                            }
+                            const updateResponse = await SuitableHCPUpdate(
+                              formData.userId,
+                              selectedHCP.userId
+                            );
+                            if (updateResponse.success) {
+                              await UpdateHCAnstatus(selectedHCP.userId, "Assigned");
+                            }
+ setFormData((prev: any) => ({ ...prev, SuitableHCP: selectedHCP.userId }));
+                            setStatusMessage(updateResponse.message);
+                          } catch (error) {
+                            console.error("HCP assignment error:", error);
+                            setStatusMessage("Something went wrong while assigning healthcare professional");
+                          }
+                        }}
+
       >
         <option value="">Choose an HCP</option>
   {HCA_List.map((each:any) => (
@@ -383,6 +407,20 @@ console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
   >
     Change Healthcare Professional
   </button>
+ {StatusMessage && (
+  <p
+    className={`text-sm font-medium ${
+      StatusMessage.includes("Please wait")
+        ? "text-yellow-600"
+        : StatusMessage.includes("Successfully")
+        ? "text-green-600"
+        : "text-slate-600"
+    }`}
+  >
+    {StatusMessage}
+  </p>
+)}
+
 </div>
 
 
