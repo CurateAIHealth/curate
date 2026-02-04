@@ -924,6 +924,35 @@ export const UpdateInvoiceData = async (
   }
 };
 
+export const UpdateClientStatusToProcessing = async () => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const result = await collection.updateMany(
+      { ClientStatus: "Placed" },
+      {
+        $set: {
+          ClientStatus: "Processing",
+          updatedAt: new Date().toISOString()
+        }
+      }
+    );
+
+    return {
+      success: true,
+      modifiedCount: result.modifiedCount
+    };
+
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err.message
+    };
+  }
+};
+
 
 export const GetSentInvoiceData = async () => {
   try {
@@ -1647,7 +1676,18 @@ export const InsertDeployment = async (
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Deployment");
+const isExists = await collection.findOne({
+      ClientId,
+      HCAId: hcpId,
+      StartDate
+    });
 
+    if (isExists) {
+      return {
+        success: true,
+        message: "Deployment already exists for this client and caretaker"
+      };
+    }
     const DeploymentData = {
       StartDate,
       EndDate,
@@ -1683,7 +1723,7 @@ export const InsertDeployment = async (
 
     return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "TimeSheet Succesfully Extended",
       insertedId: insertResult.insertedId.toString(),
     };
   } catch (error: any) {

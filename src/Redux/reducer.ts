@@ -251,3 +251,47 @@ export const RegisterByAdmin=(state:any=false,action:any)=>{
         return state
     }
 }
+
+
+
+export const YearFilter = (state: any = new Date().getFullYear(), action: any) => {
+    switch (action.type) {
+        case "UpdateYearFilter":
+            return action.payload;
+        default:
+            return state
+    }
+}
+
+export const MonthFilter = (state: any = new Date().getMonth() + 1, action: any) => {
+    switch (action.type) {
+        case "UpdateMonthFilter":
+            return action.payload;
+        default:
+            return state
+    }
+}
+
+
+const now = new Date();
+
+
+export const AdminYearFilter=(state:any=String(now.getFullYear()),action:any)=>{
+    switch(action.type){
+        case "UpdateAdminYearFilter":
+            return action.payload;
+            default:
+                return state
+
+    }
+}
+
+
+export const AdminMonthFilter = (state: any = new Date(now.getFullYear(), now.getMonth()).toLocaleString("default", { month: "long" }), action: any) => {
+    switch (action.type) {
+        case "UpdateAdminMonthFilter":
+            return action.payload;
+        default:
+            return state
+    }
+}

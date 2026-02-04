@@ -41,9 +41,52 @@ import { CallEnquiryRegistration, GetDeploymentInfo, GetInvoiceInfo, GetRegidter
 import useSWR from "swr";
 
 const fetcher = async () => {
-  const data = await GetRegidterdUsers();
-  const FiltersHCPS = data.filter((each: any) => each.userType === "healthcare-assistant" && each.Email !== 'admin@curatehealth.in')
-  return FiltersHCPS;
+  const data = await GetUsersFullInfo();
+  return data || [];
+};
+
+const loadUsers = async () => {
+  const users = await fetcher(); // <-- call the function
+
+  const filterProfilePic = users.map(
+    (each: any) => each?.HCAComplitInformation ?? {}
+  );
+
+  const Finel = filterProfilePic.map((each: any) => ({
+    id: each.UserId,
+    FirstName: each.HCPFirstName,
+    AadharNumber: each.HCPAdharNumber,
+    Age: each.Age,
+    userType: each.userType,
+    Location: each["Permanent Address"] || "",
+    Email: each.HCPEmail,
+    Contact: each.HCPContactNumber,
+    CurrentStatus: each.CurrentStatus,
+    userId: each.UserId,
+    VerificationStatus: each.VerificationStatus,
+    DetailedVerification: each.FinelVerification,
+    EmailVerification: each.EmailVerification,
+    ClientStatus: each.ClientStatus,
+    Status: each.Status,
+    provider: each.provider,
+    payTerms: each.payTerms,
+  }));
+
+  const HCA_List = Finel.filter((each: any) => {
+    const typeMatch = ["healthcare-assistant", "HCA", "HCP", "HCPT"].includes(
+      each.userType
+    );
+
+    const isNotAssigned =
+      !each.Status?.some((s: string) => s === "Assigned");
+
+    const isValidCurrentStatus =
+      !["Sick", "Leave", "Terminated"].includes(each.CurrentStatus);
+
+    return typeMatch && isNotAssigned && isValidCurrentStatus;
+  });
+
+  return HCA_List;
 };
 
 
@@ -430,7 +473,7 @@ useEffect(() => {
   }
   const { data: BenchList = [], isLoading, mutate } = useSWR(
     "bench-list",
-    fetcher,
+    loadUsers,
     {
       revalidateOnFocus: false,
     }
@@ -720,7 +763,7 @@ const Switching = useCallback(
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard
+      Hi Admin – Welcome to Admin Dashboard...
     </span>
   </div>
 
@@ -1320,78 +1363,84 @@ hover:border-[#ff1493]
           )}
 
 
-          <div className="lg:col-span-4 space-y-4">
-            <div className="bg-white flex flex-col p-2 sm:p-4 rounded-xl shadow-md">
-              <h2 className="text-base sm:text-lg font-semibold mb-3 text-gray-700">
-                Active Bench List
-              </h2>
-              {isLoading ? (
-                <p>Bench List Loading...</p>
-              ) : (
-                <ul className="space-y-3 sm:space-y-4">
-                  {BenchList.slice(0, 9).map((user: any) => (
-                    <li
-                      key={user.ContactNumber}
-                      className="flex items-center justify-between gap-3"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <img
-                          src="Icons/DashBoardNurse.png"
-                          className="w-8 h-8 sm:w-10 sm:h-10"
-                        />
-                        <div className="min-w-0">
-                          <p className="font-medium text-sm truncate">
-                            {user.FirstName} {user.LastName}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {user.ContactNumber}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                     <button
-  className="
-    px-4 py-2
-    rounded-md
-    border border-gray-300
-    bg-white
-    text-gray-700 text-sm font-medium
-cursor-pointer
-    hover:bg-gray-50
-    transition
-hover:shadow-lg
-hover:rounded-md
-    focus:outline-none focus:ring-2
-    focus:ring-gray-400 focus:ring-offset-1
-  "
->
-  Send Profile
-</button>
+         <div className="lg:col-span-4 space-y-4">
+  <div className="bg-white flex flex-col p-2 sm:p-4 rounded-xl shadow-md">
+    <h2 className="text-base sm:text-lg font-semibold mb-3 text-gray-700">
+      Active Bench List
+    </h2>
 
-                      <button
-                        className="px-2 sm:px-3 py-1 text-xs bg-green-100 text-green-600 rounded-lg cursor-pointer whitespace-nowrap"
-                        onClick={() =>
-                          ShowDompleteInformation(user.userId, user.FirstName)
-                        }
-                      >
-                        <Eye />
-                      </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+    {isLoading ? (
+      <p>Bench List Loading...</p>
+    ) : (
+      <ul className="space-y-3 sm:space-y-4">
+        {BenchList.slice(0, 9).map((user: any, index: number) => (
+          <li
+            key={user.userId ?? `${user.ContactNumber}-${index}`}
+            className="flex items-center justify-between gap-3"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <img
+                src="Icons/DashBoardNurse.png"
+                alt="User"
+                className="w-8 h-8 sm:w-10 sm:h-10"
+              />
 
-              <div className="flex justify-end mt-2">
-                <button
-                  className="px-2 py-2 w-[100px] text-center bg-teal-600 text-white text-sm font-medium rounded-lg shadow cursor-pointer transition-all duration-200"
-                  onClick={NavigatetoFullHCPlIST}
-                >
-                  See more
-                </button>
+              <div className="min-w-0">
+                <p className="font-medium text-sm truncate">
+                  {user.FirstName} {user.LastName}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {user.ContactNumber}
+                </p>
               </div>
             </div>
-          </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                className="
+                  px-4 py-2
+                  rounded-md
+                  border border-gray-300
+                  bg-white
+                  text-gray-700 text-sm font-medium
+                  cursor-pointer
+                  hover:bg-gray-50
+                  transition
+                  hover:shadow-lg
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-gray-400
+                  focus:ring-offset-1
+                "
+              >
+                Send Profile
+              </button>
+
+              <button
+                className="px-2 sm:px-3 py-1 text-xs bg-green-100 text-green-600 rounded-lg cursor-pointer whitespace-nowrap"
+                onClick={() =>
+                  ShowDompleteInformation(user.userId, user.FirstName)
+                }
+              >
+                <Eye />
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )}
+
+    <div className="flex justify-end mt-2">
+      <button
+        className="px-2 py-2 w-[100px] text-center bg-teal-600 text-white text-sm font-medium rounded-lg shadow cursor-pointer transition-all duration-200"
+        onClick={NavigatetoFullHCPlIST}
+      >
+        See more
+      </button>
+    </div>
+  </div>
+</div>
+
 
 
         </main>

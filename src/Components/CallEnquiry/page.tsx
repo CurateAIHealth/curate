@@ -1,6 +1,6 @@
 "use client";
 
-import { ClearEnquiry, GetUserInformation } from "@/Lib/user.action";
+import { ClearEnquiry, GetUserInformation, UpdateClientStatusToProcessing } from "@/Lib/user.action";
 import {
   Phone,
   MapPin,
@@ -8,7 +8,8 @@ import {
   CalendarDays,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 
 interface CallEnquiryUser {
   _id: string;
@@ -33,6 +34,8 @@ export default function CallEnquiryList({
   title = "Call Enquiries",
 }: Props) {
   const [StatusMessage,setStatusMessage]=useState<any>("")
+  const SearchMonth=useSelector((state:any)=>state.MonthFilterAdmin)
+  const SearchYear=useSelector((state:any)=>state.YearFilterAdmin)
   if (!data || data.length === 0) {
     return (
       <div className="bg-white rounded-3xl border border-gray-200 p-6 text-center text-gray-500">
@@ -40,7 +43,7 @@ export default function CallEnquiryList({
       </div>
     );
   }
-
+console.log("Check for Data Info=======",data)
 
   const handleDelete = async (user: CallEnquiryUser) => {
     const userId = localStorage.getItem("UserId");
@@ -62,6 +65,28 @@ export default function CallEnquiryList({
     }
   };
 
+const UpdatedFilterUserType = useMemo(() => {
+  return data
+    .filter((each) => {
+      const date = each.createdAt ? new Date(each.createdAt) : null;
+
+      const matchesMonth =
+        !SearchMonth ||
+        (date &&
+          date.toLocaleString("default", { month: "long" }) === SearchMonth);
+
+      const matchesYear =
+        !SearchYear ||
+        (date && date.getFullYear() === Number(SearchYear));
+
+      return matchesMonth && matchesYear;
+    })
+    .slice()
+    .reverse();
+}, [data, SearchMonth, SearchYear]);
+
+  
+
   return (
     <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 w-full">
   
@@ -74,8 +99,17 @@ export default function CallEnquiryList({
         {title}
       </h2>
       <p className="text-sm text-gray-500 mt-1">
-        Total enquiries: {data.length}
+        Total enquiries: {UpdatedFilterUserType.length}
       </p>
+      {/* <button
+      onClick={async()=>{
+const Post=await UpdateClientStatusToProcessing()
+
+if(Post.success){
+  alert("Done")
+}
+      }}
+      >Updated</button> */}
     </div>
 {StatusMessage && (
   <div
@@ -120,100 +154,91 @@ export default function CallEnquiryList({
   </div>
 
   
-  <div className="hidden md:grid grid-cols-[1.5fr_1.2fr_1.5fr_1.2fr_2fr_1fr_60px] gap-4 px-4 py-2 text-xs font-semibold text-gray-500 border-b">
-    <span>Name</span>
-    <span>Phone</span>
-    <span>Email</span>
-    <span>Location</span>
-    <span>Comments</span>
-    <span>Date</span>
-    <span className="text-center">Action</span>
-  </div>
+  <div className="hidden md:grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1.2fr_2fr_1fr_60px] gap-4 px-4 py-2 text-xs font-semibold text-gray-500 border-b">
+  <span>S.No</span>
+  <span>Name</span>
+  <span>Phone</span>
+  <span>Email</span>
+  <span>Location</span>
+  <span>Comments</span>
+  <span>Date</span>
+  <span className="text-center">Action</span>
+</div>
 
-  
-  {data.map((user) => (
-    <div
-      key={user._id}
-      className="
-        border-b
-        px-4 py-4
-        hover:bg-gray-50
-        transition
-      "
-    >
+
+{UpdatedFilterUserType.map((user, index) => (
+  <div
+    key={user._id}
+    className="border-b px-4 py-4 hover:bg-gray-50 transition"
+  >
+    <div className="hidden md:grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1.2fr_2fr_1fr_60px] gap-4 items-center text-sm">
       
-      <div className="hidden md:grid grid-cols-[1.5fr_1.2fr_1.5fr_1.2fr_2fr_1fr_60px] gap-4 items-center text-sm">
-        <span className="font-medium text-gray-800">
-          {user.FirstName || "Not Provided"}
-        </span>
+      <span className="text-gray-500 font-medium">
+        {index + 1}
+      </span>
 
-        <span className="flex items-center gap-1 text-gray-600">
-          <Phone size={12} color="#1392d3" />
-          {user.ContactNumber || "Awaiting Info"}
-        </span>
+      <span className="font-medium text-gray-800">
+        {user.FirstName || "Not Provided"}
+      </span>
 
-        <span className="text-gray-600 truncate">
-          {user.Email || "Not Provided"}
-        </span>
+      <span className="flex items-center gap-1 text-gray-600">
+        <Phone size={12} color="#1392d3" />
+        {user.ContactNumber || "Awaiting Info"}
+      </span>
 
-        <span className="flex items-center gap-1 text-gray-600">
-          <MapPin size={12} color="#ff1493" />
-          {user.Location || "Not Provided"}
-        </span>
+      <span className="text-gray-600 truncate">
+        {user.Email || "Not Provided"}
+      </span>
 
-        <span className="text-xs text-gray-500 truncate">
-          {user.comments || "No comments"}
-        </span>
+      <span className="flex items-center gap-1 text-gray-600">
+        <MapPin size={12} color="#ff1493" />
+        {user.Location || "Not Provided"}
+      </span>
 
-        <span className="flex items-center gap-1 text-xs text-gray-400">
-          <CalendarDays size={12} />
-          {new Date(user.createdAt).toLocaleDateString()}
-        </span>
+      <span className="text-xs text-gray-500 truncate">
+        {user.comments || "No comments"}
+      </span>
 
+      <span className="flex items-center gap-1 text-xs text-gray-400">
+        <CalendarDays size={12} />
+        {new Date(user.createdAt).toLocaleDateString()}
+      </span>
+
+      <button
+        onClick={() => handleDelete(user)}
+        className="flex justify-center p-2 rounded-lg hover:bg-red-50 transition"
+      >
+        <Trash2 size={16} color="#f10707" />
+      </button>
+    </div>
+
+    {/* Mobile Card */}
+    <div className="md:hidden space-y-2 text-sm">
+      <div className="flex justify-between items-center">
+        <span className="text-xs text-gray-400">#{index + 1}</span>
         <button
           onClick={() => handleDelete(user)}
-          className="flex justify-center p-2 rounded-lg hover:bg-red-50 transition"
+          className="p-2 rounded-lg hover:bg-red-50"
         >
           <Trash2 size={16} color="#f10707" />
         </button>
       </div>
 
-      {/* Mobile Card */}
-      <div className="md:hidden space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="font-semibold text-gray-800">
-            {user.FirstName || "Not Provided"}
-          </span>
-          <button
-            onClick={() => handleDelete(user)}
-            className="p-2 rounded-lg hover:bg-red-50"
-          >
-            <Trash2 size={16} color="#f10707" />
-          </button>
-        </div>
+      <div className="font-semibold text-gray-800">
+        {user.FirstName || "Not Provided"}
+      </div>
 
-        <div className="text-gray-600">
-          📞 {user.ContactNumber || "Awaiting Info"}
-        </div>
-
-        <div className="text-gray-600">
-          📧 {user.Email || "Not Provided"}
-        </div>
-
-        <div className="text-gray-600">
-          📍 {user.Location || "Not Provided"}
-        </div>
-
-        <div className="text-xs text-gray-500">
-          💬 {user.comments || "No comments"}
-        </div>
-
-        <div className="text-xs text-gray-400">
-          📅 {new Date(user.createdAt).toLocaleDateString()}
-        </div>
+      <div className="text-gray-600">📞 {user.ContactNumber || "Awaiting Info"}</div>
+      <div className="text-gray-600">📧 {user.Email || "Not Provided"}</div>
+      <div className="text-gray-600">📍 {user.Location || "Not Provided"}</div>
+      <div className="text-xs text-gray-500">💬 {user.comments || "No comments"}</div>
+      <div className="text-xs text-gray-400">
+        📅 {new Date(user.createdAt).toLocaleDateString()}
       </div>
     </div>
-  ))}
+  </div>
+))}
+
 </div>
 
   );
