@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Stethoscope, Shirt, CircleX, Search, X } from "lucide-react";
 import { GetReasonsInfoInfo, GetTerminationInfo } from "@/Lib/user.action";
 import { LoadingData } from "../Loading/page";
-import { Placements_Filters, filterColors } from "@/Lib/Content";
+import { Placements_Filters, filterColors, years } from "@/Lib/Content";
 let terminationCache: any[] | null = null;
 let ReplacementReasonsCache: any[] | null = null;
 interface TerminationData {
@@ -18,9 +18,15 @@ interface TerminationData {
 const TerminationTable: React.FC = () => {
   const [placements, setPlacements] = useState<any[]>([]);
   const [ReplacementReasons,setReplacementReasons]=useState<any[]>([]);
+ const [rawData, setRawData] = useState<any[]>([]);
    const [search, setSearch] = useState("");
-     const [month, setMonth] = useState("");
-     const [year, setYear] = useState("");
+   const [HeadingSearch,setHeadingSearch]=useState('')
+ 
+  const now = new Date();
+ 
+ const [year, setYear] = useState(String(now.getFullYear()));
+ const [month, setMonth] = useState<any>(now.getMonth() + 1);
+
 const [isChecking, setIsChecking] = useState(true);
 const [showPopup, setShowPopup] = useState(false);
 const [popupInfo, setPopupInfo] = useState("");
@@ -129,15 +135,66 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
   />
 
 
-  <input
-    type="text"
-    placeholder="Search client / phone"
-    className="w-full border border-gray-300 rounded-md py-2 pl-9 pr-9 text-sm 
-               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-               transition"
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-  />
+  <header className="sticky top-0 z-30 bg-white border-b">
+  <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3">
+    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+
+      {/* Search */}
+      <div className="relative w-full md:max-w-sm">
+        <input
+          type="text"
+          placeholder="Search client / phone"
+          className="w-full border border-gray-300 rounded-md py-2 pl-9 pr-3 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-blue-500
+                     transition"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        {/* Search icon */}
+        <svg
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <path d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+        </svg>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-2 w-full md:w-auto">
+        <select
+          className="w-full md:w-auto border px-3 py-2 rounded-md text-sm bg-white"
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+        >
+          <option value="">All Months</option>
+          {[...Array(12)].map((_, i) => (
+            <option key={i} value={`${i + 1}`}>
+              {new Date(0, i).toLocaleString("default", { month: "long" })}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="w-full md:w-auto border px-3 py-2 rounded-md text-sm bg-white"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+        >
+          <option value="">All Years</option>
+          {years.map((year) => (
+        <option key={year} value={year}>
+          {year}
+        </option>
+      ))}
+        </select>
+      </div>
+
+    </div>
+  </div>
+</header>
 
 
   {search && (
@@ -199,7 +256,7 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
 
 
         <tr className="border-b border-gray-300">
-          {["Client", "Contact", "Location", "HCA", "Status", "Reason", "Action"].map(
+          {["S.No","Client", "Contact", "Location", "HCA", "Status", "Reason", "Action"].map(
             (head) => (
               <th
                 key={head}
@@ -219,6 +276,9 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
             key={idx}
             className="group transition-colors hover:bg-gray-50"
           >
+            <td className="px-6 py-4 font-semibold text-gray-900">
+              {idx+1}
+            </td>
             {/* CLIENT */}
             <td className="px-6 py-4 font-semibold text-gray-900">
               {placement.clientName || "Not Provided"}

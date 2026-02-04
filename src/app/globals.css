@@ -317,3 +317,12 @@ body {
     transform: translateX(0);
   }
 }
+/* 🔹 Add this once in your global CSS (or main CSS file) */
+@media (max-width: 1023px) {
+  td:nth-child(5),
+  th:nth-child(5),
+  td:nth-child(8),
+  th:nth-child(8) {
+    display: none;
+  }
+}

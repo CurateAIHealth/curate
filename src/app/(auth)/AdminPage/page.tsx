@@ -45,8 +45,15 @@ export default function UserTableList() {
   const [isChecking, setIsChecking] = useState(true);
   const [UserFirstName, setUserFirstName] = useState("");
 const [SearchDate,SetSearchDate]=useState<any>(null)
-const [SearchMonth, setSearchMonth] = useState("");
-const [SearchYear, setSearchYear] = useState("");
+const now = new Date();
+const [SearchYear, setSearchYear] = useState(String(now.getFullYear()));
+const [SearchMonth, setSearchMonth] = useState(
+  new Date(
+    now.getFullYear(),
+    now.getMonth()
+  ).toLocaleString("default", { month: "long" })
+);
+
  const [SearchResult,setSearchResult]=useState("")
   const [search, setSearch] = useState('');
   const [AsignStatus,setAsignStatus]=useState("")
@@ -1035,7 +1042,7 @@ onClick={()=>UpdateNavigattosuggetions(user.userId)}
 
    
     <h3 className="text-lg font-semibold tracking-tight text-slate-800">
-      No data available
+      No data available for Current Month/ Filter
     </h3>
 
  

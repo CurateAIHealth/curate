@@ -1641,6 +1641,7 @@ export const InsertDeployment = async (
   invoice: any,
   Type: any,
   CareTakerPrice:any,
+  ClientAttendece:any
 ) => {
   try {
     const cluster = await clientPromise;
@@ -1674,6 +1675,7 @@ export const InsertDeployment = async (
       invoice,
       Type,
       CareTakerPrice,
+      ClientAttendece,
       PDRStatus: true
     };
 
@@ -2030,7 +2032,9 @@ const TimeSheetDataInsert=await collection.insertOne({
   ClientContact:Contact,
   Adress:ClientAdress,
   HCAContact:Contacthca,
-  Attendence:TimeSheetArray
+  Attendence:TimeSheetArray,
+  StartDate:new Date().toLocaleDateString("en-IN")
+
 })
 return {
       success: true,

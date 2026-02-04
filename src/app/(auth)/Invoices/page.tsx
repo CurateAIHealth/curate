@@ -26,9 +26,10 @@ interface Invoice {
 }
 
 export default function InvoicesPage() {
+  const now = new Date();
+  const [monthFilter, setMonthFilter] =useState<any>(now.getMonth() + 1);
+  const [yearFilter, setYearFilter] =useState(String(now.getFullYear()));
 
-  const [monthFilter, setMonthFilter] = useState("All");
-  const [yearFilter, setYearFilter] = useState("All");
   const [FetchedInfo, setFetchedInfo] = useState<any>([])
   const [isChecking, setisChecking] = useState(true)
   const [isSending, setIsSending] = useState(false);
@@ -53,7 +54,7 @@ const ShowMailTemplate=useSelector((A:any)=>A.RevertInvoices)
 
     Fetch()
   }, [status,(ShowMailTemplate)])
-  
+  console.log('Check for Month------',monthFilter)
   const downloadExcel = () => {
     const exportData = paginatedData.map((inv) => {
       const totalAmount =
@@ -225,39 +226,48 @@ const RefundAmount = FetchedInfo
     };
   });
 
-  const filteredInvoices = useMemo(() => {
-    let data = [...computedInvoices];
+const filteredInvoices = useMemo(() => {
+  let data = [...computedInvoices];
+
+ 
+  if (monthFilter !== "All") {
+    data = data.filter((inv: any) => {
+      const iso = convertToISO(inv.StartDate);
+      if (!iso) return false;
+
+      const date = new Date(iso);
+      if (isNaN(date.getTime())) return false;
+
+      return date.getMonth() + 1 === Number(monthFilter);
+    });
+  }
 
 
-   if (monthFilter !== "All") {
-  data = data.filter((inv) => {
-    const iso = convertToISO(inv.StartDate);
-    if (!iso) return false;
-    const month = new Date(iso).getMonth() + 1;
-    return month === Number(monthFilter);
-  });
-}
+  if (yearFilter !== "All") {
+    data = data.filter((inv: any) => {
+      const iso = convertToISO(inv.StartDate);
+      if (!iso) return false;
+
+      const date = new Date(iso);
+      if (isNaN(date.getTime())) return false;
+
+      return date.getFullYear() === Number(yearFilter);
+    });
+  }
 
 
-    if (yearFilter !== "All") {
-      data = data.filter((inv:any) => {
-        const d:any = convertToISO(inv.StartDate);
+  if (search.trim() !== "") {
+    const q = search.toLowerCase();
+    data = data.filter(
+      (x: any) =>
+        x.name?.toLowerCase().includes(q) ||
+        x.contact?.toLowerCase().includes(q)
+    );
+  }
 
-        return d.getFullYear() === Number(yearFilter);
-      });
-    }
+  return data;
+}, [computedInvoices, monthFilter, yearFilter, search]);
 
-    if (search.trim() !== "") {
-      const q = search.toLowerCase();
-      data = data.filter(
-        (x) =>
-          x.name.toLowerCase().includes(q) ||
-          x.contact.toLowerCase().includes(q)
-      );
-    }
-
-    return data;
-  }, [computedInvoices, filter, search]);
 
 
   const totalPages = Math.max(

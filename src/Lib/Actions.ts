@@ -112,7 +112,12 @@ export const getDaysInMonth = (month: number, year: number) => {
   return new Date(year, month, 0).getDate(); 
 };
 
+const currentYear = new Date().getFullYear();
 
+export const years = Array.from(
+  { length: 6 }, 
+  (_, i) => currentYear - 4 + i
+);
 
 export const getDaysBetween=(date1: any, date2: any)=> {
 
