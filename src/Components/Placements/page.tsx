@@ -1373,7 +1373,7 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
   
 
 <td className="px-3 py-3 text-center break-words">
-  {isMatch ? (
+  {/* {isMatch ? (
     <p className="inline-flex items-center justify-center px-1 py-1 
               text-[10px] 
               font-medium text-emerald-700 
@@ -1389,7 +1389,14 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
     >
       Extend
     </button>
-  )}
+  )} */}
+
+   <button
+      className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+      onClick={() => UpdatePopup(c)}
+    >
+      Extend
+    </button>
 </td>
 
  <td     className="inline-block px-1 cursor-pointer py-2 text-xs mt-4 font-medium cursor-pointer bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md">
