@@ -163,7 +163,7 @@ export default function CallEnquiryForm() {
     FinelVerification: false,
     LeadDate: '',
     ServiceArea: '',
-    ClientStatus: "",
+    ClientStatus: "Processing",
   });
   const [DiscountStatus, SetDiscountStatus] = useState(true)
   const [visible, setVisible] = useState(true);
@@ -1530,7 +1530,7 @@ setShowOtherServiceArea(e.target.value==="Other")
             <p className="text-lg md:ml-40 text-center font-semibold text-gray-800 m-2 flex">Update Client Status</p>
             <div className="flex flex-wrap justify-start md:justify-end items-end gap-2 md:gap-4  md:w-[600px] m-2">
 
-              {["Processing", "Converted", "Waiting List", "Lost",].map((each: string, i: number) => (
+              {["None","Processing", "Converted", "Waiting List", "Lost", ].map((each: string, i: number) => (
                 <button
                   key={i}
                   type="button"

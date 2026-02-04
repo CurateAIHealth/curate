@@ -1,11 +1,11 @@
 "use client";
 import { filterColors, Placements_Filters, years } from "@/Lib/Content";
 import { GetReasonsInfoInfo, GetReplacementInfo } from "@/Lib/user.action";
-import { UpdateClient, UpdateUserInformation, UpdateUserType } from "@/Redux/action";
+import { UpdateClient, UpdateMonthFilter, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import { useRouter } from "next/navigation";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 let ReplacementCach : any[] | null = null;
 let ReplacementReasonsCache: any[] | null = null;
@@ -16,8 +16,9 @@ const ReplacementTable = ({ StatusMessage }: any) => {
 
  const now = new Date();
 
-const [year, setYear] = useState(String(now.getFullYear()));
-const [month, setMonth] = useState<any>(now.getMonth() + 1);
+
+const month=useSelector((state:any)=>state.FilterMonth) 
+const year=useSelector((state:any)=>state.FilterYear) 
 
 const [ReplacementReasons,setReplacementReasons]=useState<any[]>([]);
 const [showPopup, setShowPopup] = useState(false);
@@ -92,23 +93,35 @@ ReplacementReasonsCache=ReplacementReasons?? []
       router.push("/UserInformation");
     }
   };
-console.log("Check For Month------",month)
-  const filteredData = useMemo(() => {
-    return rawData.filter((item) => {
-      const matchesSearch =
-        item.clientName.toLowerCase().includes(search.toLowerCase()) ||
-        item.patientName.toLowerCase().includes(search.toLowerCase()) ||
-        item.invoice.toLowerCase().includes(search.toLowerCase()) ||
-        item.clientPhone.includes(search);
 
-      const [itemYear, itemMonth] = item.Month?.split("-") || [];
+const filteredData = useMemo(() => {
+  return rawData.filter((item) => {
+    const searchText = search.toLowerCase();
 
-      const matchesMonth = month ? itemMonth === month : true;
-      const matchesYear = year ? itemYear === year : true;
+    const matchesSearch =
+      item.clientName?.toLowerCase().includes(searchText) ||
+      item.patientName?.toLowerCase().includes(searchText) ||
+      item.invoice?.toLowerCase().includes(searchText) ||
+      item.clientPhone?.includes(searchText);
 
-      return matchesSearch && matchesMonth && matchesYear;
-    });
-  }, [rawData, search, month, year]);
+    if (!item.startDate) return false;
+
+    const [, itemMonth, itemYear] = item.startDate.split("/");
+
+    const matchesMonth = month
+      ? Number(itemMonth) === Number(month)
+      : true;
+
+    const matchesYear = year
+      ? Number(itemYear) === Number(year)
+      : true;
+
+    return matchesSearch && matchesMonth && matchesYear;
+  });
+}, [rawData, search, month, year]);
+
+
+  
 const GetReplacementMessage = (A: any, B: any) => {
   const results =
     ReplacementReasons?.filter(
@@ -137,6 +150,8 @@ console.log("Check For Message----",GetReplacementMessage("a289361b-3601-4ba6-ad
 
 
       <div className="flex flex-wrap gap-3 items-center justify-end">
+        <p>{month}</p>
+       
         <input
           type="text"
           placeholder="Search client / patient / invoice / phone"
@@ -148,7 +163,7 @@ console.log("Check For Message----",GetReplacementMessage("a289361b-3601-4ba6-ad
         <select
           className="border px-3 py-2 rounded-md text-sm"
           value={month}
-          onChange={(e) => setMonth(e.target.value)}
+             onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
         >
           <option value="">All Months</option>
           {[...Array(12)].map((_, i) => (
@@ -161,7 +176,7 @@ console.log("Check For Message----",GetReplacementMessage("a289361b-3601-4ba6-ad
         <select
           className="border px-3 py-2 rounded-md text-sm"
           value={year}
-          onChange={(e) => setYear(e.target.value)}
+           onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
         >
           <option value="">All Years</option>
          {years.map((year) => (

@@ -184,3 +184,35 @@ export const UpdateAdminRegistrationStatus=(AdminStatus:any)=>{
         payload:AdminStatus
     }
 }
+
+
+export const UpdateMonthFilter=(FilterMonth:any)=>{
+    return{
+        type:"UpdateMonthFilter",
+        payload:FilterMonth
+    }
+}
+
+export const UpdateYearFilter=(FilterYear:any)=>{
+    return{
+        type:"UpdateYearFilter",
+        payload:FilterYear
+    }
+}
+
+
+export const UpdateAdminMonthFilter=(Month:any)=>{
+    return{
+        type:"UpdateAdminMonthFilter",
+        payload:Month
+    }
+}
+
+
+export const UpdateAdminYearFilter=(Year:any)=>{
+    return{
+        type:"UpdateAdminYearFilter",
+        payload:Year
+    }
+}
+

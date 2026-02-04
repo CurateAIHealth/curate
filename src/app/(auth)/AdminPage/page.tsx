@@ -22,7 +22,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 } from 'lucide-react';
-import {  Update_Main_Filter_Status, UpdateClient, UpdateClientSuggetion, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
+import {  Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateClient, UpdateClientSuggetion, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
 import { ClientEnquiry_Filters, filterColors, hyderabadAreas, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
 
@@ -37,6 +37,7 @@ import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 import { LoadingData } from '@/Components/Loading/page';
 import ReplacementsTable from '@/Components/ReplacementsTable/page';
 import CallEnquiryList from '@/Components/CallEnquiry/page';
+import { stat } from 'fs';
 
 
 export default function UserTableList() {
@@ -46,14 +47,10 @@ export default function UserTableList() {
   const [UserFirstName, setUserFirstName] = useState("");
 const [SearchDate,SetSearchDate]=useState<any>(null)
 const now = new Date();
-const [SearchYear, setSearchYear] = useState(String(now.getFullYear()));
-const [SearchMonth, setSearchMonth] = useState(
-  new Date(
-    now.getFullYear(),
-    now.getMonth()
-  ).toLocaleString("default", { month: "long" })
-);
+const SearchMonth=useSelector((state:any)=>state.MonthFilterAdmin)
+const SearchYear=useSelector((state:any)=>state.YearFilterAdmin)
 
+   
  const [SearchResult,setSearchResult]=useState("")
   const [search, setSearch] = useState('');
   const [AsignStatus,setAsignStatus]=useState("")
@@ -113,6 +110,7 @@ const pillStyles: Record<string, string> = {
 
 
 const callEnquiryArray=users.filter((each)=>each.userType==='CallEnquiry')
+
   const Finel = users.map((each: any) => ({
     id: each.userId,
     FirstName: each.FirstName,
@@ -127,72 +125,114 @@ const callEnquiryArray=users.filter((each)=>each.userType==='CallEnquiry')
     VerificationStatus: each.VerificationStatus,
     DetailedVerification: each.FinelVerification,
     EmailVerification: each.EmailVerification,
-    ClientStatus: each.ClientStatus||"None",
+    ClientStatus: each.ClientStatus,
     Status:each.Status,
     CurrentStatus:each.CurrentStatus||"None",
     LeadSource:each.Source,
     ClientPriority:each.ClientPriority,
+    CreatedAt:each.createdAt,
     LeadDate:each.LeadDate,
     ServiceArea:each.ServiceArea,
     ServiceLocation:each.ServiceArea,
     PreviewUserType:each.PreviewUserType
   }));
 
-const UpdatedFilterUserType = useMemo(() => {
-  return Finel
-    .filter((each) => {
-  
-      const matchesType =
-        !UpdateduserType || each.userType === UpdateduserType;
+const UpdatedFilterUserType = Finel
+  .filter((each) => {
+    const matchesType =
+      !UpdateduserType || each.userType === UpdateduserType;
+const matchesStatus =
+  !search ||
+  (search === "None"
+    ? !each.ClientStatus
+    : each.ClientStatus === search);
 
-      const matchesSearch =
-        !search || each.ClientStatus === search;
 
-      const notAdmin =
-        each.Email !== "admin@curatehealth.in";
+    const notAdmin =
+      each.Email?.toLowerCase() !== "admin@curatehealth.in";
 
-      const date = each.LeadDate ? new Date(each.LeadDate) : null;
+    const matchesSearchResult =
+      !SearchResult ||
+      [each.FirstName, each.Email, each.Contact]
+        .filter(Boolean)
+        .some((value) =>
+          value
+            .toString()
+            .toLowerCase()
+            .includes(SearchResult.toLowerCase())
+        );
+
+    const checkDate = (value: any) => {
+      if (!value) return false;
+
+      const date = new Date(value);
+      if (isNaN(date.getTime())) return false;
 
       const matchesMonth =
         !SearchMonth ||
-        (date &&
-          date.toLocaleString("default", { month: "long" }) === SearchMonth);
+        date.toLocaleString("default", { month: "long" }) === SearchMonth;
 
       const matchesYear =
-        !SearchYear ||
-        (date && date.getFullYear() === Number(SearchYear));
+        !SearchYear || date.getFullYear() === Number(SearchYear);
 
-      
-      const matchesSearchResult =
-        !SearchResult ||
-        [each.FirstName, each.Email, each.Contact]
-          .filter(Boolean) 
-          .some((value) =>
-            value
-              .toString()
-              .toLowerCase()
-              .includes(SearchResult.toLowerCase())
-          );
+      return matchesMonth && matchesYear;
+    };
 
-      return (
-        matchesType &&
-        matchesSearch &&
-        matchesMonth &&
-        matchesYear &&
-        matchesSearchResult && 
-        notAdmin
-      );
-    })
-    .slice()
-    .reverse();
-}, [
-  Finel,
-  UpdateduserType,
-  search,
-  SearchMonth,
-  SearchYear,
-  SearchResult, 
-]);
+    const matchesDate =
+      (!SearchMonth && !SearchYear) ||
+      checkDate(each.LeadDate) ||
+      checkDate(each.CreatedAt);
+
+    return (
+      matchesType &&
+      matchesStatus &&
+      matchesSearchResult &&
+      matchesDate &&
+      notAdmin
+    );
+  })
+  .slice()
+  .reverse();
+
+console.log('Check for Finel------',UpdatedFilterUserType)
+
+
+const filterByMonthAndYear = (
+  each: any,
+  SearchMonth: string,
+  SearchYear: string
+) => {
+  const checkDate = (value: any) => {
+    if (!value) return false;
+
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return false;
+
+    const matchesMonth =
+      !SearchMonth ||
+      date.toLocaleString("default", { month: "long" }) === SearchMonth;
+
+    const matchesYear =
+      !SearchYear || date.getFullYear() === Number(SearchYear);
+
+    return matchesMonth && matchesYear;
+  };
+
+  return checkDate(each.LeadDate) || checkDate(each.CreatedAt);
+};
+
+
+const MonthlyCount = Finel.filter((each) =>
+  filterByMonthAndYear(each, SearchMonth, SearchYear)
+);
+
+console.log(
+  "Check For Monthly Information------",
+  MonthlyCount,
+  MonthlyCount.length
+);
+
+
 
 
 
@@ -266,7 +306,7 @@ useEffect(() => {
       const userId = localStorage.getItem("UserId");
       if (!userId) return;
 
-      const forceFresh = !!updatedStatusMsg; // dependency-based refresh
+      const forceFresh = !!updatedStatusMsg; 
 
       const [
         profile,
@@ -510,7 +550,6 @@ const toCamelCase = (value?: string | null) => {
 };
 
 
-
 const ClientEnquiryUserInterFace = () => {
   return (
     <div>
@@ -578,6 +617,7 @@ const ClientEnquiryUserInterFace = () => {
               <table className="table-fixed w-full min-w-[800px] text-[11px] sm:text-[13px] text-left text-gray-700 border-collapse">
                 <thead className="bg-[#f5faff] sticky top-0 z-10">
                   <tr>
+                      <th className="px-2 py-2 w-[4%]">S.No</th>
                     {UpdateduserType === "patient"&&
                       <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Date</th>}
                       {UpdateduserType === "patient"&&
@@ -615,6 +655,7 @@ const ClientEnquiryUserInterFace = () => {
                       key={index}
                       className="border-b border-gray-400 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors"
                     >
+                       <td className='pl-4'>{index+1}</td>
                        {UpdateduserType === "patient"&&    <td><input
   type="date"
   value={user.LeadDate||''}
@@ -1281,7 +1322,7 @@ const GetPermanentAddress = (A: any) => {
         {
   UpdateMainFilter === "Client Enquiry"
     ? `${each} (${
-        Finel?.filter(
+        MonthlyCount?.filter(
           (Try) => Try.ClientStatus === each ||Try.userType===each
         )?.length ||0
       })`
@@ -1346,7 +1387,7 @@ onClick={()=>UpdateNavigattosuggetions()}
 
     <select
       value={SearchMonth}
-      onChange={(e) => setSearchMonth(e.target.value)}
+      onChange={(e) => dispatch(UpdateAdminMonthFilter(e.target.value))}
       className="
         w-full h-[44px] rounded-xl
         border border-gray-300
@@ -1377,7 +1418,7 @@ onClick={()=>UpdateNavigattosuggetions()}
 
     <select
       value={SearchYear}
-      onChange={(e) => setSearchYear(e.target.value)}
+      onChange={(e) => dispatch(UpdateAdminYearFilter(e.target.value))}
       className="
         w-full rounded-xl border border-gray-300
         px-4 py-3 text-sm bg-white text-gray-800

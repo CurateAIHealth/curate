@@ -9,7 +9,7 @@ import React, { useEffect, useState } from "react";
 import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash,Plus , X } from "lucide-react";
 import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
-import { UpdateClient, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from "@/Redux/action";
+import { UpdateClient, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
 import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
@@ -67,13 +67,10 @@ const [ReplacementDate,setReplacementDate]=useState("")
  const [SaveButton,setSaveButton]=useState(false)
  const [TerminationInfo,SetTerminationInfo]=useState<any>()
 const now = new Date();
-const [SearchYear, setSearchYear] = useState<any>((now.getFullYear()));
-const [SearchMonth, setSearchMonth] = useState(
-  new Date(
-    now.getFullYear(),
-    now.getMonth()
-  ).toLocaleString("default", { month: "long" })
-);
+
+
+const SearchMonth=useSelector((state:any)=>state.FilterMonth) 
+const SearchYear=useSelector((state:any)=>state.FilterYear) 
 
 
 
@@ -182,10 +179,9 @@ useEffect(() => {
 const matchesSearchAndMonth = (
   item: any,
   searchText: string,
-  searchMonth: string,
+  searchMonth: string, 
   searchYear: string
 ) => {
-
   const search = searchText?.toLowerCase() || "";
 
   const name = item.name?.toLowerCase() || "";
@@ -200,23 +196,18 @@ const matchesSearchAndMonth = (
     contact.includes(search) ||
     hca.includes(search);
 
-  
   if (!searchMonth && !searchYear) return matchesSearch;
-
   if (!item.StartDate) return false;
 
- 
+
   const [day, month, year] = item.StartDate.split("/");
 
   if (!month || !year) return false;
 
-  const monthName = new Date(
-    Number(year),
-    Number(month) - 1
-  ).toLocaleString("default", { month: "long" });
+  const monthNumber = Number(month); // 1–12
 
   const matchesMonth =
-    !searchMonth || monthName === searchMonth;
+    !searchMonth || monthNumber === Number(searchMonth);
 
   const matchesYear =
     !searchYear || Number(year) === Number(searchYear);
@@ -225,6 +216,7 @@ const matchesSearchAndMonth = (
 };
 
 
+console.log('Check for Month Name----',SearchMonth)
   const ShowDompleteInformation = async (userId: any, ClientName: any) => {
     if (userId) {
       dispatch(UpdateClient(ClientName));
@@ -548,7 +540,7 @@ serviceCharge
        SetActionStatusMessage("TimeSheet Succesfully Extended")
        const Timer=setInterval(()=>{
          setshowExtendPopup(false)
-         SetActionStatusMessage("")
+         SetActionStatusMessage(deploymentRes.message)
        },2000)
        return ()=>clearInterval(Timer)
     }
@@ -864,7 +856,7 @@ const OmServiceView = () => {
 
     <select
       value={SearchMonth}
-      onChange={(e) => setSearchMonth(e.target.value)}
+      onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
       className="
         w-full h-[44px] rounded-xl
         border border-gray-300
@@ -874,14 +866,11 @@ const OmServiceView = () => {
       "
     >
       <option value="">All Months</option>
-      {[
-        "January","February","March","April","May","June",
-        "July","August","September","October","November","December"
-      ].map((month) => (
-        <option key={month} value={month}>
-          {month}
-        </option>
-      ))}
+      {[...Array(12)].map((_, i) => (
+            <option key={i} value={`${i + 1}`}>
+              {new Date(0, i).toLocaleString("default", { month: "long" })}
+            </option>
+          ))}
     </select>
   </div>
   
@@ -893,7 +882,7 @@ const OmServiceView = () => {
 
     <select
       value={SearchYear}
-      onChange={(e) => setSearchYear(e.target.value)}
+       onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
       className="
         w-full rounded-xl border border-gray-300
         px-4 py-3 text-sm bg-white text-gray-800
@@ -1035,12 +1024,13 @@ const monthIndex = [
   "July","August","September","October","November","December"
 ].indexOf(SearchMonth) + 1;
 
-const isMatch = month === monthIndex && year === Number(SearchYear);
+const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(year) ===Number(now.getFullYear());
+
 
       return(
           <tr key={i} className="hover:bg-teal-50/30 transition-all">
            <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
-            {i+1}
+           {SearchYear}
           </td>
           <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
             {toProperCaseLive(c.name)}
@@ -1428,7 +1418,7 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
   
 
 <td className="px-3 py-3 text-center break-words">
-  {/* {isMatch ? (
+  {isMatch ? (
     <p className="inline-flex items-center justify-center px-1 py-1 
               text-[10px] 
               font-medium text-emerald-700 
@@ -1439,19 +1429,19 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
 
   ) : (
     <button
-      className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+      className="px-4 py-2 text-xs font-medium "
       onClick={() => UpdatePopup(c)}
     >
-      Extend
+      <ChevronsRight size={22} className="text-teal-600"/>
     </button>
-  )} */}
+  )}
 
-   <button
+   {/* <button
       className="px-4 py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full"
       onClick={() =>{ UpdatePopup(c),setSelectedDate("")}}
     >
   <ChevronsRight size={22} className="text-teal-600"/>
-    </button>
+    </button> */}
 </td>
 
  <td     className="inline-block px-1 ml-4 cursor-pointer py-2 text-[10px] mt-4 hover:bg-gray-100 hover:rounded-full font-medium cursor-pointer ">
