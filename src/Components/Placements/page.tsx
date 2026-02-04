@@ -6,7 +6,7 @@ let cachedTermination:any[]
 
 
 import React, { useEffect, useState } from "react";
-import { CircleCheckBig, Trash, X } from "lucide-react";
+import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash,Plus , X } from "lucide-react";
 import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from "@/Redux/action";
@@ -15,7 +15,7 @@ import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
 import { filterColors, months, Placements_Filters, years } from "@/Lib/Content";
 import ReplacementsTable from "../ReplacementsTable/page";
-import { getDaysBetween, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
+import { getDaysBetween, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
 import { useRouter } from "next/navigation";
 import { div } from "framer-motion/client";
 
@@ -953,29 +953,74 @@ const OmServiceView = () => {
   <table className="w-full table-fixed border-collapse bg-white">
     
   
-    <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white uppercase text-xs font-semibold">
+  <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white uppercase text-[10px] font-semibold">
   <tr>
-     <th className="w-[50px] px-3 py-3 whitespace-nowrap text-left">S.No</th>
-    <th className="w-[160px] px-3 py-3 whitespace-nowrap text-left">Client Name</th>
-    <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">Start Date</th>
-    <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">End Date</th>
-    <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">Service Charge</th>
-    <th className="w-[160px] px-3 py-3 whitespace-nowrap text-left">Patient Name</th>
-    <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">Contact</th>
-    <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">Location</th>
-    <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">HCA Name</th>
-    <th className="w-[120px] px-3 py-3 whitespace-nowrap text-center">Status</th>
-    <th className="w-[160px] px-3 py-3 whitespace-nowrap text-center">Replacement</th>
-    <th className="w-[140px] px-3 py-3 whitespace-nowrap_tcp text-center">Time Sheet</th>
+    <th className="w-10 px-2 py-2 text-left">S.No</th>
+
+    <th className="min-w-[90px] max-w-[140px] px-2 py-2 text-left truncate">
+      Client Name
+    </th>
+
+    <th className="w-[90px] px-2 py-2 text-left">
+      Start Date
+    </th>
+
+    <th className="w-[90px] px-2 py-2 text-left">
+      End Date
+    </th>
+
+    <th className="w-[120px] px-2 py-2 text-left">
+      Service Charge
+    </th>
+
+    <th className="min-w-[120px] max-w-[150px] px-2 py-2 text-left truncate">
+      Patient Name
+    </th>
+
+    <th className="w-[120px] px-2 py-2 text-left">
+      Contact
+    </th>
+
+    <th className="min-w-[100px] max-w-[140px] px-2 py-2 text-left truncate">
+      Location
+    </th>
+
+    <th className="min-w-[120px] max-w-[150px] px-2 py-2 text-left truncate">
+      HCA Name
+    </th>
+
+    <th className="w-[90px] px-2 py-2 text-center">
+      Status
+    </th>
+
+    <th className="w-[110px] px-2 py-2 text-center">
+      Replacement
+    </th>
+
+    <th className="w-[80px] px-2 py-2 text-center">
+      Time Sheet
+    </th>
+
     {(isInvoiceDay || enableStatus) && (
-        <th className="w-[140px] px-3 py-3 whitespace-nowrap text-center">Invoice</th>
+      <th className="w-[80px] px-2 py-2 text-center">
+        Invoice
+      </th>
     )}
-    <th className="w-[160px] px-3 py-3 whitespace-nowrap text-center">Service Continue</th>
-     <th className="w-[80px] px-2 py-3 whitespace-nowrap text-left">More</th>
-    <th className="w-[80px] px-3 py-3 whitespace-nowrap text-center">Terminate</th>
-   
+
+    <th className="w-[120px] px-2 py-2 text-center">
+      Service Continue
+    </th>
+
+    <th className="w-[70px] px-2 py-2 text-center">
+      Add HCP
+    </th>
+
+    <th className="w-[70px] px-2 py-2 text-center">
+      Terminate
+    </th>
   </tr>
 </thead>
+
 
 
    
@@ -1051,19 +1096,19 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
           getDaysBetween(c.StartDate, c.EndDate) *
           rupeeToNumber(c.ServiceCharge)
         ).toFixed(2)}{" "}
-        <span className="text-gray-500">/ Month</span>
+        <span className="text-gray-500">/M</span>
       </span>
 
       <span>
         ₹{rupeeToNumber(c.ServiceCharge).toFixed(2)}{" "}
-        <span className="text-gray-500">/ Day</span>
+        <span className="text-gray-500">/D</span>
       </span>
     </div>
   )}
 </td>
 
 
-          <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
+          <td className="px-1 py-1 font-semibold text-[11px] text-gray-900 ">
             {toProperCaseLive(c.PatientName)}
           </td>
 
@@ -1071,22 +1116,25 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
             {c.contact}
           </td>
 
-          <td className="px-3 py-3 text-gray-600 text-xs break-words">
-            {c.location}
-          </td>
+       <td className="px-1 py-3 text-gray-900 font-semibold text-[11px] flex items-center gap-1">
+  <MapPin size={14} className="text-green-600 shrink-0" />
+  {getPopularArea(c.location)}
+</td>
 
-    <td
-  className="px-3 py-3 whitespace-nowrap"
+
+
+
+ <td
+  className="px-3 py-3 max-w-[140px]"
   onClick={() => ShowDompleteInformation(c.HCA_Id, c.HCA_Name)}
 >
   <span
     className="
       inline-flex
-      w-fit
-      items-center
+      items-start
       gap-1
       px-1 py-1
-      text-[11px]
+      text-[10px]
       font-medium
       rounded-md
       bg-white
@@ -1095,7 +1143,7 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
     "
   >
     🩺
-    <span className="hover:underline">
+    <span className="hover:underline font-semibold line-clamp-2 break-words leading-tight">
       {toProperCaseLive(c.HCA_Name)}
     </span>
   </span>
@@ -1103,9 +1151,10 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
 
 
 
-          <td className="px-3 py-3 break-words">
-            <div className="flex items-center gap-2 rounded-full bg-green-100 px-3 py-1">
-              <CircleCheckBig className="w-4 h-4 text-emerald-600" />
+
+          <td className="px-1 pl-4 py-3 break-words">
+            <div className="flex items-center gap-2 rounded-full bg-green-100 p-1">
+              <CircleCheckBig className="w-3 h-3 text-emerald-600" />
               <p className="text-xs font-medium text-emerald-700">Active</p>
             </div>
           </td>
@@ -1113,15 +1162,15 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
           <td className="px-3 py-3 break-words">
          <button
   className="
-    px-2 py-2.5
-    text-xs font-semibold
+    px-1 py-1
+    text-[9px] font-semibold
     text-teal-600
-    border-2 border-teal-500
+    border-1 border-teal-500
     rounded-lg
     shadow-[0_0_0_0_rgba(20,184,166,0.5)]
     transition-all duration-300
     hover:shadow-[0_0_12px_2px_rgba(20,184,166,0.6)]
-    hover:bg-teal-50
+    bg-teal-150
     active:scale-95 
     cursor-pointer
   "
@@ -1354,23 +1403,23 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
 
           <td className="px-3 py-3 text-center break-words">
             <button
-              className="px-4 cursor-pointer py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+              className="px-4 cursor-pointer py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full  text-white "
               onClick={() => UpdateClient_UserId(c.Client_Id, c.name)}
             >
-              View
+             <CalendarCheck2 size={19} className="text-teal-600"/>
             </button>
           </td>
 
           {(isInvoiceDay || enableStatus) && (
            <td className="px-3 py-3 text-center">
   <button
-    className="inline-block px-1 py-2 text-xs font-medium cursor-pointer bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+    className="inline-block px-1 py-2 text-[9px] hover:bg-gray-100 hover:rounded-full font-medium cursor-pointer  text-white"
     onClick={() => {
       setBillingRecord(c);
       setShowPaymentModal(true);
     }}
   >
-    Generate Bill
+<FilePenLine  size={19} className="text-teal-600" />
   </button>
 </td>
 
@@ -1398,24 +1447,24 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
   )} */}
 
    <button
-      className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+      className="px-4 py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full"
       onClick={() =>{ UpdatePopup(c),setSelectedDate("")}}
     >
-      Extend
+  <ChevronsRight size={22} className="text-teal-600"/>
     </button>
 </td>
 
- <td     className="inline-block px-1 cursor-pointer py-2 text-xs mt-4 font-medium cursor-pointer bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md">
+ <td     className="inline-block px-1 ml-4 cursor-pointer py-2 text-[10px] mt-4 hover:bg-gray-100 hover:rounded-full font-medium cursor-pointer ">
             <button
             className="cursor-pointer"
              onClick={() => {setShowAssignPopup(true),setselectedClient(c),setselectedAssignHCP(null)}}
             >
-          Add HCP
+       <Plus size={19} className="h-5 w-5 text-center text-teal-600"/>
             </button>
           </td>
           <td className="px-3 py-3 text-center break-words">
             <button
-              className="px-3 py-2 text-xs font-medium cursor-pointer rounded-lg hover:bg-gray-100"
+              className="px-3 py-2 text-xs font-medium cursor-pointer rounded-lg hover:rounded-full hover:bg-gray-100"
               onClick={() => handleDeleteClick(c,c.HCA_Name)}
             >
               <Trash />
