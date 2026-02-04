@@ -6,7 +6,7 @@ let cachedTermination:any[]
 
 
 import React, { useEffect, useState } from "react";
-import { CircleCheckBig, Trash } from "lucide-react";
+import { CircleCheckBig, Trash, X } from "lucide-react";
 import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from "@/Redux/action";
@@ -493,6 +493,12 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
     const LastDate=new Date(lastDateOfMonth).toLocaleDateString("en-In")
     const currentMonth = `${new Date(selectedDate).getFullYear()}-${new Date(selectedDate).getMonth() + 1}`;
     const CareTakerCharges=serviceCharge?serviceCharge:GetInfo.serviceCharges
+   if(serviceCharge){
+     const { success } = await updateServicePrice(
+  ExtendInfo.Client_Id,
+GetInfo.serviceCharges
+);
+   }
       const attendance = [
         {
           AttendenceDate: today,
@@ -1547,6 +1553,8 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
       <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
         Extend Service
       </h2>
+
+      <X />
 
       {/* Select Date */}
       <div className="mb-4">
