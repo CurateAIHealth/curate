@@ -2402,3 +2402,153 @@ export const JobTitles = [
   "Accounting and Finance Executive",
   "Other",
 ];
+
+
+export const popularAreas = [
+
+   { name: "Pragathi Nagar", keywords: ["pragathi nagar", "pragatinagar"] },
+  { name: "Nizampet", keywords: ["nizampet", "nizampet road"] },
+  { name: "JNTU", keywords: ["jntu", "jntu colony"] },
+  { name: "KPHB Colony", keywords: ["kphb", "kphb colony"] },
+  { name: "Moosapet", keywords: ["moosapet"] },
+  { name: "Bachupally", keywords: ["bachupally", "bachu pally"] },
+  { name: "Mallampet", keywords: ["mallampet"] },
+  { name: "Gajularamaram", keywords: ["gajularamaram", "gajula ramaram"] },
+
+
+  { name: "Madhapur", keywords: ["madhapur"] },
+  { name: "Ayyappa Society", keywords: ["ayyappa society"] },
+  { name: "Gachibowli", keywords: ["gachibowli"] },
+  { name: "Indira Nagar (Gachibowli)", keywords: ["indira nagar gachibowli"] },
+  { name: "Manikonda", keywords: ["manikonda"] },
+  { name: "OU Colony", keywords: ["ou colony"] },
+  { name: "Puppalaguda", keywords: ["puppalaguda"] },
+  { name: "Narsingi", keywords: ["narsingi"] },
+
+ 
+  { name: "West Marredpally", keywords: ["west marredpally"] },
+  { name: "East Marredpally", keywords: ["east marredpally"] },
+  { name: "Tarnaka", keywords: ["tarnaka"] },
+  { name: "Mettuguda", keywords: ["mettuguda"] },
+  { name: "Trimulgherry", keywords: ["trimulgherry"] },
+  { name: "Alwal", keywords: ["alwal"] },
+  { name: "Lothkunta", keywords: ["lothkunta"] },
+
+
+  { name: "Habsiguda", keywords: ["habsiguda"] },
+  { name: "Ramanthapur", keywords: ["ramanthapur"] },
+  { name: "Amberpet", keywords: ["amberpet"] },
+  { name: "Nagole", keywords: ["nagole"] },
+  { name: "Boduppal", keywords: ["boduppal"] },
+  { name: "Peerzadiguda", keywords: ["peerzadiguda"] },
+
+
+  { name: "Himayatnagar", keywords: ["himayatnagar"] },
+  { name: "Domalguda", keywords: ["domalguda"] },
+  { name: "Basheerbagh", keywords: ["basheerbagh"] },
+  { name: "Chikkadpally", keywords: ["chikkadpally"] },
+  { name: "RTC X Roads", keywords: ["rtc x roads", "rtc crossroads"] },
+
+
+  { name: "Santoshnagar", keywords: ["santoshnagar", "santosh nagar"] },
+  { name: "Saidabad", keywords: ["saidabad"] },
+  { name: "Yakutpura", keywords: ["yakutpura"] },
+  { name: "Bahadurpura", keywords: ["bahadurpura"] },
+  { name: "Falaknuma", keywords: ["falaknuma"] },
+
+
+  { name: "Mehdipatnam", keywords: ["mehdipatnam"] },
+  { name: "Tolichowki", keywords: ["tolichowki"] },
+  { name: "Asif Nagar", keywords: ["asif nagar"] },
+  { name: "Attapur", keywords: ["attapur"] },
+  { name: "Hyderguda", keywords: ["hyderguda"] },
+
+
+  { name: "Tellapur", keywords: ["tellapur"] },
+  { name: "Osman Nagar", keywords: ["osman nagar"] },
+  { name: "Beeramguda", keywords: ["beeramguda"] },
+  { name: "Ameenpur", keywords: ["ameenpur"] },
+  { name: "Miyapur", keywords: ["miyapur"] },
+{ 
+  name: "Pragathi Nagar",
+  keywords: [
+    "pragathi nagar",
+    "pragatinagar",
+    "pragathi nagar colony",
+    "pragathi nagar road"
+  ]
+},
+
+{ name: "Kukatpally", keywords: ["kukatpally", "kukat pally"] },
+{ name: "Nizampet", keywords: ["nizampet", "nizampet road"] },
+{ name: "Pragathi Nagar", keywords: ["pragathi nagar", "pragatinagar"] },
+{ name: "Bachupally", keywords: ["bachupally", "bachu pally"] },
+
+  { name: "Abids", keywords: ["abids"] },
+  { name: "Koti", keywords: ["koti"] },
+  { name: "Nampally", keywords: ["nampally"] },
+  { name: "Himayatnagar", keywords: ["himayatnagar", "himayat nagar"] },
+  { name: "Basheerbagh", keywords: ["basheerbagh", "basheer bagh"] },
+  { name: "Khairatabad", keywords: ["khairatabad"] },
+  { name: "Lakdikapul", keywords: ["lakdikapul", "lakdi ka pul"] },
+  { name: "Punjagutta", keywords: ["punjagutta", "punja gutta"] },
+  { name: "Somajiguda", keywords: ["somajiguda"] },
+  { name: "Masab Tank", keywords: ["masab tank"] },
+
+
+  { name: "Hitech City", keywords: ["hitech city", "hi tech city", "hitech"] },
+  { name: "Madhapur", keywords: ["madhapur"] },
+  { name: "Gachibowli", keywords: ["gachibowli", "gachi bowli"] },
+  { name: "Kondapur", keywords: ["kondapur"] },
+  { name: "Manikonda", keywords: ["manikonda"] },
+  { name: "Narsingi", keywords: ["narsingi"] },
+  { name: "Financial District", keywords: ["financial district"] },
+  { name: "Kokapet", keywords: ["kokapet"] },
+  { name: "Nallagandla", keywords: ["nallagandla"] },
+  { name: "Lingampally", keywords: ["lingampally", "lingam pally"] },
+  { name: "Chandanagar", keywords: ["chandanagar", "chanda nagar"] },
+  { name: "Miyapur", keywords: ["miyapur"] },
+  { name: "Kukatpally", keywords: ["kukatpally", "kukat pally"] },
+  { name: "Bachupally", keywords: ["bachupally", "bachu pally"] },
+
+
+  { name: "Secunderabad", keywords: ["secunderabad", "sec bad"] },
+  { name: "Boinpally", keywords: ["boinpally", "boin pally"] },
+  { name: "Old Boinpally", keywords: ["old boinpally"] },
+  { name: "Bowenpally", keywords: ["bowenpally", "bowen pally"] },
+  { name: "Trimulgherry", keywords: ["trimulgherry", "trimulghery"] },
+  { name: "Alwal", keywords: ["alwal"] },
+  { name: "Malkajgiri", keywords: ["malkajgiri"] },
+  { name: "AS Rao Nagar", keywords: ["as rao nagar", "asrao nagar"] },
+  { name: "ECIL", keywords: ["ecil"] },
+  { name: "Kapra", keywords: ["kapra"] },
+
+ 
+  { name: "Uppal", keywords: ["uppal"] },
+  { name: "Nagole", keywords: ["nagole"] },
+  { name: "Habsiguda", keywords: ["habsiguda"] },
+  { name: "Tarnaka", keywords: ["tarnaka"] },
+  { name: "Nacharam", keywords: ["nacharam"] },
+  { name: "LB Nagar", keywords: ["lb nagar", "lbnagar"] },
+  { name: "Dilsukhnagar", keywords: ["dilsukhnagar", "dilsukh nagar"] },
+  { name: "Kothapet", keywords: ["kothapet", "kotha pet"] },
+  { name: "Vanastalipuram", keywords: ["vanastalipuram"] },
+
+  { name: "Mehdipatnam", keywords: ["mehdipatnam", "mehdipatam"] },
+  { name: "Tolichowki", keywords: ["tolichowki", "toli chowki"] },
+  { name: "Attapur", keywords: ["attapur"] },
+  { name: "Rajendranagar", keywords: ["rajendranagar", "rajendra nagar"] },
+  { name: "Kanchanbagh", keywords: ["kanchanbagh", "kanchan bagh"] },
+  { name: "Santosh Nagar", keywords: ["santosh nagar"] },
+  { name: "Saidabad", keywords: ["saidabad"] },
+  { name: "Malakpet", keywords: ["malakpet"] },
+  { name: "Charminar", keywords: ["charminar"] },
+  { name: "Falaknuma", keywords: ["falaknuma"] },
+
+  { name: "Shamshabad", keywords: ["shamshabad"] },
+  { name: "Adibatla", keywords: ["adibatla"] },
+  { name: "Patancheru", keywords: ["patancheru"] },
+  { name: "Beeramguda", keywords: ["beeramguda"] },
+  { name: "Tellapur", keywords: ["tellapur"] },
+  { name: "Osman Nagar", keywords: ["osman nagar"] }
+];

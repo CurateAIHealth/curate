@@ -205,6 +205,7 @@ export const numberToWords=(num: any)=> {
 
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { popularAreas } from "./Content";
 
 export const GeneratePDF = async (invoiceData:any) => {
   try {
@@ -347,5 +348,18 @@ export const GenerateBillPDF = async (invoiceData: any) => {
 };
 
 
+const normalize = (text = "") =>
+  text.toLowerCase().replace(/,/g, "").trim();
 
+export const getPopularArea = (address = "") => {
+  const text = normalize(address);
+
+  for (const area of popularAreas) {
+    if (area.keywords.some(k => text.includes(k))) {
+      return area.name;
+    }
+  }
+
+  return "Hyderabad"; // safe fallback
+};
 
