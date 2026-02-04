@@ -1399,7 +1399,7 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
 
    <button
       className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
-      onClick={() => UpdatePopup(c)}
+      onClick={() =>{ UpdatePopup(c),setSelectedDate("")}}
     >
       Extend
     </button>
@@ -1550,11 +1550,13 @@ const isMatch = month === monthIndex && year === Number(SearchYear);
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
     <div className="bg-white rounded-2xl shadow-2xl w-[360px] p-6 border border-gray-200">
 
-      <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+     <div className="flex items-center justify-between">
+       <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
         Extend Service
       </h2>
 
-      <X />
+      <X size={15} className="mb-10 cursor-pointer" onClick={()=>setshowExtendPopup(false)}/>
+      </div>
 
       {/* Select Date */}
       <div className="mb-4">
