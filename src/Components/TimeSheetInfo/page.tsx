@@ -423,7 +423,7 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
   <table className="w-full border-collapse text-[11px] md:text-sm text-gray-800">
     <thead className="sticky top-0 z-20 bg-blue-500 text-white">
       <tr>
-          {/* <Th>S.No</Th> */}
+          <th className="text-center pl-1">S.No</th>
         <Th>Invoice</Th>
         <Th>Start</Th>
         <Th>End</Th>
@@ -439,9 +439,10 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
 
         <Th className="text-right">Charge</Th>
 
-        <Th className="bg-amber-500 text-center">PD</Th>
-        <Th className="bg-amber-500 text-center">AD</Th>
-        <Th className="bg-amber-500 text-center">HP</Th>
+        <th className="bg-amber-500 ">PD</th  >
+          <th className="bg-amber-500 ">AD</th  >
+            <th className="bg-amber-500 ">HP</th  >
+    
 
         <Th className="bg-cyan-600 text-center">
           {new Date().getDate()}
@@ -465,7 +466,7 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
               idx % 2 ? "bg-white" : "bg-green-50/40"
             } hover:bg-green-100/40`}
           >
-            {/* <Td className="truncate">{idx+1}</Td> */}
+            <td className="text-center">{idx+1}</td>
             <Td className="truncate">{r.invoice}</Td>
             <Td className="truncate">{r.startDate}</Td>
             <Td className="truncate">{r.endDate}</Td>
@@ -502,9 +503,9 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
               {r.VendorName || "-"}
             </Td>
 
-            <Td className="text-right font-semibold whitespace-nowrap">
+            <td className="text-right font-semibold text-xs whitespace-nowrap p-1">
               ₹{r.CareTakerPrice}/Day
-            </Td>
+            </td>
 
             <Td className="bg-amber-50 text-center font-bold">{r.pd}</Td>
             <Td className="bg-amber-50 text-center font-bold">{r.ad}</Td>
