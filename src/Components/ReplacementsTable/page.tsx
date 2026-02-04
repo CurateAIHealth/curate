@@ -1,5 +1,5 @@
 "use client";
-import { filterColors, Placements_Filters } from "@/Lib/Content";
+import { filterColors, Placements_Filters, years } from "@/Lib/Content";
 import { GetReasonsInfoInfo, GetReplacementInfo } from "@/Lib/user.action";
 import { UpdateClient, UpdateUserInformation, UpdateUserType } from "@/Redux/action";
 import { useRouter } from "next/navigation";
@@ -13,8 +13,12 @@ const ReplacementTable = ({ StatusMessage }: any) => {
   const [rawData, setRawData] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [HeadingSearch,setHeadingSearch]=useState('')
-  const [month, setMonth] = useState("");
-  const [year, setYear] = useState("");
+
+ const now = new Date();
+
+const [year, setYear] = useState(String(now.getFullYear()));
+const [month, setMonth] = useState<any>(now.getMonth() + 1);
+
 const [ReplacementReasons,setReplacementReasons]=useState<any[]>([]);
 const [showPopup, setShowPopup] = useState(false);
 const [popupInfo, setPopupInfo] = useState("");
@@ -88,7 +92,7 @@ ReplacementReasonsCache=ReplacementReasons?? []
       router.push("/UserInformation");
     }
   };
-
+console.log("Check For Month------",month)
   const filteredData = useMemo(() => {
     return rawData.filter((item) => {
       const matchesSearch =
@@ -160,14 +164,11 @@ console.log("Check For Message----",GetReplacementMessage("a289361b-3601-4ba6-ad
           onChange={(e) => setYear(e.target.value)}
         >
           <option value="">All Years</option>
-          {[...new Set(rawData.map((d) => d.Month?.split("-")[0]))].map(
-            (y) =>
-              y && (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              )
-          )}
+         {years.map((year) => (
+        <option key={year} value={year}>
+          {year}
+        </option>
+      ))}
         </select>
       </div>
 
@@ -176,6 +177,7 @@ console.log("Check For Message----",GetReplacementMessage("a289361b-3601-4ba6-ad
         <table className="min-w-full text-sm">
           <thead className="bg-gradient-to-br from-[#00A9A5] to-[#005f61] text-white">
             <tr>
+                 <th className="px-3 py-2 text-left">S.No</th>
               <th className="px-3 py-2 text-left">Invoice</th>
               <th className="px-3 py-2 text-left">Client</th>
               <th className="px-3 py-2 text-left">Patient</th>
@@ -200,6 +202,7 @@ console.log("Check For Message----",GetReplacementMessage("a289361b-3601-4ba6-ad
             ) : (
               filteredData.map((item, idx) => (
                 <tr key={idx} className="border-t hover:bg-gray-50">
+                  <td className="px-3 py-2">{idx+1}</td>
                   <td className="px-3 py-2">{item.invoice}</td>
                   <td className="px-3 py-2">{item.clientName}</td>
                   <td className="px-3 py-2">{item.patientName}</td>

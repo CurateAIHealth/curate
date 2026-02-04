@@ -274,7 +274,7 @@ const UpdatePDRInfo = async () => {
       const today = new Date();
       const currentMonth = `${today.getFullYear()}-${today.getMonth() + 1}`;
 
-      const invoiceNo = `#INV#${today.getFullYear()}_${invoiceList??[].length + 1}`;
+      const invoiceNo = `#INV255_${(invoiceList?.length??0) + 1}`;
       const deploymentInvoice = `BSV${today.getFullYear()}_${(deploymentList?.length ?? 0) + 1}`;
 
 
@@ -285,7 +285,12 @@ const UpdatePDRInfo = async () => {
           AdminAttendece: true,
         },
       ];
-
+      const ClientAttendece = [
+        {
+          AttendenceDate: today,
+          AttendeceStatus: "Present"
+        }
+      ]
       const lastDateOfMonth = new Date(
         today.getFullYear(),
         today.getMonth() + 1,
@@ -322,7 +327,8 @@ const UpdatePDRInfo = async () => {
         TimeStampInfo,
         deploymentInvoice,
         DeploaymentInformation.Type,
-        data.serviceCharges
+        data.serviceCharges,
+        ClientAttendece
       );
 
       if (!deploymentRes?.success) {

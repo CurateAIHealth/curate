@@ -21,7 +21,9 @@ export default function InvoiceMedicalTable() {
  const now = new Date();
 const currentYear = now.getFullYear().toString();
 const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
-
+const [attendanceInfo,setAttendenceInfo]=useState<any>()
+const [showFullMonth,setShowFullMonth]=useState(false)
+const [ParticularDate,SetParticularDate]=useState<any>()
 const [AttenseceInformation,setAttenseceInformation]=useState<any>()
 const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 const [selectedYear, setSelectedYear] = useState(currentYear);
@@ -288,11 +290,15 @@ try{
 const date = new Date();
 
 
+
+const FlexDat = `${selectedYear}-${selectedMonth}-${String(ParticularDate).padStart(2, "0")}`;
+
+
 const yearMonth = date.toISOString().slice(0, 7);
 
 
 const fullDate = date.toISOString().slice(0, 10);
-const EditSelectedAttendece=await EditAttendanceByClientId(AttenseceInformation.ClientId,yearMonth,fullDate,status,"Admin")
+const EditSelectedAttendece=await EditAttendanceByClientId(AttenseceInformation.ClientId,yearMonth,FlexDat,status,"Admin")
 SetStatusMessage(`✅${EditSelectedAttendece.message}`);
 
 }catch(err:any){
@@ -302,91 +308,100 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
   return (
     <div className="relative  bg-gradient-to-br from-green-50 via-white to-blue-50 p-6">
 
-      <header className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold text-gray-800 tracking-tight flex items-center gap-3">
-            🩺 Curate Health — Time Sheet 
-          </h1>
-          <p className="text-gray-500 mt-1">
-            View invoice and attendance details by month and year.
-          </p>
-        </div>
+     <header className="mb-6">
+  <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    {/* Title Section */}
+    <div>
+      <h1 className="text-2xl sm:text-3xl font-semibold tet-gray-800 tracking-tight flex items-center gap-2">
+        🩺 Curate Health — Time Sheet
+      </h1>
+      <p className="text-gray-500 mt-1 text-sm sm:text-base">
+        View invoice and attendance details by month and year.
+      </p>
+    </div>
 
-        
+    {/* Actions */}
+    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 w-full lg:w-auto">
+      {/* Buttons */}
+      <button
+        onClick={() => setShowMissingCalendar(true)}
+        className="px-4 py-2 text-sm bg-blue-500 text-white cursor-pointer rounded-lg shadow hover:bg-blue-800 w-full sm:w-auto"
+      >
+        View Missing Attendance
+      </button>
+{/* 
+      <button
+        onClick={() => setShowPendingCalendar(true)}
+        className="px-4 py-2 text-sm bg-teal-600 text-white rounded-lg shadow hover:bg-teal-800 w-full sm:w-auto"
+      >
+        View Pending Attendance
+      </button> */}
 
-        <div className="flex gap-3 items-center">
-           <button
-          onClick={() => setShowMissingCalendar(true)}
-          className="px-4 py-2 text-sm bg-blue-500 cursor-pointer text-white rounded-lg shadow hover:bg-blue-800 self-start"
+      {/* Search */}
+      <div
+        className="
+          flex items-center bg-white shadow-md rounded-xl
+          px-4 h-9 border border-gray-200
+          focus-within:border-indigo-500 transition
+          w-full sm:w-[220px]
+        "
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="1.5"
+          stroke="currentColor"
+          className="w-5 h-5 text-gray-500 mr-2"
         >
-          View Missing Attendance
-        </button>
-          <button
-          onClick={() => setShowPendingCalendar(true)}
-          className="px-4 py-2 text-sm bg-teal-600 cursor-pointer text-white rounded-lg shadow hover:bg-teal-800 self-start"
-        >
-          View Pending Attendance
-        </button>
-        <div
-    className="
-      flex items-center bg-white shadow-md rounded-xl
-      px-4 h-[36px]
-      border border-gray-200
-      focus-within:border-indigo-500
-      transition
-       md:w-[220px]
-    "
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth="1.5"
-      stroke="currentColor"
-      className="w-5 h-5 text-gray-500 mr-2"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"
-      />
-    </svg>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"
+          />
+        </svg>
 
-    <input
-      type="search"
-      placeholder="Search..."
-      onChange={(e: any) => setSearchResult(e.target.value)}
-      className="
-        w-full bg-transparent outline-none
-        text-sm text-gray-700 placeholder-gray-400
-      "
-    />
+        <input
+          type="search"
+          placeholder="Search..."
+          onChange={(e: any) => setSearchResult(e.target.value)}
+          className="w-full bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
+        />
+      </div>
+
+      {/* Month */}
+      <select
+        value={selectedMonth}
+        onChange={(e) => setSelectedMonth(e.target.value)}
+        className="rounded-xl border border-gray-300 p-2 bg-white shadow-sm
+                   hover:border-green-400 focus:border-green-500 focus:ring-1 focus:ring-green-400
+                   w-full sm:w-auto"
+      >
+        {months.map((m) => (
+          <option key={m.value} value={m.value}>
+            {m.name}
+          </option>
+        ))}
+      </select>
+
+      {/* Year */}
+      <select
+        value={selectedYear}
+        onChange={(e) => setSelectedYear(e.target.value)}
+        className="rounded-xl border border-gray-300 p-2 bg-white shadow-sm
+                   hover:border-green-400 focus:border-green-500 focus:ring-1 focus:ring-green-400
+                   w-full sm:w-auto"
+      >
+        {years.map((y) => (
+          <option key={y} value={y}>
+            {y}
+          </option>
+        ))}
+      </select>
+    </div>
   </div>
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="rounded-xl border  border-gray-300 p-2 bg-white shadow-sm hover:border-green-400 focus:border-green-500 focus:ring-1 focus:ring-green-400"
-          >
-            {months.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.name}
-              </option>
-            ))}
-          </select>
+</header>
 
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            className="rounded-xl border border-gray-300 p-2 bg-white shadow-sm hover:border-green-400 focus:border-green-500 focus:ring-1 focus:ring-green-400"
-          >
-            {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-        </div>
-      </header>
 {showPaymentModal && billingRecord && (
   <PaymentModal
     record={billingRecord}
@@ -404,127 +419,209 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
 
 <div className="relative max-h-[64vh] overflow-y-auto overflow-x-auto bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md rounded-2xl">
 
-  <table className="min-w-[2800px] border-collapse text-sm text-gray-800">
-
- 
-    <thead className="sticky top-0 z-30 bg-blue-400 shadow-md">
-      <tr className="text-left">
-        <Th>View</Th>
+<div className="relative w-full overflow-hidden rounded-xl border border-gray-200 bg-white">
+  <table className="w-full border-collapse text-[11px] md:text-sm text-gray-800">
+    <thead className="sticky top-0 z-20 bg-blue-500 text-white">
+      <tr>
+          {/* <Th>S.No</Th> */}
         <Th>Invoice</Th>
-        <Th>Start Date</Th>
-        <Th>End Date</Th>
-        <Th>Client Name</Th>
-        <Th>Patient Name</Th>
-        <Th>Referral Name</Th>
-        <Th>HCP Name</Th>
-        <Th>HCP Referral</Th>
-        <Th>Vendor</Th>
-        <Th>Service Charge</Th>
+        <Th>Start</Th>
+        <Th>End</Th>
+        <Th className="max-w-[140px]">Client</Th>
+
+        <Th className="hidden lg:table-cell max-w-[140px]">Patient</Th>
+        <Th className="hidden xl:table-cell max-w-[140px]">Referral</Th>
+
+        <Th className="max-w-[140px]">HCP</Th>
+
+        <Th className="hidden lg:table-cell">HCP Ref</Th>
+        <Th className="hidden xl:table-cell">Vendor</Th>
+
+        <Th className="text-right">Charge</Th>
 
         <Th className="bg-amber-500 text-center">PD</Th>
         <Th className="bg-amber-500 text-center">AD</Th>
         <Th className="bg-amber-500 text-center">HP</Th>
 
-        {Array.from({ length: NumberOfDaysInMonth }, (_, i) => (
-          <Th key={i} className="text-center bg-cyan-600">
-            {i + 1}
-          </Th>
-        ))}
+        <Th className="bg-cyan-600 text-center">
+          {new Date().getDate()}
+        </Th>
+
+        <Th className="sticky right-0 bg-cyan-600 text-center">
+          Action
+        </Th>
       </tr>
     </thead>
 
-    
     <tbody>
-      {processedData.map((r: any, idx: number) => (
-        <tr
-          key={idx}
-          className={`border-t border-gray-200 ${
-            idx % 2 ? "bg-white" : "bg-green-50/40"
-          } hover:bg-green-100/40 transition-colors`}
-        >
-          <Td>
-            <Eye
-              className="cursor-pointer text-blue-600 hover:text-blue-800 transition"
-              onClick={() => setSelectedRecord(r)}
-            
-            />
-          </Td>
+      {processedData.map((r: any, idx: number) => {
+        const todayIndex = new Date().getDate() - 1
+        const dayStatus = r.days?.[todayIndex] ?? "-"
 
-          <Td>{r.invoice}</Td>
-          <Td>{r.startDate}</Td>
-          <Td>{r.endDate}</Td>
-
-          <td
-            className="px-4 py-2 font-medium cursor-pointer hover:underline hover:text-blue-600"
-            onClick={() => RouteToClient(r.ClientId, r.clientName)}
+        return (
+          <tr
+            key={idx}
+            className={`border-t ${
+              idx % 2 ? "bg-white" : "bg-green-50/40"
+            } hover:bg-green-100/40`}
           >
-            {r.clientName}
-          </td>
+            {/* <Td className="truncate">{idx+1}</Td> */}
+            <Td className="truncate">{r.invoice}</Td>
+            <Td className="truncate">{r.startDate}</Td>
+            <Td className="truncate">{r.endDate}</Td>
 
-          <Td>{r.patientName}</Td>
+           <td
+       className="truncate hidden xl:table-cell font-bold max-w-[140px]"
+              title={r.clientName}
+              onClick={() => RouteToClient(r.ClientId, r.clientName)}
+            >
+              {r.clientName}
+            </td>
 
-          <Td
-            className={`font-bold ${
-              r.referralName ? "text-green-800" : "text-red-800"
-            }`}
-          >
-            {r.referralName}
-          </Td>
+            <Td className="truncate hidden lg:table-cell max-w-[140px]">
+              {r.patientName}
+            </Td>
 
-          <td
-            className="px-4 py-2 font-medium cursor-pointer hover:underline hover:text-blue-600"
-            onClick={() => RouteToClient(r.hcpId, r.hcpName)}
-          >
-            {r.hcpName}
-          </td>
+            <Td className="truncate hidden xl:table-cell font-bold max-w-[140px]">
+              {r.referralName || "-"}
+            </Td>
 
-          <Td
-            className={`font-bold ${
-              r.hcpSource ? "text-green-800" : "text-red-800"
-            }`}
-          >
-            {r.hcpSource}
-          </Td>
+            <td
+            className="truncate hidden xl:table-cell font-bold max-w-[140px]"
+              title={r.hcpName}
+              onClick={() => RouteToClient(r.hcpId, r.hcpName)}
+            >
+              {r.hcpName}
+            </td>
 
-          <Td
-            className={`font-bold ${
-              r.VendorName ? "text-green-800" : "text-red-800"
-            }`}
-          >
-            {r.VendorName}
-          </Td>
+            <Td className="truncate hidden lg:table-cell">
+              {r.hcpSource || "-"}
+            </Td>
 
-         <Td>
-  {r.CareTakerPrice.includes("₹") ? r.CareTakerPrice: `₹${r.CareTakerPrice}`}/Day
-</Td>
+            <Td className="truncate hidden xl:table-cell">
+              {r.VendorName || "-"}
+            </Td>
 
+            <Td className="text-right font-semibold whitespace-nowrap">
+              ₹{r.CareTakerPrice}/Day
+            </Td>
 
-          <Td className="bg-amber-50 text-center font-bold">{r.pd}</Td>
-          <Td className="bg-amber-50 text-center font-bold">{r.ad}</Td>
-          <Td className="bg-amber-50 text-center font-bold">{r.hp}</Td>
+            <Td className="bg-amber-50 text-center font-bold">{r.pd}</Td>
+            <Td className="bg-amber-50 text-center font-bold">{r.ad}</Td>
+            <Td className="bg-amber-50 text-center font-bold">{r.hp}</Td>
 
-{Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
-  const dayStatus = r.days?.[i] ?? "-";
+            <Td className="text-center">
+              {dayStatus === "-" ? <span className="flex flex-col items-center leading-[10px] text-[9px] font-semibold text-gray-600">
+  <span>Not</span>
+  <span>Marked</span>
+</span>
+ : (
+                <>
+                  <DayBadge status={dayStatus as DayStatus} />
+                  <p
+                    className="text-[10px] text-blue-600 cursor-pointer hover:underline"
+                    onClick={() => {
+                      SetShowUpdateAttendece(true)
+                      setAttenseceInformation(r)
+                      setStatus("Choose")
+                      SetStatusMessage("")
+                      SetParticularDate(new Date().getDate())
+                    }}
+                  >
+                    Edit
+                  </p>
+                </>
+              )}
+            </Td>
 
-  return (
-    <Td key={i} className="text-center">
-      {dayStatus === "-" ? (
-        <span className="text-gray-400">-</span>
-      ) : (
-        <div>
-          <DayBadge status={dayStatus as DayStatus} />
-        <p className="text-[9px] cursor-pointer hover:text-blue-900 hover:underline" onClick={()=>{SetShowUpdateAttendece(!ShowUpdateAttendece), setAttenseceInformation(r),setStatus("Choose"),SetStatusMessage("")}}>Edit</p>
-        </div>
-      )}
-    </Td>
-  );
-})}
-
-        </tr>
-      ))}
+            <Td className="sticky right-0 bg-white text-center">
+              <button
+                className="px-2 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600 cursor-pointer"
+                onClick={() => {
+                  setShowFullMonth(true)
+                  setAttendenceInfo(r),
+                  console.log("Check for Days-----",r)
+                }}
+              >
+                Full Month
+              </button>
+            </Td>
+          </tr>
+        )
+      })}
     </tbody>
   </table>
 </div>
+
+
+
+</div>
+{showFullMonth && (
+  <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-3">
+    <div className="bg-white w-full max-w-[900px] rounded-xl shadow-xl">
+
+      <div className="flex items-center justify-between px-4 py-3 border-b">
+        <h3 className="text-sm font-semibold text-gray-800">
+          Monthly Attendance
+        </h3>
+        <button
+          onClick={() => setShowFullMonth(false)}
+          className="text-gray-500 hover:text-red-600"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="p-4">
+        <div
+          className="grid gap-2"
+          style={{
+            gridTemplateColumns: "repeat(7, minmax(0, 1fr))"
+          }}
+        >
+          {Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
+            const dayStatus = attendanceInfo.days?.[i] ?? "-"
+
+            return (
+              <div
+                key={i}
+                className="border rounded-md py-2 flex flex-col items-center justify-center"
+              >
+                <span className="text-[10px] text-gray-500 mb-1">
+                  Day {i + 1}
+                </span>
+
+                {dayStatus === "-" ? (
+                  <span className="text-gray-400 text-xs">-</span>
+                ) : (
+                  <div className="flex flex-col items-center gap-1">
+                    <DayBadge status={dayStatus as DayStatus} />
+                    <p
+                      className="text-[9px] cursor-pointer text-blue-600 hover:text-blue-900 hover:underline"
+                      onClick={() => {
+                        SetShowUpdateAttendece(!ShowUpdateAttendece)
+                        setAttenseceInformation(attendanceInfo)
+                        SetParticularDate(i + 1)
+                        setStatus("Choose")
+                        SetStatusMessage("")
+                      }}
+                    >
+                      Edit
+                    </p>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+    </div>
+  </div>
+)}
+
+
+
 
 {ShowUpdateAttendece&&
 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">

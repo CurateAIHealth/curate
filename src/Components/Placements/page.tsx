@@ -7,7 +7,7 @@ let cachedTermination:any[]
 
 import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Trash } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -21,8 +21,8 @@ import { div } from "framer-motion/client";
 
 
 
-type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday";
-const statusCycle: AttendanceStatus[] = ["Present", "Absent", "Leave", "Holiday"];
+type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday"|"Not Marked"|"Half Day";
+const statusCycle: AttendanceStatus[] = ["Present", "Absent", "Leave", "Holiday","Not Marked","Half Day"];
 
 const parseEnInDate = (dateStr: string) => {
   if (!dateStr || typeof dateStr !== "string") return new Date(NaN);
@@ -33,7 +33,7 @@ interface AttendanceData {
   date: string;
   day: string;
   updatedAt: string;
-  status: "Present" | "Absent" | "Leave";
+  status: "Present" | "Absent" | "Leave"|"Not Marked";
 }
 
 type User = any;
@@ -66,14 +66,23 @@ const [ReplacementDate,setReplacementDate]=useState("")
  const [updatedAttendance, setUpdatedAttendance] = useState<AttendanceState>({});
  const [SaveButton,setSaveButton]=useState(false)
  const [TerminationInfo,SetTerminationInfo]=useState<any>()
-const [SearchMonth, setSearchMonth] = useState("");
-const [SearchYear, setSearchYear] = useState("");
+const now = new Date();
+const [SearchYear, setSearchYear] = useState<any>((now.getFullYear()));
+const [SearchMonth, setSearchMonth] = useState(
+  new Date(
+    now.getFullYear(),
+    now.getMonth()
+  ).toLocaleString("default", { month: "long" })
+);
+
+
+
 const [enableStatus,setenableStatus]=useState(false)
   const [TimeSheet_UserId, setTimeSheet_UserId] = useState("");
   const [selectedReason, setSelectedReason] = useState("");
   const [otherReason, setOtherReason] = useState("");
   const [showTimeSheet, setShowTimeSheet] = useState(false)
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedMonth, setSelectedMonth] = useState<any>(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [showExtendPopup,setshowExtendPopup]=useState(false)
@@ -82,12 +91,19 @@ const [enableStatus,setenableStatus]=useState(false)
   const [ActionStatusMessage,SetActionStatusMessage]= useState<any>("");
   const [SearchResult,setSearchResult]=useState("")
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
+const [lastDateOfMonth, setLastDateOfMonth] = useState("");
+const [updateServiceCharge, setUpdateServiceCharge] = useState(false);
+const [serviceCharge, setServiceCharge] = useState("");
     const [search, setSearch] = useState("On Service");
   const [billingRecord, setBillingRecord] = useState<any>(null);
 const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
   
   const dispatch = useDispatch();
 const router=useRouter()
+ const TimeStampInfo = useSelector(
+    (state: any) => state.TimeStampInfo
+  );
 useEffect(() => {
   let mounted = true;
 
@@ -119,12 +135,7 @@ const fetchData = async (forceFresh = false) => {
    
       cachedUsersFullInfo ||= usersResult;
 
-      cachedDeploymentInfo = [
-        ...new Map(
-          [...(cachedDeploymentInfo ?? []), ...(placementInfo ?? [])]
-            .map((item) => [item.ClientId, item])
-        ).values(),
-      ];
+      cachedDeploymentInfo = placementInfo??[]
 
       cachedReplacementInfo = ReplacementInfo??[];
 
@@ -152,6 +163,68 @@ const fetchData = async (forceFresh = false) => {
   };
 }, [ActionStatusMessage, dispatch]);
 
+useEffect(() => {
+  if (!selectedDate) {
+    setLastDateOfMonth("");
+    return;
+  }
+
+  const d = new Date(selectedDate);
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+
+  const yyyy = lastDay.getFullYear();
+  const mm = String(lastDay.getMonth() + 1).padStart(2, "0");
+  const dd = String(lastDay.getDate()).padStart(2, "0");
+
+  setLastDateOfMonth(`${yyyy}-${mm}-${dd}`);
+}, [selectedDate]);
+
+const matchesSearchAndMonth = (
+  item: any,
+  searchText: string,
+  searchMonth: string,
+  searchYear: string
+) => {
+
+  const search = searchText?.toLowerCase() || "";
+
+  const name = item.name?.toLowerCase() || "";
+  const email = item.email?.toLowerCase() || "";
+  const contact = item.contact?.toLowerCase() || "";
+  const hca = item.HCA_Name?.toLowerCase() || "";
+
+  const matchesSearch =
+    !search ||
+    name.includes(search) ||
+    email.includes(search) ||
+    contact.includes(search) ||
+    hca.includes(search);
+
+  
+  if (!searchMonth && !searchYear) return matchesSearch;
+
+  if (!item.StartDate) return false;
+
+ 
+  const [day, month, year] = item.StartDate.split("/");
+
+  if (!month || !year) return false;
+
+  const monthName = new Date(
+    Number(year),
+    Number(month) - 1
+  ).toLocaleString("default", { month: "long" });
+
+  const matchesMonth =
+    !searchMonth || monthName === searchMonth;
+
+  const matchesYear =
+    !searchYear || Number(year) === Number(searchYear);
+
+  return matchesSearch && matchesMonth && matchesYear;
+};
+
+
   const ShowDompleteInformation = async (userId: any, ClientName: any) => {
     if (userId) {
       dispatch(UpdateClient(ClientName));
@@ -162,23 +235,41 @@ const fetchData = async (forceFresh = false) => {
   };
 
 
+
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
- const normalizedAttendance =
+const normalizedAttendance =
   Array.isArray(each.Attendance) && each.Attendance.length > 0
     ? each.Attendance.map((att: any) => {
-        const hcp = att.HCPAttendence ?? att.HCPAttendance ?? att.hcpAttendence;
+        const hcp =
+          att.HCPAttendence ??
+          att.HCPAttendance ??
+          att.hcpAttendence ??
+          false;
+
         const admin =
           att.AdminAttendece ??
           att.AdminAttendence ??
           att.AdminAttendance ??
-          att.adminAttendence;
+          att.adminAttendence ??
+          false;
+
+        let status: "Present" | "Half Day" | "Absent";
+
+        if (hcp === true && admin === true) {
+          status = "Present";
+        } else if (hcp === true || admin === true) {
+          status = "Half Day";
+        } else {
+          status = "Absent";
+        }
 
         return {
           date: att.AttendenceDate,
-          status: hcp === true && admin === true ? "Present" : "Absent",
+          status,
         };
       })
     : [];
+
 
 
   return {
@@ -390,18 +481,63 @@ const UpdatePopup=async(a:any)=>{
 
 }
 
-  const ExtendTimeSheet = async (a: any) => {
+  const ExtendTimeSheet = async () => {
 SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
-    const CurrentMonth = `${new Date().getFullYear()}-${new Date().getMonth() + 2}`
-    const DateofToday = new Date().toLocaleDateString('In-en')
-    const DateOfCurrentDay = new Date()
-    const LastDateOfMonth = new Date(DateOfCurrentDay.getFullYear(), DateOfCurrentDay.getMonth() + 1, 0)
-      .toLocaleDateString('en-IN');
-    const PostTimeSheet: any = await TestInserTimeSheet(DateofToday, LastDateOfMonth, ExtendInfo.Status, ExtendInfo.Address, ExtendInfo.contact, ExtendInfo.name, ExtendInfo.PatientName, ExtendInfo.Patient_PhoneNumber, ExtendInfo.RreferralName, ExtendInfo.HCA_Id, ExtendInfo.Client_Id, ExtendInfo.HCA_Name, ExtendInfo.HCAContact, ExtendInfo.
-      hcpSource, ExtendInfo.provider, ExtendInfo.payTerms, ExtendInfo.cTotal, ExtendInfo.cPay, ExtendInfo.hcpTotal, ExtendInfo.hcpPay, CurrentMonth, ["P"], TimeStamp, ExtendInfo.invoice, ExtendInfo.Type)
-   
 
-    if(PostTimeSheet.success===true){
+    // const PostTimeSheet: any = await TestInserTimeSheet(DateofToday, LastDateOfMonth, ExtendInfo.Status, ExtendInfo.Address, ExtendInfo.contact, ExtendInfo.name, ExtendInfo.PatientName, ExtendInfo.Patient_PhoneNumber, ExtendInfo.RreferralName, ExtendInfo.HCA_Id, ExtendInfo.Client_Id, ExtendInfo.HCA_Name, ExtendInfo.HCAContact, ExtendInfo.
+    //   hcpSource, ExtendInfo.provider, ExtendInfo.payTerms, ExtendInfo.cTotal, ExtendInfo.cPay, ExtendInfo.hcpTotal, ExtendInfo.hcpPay, CurrentMonth, ["P"], TimeStamp, ExtendInfo.invoice, ExtendInfo.Type)
+    
+    const GetInfo=await  GetUserInformation(ExtendInfo.Client_Id)
+
+    const StarteDate=new Date(selectedDate).toLocaleDateString("en-In")
+    const LastDate=new Date(lastDateOfMonth).toLocaleDateString("en-In")
+    const currentMonth = `${new Date(selectedDate).getFullYear()}-${new Date(selectedDate).getMonth() + 1}`;
+    const CareTakerCharges=serviceCharge?serviceCharge:GetInfo.serviceCharges
+      const attendance = [
+        {
+          AttendenceDate: today,
+          HCPAttendence: true,
+          AdminAttendece: true,
+        },
+      ];
+      const ClientAttendece = [
+        {
+          AttendenceDate: today,
+          AttendeceStatus: "Present"
+        }
+      ]
+      console.log('Check for Tha Datata-----',ExtendInfo)
+ const deploymentRes = await InsertDeployment(
+        StarteDate,
+        LastDate,
+        "Active",
+        ExtendInfo.Address,
+        ExtendInfo.contact,
+        ExtendInfo.name,
+        ExtendInfo.PatientName,
+        ExtendInfo.Patient_PhoneNumber,
+        ExtendInfo.RreferralName,
+        ExtendInfo.HCA_Id,
+        ExtendInfo.Client_Id,
+        ExtendInfo.HCA_Name,
+        ExtendInfo.HCAContact,
+        "Google",
+        "Not Provided",
+        "PP",
+        "21000",
+        "700",
+        "1800",
+        CareTakerCharges,
+        currentMonth,
+        attendance,
+        TimeStampInfo,
+         ExtendInfo.invoice,
+        ExtendInfo.Type,
+        CareTakerCharges,
+        ClientAttendece
+      );
+  
+    if(deploymentRes.success===true){
      
        SetActionStatusMessage("TimeSheet Succesfully Extended")
        const Timer=setInterval(()=>{
@@ -543,47 +679,15 @@ const confirmDelete = async (selectedReason: string) => {
 
 
 
-const FilterFinelTimeSheet = FinelTimeSheet.filter((each: any) => {
-  
-  const search = SearchResult?.toLowerCase() || "";
+const FilterFinelTimeSheet = FinelTimeSheet.filter((item) =>
+  matchesSearchAndMonth(
+    item,
+    SearchResult,
+    SearchMonth,
+    SearchYear
+  )
+);
 
-  const name = each.name?.toLowerCase() || "";
-  const email = each.email?.toLowerCase() || "";
-  const contact = each.contact?.toLowerCase() || "";
-  const role = each.role?.toLowerCase() || "";
-
-  const matchesSearch =
-    name.includes(search) ||
-    email.includes(search) ||
-    contact.includes(search) ||
-    role.includes(search);
-
- 
-  const startDate = each.StartDate || "";
-
-  let matchesMonth = true;
-  let matchesYear = true;
-
-  if (startDate) {
-    const [day, month, year] = startDate.split("/");
-
-
-    const monthName = new Date(
-      Number(year),
-      Number(month) - 1
-    ).toLocaleString("default", { month: "long" });
-
-    if (SearchMonth) {
-      matchesMonth = monthName === SearchMonth;
-    }
-
-    if (SearchYear) {
-      matchesYear = year === SearchYear;
-    }
-  }
-
-  return matchesSearch && matchesMonth && matchesYear;
-});
 console.log("Check for ----",FinelTimeSheet)
 const today:any = new Date().getDate();
 const isInvoiceDay = [ 28, 29, 30, 31].includes(today);
@@ -591,8 +695,7 @@ console.log("Test Today------",isInvoiceDay
 
 )
 
-console.log("Check for ReplacementTime----",ReplacementTime)
-console.log("Check for ReplacementTime-----",new Date(ReplacementDate).toLocaleDateString("En-in"))
+
 
 const UpdateReplacement = async (
   Available_HCP: any,
@@ -693,6 +796,8 @@ SetActionStatusMessage("Update failed");
 }
 
 }
+
+
 const OmServiceView = () => {
     return (
       <div className="w-full flex flex-col gap-8 p-2 bg-gray-50">
@@ -791,7 +896,7 @@ const OmServiceView = () => {
       "
     >
       <option value="">All Years</option>
-      {[2024, 2025, 2026].map((year) => (
+      {years.map((year) => (
         <option key={year} value={year}>
           {year}
         </option>
@@ -844,7 +949,10 @@ const OmServiceView = () => {
   
     <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white uppercase text-xs font-semibold">
   <tr>
+     <th className="w-[50px] px-3 py-3 whitespace-nowrap text-left">S.No</th>
     <th className="w-[160px] px-3 py-3 whitespace-nowrap text-left">Client Name</th>
+    <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">Start Date</th>
+    <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">End Date</th>
     <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">Service Charge</th>
     <th className="w-[160px] px-3 py-3 whitespace-nowrap text-left">Patient Name</th>
     <th className="w-[140px] px-3 py-3 whitespace-nowrap text-left">Contact</th>
@@ -866,9 +974,23 @@ const OmServiceView = () => {
 
    
     <tbody className="bg-white divide-y divide-gray-200">
-      {[...FilterFinelTimeSheet].reverse().map((c, i) => (
-        <tr key={i} className="hover:bg-teal-50/30 transition-all">
-          
+      {[...FilterFinelTimeSheet].reverse().map((c, i) => 
+        
+     {
+         const [, month, year] = c.StartDate.split("/").map(Number);
+
+const monthIndex = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December"
+].indexOf(SearchMonth) + 1;
+
+const isMatch = month === monthIndex && year === Number(SearchYear);
+
+      return(
+          <tr key={i} className="hover:bg-teal-50/30 transition-all">
+           <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
+            {i+1}
+          </td>
           <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
             {toProperCaseLive(c.name)}
           </td>
@@ -894,6 +1016,12 @@ const OmServiceView = () => {
     </div>
   )}
 </td> */}
+    <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
+            {c.StartDate}
+          </td>   
+          <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
+            {c.EndDate}
+          </td>
 <td className="px-3 py-3 text-gray-700 text-xs">
   {!c?.ServiceCharge ? (
     <div className="flex flex-col items-center gap-2">
@@ -1242,14 +1370,28 @@ const OmServiceView = () => {
 
           )}
 
-          <td className="px-3 py-3 text-center break-words">
-            <button
-              className="px-4 py-2 text-xs font-medium cursor-pointer bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
-              onClick={() => UpdatePopup(c)}
-            >
-              Extend
-            </button>
-          </td>
+  
+
+<td className="px-3 py-3 text-center break-words">
+  {isMatch ? (
+    <p className="inline-flex items-center justify-center px-1 py-1 
+              text-[10px] 
+              font-medium text-emerald-700 
+              bg-emerald-50 border border-emerald-200 
+              rounded-full whitespace-nowrap">
+  Already On Service
+</p>
+
+  ) : (
+    <button
+      className="px-4 py-2 text-xs font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md"
+      onClick={() => UpdatePopup(c)}
+    >
+      Extend
+    </button>
+  )}
+</td>
+
  <td     className="inline-block px-1 cursor-pointer py-2 text-xs mt-4 font-medium cursor-pointer bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md">
             <button
             className="cursor-pointer"
@@ -1268,7 +1410,9 @@ const OmServiceView = () => {
           </td>
  
         </tr>
-      ))}
+      )
+     }
+      )}
     </tbody>
 
   </table>
@@ -1389,38 +1533,89 @@ const OmServiceView = () => {
 )}
 
 
-{showExtendPopup&&
- <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-[350px] p-6 text-center border border-gray-200">
-     
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
-          Are you sure you want to extend?
-        </h2>
+{showExtendPopup && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white rounded-2xl shadow-2xl w-[360px] p-6 border border-gray-200">
 
-   
-        <div className="border-t border-gray-200 mb-4"></div>
+      <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+        Extend Service
+      </h2>
+
+      {/* Select Date */}
+      <div className="mb-4">
+        <label className="text-sm text-gray-600 mb-1 block">
+          Select Date
+        </label>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="w-full border rounded-lg px-3 py-2 text-sm"
+        />
+      </div>
 
     
-        <div className="flex justify-center gap-4">
-          <button
-        onClick={()=>setshowExtendPopup(false)}
-            className="px-5 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 transition-all"
-          >
-            No
-          </button>
-          <button
-            onClick={ExtendTimeSheet}
-            className="px-5 py-2 rounded-full bg-green-600 text-white hover:bg-green-700 transition-all"
-          >
-            Yes
-          </button>
+      {lastDateOfMonth && (
+        <div className="mb-4">
+          <label className="text-sm text-gray-600 mb-1 block">
+            Last Date of Service
+          </label>
+          <input
+            type="date"
+            value={lastDateOfMonth}
+            readOnly
+            className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-100"
+          />
         </div>
-        
-        
+      )}
+
+   
+      <div className="flex items-center gap-2 mb-3">
+        <input
+          type="checkbox"
+          checked={updateServiceCharge}
+          onChange={(e) => setUpdateServiceCharge(e.target.checked)}
+          className="w-4 h-4 accent-green-600"
+        />
+        <span className="text-sm text-gray-700">
+          Update Service Charge
+        </span>
       </div>
-      
+
+
+      {updateServiceCharge && (
+        <div className="mb-4">
+          <input
+            type="number"
+            placeholder="Enter service charge"
+            value={serviceCharge}
+            onChange={(e) => setServiceCharge(e.target.value)}
+            className="w-full border rounded-lg px-3 py-2 text-sm"
+          />
+        </div>
+      )}
+
+      <div className="border-t border-gray-200 my-4"></div>
+
+     
+     {selectedDate&& <div className="flex justify-center gap-4">
+        <button
+          onClick={() => setshowExtendPopup(false)}
+          className="px-5 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100"
+        >
+          No
+        </button>
+        <button
+          onClick={ExtendTimeSheet}
+          className="px-5 py-2 rounded-full bg-green-600 text-white hover:bg-green-700"
+        >
+          Yes
+        </button>
+      </div>}
+
     </div>
-}
+  </div>
+)}
 
  {showDeletePopup && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -1665,18 +1860,29 @@ const OmServiceView = () => {
           const isFuture = currentDateObj > today;
 
       
-          const currentStatus =
-            updatedAttendance?.[day]?.status ??
-            record?.status ??
-            "Absent";
+const isHalfDay =
+  record?.HCPAttendence === true ||
+  record?.AdminAttendece === true;
 
-      
-          const statusColor =
-            currentStatus === "Present"
-              ? "bg-green-100 text-green-700 border-green-300"
-              : currentStatus === "Absent"
-              ? "bg-red-100 text-red-700 border-red-300"
-              : "bg-yellow-100 text-yellow-700 border-yellow-300";
+const currentStatus:any =
+  updatedAttendance?.[day]?.status ??
+  (isHalfDay ? "Half Day" : record?.status) ??
+  "Not Marked";
+
+
+
+       const statusColor =
+  currentStatus === "Present"
+    ? "bg-green-100 text-green-700 border-green-300"
+    : currentStatus === "Absent"
+    ? "bg-red-100 text-red-700 border-red-300"
+    : currentStatus === "Leave"
+    ? "bg-yellow-100 text-yellow-700 border-yellow-300"
+    : currentStatus === "Half Day"
+    ? "bg-blue-100 text-blue-700 border-blue-300"
+    : "bg-gray-100 text-gray-500 border-gray-300"; 
+
+
 
           
           const handleStatusClick = (day:any) => {
@@ -1685,14 +1891,22 @@ const OmServiceView = () => {
             setSaveButton(true);
 
             setUpdatedAttendance((prev) => {
-              const current = prev?.[day]?.status || record?.status || "Absent";
+             const current: AttendanceStatus =
+  prev?.[day]?.status ??
+  record?.status ??
+  "Not Marked";
 
-              const nextStatus =
-                current === "Absent"
-                  ? "Present"
-                  : current === "Present"
-                  ? "Leave"
-                  : "Absent";
+
+             const nextStatus: AttendanceStatus =
+  current === "Not Marked"
+    ? "Present"
+    : current === "Present"
+    ? "Leave"
+    : current === "Leave"
+    ? "Absent"
+    : "Present";
+
+
 
               const currentDate = new Date(selectedYear, selectedMonth, day);
 
@@ -1739,7 +1953,7 @@ const OmServiceView = () => {
           return (
             <div
               key={day}
-              onClick={() => handleStatusClick(day)}
+              // onClick={() => handleStatusClick(day)}
               className={`p-3 border rounded-lg flex flex-col items-center justify-center 
                 ${
                   isFuture
@@ -1781,19 +1995,103 @@ const OmServiceView = () => {
 
     );
   };
-const GetFilterCount=(A:any)=>{
-  switch(A){
-     case "On Service":
-        return cachedDeploymentInfo?.length;
-      case "Termination":
-        return cachedTermination?.length;
-      case "Replacements":
-        return cachedReplacementInfo?.length;
-      default:
-        return null;
 
+
+
+const monthMap: Record<string, number> = {
+  January: 1,
+  February: 2,
+  March: 3,
+  April: 4,
+  May: 5,
+  June: 6,
+  July: 7,
+  August: 8,
+  September: 9,
+  October: 10,
+  November: 11,
+  December: 12,
+};
+
+const parseDate = (date?: string): Date | null => {
+  if (!date) return null;
+  const parsed = new Date(date);
+  return isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const getMiddleMonth = (item: any): number | null => {
+  if (item.StartDate && item.EndDate) {
+    const start = parseDate(item.StartDate);
+    const end = parseDate(item.EndDate);
+    if (start && end) {
+      const middleTime =
+        start.getTime() + (end.getTime() - start.getTime()) / 2;
+      return new Date(middleTime).getMonth() + 1;
+    }
   }
-}
+
+  if (Array.isArray(item.Attendance) && item.Attendance.length > 0) {
+    const dates = item.Attendance
+      .map((a: any) => parseDate(a.AttendenceDate))
+      .filter(Boolean) as Date[];
+
+    if (dates.length > 0) {
+      dates.sort((a, b) => a.getTime() - b.getTime());
+      const middleIndex = Math.floor(dates.length / 2);
+      return dates[middleIndex].getMonth() + 1;
+    }
+  }
+
+  const single =
+    parseDate(item.StartDate) ||
+    parseDate(item.AttendenceDate);
+
+  return single ? single.getMonth() + 1 : null;
+};
+
+const searchMonthNumber = monthMap[SearchMonth];
+
+const count =
+  cachedDeploymentInfo?.filter(
+    (each) => getMiddleMonth(each) === searchMonthNumber
+  ).length ?? 0;
+
+const Terminationcount =
+  cachedTermination?.filter(
+    (each) => getMiddleMonth(each) === searchMonthNumber
+  ).length ?? 0;
+
+  const ReplasementCount=
+  cachedReplacementInfo?.filter(
+    (each) => getMiddleMonth(each) === searchMonthNumber
+  ).length ?? 0;
+
+const onServiceCount = FinelTimeSheet.filter((item) =>
+  matchesSearchAndMonth(
+    item,
+    SearchResult,
+    SearchMonth,
+    SearchYear
+  )
+).length;
+
+const GetFilterCount = (type: string) => {
+  switch (type) {
+    case "On Service":
+      return onServiceCount;
+    case "Termination":
+      return terminationInfo.filter(item =>
+        matchesSearchAndMonth(item, "", SearchMonth, SearchYear)
+      ).length;
+    case "Replacements":
+      return ReplacementInformation.filter(item =>
+        matchesSearchAndMonth(item, "", SearchMonth, SearchYear)
+      ).length;
+    default:
+      return 0;
+  }
+};
+
   const CurrentUserInterfacevIew = () => {
     switch (search) {
       case "On Service":
