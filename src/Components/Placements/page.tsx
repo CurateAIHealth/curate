@@ -496,7 +496,7 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
    if(serviceCharge){
      const { success } = await updateServicePrice(
   ExtendInfo.Client_Id,
-GetInfo.serviceCharges
+serviceCharge
 );
    }
       const attendance = [
