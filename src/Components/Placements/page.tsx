@@ -6,8 +6,8 @@ let cachedTermination:any[]
 
 
 import React, { useEffect, useState } from "react";
-import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash,Plus , X } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo } from "@/Lib/user.action";
+import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X } from "lucide-react";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -218,7 +218,6 @@ const matchesSearchAndMonth = (
 };
 
 
-console.log('Check for Month Name----',SearchMonth)
   const ShowDompleteInformation = async (userId: any, ClientName: any) => {
     if (userId) {
       dispatch(UpdateClient(ClientName));
@@ -607,6 +606,19 @@ SetCareTakerName(Name)
     setShowDeletePopup(true);
   };
 
+const HandleRemove=async(Info: any,Name:any)=>{
+  try{
+alert(Info.Client_Id)
+const RemoeClientFromDeploy=await RemoveClient(Info.Client_Id)
+if(RemoeClientFromDeploy.success){
+  SetActionStatusMessage(RemoeClientFromDeploy.message)
+  setRefreshKey(1)
+}
+  }catch(err:any){
+
+  }
+}
+
 const confirmDelete = async (selectedReason: string) => {
   if (!TerminationInfo) {
     SetActionStatusMessage("Unable to delete. Required information is missing.");
@@ -807,7 +819,17 @@ const OmServiceView = () => {
            
         <div className="flex itemcs-center gap-2 justify-end">
     
-
+{ActionStatusMessage && (
+  <p
+    className={`mt-3 text-center text-sm font-medium ${
+      ActionStatusMessage .includes(" Sucessfull") 
+        ? "text-green-700"
+        : "text-gray-700"
+    }`}
+  >
+    {ActionStatusMessage}
+  </p>
+)}
             <div
     className="
       flex items-center bg-white shadow-md rounded-xl
@@ -1001,6 +1023,9 @@ const OmServiceView = () => {
 
     <th className="w-[70px] px-2 py-2 text-center">
       Terminate
+    </th>
+      <th className="w-[70px] px-2 py-2 text-center">
+      Remove
     </th>
   </tr>
 </thead>
@@ -1339,7 +1364,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
         {ActionStatusMessage && (
   <p
     className={`mt-3 text-center text-sm font-medium ${
-      ActionStatusMessage === "Replacement Updated Sucessfull"
+      ActionStatusMessage .includes(" Sucessfull") 
         ? "text-green-700"
         : "text-gray-700"
     }`}
@@ -1449,10 +1474,21 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
           </td>
           <td className="px-3 py-3 text-center break-words">
             <button
+            
               className="px-3 py-2 text-xs font-medium cursor-pointer rounded-lg hover:rounded-full hover:bg-gray-100"
               onClick={() => handleDeleteClick(c,c.HCA_Name)}
             >
               <Trash />
+            </button>
+          </td>
+               <td className="px-3 py-3 text-center break-words">
+            <button
+            
+              className="px-3 py-2 text-xs font-medium cursor-pointer rounded-lg hover:rounded-full hover:bg-gray-100"
+              onClick={() => HandleRemove(c,c.HCA_Name)}
+            >
+              <CircleX size={22} className="text-red-600" />
+
             </button>
           </td>
  

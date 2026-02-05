@@ -115,7 +115,7 @@ const [BechListInfo,setBechListInfo]=useState<any>()
   });
 
 const DASHBOARD_CACHE_KEY = "dashboardStats";
-const CACHE_TTL = 1* 60 * 1000;
+const CACHE_TTL = 20* 60 * 1000;
 const BENCH_CACHE_KEY = "benchListInfo";
 const BENCH_CACHE_TTL = 10 * 60 * 1000;
 
@@ -820,7 +820,7 @@ const Switching = (name: string) => {
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard.
+      Hi Admin – Welcome to Admin Dashboard...
     </span>
   </div>
 
