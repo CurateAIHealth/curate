@@ -206,7 +206,7 @@ const matchesSearchAndMonth = (
 
   if (!month || !year) return false;
 
-  const monthNumber = Number(month); // 1–12
+  const monthNumber = Number(month); 
 
   const matchesMonth =
     !searchMonth || monthNumber === Number(searchMonth);

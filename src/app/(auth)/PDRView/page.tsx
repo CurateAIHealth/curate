@@ -6,11 +6,11 @@ import React, { useEffect, useState } from "react";
 import { CircleCheckBig, Eye, LogOut, Trash } from "lucide-react";
 import { DeleteDeployMent, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, InserTerminationData, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
-import { GetCurrentDeploymentData, Update_Main_Filter_Status, UpdateFetchedInformation, UpdateSubHeading } from "@/Redux/action";
+import { GetCurrentDeploymentData, Update_Main_Filter_Status, UpdateFetchedInformation, UpdateMonthFilter, UpdateSubHeading, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "@/Components/Terminations/page";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
-import { normalizeDate } from "@/Lib/Actions";
+import { normalizeDate, years } from "@/Lib/Actions";
 
 
 type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday";
@@ -57,6 +57,8 @@ const ClientTable = () => {
   const [deleteTargetId, setDeleteTargetId] =  useState<any>();
   const [ActionStatusMessage,SetActionStatusMessage]= useState<any>();
   const [SearchResult,setSearchResult]=useState("")
+  const SearchMonth=useSelector((state:any)=>state.FilterMonth) 
+  const SearchYear=useSelector((state:any)=>state.FilterYear) 
 const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
   const SubHeading = useSelector((state: any) => state.SubHeadinList);
   const dispatch = useDispatch();
@@ -113,6 +115,7 @@ useEffect(() => {
       HCA_Name: each.HCAName,
       location: each.Address||"UnFilled",
       TimeSheet: normalizedAttendance,
+      StartDate:each.StartDate,
       PatientName: each.patientName,
       Patient_PhoneNumber: each.patientPhone,
       RreferralName: each.referralName,
@@ -299,20 +302,35 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
   };
 
 
-const FilterFinelTimeSheet = FinelTimeSheet.filter((each:any) => {
+const FilterFinelTimeSheet = FinelTimeSheet.filter((each: any) => {
   const search = SearchResult?.toLowerCase() || "";
+
   const name = each.name?.toLowerCase() || "";
   const email = each.email?.toLowerCase() || "";
   const contact = each.contact?.toLowerCase() || "";
-  const role=each.role?.toLowerCase() || "";
+  const role = each.role?.toLowerCase() || "";
 
-  return (
+  if (!each.StartDate) return false;
+
+  const [day, month, year] = each.StartDate.split("/").map(Number);
+  if (!month || !year) return false;
+
+  const matchesMonth =
+    !SearchMonth || month === Number(SearchMonth);
+
+  const matchesYear =
+    !SearchYear || year === Number(SearchYear);
+
+  const matchesSearch =
+    !search ||
     name.includes(search) ||
     email.includes(search) ||
-    contact.includes(search)||
-    role.includes(search)
-  );
+    contact.includes(search) ||
+    role.includes(search);
+
+  return matchesSearch && matchesMonth && matchesYear;
 });
+
 
 
 const handleLogout = () => {
@@ -436,6 +454,55 @@ const handleLogout = () => {
 
   <div className="flex items-center gap-4">
  
+   <div className="w-full sm:w-[130px]">
+     {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
+       Month
+     </label> */}
+ 
+     <select
+       value={SearchMonth}
+       onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
+       className="
+         w-full h-[44px] rounded-xl
+         border border-gray-300
+         px-4 text-sm bg-white text-gray-800
+         focus:outline-none focus:ring-2 focus:ring-indigo-500
+         focus:border-transparent transition-all
+       "
+     >
+       <option value="">All Months</option>
+       {[...Array(12)].map((_, i) => (
+             <option key={i} value={`${i + 1}`}>
+               {new Date(0, i).toLocaleString("default", { month: "long" })}
+             </option>
+           ))}
+     </select>
+   </div>
+   
+     
+ <div >
+     {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
+       Year
+     </label> */}
+ 
+     <select
+       value={SearchYear}
+        onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
+       className="
+         w-full rounded-xl border border-gray-300
+         px-4 py-3 text-sm bg-white text-gray-800
+         focus:outline-none focus:ring-2 focus:ring-indigo-500
+         focus:border-transparent transition-all
+       "
+     >
+       <option value="">All Years</option>
+       {years.map((year) => (
+         <option key={year} value={year}>
+           {year}
+         </option>
+       ))}
+     </select>
+   </div>
     <div className="flex rounded-lg border border-gray-200 bg-gray-100 p-1">
       <button
         onClick={() => setActiveTab(false)}

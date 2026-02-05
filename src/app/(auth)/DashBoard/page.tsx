@@ -115,7 +115,7 @@ const [BechListInfo,setBechListInfo]=useState<any>()
   });
 
 const DASHBOARD_CACHE_KEY = "dashboardStats";
-const CACHE_TTL = 1 * 60 * 1000;
+const CACHE_TTL = 1* 60 * 1000;
 const BENCH_CACHE_KEY = "benchListInfo";
 const BENCH_CACHE_TTL = 10 * 60 * 1000;
 
@@ -127,7 +127,7 @@ const BENCH_CACHE_TTL = 10 * 60 * 1000;
           if (userId) {
       const user = await GetUserInformation(userId);
       if (mounted && user?.Email) {
-       
+       setloggedInEmail(user?.Email)
       }
     }
       const cachedStats = localStorage.getItem(DASHBOARD_CACHE_KEY);
@@ -211,42 +211,48 @@ let currentMonthPatientCount = 0;
 
 
 const currentUTCYear = now.getUTCFullYear();
-const currentUTCMonth = String(now.getUTCMonth() + 1).padStart(2, "0");
+const currentUTCMonth = now.getUTCMonth(); 
+
+const VALID_USER_TYPES = new Set([
+  "healthcare-assistant",
+  
+]);
+
+const getISODate = (value: any): Date | null => {
+  if (!value) return null;
+
+  if (value instanceof Date) return value;
+  if (typeof value === "string") return new Date(value);
+  if (value?.toDate) return value.toDate();
+
+  return null;
+};
+
+
+let healthcareUserCount = 0;
 
 for (const u of registeredUsers) {
-  let isCurrentMonth = false;
+  const leadDate = getISODate(u.LeadDate);
+  const createdDate = getISODate(u.createdAt);
 
-  const getISO = (value: any) => {
-    if (!value) return "";
+  const isCurrentMonth =
+    (leadDate &&
+      leadDate.getUTCFullYear() === currentUTCYear &&
+      leadDate.getUTCMonth() === currentUTCMonth) ||
+    (createdDate &&
+      createdDate.getUTCFullYear() === currentUTCYear &&
+      createdDate.getUTCMonth() === currentUTCMonth);
+ 
+  if (!isCurrentMonth) continue;
+ monthReg++;
 
-    if (typeof value === "string") return value;
-    if (value instanceof Date) return value.toISOString();
-    if (value?.toDate) return value.toDate().toISOString();
 
-    return "";
-  };
-
-  const leadISO = getISO(u.LeadDate);
-  const createdISO = getISO(u.createdAt);
-
-  const checkISO = (iso: string) => {
-    if (!iso) return false;
-    const [year, month] = iso.split("T")[0].split("-");
-    return (
-      Number(year) === currentUTCYear &&
-      month === currentUTCMonth
-    );
-  };
-
-  isCurrentMonth = checkISO(leadISO) || checkISO(createdISO);
-
-  if (isCurrentMonth) monthReg++;
-
-  if (
-    (u.userType === "patient" || u.userType === "CallEnquiry") &&
-    isCurrentMonth
-  ) {
+   if (u.userType === "patient" || u.userType === "CallEnquiry") {
     currentMonthPatientCount++;
+  } else if (VALID_USER_TYPES.has(u.userType)) {
+    healthcareUserCount++;
+  } else {
+    vendor++;
   }
 }
 
@@ -265,16 +271,40 @@ const deployedUnique =  deployments
         return month === currentMonth && year === currentYear;
       })
 
+const Invoice =  invoices
+      .filter((i: any) => {
+        if (!i?.DeployDate) return false;
 
-      const pendingPdr = timesheets.filter((t: any) => t.PDRStatus === false).length;
+        const [, month, year] = i.DeployDate.split("/").map(Number);
+        return month === currentMonth && year === currentYear && i.status!=="Draft";
+      })
+const PDRcurrentMonth = now.getMonth();
+const PDRcurrentYear = now.getFullYear();
+
+const pendingPdr = timesheets.filter((t: any) => {
+  if (!t.StartDate || t.PDRStatus !== false) return false;
+
+  const [day, month, year] = t.StartDate.split("/").map(Number);
+
+  const date = new Date(year, month - 1, day);
+
+  
+  if (isNaN(date.getTime())) return false;
+
+  return (
+    date.getMonth() === PDRcurrentMonth &&
+    date.getFullYear() === PDRcurrentYear
+  );
+}).length;
+
 
       const finalStats = {
         registeredUsers: currentMonthPatientCount,
-        hcpListCount: hcp,
+        hcpListCount: healthcareUserCount,
         vendorsCount: vendor,
         hostelAttendanceCount: active,
         registrationCount: monthReg,
-        invoiceCount: invoices.length,
+        invoiceCount: Invoice.length,
         deployedLength: deployedUnique.length,
         timesheetcount: deployedUnique.length,
         pendingPdrCount: pendingPdr,
@@ -692,13 +722,14 @@ const canAccessTab = useCallback(
 
 const Switching = (name: string) => {
  
-//   if (!loggedInEmail) return;
+  if (!loggedInEmail) return;
  
-//   if (!canAccessTab(name, loggedInEmail)) {
-//     setShowPermissionPopup(true);
-//     return;
-//   }
-// alert('d')
+  if (!canAccessTab(name, loggedInEmail)) {
+    setShowPermissionPopup(true);
+    return;
+  }
+
+  
   switch (name) {
     case "Client Enquiry":
     case "Deployment":
@@ -789,7 +820,7 @@ const Switching = (name: string) => {
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard
+      Hi Admin – Welcome to Admin Dashboard.
     </span>
   </div>
 
