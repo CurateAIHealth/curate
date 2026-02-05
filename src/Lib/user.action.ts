@@ -2727,6 +2727,36 @@ export const ClearEnquiry = async (userId: string) => {
 };
 
 
+export const RemoveClient = async (userId: string) => {
+  try {
+    const client = await clientPromise;
+    const db = client.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const result = await collection.deleteOne({
+      ClientId: userId
+    });
+
+    if (result.deletedCount === 0) {
+      return {
+        success: false,
+        message: "No enquiry found to delete",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Client Removed Successfully",
+    };
+  } catch (error) {
+    console.error("Error deleting enquiry:", error);
+    return {
+      success: false,
+      message: "Failed to delete enquiry",
+    };
+  }
+};
+
 
 
 export const GetUserCompliteInformation = async (UserIdFromLocal: any) => {
