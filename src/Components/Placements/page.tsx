@@ -59,6 +59,8 @@ const [ReplacementDate,setReplacementDate]=useState("")
     updatedAt: "",
     status: ""
   })
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const [CareTakerName,SetCareTakerName]=useState('')
   const [HCPName,setHCPName]=useState("")
   const [ShowReassignmentPopUp,setShowReassignmentPopUp]=useState(false)
@@ -153,12 +155,12 @@ const fetchData = async (forceFresh = false) => {
 };
 
 
-  fetchData(!!ActionStatusMessage);
+  fetchData();
 
   return () => {
     mounted = false;
   };
-}, [ActionStatusMessage, dispatch]);
+}, [refreshKey]);
 
 useEffect(() => {
   if (!selectedDate) {
@@ -535,15 +537,16 @@ serviceCharge
         ClientAttendece
       );
   
-    if(deploymentRes.success===true){
-     
-       SetActionStatusMessage("TimeSheet Succesfully Extended")
-       const Timer=setInterval(()=>{
-         setshowExtendPopup(false)
-         SetActionStatusMessage(deploymentRes.message)
-       },2000)
-       return ()=>clearInterval(Timer)
-    }
+if (deploymentRes.success) {
+  SetActionStatusMessage("TimeSheet Successfully Extended");
+
+  setTimeout(() => {
+    setshowExtendPopup(false);
+    setSelectedDate("");
+    SetActionStatusMessage('')
+  }, 2000);
+}
+
     
   }
   const HCA_List = Finel.filter((each: any) => {
@@ -803,15 +806,7 @@ const OmServiceView = () => {
     
            
         <div className="flex itemcs-center gap-2 justify-end">
-      <p
-  className={`text-xs mt-1 ${
-    ActionStatusMessage?.includes("updated successfully")
-      ? "text-green-600"
-      : "text-red-600 font-bold"
-  }`}
->
-  {ActionStatusMessage}
-</p>
+    
 
             <div
     className="
@@ -1030,7 +1025,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
       return(
           <tr key={i} className="hover:bg-teal-50/30 transition-all">
            <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
-           {SearchYear}
+           {i+1}
           </td>
           <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
             {toProperCaseLive(c.name)}
@@ -1429,8 +1424,8 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
 
   ) : (
     <button
-      className="px-4 py-2 text-xs font-medium "
-      onClick={() => UpdatePopup(c)}
+      className="px-4 py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full"
+     onClick={() =>{ UpdatePopup(c),setSelectedDate("")}}
     >
       <ChevronsRight size={22} className="text-teal-600"/>
     </button>
@@ -1597,7 +1592,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
       <X size={15} className="mb-10 cursor-pointer" onClick={()=>setshowExtendPopup(false)}/>
       </div>
 
-      {/* Select Date */}
+  
       <div className="mb-4">
         <label className="text-sm text-gray-600 mb-1 block">
           Select Date
@@ -1668,7 +1663,15 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
           Yes
         </button>
       </div>}
-
+  <p
+  className={`text-[9px] mt-1 text-center ${
+    ActionStatusMessage?.includes("TimeSheet Successfully Extended")
+      ? "text-green-600"
+      : "text-red-600 font-bold"
+  }`}
+>
+  {ActionStatusMessage}
+</p>
     </div>
   </div>
 )}

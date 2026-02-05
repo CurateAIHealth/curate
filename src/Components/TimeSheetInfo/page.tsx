@@ -429,7 +429,7 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
         <Th>End</Th>
         <Th className="max-w-[140px]">Client</Th>
 
-        <Th className="hidden lg:table-cell max-w-[140px]">Patient</Th>
+        <Th className="hidden lg:table-cell max-w-[120px]">Patient</Th>
         <Th className="hidden xl:table-cell max-w-[140px]">Referral</Th>
 
         <Th className="max-w-[140px]">HCP</Th>
@@ -511,7 +511,7 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
             <Td className="bg-amber-50 text-center font-bold">{r.ad}</Td>
             <Td className="bg-amber-50 text-center font-bold">{r.hp}</Td>
 
-            <Td className="text-center">
+            <Td className="text-left">
               {dayStatus === "-" ? <span className="flex flex-col items-center leading-[10px] text-[9px] font-semibold text-gray-600">
   <span>Not</span>
   <span>Marked</span>
@@ -520,7 +520,7 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
                 <>
                   <DayBadge status={dayStatus as DayStatus} />
                   <p
-                    className="text-[10px] text-blue-600 cursor-pointer hover:underline"
+                    className="text-[10px] text-center text-blue-600 cursor-pointer hover:underline"
                     onClick={() => {
                       SetShowUpdateAttendece(true)
                       setAttenseceInformation(r)
@@ -537,7 +537,7 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
 
             <Td className="sticky right-0 bg-white text-center">
               <button
-                className="px-2 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600 cursor-pointer"
+                className="px-1 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600 cursor-pointer"
                 onClick={() => {
                   setShowFullMonth(true)
                   setAttendenceInfo(r),

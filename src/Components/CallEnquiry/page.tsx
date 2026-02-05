@@ -12,6 +12,7 @@ import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 
 interface CallEnquiryUser {
+  LeadDate: any;
   _id: string;
   userId: string;
   FirstName: string;
@@ -45,18 +46,20 @@ export default function CallEnquiryList({
   }
 console.log("Check for Data Info=======",data)
 
-  const handleDelete = async (user: CallEnquiryUser) => {
-    const userId = localStorage.getItem("UserId");
-    console.log('Check for Info-------', user?.userId)
+  const handleDelete = async (Clearuser: CallEnquiryUser) => {
+    setStatusMessage("Please Wait....")
+      const userId = localStorage.getItem("UserId");
+    
     if (userId) {
       const user = await GetUserInformation(userId);
-      if (user?.Email !== "srivanikasham@curatehealth.in") {
+      console.log('Check for Info Mail-------', userId)
+      if (user?.Email !== "admin@curatehealth.in") {
         setStatusMessage('You don’t have the required permissions to proceed')
         return
       }
 
 
-      const DeletCallEnquiry = await ClearEnquiry(user?.userId)
+      const DeletCallEnquiry = await ClearEnquiry(Clearuser?.userId)
       if (DeletCallEnquiry.success === true) {
         setStatusMessage(DeletCallEnquiry.message)
       }
@@ -68,22 +71,28 @@ console.log("Check for Data Info=======",data)
 const UpdatedFilterUserType = useMemo(() => {
   return data
     .filter((each) => {
-      const date = each.createdAt ? new Date(each.createdAt) : null;
+      const checkDate = (value: any) => {
+        if (!value) return false;
 
-      const matchesMonth =
-        !SearchMonth ||
-        (date &&
-          date.toLocaleString("default", { month: "long" }) === SearchMonth);
+        const date = new Date(value);
+        if (isNaN(date.getTime())) return false;
 
-      const matchesYear =
-        !SearchYear ||
-        (date && date.getFullYear() === Number(SearchYear));
+        const matchesMonth =
+          !SearchMonth ||
+          date.toLocaleString("default", { month: "long" }) === SearchMonth;
 
-      return matchesMonth && matchesYear;
+        const matchesYear =
+          !SearchYear || date.getFullYear() === Number(SearchYear);
+
+        return matchesMonth && matchesYear;
+      };
+
+      return checkDate(each.createdAt) || checkDate(each.LeadDate);
     })
     .slice()
     .reverse();
 }, [data, SearchMonth, SearchYear]);
+
 
   
 
