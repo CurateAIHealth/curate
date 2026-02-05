@@ -487,7 +487,7 @@ export const UpdatePatientInformation = async (Patient: {
       EmailVerification: Patient.EmailVerification,
       FinelVerification: Patient.FinelVerification,
       ClientStatus:Patient.ClientStatus,
-
+      LeadDate: new Date().toISOString().split("T")[0],
       createdAt: new Date().toISOString(),
     };
 
@@ -640,9 +640,12 @@ TreatmentRemarks:FinelPostingData.TreatmentRemarks,
       userId: FinelPostingData.userId,
       SuitableHCP: FinelPostingData.SuitableHCP,
       TimeStampInfo: FinelPostingData.TimeStamp,
-      LeadDate:FinelPostingData.LeadDate,
+      LeadDate: FinelPostingData?.LeadDate
+  ? new Date(FinelPostingData.LeadDate).toISOString().split("T")[0]
+  : new Date().toISOString().split("T")[0],
+
       ServiceArea:FinelPostingData.ServiceArea,
-      createdAt: new Date().toISOString(),
+      createdAt:  new Date().toISOString(),
     };
 
     const result = await collection.insertOne(encryptedData);
@@ -1080,10 +1083,10 @@ StaffType:HCA.StaffType,
       VerificationStatus: HCA.VerificationStatus,
       TermsAndConditions: HCA.TermsAndConditions,
       FinelVerification: HCA.FinelVerification,
-      EmailVerification: HCA.EmailVerification,
+      EmailVerification: HCA.EmailVerification||true,
       PreviewUserType:HCA.PreviewUserType,
       ClientNote:HCA.ClientNote,
-
+ LeadDate: new Date().toISOString().split("T")[0],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1179,7 +1182,7 @@ export const PostEmployInfo = async (EMP: any) => {
       FinelVerification: true,
       EmailVerification: true,
 
-      
+       LeadDate: new Date().toISOString().split("T")[0],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1204,7 +1207,24 @@ export const CallEnquiryRegistration = async (HCA: any) => {
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
 
+  // 🔒 encrypt once
+    const encryptedContact = encrypt(HCA.ContactNumber);
+    const encryptedEmail = encrypt(HCA.Email);
 
+    // ✅ check duplicate (Contact OR Email)
+    const existingUser = await collection.findOne({
+      $or: [
+        { ContactNumber: encryptedContact },
+        { Email: encryptedEmail },
+      ],
+    });
+
+    if (existingUser) {
+      return {
+        success: false,
+        message: "This contact or email is already registered",
+      };
+    }
     
     const encryptedData = {
    
@@ -1217,6 +1237,7 @@ export const CallEnquiryRegistration = async (HCA: any) => {
       userId: HCA.userId,
       createdAt: new Date(),
       updatedAt: new Date(),
+      LeadDate: new Date().toISOString().split("T")[0],
     };
 
     const result = await collection.insertOne(encryptedData);
@@ -4004,6 +4025,7 @@ export const UpdatedUserJoingDate = async (
       {
         $set: {
           LeadDate: UpdatedStatus, 
+          createdAt:new Date (UpdatedStatus).toISOString(),
         
         },
       },

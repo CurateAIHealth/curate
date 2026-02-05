@@ -161,7 +161,7 @@ export default function CallEnquiryForm() {
     TermsAndConditions: "Accepted",
     EmailVerification: true,
     FinelVerification: false,
-    LeadDate: '',
+    LeadDate: new Date().toISOString(),
     ServiceArea: '',
     ClientStatus: "Processing",
   });

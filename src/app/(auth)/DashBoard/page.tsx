@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation';
 import {
   User,
   Bell,
@@ -28,7 +28,7 @@ import {
   Shield,
 } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
-import { motion } from "framer-motion";
+
 import { useDispatch, useSelector } from "react-redux";
 import {
   Update_Main_Filter_Status,
@@ -38,61 +38,15 @@ import {
   UpdateUserType,
 } from "@/Redux/action";
 import { CallEnquiryRegistration, GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo } from "@/Lib/user.action";
-import useSWR from "swr";
 
-const fetcher = async () => {
-  const data = await GetUsersFullInfo();
-  return data || [];
-};
 
-const loadUsers = async () => {
-  const users = await fetcher(); // <-- call the function
 
-  const filterProfilePic = users.map(
-    (each: any) => each?.HCAComplitInformation ?? {}
-  );
 
-  const Finel = filterProfilePic.map((each: any) => ({
-    id: each.UserId,
-    FirstName: each.HCPFirstName,
-    AadharNumber: each.HCPAdharNumber,
-    Age: each.Age,
-    userType: each.userType,
-    Location: each["Permanent Address"] || "",
-    Email: each.HCPEmail,
-    Contact: each.HCPContactNumber,
-    CurrentStatus: each.CurrentStatus,
-    userId: each.UserId,
-    VerificationStatus: each.VerificationStatus,
-    DetailedVerification: each.FinelVerification,
-    EmailVerification: each.EmailVerification,
-    ClientStatus: each.ClientStatus,
-    Status: each.Status,
-    provider: each.provider,
-    payTerms: each.payTerms,
-  }));
-
-  const HCA_List = Finel.filter((each: any) => {
-    const typeMatch = ["healthcare-assistant", "HCA", "HCP", "HCPT"].includes(
-      each.userType
-    );
-
-    const isNotAssigned =
-      !each.Status?.some((s: string) => s === "Assigned");
-
-    const isValidCurrentStatus =
-      !["Sick", "Leave", "Terminated"].includes(each.CurrentStatus);
-
-    return typeMatch && isNotAssigned && isValidCurrentStatus;
-  });
-
-  return HCA_List;
-};
 
 
 import { UserCheck } from "lucide-react";
 import { hyderabadAreas } from "@/Lib/Content";
-import { form } from "framer-motion/client";
+
 import PermissionDeniedPopup from "@/Components/Permission/page";
 import ProfileDrawer from "@/Components/ProfileView/page";
 import MarkAttendance from "@/Components/EmployAttendence/page";
@@ -113,8 +67,9 @@ const DOCUMENT_KEYS = [
 
 
 export default function Dashboard() {
-  const router = useRouter();
+  const router =useRouter()
   const dispatch = useDispatch();
+  
   const updatedRefresh = useSelector((afterEach: any) => afterEach.updatedCount);
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
   const [OtherArea,setOtherArea]=useState<any>("")
@@ -128,8 +83,9 @@ export default function Dashboard() {
   const [openExpense,setOpenExpense]=useState<any>(false)
   const [compliteInfo,setcompliteInfo]=useState<any>()
   const [showProfileOptions,setShowProfileOptions]=useState(false)
-
+const [BechListInfo,setBechListInfo]=useState<any>()
   const [loading, setLoading] = useState<boolean>(true);
+      const [benchSource, setBenchSource] = useState<any>(null);
   
 
   const [loggedInEmail, setloggedInEmail] = useState<any>("")
@@ -159,181 +115,210 @@ export default function Dashboard() {
   });
 
 const DASHBOARD_CACHE_KEY = "dashboardStats";
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL = 1 * 60 * 1000;
+const BENCH_CACHE_KEY = "benchListInfo";
+const BENCH_CACHE_TTL = 10 * 60 * 1000;
 
+  useEffect(() => {
+    let mounted = true;
 
+    const run = async () => {
+       const userId = localStorage.getItem("UserId");
+          if (userId) {
+      const user = await GetUserInformation(userId);
+      if (mounted && user?.Email) {
+       
+      }
+    }
+      const cachedStats = localStorage.getItem(DASHBOARD_CACHE_KEY);
+      const cachedBench = localStorage.getItem(BENCH_CACHE_KEY);
 
+      let statsValid = false;
+      let benchValid = false;
 
-useEffect(() => {
-    let isMounted = true;
-
-    const fetchDashboard = async () => {
-      try {
-        /* -------------------- USER INFO -------------------- */
-        const userId =
-          typeof window !== "undefined"
-            ? localStorage.getItem("UserId")
-            : null;
-
-        if (userId) {
-          const user = await GetUserInformation(userId);
-          if (!isMounted) return;
-
-          setcompliteInfo(user);
-          setloggedInEmail(user?.Email ?? "");
-          SetProfileName(user?.Name ?? "");
-          setIsManagement(user?.Email === "admin@curatehealth.in");
+      if (cachedStats) {
+        const { data, timestamp } = JSON.parse(cachedStats);
+        if (Date.now() - timestamp < CACHE_TTL) {
+          setStats(data);
+          statsValid = true;
         }
+      }
 
-        /* -------------------- CACHE -------------------- */
-        const cached =
-          typeof window !== "undefined"
-            ? localStorage.getItem(DASHBOARD_CACHE_KEY)
-            : null;
-
-        if (cached) {
-          const { data, timestamp } = JSON.parse(cached);
-
-          if (Date.now() - timestamp < CACHE_TTL) {
-            setStats(data);
-            setLoading(false);
-            return;
-          }
+      if (cachedBench) {
+        const { data, timestamp } = JSON.parse(cachedBench);
+        if (Date.now() - timestamp < CACHE_TTL) {
+          setBenchSource(data);
+          benchValid = true;
         }
+      }
 
-        /* -------------------- API CALLS -------------------- */
-        const results = await Promise.allSettled([
+      if (statsValid && benchValid) {
+        setLoading(false);
+        return;
+      }
+
+  
+
+      const [user, results] = await Promise.all([
+        userId ? GetUserInformation(userId) : null,
+        Promise.allSettled([
           GetRegidterdUsers(),
           GetUsersFullInfo(),
           GetDeploymentInfo(),
           GetInvoiceInfo(),
           GetTimeSheetInfo(),
-        ]);
+        ]),
+      ]);
 
-        if (!isMounted) return;
+      if (!mounted) return;
 
-        const [
-          registeredUsersData = [],
-          HCPFullInfo = [],
-          deployedData = [],
-          invoiceData = [],
-          timesheetData = [],
-        ] = results.map((r) =>
-          r.status === "fulfilled" && Array.isArray(r.value) ? r.value : []
+      
+
+      const getArr = (r: any) =>
+        r.status === "fulfilled"
+          ? Array.isArray(r.value)
+            ? r.value
+            : r.value?.data ?? []
+          : [];
+
+      const [
+        registeredUsers,
+        fullUsers,
+        deployments,
+        invoices,
+        timesheets,
+      ] = results.map(getArr);
+
+      if (fullUsers.length > 0) {
+        setBenchSource(fullUsers);
+        localStorage.setItem(
+          BENCH_CACHE_KEY,
+          JSON.stringify({ data: fullUsers, timestamp: Date.now() })
         );
-
-        /* -------------------- CALCULATIONS -------------------- */
-        const now = new Date();
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth();
-
-        let patient = 0;
-        let hcp = 0;
-        let vendor = 0;
-        let active = 0;
-        let monthReg = 0;
-
-        const activeSet = new Set<string>();
-
-        for (const u of registeredUsersData) {
-          if (!u) continue;
-
-          if (u.userType === "patient" && u.ClientStatus !== "Placed") patient++;
-          if (u.userType === "healthcare-assistant") hcp++;
-          if (u.userType === "Vendor") vendor++;
-
-          if (u.CurrentStatus === "Active") {
-            active++;
-            u.userId && activeSet.add(u.userId);
-          }
-
-          let createdDate: Date | null = null;
-
-          if (u.createdAt instanceof Date) createdDate = u.createdAt;
-          else if (typeof u.createdAt === "string" || typeof u.createdAt === "number")
-            createdDate = new Date(u.createdAt);
-          else if (u.createdAt?.toDate) createdDate = u.createdAt.toDate();
-
-          if (
-            createdDate &&
-            createdDate.getFullYear() === currentYear &&
-            createdDate.getMonth() === currentMonth
-          ) {
-            monthReg++;
-          }
-        }
-
-        /* -------------------- DOCUMENT COMPLIANCE -------------------- */
-        const missingDocSet = new Set<string>();
-
-        for (const e of HCPFullInfo) {
-          const info = e?.HCAComplitInformation;
-          if (info?.UserId && !("Status" in info)) {
-            missingDocSet.add(info.UserId);
-          }
-        }
-
-        let docCompliance = 0;
-        for (const id of activeSet) {
-          if (missingDocSet.has(id)) docCompliance++;
-        }
-
-        /* -------------------- DEPLOYMENT (DEDUPED) -------------------- */
-        const mergedDeploymentInfo = [
-          ...new Map(
-            [...deployedData].map((item) => [item?.ClientId, item])
-          ).values(),
-        ];
-
-        /* -------------------- TIMESHEET -------------------- */
-        const pendingPdr = timesheetData.reduce(
-          (count: number, t: any) => count + (t?.PDRStatus === false ? 1 : 0),
-          0
-        );
-
-        /* -------------------- FINAL STATS -------------------- */
-        const finalStats = {
-          registeredUsers: patient,
-          hcpListCount: hcp,
-          vendorsCount: vendor,
-          hostelAttendanceCount: active,
-          registrationCount: monthReg,
-          invoiceCount: invoiceData.length,
-          deployedLength: mergedDeploymentInfo.length,
-          timesheetcount: mergedDeploymentInfo.length,
-          pendingPdrCount: pendingPdr,
-          documentComplianceCount: docCompliance,
-          Notifications: 0,
-          Employs: 0,
-        };
-
-        /* -------------------- SAVE CACHE -------------------- */
-        if (typeof window !== "undefined") {
-          localStorage.setItem(
-            DASHBOARD_CACHE_KEY,
-            JSON.stringify({
-              data: finalStats,
-              timestamp: Date.now(),
-            })
-          );
-        }
-
-        setStats(finalStats);
-      } catch (error) {
-        if (isMounted) {
-          console.error("Dashboard Error:", error);
-        }
-      } finally {
-        if (isMounted) setLoading(false);
       }
+
+    let patient = 0;
+let hcp = 0;
+let vendor = 0;
+let active = 0;
+let monthReg = 0;
+let currentMonthPatientCount = 0;
+
+      const now = new Date();
+      const activeSet = new Set<string>();
+
+
+
+
+const currentUTCYear = now.getUTCFullYear();
+const currentUTCMonth = String(now.getUTCMonth() + 1).padStart(2, "0");
+
+for (const u of registeredUsers) {
+  let isCurrentMonth = false;
+
+  const getISO = (value: any) => {
+    if (!value) return "";
+
+    if (typeof value === "string") return value;
+    if (value instanceof Date) return value.toISOString();
+    if (value?.toDate) return value.toDate().toISOString();
+
+    return "";
+  };
+
+  const leadISO = getISO(u.LeadDate);
+  const createdISO = getISO(u.createdAt);
+
+  const checkISO = (iso: string) => {
+    if (!iso) return false;
+    const [year, month] = iso.split("T")[0].split("-");
+    return (
+      Number(year) === currentUTCYear &&
+      month === currentUTCMonth
+    );
+  };
+
+  isCurrentMonth = checkISO(leadISO) || checkISO(createdISO);
+
+  if (isCurrentMonth) monthReg++;
+
+  if (
+    (u.userType === "patient" || u.userType === "CallEnquiry") &&
+    isCurrentMonth
+  ) {
+    currentMonthPatientCount++;
+  }
+}
+
+
+
+
+ 
+const currentMonth = now.getMonth() + 1; 
+const currentYear = now.getFullYear();
+
+const deployedUnique =  deployments
+      .filter((i: any) => {
+        if (!i?.StartDate || !i?.ClientId) return false;
+
+        const [, month, year] = i.StartDate.split("/").map(Number);
+        return month === currentMonth && year === currentYear;
+      })
+
+
+      const pendingPdr = timesheets.filter((t: any) => t.PDRStatus === false).length;
+
+      const finalStats = {
+        registeredUsers: currentMonthPatientCount,
+        hcpListCount: hcp,
+        vendorsCount: vendor,
+        hostelAttendanceCount: active,
+        registrationCount: monthReg,
+        invoiceCount: invoices.length,
+        deployedLength: deployedUnique.length,
+        timesheetcount: deployedUnique.length,
+        pendingPdrCount: pendingPdr,
+        documentComplianceCount: 0,
+        Notifications: 0,
+        Employs: 0,
+      };
+
+      setStats(finalStats);
+      localStorage.setItem(
+        DASHBOARD_CACHE_KEY,
+        JSON.stringify({ data: finalStats, timestamp: Date.now() })
+      );
+
+      setLoading(false);
     };
 
-    fetchDashboard();
-
+    run();
     return () => {
-      isMounted = false;
+      mounted = false;
     };
   }, []);
+
+  const BenchList = useMemo(() => {
+    if (!benchSource) return [];
+
+    return benchSource
+      .map((e: any) => e?.HCAComplitInformation)
+      .filter(Boolean)
+      .map((u: any) => ({
+        userId: u.UserId,
+        FirstName: u.HCPFirstName,
+        Contact: u.HCPContactNumber,
+        userType: u.userType,
+        Status: u.Status,
+        CurrentStatus: u.CurrentStatus,
+      }))
+      .filter(
+        (u: any) =>
+          ["healthcare-assistant", "HCA", "HCP", "HCPT"].includes(u.userType) &&
+          !u.Status?.includes("Assigned") &&
+          !["Sick", "Leave", "Terminated"].includes(u.CurrentStatus)
+      );
+  }, [benchSource]);
 
 
   const handleChange = (e: any) => {
@@ -471,21 +456,59 @@ useEffect(() => {
 
     }
   }
-  const { data: BenchList = [], isLoading, mutate } = useSWR(
-    "bench-list",
-    loadUsers,
-    {
-      revalidateOnFocus: false,
-    }
-  );
+
+
+//   const loadUsers =  () => {
+//   const users = BechListInfo
+//   const filterProfilePic = users.map(
+//     (each: any) => each?.HCAComplitInformation ?? {}
+//   );
+
+//   const Finel = filterProfilePic.map((each: any) => ({
+//     id: each.UserId,
+//     FirstName: each.HCPFirstName,
+//     AadharNumber: each.HCPAdharNumber,
+//     Age: each.Age,
+//     userType: each.userType,
+//     Location: each["Permanent Address"] || "",
+//     Email: each.HCPEmail,
+//     Contact: each.HCPContactNumber,
+//     CurrentStatus: each.CurrentStatus,
+//     userId: each.UserId,
+//     VerificationStatus: each.VerificationStatus,
+//     DetailedVerification: each.FinelVerification,
+//     EmailVerification: each.EmailVerification,
+//     ClientStatus: each.ClientStatus,
+//     Status: each.Status,
+//     provider: each.provider,
+//     payTerms: each.payTerms,
+//   }));
+
+//   const HCA_List = Finel.filter((each: any) => {
+//     const typeMatch = ["healthcare-assistant", "HCA", "HCP", "HCPT"].includes(
+//       each.userType
+//     );
+
+//     const isNotAssigned =
+//       !each.Status?.some((s: string) => s === "Assigned");
+
+//     const isValidCurrentStatus =
+//       !["Sick", "Leave", "Terminated"].includes(each.CurrentStatus);
+
+//     return typeMatch && isNotAssigned && isValidCurrentStatus;
+//   });
+
+//   return HCA_List;
+// };
+//   const { data: BenchList = [], isLoading } = useSWR(
+//   BechListInfo ? "bench-list" : null,
+//   loadUsers,
+//   { revalidateOnFocus: false }
+// );
 
 
 
-  useEffect(() => {
-    if (updatedRefresh) {
-      mutate();
-    }
-  }, [updatedRefresh, mutate]);
+
 
 
   const RoutToAdminPage = (A: string) => {
@@ -666,60 +689,63 @@ const canAccessTab = useCallback(
 );
 
 
-const Switching = useCallback(
-  (name: string) => {
-    if (!loggedInEmail) return;
 
-    if (!canAccessTab(name, loggedInEmail)) {
-      setShowPermissionPopup(true);
-      return;
-    }
+const Switching = (name: string) => {
+ 
+//   if (!loggedInEmail) return;
+ 
+//   if (!canAccessTab(name, loggedInEmail)) {
+//     setShowPermissionPopup(true);
+//     return;
+//   }
+// alert('d')
+  switch (name) {
+    case "Client Enquiry":
+    case "Deployment":
+    case "Timesheet":
+      dispatch(Update_Main_Filter_Status(name));
+      dispatch(UpdateUserType("patient"));
+      router.push("/AdminPage");
+      break;
 
-    switch (name) {
-      case "Client Enquiry":
-      case "Deployment":
-      case "Timesheet":
-        dispatch(Update_Main_Filter_Status(name));
-        dispatch(UpdateUserType("patient"));
-        router.push("/AdminPage");
-        break;
+    case "HCP List":
+      dispatch(Update_Main_Filter_Status(name));
+      dispatch(UpdateUserType("healthcare-assistant"));
+      router.push("/AdminPage");
+      break;
 
-      case "HCP List":
-        dispatch(Update_Main_Filter_Status(name));
-        dispatch(UpdateUserType("healthcare-assistant"));
-        router.push("/AdminPage");
-        break;
+    case "Pending PDR":
+      router.push("/PDRView");
+      break;
 
-      case "Pending PDR":
-        router.push("/PDRView");
-        break;
+    case "Vendors":
+      router.push("/VendorsPanel");
+      break;
 
-      case "Vendors":
-        router.push("/VendorsPanel");
-        break;
+    case "Document Compliance":
+      router.push("/Documents");
+      break;
 
-      case "Document Compliance":
-        router.push("/Documents");
-        break;
+    case "Invoices":
+      router.push("/Invoices");
+      break;
 
-      case "Invoices":
-        router.push("/Invoices");
-        break;
+    case "Registration":
+      router.push("/UserTypeRegistration");
+      break;
 
-      case "Registration":
-        router.push("/UserTypeRegistration");
-        break;
+    case "Hostel Attendance":
+      router.push("/HostelAttendence");
+      break;
 
-      case "Hostel Attendance":
-        router.push("/HostelAttendence");
-        break;
-        case "Notifications":
-        router.push("/Notifications");
-        break;
-    }
-  },
-  [dispatch, router, loggedInEmail, canAccessTab]
-);
+    case "Notifications":
+      router.push("/Notifications");
+      break;
+  }
+};
+
+
+
 
 
   
@@ -763,7 +789,7 @@ const Switching = useCallback(
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard...
+      Hi Admin – Welcome to Admin Dashboard
     </span>
   </div>
 
@@ -780,7 +806,7 @@ const Switching = useCallback(
     </div>
 
     
-    <button className="relative">
+    <button type="button" className="relative">
       <Bell size={22} />
       <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
     </button>
@@ -872,6 +898,7 @@ const Switching = useCallback(
      
       <div className="py-1">
         <button
+        type="button"
           onClick={() => {
             setOpenProfile(true);
             setShowProfileOptions(false);
@@ -883,6 +910,7 @@ const Switching = useCallback(
         </button>
 
         <button
+        type="button"
           onClick={() => {
             setAttendeceView(true);
             setShowProfileOptions(false);
@@ -894,6 +922,7 @@ const Switching = useCallback(
         </button>
 
         <button
+        type="button"
           onClick={() => {
             setOpenExpense(true);
             setShowProfileOptions(false);
@@ -904,17 +933,17 @@ const Switching = useCallback(
           Post Expense
         </button>
 
-        <button className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
+        <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
           <Shield size={16} className="text-slate-500" />
           Security
         </button>
 
-        <button className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
+        <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
           <Settings size={16} className="text-slate-500" />
           Settings
         </button>
 
-        <button className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
+        <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
           <HelpCircle size={16} className="text-slate-500" />
           Help & Support
         </button>
@@ -924,6 +953,7 @@ const Switching = useCallback(
 
     
       <button
+      type="button"
         onClick={() => {
           handleLogout();
           setShowProfileOptions(false);
@@ -1010,24 +1040,29 @@ const Switching = useCallback(
     />
   </div>
 )}
-
+ <PermissionDeniedPopup
+                    open={showPermissionPopup}
+                    onClose={() => setShowPermissionPopup(false)}
+                  />
 
         <main className="p-4 sm:p-2 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 space-y-6">
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
               {tabs.map((tab: any, index) => (
-                <motion.div
-                  key={tab.name}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
-                   onClick={
+             <div
+  className="cursor-pointer"
+  key={tab.name}
+   onClick={
                       () => {if(tab.name!=="Client Enquiry"){Switching(tab.name)}}
                     }
-                  className="flex flex-col items-center cursor-pointer hover:shadow-lg justify-center bg-white rounded-xl shadow-md border border-gray-100 p-3 sm:p-1"
-                >
+>
+
+                <div
+  key={tab.name}
+  className="flex flex-col items-center cursor-pointer hover:shadow-lg justify-center bg-white rounded-xl shadow-md border border-gray-100 p-3 sm:p-1 transition-transform hover:scale-[1.05]"
+>
+
                   <div
                     className={`w-10 h-10 flex items-center justify-center rounded-full shadow-md ${tab.bg}`}
                   >
@@ -1035,15 +1070,15 @@ const Switching = useCallback(
                   </div>
 
 
-
-                  <p
-                    className="mt-2 sm:mt-3 text-xs sm:text-sm hover:underline font-semibold cursor-pointer text-gray-900 text-center"
-                    onClick={
+<p
+  className="mt-2 sm:mt-3 text-xs sm:text-sm hover:underline font-semibold cursor-pointer text-gray-900 text-center"
+    onClick={
                       () => {if(tab.name==="Client Enquiry"){Switching(tab.name)}}
                     }
-                  >
-                    {tab.name}
-                  </p>
+>
+  {tab.name}
+</p>
+
 
 
                   <div className="relative group inline-block">
@@ -1056,10 +1091,7 @@ const Switching = useCallback(
                         : "No payments processed this month ❌"}
                     </div>
                   </div>
-                  <PermissionDeniedPopup
-                    open={showPermissionPopup}
-                    onClose={() => setShowPermissionPopup(false)}
-                  />
+                 
 
 
                   <div className="mt-2 flex flex-wrap justify-center gap-2">
@@ -1082,6 +1114,7 @@ const Switching = useCallback(
                     {tab.name === "Client Enquiry" && (
                       <div className="flex items-center gap-2">
                         <button
+                        type="button"
                           onClick={UpdateNewLead}
                           className="rounded-md cursor-pointer text-xs px-2 py-1
       bg-gradient-to-r from-blue-400 to-blue-500
@@ -1092,6 +1125,7 @@ const Switching = useCallback(
                         </button>
 
                         <button
+                        type="button"
                           onClick={() => setShowCallEnquiry(true)}
                           className="rounded-md cursor-pointer text-xs px-2 py-1
       bg-gradient-to-r from-green-400 to-green-500
@@ -1104,7 +1138,9 @@ const Switching = useCallback(
                     )}
 
                   </div>
-                </motion.div>
+                </div>
+                </div>
+
               ))}
             </div>
           </div>
@@ -1135,6 +1171,7 @@ const Switching = useCallback(
 
                 <div className="flex justify-end border-t border-gray-200 px-6 py-4">
                   <button
+                  type="button"
                     onClick={() => setShowAccessDenied(false)}
                     className="rounded-lg bg-red-600 px-5 py-2 text-sm cursor-pointer font-semibold text-white
                    shadow transition hover:bg-red-700 active:scale-95"
@@ -1168,6 +1205,7 @@ const Switching = useCallback(
                     </div>
                   </div>
                   <button
+                  type="button"
                     onClick={() => setShowCallEnquiry(false)}
                     className="h-8 w-8 rounded-full flex items-center justify-center
           text-gray-500 hover:bg-gray-100 hover:text-red-500 transition"
@@ -1342,6 +1380,7 @@ hover:border-[#ff1493]
 
                 <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
                   <button
+                  type="button"
                     onClick={() => setShowCallEnquiry(false)}
                     className="px-4 py-2 text-sm rounded-lg border border-gray-300
           text-gray-600 hover:bg-gray-100"
@@ -1350,6 +1389,7 @@ hover:border-[#ff1493]
                   </button>
 
                   <button
+                  type="button"
                     onClick={UpdateCallEnquiry}
                     className="px-5 py-2 text-sm rounded-lg font-medium text-white
           bg-gray-900 hover:bg-gray-800 transition"
@@ -1369,9 +1409,9 @@ hover:border-[#ff1493]
       Active Bench List
     </h2>
 
-    {isLoading ? (
-      <p>Bench List Loading...</p>
-    ) : (
+    { BenchList.length === 0 ? (
+  <p className="text-sm text-gray-500">Please Wait....</p>
+) : (
       <ul className="space-y-3 sm:space-y-4">
         {BenchList.slice(0, 9).map((user: any, index: number) => (
           <li
@@ -1390,13 +1430,15 @@ hover:border-[#ff1493]
                   {user.FirstName} {user.LastName}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  {user.ContactNumber}
+                  {user.
+Contact}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
               <button
+              type="button"
                 className="
                   px-4 py-2
                   rounded-md
@@ -1417,6 +1459,7 @@ hover:border-[#ff1493]
               </button>
 
               <button
+              type="button"
                 className="px-2 sm:px-3 py-1 text-xs bg-green-100 text-green-600 rounded-lg cursor-pointer whitespace-nowrap"
                 onClick={() =>
                   ShowDompleteInformation(user.userId, user.FirstName)
@@ -1432,6 +1475,7 @@ hover:border-[#ff1493]
 
     <div className="flex justify-end mt-2">
       <button
+      type="button"
         className="px-2 py-2 w-[100px] text-center bg-teal-600 text-white text-sm font-medium rounded-lg shadow cursor-pointer transition-all duration-200"
         onClick={NavigatetoFullHCPlIST}
       >
