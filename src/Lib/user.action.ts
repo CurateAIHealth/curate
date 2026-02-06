@@ -1207,11 +1207,10 @@ export const CallEnquiryRegistration = async (HCA: any) => {
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
 
-  // 🔒 encrypt once
+
     const encryptedContact = encrypt(HCA.ContactNumber);
     const encryptedEmail = encrypt(HCA.Email);
 
-    // ✅ check duplicate (Contact OR Email)
     const existingUser = await collection.findOne({
       $or: [
         { ContactNumber: encryptedContact },
@@ -1226,20 +1225,34 @@ export const CallEnquiryRegistration = async (HCA: any) => {
       };
     }
     
-    const encryptedData = {
-   
+   const encryptedData: any = {
       userType: HCA.userType,
-      FirstName:HCA.FirstName? encrypt(HCA.FirstName):'',
-      ContactNumber: encrypt(HCA.ContactNumber),
-      Email: encrypt(HCA.Email),
-      Location:HCA.Location,
-      comments:HCA.ClientNote,
       userId: HCA.userId,
+
+      FirstName: HCA.FirstName ? encrypt(HCA.FirstName) : "",
+      ContactNumber: HCA.ContactNumber,
+      Email: encryptedEmail,
+
+      patientAge: HCA.patientAge || "",
+      patientGender: HCA.patientGender || "",
+      HCPPreferGender: HCA.HCPPreferGender || "",
+      PreferredLanguage: HCA.PreferredLanguage || "",
+
+      Location: HCA.Location || "",
+      ServiceType: HCA.ServiceType || "",
+      HealthCard: HCA.HealthCard || "",
+
+      ExpectedService: HCA.ExpectedService || "",
+      ReasonForService: HCA.ReasonForService || "",
+
+      serviceCharges: HCA.serviceCharges || "",
+      RegistrationFee: HCA.RegistrationFee || 0,
+      comments: HCA.ClientNote || "",
+
+      LeadDate: new Date().toISOString().split("T")[0],
       createdAt: new Date(),
       updatedAt: new Date(),
-      LeadDate: new Date().toISOString().split("T")[0],
     };
-
     const result = await collection.insertOne(encryptedData);
 
     return {

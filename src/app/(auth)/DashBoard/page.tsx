@@ -46,7 +46,7 @@ import { CallEnquiryRegistration, GetDeploymentInfo, GetInvoiceInfo, GetRegidter
 
 
 import { UserCheck } from "lucide-react";
-import { hyderabadAreas } from "@/Lib/Content";
+import { Health_Card, healthcareServices, hyderabadAreas, IndianLanguages } from "@/Lib/Content";
 
 import PermissionDeniedPopup from "@/Components/Permission/page";
 import ProfileDrawer from "@/Components/ProfileView/page";
@@ -74,6 +74,7 @@ export default function Dashboard() {
   const updatedRefresh = useSelector((afterEach: any) => afterEach.updatedCount);
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
   const [OtherArea,setOtherArea]=useState<any>("")
+    const [DiscountStatus, SetDiscountStatus] = useState(true)
   const [showAccessDenied, setShowAccessDenied] = useState(false);
   const [showCallEnquiry, setShowCallEnquiry] = useState(false);
   const [EnquiryMessage, setEnquiryMessage] = useState<any>(null)
@@ -87,18 +88,33 @@ export default function Dashboard() {
 const [BechListInfo,setBechListInfo]=useState<any>()
   const [loading, setLoading] = useState<boolean>(true);
       const [benchSource, setBenchSource] = useState<any>(null);
-  
+   const [value, setValue] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+const [languageInput, setLanguageInput] = useState("");
+const [languageOptions, setLanguageOptions] = useState<string[]>([]);
 
 const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
-
+  const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
   const [EnquiryForm, setEnquiryForm] = useState<any>({
     ClientName: "",
     CliecntContact: '',
     ClientEmail: '',
+    patientAge:"",
+    patientGender:'',
+    HCPPreferGender:"",
+    PreferredLanguage:"",
     ClientArea: '',
-    ClientNote: ""
+    ClientNote: "",
+    serviceCharges:"",
+    ServiceType:"",
+    patientHealthCard:"",
+    ExpectedService:"",
+    Reasonforservice:""
   })
-
+    const [showHealthCardSuggestions, setShowHealthCardSuggestions] =
+    useState(false);
+ const [DiscountPrice, setDiscountPrice] = useState<any>(1500)
+  const [ClientDiscount, SetClientDiscount] = useState<any>(0)
   const [stats, setStats] = useState<any>({
     registeredUsers: "Loading...",
     timesheetcount: 'Loading....',
@@ -117,7 +133,7 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   });
 
 const DASHBOARD_CACHE_KEY = "dashboardStats";
-const CACHE_TTL = 20* 60 * 1000;
+const CACHE_TTL = 10* 60 * 1000;
 const BENCH_CACHE_KEY = "benchListInfo";
 const BENCH_CACHE_TTL = 10 * 60 * 1000;
 
@@ -464,17 +480,30 @@ const pendingPdr = timesheets.filter((t: any) => {
     setEnquiryMessage("Please Wait.....")
     try {
       const generatedUserId = uuidv4()
-      const payload: any = {
-        userType: "CallEnquiry",
-        FirstName: EnquiryForm.ClientName || "",
-        ContactNumber: EnquiryForm.ClientContact || "",
-        Email: EnquiryForm.ClientEmail || "",
-        Location: EnquiryForm.ClientArea || "",
-        ClientNote: EnquiryForm.ClientNote || "",
-        userId: generatedUserId,
+       const payload: any = {
+      userType: "CallEnquiry",
+      userId: generatedUserId,
 
-      };
+      FirstName: EnquiryForm.ClientName || "",
+      ContactNumber: EnquiryForm.CliecntContact || "",
+      Email: EnquiryForm.ClientEmail || "",
 
+      patientAge: EnquiryForm.patientAge || "",
+      patientGender: EnquiryForm.patientGender || "",
+      HCPPreferGender: EnquiryForm.HCPPreferGender || "",
+      PreferredLanguage: EnquiryForm.PreferredLanguage || "",
+
+      Location: EnquiryForm.ClientArea || "",
+      ServiceType: EnquiryForm.ServiceType || "",
+      HealthCard: EnquiryForm.patientHealthCard || "",
+
+      ExpectedService: EnquiryForm.ExpectedService || "",
+      ReasonForService: EnquiryForm.Reasonforservice || "",
+
+      serviceCharges: EnquiryForm.serviceCharges || "",
+      ClientNote: EnquiryForm.ClientNote || "",
+      RegistrationFee: DiscountPrice - ClientDiscount
+    };
       const registrationResult = await CallEnquiryRegistration(payload);
 
       if (registrationResult.success === true) {
@@ -539,9 +568,66 @@ const pendingPdr = timesheets.filter((t: any) => {
 //   { revalidateOnFocus: false }
 // );
 
+const handleAreaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const text = e.target.value;
+
+ 
+  setValue(text);
+  setEnquiryForm((prev:any) => ({
+    ...prev,
+    ClientArea: text,
+  }));
+
+  if (!text.trim()) {
+    setSuggestions([]);
+    return;
+  }
+
+  const filtered = hyderabadAreas.filter(area =>
+    area.toLowerCase().includes(text.toLowerCase())
+  );
+
+  setSuggestions(filtered);
+};
+
+const selectArea = (area: string) => {
+  setValue(area);
+  setEnquiryForm((prev:any) => ({
+    ...prev,
+    ClientArea: area,
+  }));
+  setSuggestions([]);
+};
 
 
+const handleLanguageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const text = e.target.value;
+  setLanguageInput(text);
+   setEnquiryForm((prev:any) => ({
+    ...prev,
+    PreferredLanguage: text,
+  }));
 
+  if (!text.trim()) {
+    setLanguageOptions([]);
+    return;
+  }
+
+  setLanguageOptions(
+    IndianLanguages.filter(lang =>
+      lang.toLowerCase().includes(text.toLowerCase())
+    )
+  );
+};
+
+  const selectLanguage = (lang: string) => {
+    setLanguageInput(lang);
+     setEnquiryForm((prev:any) => ({
+    ...prev,
+    PreferredLanguage: lang,
+  }));
+    setLanguageOptions([]);
+  };
 
 
   const RoutToAdminPage = (A: string) => {
@@ -1219,222 +1305,439 @@ const Switching = (name: string) => {
           )}
 
           {showCallEnquiry && (
-            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+  <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-2 sm:p-4">
+    <div className="w-full max-w-6xl h-[100dvh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden">
 
+      <div className="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
+        <div className="flex items-center gap-2">
+          <img src="Icons/Curate-logoq.png" className="h-9" alt="CompanyLogo" />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">Call Enquiry</h3>
+            <p className="text-xs text-gray-500">Log a quick enquiry from a phone call</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowCallEnquiry(false)}
+          className="h-8 w-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-red-500 transition"
+        >
+          ✕
+        </button>
+      </div>
 
-              <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                <div className="px-6 py-4 border-b flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <img src="Icons/Curate-logoq.png" className="h-9" alt="CompanyLogo" />
-                    <div>
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Client Name</label>
+            <input
+              type="text"
+              name="ClientName"
+              onChange={handleChange}
+              placeholder="Full name"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+            />
+          </div>
 
-                      <h3 className="text-lg font-semibold text-gray-800">
-                        Call Enquiry
-                      </h3>
-                      <p className="text-xs text-gray-500">
-                        Log a quick enquiry from a phone call
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                  type="button"
-                    onClick={() => setShowCallEnquiry(false)}
-                    className="h-8 w-8 rounded-full flex items-center justify-center
-          text-gray-500 hover:bg-gray-100 hover:text-red-500 transition"
-                  >
-                    ✕
-                  </button>
-                </div>
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Mobile Number</label>
+            
+            <input
+              type="tel"
+              name="ClientContact"
+              value={EnquiryForm.ClientContact || ""}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "");
+                if (value.length <= 10) {
+                  handleChange({
+                    target: { name: "ClientContact", value },
+                  });
+                }
+              }}
+              placeholder="10-digit Indian mobile number"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm tracking-widest focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+            />
+            {EnquiryForm.ClientContact &&
+              !/^[6-9]\d{9}$/.test(EnquiryForm.ClientContact) && (
+                <p className="mt-1 text-xs text-red-500">Enter a valid Indian mobile number</p>
+              )}
+          </div>
 
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Email Address</label>
+          
+            <input
+              type="email"
+              name="ClientEmail"
+              onChange={handleChange}
+              placeholder="example@email.com"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </div>
 
-                <div className="px-6 py-5 space-y-4">
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              Patient Age <span className="text-red-500">*</span>
+             
+            </label>
+            <input
+              type="number"
+              name="patientAge"
+              onChange={handleChange}
+              min={0}
+              max={120}
+              placeholder="Enter age"
+              className="w-full rounded-md border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">
-                        Customer Name
-                      </label>
-                      <input
-                        type="text"
-                        name="ClientName"
-                        onChange={handleChange}
-                        placeholder="Full name"
-                        className="w-full rounded-lg border border-gray-300 px-4 py-3
-              text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
-                      />
-                    </div>
-
-                    <div>
-  <label className="block text-xs font-medium text-gray-500 mb-1">
-    Mobile Number
-  </label>
-
-  <input
-    type="tel"
-    name="ClientContact"
-    value={EnquiryForm.ClientContact || ""}
-    onChange={(e) => {
-     
-      const value = e.target.value.replace(/\D/g, "");
-
-    
-      if (value.length <= 10) {
-        handleChange({
-          target: {
-            name: "ClientContact",
-            value,
-          },
-        } as any);
-      }
-    }}
-    pattern="^[6-9]\d{9}$"
-    maxLength={10}
-    placeholder="10-digit Indian mobile number"
-    className="w-full rounded-lg border border-gray-300 px-4 py-3
-      text-sm tracking-widest focus:ring-2 focus:ring-gray-800
-      focus:border-transparent"
-  />
-
- 
-  {EnquiryForm.ClientContact &&
-    !/^[6-9]\d{9}$/.test(EnquiryForm.ClientContact) && (
-      <p className="mt-1 text-xs text-red-500">
-        Enter a valid Indian mobile number
-      </p>
-    )}
-</div>
-
-                    <div className="w-full">
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">
-                        Email Address
-                      </label>
-
-                      <input
-                        type="email"
-                        name="ClientEmail"
-                        onChange={handleChange}
-                        placeholder="example@email.com"
-                        className="
-      w-full
-      rounded-xl
-      border border-gray-300
-      px-4 py-3
-      text-sm text-gray-800
-      placeholder-gray-400
-      focus:outline-none
-      focus:ring-2 focus:ring-indigo-500
-      focus:border-transparent
-      transition-all
-    "
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">
-                        Area
-                      </label>
-                      <select
-                        name="ClientArea"
-                        className="w-full rounded-lg border border-gray-300 px-4 py-3
-            text-sm bg-white focus:ring-2 focus:ring-gray-800 focus:border-transparent"
-                    onChange={(e)=>{
-                      setOtherArea(e.target.value==="Other")
-                      setEnquiryForm({ ...EnquiryForm, ClientArea: e.target.value==="Other"?"":e.target.value })
-                    }}
-                      >
-                        <option value="">Select Area</option>
-                        {hyderabadAreas.map((city) => (
-                          <option key={city} value={city}>{city}</option>
-                        ))}
-                      </select>
-                      {OtherArea&&  <input
-   
-                        name="ClientArea"
-                        onChange={handleChange}
-                        placeholder="Enter client area"
-                        className="
-      w-full
-      px-3 py-2
-      text-sm
-      rounded-xl
-      border border-gray-300
-      bg-white
-      text-gray-800
-      placeholder-gray-400
-      mt-2
-      focus:outline-none  
-      focus:ring-2
-      focus:ring-[#1392d3]/40
-      focus:border-[#1392d3]
-hover:border-[#ff1493]
-      transition
-    "
-                      />}
-                    </div>
-                  </div>
-
-
-
-
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      Notes
-                    </label>
-                    <textarea
-                      name="ClientNote"
-                      onChange={handleChange}
-                      placeholder="Short call summary"
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3
-            text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800 focus:border-transparent"
-                    />
-                  </div>
-                  {EnquiryMessage && (
-                    <p
-                      className="
-      flex items-center gap-2
-      px-4 py-2 mt-3
-      rounded-lg
-      text-sm font-medium
-      shadow-sm
-      transition-all duration-300
-      bg-blue-50 text-blue-700 border border-blue-200
-    "
-                    >
-
-                      <span className="h-2 w-2 bg-blue-600 rounded-full animate-pulse" />
-
-                      {EnquiryMessage}
-                    </p>
-                  )}
-
-                </div>
-
-
-                <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
-                  <button
-                  type="button"
-                    onClick={() => setShowCallEnquiry(false)}
-                    className="px-4 py-2 text-sm rounded-lg border border-gray-300
-          text-gray-600 hover:bg-gray-100"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                  type="button"
-                    onClick={UpdateCallEnquiry}
-                    className="px-5 py-2 text-sm rounded-lg font-medium text-white
-          bg-gray-900 hover:bg-gray-800 transition"
-                  >
-                    Save Enquiry
-                  </button>
-                </div>
-
-              </div>
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-500 mb-2">
+              Patient Gender <span className="text-red-500">*</span>
+             
+            </label>
+            <div className="flex gap-6">
+              {["Male", "Female", "Other"].map((gender) => (
+                <label key={gender} className="flex items-center gap-2">
+                  <input type="radio" name="patientGender" value={gender} className="h-5 w-5 accent-indigo-500" onChange={handleChange}/>
+                  <span className="text-sm text-gray-700">{gender}</span>
+                </label>
+              ))}
             </div>
-          )}
+          </div>
+
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-500 mb-2">HCP Preferred</label>
+          
+            <div className="flex gap-6">
+              {["Male", "Female"].map((opt) => (
+                <label key={opt} className="flex items-center gap-2">
+                  <input type="radio" name="HCPPreferGender" value={opt} className="h-5 w-5 accent-indigo-500" onChange={handleChange}/>
+                  <span className="text-sm text-gray-700">{opt}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="w-full relative">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Language Preferred</label>
+         
+            <input
+              type="text"
+              value={languageInput}
+              onChange={handleLanguageChange}
+              placeholder="Type preferred language"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
+            />
+            {languageOptions.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full max-h-40 overflow-y-auto rounded-xl border bg-white shadow">
+                {languageOptions.map((lang) => (
+                  <div
+                    key={lang}
+                    onClick={() => selectLanguage(lang)}
+                    className="cursor-pointer px-4 py-2 text-sm hover:bg-gray-100"
+                  >
+                    {lang}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="w-full relative">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Service Area</label>
+  
+            <input
+              type="text"
+              value={value}
+              onChange={handleAreaChange}
+              placeholder="Enter area in Hyderabad"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
+            />
+            {suggestions.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full max-h-44 overflow-y-auto rounded-md border bg-white shadow-sm">
+                {suggestions.map((area) => (
+                  <div
+                    key={area}
+                    onClick={() => selectArea(area)}
+                    className="cursor-pointer px-3 py-2 text-sm hover:bg-gray-100"
+                  >
+                    {area}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+      <div className="relative">
+        <label className="block text-xs font-medium text-gray-500 mb-2">Service Type</label>
+     
+        <input
+          type="text"
+          value={EnquiryForm.ServiceType}
+          placeholder="Enter service type"
+          onChange={(e) => {
+            setEnquiryForm((prev: any) => ({
+              ...prev,
+              ServiceType: e.target.value,
+            }));
+            setShowServiceSuggestions(true);
+          }}
+          onFocus={() => setShowServiceSuggestions(true)}
+          onBlur={() =>
+            setTimeout(() => setShowServiceSuggestions(false), 150)
+          }
+          className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+        />
+
+        {showServiceSuggestions && EnquiryForm.ServiceType && (
+          <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border bg-white shadow">
+            {healthcareServices
+              .filter((service) =>
+                service
+                  .toLowerCase()
+                  .includes(EnquiryForm.ServiceType.toLowerCase())
+              )
+              .map((service, index) => (
+                <li
+                  key={index}
+                  onClick={() => {
+                    setEnquiryForm((prev: any) => ({
+                      ...prev,
+                      ServiceType: service,
+                    }));
+                    setShowServiceSuggestions(false);
+                  }}
+                  className="cursor-pointer px-3 py-2 text-sm hover:bg-blue-50"
+                >
+                  {service}
+                </li>
+              ))}
+          </ul>
+        )}
+      </div>
+     <div className="w-full max-w-md">
+        <label className="block text-xs font-medium text-gray-500 mb-2">Health Card</label>
+      <div className="relative">
+        <input
+          type="text"
+          value={EnquiryForm.patientHealthCard}
+          placeholder="Enter health condition"
+          onChange={(e) => {
+            setEnquiryForm((prev: any) => ({
+              ...prev,
+              patientHealthCard: e.target.value,
+            }));
+            setShowHealthCardSuggestions(true);
+          }}
+          onFocus={() => setShowHealthCardSuggestions(true)}
+          onBlur={() =>
+            setTimeout(() => setShowHealthCardSuggestions(false), 150)
+          }
+          className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+        />
+
+        {showHealthCardSuggestions && EnquiryForm.patientHealthCard && (
+          <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border bg-white shadow">
+            {Health_Card.filter((item) =>
+              item
+                .toLowerCase()
+                .includes(EnquiryForm.patientHealthCard.toLowerCase())
+            ).map((item, index) => (
+              <li
+                key={index}
+                onClick={() => {
+                  setEnquiryForm((prev: any) => ({
+                    ...prev,
+                    patientHealthCard: item,
+                  }));
+                  setShowHealthCardSuggestions(false);
+                }}
+                className="cursor-pointer px-3 py-2 text-sm hover:bg-blue-50"
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+        </div>
+
+       <div id="Charges" className="bg-white rounded-lg shadow p-4 space-y-2">
+            <h2 className="text-lg font-semibold text-teal-600">Charges</h2>
+            {["₹1200", "₹1000", "₹900", "Other"].map((charge) => (
+              <div key={charge} className="flex flex-col">
+                <label className="flex items-center text-sm">
+                  <input
+                    type="radio"
+                    name="serviceCharges"
+                    value={charge}
+                    checked={
+                      EnquiryForm.serviceCharges === charge ||
+                      (charge === "Other" &&
+                        !["₹1200", "₹1000", "₹900", "₹800"].includes(EnquiryForm.serviceCharges))
+                    }
+                    onChange={() =>
+                    
+                      {
+                        setEnquiryForm({...EnquiryForm,serviceCharges:charge === "Other" ? "" : charge}),setEnquiryMessage("")
+                      }
+                    }
+                    className="mr-2 accent-purple-600"
+                  />
+                  {charge}
+                </label>
+                {charge === "Other" &&
+                  !["₹1200", "₹1000", "₹900", "₹800"].includes(EnquiryForm.serviceCharges) && (
+                    <input
+                      type="text"
+                      placeholder="Enter Other Amount"
+                      className="mt-1 w-full border rounded-lg p-2 text-sm"
+                      value={EnquiryForm.serviceCharges}
+                onChange={(e) => {
+  const value = e.target.value;
+
+  setEnquiryForm({
+    ...EnquiryForm,
+    serviceCharges: value,
+  });
+
+  const numericValue = Number(value.replace(/[^0-9]/g, ""));
+
+  if (!numericValue) {
+    setEnquiryMessage("");
+    return;
+  }
+
+  if (numericValue < 800) {
+    setEnquiryMessage("Price Not Offerable");
+  } else {
+    setEnquiryMessage("");
+  }
+}}
+
+                    />
+                  )}
+              </div>
+            ))}
+            <div>
+                
+              <p>Registration Charger: 1500</p>
+              {DiscountStatus ? (
+                <button
+                  onClick={() => SetDiscountStatus(false)}
+                  className="px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg
+               hover:bg-teal-700 transition shadow-sm"
+                >
+                  Add Discount
+                </button>
+              ) : (
+                <input
+                  type="number"
+                  placeholder="Enter Registration discount"
+                  onChange={(e) => SetClientDiscount(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm
+               focus:outline-none focus:ring-2 focus:ring-teal-500 
+               text-gray-700"
+                />
+              )}
+
+
+            </div>
+            <div className="flex flex-col gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+
+              <p className="text-gray-700 text-sm font-medium">
+               Charge Per Day:{" "}
+                <span className="font-semibold text-teal-700">
+                  {EnquiryForm.serviceCharges}
+                </span>
+              </p>
+
+              <p className="text-gray-700 text-sm font-medium">
+                Registration Fee:{" "}
+                <span className="font-semibold text-teal-700">
+                  ₹{DiscountPrice - ClientDiscount}
+                </span>
+              </p>
+
+              <p
+                className="border border-teal-400 bg-teal-50 text-teal-800 
+               font-semibold rounded-lg px-4 py-3 shadow-sm 
+               flex items-center justify-between"
+              >
+                <span>Total Amount</span>
+                <span>
+                  ₹{EnquiryForm.serviceCharges === "Other"
+                    ? 1500
+                    : (parseFloat(EnquiryForm.serviceCharges.replace(/[^0-9.]/g, "")) || 0) +
+                    DiscountPrice -
+                    ClientDiscount}
+                </span>
+              </p>
+
+            </div>
+
+         
+          </div>
+             <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">Expected Service</label>
+         
+          <textarea
+            name="ExpectedService"
+            onChange={handleChange}
+            placeholder="Short call summary"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
+          />
+        </div>
+           <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">Reason for service</label>
+        
+          <textarea
+            name="Reasonforservice"
+            onChange={handleChange}
+            placeholder="Short call summary"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">Note</label>
+         
+          <textarea
+            name="ClientNote"
+            onChange={handleChange}
+            placeholder="Short call summary"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
+          />
+        </div>
+
+      </div>
+
+      <div className=" flex items-center justify-between w-full px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 sticky bottom-0">
+       <p className="text-red-500">{EnquiryMessage}</p>
+       <div>
+        <button
+          type="button"
+          onClick={() => setShowCallEnquiry(false)}
+          className="px-4 py-2 text-sm rounded-lg border text-gray-600 hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={UpdateCallEnquiry}
+          className="px-5 py-2 text-sm rounded-lg font-medium text-white bg-gray-900 hover:bg-gray-800"
+        >
+          Save Enquiry
+        </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+)}
+
 
 
          <div className="lg:col-span-4 space-y-4">
