@@ -216,3 +216,9 @@ export const UpdateAdminYearFilter=(Year:any)=>{
     }
 }
 
+export const CurrentLoginUser=(EmailResults:any)=>{
+    return{
+        type:"CurrentLoginUser",
+        payload:EmailResults
+    }
+}

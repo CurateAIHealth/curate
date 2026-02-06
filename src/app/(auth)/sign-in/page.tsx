@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Logo from '@/Components/Logo/page';
-import { SignInRessult } from '@/Lib/user.action';
+import { GetUserInformation, SignInRessult } from '@/Lib/user.action';
 import { Eye, EyeOff } from 'lucide-react';
 import { hashValue, verifySHA256 } from '@/Lib/Actions';
+import { CurrentLoginUser } from '@/Redux/action';
+import { useDispatch } from 'react-redux';
 
 export default function SignIn() {
   const router = useRouter();
@@ -16,7 +18,7 @@ export default function SignIn() {
     field_user: '',
     field_pass: ''
   });
-
+const dispatch=useDispatch()
  
   useEffect(() => {
     setLoginInfo({ field_user: '', field_pass: '' });
@@ -45,6 +47,8 @@ const hashed = hashValue( loginInfo.field_pass);
 
       if (Result.success===true) {
         localStorage.setItem("UserId", Result.userId);
+           const user = await GetUserInformation(Result.userId);
+           dispatch(CurrentLoginUser(user?.Email))
         setsigninStatus(true);
         router.push("/");
       } else {
