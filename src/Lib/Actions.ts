@@ -233,6 +233,15 @@ export const GeneratePDF = async (invoiceData:any) => {
     console.log("PDF Error ----", err);
   }
 };
+
+
+export   const toCamelCase = (value?: string | null) => {
+    if (!value) return "Not Provided";
+
+    return value
+      .toLowerCase()
+      .replace(/\b\w/g, char => char.toUpperCase());
+  };
 export const toProperCaseLive = (value?: string) => {
   const endsWithSpace = value?.endsWith(" ");
 

@@ -1,5 +1,8 @@
 "use client";
 
+
+
+import { toProperCaseLive } from "@/Lib/Actions";
 import { ClearEnquiry, GetUserInformation, UpdateClientStatusToProcessing } from "@/Lib/user.action";
 import {
   Phone,
@@ -7,7 +10,9 @@ import {
   Mail,
   CalendarDays,
   Trash2,
+  Send,
 } from "lucide-react";
+
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 
@@ -67,7 +72,13 @@ console.log("Check for Data Info=======",data)
 
     }
   };
+const SendWhatsAppConfirmation=()=>{
+  try{
 
+  }catch(err:any){
+    
+  }
+}
 const UpdatedFilterUserType = useMemo(() => {
   return data
     .filter((each) => {
@@ -93,6 +104,8 @@ const UpdatedFilterUserType = useMemo(() => {
     .reverse();
 }, [data, SearchMonth, SearchYear]);
 
+const GRID_COLS =
+  "grid-cols-[60px_1fr_1.2fr_1.2fr_2fr_120px_120px_60px]";
 
   
 
@@ -101,12 +114,7 @@ const UpdatedFilterUserType = useMemo(() => {
   
   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div>
-      <h2
-        className="text-2xl font-extrabold"
-        style={{ color: "#ff1493" }}
-      >
-        {title}
-      </h2>
+      
       <p className="text-sm text-gray-500 mt-1">
         Total enquiries: {UpdatedFilterUserType.length}
       </p>
@@ -163,89 +171,82 @@ if(Post.success){
   </div>
 
   
-  <div className="hidden md:grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1.2fr_2fr_1fr_60px] gap-4 px-4 py-2 text-xs font-semibold text-gray-500 border-b">
+<div
+  className={`hidden md:grid ${GRID_COLS} gap-4 bg-blue-500 px-4 py-3 text-xs font-semibold text-white border-b`}
+>
   <span>S.No</span>
   <span>Name</span>
   <span>Phone</span>
-  <span>Email</span>
   <span>Location</span>
   <span>Comments</span>
+  <span className="text-center">Message</span>
   <span>Date</span>
   <span className="text-center">Action</span>
 </div>
 
 
+
 {UpdatedFilterUserType.map((user, index) => (
-  <div
-    key={user._id}
-    className="border-b px-4 py-4 hover:bg-gray-50 transition"
-  >
-    <div className="hidden md:grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1.2fr_2fr_1fr_60px] gap-4 items-center text-sm">
-      
-      <span className="text-gray-500 font-medium">
-        {index + 1}
-      </span>
+ <div
+ key={index}
+  className={`hidden md:grid ${GRID_COLS} gap-4 items-center px-4 py-3 text-sm border-b`}
+>
+  <span className="text-gray-500 font-medium">
+    {index + 1}
+  </span>
 
-      <span className="font-medium text-gray-800">
-        {user.FirstName || "Not Provided"}
-      </span>
+  <span className="font-medium text-gray-800 truncate">
+    {toProperCaseLive(user.FirstName) || "Not Provided"}
+  </span>
 
-      <span className="flex items-center gap-1 text-gray-600">
-        <Phone size={12} color="#1392d3" />
-        {user.ContactNumber || "Awaiting Info"}
-      </span>
+  <span className="flex items-center gap-1 text-gray-600 truncate">
+    <Phone size={12} className="shrink-0" />
+    <span className="truncate">
+      {user.ContactNumber || "Awaiting Info"}
+    </span>
+  </span>
 
-      <span className="text-gray-600 truncate">
-        {user.Email || "Not Provided"}
-      </span>
+  <span className="flex items-center gap-1 text-gray-600 truncate">
+    <MapPin size={16} className="shrink-0 text-red-600" />
+    <span className="truncate">
+      {user.Location || "Not Provided"}
+    </span>
+  </span>
 
-      <span className="flex items-center gap-1 text-gray-600">
-        <MapPin size={12} color="#ff1493" />
-        {user.Location || "Not Provided"}
-      </span>
+  <span className="text-xs text-gray-500 truncate">
+    {toProperCaseLive(user.comments) || "No comments"}
+  </span>
 
-      <span className="text-xs text-gray-500 truncate">
-        {user.comments || "No comments"}
-      </span>
-
-      <span className="flex items-center gap-1 text-xs text-gray-400">
-        <CalendarDays size={12} />
-        {new Date(user.createdAt).toLocaleDateString()}
-      </span>
-
-      <button
-        onClick={() => handleDelete(user)}
-        className="flex justify-center p-2 rounded-lg hover:bg-red-50 transition"
-      >
-        <Trash2 size={16} color="#f10707" />
-      </button>
-    </div>
-
-    {/* Mobile Card */}
-    <div className="md:hidden space-y-2 text-sm">
-      <div className="flex justify-between items-center">
-        <span className="text-xs text-gray-400">#{index + 1}</span>
-        <button
-          onClick={() => handleDelete(user)}
-          className="p-2 rounded-lg hover:bg-red-50"
-        >
-          <Trash2 size={16} color="#f10707" />
-        </button>
-      </div>
-
-      <div className="font-semibold text-gray-800">
-        {user.FirstName || "Not Provided"}
-      </div>
-
-      <div className="text-gray-600">📞 {user.ContactNumber || "Awaiting Info"}</div>
-      <div className="text-gray-600">📧 {user.Email || "Not Provided"}</div>
-      <div className="text-gray-600">📍 {user.Location || "Not Provided"}</div>
-      <div className="text-xs text-gray-500">💬 {user.comments || "No comments"}</div>
-      <div className="text-xs text-gray-400">
-        📅 {new Date(user.createdAt).toLocaleDateString()}
-      </div>
-    </div>
+  <div className="flex justify-center">
+    <button className="flex items-center cursor-pointer gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap" onClick={SendWhatsAppConfirmation}>
+      <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 32 32"
+      width="18"
+      height="18"
+      fill="currentColor"
+    >
+      <path d="M16 2.9C8.8 2.9 3 8.7 3 15.9c0 2.5.7 4.9 2.1 7L3 29l6.3-2c2 1.1 4.3 1.7 6.7 1.7 7.2 0 13-5.8 13-12.9S23.2 2.9 16 2.9zm0 23.4c-2.1 0-4.2-.6-6-1.7l-.4-.2-3.7 1.2 1.2-3.6-.2-.4c-1.2-1.9-1.9-4.1-1.9-6.4 0-6.2 5.1-11.3 11.4-11.3 6.3 0 11.4 5.1 11.4 11.3 0 6.2-5.1 11.3-11.4 11.3zm6.2-8.5c-.3-.2-1.8-.9-2.1-1s-.5-.2-.8.2-1 1.2-1.2 1.4-.4.3-.7.1c-.3-.2-1.4-.5-2.6-1.6-1-.9-1.6-2-1.8-2.3-.2-.3 0-.5.2-.6.2-.2.3-.4.5-.6.2-.2.3-.4.4-.6.1-.2 0-.4 0-.6s-.8-2-1.1-2.8c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.4s-1.2 1.1-1.2 2.7 1.2 3.1 1.4 3.3c.2.2 2.4 3.6 5.9 5 3.4 1.3 3.4.9 4 .9s2-.8 2.3-1.5c.3-.7.3-1.3.2-1.5-.1-.2-.3-.3-.6-.5z" />
+    </svg>
+      Send
+    </button>
   </div>
+
+  <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
+    <CalendarDays size={12} />
+    {new Date(user.createdAt).toLocaleDateString()}
+  </span>
+
+  <div className="flex justify-center">
+    <button
+      onClick={() => handleDelete(user)}
+      className="p-2 rounded-lg hover:bg-red-50 transition"
+    >
+      <Trash2 size={16} className="text-red-600" />
+    </button>
+  </div>
+</div>
+
 ))}
 
 </div>

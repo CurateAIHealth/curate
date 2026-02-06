@@ -106,61 +106,67 @@ const router=useRouter()
 useEffect(() => {
   let mounted = true;
 
-const fetchData = async (forceFresh = false) => {
-  try {
-    const [
-      RegisterdUsers,
-      usersResult,
-      placementInfo,
-      ReplacementInfo,
-      TerminationInformation,
-    ] = await Promise.all([
-      GetRegidterdUsers(),
-      GetUsersFullInfo(),
-      GetDeploymentInfo(),
-      GetReplacementInfo(),
-      GetTerminationInfo(),
-    ]);
+  const fetchData = async (forceFresh = false) => {
+    try {
+      // 🔹 Use cache if available
+      if (
+        !forceFresh &&
+        cachedUsersFullInfo &&
+        cachedDeploymentInfo &&
+        cachedReplacementInfo &&
+        cachedTermination
+      ) {
+        setUsers([...cachedUsersFullInfo]);
+        setClientsInformation([...cachedDeploymentInfo]);
+        setReplacementInformation([...cachedReplacementInfo]);
+        SetterminationInfo([...cachedTermination]);
+        setIsChecking(false);
+        return;
+      }
 
-    if (!mounted) return;
+      const [
+        , // RegisteredUsers not required here
+        usersResult,
+        placementInfo,
+        replacementInfo,
+        terminationInfo,
+      ] = await Promise.all([
+        GetRegidterdUsers(),
+        GetUsersFullInfo(),
+        GetDeploymentInfo(),
+        GetReplacementInfo(),
+        GetTerminationInfo(),
+      ]);
 
-    if (forceFresh) {
-    
-      cachedUsersFullInfo = usersResult;
-      cachedDeploymentInfo = placementInfo??[];
-      cachedReplacementInfo = ReplacementInfo??[];
-      cachedTermination = TerminationInformation??[];
-    } else {
-   
-      cachedUsersFullInfo ||= usersResult;
+      if (!mounted) return;
 
-      cachedDeploymentInfo = placementInfo??[]
+      // 🔹 Update cache
+      cachedUsersFullInfo = usersResult ?? [];
+      cachedDeploymentInfo = placementInfo ?? [];
+      cachedReplacementInfo = replacementInfo ?? [];
+      cachedTermination = terminationInfo ?? [];
 
-      cachedReplacementInfo = ReplacementInfo??[];
+      setUsers(cachedUsersFullInfo);
+      setClientsInformation(cachedDeploymentInfo);
+      setReplacementInformation(cachedReplacementInfo);
+      SetterminationInfo(cachedTermination);
 
-      cachedTermination = TerminationInformation??[];
+      dispatch(UpdateSubHeading("On Service"));
+    } catch (err) {
+      console.error("Fetch error:", err);
+    } finally {
+      mounted && setIsChecking(false);
     }
+  };
 
-    setUsers([...cachedUsersFullInfo]);
-    setClientsInformation([...cachedDeploymentInfo]);
-    setReplacementInformation([...cachedReplacementInfo]);
-    SetterminationInfo([...cachedTermination]);
-    dispatch(UpdateSubHeading("On Service"));
-
-  } catch (err) {
-    console.error("Fetch error:", err);
-  } finally {
-    mounted && setIsChecking(false);
-  }
-};
-
-
-  fetchData();
+  // 🔹 Refresh only when needed
+  fetchData(!!refreshKey);
 
   return () => {
     mounted = false;
   };
 }, [refreshKey]);
+
 
 useEffect(() => {
   if (!selectedDate) {

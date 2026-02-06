@@ -33,7 +33,7 @@ import { HCAList } from '@/Redux/reducer';
 import WorkingOn from '@/Components/CurrentlyWoring/page';
 import axios from 'axios';
 import { setTimeout } from 'timers/promises';
-import { decrypt, encrypt } from '@/Lib/Actions';
+import { decrypt, encrypt, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
 import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 import { LoadingData } from '@/Components/Loading/page';
 import ReplacementsTable from '@/Components/ReplacementsTable/page';
@@ -50,9 +50,7 @@ export default function UserTableList() {
   const now = new Date();
   const SearchMonth = useSelector((state: any) => state.MonthFilterAdmin)
   const SearchYear = useSelector((state: any) => state.YearFilterAdmin)
-
-
-  const [SearchResult, setSearchResult] = useState("")
+const [SearchResult, setSearchResult] = useState("")
   const [search, setSearch] = useState('');
   const [AsignStatus, setAsignStatus] = useState("")
   const [LoginEmail, setLoginEmail] = useState("");
@@ -70,6 +68,78 @@ export default function UserTableList() {
   const UpdateduserType = useSelector((state: any) => state.ViewHCPList)
   const CurrentCount = useSelector((state: any) => state.updatedCount)
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
+const RESTRICTED_EMAILS = new Set([
+  "info@curatehealth.in",
+  "admin@curatehealth.in",
+  "tsiddu805@gmail.com",
+  "gouricurate@gmail.com",
+  "srivanikasham@curatehealth.in",
+  "sravanthicurate@gmail.com",
+  "srinivasnew0803@gmail.com",
+]);
+
+useEffect(() => {
+  let mounted = true;
+  const isInitialLoad = updatedStatusMsg === "";
+  const isSuccessUpdate = updatedStatusMsg?.includes("Successfully");
+
+  if (!isInitialLoad && !isSuccessUpdate) return;
+
+  const fetchFreshData = async () => {
+    try {
+      const userId = localStorage.getItem("UserId");
+      if (!userId) return;
+
+      setIsChecking(true);
+
+      const [profile, registeredUsers, fullInfo, deployedLength] = await Promise.all([
+        isSuccessUpdate ? GetUserInformation(userId) : (cachedUserInfo ?? GetUserInformation(userId)),
+        isSuccessUpdate ? GetRegidterdUsers() : (cachedRegisteredUsers ?? GetRegidterdUsers()),
+        isSuccessUpdate ? GetUsersFullInfo() : (cachedFullInfo ?? GetUsersFullInfo()),
+        isSuccessUpdate ? GetDeploymentInfo() : (cachedDeployed ?? GetDeploymentInfo()),
+      ]);
+
+      if (!mounted) return;
+
+      cachedUserInfo = profile;
+      cachedRegisteredUsers = registeredUsers;
+      cachedFullInfo = fullInfo;
+      cachedDeployed = deployedLength;
+
+      setUsers(registeredUsers);
+      setUserFirstName(profile?.FirstName);
+      setLoginEmail(profile?.Email);
+      setFullInfo(fullInfo);
+    } catch (e) {
+      console.error("Fetch error:", e);
+    } finally {
+      if (mounted) setIsChecking(false);
+    }
+  };
+
+  fetchFreshData();
+
+  return () => {
+    mounted = false;
+  };
+}, [updatedStatusMsg]);
+
+useEffect(() => {
+  const email = cachedUserInfo?.Email?.toLowerCase();
+  if (!email) return;
+
+  if (!RESTRICTED_EMAILS.has(email)) {
+    router.push("/");
+    return;
+  }
+
+  if (email === "info@curatehealth.in") {
+    dispatch(UpdateUserType("patient"));
+  } else if (email === "gouricurate@gmail.com") {
+    dispatch(UpdateUserType("healthcare-assistant"));
+  }
+}, [dispatch, router, cachedUserInfo]);
+
 
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
     setUpdatedStatusMsg(`Updating ${first} Contact Status....`);
@@ -300,83 +370,7 @@ export default function UserTableList() {
   // }, [updatedStatusMsg, CurrentClientStatus, UpdateduserType]);
 
 
-  useEffect(() => {
-    let mounted = true;
 
-    const fetchData = async () => {
-      try {
-        const userId = localStorage.getItem("UserId");
-        if (!userId) return;
-
-        const forceFresh = !!updatedStatusMsg;
-
-        const [
-          profile,
-          registeredUsers,
-          fullInfo,
-          deployedLength,
-        ] = await Promise.all([
-          forceFresh ? GetUserInformation(userId) : cachedUserInfo ?? GetUserInformation(userId),
-          forceFresh ? GetRegidterdUsers() : cachedRegisteredUsers ?? GetRegidterdUsers(),
-          forceFresh ? GetUsersFullInfo() : cachedFullInfo ?? GetUsersFullInfo(),
-          forceFresh ? GetDeploymentInfo() : cachedDeployed ?? GetDeploymentInfo(),
-        ]);
-
-        if (!mounted) return;
-
-        cachedUserInfo = profile;
-        cachedRegisteredUsers = registeredUsers;
-        cachedFullInfo = fullInfo;
-        cachedDeployed = deployedLength;
-
-        setUsers(registeredUsers);
-        setUserFirstName(profile?.FirstName);
-        setLoginEmail(profile?.Email);
-        setFullInfo(fullInfo);
-
-      } catch (e) {
-        console.error("Fetch error:", e);
-      } finally {
-        mounted && setIsChecking(false);
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      mounted = false;
-    };
-  }, [updatedStatusMsg]);
-
-
-
-  useEffect(() => {
-    if (!cachedUserInfo) return;
-
-    const email = cachedUserInfo.Email?.toLowerCase();
-
-    if (email === "info@curatehealth.in") {
-      dispatch(UpdateUserType("patient"));
-    } else if (email === "gouricurate@gmail.com") {
-      dispatch(UpdateUserType("healthcare-assistant"));
-    }
-
-    const restricted = [
-
-      "info@curatehealth.in",
-      "admin@curatehealth.in",
-      "tsiddu805@gmail.com",
-      "gouricurate@gmail.com",
-      "srivanikasham@curatehealth.in",
-      "sravanthicurate@gmail.com",
-      "srinivasnew0803@gmail.com",
-
-    ];
-
-    if (!restricted.includes(email)) {
-      router.push("/");
-    }
-  }, [dispatch, router]);
 
 
 
@@ -558,13 +552,7 @@ export default function UserTableList() {
       setUpdatedStatusMsg(err)
     }
   }
-  const toCamelCase = (value?: string | null) => {
-    if (!value) return "Not Provided";
 
-    return value
-      .toLowerCase()
-      .replace(/\b\w/g, char => char.toUpperCase());
-  };
 
 
   const ClientEnquiryUserInterFace = () => {
@@ -816,7 +804,7 @@ export default function UserTableList() {
                           /> */}
 
                                 <span className="font-semibold text-[#007B7F] truncate">
-                                  {toCamelCase(user.FirstName)}
+                                  {toProperCaseLive(user.FirstName)}
 
 
                                 </span>
@@ -835,7 +823,7 @@ export default function UserTableList() {
                           /> */}
 
                                 <span className="font-semibold text-[#007B7F] truncate">
-                                  {toCamelCase(user.PatientName)}
+                                  {toProperCaseLive(user.PatientName)}
 
 
                                 </span>
