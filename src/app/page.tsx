@@ -10,7 +10,7 @@ import { Sparkles, Star, Settings, User, LogIn, BriefcaseMedical, CircleEllipsis
 import FreeConsultationForm from '@/Components/Contactfill/page';
 import ContactSection from '@/Components/Contact/page';
 import ModernFooter from '@/Components/Footer/page';
-import { UpdateRegisterdType, UpdateTimeStamp } from '@/Redux/action';
+import { CurrentLoginUser, UpdateRegisterdType, UpdateTimeStamp } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
 import { LoadingData } from '@/Components/Loading/page';
 import { StaffEmails } from '@/Lib/Content';
@@ -63,6 +63,10 @@ const visibleReviews = showAllReviews
 
       const email = ProfileInformation?.Email?.toLowerCase();
       if (StaffEmails.includes(email)) {
+        
+                   const user = await GetUserInformation(localValue);
+                   console.log("Check Email-----",user?.Email)
+                   dispatch(CurrentLoginUser(user?.Email))
         router.push("/DashBoard");
         return;
       }

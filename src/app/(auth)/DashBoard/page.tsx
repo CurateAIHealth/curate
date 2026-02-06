@@ -31,6 +31,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { useDispatch, useSelector } from "react-redux";
 import {
+  CurrentLoginUser,
   Update_Main_Filter_Status,
   UpdateClient,
   UpdateTimeStamp,
@@ -88,7 +89,8 @@ const [BechListInfo,setBechListInfo]=useState<any>()
       const [benchSource, setBenchSource] = useState<any>(null);
   
 
-  const [loggedInEmail, setloggedInEmail] = useState<any>("")
+const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
+
   const [EnquiryForm, setEnquiryForm] = useState<any>({
     ClientName: "",
     CliecntContact: '',
@@ -127,7 +129,8 @@ const BENCH_CACHE_TTL = 10 * 60 * 1000;
           if (userId) {
       const user = await GetUserInformation(userId);
       if (mounted && user?.Email) {
-       setloggedInEmail(user?.Email)
+   
+         dispatch(CurrentLoginUser(user?.Email))
       }
     }
       const cachedStats = localStorage.getItem(DASHBOARD_CACHE_KEY);
@@ -820,7 +823,7 @@ const Switching = (name: string) => {
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard,
+      Hi Admin – Welcome to Admin Dashboard
     </span>
   </div>
 

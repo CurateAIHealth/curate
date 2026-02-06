@@ -295,3 +295,13 @@ export const AdminMonthFilter = (state: any = new Date(now.getFullYear(), now.ge
             return state
     }
 }
+
+
+export const LoginUserEmail=(state:any="tets",action:any)=>{
+    switch(action.type){
+case "CurrentLoginUser":
+    return action.payload;
+    default:
+        return state
+    }
+}
