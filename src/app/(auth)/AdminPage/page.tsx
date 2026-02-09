@@ -56,7 +56,7 @@ const [SearchResult, setSearchResult] = useState("")
   const [LoginEmail, setLoginEmail] = useState("");
   const [DeleteInformation, SetDeleteInformation] = useState<any>()
   const [ShowDeletePopUp, setShowDeletePopUp] = useState(false)
-  const Status = ["None", "Processing", "Converted", "Waiting List", "Lost",];
+  const Status = ["None",,"Converted", "Waiting List", "Lost",];
   const EmailVerificationStatus = ['Verified', 'Pending'];
   const CurrentStatusOptions = ["Active", "Sick", "Leave", "Terminated"];
 
@@ -385,10 +385,16 @@ useEffect(() => {
     try {
       setUpdatedStatusMsg("Please Wait Deleteing Client.....")
       const DeleteEnquiry = await ClearEnquiry(DeleteInformation.userId)
-  if (DeleteEnquiry?.success) {
-  setUpdatedStatusMsg("Client Deleted Successfully");
+if (DeleteEnquiry?.success) {
+  setUpdatedStatusMsg("Client Deleted Successfully")
 
+  const timer:any = setInterval(() => {
+    setShowDeletePopUp(false)
+  }, 2000)
+
+  return () => clearTimeout(timer)
 }
+
 
 
 

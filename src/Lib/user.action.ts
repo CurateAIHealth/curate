@@ -773,6 +773,8 @@ const endOfMonthFormatted = endOfMonth.toLocaleDateString("en-IN");
     const Invoice =await  collection.insertOne({
       Invoice:InvoiceNumber,
       DeployDate: new Date().toLocaleDateString("en-IN"),
+      ClienId:InvoiseInfo.userId,
+      SeriviceStartDate:  new Date().toLocaleDateString("en-IN"),
       ServiceEndDate: endOfMonthFormatted,
       Adress: InvoiseInfo.serviceLocation,
       ClientName:InvoiseInfo.FirstName,
@@ -1265,6 +1267,57 @@ export const CallEnquiryRegistration = async (HCA: any) => {
     throw err;
   }
 };
+export const PostCallEnquiryNotification = async (
+  NotificationInformation: any
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Notification");
+
+    const payload = {
+      clientName: NotificationInformation.ClientName,
+      clientContact: NotificationInformation.CliecntContact,
+      clientEmail: NotificationInformation.ClientEmail,
+
+      patientAge: NotificationInformation.patientAge,
+      patientGender: NotificationInformation.patientGender,
+      hcpPreferGender: NotificationInformation.HCPPreferGender,
+      preferredLanguage: NotificationInformation.PreferredLanguage,
+
+      clientArea: NotificationInformation.ClientArea,
+      clientNote: NotificationInformation.ClientNote,
+
+      serviceCharges: NotificationInformation.serviceCharges,
+      serviceType: NotificationInformation.ServiceType,
+      expectedService: NotificationInformation.ExpectedService,
+      reasonForService: NotificationInformation.Reasonforservice,
+
+      clientStatus: NotificationInformation.ClientStatus,
+      patientHealthCard: NotificationInformation.patientHealthCard,
+      EnquiryDate: new Date().toISOString().split("T")[0],
+
+      isRead: false,
+      createdAt: new Date(),
+    };
+
+    const result = await collection.insertOne(payload);
+
+    return {
+      success: true,
+      insertedId: result.insertedId,
+      message:"Notification Send Succesfully"
+    };
+  } catch (err: any) {
+    console.error("PostCallEnquiryNotification error:", err);
+
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+};
+
 
 
 export const PostFullRegistration = async (Info: any) => {
