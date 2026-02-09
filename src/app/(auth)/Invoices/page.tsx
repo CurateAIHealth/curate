@@ -674,7 +674,7 @@ CheckPaymentStatus:CurrentPaymentStatus
  +
         Number(inv.RegistrationFee);
 
-      const balance = Number(total) - Number(inv.AdvanceReceived);
+      const balance = Number(total) - Number(inv.AdvanceReceived||0);
 
       return (
         <div
