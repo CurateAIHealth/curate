@@ -234,8 +234,7 @@ const matchesSearchAndMonth = (
   };
 
 const GenerateBillPDF=async(Info:any)=>{
-console.log('Check for Paaa---',
-)
+
 const GetInvoiceList=await  GetInvoiceInfo();
 const getUserInvoiceInfo = GetInvoiceList?.filter(
   (each: any) =>
@@ -261,8 +260,9 @@ const getUserInvoiceInfo = GetInvoiceList?.filter(
     name: Info?.
       PatientName
   }
-console.log('Check For Patient Name------',payloadToDispatch)
+
   dispatch(UpdateInvoiceInfo(FinelInfo));
+  SetActionStatusMessage("")
      router.push("/MailInvoiceTemplate")
 }
 
@@ -906,7 +906,7 @@ const OmServiceView = () => {
 {ActionStatusMessage && (
   <p
     className={`mt-3 text-center text-sm font-medium ${
-      ActionStatusMessage .includes(" Sucessfull") 
+      ActionStatusMessage .includes("Sucessfull") 
         ? "text-green-700"
         : "text-gray-700"
     }`}
@@ -1509,6 +1509,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
   <button
     className="inline-block px-1 py-2 text-[9px] hover:bg-gray-100 hover:rounded-full font-medium cursor-pointer  text-white"
     onClick={() => {
+      SetActionStatusMessage("Please Wait......")
       GenerateBillPDF(c)
     }}
   >
