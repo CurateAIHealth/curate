@@ -163,7 +163,7 @@ export default function CallEnquiryForm() {
     FinelVerification: false,
     LeadDate: new Date().toISOString(),
     ServiceArea: '',
-    ClientStatus: "Processing",
+    ClientStatus: "Waiting List",
   });
   const [DiscountStatus, SetDiscountStatus] = useState(true)
   const [visible, setVisible] = useState(true);

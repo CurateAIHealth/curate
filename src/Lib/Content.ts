@@ -422,7 +422,7 @@ export const HYDERABAD_LOCATIONS = [
 // ];
 export const Main_Filters = ["Client Enquiry", "Placements", "Timesheet", "Referral Pay", "Payments"];
 
-export const ClientEnquiry_Filters = ["Processing", "Converted", "Waiting List", "Lost", "CallEnquiry" ];
+export const ClientEnquiry_Filters = ["CallEnquiry", "Converted", "Waiting List", "Lost",  ];
 
 export const Placements_Filters = ["On Service", "Replacements", "Termination"];
 
@@ -2302,9 +2302,10 @@ export const paymentData = [
 
 
 export  const serviceOptions = [
-  { name: "Healthcare Assistant Service", code: "HCAS", amount: 20000 },
+  // { name: "Healthcare Assistant Service", code: "HCAS", amount: 20000 },
   { name: "Nursing Care Service", code: "NURS", amount: 35000 },
-  { name: "Bedside Attendant", code: "BSA", amount: 15000 }
+  { name: "Bedside Attendant", code: "BSA", amount: 15000 },
+    { name: "Other", code: "Other", amount: 0 }
 ];
 
 

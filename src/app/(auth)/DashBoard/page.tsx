@@ -26,6 +26,7 @@ import {
   HelpCircle,
   Settings,
   Shield,
+  Minimize2,
 } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -38,7 +39,7 @@ import {
   UpdateUserInformation,
   UpdateUserType,
 } from "@/Redux/action";
-import { CallEnquiryRegistration, GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo } from "@/Lib/user.action";
+import { CallEnquiryRegistration, GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, PostCallEnquiryNotification } from "@/Lib/user.action";
 
 
 
@@ -46,13 +47,14 @@ import { CallEnquiryRegistration, GetDeploymentInfo, GetInvoiceInfo, GetRegidter
 
 
 import { UserCheck } from "lucide-react";
-import { Health_Card, healthcareServices, hyderabadAreas, IndianLanguages } from "@/Lib/Content";
+import { filterColors, Health_Card, healthcareServices, hyderabadAreas, IndianLanguages } from "@/Lib/Content";
 
 import PermissionDeniedPopup from "@/Components/Permission/page";
 import ProfileDrawer from "@/Components/ProfileView/page";
 import MarkAttendance from "@/Components/EmployAttendence/page";
 import axios from "axios";
 import PostExpense from "@/Components/Expences/page";
+import StaffNotificationModal from "@/Components/CallEnquiryNotification/page";
 
 const DOCUMENT_KEYS = [
   "AadharAttachmentURL",
@@ -74,6 +76,8 @@ export default function Dashboard() {
   const updatedRefresh = useSelector((afterEach: any) => afterEach.updatedCount);
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
   const [OtherArea,setOtherArea]=useState<any>("")
+  const [NotificationStatus,setNotificationStatus]=useState('')
+  const [ShowNotification,setShowNotification]=useState(false)
     const [DiscountStatus, SetDiscountStatus] = useState(true)
   const [showAccessDenied, setShowAccessDenied] = useState(false);
   const [showCallEnquiry, setShowCallEnquiry] = useState(false);
@@ -109,7 +113,8 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
     ServiceType:"",
     patientHealthCard:"",
     ExpectedService:"",
-    Reasonforservice:""
+    Reasonforservice:"",
+    ClientStatus:"",
   })
     const [showHealthCardSuggestions, setShowHealthCardSuggestions] =
     useState(false);
@@ -371,6 +376,7 @@ const pendingPdr = timesheets.filter((t: any) => {
 
 
   const handleChange = (e: any) => {
+    
     try {
       const name = e.target.name
       const value = e.target.value
@@ -479,6 +485,10 @@ const pendingPdr = timesheets.filter((t: any) => {
   const UpdateCallEnquiry = async () => {
     setEnquiryMessage("Please Wait.....")
     try {
+      if(!EnquiryForm.ClientStatus){
+        setEnquiryMessage("Pleae Update Call Enquiry Status")
+        return
+      }
       const generatedUserId = uuidv4()
        const payload: any = {
       userType: "CallEnquiry",
@@ -509,9 +519,13 @@ const pendingPdr = timesheets.filter((t: any) => {
       if (registrationResult.success === true) {
         setEnquiryMessage("Client Enquiry Registered Successfully");
 
-        setTimeout(() => {
-          setShowCallEnquiry(false);
-        }, 3500);
+        if((EnquiryForm.ClientStatus!="Waiting List")||(EnquiryForm.ClientStatus!="Lost")){
+setShowNotification(true)
+        }
+
+        // setTimeout(() => {
+        //   setShowCallEnquiry(false);
+        // }, 3500);
       }
 
     } catch (err: any) {
@@ -864,7 +878,17 @@ const Switching = (name: string) => {
   }
 };
 
+const PostNotificationInfo=async()=>{
+try{
+  setNotificationStatus("Please Wait.....")
+const PostinNotification:any=PostCallEnquiryNotification(EnquiryForm)
+if(PostinNotification.success){
+setNotificationStatus( PostinNotification.message)
+}
+}catch(err:any){
 
+}
+}
 
 
 
@@ -909,7 +933,7 @@ const Switching = (name: string) => {
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard
+      Hi Admin – Welcome to Admin Dashboard.
     </span>
   </div>
 
@@ -1682,6 +1706,8 @@ const Switching = (name: string) => {
          
           </div>
              <div>
+            
+            
           <label className="block text-xs font-medium text-gray-500 mb-1">Expected Service</label>
          
           <textarea
@@ -1711,12 +1737,45 @@ const Switching = (name: string) => {
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
           />
         </div>
+   <p className="text-lg  font-semibold text-gray-800 m-2 flex">Update Call Enquiry Status</p>
+                          <div className="flex  gap-4 m-2">
+              
+                            {["Save","Send","Lost", "Waiting List",].map((each: string, i: number) => (
+                              <button
+                                key={i}
+                                type="button"
+                                name="ClientStatus"
+                                className={` md:px-1 px-1 text-[15px] md:text-[15px]  sm:py-2 text-center ${each === EnquiryForm.ClientStatus && "border-2"
+                                  } h-7 md:h-10 rounded-md shadow cursor-pointer ${filterColors[each] || "bg-gray-200 text-gray-800"
+                                  }`}
+                              
+                                onClick={
+                                  () => setEnquiryForm({ ...EnquiryForm, ClientStatus: each })
+                                }
 
+
+                              >
+                                {each}
+                              </button>
+                            ))}
+                          </div>
       </div>
+      {ShowNotification&&
+<StaffNotificationModal
+  open={ShowNotification}
+  subMessage={NotificationStatus}
+  onClose={() => setShowNotification(false)}
+  onSend={() => {
+   PostNotificationInfo
+  }}
+/>
+
+
+      }
 
       <div className=" flex items-center justify-between w-full px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 sticky bottom-0">
        <p className="text-red-500">{EnquiryMessage}</p>
-       <div>
+       <div className="flex gap-4">
         <button
           type="button"
           onClick={() => setShowCallEnquiry(false)}

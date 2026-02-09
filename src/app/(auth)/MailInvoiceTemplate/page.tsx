@@ -7,7 +7,7 @@ import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { SaveInvoiceData, UpdateInvoice, UpdateInvoiceData } from "@/Lib/user.action";
-import { Plus } from "lucide-react";
+import { Plus,CircleX } from "lucide-react";
 import { paymentData, serviceOptions } from "@/Lib/Content";
 
 
@@ -23,6 +23,13 @@ export default function InvoiceForm() {
   const [discountValue, setDiscountValue] = useState<any>();
   const [roundType, setRoundType] = useState<RoundType>("none");
   const [Mailstatus,setMailstatus]=useState(true)
+  const [selectedService, setSelectedService] = useState<any>(null);
+const [otherService, setOtherService] = useState({
+  name: "",
+  code:"Other",
+  amount: "",
+});
+
   const Router=useRouter()
   
   const [ShowMailTemplate, setShowMailTemplate] = useState(true);
@@ -48,11 +55,12 @@ const [selected, setSelected] = useState<any>({
 
   const days = getDaysBetween(start, end);
   const perDay = Number(InvoiceData?.CareTakeCharge?.replace("₹", "") || 0);
+
   const regFee = Number(InvoiceData?.RegistrationFee || 0);
   const advance = Number(InvoiceData?.AdvanceReceived || 0);
 
 
-  const baseTotal = days * perDay + regFee;
+  const baseTotal = Number(days) * Number(perDay) + Number(regFee);
 
   const discountAmount =
     discountType === "percent"
@@ -67,13 +75,13 @@ const [selected, setSelected] = useState<any>({
   // if (roundType === "down") finalTotal = Math.floor(rawTotal);
   // if (roundType === "nearest") finalTotal = Math.round(rawTotal);
 const [services, setServices] = useState([
-    { name: "Healthcare Assistant Service", code: "HCAS",amount:Number(baseTotal) },
+    { name: "Healthcare Assistant Service", code: "HCAS",amount:Number(days) * Number(perDay)},
   ]);
   const roundingDifference = finalTotal - rawTotal;
   const balanceDue:any = finalTotal - advance;
 
   const invoice = {
-    number: InvoiceData?.id,
+    number: InvoiceData?.id||InvoiceData?.Invoice,
     date: InvoiceData?.StartDate,
     dueDate: InvoiceData?.ServiceEndDate,
     serviceFrom: InvoiceData?.StartDate,
@@ -165,6 +173,10 @@ const TaxAmount:any=balanceDue.toFixed(2)*Number(selected?.tdsRate?.replace("%",
     totals,
   };
 
+const serviceAmount = services.reduce(
+  (total: number, service: any) => total + Number(service.amount || 0),
+  0
+);
 
 const handleSubmit = async () => {
   setIsSending(true);   
@@ -299,6 +311,27 @@ if(UpdateInvoiceStatus?.success===true){
 const NavigatetoInvoices=()=>{
   Router.push("/Invoices")
 }
+const removeService = (code: string) => {
+  setServices((prev: any[]) =>
+    prev.filter(service => service.code !== code)
+  );
+};
+const addOtherService = () => {
+  if (!otherService.name || !otherService.amount) return;
+
+  setServices((prev: any[]) => [
+    ...prev,
+    {
+      name: otherService.name,
+      code: "Other",
+      amount: Number(otherService.amount),
+    },
+  ]);
+
+  
+  setOtherService({ name: "",   code:"Other",amount: "" });
+  setSelectedService(null);
+};
 
 
 
@@ -426,11 +459,12 @@ const NavigatetoInvoices=()=>{
                 <InfoField label="Address" value={billTo.addressLines} />
               </div>
 
-              <div className="border-t border-slate-100 px-6 py-3 grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50/70">
+              <div className="border-t border-slate-100 px-6 py-3 grid grid-cols-2 md:grid-cols-5 gap-3 bg-slate-50/70">
                 <StatItem label="Invoice Date" value={invoice.date || "--"} />
                 <StatItem label="Due Date" value={invoice.dueDate || "--"} />
                 <StatItem label="Service From" value={invoice.serviceFrom || "--"} />
                 <StatItem label="Service To" value={invoice.serviceTo || "--"} />
+                 <StatItem label="Days" value={days|| "--"} />
               </div>
             </div>
 
@@ -452,6 +486,7 @@ const NavigatetoInvoices=()=>{
                       <Th>Service Code</Th>
                       <Th>Change Service</Th>
                       <Th>Amount</Th>
+                      <Th>Remove</Th>
                     </tr>
                   </thead>
                   <tbody>
@@ -473,14 +508,22 @@ const NavigatetoInvoices=()=>{
                             ))}
                           </select>
                         </Td>
-                        <Td className="font-mono text-xs text-slate-600">{srv.amount}</Td>
+                        <Td className="font-mono text-xs text-slate-600">{srv.name==="Healthcare Assistant Service"?Number(days) * Number(perDay):srv.amount}</Td>
+<Td className="font-mono text-xs text-slate-600 cursor-pointer">
+  <CircleX
+    className="text-red-600 hover:bg-gray-300 rounded-full p-0.5"
+    onClick={() => removeService(srv.code)}
+  />
+</Td>
+
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-             
-             <Plus  className="bg-teal-800 p-2 ml-2 mb-2 rounded-md text-white cursor-pointer h-8 w-8" onClick={()=>setShowServices(!ShowServices)}/>
+             <div className="flex items-center justify-between w-[90%]">
+              <div> 
+                           <Plus  className="bg-teal-800 p-2 ml-2 mb-2 rounded-md text-white cursor-pointer h-8 w-8" onClick={()=>setShowServices(!ShowServices)}/>
              {ShowServices&&
                 
                       <tr className="border-t border-slate-100 hover:bg-slate-50/60">
@@ -494,14 +537,18 @@ const NavigatetoInvoices=()=>{
     );
     if (!selected) return;
 
-    setServices((prev: any) => [
-      ...prev,
-      {
-        name: selected.name,
-        code: selected.code,
-        amount: selected.amount, 
-      },
-    ]);
+    setSelectedService(selected);
+
+    if (selected.name !== "Other") {
+      setServices((prev: any[]) => [
+        ...prev,
+        {
+          name: selected.name,
+          code: selected.code,
+          amount: selected.amount,
+        },
+      ]);
+    }
   }}
 >
   <option value="">Select Service</option>
@@ -511,13 +558,59 @@ const NavigatetoInvoices=()=>{
     </option>
   ))}
 </select>
+{selectedService?.name === "Other" && (
+  <div className="mt-3 grid grid-cols-3 gap-3">
+    <input
+      type="text"
+      placeholder="Service Name"
+      className="border border-slate-200 text-sm px-2 py-1 rounded-lg"
+      value={otherService.name}
+      onChange={(e) =>
+        setOtherService(prev => ({ ...prev, name: e.target.value }))
+      }
+    />
+
+    <input
+      type="number"
+      placeholder="Amount"
+      className="border border-slate-200 text-sm px-2 py-1 rounded-lg"
+      value={otherService.amount}
+      onChange={(e) =>
+        setOtherService(prev => ({ ...prev, amount: e.target.value }))
+      }
+    />
+  <button
+  onClick={addOtherService}
+  disabled={!otherService.name || !otherService.amount}
+  className={`mt-3 w-full text-sm cursor-pointer font-semibold py-2.5 rounded-lg transition
+    ${
+      !otherService.name || !otherService.amount
+        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+        : "bg-teal-600 text-white hover:bg-teal-700"
+    }`}
+>
+  Add Service
+</button>
+
+  </div>
+)}
 
 </Td>
 
 
                       </tr>
                     }
-            
+
+                    </div>
+                  <p className="mt-4 text-right text-sm text-slate-600">
+  Total:
+  <span className="ml-2 font-semibold text-teal-700">
+    ₹ {serviceAmount}
+  </span>
+</p>
+
+            </div>
+
             </div>
           </div>
 
@@ -532,6 +625,7 @@ const NavigatetoInvoices=()=>{
                   </p>
                   <h2 className="text-lg font-semibold text-slate-900 mt-1">
                     Invoice Amount
+         
                   </h2>
                 </div>
      
@@ -615,7 +709,9 @@ const NavigatetoInvoices=()=>{
                   ₹{Number(rawTotal)}/-
                 </KeyRow>
 
-              
+               <KeyRow label="Registration Fee">
+                  ₹{regFee}/-
+                </KeyRow>
 
                 <KeyRow label="Advance Received">
                   ₹{advance}/-

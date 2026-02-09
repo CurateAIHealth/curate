@@ -9,7 +9,7 @@ import React, { useEffect, useState } from "react";
 import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X } from "lucide-react";
 import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
-import { UpdateClient, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
+import { UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
 import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
@@ -233,7 +233,38 @@ const matchesSearchAndMonth = (
     }
   };
 
+const GenerateBillPDF=async(Info:any)=>{
+console.log('Check for Paaa---',
+)
+const GetInvoiceList=await  GetInvoiceInfo();
+const getUserInvoiceInfo = GetInvoiceList?.filter(
+  (each: any) =>
+    each?.Email === Info?.email ||
+    each?.contact === Info?.contact
+) || [];
 
+  const selectedInvoice = getUserInvoiceInfo?.[0];
+
+  const ArgumentInfo = {
+    ...selectedInvoice,
+    StartDate: Info?.StartDate,
+  };
+
+  const payloadToDispatch =
+    selectedInvoice?.StartDate
+      ? selectedInvoice
+      : ArgumentInfo;
+      console.log('CaretTakerCharge-----',Info)
+  const FinelInfo = {
+    ...payloadToDispatch,
+    CareTakeCharge:Info?.CareTakeChare||Info?.ServiceCharge,
+    name: Info?.
+      PatientName
+  }
+console.log('Check For Patient Name------',payloadToDispatch)
+  dispatch(UpdateInvoiceInfo(FinelInfo));
+     router.push("/MailInvoiceTemplate")
+}
 
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
 const normalizedAttendance =
@@ -329,7 +360,7 @@ const normalizedAttendance =
       confirmDelete(selectedReason);
     }
   };
-
+console.log('Check for Task-----',selectedClient)
   const UpdateAssignHca = async () => {
   try {
    
@@ -392,39 +423,86 @@ const normalizedAttendance =
     const placementInfo = await GetTimeSheetInfo();
     const invoiceNumber = `BSV${now.getFullYear()}_${(placementInfo?.length || 0) + 1}`;
 
-    const response = await TestInsertTimeSheet(
-      todayDate,
-      lastDateOfMonth,
-      "Active",
-      address,
-      clientContact,
-      clientName,
-      patientName,
-      patientPhone,
-      source,
-      hcaUserId,
-      clientId,
-      hcaName,
-      hcaContact,
-      "Google",
-      "Not Provided",
-      "PP",
-      "21000",
-      "700",
-      "1800",
-      "900",
-      currentMonth,
-      ["P"],
-      timestamp,
-      invoiceNumber,
-      Type
-    );
+    // const response = await TestInsertTimeSheet(
+    //   todayDate,
+    //   lastDateOfMonth,
+    //   "Active",
+    //   address,
+    //   clientContact,
+    //   clientName,
+    //   patientName,
+    //   patientPhone,
+    //   source,
+    //   hcaUserId,
+    //   clientId,
+    //   hcaName,
+    //   hcaContact,
+    //   "Google",
+    //   "Not Provided",
+    //   "PP",
+    //   "21000",
+    //   "700",
+    //   "1800",
+    //   "900",
+    //   currentMonth,
+    //   ["P"],
+    //   timestamp,
+    //   invoiceNumber,
+    //   Type
+    // );
+const StarteDate=new Date(selectedDate).toLocaleDateString("en-In")
+    const LastDate=new Date(lastDateOfMonth).toLocaleDateString("en-In")
+   const attendance = [
+        {
+          AttendenceDate: today,
+          HCPAttendence: true,
+          AdminAttendece: true,
+        },
+      ];
+      const ClientAttendece = [
+        {
+          AttendenceDate: today,
+          AttendeceStatus: "Present"
+        }
+      ]
+  const GetInfo=await  GetUserInformation(selectedClient.Client_Id)
+const SelectedCareTakerCharges=GetInfo.serviceCharges
+   
+     const deploymentRes = await InsertDeployment(
+        StarteDate,
+        LastDate,
+        "Active",
+        selectedClient.Address,
+        selectedClient.contact,
+        selectedClient.name,
+        selectedClient.PatientName,
+        selectedClient.Patient_PhoneNumber,
+        selectedClient.RreferralName,
+        selectedAssignHCP.userId,
+        selectedClient.Client_Id,
+        selectedAssignHCP.FirstName,
+        selectedAssignHCP.Contact,
+        "Google",
+        "Not Provided",
+        "PP",
+        "21000",
+        "700",
+        "1800",
+        SelectedCareTakerCharges,
+        currentMonth,
+        attendance,
+        TimeStampInfo,
+        ExtendInfo.invoice,
+        ExtendInfo.Type,
+        SelectedCareTakerCharges,
+        ClientAttendece
+      );
 
-    if (!response?.success) {
-      throw new Error(response?.message || "Failed to assign HCA.");
+    if (!deploymentRes?.success) {
+      throw new Error(deploymentRes?.message || "Failed to assign HCA.");
     }
 
-    SetActionStatusMessage(response.message);
+    SetActionStatusMessage(deploymentRes.message);
 
     // Optional navigation / refresh (enable if needed)
     // dispatch(UpdateRefresh(1));
@@ -935,7 +1013,7 @@ const OmServiceView = () => {
       {enableStatus ? "Disable Generate Bill" : "Enable Generate Bill"}
     </button>
   </div>
-  {showPaymentModal && billingRecord && (
+  {/* {showPaymentModal && billingRecord && (
   <PaymentModal
     record={billingRecord}
     onClose={() => {
@@ -946,7 +1024,7 @@ const OmServiceView = () => {
       console.log("Saving billing:", billingResult);
     }}
   />
-)}
+)} */}
 
   {ClientsInformation.length === 0 && (
     <div className="flex flex-col items-center justify-center gap-6 h-[60vh] mt-10 rounded-3xl bg-white/60 backdrop-blur-lg border border-gray-200 shadow-2xl p-12">
@@ -1431,8 +1509,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
   <button
     className="inline-block px-1 py-2 text-[9px] hover:bg-gray-100 hover:rounded-full font-medium cursor-pointer  text-white"
     onClick={() => {
-      setBillingRecord(c);
-      setShowPaymentModal(true);
+      GenerateBillPDF(c)
     }}
   >
 <FilePenLine  size={19} className="text-teal-600" />
@@ -1558,9 +1635,10 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
                      focus:border-emerald-600"
           value={selectedHCP?.userId || ""}
         onChange={(e) => {
-    const selected = HCA_List.find(
+    const selected:any = HCA_List.find(
       (hca) => hca.userId === e.target.value
     );
+  
     setselectedAssignHCP(selected);
   }}
 >
@@ -1573,15 +1651,16 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
   ))}
         </select>
 
-        {selectedHCP && (
+        {selectedAssignHCP && (
           <div className="text-xs text-gray-600">
             Selected:{" "}
             <span className="font-medium text-gray-900">
-              {selectedHCP.FirstName}
+              {selectedAssignHCP.FirstName}
             </span>
           </div>
         )}
       </div>
+    
 {ActionStatusMessage && (
   <p
     className={`mt-3 text-center text-sm font-medium ${
