@@ -421,7 +421,7 @@ if (DeleteEnquiry?.success) {
 
   const UpdateMainFilterValues = () => {
     switch (UpdateMainFilter) {
-      case "Client Enquiry":
+      case "Call Enquiry":
 
         return ClientEnquiry_Filters;
       case "Deployment":
@@ -447,7 +447,7 @@ if (DeleteEnquiry?.success) {
   }
   const ContetUserInterface = () => {
     switch (UpdateMainFilter) {
-      case "Client Enquiry":
+      case "Call Enquiry":
       case "HCP List":
         return ClientEnquiryUserInterFace()
       case "Deployment":
@@ -1214,7 +1214,7 @@ if (DeleteEnquiry?.success) {
           </div>
 
           <div className='flex gap-2 items-center'>
-            {(UpdateMainFilter === "Client Enquiry" || UpdateMainFilter === "HCP List")
+            {(UpdateMainFilter === "Call Enquiry" || UpdateMainFilter === "HCP List")
               && <div
                 className="
       flex items-center bg-white shadow-md rounded-xl
@@ -1315,7 +1315,7 @@ if (DeleteEnquiry?.success) {
 </div> */}
 
               <div className="flex gap-2 flex-wrap w-full items-center">
-                {UpdateMainFilter === "Client Enquiry" && <div className="flex gap-2 flex-wrap">
+                {UpdateMainFilter === "Call Enquiry" && <div className="flex gap-2 flex-wrap">
 
                   {UpdateMainFilterValues().map((each: any, index: any) => (
                     <button
@@ -1326,7 +1326,7 @@ if (DeleteEnquiry?.success) {
                         }`}
                     >
                       {
-                        UpdateMainFilter === "Client Enquiry"
+                        UpdateMainFilter === "Call Enquiry"
                           ? `${each} (${MonthlyCount?.filter(
                             (Try) => Try.ClientStatus === each || Try.userType === each
                           )?.length || 0
