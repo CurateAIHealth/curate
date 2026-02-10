@@ -66,7 +66,7 @@ case "UpdateSuHeading":
 }
 
 
-export const Admin_Main_Filter = (state: any = "Client Enquiry", action: any) => {
+export const Admin_Main_Filter = (state: any = "Call Enquiry", action: any) => {
     switch (action.type) {
         case "Update_Main_Filter":
             return action.payload;

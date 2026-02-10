@@ -389,7 +389,7 @@ const pendingPdr = timesheets.filter((t: any) => {
   const tabs = useMemo(
     () => [
       {
-        name: "Client Enquiry",
+        name: "Call Enquiry",
         count: stats.registeredUsers,
         icon: Bell,
         bg: "bg-blue-500",
@@ -738,7 +738,7 @@ const handleLanguageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   }
   // };
 const TAB_ACCESS_CONTROL: Record<string, string[]> = {
-  "Client Enquiry": [
+  "Call Enquiry": [
     "tsiddu805@gmail.com",
     "info@curatehealth.in",
   ],
@@ -834,7 +834,7 @@ const Switching = (name: string) => {
 
   
   switch (name) {
-    case "Client Enquiry":
+    case "Call Enquiry":
     case "Deployment":
     case "Timesheet":
       dispatch(Update_Main_Filter_Status(name));
@@ -851,7 +851,6 @@ const Switching = (name: string) => {
     case "Pending PDR":
       router.push("/PDRView");
       break;
-
     case "Vendors":
       router.push("/VendorsPanel");
       break;
@@ -933,7 +932,7 @@ setNotificationStatus( PostinNotification.message)
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard,
+      Hi Admin – Welcome to Admin Dashboard
     </span>
   </div>
 
@@ -1198,7 +1197,7 @@ setNotificationStatus( PostinNotification.message)
   className="cursor-pointer"
   key={tab.name}
    onClick={
-                      () => {if(tab.name!=="Client Enquiry"){Switching(tab.name)}}
+                      () => {if(tab.name!=="Call Enquiry"){Switching(tab.name)}}
                     }
 >
 
@@ -1217,7 +1216,7 @@ setNotificationStatus( PostinNotification.message)
 <p
   className="mt-2 sm:mt-3 text-xs sm:text-sm hover:underline font-semibold cursor-pointer text-gray-900 text-center"
     onClick={
-                      () => {if(tab.name==="Client Enquiry"){Switching(tab.name)}}
+                      () => {if(tab.name==="Call Enquiry"){Switching(tab.name)}}
                     }
 >
   {tab.name}
@@ -1255,9 +1254,9 @@ setNotificationStatus( PostinNotification.message)
                       </div>
                     </div> */}
 
-                    {tab.name === "Client Enquiry" && (
+                    {tab.name === "Call Enquiry" && (
                       <div className="flex items-center gap-2">
-                        <button
+                        {/* <button
                         type="button"
                           onClick={UpdateNewLead}
                           className="rounded-md cursor-pointer text-xs px-2 py-1
@@ -1266,7 +1265,7 @@ setNotificationStatus( PostinNotification.message)
       hover:from-teal-400 transition"
                         >
                           + New Lead
-                        </button>
+                        </button> */}
 
                         <button
                         type="button"
