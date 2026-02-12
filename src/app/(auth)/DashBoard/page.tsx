@@ -47,7 +47,7 @@ import { CallEnquiryRegistration, GetDeploymentInfo, GetInvoiceInfo, GetRegidter
 
 
 import { UserCheck } from "lucide-react";
-import { filterColors, Health_Card, healthcareServices, hyderabadAreas, IndianLanguages } from "@/Lib/Content";
+import { filterColors, Health_Card, healthcareServices, healthcareServicesforCallEnquiry, hyderabadAreas, hyderabadAreasforcallEnquiry, IndianLanguages, LeadSources, StaffEmails } from "@/Lib/Content";
 
 import PermissionDeniedPopup from "@/Components/Permission/page";
 import ProfileDrawer from "@/Components/ProfileView/page";
@@ -96,16 +96,18 @@ const [BechListInfo,setBechListInfo]=useState<any>()
   const [suggestions, setSuggestions] = useState<string[]>([]);
 const [languageInput, setLanguageInput] = useState("");
 const [languageOptions, setLanguageOptions] = useState<string[]>([]);
-
+const [showLeadSuggestions, setShowLeadSuggestions] = useState(false);
+const [filteredLeads, setFilteredLeads] = useState<string[]>([])
 const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
   const [EnquiryForm, setEnquiryForm] = useState<any>({
     ClientName: "",
-    CliecntContact: '',
+    ClientContact: '',
     ClientEmail: '',
     patientAge:"",
     patientGender:'',
     HCPPreferGender:"",
+    NewLead:"",
     PreferredLanguage:"",
     ClientArea: '',
     ClientNote: "",
@@ -495,14 +497,14 @@ const pendingPdr = timesheets.filter((t: any) => {
       userId: generatedUserId,
 
       FirstName: EnquiryForm.ClientName || "",
-      ContactNumber: EnquiryForm.CliecntContact || "",
+      ContactNumber: EnquiryForm.ClientContact || "",
       Email: EnquiryForm.ClientEmail || "",
 
       patientAge: EnquiryForm.patientAge || "",
       patientGender: EnquiryForm.patientGender || "",
       HCPPreferGender: EnquiryForm.HCPPreferGender || "",
       PreferredLanguage: EnquiryForm.PreferredLanguage || "",
-
+NewLead:EnquiryForm.NewLead||'',
       Location: EnquiryForm.ClientArea || "",
       ServiceType: EnquiryForm.ServiceType || "",
       HealthCard: EnquiryForm.patientHealthCard || "",
@@ -519,13 +521,13 @@ const pendingPdr = timesheets.filter((t: any) => {
       if (registrationResult.success === true) {
         setEnquiryMessage("Client Enquiry Registered Successfully");
 
-        if((EnquiryForm.ClientStatus!="Waiting List")||(EnquiryForm.ClientStatus!="Lost")){
-setShowNotification(true)
-        }
+//         if((EnquiryForm.ClientStatus!="Waiting List")||(EnquiryForm.ClientStatus!="Lost")){
+// setShowNotification(true)
+//         }
 
-        // setTimeout(() => {
-        //   setShowCallEnquiry(false);
-        // }, 3500);
+        setTimeout(() => {
+          setShowCallEnquiry(false);
+        }, 3500);
       }
 
     } catch (err: any) {
@@ -597,7 +599,7 @@ const handleAreaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     return;
   }
 
-  const filtered = hyderabadAreas.filter(area =>
+  const filtered = hyderabadAreasforcallEnquiry.filter(area =>
     area.toLowerCase().includes(text.toLowerCase())
   );
 
@@ -877,12 +879,21 @@ const Switching = (name: string) => {
   }
 };
 
-const PostNotificationInfo=async()=>{
+const PostNotificationInfo=async(Emails: string[])=>{
 try{
   setNotificationStatus("Please Wait.....")
-const PostinNotification:any=PostCallEnquiryNotification(EnquiryForm)
+   const RegistrationFee= DiscountPrice - ClientDiscount
+const PostinNotification:any=await PostCallEnquiryNotification(EnquiryForm,Emails,RegistrationFee)
+console.log('Chec Retuen Info-----',PostinNotification)
+
+
 if(PostinNotification.success){
-setNotificationStatus( PostinNotification.message)
+setNotificationStatus("Notification Send Succesfully")
+ setTimeout(() => {
+  setNotificationStatus("")
+          setShowNotification(false);
+        }, 2000);
+
 }
 }catch(err:any){
 
@@ -1256,7 +1267,7 @@ setNotificationStatus( PostinNotification.message)
 
                     {tab.name === "Call Enquiry" && (
                       <div className="flex items-center gap-2">
-                        {/* <button
+                        <button
                         type="button"
                           onClick={UpdateNewLead}
                           className="rounded-md cursor-pointer text-xs px-2 py-1
@@ -1265,7 +1276,7 @@ setNotificationStatus( PostinNotification.message)
       hover:from-teal-400 transition"
                         >
                           + New Lead
-                        </button> */}
+                        </button>
 
                         <button
                         type="button"
@@ -1442,6 +1453,52 @@ setNotificationStatus( PostinNotification.message)
               ))}
             </div>
           </div>
+        <div className="relative">
+  <label className="block text-xs font-medium text-gray-500 mb-2">
+    Lead Source 
+  </label>
+
+  <input
+    type="text"
+    value={EnquiryForm.NewLead}
+    placeholder="Type Lead Source"
+    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
+    onChange={(e) => {
+      const value = e.target.value;
+
+      setEnquiryForm({ ...EnquiryForm, NewLead: value });
+
+      if (!value.trim()) {
+        setShowLeadSuggestions(false);
+        return;
+      }
+
+      const results = LeadSources.filter((item) =>
+        item.toLowerCase().includes(value.toLowerCase())
+      );
+
+      setFilteredLeads(results);
+      setShowLeadSuggestions(results.length > 0); 
+    }}
+  />
+
+  {showLeadSuggestions && (
+    <div className="absolute z-20 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto">
+      {filteredLeads.map((lead, index) => (
+        <p
+          key={index}
+          className="px-4 py-2 text-sm cursor-pointer hover:bg-gray-100"
+          onClick={() => {
+            setEnquiryForm({ ...EnquiryForm, NewLead: lead });
+            setShowLeadSuggestions(false);
+          }}
+        >
+          {lead}
+        </p>
+      ))}
+    </div>
+  )}
+</div>
 
           <div className="w-full relative">
             <label className="block text-xs font-medium text-gray-500 mb-1">Language Preferred</label>
@@ -1516,7 +1573,7 @@ setNotificationStatus( PostinNotification.message)
 
         {showServiceSuggestions && EnquiryForm.ServiceType && (
           <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border bg-white shadow">
-            {healthcareServices
+            {healthcareServicesforCallEnquiry
               .filter((service) =>
                 service
                   .toLowerCase()
@@ -1736,6 +1793,8 @@ setNotificationStatus( PostinNotification.message)
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
           />
         </div>
+
+      
    <p className="text-lg  font-semibold text-gray-800 m-2 flex">Update Call Enquiry Status</p>
                           <div className="flex  gap-4 m-2">
               
@@ -1749,7 +1808,7 @@ setNotificationStatus( PostinNotification.message)
                                   }`}
                               
                                 onClick={
-                                  () => setEnquiryForm({ ...EnquiryForm, ClientStatus: each })
+                                  () =>{ setEnquiryForm({ ...EnquiryForm, ClientStatus: each },); if (each==="Save"||each==="Send")setShowNotification(true)}
                                 }
 
 
@@ -1759,21 +1818,21 @@ setNotificationStatus( PostinNotification.message)
                             ))}
                           </div>
       </div>
-      {ShowNotification&&
+     
 <StaffNotificationModal
   open={ShowNotification}
   subMessage={NotificationStatus}
   onClose={() => setShowNotification(false)}
-  onSend={() => {
-   PostNotificationInfo
+  onSend={(emails) => {
+   PostNotificationInfo(emails)
   }}
 />
 
 
-      }
+     
 
       <div className=" flex items-center justify-between w-full px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 sticky bottom-0">
-       <p className="text-red-500">{EnquiryMessage}</p>
+       <p className={EnquiryMessage==="Client Enquiry Registered Successfully"?'text-green  -800':'text-red-500'}>{EnquiryMessage}</p>
        <div className="flex gap-4">
         <button
           type="button"

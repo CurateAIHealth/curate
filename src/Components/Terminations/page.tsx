@@ -245,12 +245,7 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
     <table className="w-full text-left text-sm border-separate border-spacing-0">
       
  
-<thead className="
-  sticky top-0 z-10
-  bg-gradient-to-b from-teal-600 to-teal-700
-  text-white
-  shadow-md
-">
+<thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white  text-[10px] font-semibold">
 
 
 
@@ -260,7 +255,7 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
             (head) => (
               <th
                 key={head}
-                className="px-6 py-4  text-[11px] font-semibold tracking-wider  uppercase"
+                className="px-6 py-4  text-[11px] font-semibold tracking-wider  "
               >
                 {head}
               </th>
@@ -270,11 +265,11 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
       </thead>
 
       {/* ===== BODY ===== */}
-      <tbody>
+      <tbody className="bg-white divide-y divide-gray-200">
         {FilterValues.map((placement, idx) => (
           <tr
             key={idx}
-            className="group transition-colors hover:bg-gray-50"
+           className="bg-white divide-y divide-gray-200"
           >
             <td className="px-6 py-4 font-semibold text-gray-900">
               {idx+1}

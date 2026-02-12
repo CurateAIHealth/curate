@@ -222,3 +222,10 @@ export const CurrentLoginUser=(EmailResults:any)=>{
         payload:EmailResults
     }
 }
+
+export const Refresh=(RefreshData:any)=>{
+    return{
+        type:"Refresh",
+        payload:RefreshData
+    }
+}

@@ -1239,7 +1239,7 @@ export const CallEnquiryRegistration = async (HCA: any) => {
       patientGender: HCA.patientGender || "",
       HCPPreferGender: HCA.HCPPreferGender || "",
       PreferredLanguage: HCA.PreferredLanguage || "",
-
+NewLead:HCA.NewLead||"",
       Location: HCA.Location || "",
       ServiceType: HCA.ServiceType || "",
       HealthCard: HCA.HealthCard || "",
@@ -1268,16 +1268,18 @@ export const CallEnquiryRegistration = async (HCA: any) => {
   }
 };
 export const PostCallEnquiryNotification = async (
-  NotificationInformation: any
+  NotificationInformation: any,
+  EmailList: string[],
+  RegistrationFee:any
 ) => {
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
-    const collection = db.collection("Notification");
+    const collection = db.collection("Notifications");
 
     const payload = {
       clientName: NotificationInformation.ClientName,
-      clientContact: NotificationInformation.CliecntContact,
+      clientContact: NotificationInformation.ClientContact,
       clientEmail: NotificationInformation.ClientEmail,
 
       patientAge: NotificationInformation.patientAge,
@@ -1287,7 +1289,7 @@ export const PostCallEnquiryNotification = async (
 
       clientArea: NotificationInformation.ClientArea,
       clientNote: NotificationInformation.ClientNote,
-
+RegistrationFee:RegistrationFee,
       serviceCharges: NotificationInformation.serviceCharges,
       serviceType: NotificationInformation.ServiceType,
       expectedService: NotificationInformation.ExpectedService,
@@ -1296,7 +1298,7 @@ export const PostCallEnquiryNotification = async (
       clientStatus: NotificationInformation.ClientStatus,
       patientHealthCard: NotificationInformation.patientHealthCard,
       EnquiryDate: new Date().toISOString().split("T")[0],
-
+      NotifyEmploys:EmailList,
       isRead: false,
       createdAt: new Date(),
     };
@@ -1305,7 +1307,6 @@ export const PostCallEnquiryNotification = async (
 
     return {
       success: true,
-      insertedId: result.insertedId,
       message:"Notification Send Succesfully"
     };
   } catch (err: any) {

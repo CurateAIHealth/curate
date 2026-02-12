@@ -1043,7 +1043,7 @@ const OmServiceView = () => {
   <table className="w-full table-fixed border-collapse bg-white">
     
   
-  <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white uppercase text-[10px] font-semibold">
+  <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white  text-[10px] font-semibold">
   <tr>
     <th className="w-10 px-2 py-2 text-left">S.No</th>
 
