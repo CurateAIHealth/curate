@@ -190,7 +190,7 @@ console.log("Check For Message----",GetReplacementMessage("a289361b-3601-4ba6-ad
  
       <div className="overflow-x-auto border rounded-lg">
         <table className="min-w-full text-sm">
-          <thead className="bg-gradient-to-br from-[#00A9A5] to-[#005f61] text-white">
+          <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white  text-[10px] font-semibold">
             <tr>
                  <th className="px-3 py-2 text-left">S.No</th>
               <th className="px-3 py-2 text-left">Invoice</th>

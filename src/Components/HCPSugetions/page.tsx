@@ -60,6 +60,8 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
   const [SearchReasult,setSearchReasult]=useState("")
   const [SearchOptions,setSearchOptions]=useState(false)
   const [loading, setLoading] = useState(true);
+  const [showAssignedOnly, setShowAssignedOnly] = useState(true);
+
   const dispatch = useDispatch();
   const router = useRouter();
 const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -252,16 +254,22 @@ Curate Health Care Service
 };
 
 
-const filteredHcps = hcps.filter((each: any) => {
-  const query = SearchReasult.trim().toLowerCase();
+const query = SearchReasult.trim().toLowerCase();
 
-  return (
+const filteredHcps = hcps.filter((each: any) => {
+  const matchesSearch =
     each?.HCPFirstName?.toLowerCase().includes(query) ||
-    each?.HCPSurName?.toLowerCase().includes(query)
-  );
+    each?.HCPSurName?.toLowerCase().includes(query);
+
+  const isAssigned = each?.Status?.includes("Assigned");
+
+  return showAssignedOnly
+    ? matchesSearch && !isAssigned   
+    : matchesSearch;               
 });
 
 
+console.log ("Check Languages------",)
 
 
 const handleShare = async (hcp: any, clientUserId: any) => {
@@ -703,6 +711,8 @@ if (!activeClient) {
     Client Directory
   </h2>
   
+  
+
 
   <div className="overflow-y-auto  space-y-3 pr-1 scrollbar-thin scrollbar-thumb-[#b7e4c7] scrollbar-track-transparent">
     {clients.map((client, index) => (
@@ -872,20 +882,35 @@ Search For HCP Criteria
         <div className="w-full lg:w-4/5 mx-auto py-0">
          {SearchOptions===false&& 
             <div>
-              <div className="mb-2 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-teal-700 dark:text-teal-400 tracking-tight drop-shadow-sm">
+              <div className="mb-2 flex flex-col sm:flex-row items-center justify-between">
+                <h1 className="text-[26px]  font-extrabold text-teal-700 dark:text-teal-400 tracking-tight drop-shadow-sm">
                   Friendly Care Matches
                 </h1>
+
+  
                 <input
   type="search"
   placeholder="Search..."
   onChange={(e:any)=>setSearchReasult(e.target.value)}
-  className="w-full max-w-sm rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/30"
+  className="max-w-sm rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/30"
 />
 
+   <button
+  onClick={() => setShowAssignedOnly(prev => !prev)}
+  className={`flex items-center justify-center gap-2 px-2 py-1.5 text-xs hover:shadow-lg w-fit font-semibold 
+              rounded-full transition-all duration-200 cursor-pointer 
+              ${
+                showAssignedOnly
+                  ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                  : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+              }`}
+>
 
+        
+  {showAssignedOnly ? "🟢 Show Full List" : "🟡 Show Available List"}
+</button>
 
-               <div className="flex flex-wrap items-center gap-3">
+               <div className="flex flex-wrap items-center gap-2">
   <div className="flex items-center gap-2 rounded-full bg-gray-100 px-2 py-2 text-sm text-gray-700 hover:bg-gray-200 transition">
     📋 Total <span className="font-semibold">{hcps.length}</span>
   </div>
@@ -900,6 +925,8 @@ Search For HCP Criteria
       {hcps.length - AssignedHcps.length}
     </span>
   </div>
+
+
 </div>
 
               </div>
@@ -927,7 +954,7 @@ const isAssigned =
                           ref={(el) => {
                             cardRefs.current[hcp.UserId] = el;
                           }}
-                          className="relative flex flex-col items-center bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 w-[140px] sm:w-[160px] md:w-[180px] lg:w-[190px] min-h-[220px]"
+                          className="relative flex flex-col items-center bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 w-[140px] sm:w-[140px] md:w-[140px] lg:w-[180px] min-h-[220px]"
                         >
 
                           <div className="bg-teal-600 w-full h-[50px] flex items-center justify-center relative rounded-t-2xl">
@@ -970,11 +997,24 @@ const isAssigned =
                               </span>
                             </div>
 
-
+ {hcp.Languages?
+ <div>
                             <h4 className="text-[9px] font-semibold text-gray-700 uppercase mt-1">
-                              Skills
+                              Languages Speak
                             </h4>
-                            <div className="flex flex-wrap justify-center gap-[1px] mt-1">
+     <p className="flex items-center  justify-center text-[10px]  font-medium border border-yellow-300 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-1 py-1 rounded-md">
+  {hcp.Languages}
+</p>
+
+</div>:
+<p className="inline-flex items-center gap-2 px-2 py-1 text-[10px] 
+              rounded-full bg-red-100 text-red-600 border border-red-600">
+  Languages Not Updated
+</p>
+
+}
+
+                            {/* <div className="flex flex-wrap justify-center gap-[1px] mt-1">
                               {PROFESSIONAL_SKILL_OPTIONS.map((skill: string, sidx: number) => {
                                 const hasSkill =
                                   Array.isArray(hcp?.ProfessionalSkills) &&
@@ -992,10 +1032,10 @@ const isAssigned =
                                   </span>
                                 );
                               })}
-                            </div>
+                            </div> */}
 
                         {isAssigned?
-                        <div className='flex gap-2'>
+                        <div className='flex gap-2 items-end justify-center'>
                         <p className="group mt-1 inline-flex cursor-not-allowed items-center gap-1.5 rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-2.5 py-0.5 text-[10px] font-semibold text-white shadow-md transition">
   Assigned
 

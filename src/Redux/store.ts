@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import {UserType,RefreshCount,FullHCPList, Admin_Main_Filter, DocReason, HCAList, LoadingClient, PreviedComponent, SUbHeadings, Submmision_Client_Status, Suitable_HCP, TaskOne, UserIdValue, UserInformation, Medication, FullInfo, TimeStamp, CurrentRegisterUser, VendorReferal, ReferdVendorUserId, InvoiceData, DeploymentInformation, EditInvoice, UpdateInvoicePageStatus, RegisterByAdmin, MonthFilter, YearFilter, AdminMonthFilter, AdminYearFilter, LoginUserEmail } from "./reducer";
+import {UserType,RefreshCount,FullHCPList, Admin_Main_Filter, DocReason, HCAList, LoadingClient, PreviedComponent, SUbHeadings, Submmision_Client_Status, Suitable_HCP, TaskOne, UserIdValue, UserInformation, Medication, FullInfo, TimeStamp, CurrentRegisterUser, VendorReferal, ReferdVendorUserId, InvoiceData, DeploymentInformation, EditInvoice, UpdateInvoicePageStatus, RegisterByAdmin, MonthFilter, YearFilter, AdminMonthFilter, AdminYearFilter, LoginUserEmail, RefreshState } from "./reducer";
 
 export const store = configureStore({
     reducer: {
@@ -32,6 +32,7 @@ export const store = configureStore({
         FilterYear:YearFilter,
         YearFilterAdmin:AdminYearFilter,
         MonthFilterAdmin:AdminMonthFilter,
-        LoggedInEmail:LoginUserEmail
+        LoggedInEmail:LoginUserEmail,
+        GlobelRefresh:RefreshState
     }
 })

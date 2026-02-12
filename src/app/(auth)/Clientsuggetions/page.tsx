@@ -29,39 +29,39 @@ const ClientSuggetions = () => {
   const router = useRouter();
   const dispatch = useDispatch();
 
-  /* ---------- USER INFO EFFECT ---------- */
-  useEffect(() => {
-    let mounted = true;
 
-    const fetchUserInfo = async () => {
-      try {
-        const userId =
-          typeof window !== 'undefined'
-            ? localStorage.getItem('UserId')
-            : null;
+  // useEffect(() => {
+  //   let mounted = true;
 
-        if (!userId) return;
+  //   const fetchUserInfo = async () => {
+  //     try {
+  //       const userId =
+  //         typeof window !== 'undefined'
+  //           ? localStorage.getItem('UserId')
+  //           : null;
 
-        const user = await GetUserInformation(userId);
-        if (mounted) {
-          dispatch(
-            UpdateTimeStamp(
-              `${user.FirstName} ${user.LastName}, Email: ${user.Email}`
-            )
-          );
-        }
-      } catch (err) {
-        console.error('User info error', err);
-      }
-    };
+  //       if (!userId) return;
 
-    fetchUserInfo();
-    return () => {
-      mounted = false;
-    };
-  }, [dispatch]);
+  //       const user = await GetUserInformation(userId);
+  //       if (mounted) {
+  //         dispatch(
+  //           UpdateTimeStamp(
+  //             `${user.FirstName} ${user.LastName}, Email: ${user.Email}`
+  //           )
+  //         );
+  //       }
+  //     } catch (err) {
+  //       console.error('User info error', err);
+  //     }
+  //   };
 
-  /* ---------- MAIN DATA EFFECT ---------- */
+  //   fetchUserInfo();
+  //   return () => {
+  //     mounted = false;
+  //   };
+  // }, [dispatch]);
+
+
   useEffect(() => {
     if (!currentClientUserId) {
       router.replace('/AdminPage');
@@ -118,7 +118,7 @@ const ClientSuggetions = () => {
     return () => {
       mounted = false;
     };
-  }, [currentClientUserId, updatedRefresh, router]);
+  }, [currentClientUserId, updatedRefresh]);
 
   /* ---------- LOADING UI ---------- */
   if (loading) {

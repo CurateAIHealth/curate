@@ -4,6 +4,7 @@
 
 import { toProperCaseLive } from "@/Lib/Actions";
 import { ClearEnquiry, GetUserInformation, UpdateClientStatusToProcessing } from "@/Lib/user.action";
+import { Refresh } from "@/Redux/action";
 import {
   Phone,
   MapPin,
@@ -14,9 +15,10 @@ import {
 } from "lucide-react";
 
 import { useMemo, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 interface CallEnquiryUser {
+  NewLead: string | undefined;
   LeadDate: any;
   _id: string;
   userId: string;
@@ -42,6 +44,9 @@ export default function CallEnquiryList({
   const [StatusMessage,setStatusMessage]=useState<any>("")
   const SearchMonth=useSelector((state:any)=>state.MonthFilterAdmin)
   const SearchYear=useSelector((state:any)=>state.YearFilterAdmin)
+  
+    const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
+  const dispatch=useDispatch()
   if (!data || data.length === 0) {
     return (
       <div className="bg-white rounded-3xl border border-gray-200 p-6 text-center text-gray-500">
@@ -49,28 +54,26 @@ export default function CallEnquiryList({
       </div>
     );
   }
-console.log("Check for Data Info=======",data)
+
 
   const handleDelete = async (Clearuser: CallEnquiryUser) => {
     setStatusMessage("Please Wait....")
+    dispatch(Refresh("Process"))
       const userId = localStorage.getItem("UserId");
     
-    if (userId) {
-      const user = await GetUserInformation(userId);
-      console.log('Check for Info Mail-------', userId)
-      if (user?.Email !== "admin@curatehealth.in") {
+   
+      if (loggedInEmail !== "srivanikasham@curatehealth.in") {
         setStatusMessage('You don’t have the required permissions to proceed')
         return
       }
-
-
       const DeletCallEnquiry = await ClearEnquiry(Clearuser?.userId)
       if (DeletCallEnquiry.success === true) {
         setStatusMessage(DeletCallEnquiry.message)
+        dispatch(Refresh("Refreshed"))
       }
 
 
-    }
+   
   };
 const SendWhatsAppConfirmation=()=>{
   try{
@@ -79,6 +82,8 @@ const SendWhatsAppConfirmation=()=>{
     
   }
 }
+
+console.log('Check For Contact----',data)
 const UpdatedFilterUserType = useMemo(() => {
   return data
     .filter((each) => {
@@ -117,6 +122,8 @@ const GRID_COLS =
       
       <p className="text-sm text-gray-500 mt-1">
         Total enquiries: {UpdatedFilterUserType.length}
+     
+      
       </p>
       {/* <button
       onClick={async()=>{
@@ -172,15 +179,20 @@ if(Post.success){
 
   
 <div
-  className={`hidden md:grid ${GRID_COLS} gap-4 bg-blue-500 px-4 py-3 text-xs font-semibold text-white border-b`}
+  className={`hidden md:grid ${GRID_COLS} gap-4  px-4 py-3 text-xs bg-gradient-to-r from-teal-600 to-emerald-500 text-white  text-[10px] font-semibold `}
+  
 >
   <span>S.No</span>
-  <span>Name</span>
+  <span>Date</span>
+  <span> Lead Source</span>
+ 
+  <span>Client Name</span>
+
   <span>Phone</span>
   <span>Location</span>
   <span>Comments</span>
-  <span className="text-center">Message</span>
-  <span>Date</span>
+  {/* <span className="text-center">Message</span> */}
+  
   <span className="text-center">Action</span>
 </div>
 
@@ -189,10 +201,17 @@ if(Post.success){
 {UpdatedFilterUserType.map((user, index) => (
  <div
  key={index}
-  className={`hidden md:grid ${GRID_COLS} gap-4 items-center px-4 py-3 text-sm border-b`}
+  className={`hidden md:grid ${GRID_COLS} gap-4 items-center px-4 py-3 text-sm border-b border-gray-300`}
 >
   <span className="text-gray-500 font-medium">
     {index + 1}
+  </span>
+ <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
+    <CalendarDays size={12} />
+    {new Date(user.createdAt).toLocaleDateString()}
+  </span>
+   <span className="font-medium text-gray-800 truncate">
+  {toProperCaseLive(user.NewLead) || "Not Provided"}
   </span>
 
   <span className="font-medium text-gray-800 truncate">
@@ -217,7 +236,7 @@ if(Post.success){
     {toProperCaseLive(user.comments) || "No comments"}
   </span>
 
-  <div className="flex justify-center">
+  {/* <div className="flex justify-center">
     <button className="flex items-center cursor-pointer gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap" onClick={SendWhatsAppConfirmation}>
       <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -230,19 +249,16 @@ if(Post.success){
     </svg>
       Send
     </button>
-  </div>
+  </div> */}
 
-  <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
-    <CalendarDays size={12} />
-    {new Date(user.createdAt).toLocaleDateString()}
-  </span>
+ 
 
   <div className="flex justify-center">
     <button
       onClick={() => handleDelete(user)}
       className="p-2 rounded-lg hover:bg-red-50 transition"
     >
-      <Trash2 size={16} className="text-red-600" />
+      <Trash2 size={16} className="text-red-600 cursor-pointer" />
     </button>
   </div>
 </div>

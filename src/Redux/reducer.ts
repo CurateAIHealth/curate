@@ -305,3 +305,12 @@ case "CurrentLoginUser":
         return state
     }
 }
+
+export const RefreshState = (state: any = "Siddu", action: any) => {
+    switch (action.type) {
+        case "Refresh":
+            return action.payload;
+        default:
+            return state
+    }
+}

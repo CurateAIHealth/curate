@@ -22,7 +22,7 @@ import {
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 } from 'lucide-react';
+import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 ,Hourglass ,BadgeCheck, MapPin,FileCheck,FileX } from 'lucide-react';
 import { Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateClient, UpdateClientSuggetion, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
 import { ClientEnquiry_Filters, filterColors, hyderabadAreas, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
@@ -68,6 +68,7 @@ const [SearchResult, setSearchResult] = useState("")
   const UpdateduserType = useSelector((state: any) => state.ViewHCPList)
   const CurrentCount = useSelector((state: any) => state.updatedCount)
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const GlobelRefreshStage=useSelector((each:any)=>each.GlobelRefresh)
 const RESTRICTED_EMAILS = new Set([
   "info@curatehealth.in",
   "admin@curatehealth.in",
@@ -122,7 +123,7 @@ useEffect(() => {
   return () => {
     mounted = false;
   };
-}, [updatedStatusMsg]);
+}, [updatedStatusMsg,GlobelRefreshStage]);
 
 useEffect(() => {
   const email = cachedUserInfo?.Email?.toLowerCase();
@@ -159,6 +160,7 @@ useEffect(() => {
   };
   const UpdateEmailVerificationStatus = async (first: string, e: string, UserId: any) => {
     setUpdatedStatusMsg(`Updating ${first} Email Verification Status....`);
+
     try {
       const res = await UpdateUserEmailVerificationstatus(UserId, e);
       if (res?.success === true) {
@@ -626,7 +628,7 @@ if (DeleteEnquiry?.success) {
                 <div className=" overflow-y-auto">
                   <div className="w-full overflow-x-auto sm:overflow-x-hidden">
                     <table className="table-fixed w-full min-w-[800px] text-[11px] sm:text-[13px] text-left text-gray-700 border-collapse">
-                      <thead className="bg-[#f5faff] sticky top-0 z-10">
+                      <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white  text-[10px] font-semibold">
                         <tr>
                           <th className="px-2 py-2 w-[4%]">S.No</th>
                           {UpdateduserType === "patient" &&
@@ -656,15 +658,18 @@ if (DeleteEnquiry?.success) {
                       <th className="px-2 py-2 w-[14%]">Designate</th>
                     )} */}
                           <th className="px-4 py-2 w-[10%]">Action</th>
+                          
+                          <th className="px-4 py-2 text-center w-[10%]">PDR</th>
+                            
                           {UpdateduserType === 'patient' && <th className="px-2 py-2 w-[10%]">Suitable HCP</th>}
                           {UpdateduserType === 'patient' && <th className="px-2 py-2 w-[10%]">Delete</th>}
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="bg-white divide-y divide-gray-200">
                         {UpdatedFilterUserType.map((user, index) => (
                           <tr
                             key={index}
-                            className="border-b border-gray-400 even:bg-[#f8fafd] hover:bg-[#e7fbfc] transition-colors"
+                            
                           >
                             <td className='pl-4'>{index + 1}</td>
                        
@@ -672,11 +677,11 @@ if (DeleteEnquiry?.success) {
                               type="date"
                               value={user.LeadDate || ''}
                               className="
-    h-11 w-[150px] px-4
+    h-11 w-[120px] px-2
     rounded-xl
     bg-white
     border border-slate-300
-    text-sm font-semibold text-slate-700
+    text-xs font-semibold text-slate-700
     shadow-sm
 
     transition-all duration-200 ease-in-out
@@ -698,8 +703,8 @@ if (DeleteEnquiry?.success) {
                               <td>
                                 <select
                                   className={`
-    h-11 w-[130px] px-3
-    ml-auto cursor-pointer
+    h-11 w-fit  px-3
+     cursor-pointer
     rounded-xl bg-white
     border border-slate-300
     text-sm font-semibold text-slate-700
@@ -715,10 +720,10 @@ if (DeleteEnquiry?.success) {
 
                                   onChange={(e) => UpdateClientPriority(user.FirstName, user.userId, e.target.value)}
                                 >
-                                  <option value="Important">⭐Important</option>
-                                  <option value="stable">🟢 Stable</option>
-                                  <option value="VIP">👑VIP</option>
-                                  <option value="Critical">🔴 Critical </option>
+                                  <option value="Important">⭐</option>
+                                  <option value="stable">🟢 </option>
+                                  <option value="VIP">👑</option>
+                                  <option value="Critical">🔴 </option>
                                 </select>
                               </td>}
                             {UpdateduserType === "healthcare-assistant" &&
@@ -854,8 +859,9 @@ if (DeleteEnquiry?.success) {
                               {UpdateduserType === "patient" ? (
                                 <div className="flex items-center gap-2">
                                   {/* Display Value */}
+                                   <MapPin size={14} className="text-green-600 shrink-0" />
                                   <span
-                                    className={`text-sm ${user.ServiceLocation
+                                    className={`text-xs ${user.ServiceLocation
                                         ? "text-slate-700 font-medium"
                                         : "italic text-slate-400"
                                       }`}
@@ -863,7 +869,7 @@ if (DeleteEnquiry?.success) {
                                     {user.ServiceLocation || "Not mentioned"}
                                   </span>
 
-                                  {/* Pencil Icon */}
+                                
                                   <button
                                     onClick={() => setEditingUserId(user.userId)}
                                     className="
@@ -874,7 +880,7 @@ if (DeleteEnquiry?.success) {
         "
                                     title="Edit service area"
                                   >
-                                    <Pencil size={14} />
+                                    <Pencil size={12} />
                                   </button>
 
 
@@ -925,13 +931,14 @@ if (DeleteEnquiry?.success) {
                                 </div>
                               ) : (
                                 <span className="text-sm text-slate-700">
+                                 
                                   {GetPermanentAddress(user.userId)}
                                 </span>
                               )}
                             </td>
 
                             <td className="px-2 py-2">
-                              <select
+                              {/* <select
                                 className="w-full text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200 cursor-pointer text-xs sm:text-sm"
                                 defaultValue={user.EmailVerification ? "Verified" : "Pending"}
                                 onChange={(e) =>
@@ -940,10 +947,46 @@ if (DeleteEnquiry?.success) {
                               >
                                 {EmailVerificationStatus.map((status) => (
                                   <option key={status} value={status}>
-                                    {status}
+                                    {status==="Verified"?<BadgeCheck />:<Hourglass />}
                                   </option>
                                 ))}
-                              </select>
+                              </select> */}
+
+                               {user.EmailVerification ? (
+  
+
+<div className="relative group inline-block ml-10">
+  <BadgeCheck
+    size={30}
+    className="text-green-600 cursor-pointer hover:bg-gray-300 p-1 rounded-full"
+    onClick={(e:any) =>
+     UpdateEmailVerificationStatus(user.FirstName, "Pending", user.userId)
+    }
+  />
+
+ <div className="absolute top-0 right-full -translate-y-1/2 mr-2
+                opacity-0 group-hover:opacity-100
+                transition-opacity duration-200
+                bg-black text-white text-xs px-3 py-1 rounded-md whitespace-nowrap">
+  Email Verified,Click to Update
+</div>
+
+</div>
+
+  ) : (
+    <div className="relative group inline-block ">
+    <Hourglass className="text-yellow-500 cursor-pointer hover:bg-gray-300 p-1 rounded-full ml-10" size={30} onClick={(e:any) =>
+                                  UpdateEmailVerificationStatus(user.FirstName, "Verified", user.userId)
+                                }/>
+                                 <div     className="absolute top-0 right-full -translate-y-1/2 mr-2
+               opacity-0 group-hover:opacity-100
+               transition-opacity duration-200
+               bg-black text-white text-xs px-3 py-1 rounded-md whitespace-nowrap"
+  >
+  Email Verification Pending,Click to Update
+</div>
+</div>
+  )}
                             </td>
                             {user.userType === "patient" && (
                               <td className="px-2 py-2">
@@ -1032,6 +1075,22 @@ if (DeleteEnquiry?.success) {
                                 >
                                   {user.DetailedVerification ? "View" : "Preview"}
                                 </button>}
+
+                            </td>
+                            
+                             <td className="px-2 py-2 text-center">
+                        {user.ClientStatus=="Waiting List" ? (
+  <span className="inline-flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:shadow-lg
+                   bg-red-100 text-red-600">
+    <FileX size={18} strokeWidth={2.2} />
+  </span>
+) : (
+  <span className="inline-flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:shadow-lg
+                   bg-emerald-100 text-emerald-600">
+    <FileCheck size={18} strokeWidth={2.2} />
+  </span>
+)}
+
 
                             </td>
                             {UpdateduserType === 'patient' &&

@@ -264,7 +264,7 @@ const toProperCaseLive = (value: string) => {
         GetRegidterdUsers(),
       ]);
       setImportedVendors(RegisterdUsers.filter((each: any) => each.userType === "Vendor"))
-      setTimeStameDetails(`${Sign_in_UserInfo.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`)
+      setTimeStameDetails(`${Sign_in_UserInfo?.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`)
     }
     Fetch()
   }, [])
@@ -345,11 +345,11 @@ const requiresSubType = (hcpTypes = []) => {
 
   return hcpTypes.some(type => servicesWithSubTypes.includes(type));
 };
-const hasSubTypes = (service: string): service is ServiceWithSubType => {
+const hasSubTypes = (service: any): service is ServiceWithSubType => {
   return service in SERVICE_SUBTYPE_MAP;
 };
 
-  console.log('Check for Post Datat-----', formData.serviceSubTypes
+  console.log('Check for Post Datat-----', formData.patientType
 )
   const FilterdImportedVendorName = ImportedVendors.map((each: any) => each.VendorName)
   return (
@@ -472,27 +472,73 @@ const hasSubTypes = (service: string): service is ServiceWithSubType => {
                 />
               )}
             </div>
-            <p>Relation to Patient</p>
-
-            <select className="w-full border rounded-lg p-2" onChange={(e) => handleChange("RelationtoPatient", e.target.value)}>
-              <option>Choose Relation</option>
-              {indianFamilyRelations.map((each: any) => <option key={each}>{each}</option>)}
-            </select>
             <div>
+              <div>
+  <p>Relation to Patient</p>
+
+  {(() => {
+    const inputValue =
+      typeof formData.RelationtoPatient === "string"
+        ? formData.RelationtoPatient
+        : "";
+
+    const filteredSuggestions =
+      inputValue.trim() === "" ||
+      indianFamilyRelations.some(
+        (item: string) =>
+          item.toLowerCase() === inputValue.toLowerCase()
+      )
+        ? []
+        : indianFamilyRelations.filter((item: string) =>
+            item.toLowerCase().includes(inputValue.toLowerCase())
+          );
+
+    return (
+      <div className="relative w-full">
+        <input
+          type="text"
+          placeholder="Type Relation"
+          value={inputValue}
+          onChange={(e) =>
+            handleChange("RelationtoPatient", e.target.value)
+          }
+          className="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+        />
+
+        {filteredSuggestions.length > 0 && (
+          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-md max-h-48 overflow-y-auto">
+            {filteredSuggestions.map((s: string) => (
+              <div
+                key={s}
+                onClick={() =>
+                  handleChange("RelationtoPatient", s)
+                }
+                className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+              >
+                {s}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  })()}
+</div>
 
 
-              <p className="flex items-center gap-2 font-medium relative">
-                Lead Source :
+            </div>
+        <div>
+<p className="flex items-center gap-2 font-medium relative">
+  Lead Source :
 
-                <span className="relative group">
-                  <AlertCircle
-                    size={16}
-                    className="text-red-500 cursor-pointer"
-                  />
+  <span className="relative group inline-flex">
+    <AlertCircle
+      size={16}
+      className="text-red-500 cursor-pointer"
+    />
 
-
-                  <span
-                    className="
+    <span
+      className="
         absolute left-1/2 top-full mt-2 -translate-x-1/2
         w-72
         rounded-lg bg-gray-900 text-white text-xs
@@ -501,29 +547,74 @@ const hasSubTypes = (service: string): service is ServiceWithSubType => {
         group-hover:opacity-100 group-hover:scale-100
         transition-all duration-200
         shadow-lg
-        z-50
+        z-50 pointer-events-none
       "
-                  >
-                    This is a key field. All salary calculations are derived based on the selected name.
-                  </span>
-                </span>
-              </p>
+    >
+      This is a key field. All salary calculations are derived based on the selected name.
+    </span>
+  </span>
+</p>
 
 
+  {(() => {
+    const options = [...FilterdImportedVendorName, ...LeadSources];
 
+    const inputValue =
+      typeof formData.Source === "string" ? formData.Source : "";
 
-              <select className="w-full border rounded-md text-center" onChange={(e) => handleChange("Source", e.target.value)}>
-                <option className="bg-gray-400">Choose Lead</option>
-                {[...FilterdImportedVendorName, ...LeadSources].map((each: any) => <option key={each}>{each}</option>)}
-              </select>
-              {formData.Source === "Other" && <input
-                type="text"
-                placeholder="Enter New Lead Name"
-                className="w-[300px] border rounded-lg p-2 m-2"
-                value={formData.NewLead}
-                onChange={(e) => handleChange("NewLead", e.target.value)}
-              />}
-            </div>
+    const filteredSuggestions =
+      inputValue.trim() === "" ||
+      options.some(
+        (item: string) =>
+          item.toLowerCase() === inputValue.toLowerCase()
+      )
+        ? []
+        : options.filter((item: string) =>
+            item.toLowerCase().includes(inputValue.toLowerCase())
+          );
+
+    return (
+      <div className="relative w-full">
+        <input
+          type="text"
+          placeholder="Type Lead"
+          value={inputValue}
+          onChange={(e) =>
+            handleChange("Source", e.target.value)
+          }
+          className="w-full border rounded-md text-center py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+        />
+
+        {filteredSuggestions.length > 0 && (
+          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-md max-h-48 overflow-y-auto">
+            {filteredSuggestions.map((s: string) => (
+              <div
+                key={s}
+                onClick={() =>
+                  handleChange("Source", s)
+                }
+                className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 text-center"
+              >
+                {s}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  })()}
+
+  {formData.Source === "Other" && (
+    <input
+      type="text"
+      placeholder="Enter New Lead Name"
+      className="w-[300px] border rounded-lg p-2 m-2"
+      value={formData.NewLead}
+      onChange={(e) => handleChange("NewLead", e.target.value)}
+    />
+  )}
+</div>
+
             <div className="flex flex-col gap-2 max-w-xs">
 
               <label className="flex items-center gap-2 font-medium relative">
@@ -660,113 +751,131 @@ const hasSubTypes = (service: string): service is ServiceWithSubType => {
           <div className="bg-white rounded-lg shadow p-4 space-y-3">
             <h2 className="text-lg font-semibold text-teal-600">Patient Details</h2>
             <div>
-              <h3 className="font-medium text-sm">Patient Type</h3>
-             <div className="flex flex-col gap-2">
-  {patientCategories.map((t) => {
-    const isOther = t === "Other";
-    const isSelected =
-      isOther
-        ? formData.patientType?.startsWith("Other:")
-        : formData.patientType === t;
+  <h3 className="font-medium text-sm">Patient Type</h3>
+
+  {(() => {
+    const patientTypeOptions = [
+      "Independent Patients",
+      "Support Care Patients",
+      "Wheel Chair - self propel",
+      "Wheel Chair - Dependent",
+      "Semi Bedridden - Limited Mobility",
+      "Completely Bedridden",
+      "Paralysis/Stroke Patients",
+      "Post Surgery care",
+      "Fractures/Injury",
+    ];
+
+    const inputValue = formData.patientType || "";
+
+ const filteredSuggestions =
+  inputValue.trim() === "" ||
+  patientTypeOptions.some(
+    (item) => item.toLowerCase() === inputValue.toLowerCase()
+  )
+    ? []
+    : patientTypeOptions.filter((item) =>
+        item.toLowerCase().includes(inputValue.toLowerCase())
+      );
+
 
     return (
-      <div key={t} className="space-y-1">
-        <label className="flex items-center text-sm">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() =>
-              setFormData((prev: any) => ({
-                ...prev,
-                patientType: isOther ? "Other:" : t,
-              }))
-            }
-            className="mr-2 accent-purple-600"
-          />
-          {t}
-        </label>
+      <div className="relative w-[90%]">
+        <input
+          type="text"
+          placeholder="Enter Patient Type"
+          value={inputValue}
+          onChange={(e) =>
+            setFormData((prev: any) => ({
+              ...prev,
+              patientType: e.target.value,
+            }))
+          }
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+        />
 
-      
-        {isOther && isSelected && (
-          <div className="ml-6 flex items-center border border-gray-300 rounded-md overflow-hidden w-[90%]">
-            <span className="bg-gray-100 px-3 py-1.5 text-sm text-gray-600">
-              Other:
-            </span>
-            <input
-              type="text"
-              placeholder="Enter value"
-              value={formData.patientType.replace("Other:", "")}
-              onChange={(e) =>
-                setFormData((prev: any) => ({
-                  ...prev,
-                  patientType: `Other: ${e.target.value.trimStart()}`,
-                }))
-              }
-              className="flex-1 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
+        {filteredSuggestions.length > 0 && (
+          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-md max-h-48 overflow-y-auto">
+            {filteredSuggestions.map((s) => (
+              <div
+                key={s}
+                onClick={() =>
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    patientType: s,
+                  }))
+                }
+                className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+              >
+                {s}
+              </div>
+            ))}
           </div>
         )}
       </div>
     );
-  })}
+  })()}
 </div>
 
-            </div>
-            <div>
-              <h3 className="font-medium text-sm">Current Location</h3>
-          <div className="flex flex-col gap-2">
-  {["Hospital", "Rehab", "Home", "Other"].map((loc) => {
-    const rawLocation = formData.patientCurrentLocation;
-    const locationValue =
-      typeof rawLocation === "string" ? rawLocation : "";
+           <div>
+  <h3 className="font-medium text-sm">Current Location</h3>
 
-    const isOther = loc === "Other";
-    const isSelected = isOther
-      ? locationValue.startsWith("Other:")
-      : locationValue === loc;
+  {(() => {
+    const locationOptions = ["Hospital", "Rehab", "Home",];
+
+    const inputValue =
+      typeof formData.patientCurrentLocation === "string"
+        ? formData.patientCurrentLocation
+        : "";
+
+    const filteredSuggestions =
+      inputValue.trim() === "" ||
+      locationOptions.some(
+        (item) => item.toLowerCase() === inputValue.toLowerCase()
+      )
+        ? []
+        : locationOptions.filter((item) =>
+            item.toLowerCase().includes(inputValue.toLowerCase())
+          );
 
     return (
-      <div key={loc} className="space-y-1">
-        <label className="flex items-center text-sm">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() =>
-              setFormData((prev: any) => ({
-                ...prev,
-                patientCurrentLocation: isOther ? "Other:" : loc,
-              }))
-            }
-            className="mr-2 accent-purple-600"
-          />
-          {loc}
-        </label>
+      <div className="relative w-[90%]">
+        <input
+          type="text"
+          placeholder="Enter location"
+          value={inputValue}
+          onChange={(e) =>
+            setFormData((prev: any) => ({
+              ...prev,
+              patientCurrentLocation: e.target.value,
+            }))
+          }
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+        />
 
-        {isOther && isSelected && (
-          <div className="ml-6 flex items-center border border-gray-300 rounded-md overflow-hidden w-[90%]">
-            <span className="bg-gray-100 px-3 py-1.5 text-sm text-gray-600">
-              Other:
-            </span>
-            <input
-              type="text"
-              placeholder="Enter location"
-              value={locationValue.replace("Other:", "")}
-              onChange={(e) =>
-                setFormData((prev: any) => ({
-                  ...prev,
-                  patientCurrentLocation: `Other: ${e.target.value.trimStart()}`,
-                }))
-              }
-              className="flex-1 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
+        {filteredSuggestions.length > 0 && (
+          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-md max-h-48 overflow-y-auto">
+            {filteredSuggestions.map((s) => (
+              <div
+                key={s}
+                onClick={() =>
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    patientCurrentLocation: s,
+                  }))
+                }
+                className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+              >
+                {s}
+              </div>
+            ))}
           </div>
         )}
       </div>
     );
-  })}
+  })()}
 </div>
 
-            </div>
             <div>
               <h3 className="font-medium text-sm">Service Location</h3>
               <input
@@ -779,54 +888,76 @@ const hasSubTypes = (service: string): service is ServiceWithSubType => {
              
               />
             </div>
-            <div className="flex flex-col gap-2 max-w-xs">
+          <div className="flex flex-col gap-2 max-w-xs">
+  <label className="font-medium text-sm tracking-wide text-gray-800">
+    Service Area
+  </label>
 
-              <label className="font-medium text-sm   tracking-wide text-gray-800">
-                Service Area
-              </label>
+  {(() => {
+    const inputValue =
+      typeof formData.ServiceArea === "string"
+        ? formData.ServiceArea
+        : "";
 
-              <select
-               
-                   onChange={(e)=>{
-setShowOtherServiceArea(e.target.value==="Other")
-                  setFormData({...formData,ServiceArea:e.target.value==="Other"?'':e.target.value})
-                }}
-                className="
-      h-11 w-full px-4
-      rounded-xl
-      bg-white
-      border border-slate-300
-      text-sm font-medium text-slate-700
-      shadow-sm
-      cursor-pointer
+    const filteredSuggestions =
+      inputValue.trim() === "" ||
+      hyderabadAreas.some(
+        (item: any) => item.toLowerCase() === inputValue.toLowerCase()
+      )
+        ? []
+        : hyderabadAreas.filter((item: any) =>
+            item.toLowerCase().includes(inputValue.toLowerCase())
+          );
 
-      transition-all duration-200 ease-in-out
+    return (
+      <div className="relative w-full">
+        <input
+          type="text"
+          placeholder="Type service area"
+          value={inputValue}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              ServiceArea: toProperCaseLive(e.target.value),
+            })
+          }
+          className="
+            h-11 w-full px-4
+            rounded-xl
+            bg-white
+            border border-slate-300
+            text-sm font-medium text-slate-700
+            shadow-sm
+            transition-all duration-200 ease-in-out
+            hover:border-slate-400 hover:shadow-md
+            focus:outline-none
+            focus:border-[#62e0d9]
+            focus:ring-2 focus:ring-[#caf0f8]
+          "
+        />
 
-      hover:border-slate-400 hover:shadow-md
-      focus:outline-none
-      focus:border-[#62e0d9]
-      focus:ring-2 focus:ring-[#caf0f8]
-    "
+        {filteredSuggestions.length > 0 && (
+          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-md max-h-52 overflow-y-auto">
+            {filteredSuggestions.map((s: any) => (
+              <div
+                key={s}
+                onClick={() =>
+                  setFormData({
+                    ...formData,
+                    ServiceArea: s,
+                  })
+                }
+                className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
               >
-                <option value="">Select service area</option>
-
-                {hyderabadAreas.map((each: any) => (
-                  <option key={each} value={each}>
-                    {each}
-                  </option>
-                ))}
-              </select>
-              {ShowOtherServiceArea&&
-               <input
-            type="text"
-            placeholder="Specify other Service Area"
-            onChange={(e) =>
-              handleChange("ServiceArea", toProperCaseLive(e.target.value))
-            }
-            className="mt-2 w-full text-xs font-medium text-gray-700 bg-white
-            border border-gray-200 rounded-xl px-3 py-2"
-          />}
-            </div>
+                {s}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  })()}
+</div>
 
             <button type="button" className="bg-white/30 backdrop-blur-md mt-20 border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, PatientDetails: !RemarkStatus.PatientDetails }))} > {RemarkStatus.PatientDetails ? "SAVE Remark" : "Add Remarks"} </button>
             {RemarkStatus.PatientDetails && <textarea
@@ -989,415 +1120,400 @@ setShowOtherServiceArea(e.target.value==="Other")
             }
           </div>
 
-          <div id="Comfortable Languages" className="bg-white rounded-lg shadow p-4 space-y-3">
-            <h2 className="text-lg font-semibold text-teal-600">Comfortable Languages</h2>
+         <div id="Comfortable Languages" className="bg-white rounded-lg shadow p-4 space-y-3">
+  <h2 className="text-lg font-semibold text-teal-600">Comfortable Languages</h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {["Telugu", "Hindi", "English", "Other"].map((lang) => (
-                <div key={lang} className="flex flex-col">
+  {(() => {
+    const inputValue =
+      Array.isArray(formData.comfortableLanguages) &&
+      formData.comfortableLanguages.length > 0
+        ? formData.comfortableLanguages[0]
+        : "";
 
+    const filteredSuggestions =
+      inputValue.trim() === "" ||
+      IndianLanguages.some(
+        (item: any) => item.toLowerCase() === inputValue.toLowerCase()
+      )
+        ? []
+        : IndianLanguages.filter((item: any) =>
+            item.toLowerCase().includes(inputValue.toLowerCase())
+          );
 
-                  <label className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
-                    <input
-                      type="checkbox"
-                      checked={
-                        lang === "Other"
-                          ? formData.comfortableLanguages.some((l: any) => l.startsWith("Other"))
-                          : formData.comfortableLanguages.includes(lang)
-                      }
-                      onChange={() => {
-                        if (lang === "Other") {
-                          setFormData((prev: any) => {
-                            const hasOther = prev.comfortableLanguages.some((l: any) =>
-                              l.startsWith("Other")
-                            );
+    return (
+      <div className="relative max-w-xs">
+        <input
+          type="text"
+          placeholder="Enter language"
+          value={inputValue}
+          onChange={(e) =>
+            setFormData((prev: any) => ({
+              ...prev,
+              comfortableLanguages: [e.target.value],
+            }))
+          }
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+        />
 
-                            return {
-                              ...prev,
-                              comfortableLanguages: hasOther
-                                ? prev.comfortableLanguages.filter(
-                                  (l: any) => !l.startsWith("Other")
-                                )
-                                : [...prev.comfortableLanguages, "Other:"],
-                            };
-                          });
-                        } else {
-                          handleCheckboxChange("comfortableLanguages", lang);
-                        }
-                      }}
-                      className="mr-2 accent-purple-600"
-                    />
-                    {lang}
-                  </label>
-
-
-                  {lang === "Other" &&
-                    formData.comfortableLanguages.some((l: any) => l.startsWith("Other")) && (
-                      <div>
-                        <select
-                          className="mt-1 w-full border rounded-lg p-2 text-sm"
-                          value={
-                            (() => {
-                              const otherValue = formData.comfortableLanguages.find((l: any) =>
-                                l.startsWith("Other")
-                              );
-                              return otherValue ? otherValue.replace("Other:", "") : "";
-                            })()
-                          }
-                          onChange={(e) => {
-                            const value = e.target.value;
-
-                            setFormData((prev: any) => {
-                              return {
-                                ...prev,
-                                comfortableLanguages: [
-                                  ...prev.comfortableLanguages.filter(
-                                    (l: any) => !l.startsWith("Other")
-                                  ),
-                                  value ? `Other:${value}` : "Other",
-                                ],
-                              };
-                            });
-                          }}
-                        >
-                          <option value="">Select Language</option>
-
-                          {IndianLanguages.map((l) => (
-                            <option key={l} value={l}>
-                              {l}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
-                </div>
-              ))}
-            </div>
+        {filteredSuggestions.length > 0 && (
+          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md max-h-48 overflow-y-auto">
+            {filteredSuggestions.map((s: any) => (
+              <div
+                key={s}
+                onClick={() =>
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    comfortableLanguages: [s],
+                  }))
+                }
+                className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+              >
+                {s}
+              </div>
+            ))}
           </div>
+        )}
+      </div>
+    );
+  })()}
+</div>
 
 
-          {[
-            {
-              title: "Home Assistance",
-              field: "patientHomeAssistance",
-              options: HomeAssistance,
-            },
-            {
-              title: "Home Needs",
-              field: "patientHomeNeeds",
-              options: Patient_Home_Supply_Needs,
-            },
-            {
-              title: "Doctor Needs",
-              field: "patientDrNeeds",
-              options: ["Medical Dr.", "Physio", "SLT", "BT", "OT","Other"],
-            },
-            {
-              title: "Health Card",
-              field: "patientHealthCard",
-              options: Health_Card,
-            },
-            {
-              title: "Service Type",
-              field: "hcpType",
-              options: healthcareServices,
-            },
-          ].map((section: any) => (
-            <div key={section.field} id={section.title} className="bg-white rounded-lg shadow p-4 space-y-2">
-          
-              <h2 className="text-lg font-semibold text-teal-600">{section.title}</h2>
 
- {section.options.map((opt: string) => {
+{[
+  {
+    title: "Home Assistance",
+    field: "patientHomeAssistance",
+    options: HomeAssistance,
+  },
+  {
+    title: "Home Needs",
+    field: "patientHomeNeeds",
+    options: Patient_Home_Supply_Needs,
+  },
+  {
+    title: "Doctor Needs",
+    field: "patientDrNeeds",
+    options: ["Medical Dr.", "Physio", "SLT", "BT", "OT", "Other"],
+  },
+  {
+    title: "Health Card",
+    field: "patientHealthCard",
+    options: Health_Card,
+  },
+  {
+    title: "Service Type",
+    field: "hcpType",
+    options: healthcareServices,
+  },
+].map((section: any) => {
   const raw = formData[section.field];
+
   const values = Array.isArray(raw)
     ? raw
     : Array.isArray(raw?.values)
     ? raw.values
     : [];
 
-  const isOther = opt === "Other";
-  const otherValue = values.find(
-    (v: string) => typeof v === "string" && v.startsWith("Other:")
-  );
+  const clean = (v: string) =>
+    typeof v === "string" ? v.replace(/^Other:\s*/i, "") : "";
+
+  const inputValue = values?.[0] || "";
+  const cleanInput = clean(inputValue);
+
+  const filteredSuggestions =
+    cleanInput.trim() === "" ||
+    section.options.some(
+      (item: string) =>
+        item.toLowerCase() === cleanInput.toLowerCase()
+    )
+      ? []
+      : section.options.filter((item: string) =>
+          item.toLowerCase().includes(cleanInput.toLowerCase())
+        );
 
   return (
-    <div key={opt} className="flex flex-col gap-2  space-y-2">
-      <label className="flex items-center text-sm gap-2">
-        <input
-          type="checkbox"
-          checked={
-            isOther
-              ? Boolean(otherValue)
-              : values.includes(opt)
-          }
-          onChange={() => handleCheckboxChange(section.field, opt)}
-          className="accent-purple-600"
-        />
-        {opt}
-      </label>
-    
-{section.title === "Service Type" &&
-  hasSubTypes(opt) &&
-  formData.hcpType.includes(opt) && (
     <div
-      className="ml-6 mt-3 pl-4 border-l-2 border-teal-200"
+      key={section.field}
+      id={section.title}
+      className="bg-white rounded-lg shadow p-4 space-y-2"
     >
-      {/* <p className="text-sm font-medium text-gray-800 mb-2">
-        {opt} <span className="text-gray-500">– Sub Type</span>
-      </p> */}
+      <h2 className="text-lg font-semibold text-teal-600">
+        {section.title}
+      </h2>
 
-      <div className="flex flex-wrap gap-5">
-        {SERVICE_SUBTYPE_MAP[opt].map((type: string) => (
-          <label key={type} className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={formData.serviceSubTypes?.[opt] === type}
-              onChange={() =>
-                setFormData((prev: any) => ({
-                  ...prev,
-                  serviceSubTypes: {
-                    ...prev.serviceSubTypes,
-                    [opt]: type,
-                  },
-                }))
-              }
-              className="accent-teal-600"
-            />
-            {type}
-          </label>
-        ))}
-      </div>
-
-      <div className="mt-3 flex items-center gap-3 text-sm">
-        <span className="text-gray-700">Number of Sessions</span>
+      <div className="relative w-[90%]">
         <input
-          type="number"
-          value={formData.sessions?.[opt] ?? 0}
+          type="text"
+          placeholder={`Enter ${section.title}`}
+          value={cleanInput}
           onChange={(e) =>
-            setFormData((prev: any) => ({
-              ...prev,
-              sessions: {
-                ...prev.sessions,
-                [opt]: Number(e.target.value),
-              },
-            }))
+            handleOtherChange(
+              section.field,
+              toProperCaseLive(e.target.value)
+            )
           }
-          className="w-20 border border-gray-300 rounded-md px-2 py-1 text-center"
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
         />
-      </div>
-    </div>
-  )}
 
-      {allowedServices.includes(opt) &&
- formData.hcpType.includes(opt) && (
-  <div>
-    {opt === "Oncall Service (OCS)" ? (
-      <div>
-        <select
-          className="mt-2 w-full text-xs font-medium text-gray-700 bg-white
-          border border-gray-200 rounded-xl px-3 py-2 shadow-sm"
-          // onChange={(e) =>
-          //   handleChange("OnCallSerive", e.target.value)
-          // }
-
-          onChange={
-            (e:any)=>{
-              setShowOtherOnGoinCall(e.target.value==="Other")
-              setFormData({...formData,OnCallSerive:e.target.value==="Other"?'':e.target.value})
-            }
-          }
-        >
-          <option value="">Choose Service Type</option>
-          <option value="Injection">Injection</option>
-          <option value="Dressing">Dressing</option>
-          <option value="Other">Other</option>
-        </select>
-
-        {ShowOtherOnGoinCall && (
-          <input
-            type="text"
-            placeholder="Specify other service"
-            onChange={(e) =>
-              handleChange("OnCallSerive", e.target.value)
-            }
-            className="mt-2 w-full text-xs font-medium text-gray-700 bg-white
-            border border-gray-200 rounded-xl px-3 py-2"
-          />
+        {filteredSuggestions.length > 0 && (
+          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-md max-h-48 overflow-y-auto">
+            {filteredSuggestions.map((s: string) => (
+              <div
+                key={s}
+                onClick={() =>
+                  handleOtherChange(section.field, s)
+                }
+                className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+              >
+                {s}
+              </div>
+            ))}
+          </div>
         )}
       </div>
-    ) : (
-  <div className="flex gap-3 text-sm items-center justify-center rounded-md
-  transition-all duration-200 ease-out border-l-3 border-teal-200 shadow-lg p-1
-  hover:bg-gray-50 hover:rounded-md hover:px-2">
 
+      {section.title === "Service Type" &&
+        (Array.isArray(values) ? values : []).map((opt: string) =>
+          hasSubTypes(clean(opt)) &&
+          (formData.hcpType || []).some(
+            (v: string) => clean(v) === clean(opt)
+          ) ? (
+            <div
+              key={opt}
+              className="ml-6 mt-3 pl-4 border-l-2 border-teal-200"
+            >
+              <div className="flex flex-wrap gap-5">
+                {SERVICE_SUBTYPE_MAP[clean(opt)]?.map(
+                  (type: string) => (
+                    <label
+                      key={type}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={
+                          formData.serviceSubTypes?.[
+                            clean(opt)
+                          ] === type
+                        }
+                        onChange={() =>
+                          setFormData((prev: any) => ({
+                            ...prev,
+                            serviceSubTypes: {
+                              ...prev.serviceSubTypes,
+                              [clean(opt)]: type,
+                            },
+                          }))
+                        }
+                        className="accent-teal-600"
+                      />
+                      {type}
+                    </label>
+                  )
+                )}
+              </div>
 
-  
-  <div className="flex items-center gap-2">
-    <span className="text-gray-700">No. of People</span>
-    <input
-      type="number"
-      
-      value={formData.NumberOfCareTakers?.[opt] ?? 0}
-      onChange={(e) =>
-        setFormData((prev: any) => ({
-          ...prev,
-          NumberOfCareTakers: {
-            ...prev.NumberOfCareTakers,
-            [opt]: Number(e.target.value),
-          },
-        }))
-      }
-      className="w-16 border cursor-pointer border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
-    />
-  </div>
+              <div className="mt-3 flex items-center gap-3 text-sm">
+                <span className="text-gray-700">
+                  Number of Sessions
+                </span>
+                <input
+                  type="number"
+                  value={formData.sessions?.[clean(opt)] ?? 0}
+                  onChange={(e) =>
+                    setFormData((prev: any) => ({
+                      ...prev,
+                      sessions: {
+                        ...prev.sessions,
+                        [clean(opt)]: Number(e.target.value),
+                      },
+                    }))
+                  }
+                  className="w-20 border border-gray-300 rounded-md px-2 py-1 text-center"
+                />
+              </div>
 
-  
- <div className="flex gap-6">
-  {/* 12-Hr */}
-  <label className="flex items-center gap-2">
-    <input
-      type="checkbox"
-      className="cursor-pointer accent-teal-600"
-      checked={formData.ServiceWorkingHours?.[opt] === "12-Hr"}
-      onChange={(e) =>
-        setFormData((prev: any) => ({
-          ...prev,
-          ServiceWorkingHours: {
-            ...prev.ServiceWorkingHours,
-            [opt]: e.target.checked ? "12-Hr" : "",
-          },
-        }))
-      }
-    />
-    <span>12-Hr</span>
-  </label>
+              {allowedServices.includes(clean(opt)) && (
+                <div className="flex gap-3 text-sm items-center justify-center rounded-md transition-all duration-200 ease-out border-l-3 border-teal-200 shadow-lg p-1 hover:bg-gray-50 hover:rounded-md hover:px-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-700">
+                      No. of People
+                    </span>
+                    <input
+                      type="number"
+                      value={
+                        formData.NumberOfCareTakers?.[
+                          clean(opt)
+                        ] ?? 0
+                      }
+                      onChange={(e) =>
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          NumberOfCareTakers: {
+                            ...prev.NumberOfCareTakers,
+                            [clean(opt)]: Number(e.target.value),
+                          },
+                        }))
+                      }
+                      className="w-16 border cursor-pointer border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    />
+                  </div>
 
-  {/* 24-Hr */}
-  <label className="flex items-center gap-2">
-    <input
-      type="checkbox"
-      className="cursor-pointer accent-teal-600"
-      checked={formData.ServiceWorkingHours?.[opt] === "24-Hr"}
-      onChange={(e) =>
-        setFormData((prev: any) => ({
-          ...prev,
-          ServiceWorkingHours: {
-            ...prev.ServiceWorkingHours,
-            [opt]: e.target.checked ? "24-Hr" : "",
-          },
-        }))
-      }
-    />
-    <span>24-Hr</span>
-  </label>
-</div>
+                  <div className="flex gap-6">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        className="cursor-pointer accent-teal-600"
+                        checked={
+                          formData.ServiceWorkingHours?.[
+                            clean(opt)
+                          ] === "12-Hr"
+                        }
+                        onChange={(e) =>
+                          setFormData((prev: any) => ({
+                            ...prev,
+                            ServiceWorkingHours: {
+                              ...prev.ServiceWorkingHours,
+                              [clean(opt)]: e.target.checked
+                                ? "12-Hr"
+                                : "",
+                            },
+                          }))
+                        }
+                      />
+                      <span>12-Hr</span>
+                    </label>
 
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        className="cursor-pointer accent-teal-600"
+                        checked={
+                          formData.ServiceWorkingHours?.[
+                            clean(opt)
+                          ] === "24-Hr"
+                        }
+                        onChange={(e) =>
+                          setFormData((prev: any) => ({
+                            ...prev,
+                            ServiceWorkingHours: {
+                              ...prev.ServiceWorkingHours,
+                              [clean(opt)]: e.target.checked
+                                ? "24-Hr"
+                                : "",
+                            },
+                          }))
+                        }
+                      />
+                      <span>24-Hr</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null
+        )}
 
-</div>
+      <button
+        className="bg-white/30 backdrop-blur-md mt-5 border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200"
+        type="button"
+        onClick={() =>
+          setRemarkStatus((prev) => ({
+            ...prev,
+            [section.field as keyof RemarkStatusType]:
+              !prev[
+                section.field as keyof RemarkStatusType
+              ],
+          }))
+        }
+      >
+        {RemarkStatus[
+          section.field as keyof RemarkStatusType
+        ]
+          ? "SAVE Remark"
+          : "Add Remarks"}
+      </button>
 
-    )}
-  </div>
-)}
+      {RemarkStatus[
+        section.field as keyof RemarkStatusType
+      ] && (
+        <textarea
+          rows={4}
+          placeholder="Enter your remarks here..."
+          className="w-[400px] p-3 mt-2 border-1 ml-2 border-gray-300 rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 text-sm"
+          value={formData[`${section.field}Remarks`] || ""}
+          onChange={(e) =>
+            handleChange(
+              `${section.field}Remarks`,
+              toProperCaseLive(e.target.value)
+            )
+          }
+        />
+      )}
 
-     
+      {section.title === "Doctor Needs" && (
+        <div className="flex flex-col gap-2">
+          {(Array.isArray(values) ? values : []).map(
+            (each: string) => {
+              const cleanEach = clean(each);
 
-      {isOther && otherValue && (
-  <div className="ml-6 flex items-center w-[90%] border border-gray-300 rounded-md overflow-hidden">
-    
- 
-    <span className="bg-gray-100 px-3 py-1.5 text-sm text-gray-600 whitespace-nowrap">
-      Other:
-    </span>
+              if (cleanEach === "Medical Dr.") {
+                return (
+                  <select
+                    key="MedicalDr"
+                    className="w-full border rounded-lg p-2"
+                    onChange={(e) =>
+                      handleChange(
+                        "MedicalDrSpecialisation",
+                        e.target.value
+                      )
+                    }
+                  >
+                    <option>
+                      Choose Medical Dr specialization
+                    </option>
+                    {medicalSpecializations.map((spec) => (
+                      <option key={spec}>{spec}</option>
+                    ))}
+                  </select>
+                );
+              }
 
-    <input
-      type="text"
-      value={extractOtherValue(otherValue)}
-      onChange={(e) =>
-        handleOtherChange(
-          section.field,
-          toProperCaseLive(e.target.value)
-        )
-      }
-      placeholder="Enter value"
-      className="
-        flex-1 px-3 py-1.5
-        text-sm
-        focus:outline-none
-        focus:ring-2 focus:ring-teal-500
-      "
-    />
-  </div>
-)}
+              if (cleanEach === "Physio") {
+                return (
+                  <select
+                    key="Physio"
+                    className="w-full border rounded-lg p-2"
+                    onChange={(e) =>
+                      handleChange(
+                        "PhysiotherapySpecialisation",
+                        e.target.value
+                      )
+                    }
+                  >
+                    <option>
+                      Choose Physiotherapy specialization
+                    </option>
+                    {physioSpecializations.map((spec) => (
+                      <option key={spec}>{spec}</option>
+                    ))}
+                  </select>
+                );
+              }
 
+              return null;
+            }
+          )}
+        </div>
+      )}
     </div>
   );
-
- 
 })}
 
 
 
-
-              <button
-                className="bg-white/30 backdrop-blur-md mt-5 border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200"
-                type="button"
-                onClick={() =>
-                  setRemarkStatus(prev => ({
-                    ...prev,
-                    [section.field as keyof RemarkStatusType]: !prev[section.field as keyof RemarkStatusType],
-                  }))
-                }
-
-              >
-                {RemarkStatus[section.field as keyof RemarkStatusType] ? "SAVE Remark" : "Add Remarks"}
-              </button>
-
-              {RemarkStatus[section.field as keyof RemarkStatusType] && (
-                <textarea
-                  rows={4}
-                  placeholder="Enter your remarks here..."
-                  className="w-[400px] p-3 mt-2 border-1 ml-2 border-gray-300 rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 text-sm"
-                  value={formData[`${section.field}Remarks`] || ""}
-                  onChange={(e) => handleChange(`${section.field}Remarks`, toProperCaseLive(e.target.value))}
-                />
-              )}
-
-              {section.title === "Doctor Needs" && (
-                <div className="flex flex-col gap-2">
-                  {formData.patientDrNeeds.map((each: string) => {
-                    if (each === "Medical Dr.") {
-                      return (
-                        <select
-                          key="MedicalDr"
-                          className="w-full border rounded-lg p-2"
-                          onChange={(e) => handleChange("MedicalDrSpecialisation", e.target.value)}
-                        >
-                          <option>Choose Medical Dr specialization</option>
-                          {medicalSpecializations.map((spec) => <option key={spec}>{spec}</option>)}
-                        </select>
-                      );
-                    } else if (each === "Physio") {
-                      return (
-                        <select
-                          key="Physio"
-                          className="w-full border rounded-lg p-2"
-                          onChange={(e) => handleChange("PhysiotherapySpecialisation", e.target.value)}
-                        >
-                          <option>Choose Physiotherapy specialization</option>
-                          {physioSpecializations.map((spec) => <option key={spec}>{spec}</option>)}
-                        </select>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-              )}
-            </div>
-          ))}
-
-
-          <div id="Charges" className="bg-white rounded-lg shadow p-4 space-y-2">
+          {/* <div id="Charges" className="bg-white rounded-lg shadow p-4 space-y-2">
             <h2 className="text-lg font-semibold text-teal-600">Charges</h2>
             {["₹1200", "₹1000", "₹900", "Other"].map((charge) => (
               <div key={charge} className="flex flex-col">
@@ -1487,7 +1603,7 @@ setShowOtherServiceArea(e.target.value==="Other")
             </div>
 
             <p className="text-red-500">{WarningMessage}</p>
-          </div>
+          </div> */}
 
           <div id="Additional Comments" className="flex flex-col md:ml-2  md:w-[400px] ">
 
@@ -1508,7 +1624,7 @@ setShowOtherServiceArea(e.target.value==="Other")
 
           </div>
 
-          <div className="flex flex-col flex-wrap items-center justify-center">
+          {/* <div className="flex flex-col flex-wrap items-center justify-center">
             <div className="w-full md:w-[330px] mr-[20px] max-w-sm mx-auto p-6  rounded-2xl shadow-lg flex flex-col items-center gap-4 sm:max-w-md md:max-w-lg">
               <p className="text-lg font-semibold text-gray-800 tracking-tight">Add CallBack Reminder</p>
 
@@ -1543,7 +1659,7 @@ setShowOtherServiceArea(e.target.value==="Other")
                 </button>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="text-center">

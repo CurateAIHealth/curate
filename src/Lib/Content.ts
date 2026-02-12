@@ -1318,7 +1318,7 @@ export const LeadSources = [
   "Soumya Ranjan",
   "Website",
   "Google",
-  "Other"
+  
 ];
 export const REFERRAL_SOURCE_TYPES: string[] = [
   "Institute",
@@ -1974,9 +1974,26 @@ export const healthcareServices = [
   "Baby Care",
   "Other"
 ];
+export const healthcareServicesforCallEnquiry = [
+  "Healthcare Assistant Service (HCAS)",
+  "Healthcare Nursing Service (HCNS)",
+  "Physiotherapy Service (PTS)",
+  "Medical Equipment Service (MES)",
+  "Oncall Service (OCS)",
+  "Lab Service (LABS)",
+  "Occupational Health Service (OHS)",
+  "Digital Health Service (DHS)",
+  "AI Health Service (AIHS)",
+  "Speech & Language Therapy Service (SPTS)",
+  "Occupational Therapy Service (OTS)",
+  "Behaviour Health Service (BHS)",
+  "Healthcare Consulting Service (HCS)",
+  "Baby Care",
+  
+];
 
 
-export const SERVICE_SUBTYPE_MAP = {
+export const SERVICE_SUBTYPE_MAP:any = {
   "Physiotherapy Service (PTS)": [
     "Assessment",
     "Consultation",
@@ -2354,7 +2371,51 @@ export const hyderabadAreas = [
   "Narsingi",
   "Other"
 ];
-
+export const hyderabadAreasforcallEnquiry = [
+  "Banjara Hills",
+  "Jubilee Hills",
+  "HITEC City",
+  "Gachibowli",
+  "Madhapur",
+  "Kukatpally",
+  "Ameerpet",
+  "Begumpet",
+  "Somajiguda",
+  "Secunderabad",
+  "Mehdipatnam",
+  "Miyapur",
+  "Manikonda",
+  "Uppal",
+  "Nallakunta",
+  "Chandanagar",
+  "Nampally",
+  "Abids",
+  "Ashok Nagar",
+  "Asif Nagar",
+  "Bahadurpura",
+  "Aliabad",
+  "Aghapura",
+  "Sainikpuri",
+  "Amberpet",
+  "Badichowdi",
+  "Balkampet",
+  "Barkatpura",
+  "Bagh Lingampally",
+  "Adikmet",
+  "Koti",
+  "Tolichowki",
+  "Dilsukhnagar",
+  "LB Nagar",
+  "Himayat Nagar",
+  "Khairatabad",
+  "Kondapur",
+  "Nizampet",
+  "Shamshabad",
+  "Medchal",
+  "Tellapur",
+  "Narsingi",
+ 
+];
 export const EducationLevels = [
   "10th (Secondary School)",
   "12th (Higher Secondary)",
