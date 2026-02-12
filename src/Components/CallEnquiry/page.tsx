@@ -3,7 +3,7 @@
 
 
 import { toProperCaseLive } from "@/Lib/Actions";
-import { ClearEnquiry, GetUserInformation, UpdateClientStatusToProcessing } from "@/Lib/user.action";
+import { ClearEnquiry, GetUserInformation, UpdateClientStatusinCallEnquiry, UpdateClientStatusToProcessing } from "@/Lib/user.action";
 import { Refresh } from "@/Redux/action";
 import {
   Phone,
@@ -18,6 +18,7 @@ import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 interface CallEnquiryUser {
+  ClientStatus: string | number | readonly string[] | undefined;
   NewLead: string | undefined;
   LeadDate: any;
   _id: string;
@@ -41,11 +42,12 @@ export default function CallEnquiryList({
   data,
   title = "Call Enquiries",
 }: Props) {
-  const [StatusMessage,setStatusMessage]=useState<any>("")
+ 
   const SearchMonth=useSelector((state:any)=>state.MonthFilterAdmin)
   const SearchYear=useSelector((state:any)=>state.YearFilterAdmin)
   
     const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
+      const StatusMessage=useSelector((each:any)=>each.GlobelRefresh)
   const dispatch=useDispatch()
   if (!data || data.length === 0) {
     return (
@@ -57,19 +59,20 @@ export default function CallEnquiryList({
 
 
   const handleDelete = async (Clearuser: CallEnquiryUser) => {
-    setStatusMessage("Please Wait....")
-    dispatch(Refresh("Process"))
+   
+      dispatch(Refresh("Please Wait...."))
       const userId = localStorage.getItem("UserId");
     
    
       if (loggedInEmail !== "srivanikasham@curatehealth.in") {
-        setStatusMessage('You don’t have the required permissions to proceed')
+     
+              dispatch(Refresh('You don’t have the required permissions to proceed'))
         return
       }
       const DeletCallEnquiry = await ClearEnquiry(Clearuser?.userId)
       if (DeletCallEnquiry.success === true) {
-        setStatusMessage(DeletCallEnquiry.message)
-        dispatch(Refresh("Refreshed"))
+       
+        dispatch(Refresh(DeletCallEnquiry.message))
       }
 
 
@@ -109,8 +112,23 @@ const UpdatedFilterUserType = useMemo(() => {
     .reverse();
 }, [data, SearchMonth, SearchYear]);
 
+const UpdateClientStatus=async(UserId:any,Value:any)=>{
+try{
+  
+  dispatch(Refresh("Please Wait....."))
+const UpdateCurrentClientStatus=await   UpdateClientStatusinCallEnquiry(UserId,Value)
+if(UpdateCurrentClientStatus.success){
+
+  dispatch(Refresh("Status Updated Successfully"))
+}
+}catch(err:any){
+
+}
+}
+
 const GRID_COLS =
-  "grid-cols-[60px_1fr_1.2fr_1.2fr_2fr_120px_120px_60px]";
+  "grid-cols-[60px_120px_1.2fr_1.5fr_1.3fr_120px_1.2fr_2fr_80px]";
+
 
   
 
@@ -179,22 +197,19 @@ if(Post.success){
 
   
 <div
-  className={`hidden md:grid ${GRID_COLS} gap-4  px-4 py-3 text-xs bg-gradient-to-r from-teal-600 to-emerald-500 text-white  text-[10px] font-semibold `}
-  
+  className={`hidden md:grid ${GRID_COLS} gap-4 px-4 py-3 text-xs bg-gradient-to-r from-teal-600 to-emerald-500 text-white text-[10px] font-semibold`}
 >
   <span>S.No</span>
   <span>Date</span>
-  <span> Lead Source</span>
- 
+  <span>Lead Source</span>
   <span>Client Name</span>
-
   <span>Phone</span>
+  <span className="text-center">Status</span>
   <span>Location</span>
   <span>Comments</span>
-  {/* <span className="text-center">Message</span> */}
-  
   <span className="text-center">Action</span>
 </div>
+
 
 
 
@@ -221,12 +236,38 @@ if(Post.success){
   <span className="flex items-center gap-1 text-gray-600 truncate">
     <Phone size={12} className="shrink-0" />
     <span className="truncate">
-      {user.ContactNumber || "Awaiting Info"}
+      {user.ContactNumber || "Awaiting Info"}{user.ClientStatus}
     </span>
   </span>
+<span className="flex items-center w-fit text-center">
+  <div className="relative w-fit text-center">
+    <select
+    defaultValue={user.ClientStatus}
+    onChange={(e:any)=>UpdateClientStatus(user.userId,e.target.value)}
+      className="w-fit text-center appearance-none text-xs font-medium
+      px-3 py-1.5 pr-5 rounded-full
+      bg-gradient-to-r from-slate-50 to-white
+      border border-slate-200 text-slate-700
+      shadow-sm
+      hover:border-emerald-400 hover:shadow-md
+      focus:outline-none focus:ring-2 focus:ring-emerald-400
+      transition-all duration-200 cursor-pointer"
+    >
+      {["Save","Send","Converted","Waiting List","Lost"].map((each:any,i:number)=>(
+        <option key={i} value={each}>{each}</option>
+      ))}
+    </select>
+
+  
+    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">
+      ▼
+    </span>
+  </div>
+</span>
+
 
   <span className="flex items-center gap-1 text-gray-600 truncate">
-    <MapPin size={16} className="shrink-0 text-red-600" />
+    <MapPin size={16} className="shrink-0 text-green-600" />
     <span className="truncate">
       {user.Location || "Not Provided"}
     </span>

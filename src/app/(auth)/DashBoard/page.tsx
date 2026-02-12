@@ -504,11 +504,11 @@ const pendingPdr = timesheets.filter((t: any) => {
       patientGender: EnquiryForm.patientGender || "",
       HCPPreferGender: EnquiryForm.HCPPreferGender || "",
       PreferredLanguage: EnquiryForm.PreferredLanguage || "",
-NewLead:EnquiryForm.NewLead||'',
+      NewLead:EnquiryForm.NewLead||'',
       Location: EnquiryForm.ClientArea || "",
       ServiceType: EnquiryForm.ServiceType || "",
       HealthCard: EnquiryForm.patientHealthCard || "",
-
+ClientStatus:EnquiryForm.ClientStatus||"",
       ExpectedService: EnquiryForm.ExpectedService || "",
       ReasonForService: EnquiryForm.Reasonforservice || "",
 
@@ -943,7 +943,7 @@ setNotificationStatus("Notification Send Succesfully")
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard
+      Hi Admin – Welcome to Admin Dashboard.
     </span>
   </div>
 

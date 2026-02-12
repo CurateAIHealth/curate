@@ -23,7 +23,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 ,Hourglass ,BadgeCheck, MapPin,FileCheck,FileX } from 'lucide-react';
-import { Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateClient, UpdateClientSuggetion, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
+import { Refresh, Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateClient, UpdateClientSuggetion, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
 import { ClientEnquiry_Filters, filterColors, hyderabadAreas, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
 
@@ -42,7 +42,7 @@ import { stat } from 'fs';
 
 
 export default function UserTableList() {
-  const [updatedStatusMsg, setUpdatedStatusMsg] = useState('');
+
   const [users, setUsers] = useState<any[]>([]);
   const [isChecking, setIsChecking] = useState(true);
   const [UserFirstName, setUserFirstName] = useState("");
@@ -68,7 +68,7 @@ const [SearchResult, setSearchResult] = useState("")
   const UpdateduserType = useSelector((state: any) => state.ViewHCPList)
   const CurrentCount = useSelector((state: any) => state.updatedCount)
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const GlobelRefreshStage=useSelector((each:any)=>each.GlobelRefresh)
+  const updatedStatusMsg=useSelector((each:any)=>each.GlobelRefresh)
 const RESTRICTED_EMAILS = new Set([
   "info@curatehealth.in",
   "admin@curatehealth.in",
@@ -123,7 +123,7 @@ useEffect(() => {
   return () => {
     mounted = false;
   };
-}, [updatedStatusMsg,GlobelRefreshStage]);
+}, [updatedStatusMsg]);
 
 useEffect(() => {
   const email = cachedUserInfo?.Email?.toLowerCase();
@@ -143,11 +143,13 @@ useEffect(() => {
 
 
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
-    setUpdatedStatusMsg(`Updating ${first} Contact Status....`);
+   
+      dispatch(Refresh(`Updating ${first} Contact Status....`))
     try {
       const res = await UpdateUserContactVerificationstatus(UserId, e);
       if (res?.success === true) {
-        setUpdatedStatusMsg(`${first} Verification Status Updated Successfully`);
+       
+          dispatch(Refresh(`${first} Verification Status Updated Successfully`))
       }
     } catch (err: any) {
       console.error(err);
@@ -159,12 +161,14 @@ useEffect(() => {
     HCN: "bg-purple-200 text-purple-900",
   };
   const UpdateEmailVerificationStatus = async (first: string, e: string, UserId: any) => {
-    setUpdatedStatusMsg(`Updating ${first} Email Verification Status....`);
+   
+     dispatch(Refresh(`Updating ${first} Email Verification Status....`))
 
     try {
       const res = await UpdateUserEmailVerificationstatus(UserId, e);
       if (res?.success === true) {
-        setUpdatedStatusMsg(`${first} Email Verification Status Updated Successfully`);
+     
+          dispatch(Refresh(`${first} Email Verification Status Updated Successfully`))
       }
 
     } catch (err: any) {
@@ -172,10 +176,11 @@ useEffect(() => {
     }
   };
   const UpdateCurrentstatus = async (first: string, e: string, UserId: any) => {
-    setUpdatedStatusMsg(`Updating ${first} Current Status....`);
+  
+      dispatch(Refresh(`Updating ${first} Current Status....`))
     try {
       const res = await UpdateUserCurrentstatus(UserId, e);
-      setUpdatedStatusMsg(res.message)
+        dispatch(Refresh(res.message))
 
     } catch (err: any) {
       console.error(err);
@@ -202,7 +207,7 @@ useEffect(() => {
     ClientStatus: each.ClientStatus,
     Status: each.Status,
     CurrentStatus: each.CurrentStatus || "None",
-    LeadSource: each.Source,
+    LeadSource: each.Source||each.NewLead,
     ClientPriority: each.ClientPriority,
     CreatedAt: each.createdAt,
     LeadDate: each.LeadDate,
@@ -385,11 +390,12 @@ useEffect(() => {
 
   const DeleteClient = async () => {
     try {
-      setUpdatedStatusMsg("Please Wait Deleteing Client.....")
+      
+       dispatch(Refresh("Please Wait Deleteing Client....."))
       const DeleteEnquiry = await ClearEnquiry(DeleteInformation.userId)
 if (DeleteEnquiry?.success) {
-  setUpdatedStatusMsg("Client Deleted Successfully")
-
+  
+ dispatch(Refresh("Client Deleted Successfully"))
   const timer:any = setInterval(() => {
     setShowDeletePopUp(false)
   }, 2000)
@@ -406,6 +412,7 @@ if (DeleteEnquiry?.success) {
   }
 
   const UpdateFilterValue = (UpdatedValue: any) => {
+         dispatch(Refresh(''))
     setSearch(UpdatedValue)
     // dispatch(UpdateSubHeading(UpdatedValue))
     // dispatch(Update_Main_Filter_Status(UpdatedValue))
@@ -478,11 +485,13 @@ if (DeleteEnquiry?.success) {
 
   const UpdateClientPriority = async (ClientName: any, ClientUserId: any, UpdatedValue: any) => {
     try {
-      setUpdatedStatusMsg(`Please Wait,${ClientName} Priority Updateding...`);
+   
+       dispatch(Refresh(`Please Wait,${ClientName} Priority Updateding...`))
       const PriorityResult: any = await UpdatedClientPriority(ClientUserId, UpdatedValue)
 
       if (PriorityResult.success === true) {
-        setUpdatedStatusMsg(`${ClientName} Priority Updated Successfully`);
+     
+         dispatch(Refresh(`${ClientName} Priority Updated Successfully`))
       }
     } catch (err: any) {
 
@@ -491,11 +500,13 @@ if (DeleteEnquiry?.success) {
 
   const UpdateClientServiceLocation = async (ClientName: any, ClientUserId: any, UpdatedValue: any) => {
     try {
-      setUpdatedStatusMsg(`Please Wait,${ClientName} Priority Updateding...`);
+    
+       dispatch(Refresh(`Please Wait,${ClientName} Priority Updateding...`))
       const AreaUpdateResult: any = await UpdatedServiceArea(ClientUserId, UpdatedValue)
 
       if (AreaUpdateResult.success === true) {
-        setUpdatedStatusMsg(`${ClientName} Priority Updated Successfully`);
+        
+         dispatch(Refresh(`${ClientName} Priority Updated Successfully`))
       }
     } catch (err: any) {
 
@@ -504,11 +515,13 @@ if (DeleteEnquiry?.success) {
 
   const UpdatePreviewUserType = async (ClientName: any, ClientUserId: any, UpdatedValue: any) => {
     try {
-      setUpdatedStatusMsg(`Please Wait,${ClientName} Priority Updateding...`);
+      
+       dispatch(Refresh(`Please Wait,${ClientName} Priority Updateding...`))
       const AreaUpdateResult: any = await UpdatedPreviewUserType(ClientUserId, UpdatedValue)
 
       if (AreaUpdateResult.success === true) {
-        setUpdatedStatusMsg(`${ClientName} Priority Updated Successfully`);
+      
+         dispatch(Refresh(`${ClientName} Priority Updated Successfully`))
       }
     } catch (err: any) {
 
@@ -519,11 +532,13 @@ if (DeleteEnquiry?.success) {
 
   const UpdateJoiningDate = async (ClientName: any, ClientUserId: any, UpdatedValue: any) => {
     try {
-      setUpdatedStatusMsg(`Please Wait,${ClientName} Priority Updateding...`);
+     
+       dispatch(Refresh(`Please Wait,${ClientName} Priority Updateding...`))
       const PriorityResult: any = await UpdatedUserJoingDate(ClientUserId, UpdatedValue)
 
       if (PriorityResult.success === true) {
-        setUpdatedStatusMsg(`${ClientName} Priority Updated Successfully`);
+      
+         dispatch(Refresh(`${ClientName} Priority Updated Successfully`))
       }
     } catch (err: any) {
 
@@ -531,7 +546,8 @@ if (DeleteEnquiry?.success) {
   }
 
   const UpdateAssignHca = async (UserIDClient: any, UserIdHCA: any, ClientName: any, ClientEmail: any, ClientContact: any, Adress: any, HCAName: any, HCAContact: any) => {
-    setUpdatedStatusMsg("Please Wait Assigning HCA...")
+    
+     dispatch(Refresh("Please Wait Assigning HCA..."))
     try {
       const today = new Date();
       const attendanceRecord = {
@@ -547,7 +563,8 @@ if (DeleteEnquiry?.success) {
       const UpdateHcaStatus = await UpdateHCAnstatus(UserIdHCA, "Assigned")
       const PostTimeSheet: any = await InserTimeSheet(UserIDClient, UserIdHCA, ClientName, ClientEmail, ClientContact, Adress, HCAName, HCAContact, TimeSheetData)
       if (PostTimeSheet.success === true) {
-        setUpdatedStatusMsg("HCA Assigned Successfully, For More Information Check in Placemets")
+       
+         dispatch(Refresh("HCA Assigned Successfully, For More Information Check in Placemets"))
 
         sendWhatsApp("+919347877159", "+919347877159");
 
@@ -557,7 +574,8 @@ if (DeleteEnquiry?.success) {
       }
 
     } catch (err: any) {
-      setUpdatedStatusMsg(err)
+  
+       dispatch(Refresh(err))
     }
   }
 
