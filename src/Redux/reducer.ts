@@ -306,7 +306,7 @@ case "CurrentLoginUser":
     }
 }
 
-export const RefreshState = (state: any = "Siddu", action: any) => {
+export const RefreshState = (state: any = "", action: any) => {
     switch (action.type) {
         case "Refresh":
             return action.payload;

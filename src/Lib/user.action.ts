@@ -1239,11 +1239,11 @@ export const CallEnquiryRegistration = async (HCA: any) => {
       patientGender: HCA.patientGender || "",
       HCPPreferGender: HCA.HCPPreferGender || "",
       PreferredLanguage: HCA.PreferredLanguage || "",
-NewLead:HCA.NewLead||"",
+      NewLead:HCA.NewLead||"",
       Location: HCA.Location || "",
       ServiceType: HCA.ServiceType || "",
       HealthCard: HCA.HealthCard || "",
-
+ClientStatus:HCA.ClientStatus||"",
       ExpectedService: HCA.ExpectedService || "",
       ReasonForService: HCA.ReasonForService || "",
 
@@ -2782,7 +2782,7 @@ export const ClearEnquiry = async (userId: string) => {
 
     return {
       success: true,
-      message: "Enquiry deleted successfully",
+      message: "Enquiry deleted Successfully",
     };
   } catch (error) {
     console.error("Error deleting enquiry:", error);
@@ -4252,6 +4252,47 @@ export const UpdateUserContactVerificationstatus = async (UserId: string,Contact
     return err
   }
 }
+
+export const UpdateClientStatusinCallEnquiry = async (
+  UserId: string,
+  ContactStatus: string
+) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Registration");
+
+    const isPatient =
+      ContactStatus === "Converted" ||
+      ContactStatus === "Waiting List" ||
+      ContactStatus === "Lost";
+
+    const result = await Collection.updateOne(
+      { userId: UserId },
+      {
+        $set: {
+          ClientStatus: ContactStatus,
+          userType: isPatient ? "patient" : "CallEnquiry",
+        },
+      },
+      { upsert: true } 
+    );
+
+    if (!result.acknowledged) {
+      return { success: false, message: "Internal Error Try Again!" };
+    }
+
+    return {
+      success: true,
+      message: result.upsertedCount
+        ? "ClientStatus added successfully."
+        : "ClientStatus updated successfully.",
+    };
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+};
+
 
 export const UpdateHCAnstatus = async (
   UserId: string,
