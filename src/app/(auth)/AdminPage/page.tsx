@@ -1127,7 +1127,7 @@ console.log('Check For PDR----',a)
     <FileCheck size={18} strokeWidth={2.2} onClick={() => UpdatePopup(user)}/>
   </span>:  <span className="inline-flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:shadow-lg
                    bg-red-100 text-red-600">
-    <FileX size={18} strokeWidth={2.2}  onClick={()=>{dispatch(CurrrentPDRUserId(user.userId));router.push("/NewLead")}}/>
+    <FileX size={18} strokeWidth={2.2}  onClick={()=>{dispatch(CurrrentPDRUserId(user.userId)) ; dispatch(Refresh("Taking you to PDR…"));router.push("/NewLead")}}/>
   </span>}
 </div>:<p className="inline-flex items-center gap-2 rounded-full w-[100px] h-[28px] border border-gray-200 px-3 shadow-lg py-1 text-[9px] text-gray-600">
   <span className="h-4 w-2 rounded-full bg-green-500"></span>
@@ -1254,7 +1254,7 @@ Awaiting Conversion
   const handleLogout = () => {
     dispatch(Update_Main_Filter_Status(""))
     router.push('/DashBoard');
-
+ dispatch(Refresh(""))
   };
 
   const handleMainLogout = async () => {

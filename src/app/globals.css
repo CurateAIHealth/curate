@@ -326,3 +326,19 @@ body {
     display: none;
   }
 }
+/* heartbeat breathing ring */
+@keyframes heartbeat {
+  0% { transform: scale(1); opacity:.6; }
+  50% { transform: scale(1.15); opacity:.2; }
+  100% { transform: scale(1); opacity:.6; }
+}
+
+/* ECG moving line */
+@keyframes ecgMove {
+  0% { transform: translateX(-120px); }
+  100% { transform: translateX(120px); }
+}
+
+.animate-ecg {
+  animation: ecgMove 2.5s linear infinite;
+}

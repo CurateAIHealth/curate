@@ -3,9 +3,11 @@
 import { LoadingData } from "@/Components/Loading/page";
 import MobileMedicationSchedule from "@/Components/MedicationMobileView/page";
 import MedicationSchedule from "@/Components/Medications/page";
+import { normalizeDate } from "@/Lib/Actions";
 import { ClientEnquiry_Filters, filterColors, Headings, Health_Card, healthcareServices, HomeAssistance, hyderabadAreas, indianFamilyRelations, IndianLanguages, LeadSources, Main_Filters, medicalSpecializations, Patient_Home_Supply_Needs, patientCategories, physioSpecializations, SERVICE_SUBTYPE_MAP,  } from "@/Lib/Content";
 import { GetRegidterdUsers, GetUserInformation, UpdateNewLeadInformation } from "@/Lib/user.action";
-import { Update_Current_Client_Status } from "@/Redux/action";
+import { Refresh, Update_Current_Client_Status, Update_Main_Filter_Status, UpdateFetchedInformation } from "@/Redux/action";
+import { a } from "framer-motion/client";
 import { AlertCircle, Info, ListFilter, LogOut, PhoneCall, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { stringify } from "querystring";
@@ -287,9 +289,12 @@ serviceCharges:GetUserInfo?.serviceCharges,
     ? GetUserInfo.PreferredLanguage.split(",").map((v: string) => v.trim())
     : [],
 ServiceArea:GetUserInfo?.Location,
-hcpType: GetUserInfo?.ServiceType
-? GetUserInfo.ServiceType.split(",").map((v: string) => v.trim())
+hcpType: Array.isArray(GetUserInfo?.ServiceType)
+  ? GetUserInfo.ServiceType
+  : typeof GetUserInfo?.ServiceType === "string"
+    ? GetUserInfo.ServiceType.split(",").map((v: string) => v.trim())
     : [],
+
 
 
 
@@ -343,8 +348,9 @@ const handleCheckboxChange = (field: string, option: string) => {
     }
   };
   const handleLogout = () => {
-
+    dispatch(Update_Main_Filter_Status(""))
     router.push('/DashBoard');
+ dispatch(Refresh(""))
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -360,7 +366,21 @@ const handleCheckboxChange = (field: string, option: string) => {
 console.log("Check Response-----",FinelPostingData)
     const PostResult = await UpdateNewLeadInformation(FinelPostingData);
     if (PostResult.success) {
+     
+        const data = await GetUserInformation(FetchedInfo.userId);
+
       setStatusMessage(`${PostResult.message},Riderecting to PDR....`);
+
+      dispatch(
+        UpdateFetchedInformation({
+          ...data,
+          updatedAt: normalizeDate(data?.updatedAt),
+          createdAt: normalizeDate(data?.createdAt),
+        })
+      );
+
+      router.push("/PDR");
+     
       
       // dispatch(Update_Current_Client_Status(formData.ClientStatus))
       // const Timer = setInterval(() => {
@@ -409,7 +429,17 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
           />
 
           <h1 className="text-base sm:text-lg md:text-xl font-medium text-[#ff1493] tracking-wide leading-snug flex items-center justify-center gap-2">
-            Call Enquiry & Firsthand Info 
+            Call Enquiry & Firsthand Info  <p
+            className={`${statusMessage === "Your Lead Registration Completed,Riderecting to Admin Page..."
+                ? "text-green-800"
+                : statusMessage === "Please Select Client Status"
+                  ? "text-red-600"
+                  : "text-gray-600"
+              }`}
+
+          >
+            {statusMessage}
+          </p>
             <span className="bg-white text-teal-500 rounded-full p-2 shadow-sm text-lg flex items-center justify-center">
               <PhoneCall />
             </span>
