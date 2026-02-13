@@ -64,7 +64,7 @@ export default function CallEnquiryList({
       const userId = localStorage.getItem("UserId");
     
    
-      if (loggedInEmail !== "srivanikasham@curatehealth.in") {
+      if (loggedInEmail === "srivanikasham@curatehealth.in") {
      
               dispatch(Refresh('You don’t have the required permissions to proceed'))
         return
@@ -236,7 +236,7 @@ if(Post.success){
   <span className="flex items-center gap-1 text-gray-600 truncate">
     <Phone size={12} className="shrink-0" />
     <span className="truncate">
-      {user.ContactNumber || "Awaiting Info"}{user.ClientStatus}
+      {user.ContactNumber || "Awaiting Info"}
     </span>
   </span>
 <span className="flex items-center w-fit text-center">

@@ -1267,7 +1267,7 @@ setNotificationStatus("Notification Send Succesfully")
 
                     {tab.name === "Call Enquiry" && (
                       <div className="flex items-center gap-2">
-                        <button
+                        {/* <button
                         type="button"
                           onClick={UpdateNewLead}
                           className="rounded-md cursor-pointer text-xs px-2 py-1
@@ -1276,7 +1276,7 @@ setNotificationStatus("Notification Send Succesfully")
       hover:from-teal-400 transition"
                         >
                           + New Lead
-                        </button>
+                        </button> */}
 
                         <button
                         type="button"

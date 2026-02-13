@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingData } from "@/Components/Loading/page";
 import MobileMedicationSchedule from "@/Components/MedicationMobileView/page";
 import MedicationSchedule from "@/Components/Medications/page";
 import { ClientEnquiry_Filters, filterColors, Headings, Health_Card, healthcareServices, HomeAssistance, hyderabadAreas, indianFamilyRelations, IndianLanguages, LeadSources, Main_Filters, medicalSpecializations, Patient_Home_Supply_Needs, patientCategories, physioSpecializations, SERVICE_SUBTYPE_MAP,  } from "@/Lib/Content";
@@ -176,9 +177,11 @@ export default function CallEnquiryForm() {
   const [ShowOtherServiceArea,setShowOtherServiceArea]=useState(false)
   const [statusMessage, setStatusMessage] = useState("");
   const [addedheight, setaddedheight] = useState<any>();
+  const [FetchedInfo,setFetchedInfo]=useState<any>()
   const [TimeStameDetails, setTimeStameDetails] = useState("setTimeStameDetails")
   const [showTooltip, setShowTooltip] = useState(false);
   const [ImportedVendors, setImportedVendors] = useState<any>([])
+  const [isChecking, setIsChecking] = useState(true);
   const [MinimiseOptions, setMinimizeOptions] = useState({ Hygiene: false, Nutrition: false, Vitals: false, Elimination: false, Mobility: false, Medication: false })
   const [RemarkStatus, setRemarkStatus] = useState({
     Hygiene: false, Nutrition: false, Vitals: false, Elimination: false, Mobility: false, ClientCard: false, PatientCard: false, PatientDetails: false, Weight: false, Height: false, patientHomeAssistance: false,
@@ -192,6 +195,7 @@ export default function CallEnquiryForm() {
   const dispatch = useDispatch()
   const router = useRouter()
   const MedicationData = useSelector((each: any) => each.MedicationInfo)
+  const PDRFilledUser=useSelector((each:any)=>each.FillPdrUserId)
   const FinelPostingData = { ...formData, serviceCharges: formData.serviceCharges, RegistrationFee: DiscountPrice - ClientDiscount, Medications: MedicationData }
 
   const handleChange = (field: string, value: string) => {
@@ -259,14 +263,44 @@ const toProperCaseLive = (value: string) => {
   useEffect(() => {
     const Fetch = async () => {
       const localValue = localStorage.getItem('UserId');
-      const [Sign_in_UserInfo, RegisterdUsers] = await Promise.all([
+      const [Sign_in_UserInfo, RegisterdUsers,GetUserInfo] = await Promise.all([
         GetUserInformation(localValue),
         GetRegidterdUsers(),
+        GetUserInformation(PDRFilledUser)
       ]);
       setImportedVendors(RegisterdUsers.filter((each: any) => each.userType === "Vendor"))
       setTimeStameDetails(`${Sign_in_UserInfo?.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`)
+     console.log('Check for Post Datat-----', GetUserInfo
+)
+setFetchedInfo(GetUserInfo)
+setFormData({...formData,clientPhone:GetUserInfo?.ContactNumber,
+clientEmail:GetUserInfo?.Email,
+clientName:GetUserInfo?.FirstName,
+NewLead:GetUserInfo?.LeadDate,
+ClientStatus:GetUserInfo?.ClientStatus,
+Source:GetUserInfo?.NewLead,
+serviceCharges:GetUserInfo?.serviceCharges,
+  patientHealthCard: GetUserInfo?.HealthCard
+    ? GetUserInfo.HealthCard.split(",").map((v: string) => v.trim())
+    : [],
+  comfortableLanguages: GetUserInfo?.PreferredLanguage
+    ? GetUserInfo.PreferredLanguage.split(",").map((v: string) => v.trim())
+    : [],
+ServiceArea:GetUserInfo?.Location,
+hcpType: GetUserInfo?.ServiceType
+? GetUserInfo.ServiceType.split(",").map((v: string) => v.trim())
+    : [],
+
+
+
+
+
+
+})
+
     }
     Fetch()
+    setIsChecking(false)
   }, [])
 const handleCheckboxChange = (field: string, option: string) => {
   setFormData((prev: any) => {
@@ -322,17 +356,18 @@ const handleCheckboxChange = (field: string, option: string) => {
     setStatusMessage("Please Wait...");
     const generatedUserId = uuidv4();
 
-    const FinelPostingData = { ...formData, serviceCharges: formData.serviceCharges, RegistrationFee: DiscountPrice - ClientDiscount, Medications: MedicationData, userId: generatedUserId, SuitableHCP: "" }
-
+    const FinelPostingData = { ...formData, serviceCharges: formData.serviceCharges?formData.serviceCharges:FetchedInfo.serviceCharges, RegistrationFee: DiscountPrice - ClientDiscount?DiscountPrice - ClientDiscount:FetchedInfo.RegistrationFee, Medications: MedicationData, userId: FetchedInfo.userId, SuitableHCP: "" }
+console.log("Check Response-----",FinelPostingData)
     const PostResult = await UpdateNewLeadInformation(FinelPostingData);
     if (PostResult.success) {
-      setStatusMessage(`${PostResult.message},Riderecting to Admin Page...`);
-      dispatch(Update_Current_Client_Status(formData.ClientStatus))
-      const Timer = setInterval(() => {
-        router.push("/AdminPage")
-      }, 1200)
+      setStatusMessage(`${PostResult.message},Riderecting to PDR....`);
+      
+      // dispatch(Update_Current_Client_Status(formData.ClientStatus))
+      // const Timer = setInterval(() => {
+      //   router.push("/AdminPage")
+      // }, 1200)
 
-      return () => clearInterval(Timer)
+      // return () => clearInterval(Timer)
     }
   };
 const requiresSubType = (hcpTypes = []) => {
@@ -349,9 +384,14 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
   return service in SERVICE_SUBTYPE_MAP;
 };
 
-  console.log('Check for Post Datat-----', formData.patientType
-)
+
   const FilterdImportedVendorName = ImportedVendors.map((each: any) => each.VendorName)
+    if (isChecking) {
+      return (
+        <LoadingData/>
+      );
+    }
+  
   return (
     <div
 
@@ -369,7 +409,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
           />
 
           <h1 className="text-base sm:text-lg md:text-xl font-medium text-[#ff1493] tracking-wide leading-snug flex items-center justify-center gap-2">
-            Call Enquiry & Firsthand Info
+            Call Enquiry & Firsthand Info 
             <span className="bg-white text-teal-500 rounded-full p-2 shadow-sm text-lg flex items-center justify-center">
               <PhoneCall />
             </span>
@@ -436,14 +476,14 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
               type="text"
               placeholder="Client Phone"
               className="w-full border rounded-lg p-2"
-              value={formData.clientPhone}
+              value={formData.clientPhone||''}
               onChange={(e) => handleChange("clientPhone", e.target.value)}
             />
             <input
               type="email"
               placeholder="Client Email"
               className="w-full border rounded-lg p-2"
-              value={formData.clientEmail}
+              value={formData.clientEmail||""}
               onChange={(e) => handleChange("clientEmail", e.target.value)}
             />   <div>
               <p>Main point for Patient:</p>
@@ -577,8 +617,9 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
       <div className="relative w-full">
         <input
           type="text"
+          
           placeholder="Type Lead"
-          value={inputValue}
+          value={inputValue||formData.Source||''}
           onChange={(e) =>
             handleChange("Source", e.target.value)
           }
@@ -609,8 +650,8 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
       type="text"
       placeholder="Enter New Lead Name"
       className="w-[300px] border rounded-lg p-2 m-2"
-      value={formData.NewLead}
-      onChange={(e) => handleChange("NewLead", e.target.value)}
+      value={formData.Source||''}
+      onChange={(e) => handleChange("Source", e.target.value)}
     />
   )}
 </div>
@@ -625,6 +666,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
 
               <input
                 type="date"
+                value={ formData.NewLead||''}
                 className="
       h-11 w-full px-4
       rounded-xl
@@ -663,7 +705,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
               type="text"
               placeholder="Patient Name"
               className="w-full border rounded-lg p-2"
-              value={formData.patientName}
+              value={formData.patientName||''}
               onChange={(e) => handleChange("patientName", toProperCaseLive(e.target.value))}
 
             />
@@ -671,14 +713,14 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
               type="text"
               placeholder="Phone"
               className="w-full border rounded-lg p-2"
-              value={formData.patientPhone}
+              value={formData.patientPhone||''}
               onChange={(e) => handleChange("patientPhone", e.target.value)}
             />
             <input
               type="number"
               placeholder="Age"
               className="w-full border rounded-lg p-2"
-              value={formData.patientAge}
+              value={formData.patientAge||''}
               onChange={(e) => handleChange("patientAge", e.target.value)}
             />
             <div className="flex flex-col">
@@ -882,7 +924,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
                 type="text"
                 placeholder="Enter Service Location"
                 className="w-full border rounded-lg p-2"
-                value={formData.serviceLocation}
+                value={formData.serviceLocation||''}
                 onChange={(e) => handleChange("serviceLocation", toProperCaseLive(e.target.value))}
 
              
@@ -1246,7 +1288,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
         <input
           type="text"
           placeholder={`Enter ${section.title}`}
-          value={cleanInput}
+          value={cleanInput||formData[stringify(section.title)]||""}
           onChange={(e) =>
             handleOtherChange(
               section.field,
@@ -1679,7 +1721,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
             type="submit"
             className="px-4 md:mb-2 sm:px-6 py-2 bg-purple-600 text-white rounded-md shadow hover:bg-purple-700 cursor-pointer transition"
           >
-            Submit Enquiry
+      Fill Pdr
           </button>
         </div>
       </form>

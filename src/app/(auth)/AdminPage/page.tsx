@@ -22,8 +22,8 @@ import {
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 ,Hourglass ,BadgeCheck, MapPin,FileCheck,FileX } from 'lucide-react';
-import { Refresh, Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateClient, UpdateClientSuggetion, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
+import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 ,Hourglass ,BadgeCheck, MapPin,FileCheck,FileX, Router } from 'lucide-react';
+import { CurrrentPDRUserId, GetCurrentDeploymentData, Refresh, Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateClient, UpdateClientSuggetion, UpdateFetchedInformation, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
 import { ClientEnquiry_Filters, filterColors, hyderabadAreas, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
 
@@ -33,7 +33,7 @@ import { HCAList } from '@/Redux/reducer';
 import WorkingOn from '@/Components/CurrentlyWoring/page';
 import axios from 'axios';
 import { setTimeout } from 'timers/promises';
-import { decrypt, encrypt, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
+import { decrypt, encrypt, normalizeDate, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
 import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 import { LoadingData } from '@/Components/Loading/page';
 import ReplacementsTable from '@/Components/ReplacementsTable/page';
@@ -197,7 +197,8 @@ useEffect(() => {
     AadharNumber: each.AadharNumber,
     Age: each.Age,
     userType: each.userType,
-    Location: each.Location || each.serviceLocation || 'Not Provided',
+
+    Location: each.Location || each.serviceLocation ||each.Location|| 'Not Provided',
     Email: each.Email,
     Contact: each.ContactNumber,
     userId: each.userId,
@@ -213,7 +214,8 @@ useEffect(() => {
     LeadDate: each.LeadDate,
     ServiceArea: each.ServiceArea,
     ServiceLocation: each.ServiceArea,
-    PreviewUserType: each.PreviewUserType
+    PreviewUserType: each.PreviewUserType,
+    PDRStatus:each.PDRStatus||"No Available"
   }));
 
   const UpdatedFilterUserType = Finel
@@ -579,6 +581,22 @@ if (DeleteEnquiry?.success) {
     }
   }
 
+const UpdatePopup = async (a: any) => {
+  dispatch(GetCurrentDeploymentData(a));
+console.log('Check For PDR----',a)
+ dispatch(Refresh("Redirecting to PDR…"))
+  const data = await GetUserInformation(a.userId);
+
+  dispatch(
+    UpdateFetchedInformation({
+      ...data,
+      updatedAt: normalizeDate(data.updatedAt),
+      createdAt: normalizeDate(data.createdAt),
+    })
+  );
+
+  router.push("/PDR");
+};
 
 
   const ClientEnquiryUserInterFace = () => {
@@ -676,8 +694,8 @@ if (DeleteEnquiry?.success) {
                       <th className="px-2 py-2 w-[14%]">Designate</th>
                     )} */}
                           <th className="px-4 py-2 w-[10%]">Action</th>
-                          
-                          <th className="px-4 py-2 text-center w-[10%]">PDR</th>
+                            {UpdateduserType === "patient" &&
+                          <th className="px-4 py-2 text-center w-[10%]">PDR</th>}
                             
                           {UpdateduserType === 'patient' && <th className="px-2 py-2 w-[10%]">Suitable HCP</th>}
                           {UpdateduserType === 'patient' && <th className="px-2 py-2 w-[10%]">Delete</th>}
@@ -832,7 +850,7 @@ if (DeleteEnquiry?.success) {
                             className="rounded-full h-7 w-7 sm:h-10 sm:w-10 object-cover"
                           /> */}
 
-                                <span className="font-semibold text-[#007B7F] truncate">
+                                <span className="font-semibold  ">
                                   {toProperCaseLive(user.FirstName)}
 
 
@@ -851,7 +869,7 @@ if (DeleteEnquiry?.success) {
                             className="rounded-full h-7 w-7 sm:h-10 sm:w-10 object-cover"
                           /> */}
 
-                                <span className="font-semibold text-[#007B7F] truncate">
+                                <span className="font-semibold ">
                                   {toProperCaseLive(user.PatientName)}
 
 
@@ -879,12 +897,12 @@ if (DeleteEnquiry?.success) {
                                   {/* Display Value */}
                                    <MapPin size={14} className="text-green-600 shrink-0" />
                                   <span
-                                    className={`text-xs ${user.ServiceLocation
+                                    className={`text-xs ${user.ServiceLocation||user.Location
                                         ? "text-slate-700 font-medium"
                                         : "italic text-slate-400"
                                       }`}
                                   >
-                                    {user.ServiceLocation || "Not mentioned"}
+                                    {user.ServiceLocation ||user.Location|| "Not mentioned"}
                                   </span>
 
                                 
@@ -1085,8 +1103,14 @@ if (DeleteEnquiry?.success) {
 
 
                             )}
+
+
                             <td className="px-2 py-2">
-                              {(user?.DetailedVerification === false && UpdateduserType === "healthcare-assistant") ? <p>FillFullInfo</p> :
+                              {(user?.DetailedVerification === false && UpdateduserType === "healthcare-assistant")||(UpdateduserType==='patient'&&user?.PDRStatus!=="Filled") ? <p className="inline-block px-2 py-1 text-[10px] text-center font-semibold 
+              text-neutral-700 bg-neutral-100 rounded-md">
+  Full Info Required
+</p>
+ :
                                 <button
                                   className="w-full text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition cursor-pointer text-xs sm:text-sm"
                                   onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
@@ -1097,17 +1121,19 @@ if (DeleteEnquiry?.success) {
                             </td>
                             
                              <td className="px-2 py-2 text-center">
-                        {user.ClientStatus=="Waiting List" ? (
-  <span className="inline-flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:shadow-lg
-                   bg-red-100 text-red-600">
-    <FileX size={18} strokeWidth={2.2} />
-  </span>
-) : (
+                        {user.ClientStatus==="Converted" ?<div>{user?.PDRStatus==="Filled" ?
   <span className="inline-flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:shadow-lg
                    bg-emerald-100 text-emerald-600">
-    <FileCheck size={18} strokeWidth={2.2} />
-  </span>
-)}
+    <FileCheck size={18} strokeWidth={2.2} onClick={() => UpdatePopup(user)}/>
+  </span>:  <span className="inline-flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:shadow-lg
+                   bg-red-100 text-red-600">
+    <FileX size={18} strokeWidth={2.2}  onClick={()=>{dispatch(CurrrentPDRUserId(user.userId));router.push("/NewLead")}}/>
+  </span>}
+</div>:<p className="inline-flex items-center gap-2 rounded-full w-[100px] h-[28px] border border-gray-200 px-3 shadow-lg py-1 text-[9px] text-gray-600">
+  <span className="h-4 w-2 rounded-full bg-green-500"></span>
+Awaiting Conversion
+</p>
+}
 
 
                             </td>
@@ -1120,7 +1146,7 @@ if (DeleteEnquiry?.success) {
  text-white    h-10 text-[9px] transition-all duration-150"
                                 >
                                   {/* <img src="Icons/HCP.png" className='h-10 w-10 rounded-full'/> */}
-                                  <img src="Icons/FemaleHCA.png" className='h-15 w-15 rounded-full' />
+                                  <img src="Icons/FemaleHCA.png" className='h-10 w-15 rounded-full' />
 
                                 </button>
                               </td>}

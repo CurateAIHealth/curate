@@ -504,12 +504,15 @@ export const UpdatePatientInformation = async (Patient: {
 };
 export const UpdateNewLeadInformation = async (FinelPostingData: any) => {
   try {
-    console.log("Test User-id---",FinelPostingData.userId)
+    console.log("Test User-id---", FinelPostingData.userId);
+
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
- const encryptIfExists = (value: string | undefined | null) =>
+
+    const encryptIfExists = (value: string | undefined | null) =>
       value ? encrypt(value) : null;
+
     const encryptedData = {
       userType: FinelPostingData.userType,
       FirstName: encryptIfExists(FinelPostingData.clientName),
@@ -537,127 +540,46 @@ export const UpdateNewLeadInformation = async (FinelPostingData: any) => {
       patientDrNeeds: FinelPostingData.patientDrNeeds,
       patientHealthCard: FinelPostingData.patientHealthCard,
       ServiceType: FinelPostingData.hcpType,
-      NumberOfCareTakers:FinelPostingData.NumberOfCareTakers,
-      OnCallSerive:FinelPostingData.OnCallSerive,
-      Sessions:FinelPostingData.sessions,
-      serviceSubTypes:FinelPostingData.serviceSubTypes,
-      ServiceTypeWorkingHours:FinelPostingData.ServiceWorkingHours,
-    
-      PhysiotherapySpecialisation: FinelPostingData.PhysiotherapySpecialisation,
-      MedicalDrSpecialisation: FinelPostingData.MedicalDrSpecialisation,
-      PatientBathRoomCleaning: FinelPostingData.PatientBathRoomCleaning,
-      HydrationWaterLevel: FinelPostingData.HydrationWaterLevel,
-      DocterAdvisedHydrationWaterLevel: FinelPostingData.DocterAdvisedHydrationWaterLevel,
-      Patient_Indipendent_Elimination: FinelPostingData.Patient_Indipendent_Elimination,
-      Comode: FinelPostingData.Comode,
-      Diaper: FinelPostingData.Diaper,
-      Urine: FinelPostingData.Urine,
-      Juice: FinelPostingData.Juice,
-      Doabatic: FinelPostingData.Doabatic,
-      DoabaticPlan: FinelPostingData.DoabaticPlan,
-      DiabeticSpecification: FinelPostingData.DiabeticSpecification,
-      FoodPreparation: FinelPostingData.FoodPreparation,
-      FoodPreparationInputs: FinelPostingData.FoodPreparationInputs,
-      Allergies: FinelPostingData.Allergies,
-      AllergyOption: FinelPostingData.AllergyOption,
-      FoodItem: FinelPostingData.FoodItem,
-      SpecialFoodItem: FinelPostingData.SpecialFoodItem,
-      PatientBathing: FinelPostingData.PatientBathing,
-      PatientClothes: FinelPostingData.PatientClothes,
-      HairWash: FinelPostingData.HairWash,
-      NailCare: FinelPostingData.NailCare,
-      Dressing_Grooming: FinelPostingData.Dressing_Grooming,
-      Assisting_in_suctioning: FinelPostingData.Assisting_in_suctioning,
-      PassiveExercises: FinelPostingData.PassiveExercises,
-      ActiveExercises: FinelPostingData.ActiveExercises,
-      ResistedExercises: FinelPostingData.ResistedExercises,
-      Walking: FinelPostingData.Walking,
-      AssistanceRequire: FinelPostingData.AssistanceRequire,
-      HIV: FinelPostingData.HIV,
-      serviceCharges: FinelPostingData.serviceCharges,
-      RegistrationFee:FinelPostingData.RegistrationFee,
-      PatientRoomCleaning: FinelPostingData.PatientRoomCleaning,
-      Brushing_FaceFash: FinelPostingData.Brushing_FaceFash,
-      BedMaking: FinelPostingData.BedMaking,
-      AdditionalComments: FinelPostingData.AdditionalComments,
-      Hygiene: FinelPostingData.Hygiene,
-      Nutrition: FinelPostingData.Nutrition,
-      Vitals: FinelPostingData.Vitals,
-      Elimination: FinelPostingData.Elimination,
-      Mobility: FinelPostingData.Mobility,
-      Medication: FinelPostingData.Medication,
-      RemainderTime: FinelPostingData.RemainderTime,
-      RemainderDate: FinelPostingData.RemainderDate,
-      ClientCardRemarks: FinelPostingData.ClientCardRemarks,
-      PatientCardCardRemarks: FinelPostingData.PatientCardCardRemarks,
-      PatientDetailsCardRemarks: FinelPostingData.PatientDetailsCardRemarks,
-      Hygieneremarks: FinelPostingData.Hygieneremarks,
-      Nutritionremarks: FinelPostingData.Nutritionremarks,
-      Vitalsremarks: FinelPostingData.Vitalsremarks,
-      Eliminationremarks: FinelPostingData.Eliminationremarks,
-      Mobilityremarks: FinelPostingData.Mobilityremarks,
-      WeightRemarks: FinelPostingData.WeightRemarks,
-      HeightRemarks: FinelPostingData.HeightRemarks,
-      patientHomeAssistanceRemarks: FinelPostingData.patientHomeAssistanceRemarks,
-      patientHomeNeedsRemarks: FinelPostingData.patientHomeNeedsRemarks,
-      patientDrNeedsRemarks: FinelPostingData.patientDrNeedsRemarks,
-      patientHealthCardRemarks: FinelPostingData.patientHealthCardRemarks,
-      hcpTypeRemarks: FinelPostingData.hcpTypeRemarks,
-      Current_Previous_Occupation: FinelPostingData.Current_Previous_Occupation,
-      Hobbies: FinelPostingData.Hobbies,
-      Present_Illness: FinelPostingData.Present_Illness,
-      Speciality_Areas: FinelPostingData.Speciality_Areas,
-      OnGoing_Treatment: FinelPostingData.OnGoing_Treatment,
-      Balance: FinelPostingData.Balance,
-      FunctionalAssessmentsRemarks:FinelPostingData.FunctionalAssessmentsRemarks,
-      EquipmentRemark:FinelPostingData.EquipmentRemark,
-      History_of_Fall: FinelPostingData.History_of_Fall,
-      Hearing_Loss: FinelPostingData.Hearing_Loss,
-      Visual_Impairment: FinelPostingData.Visual_Impairment,
-      Depression: FinelPostingData.Depression,
-      Temperature:FinelPostingData.Temperature,
-     Pulse:FinelPostingData.Pulse,
-     OxygenSaturation:FinelPostingData.OxygenSaturation, 
-    BloodPressure:FinelPostingData.BloodPressure,
-      Confusion: FinelPostingData.Confusion,
-      Frequent_Urination: FinelPostingData.Frequent_Urination,
-      Sleep_Issues: FinelPostingData.Sleep_Issues,
-      Anxiety: FinelPostingData.Anxiety,
-      Mobility_Aids: FinelPostingData.Mobility_Aids,
-      Breathing_Equipment: FinelPostingData.Breathing_Equipment,
-      Feeding_Method: FinelPostingData.Feeding_Method,
-      Floor_Type: FinelPostingData.Floor_Type,
-      Washroom_Accessories: FinelPostingData.Washroom_Accessories,
-      PhysioScore: FinelPostingData.PhysioScore,
-PresentHealthRemarks:FinelPostingData.PresentHealthRemarks,
-TreatmentRemarks:FinelPostingData.TreatmentRemarks,
-      VerificationStatus: FinelPostingData.VerificationStatus,
-      TermsAndConditions: FinelPostingData.TermsAndConditions,
-      EmailVerification: FinelPostingData.EmailVerification,
-      FinelVerification: FinelPostingData.FinelVerification,
+      NumberOfCareTakers: FinelPostingData.NumberOfCareTakers,
+      OnCallSerive: FinelPostingData.OnCallSerive,
+      Sessions: FinelPostingData.sessions,
+      serviceSubTypes: FinelPostingData.serviceSubTypes,
+      ServiceTypeWorkingHours: FinelPostingData.ServiceWorkingHours,
+
+      SuitableHCP: FinelPostingData.SuitableHCP,
       ClientStatus: FinelPostingData.ClientStatus,
       Medications: FinelPostingData.Medications,
-      userId: FinelPostingData.userId,
-      SuitableHCP: FinelPostingData.SuitableHCP,
-      TimeStampInfo: FinelPostingData.TimeStamp,
+      PDRStatus:"Filled",
       LeadDate: FinelPostingData?.LeadDate
-  ? new Date(FinelPostingData.LeadDate).toISOString().split("T")[0]
-  : new Date().toISOString().split("T")[0],
+        ? new Date(FinelPostingData.LeadDate).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
 
-      ServiceArea:FinelPostingData.ServiceArea,
-      createdAt:  new Date().toISOString(),
+      ServiceArea: FinelPostingData.ServiceArea,
+      TimeStampInfo: FinelPostingData.TimeStamp,
+      updatedAt: new Date().toISOString(),
     };
 
-    const result = await collection.insertOne(encryptedData);
+    const result = await collection.updateOne(
+      { userId: FinelPostingData.userId }, // ✅ match existing user
+      {
+        $set: encryptedData, 
+        $setOnInsert: {
+          createdAt: new Date().toISOString(),
+          userId: FinelPostingData.userId,
+        },
+      },
+      { upsert: true } 
+    );
 
     return {
       success: true,
-      message: "Lead Registration Completed Successfully ✅",
-      insertedId: result.insertedId.toString(),
+      message: "Lead information updated successfully ✅",
+      modifiedCount: result.modifiedCount,
+      upsertedId: result.upsertedId?.toString() || null,
     };
   } catch (error) {
-    console.error("Error inserting patient data:", error);
-    throw new Error("Failed to register lead information.");
+    console.error("Error updating patient data:", error);
+    throw new Error("Failed to update lead information.");
   }
 };
 

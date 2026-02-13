@@ -314,3 +314,13 @@ export const RefreshState = (state: any = "", action: any) => {
             return state
     }
 }
+
+export const PDRUserId=(state:any="",action:any)=>{
+switch(action.type){
+    case "CurrrentPDRUserId":
+        return action.payload;
+        default :
+        return state
+
+}
+}
