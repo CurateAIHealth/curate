@@ -999,12 +999,14 @@ const isAssigned =
 
  {hcp.Languages?
  <div>
-                            <h4 className="text-[9px] font-semibold text-gray-700 uppercase mt-1">
-                              Languages Speak
-                            </h4>
-     <p className="flex items-center  justify-center text-[10px]  font-medium border border-yellow-300 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-1 py-1 rounded-md">
-  {hcp.Languages}
+                            
+    <p className="flex flex-wrap items-center justify-center gap-1  mt-1 text-[10px] font-medium border border-yellow-300 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-2 py-1 rounded-md">
+  <span className="text-[8px] whitespace-nowrap">Languages:</span>
+  <span className="break-words text-center">
+    {hcp?.Languages || "Not specified"}
+  </span>
 </p>
+
 
 </div>:
 <p className="inline-flex items-center gap-2 px-2 py-1 text-[10px] 

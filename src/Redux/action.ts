@@ -229,3 +229,11 @@ export const Refresh=(RefreshData:any)=>{
         payload:RefreshData
     }
 }
+
+
+export const CurrrentPDRUserId=(FilledIserId:any)=>{
+    return{
+        type:"CurrrentPDRUserId",
+        payload:FilledIserId
+    }
+}
