@@ -102,6 +102,7 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
   const [EnquiryForm, setEnquiryForm] = useState<any>({
     ClientName: "",
+    patientName:"",
     ClientContact: '',
     ClientEmail: '',
     patientAge:"",
@@ -117,6 +118,7 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
     ExpectedService:"",
     Reasonforservice:"",
     ClientStatus:"",
+    patientWeight:'',
   })
     const [showHealthCardSuggestions, setShowHealthCardSuggestions] =
     useState(false);
@@ -499,8 +501,9 @@ const pendingPdr = timesheets.filter((t: any) => {
       FirstName: EnquiryForm.ClientName || "",
       ContactNumber: EnquiryForm.ClientContact || "",
       Email: EnquiryForm.ClientEmail || "",
-
+patientName:EnquiryForm.patientName||"",
       patientAge: EnquiryForm.patientAge || "",
+      patientWeight:EnquiryForm.patientWeight||'',
       patientGender: EnquiryForm.patientGender || "",
       HCPPreferGender: EnquiryForm.HCPPreferGender || "",
       PreferredLanguage: EnquiryForm.PreferredLanguage || "",
@@ -943,7 +946,7 @@ setNotificationStatus("Notification Send Succesfully")
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard
+      Hi Admin – Welcome to Admin Dashboard.
     </span>
   </div>
 
@@ -1364,22 +1367,35 @@ setNotificationStatus("Notification Send Succesfully")
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           <div className="w-full">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Client Name</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Client Name <span className="text-red-500">*</span></label> 
             <input
               type="text"
               name="ClientName"
               onChange={handleChange}
               placeholder="Full name"
+              required
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+            />
+          </div>
+             <div className="w-full">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Patient Name <span className="text-red-500">*</span></label> 
+            <input
+              type="text"
+              name="patientName"
+              onChange={handleChange}
+              placeholder="Patient Full name"
+              required
               className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
             />
           </div>
 
           <div className="w-full">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Mobile Number</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Mobile Number <span className="text-red-500">*</span></label>
             
             <input
               type="tel"
               name="ClientContact"
+              required
               value={EnquiryForm.ClientContact || ""}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, "");
@@ -1422,6 +1438,24 @@ setNotificationStatus("Notification Send Succesfully")
               min={0}
               max={120}
               placeholder="Enter age"
+              required
+              className="w-full rounded-md border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              Patient Weight <span className="text-red-500">*</span>
+             
+            </label>
+        
+            <input
+              type="number"
+              name="patientWeight"
+              onChange={handleChange}
+              min={0}
+              max={120}
+              placeholder="Enter Weight KG's"
               className="w-full rounded-md border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -1763,7 +1797,16 @@ setNotificationStatus("Notification Send Succesfully")
           </div>
              <div>
             
-            
+            <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1">Reason for service</label>
+        
+          <textarea
+            name="Reasonforservice"
+            onChange={handleChange}
+            placeholder="Short call summary"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
+          />
+        </div> 
           <label className="block text-xs font-medium text-gray-500 mb-1">Expected Service</label>
          
           <textarea
@@ -1773,16 +1816,7 @@ setNotificationStatus("Notification Send Succesfully")
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
           />
         </div>
-           <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">Reason for service</label>
-        
-          <textarea
-            name="Reasonforservice"
-            onChange={handleChange}
-            placeholder="Short call summary"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
-          />
-        </div>
+          
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">Note</label>
          
@@ -1808,7 +1842,7 @@ setNotificationStatus("Notification Send Succesfully")
                                   }`}
                               
                                 onClick={
-                                  () =>{ setEnquiryForm({ ...EnquiryForm, ClientStatus: each },); if (each==="Save"||each==="Send")setShowNotification(true)}
+                                  () =>{ setEnquiryForm({ ...EnquiryForm, ClientStatus: each },); if (each==="Send")setShowNotification(true)}
                                 }
 
 

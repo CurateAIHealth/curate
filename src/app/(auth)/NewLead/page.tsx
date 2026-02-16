@@ -168,6 +168,8 @@ export default function CallEnquiryForm() {
     ServiceArea: '',
     ClientStatus: "Waiting List",
   });
+  const [heightCm, setHeightCm] = useState("");
+
   const [DiscountStatus, SetDiscountStatus] = useState(true)
   const [visible, setVisible] = useState(true);
   const [WarningMessage, setWarningMessage] = useState("");
@@ -281,6 +283,7 @@ clientName:GetUserInfo?.FirstName,
 NewLead:GetUserInfo?.LeadDate,
 ClientStatus:GetUserInfo?.ClientStatus,
 Source:GetUserInfo?.NewLead,
+patientWeight:GetUserInfo?.patientWeight,
 serviceCharges:GetUserInfo?.serviceCharges,
   patientHealthCard: GetUserInfo?.HealthCard
     ? GetUserInfo.HealthCard.split(",").map((v: string) => v.trim())
@@ -334,6 +337,19 @@ const handleCheckboxChange = (field: string, option: string) => {
         : [...values, option],
     };
   });
+};
+
+const handleCmChange = (value: string) => {
+  setHeightCm(value);
+
+  const cm = parseFloat(value);
+  if (!cm || cm <= 0) return;
+
+
+  const feet = cm / 30.48;
+
+  setaddedheight(""); 
+  handleChange("patientHeight", feet.toFixed(1));
 };
 
 
@@ -718,7 +734,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
             </div>
 
 
-            <button type="button" className="bg-white/30 backdrop-blur-md border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, ClientCard: !RemarkStatus.ClientCard }))} > {RemarkStatus.ClientCard ? "SAVE Remark" : "Add Remarks"} </button>
+            {/* <button type="button" className="bg-white/30 backdrop-blur-md border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, ClientCard: !RemarkStatus.ClientCard }))} > {RemarkStatus.ClientCard ? "SAVE Remark" : "Add Remarks"} </button>
             {RemarkStatus.ClientCard && <textarea
               rows={4}
               placeholder="Enter your remarks here..."
@@ -726,7 +742,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
               value={formData.ClientCardRemarks || ""}
               onChange={(e) => handleChange("ClientCardRemarks", toProperCaseLive(e.target.value))}
             />
-            }
+            } */}
           </div>
 
           <div id="Patient Card – ID" className="bg-white rounded-lg shadow p-4 flex flex-col space-y-3">
@@ -807,7 +823,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
               </div>
             </div>
             <div className="flex items-end md:mt-25">
-              <button type="button" className="bg-white/30 backdrop-blur-md  border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, PatientCard: !RemarkStatus.PatientCard }))} > {RemarkStatus.PatientCard ? "SAVE Remark" : "Add Remarks"} </button>
+              {/* <button type="button" className="bg-white/30 backdrop-blur-md  border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, PatientCard: !RemarkStatus.PatientCard }))} > {RemarkStatus.PatientCard ? "SAVE Remark" : "Add Remarks"} </button>
               {RemarkStatus.PatientCard && <textarea
                 rows={4}
                 placeholder="Enter your remarks here..."
@@ -815,7 +831,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
                 value={formData.PatientCardCardRemarks || ""}
                 onChange={(e) => handleChange("PatientCardCardRemarks", toProperCaseLive(e.target.value))}
               />
-              }
+              } */}
             </div>
 
           </div>
@@ -1031,7 +1047,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
   })()}
 </div>
 
-            <button type="button" className="bg-white/30 backdrop-blur-md mt-20 border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, PatientDetails: !RemarkStatus.PatientDetails }))} > {RemarkStatus.PatientDetails ? "SAVE Remark" : "Add Remarks"} </button>
+            {/* <button type="button" className="bg-white/30 backdrop-blur-md mt-20 border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, PatientDetails: !RemarkStatus.PatientDetails }))} > {RemarkStatus.PatientDetails ? "SAVE Remark" : "Add Remarks"} </button>
             {RemarkStatus.PatientDetails && <textarea
               rows={4}
               placeholder="Enter your remarks here..."
@@ -1039,7 +1055,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
               value={formData.PatientDetailsCardRemarks || ""}
               onChange={(e) => handleChange("PatientDetailsCardRemarks", toProperCaseLive(e.target.value))}
             />
-            }
+            } */}
 
 
           </div>
@@ -1108,7 +1124,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
                 </p>
               </div>
             )}
-            <button type="button" className="bg-white/30 backdrop-blur-md  border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, Weight: !RemarkStatus.Weight }))} > {RemarkStatus.Weight ? "SAVE Remark" : "Add Remarks"} </button>
+            {/* <button type="button" className="bg-white/30 backdrop-blur-md  border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, Weight: !RemarkStatus.Weight }))} > {RemarkStatus.Weight ? "SAVE Remark" : "Add Remarks"} </button>
             {RemarkStatus.Weight && <textarea
               rows={4}
               placeholder="Enter your remarks here..."
@@ -1116,7 +1132,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
               value={formData.WeightRemarks || ""}
               onChange={(e) => handleChange("WeightRemarks", toProperCaseLive(e.target.value))}
             />
-            }
+            } */}
           </div>
 
           <div id="Height" className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-2">
@@ -1181,7 +1197,21 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
                 </p>
               )}
             </div>
-            <button type="button" className="bg-white/30 backdrop-blur-md  border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, Height: !RemarkStatus.Height }))} > {RemarkStatus.Height ? "SAVE Remark" : "Add Remarks"} </button>
+            <div className="mt-4 flex flex-col items-center gap-1">
+  <label className="text-xs font-semibold text-gray-600">
+    Enter Height (CM)
+  </label>
+
+  <input
+    type="number"
+    placeholder="e.g. 170"
+    value={heightCm}
+    onChange={(e) => handleCmChange(e.target.value)}
+    className="w-[130px] px-3 py-1.5 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-teal-500"
+  />
+</div>
+
+            {/* <button type="button" className="bg-white/30 backdrop-blur-md  border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, Height: !RemarkStatus.Height }))} > {RemarkStatus.Height ? "SAVE Remark" : "Add Remarks"} </button>
             {RemarkStatus.Height && <textarea
               rows={4}
               placeholder="Enter your remarks here..."
@@ -1189,7 +1219,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
               value={formData.HeightRemarks || ""}
               onChange={(e) => handleChange("HeightRemarks", toProperCaseLive(e.target.value))}
             />
-            }
+            } */}
           </div>
 
          <div id="Comfortable Languages" className="bg-white rounded-lg shadow p-4 space-y-3">
@@ -1487,7 +1517,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
           ) : null
         )}
 
-      <button
+      {/* <button
         className="bg-white/30 backdrop-blur-md mt-5 border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200"
         type="button"
         onClick={() =>
@@ -1522,7 +1552,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
             )
           }
         />
-      )}
+      )} */}
 
       {section.title === "Doctor Needs" && (
         <div className="flex flex-col gap-2">

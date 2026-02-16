@@ -969,12 +969,12 @@ export const HCARegistration = async (HCA: HCAInfo) => {
       ],
     });
 
-    if (existingHCA) {
-      return {
-        success: false,
-        message: "An account with these details already exists.",
-      };
-    }
+    // if (existingHCA) {
+    //   return {
+    //     success: false,
+    //     message: "An account with these details already exists.",
+    //   };
+    // }
 
     
     const encryptedData = {
@@ -991,7 +991,7 @@ export const HCARegistration = async (HCA: HCAInfo) => {
       ContactNumber: encrypt(HCA.ContactNumber),
       Email: encrypt(HCA.Email),
       Location:HCA.Location,
-CurrentStatus:HCA.CurrentStatus,
+CurrentStatus:HCA.CurrentStatus||"Active",
 StaffType:HCA.StaffType,
 
       emailHash: hashValue(HCA.Email.toLowerCase()),
@@ -1008,10 +1008,10 @@ StaffType:HCA.StaffType,
       TermsAndConditions: HCA.TermsAndConditions,
       FinelVerification: HCA.FinelVerification,
       EmailVerification: HCA.EmailVerification||true,
-      PreviewUserType:HCA.PreviewUserType,
+      PreviewUserType:HCA.PreviewUserType||"HCP",
       ClientNote:HCA.ClientNote,
- LeadDate: new Date().toISOString().split("T")[0],
-      createdAt: new Date(),
+      LeadDate: new Date().toISOString().split("T")[0],
+      createdAt: new Date().toISOString().split("T")[0],
       updatedAt: new Date(),
     };
 
@@ -1154,9 +1154,10 @@ export const CallEnquiryRegistration = async (HCA: any) => {
       userId: HCA.userId,
 
       FirstName: HCA.FirstName ? encrypt(HCA.FirstName) : "",
+      patientName:HCA.patientName||"",
       ContactNumber: HCA.ContactNumber,
       Email: encryptedEmail,
-
+patientWeight:HCA.patientWeight||"",
       patientAge: HCA.patientAge || "",
       patientGender: HCA.patientGender || "",
       HCPPreferGender: HCA.HCPPreferGender || "",
@@ -1793,6 +1794,7 @@ const UpdateStatus=await Collection.updateOne(
 
   }
 }
+
 export const GetUserPDRInfo = async (UserId: any) => {
   try {
     const Cluster = await clientPromise;
@@ -1814,8 +1816,7 @@ export const GetUserPDRInfo = async (UserId: any) => {
   }
 };
 
-import { ObjectId } from "mongodb";
-import EmployRegistration from "@/Components/EmployRegistration/page";
+
 
 export const UpdateAttendence = async (
   hcpId: string,
@@ -3940,7 +3941,7 @@ export const UpdatedServiceArea = async (
       { userId: UserId }, 
       {
         $set: {
-          ServiceArea: UpdatedStatus, 
+          Source: UpdatedStatus, 
         
         },
       },
@@ -4149,6 +4150,70 @@ export const UpdateUserCurrentstatus = async (
     };
   }
 };
+
+export const UpdateUserCurrentstatusInHCPView = async (
+  UserId: string,
+  UpdatedStatus: string
+) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+
+    const RegistrationCollection = Db.collection("Registration");
+    const CompliteCollection = Db.collection("CompliteRegistrationInformation");
+
+   
+    const updateRegistration = await RegistrationCollection.updateOne(
+      { userId: UserId },
+      {
+        $set: {
+          CurrentStatus: UpdatedStatus,
+          UpdatedAt: new Date(),
+        },
+      }
+    );
+
+    if (updateRegistration.matchedCount === 0) {
+      return {
+        success: false,
+        message: "User not found in Registration collection",
+      };
+    }
+
+
+    const updateComplite = await CompliteCollection.updateOne(
+      { "HCAComplitInformation.UserId": UserId },
+      {
+        $set: {
+          "HCAComplitInformation.CurrentStatus": UpdatedStatus,
+          "HCAComplitInformation.UpdatedAt": new Date(),
+        },
+       
+   
+      },
+      {
+        upsert: true,
+      }
+    );
+
+
+    return {
+      success: true,
+      message:
+        updateComplite.upsertedCount === 1
+          ? "User status created and updated successfully"
+          : "User status updated successfully",
+    };
+  } catch (err: any) {
+    console.error("UpdateUserCurrentstatus Error:", err);
+    return {
+      success: false,
+      message: "Failed to update user current status",
+    };
+  }
+};
+
+
 
 
 

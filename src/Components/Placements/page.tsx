@@ -108,7 +108,7 @@ useEffect(() => {
 
   const fetchData = async (forceFresh = false) => {
     try {
-      // 🔹 Use cache if available
+      // 🔹 Use cache only when not forcing fresh data
       if (
         !forceFresh &&
         cachedUsersFullInfo &&
@@ -125,7 +125,7 @@ useEffect(() => {
       }
 
       const [
-        , // RegisteredUsers not required here
+        ,
         usersResult,
         placementInfo,
         replacementInfo,
@@ -140,7 +140,6 @@ useEffect(() => {
 
       if (!mounted) return;
 
-      // 🔹 Update cache
       cachedUsersFullInfo = usersResult ?? [];
       cachedDeploymentInfo = placementInfo ?? [];
       cachedReplacementInfo = replacementInfo ?? [];
@@ -159,13 +158,14 @@ useEffect(() => {
     }
   };
 
-  // 🔹 Refresh only when needed
-  fetchData(!!refreshKey);
+  // 🔥 Always fetch fresh when ActionStatusMessage changes
+  fetchData(true);
 
   return () => {
     mounted = false;
   };
-}, [refreshKey]);
+}, [ActionStatusMessage]);
+
 
 
 useEffect(() => {
@@ -360,7 +360,7 @@ const normalizedAttendance =
       confirmDelete(selectedReason);
     }
   };
-console.log('Check for Task-----',selectedClient)
+
   const UpdateAssignHca = async () => {
   try {
    
@@ -400,11 +400,7 @@ console.log('Check for Task-----',selectedClient)
     const todayDate = now.toLocaleDateString("en-IN");
     const timestamp = now.toISOString();
 
-    const lastDateOfMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0
-    ).toLocaleDateString("en-IN");
+
 
     const attendanceRecord = {
       date: todayDate,
@@ -450,8 +446,15 @@ console.log('Check for Task-----',selectedClient)
     //   invoiceNumber,
     //   Type
     // );
-const StarteDate=new Date(selectedDate).toLocaleDateString("en-In")
-    const LastDate=new Date(lastDateOfMonth).toLocaleDateString("en-In")
+const StarteDate=new Date().toLocaleDateString("en-In")
+    const lastDateOfMonthCurrent = new Date(
+  now.getFullYear(),
+  now.getMonth() + 1,
+  0
+);
+
+const LastDate = lastDateOfMonthCurrent.toLocaleDateString("en-IN");
+
    const attendance = [
         {
           AttendenceDate: today,
@@ -502,7 +505,7 @@ const SelectedCareTakerCharges=GetInfo.serviceCharges
       throw new Error(deploymentRes?.message || "Failed to assign HCA.");
     }
 
-    SetActionStatusMessage(deploymentRes.message);
+    SetActionStatusMessage("Additional HCP Assigned Successfully");
 
     // Optional navigation / refresh (enable if needed)
     // dispatch(UpdateRefresh(1));
@@ -692,7 +695,8 @@ SetCareTakerName(Name)
 
 const HandleRemove=async(Info: any,Name:any)=>{
   try{
-alert(Info.Client_Id)
+
+    
 const RemoeClientFromDeploy=await RemoveClient(Info.Client_Id)
 if(RemoeClientFromDeploy.success){
   SetActionStatusMessage(RemoeClientFromDeploy.message)
@@ -1076,7 +1080,7 @@ const OmServiceView = () => {
     </th>
 
     <th className="min-w-[120px] max-w-[150px] px-2 py-2 text-left truncate">
-      HCA Name
+      HCP Name
     </th>
 
     <th className="w-[90px] px-2 py-2 text-center">
