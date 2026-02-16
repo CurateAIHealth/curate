@@ -1316,8 +1316,8 @@ export const LeadSources = [
   "Pandu",
   "Swaroop I",
   "Soumya Ranjan",
-  "Website",
-  "Google",
+  
+"Other"
   
 ];
 export const REFERRAL_SOURCE_TYPES: string[] = [
@@ -2614,3 +2614,16 @@ export const popularAreas = [
   { name: "Tellapur", keywords: ["tellapur"] },
   { name: "Osman Nagar", keywords: ["osman nagar"] }
 ];
+
+
+
+export const HCPFilters=[
+   { label: "⚪ None", value: "None" },
+    { label: "🟢 Active", value: "Active" },
+    { label: "🟢 Available for Work", value: "Available for Work" },
+    { label: "🟡 Sick", value: "Sick" },
+    { label: "🔵 Leave", value: "Leave" },
+    { label: "🟣 Bench", value: "Bench" },
+   
+    { label: "🔴 Terminated", value: "Terminated" },
+  ]

@@ -12,7 +12,7 @@ type StaffNotificationModalProps = {
 };
 
 const employEmails = [
-  { Name: "Office Email", Email: "info@curatehealth.in" },
+  // { Name: "Office Email", Email: "info@curatehealth.in" },
   { Name: "Srinivas", Email: "srinivasnew0803@gmail.com" },
   { Name: "Srivani", Email: "srivanikasham@curatehealth.in" },
   { Name: "Sravanthi", Email: "sravanthicurate@gmail.com" },
@@ -43,6 +43,19 @@ const handleSelectEmploy = (email: string) => {
     setSelectedEmployEmails(prev => [...prev, email]);
   }
 };
+
+const allEmails = employEmails.map(emp => emp.Email);
+
+const handleSelectAll = () => {
+  if (selectedEmployEmails.length === allEmails.length) {
+
+    setSelectedEmployEmails([]);
+  } else {
+   
+    setSelectedEmployEmails(allEmails);
+  }
+};
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
       <div className="max-w-sm w-full bg-teal-800 text-white px-5 py-4 rounded-xl shadow-xl text-sm animate-scale-in">
@@ -57,17 +70,45 @@ const handleSelectEmploy = (email: string) => {
         </div>
 
         <div className="flex flex-col items-center justify-center gap-3">
-          <div>🔔</div>
-<div className="text-center mb-3">
-  <p className="text-[20px] font-bold text-yellow-500">
-    Choose Staff to Notify
-  </p>
-  <span className="text-[10px] text-white">
-    You can select multiple team members
-  </span>
+     <div className="flex flex-col items-center justify-center mb-4">
+
+  <div className="flex items-center justify-center w-14 h-14 rounded-full 
+  bg-yellow-400/20 border border-yellow-300/40 shadow-md mb-2">
+    <span className="text-xl animate-pulse">🔔</span>
+  </div>
+
+  <div className="text-center space-y-1">
+    <p className="text-[20px] font-bold text-yellow-400 tracking-wide">
+      Notify Your Team
+    </p>
+
+    <p className="text-[11px] text-white/80 leading-tight">
+      Select one or more staff members to send the alert instantly
+    </p>
+  </div>
+
 </div>
 
+
      <div className="flex flex-wrap space-y-2 max-h-52 overflow-y-auto">
+     <label className="relative w-full flex items-center gap-3 px-4 py-3 mb-3 rounded-lg cursor-pointer
+bg-teal-700/30 hover:bg-teal-700/50 border border-teal-400/20 transition-all">
+
+  <span className="absolute left-0 top-0 h-full w-1 bg-emerald-400 rounded-l-lg"></span>
+
+  <input
+    type="checkbox"
+    checked={selectedEmployEmails.length === employEmails.length}
+    onChange={handleSelectAll}
+    className="ml-2 w-4 h-4 accent-emerald-400"
+  />
+
+  <span className="text-sm font-semibold text-emerald-200">
+    Select Entire Team
+  </span>
+</label>
+
+
   {employEmails.map((emp, index) => (
     <label
       key={index}

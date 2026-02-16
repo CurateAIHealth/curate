@@ -15,13 +15,14 @@
   import Preview from '@/Components/Preview/page'
   import PreviewComponent from '@/Components/Preview/page'
   import { useDispatch, useSelector } from 'react-redux'
-  import { UpdateFetchedInformation, UpdatePreviewStatus } from '@/Redux/action'
+  import { Refresh, UpdateFetchedInformation, UpdatePreviewStatus, } from '@/Redux/action'
   import { indianFamilyRelations, LeadSources, medicalSpecializations, physioSpecializations, ClientEnquiry_Filters, PDRspecialityOptions, treatmentOptions, mobilityAids, breathingEquipments, nutritionFeeds, Allergiesoptions, mealTimings, DiabeticSpecifications, FootItems, HygineOptions, floorTypes, washroomAccessories, Vitals_Options, Mobility_excercise_Options, sampleData } from '@/Lib/Content'
   import MobileMedicationSchedule from '@/Components/MedicationMobileView/page'
   import MedicationSchedule from '@/Components/Medications/page'
   import { CheckboxGroup } from '@/Components/CheckboxGroup'
   import axios from 'axios'
 import { GetUsersFullInfo, SuitableHCPUpdate, UpdateHCAnstatus } from '@/Lib/user.action'
+import { useRouter } from 'next/navigation'
   type EditingKeys = 'PatientCardEditing' | 'ClientCardEditing' | 'PatientDetails' | 'AdditionalInformation' | 'OtherInformation' | 'EquipmentDetails' | 'Hygiene' | 'Medication';
 
 
@@ -85,7 +86,7 @@ const reduxFormData = useSelector(
 );
 
 const [formData, setFormData] = useState<any>({});
-
+const router=useRouter()
 
 useEffect(() => {
   const fetchData = async () => {
@@ -283,6 +284,14 @@ console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
                 By developing a personalised care plan for home health care, the aim is to provide a holistic and individualised approach to meet the patient's medical, physical, emotional, and social needs, while allowing them to maintain their independence and dignity in the familiar surroundings of their own home.
               </div>
             </div> */}
+            <button
+           onClick={()=>{ 
+               router.push('/AdminPage');
+            dispatch(Refresh(""))}}
+              className="flex cursor-pointer items-center gap-2 ml-auto w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+            >
+             Admin  Page 
+            </button>
           </h1>
 
           <main className="w-full flex flex-wrap  p-2 ">

@@ -695,7 +695,7 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
 
           if (isNewUser) {
             registrationResult = await HCARegistration(payload);
-            console.log("Check for Issues-----",registrationResult)
+      
           }
 
           if (registrationResult.success !== true) {
@@ -977,6 +977,7 @@ console.log("check Update----",form.BankName)
               </div>
 
               <div className="mt-4 text-center">
+                
                 <h2 className="text-lg font-semibold text-gray-800">Profile Overview</h2>
                 <p className="text-[9px] text-gray-600 mt-1 max-w-[180px]">
                   Upload your photo for identity verification

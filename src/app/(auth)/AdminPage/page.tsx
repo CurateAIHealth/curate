@@ -18,17 +18,20 @@ import {
   UpdateHCAnstatus,
   UpdateUserContactVerificationstatus,
   UpdateUserCurrentstatus,
-  UpdateUserEmailVerificationstatus
+  UpdateUserEmailVerificationstatus,
+  GetUserPDRInfo,
+  UpdateUserCurrentstatusInHCPView
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 ,Hourglass ,BadgeCheck, MapPin,FileCheck,FileX, Router } from 'lucide-react';
+import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 ,Hourglass ,BadgeCheck, MapPin,FileCheck,FileX, Router, List } from 'lucide-react';
 import { CurrrentPDRUserId, GetCurrentDeploymentData, Refresh, Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateClient, UpdateClientSuggetion, UpdateFetchedInformation, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
-import { ClientEnquiry_Filters, filterColors, hyderabadAreas, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
+import { ClientEnquiry_Filters, filterColors, HCPFilters, hyderabadAreas, LeadSources, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
 
 import { select, thead, tr } from 'framer-motion/client';
 import ClientTable from '@/Components/Placements/page';
+import StatusPopup from '@/Components/PDRStatusPopup/page';
 import { HCAList } from '@/Redux/reducer';
 import WorkingOn from '@/Components/CurrentlyWoring/page';
 import axios from 'axios';
@@ -42,19 +45,24 @@ import { stat } from 'fs';
 
 
 export default function UserTableList() {
-
+ const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<any[]>([]);
   const [isChecking, setIsChecking] = useState(true);
   const [UserFirstName, setUserFirstName] = useState("");
+  const [HCPCurrentStatus,setHCPCurrentStatus]=useState("")
   const [SearchDate, SetSearchDate] = useState<any>(null)
   const now = new Date();
   const SearchMonth = useSelector((state: any) => state.MonthFilterAdmin)
   const SearchYear = useSelector((state: any) => state.YearFilterAdmin)
+  const [HCPPreviewtype,setHCPPreviewtype]=useState("")
 const [SearchResult, setSearchResult] = useState("")
   const [search, setSearch] = useState('');
   const [AsignStatus, setAsignStatus] = useState("")
   const [LoginEmail, setLoginEmail] = useState("");
   const [DeleteInformation, SetDeleteInformation] = useState<any>()
+  const [showOptions, setShowOptions] = useState(false);
+
   const [ShowDeletePopUp, setShowDeletePopUp] = useState(false)
   const Status = ["None",,"Converted", "Waiting List", "Lost",];
   const EmailVerificationStatus = ['Verified', 'Pending'];
@@ -141,6 +149,18 @@ useEffect(() => {
   }
 }, [dispatch, router, cachedUserInfo]);
 
+const GetHCPTypeCount = (HCPType: string) => {
+  try {
+    const HCPTypeCount = users?.filter(
+      (each: any) => each?.PreviewUserType === HCPType
+    );
+
+    return HCPTypeCount?.length || 0;
+  } catch (err) {
+    console.error("GetHCPTypeCount error:", err);
+    return 0;
+  }
+};
 
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
    
@@ -179,7 +199,8 @@ useEffect(() => {
   
       dispatch(Refresh(`Updating ${first} Current Status....`))
     try {
-      const res = await UpdateUserCurrentstatus(UserId, e);
+      const res = await UpdateUserCurrentstatusInHCPView(UserId, e);
+    
         dispatch(Refresh(res.message))
 
     } catch (err: any) {
@@ -214,68 +235,91 @@ useEffect(() => {
     LeadDate: each.LeadDate,
     ServiceArea: each.ServiceArea,
     ServiceLocation: each.ServiceArea,
-    PreviewUserType: each.PreviewUserType,
+    PreviewUserType: each.PreviewUserType||"None",
     PDRStatus:each.PDRStatus||"No Available"
   }));
 
   const UpdatedFilterUserType = Finel
-    .filter((each) => {
-      const matchesType =
-        !UpdateduserType || each.userType === UpdateduserType;
-      const matchesStatus =
-        !search ||
-        (search === "None"
-          ? !each.ClientStatus
-          : each.ClientStatus === search);
+  .filter((each) => {
 
 
-      const notAdmin =
-        each.Email?.toLowerCase() !== "admin@curatehealth.in";
+  
+    
+    const matchesType =
+      !UpdateduserType || each.userType === UpdateduserType;
 
-      const matchesSearchResult =
-        !SearchResult ||
-        [each.FirstName, each.Email, each.Contact]
-          .filter(Boolean)
-          .some((value) =>
-            value
-              .toString()
-              .toLowerCase()
-              .includes(SearchResult.toLowerCase())
-          );
 
-      const checkDate = (value: any) => {
-        if (!value) return false;
+      
+    const matchesStatus =
+      !search ||
+      (search === "None"
+        ? !each.ClientStatus
+        : each.ClientStatus === search);
 
-        const date = new Date(value);
-        if (isNaN(date.getTime())) return false;
+        
+    const notAdmin =
+      each.Email?.toLowerCase() !== "admin@curatehealth.in";
 
-        const matchesMonth =
-          !SearchMonth ||
-          date.toLocaleString("default", { month: "long" }) === SearchMonth;
 
-        const matchesYear =
-          !SearchYear || date.getFullYear() === Number(SearchYear);
+      
+    const matchesSearchResult =
+      !SearchResult ||
+      [each.FirstName, each.Email, each.Contact]
+        .filter(Boolean)
+        .some((value) =>
+          value
+            .toString()
+            .toLowerCase()
+            .includes(SearchResult.toLowerCase())
+        );
 
-        return matchesMonth && matchesYear;
-      };
 
-      const matchesDate =
-        (!SearchMonth && !SearchYear) ||
-        checkDate(each.LeadDate) ||
-        checkDate(each.CreatedAt);
+        
+    const matchesCurrentStatus =
+      !HCPCurrentStatus || each.CurrentStatus === HCPCurrentStatus;
 
-      return (
-        matchesType &&
-        matchesStatus &&
-        matchesSearchResult &&
-        matchesDate &&
-        notAdmin
-      );
-    })
-    .slice()
-    .reverse();
+  const HCPUserType =
+  !HCPPreviewtype ||
+  each.PreviewUserType.toLowerCase() === HCPPreviewtype.toLowerCase();
 
-  console.log('Check for Finel------', UpdatedFilterUserType)
+
+
+    // Date Checker
+    const checkDate = (value: any) => {
+      if (!value) return false;
+
+      const date = new Date(value);
+      if (isNaN(date.getTime())) return false;
+
+      const matchesMonth =
+        !SearchMonth ||
+        date.toLocaleString("default", { month: "long" }) === SearchMonth;
+
+      const matchesYear =
+        !SearchYear || date.getFullYear() === Number(SearchYear);
+
+      return matchesMonth && matchesYear;
+    };
+
+    const matchesDate =
+      (!SearchMonth && !SearchYear) ||
+      checkDate(each.LeadDate) ||
+      checkDate(each.CreatedAt);
+
+    return (
+      HCPUserType&&
+      matchesType &&
+      matchesStatus &&
+      matchesSearchResult &&
+      matchesCurrentStatus &&
+      matchesDate &&
+      notAdmin
+    );
+  })
+  .slice()
+  .reverse();
+
+ 
 
 
   const filterByMonthAndYear = (
@@ -307,11 +351,7 @@ useEffect(() => {
     filterByMonthAndYear(each, SearchMonth, SearchYear)
   );
 
-  console.log(
-    "Check For Monthly Information------",
-    MonthlyCount,
-    MonthlyCount.length
-  );
+ 
 
 
 
@@ -319,7 +359,7 @@ useEffect(() => {
 
 
 
-  console.log("Check For Issues-----", UpdateMainFilter)
+
 
 
   // useEffect(() => {
@@ -503,12 +543,12 @@ if (DeleteEnquiry?.success) {
   const UpdateClientServiceLocation = async (ClientName: any, ClientUserId: any, UpdatedValue: any) => {
     try {
     
-       dispatch(Refresh(`Please Wait,${ClientName} Priority Updateding...`))
+       dispatch(Refresh(`Please Wait...`))
       const AreaUpdateResult: any = await UpdatedServiceArea(ClientUserId, UpdatedValue)
 
       if (AreaUpdateResult.success === true) {
         
-         dispatch(Refresh(`${ClientName} Priority Updated Successfully`))
+         dispatch(Refresh(`${ClientName}  Updated Successfully`))
       }
     } catch (err: any) {
 
@@ -582,9 +622,16 @@ if (DeleteEnquiry?.success) {
   }
 
 const UpdatePopup = async (a: any) => {
+setOpen(true)
+     const pdrRes = await GetUserPDRInfo(a.userId);
+  
+     if (pdrRes.success===false||pdrRes.data.PDRStatus === false){
+setLoading(false)
+return
+     }
   dispatch(GetCurrentDeploymentData(a));
-console.log('Check For PDR----',a)
- dispatch(Refresh("Redirecting to PDR…"))
+
+//  dispatch(Refresh("Redirecting to PDR…"))
   const data = await GetUserInformation(a.userId);
 
   dispatch(
@@ -659,6 +706,14 @@ console.log('Check For PDR----',a)
               </div>
 
             )}
+            <>
+      <StatusPopup
+        open={open}
+        loading={loading}
+        message="Assign an HCP and complete the PDR before making any updates."
+         onClose={()=>setOpen(false)}
+      />
+    </>
             {UpdatedFilterUserType.length > 0 ? (
               <div className="bg-white/90 rounded-2xl shadow-2xl border border-gray-100">
                 <div className=" overflow-y-auto">
@@ -675,9 +730,12 @@ console.log('Check For PDR----',a)
                             <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client Priority</th>}
                           {UpdateduserType === "healthcare-assistant" &&
                             <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">User type</th>}
-
-                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client Name</th>
-                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Patient Name</th>
+                     {UpdateduserType === "healthcare-assistant"&&
+                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">HCP Name</th>}
+ {UpdateduserType === "patient" &&
+                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client Name</th>}
+                           {UpdateduserType === "patient" &&
+                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Patient Name</th>}
                           {/* <th className="px-2 py-2 sm:px-4 sm:py-3 w-[18%]">Email</th> */}
                           <th className="px-2 py-2 w-[12%]">Contact</th>
                           {/* <th className="px-2 py-2 w-[10%]">Role</th>
@@ -734,7 +792,61 @@ console.log('Check For PDR----',a)
                             />
                             </td>}
                             {UpdateduserType === "patient" &&
-                              <td className='pl-6'>{user.LeadSource || "Not Mentioned"}</td>}
+                              <td className='pl-6'>{toProperCaseLive(user.LeadSource) || "Not Mentioned"} <button
+                                    onClick={() => setEditingUserId(user.userId)}
+                                    className="
+          rounded-lg p-1
+          text-slate-500
+          transition-all
+          hover:bg-slate-100 hover:text-slate-700
+        "
+                                    title="Edit service area"
+                                  >
+                                    <Pencil size={12} />
+                                  </button> {editingUserId === user.userId && (
+                                    <div
+                                      className="
+      absolute z-50
+      mt-2
+      w-56
+      rounded-xl
+      bg-white
+      border border-slate-200
+      shadow-[0_12px_30px_rgba(0,0,0,0.12)]
+      p-2
+      animate-in fade-in zoom-in-95
+    "
+                                    >
+                                      <select
+                                        autoFocus
+                                        onChange={(e) => {
+                                          UpdateClientServiceLocation(user.FirstName, user.userId, e.target.value)
+                                          setEditingUserId(null);
+                                        }}
+                                        onBlur={() => setEditingUserId(null)}
+                                        className="
+        h-10 w-full px-3
+        rounded-lg
+        border border-slate-300
+        bg-[#f8fafc]
+        text-sm font-medium text-slate-700
+        cursor-pointer
+
+        focus:outline-none
+        focus:border-[#62e0d9]
+        focus:ring-2 focus:ring-[#caf0f8]
+      "
+                                      >
+                                        <option value="">Select Lead</option>
+                                        {LeadSources.map((area: any) => (
+                                          <option key={area} value={area}>
+                                            {area}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  )}</td>}
+                                  
                             {UpdateduserType === "patient" &&
                               <td>
                                 <select
@@ -773,7 +885,7 @@ console.log('Check For PDR----',a)
                                         : "italic text-slate-400"
                                       }`}
                                   >
-                                    {user.PreviewUserType || "Not mentioned"}
+                                    {user.PreviewUserType}
                                   </span>
 
 
@@ -827,7 +939,8 @@ console.log('Check For PDR----',a)
                                       >
                                         <option value="">Select Type</option>
                                         {["HCA", "HCP", "HCN"].map((area: any) => (
-                                          <option key={area} value={area}>
+                                          <option key={area} 
+                                          value={area}>
                                             {area}
                                           </option>
                                         ))}
@@ -858,6 +971,7 @@ console.log('Check For PDR----',a)
 
                               </div>
                             </td>
+                                    {UpdateduserType === "patient" &&
                             <td className="px-2 py-2 truncate">
                               <div className="flex items-center gap-2">
                                 {/* <img
@@ -876,7 +990,7 @@ console.log('Check For PDR----',a)
                                 </span>
 
                               </div>
-                            </td>
+                              </td>}
                             {/* <td className="px-2 py-2 break-words">{user?.Email?.toLowerCase()||"Not Provided"}</td> */}
                             <td className="px-2 py-2">
                               {user?.Contact ? `+91${user.Contact}` : "Not Provided"}
@@ -906,63 +1020,10 @@ console.log('Check For PDR----',a)
                                   </span>
 
                                 
-                                  <button
-                                    onClick={() => setEditingUserId(user.userId)}
-                                    className="
-          rounded-lg p-1
-          text-slate-500
-          transition-all
-          hover:bg-slate-100 hover:text-slate-700
-        "
-                                    title="Edit service area"
-                                  >
-                                    <Pencil size={12} />
-                                  </button>
+                                 
 
 
-                                  {editingUserId === user.userId && (
-                                    <div
-                                      className="
-      absolute z-50
-      mt-2
-      w-56
-      rounded-xl
-      bg-white
-      border border-slate-200
-      shadow-[0_12px_30px_rgba(0,0,0,0.12)]
-      p-2
-      animate-in fade-in zoom-in-95
-    "
-                                    >
-                                      <select
-                                        autoFocus
-                                        onChange={(e) => {
-                                          UpdateClientServiceLocation(user.FirstName, user.userId, e.target.value)
-                                          setEditingUserId(null);
-                                        }}
-                                        onBlur={() => setEditingUserId(null)}
-                                        className="
-        h-10 w-full px-3
-        rounded-lg
-        border border-slate-300
-        bg-[#f8fafc]
-        text-sm font-medium text-slate-700
-        cursor-pointer
-
-        focus:outline-none
-        focus:border-[#62e0d9]
-        focus:ring-2 focus:ring-[#caf0f8]
-      "
-                                      >
-                                        <option value="">Select area</option>
-                                        {hyderabadAreas.map((area: any) => (
-                                          <option key={area} value={area}>
-                                            {area}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                  )}
+                                 
 
                                 </div>
                               ) : (
@@ -1072,6 +1133,7 @@ console.log('Check For PDR----',a)
                       )} */}
                             {UpdateduserType === "healthcare-assistant" && (
                               <td className="">
+                             
                                 <select
                                   className={` text-center  px-2 py-1 rounded-lg border cursor-pointer text-xs sm:text-sm transition-all duration-200 font-semibold
       ${user.CurrentStatus === "Available"
@@ -1092,7 +1154,7 @@ console.log('Check For PDR----',a)
                                 >
 
                                   <option value="Active">🟢 Active</option>
-                                  <option value="Available">🟢 Available for Work</option>
+                                  <option value="Available for Work">🟢 Available for Work</option>
                                   <option value="Sick">🟡 Sick</option>
                                   <option value="Leave">🔵 Leave</option>
                                   <option value="Bench">🟣 Bench</option>
@@ -1119,7 +1181,7 @@ console.log('Check For PDR----',a)
                                 </button>}
 
                             </td>
-                            
+                                 {UpdateduserType === 'patient' &&
                              <td className="px-2 py-2 text-center">
                         {user.ClientStatus==="Converted" ?<div>{user?.PDRStatus==="Filled" ?
   <span className="inline-flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:shadow-lg
@@ -1127,7 +1189,7 @@ console.log('Check For PDR----',a)
     <FileCheck size={18} strokeWidth={2.2} onClick={() => UpdatePopup(user)}/>
   </span>:  <span className="inline-flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:shadow-lg
                    bg-red-100 text-red-600">
-    <FileX size={18} strokeWidth={2.2}  onClick={()=>{dispatch(CurrrentPDRUserId(user.userId)) ; dispatch(Refresh("Taking you to PDR…"));router.push("/NewLead")}}/>
+    <FileX size={18} strokeWidth={2.2}  onClick={()=>{dispatch(CurrrentPDRUserId(user.userId)) ; dispatch(Refresh("Please Wait......"));router.push("/NewLead")}}/>
   </span>}
 </div>:<p className="inline-flex items-center gap-2 rounded-full w-[100px] h-[28px] border border-gray-200 px-3 shadow-lg py-1 text-[9px] text-gray-600">
   <span className="h-4 w-2 rounded-full bg-green-500"></span>
@@ -1136,7 +1198,7 @@ Awaiting Conversion
 }
 
 
-                            </td>
+                            </td>}
                             {UpdateduserType === 'patient' &&
                               <td className="md:px-8 md:py-2">
 
@@ -1309,12 +1371,59 @@ Awaiting Conversion
 
       <div className="sticky top-0 z-50 bg-opacity-90 backdrop-blur-lg mb-3">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-white/90 rounded-xl p-3 shadow-2xl border border-gray-100">
-          <div className="flex items-center gap-3">
-            <img src="/Icons/Curate-logo.png" onClick={() => router.push("/DashBoard")} alt="Logo" className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl" />
-            <h1 className="text-lg sm:text-2xl font-extrabold text-[#007B7F] tracking-tight leading-tight">
-              Hi,<span className="text-[#ff1493]">{UserFirstName}</span>
-            </h1>
-          </div>
+        <div className="flex items-center gap-3 relative">
+          {showOptions && (
+    <div className="absolute top-12 left-0 bg-white border border-gray-200 rounded-xl shadow-lg w-40 py-2 z-50">
+      <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("Call Enquiry"));
+      dispatch(UpdateUserType("patient"));
+    setShowOptions(false)}
+      }>
+   Call Enquiry
+      </button>
+      <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("Deployment"));
+      dispatch(UpdateUserType("patient"));
+    setShowOptions(false)}
+      }>
+     Deployment
+      </button>
+       <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("Timesheet"));
+      dispatch(UpdateUserType("patient"));
+    setShowOptions(false)}
+      }>
+      Timesheet
+      </button>
+      <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>router.push("/Invoices")}>
+      Invoice
+      </button>
+      <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>router.push("/PDRView")}>
+    PDR 
+      </button>
+    </div>
+  )}
+    <button
+      onClick={() => setShowOptions(!showOptions)}
+      className="rounded-lg hover:bg-gray-100 transition cursor-pointer"
+    >
+         <List size={40} className='text-teal-800  p-2'/>
+    </button>
+  <img
+    src="/Icons/Curate-logo.png"
+    onClick={() => router.push("/DashBoard")}
+    alt="Logo"
+    className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl"
+  />
+
+  <h1 className="text-lg sm:text-2xl font-extrabold text-[#007B7F] tracking-tight leading-tight flex items-center gap-2">
+    Hi,<span className="text-[#ff1493]">{UserFirstName}</span>
+
+    
+  
+  </h1>
+
+
+  
+</div>
+
 
           <div className='flex gap-2 items-center'>
             {(UpdateMainFilter === "Call Enquiry" || UpdateMainFilter === "HCP List")
@@ -1457,22 +1566,38 @@ Awaiting Conversion
             </div>}
 
 
-          {UpdateduserType === "healthcare-assistant" && <div className="flex gap-3 flex-wrap items-center">
-            {["HCA", "HCP", "HCN"].map((each, index) => (
-              <span
-                key={index}
-                className={`
-        px-4 py-1.5
-        rounded-full
-        text-sm font-semibold
-        shadow-sm
-        ${pillStyles[each]}
-      `}
-              >
-                {each}(0)
-              </span>
-            ))}
-          </div>
+          {UpdateduserType === "healthcare-assistant" && 
+          <div className="flex gap-3 flex-wrap items-center">
+  {["HCA", "HCP", "HCN"].map((each, index) => {
+    const isActive = HCPPreviewtype === each;
+
+    return (
+      <span
+        key={index}
+        onClick={() => {setHCPPreviewtype(each);  dispatch(Refresh(""))}}
+        className={`
+          px-4 py-1.5
+          rounded-full
+          text-sm font-semibold
+          cursor-pointer
+          transition-all duration-200
+          border
+          ${
+            isActive
+              ? "bg-teal-600 text-white border-teal-600 shadow-md scale-105"
+              : "bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200"
+          }
+        `}
+      >
+        {/* {each} ({GetHCPTypeCount(each)}) */} {each}({MonthlyCount?.filter(
+                            (Try) => Try.PreviewUserType === each &&Try.userType==="healthcare-assistant" 
+                          )?.length || 0
+                          })
+      </span>
+    );
+  })}
+</div>
+
           }
           {/* <button
 onClick={()=>UpdateNavigattosuggetions()}
@@ -1480,7 +1605,29 @@ onClick={()=>UpdateNavigattosuggetions()}
  text-white rounded-xl  hover:shadow-lg hover:rounded-full h-8 text-[9px] transition-all duration-150"
           >
             Show Placement Suggetions
+            
           </button> */}
+    {UpdateduserType === "healthcare-assistant" &&
+     <div className="w-[320px] flex flex-wrap items-center justify-center gap-1">
+  {HCPFilters.map((status) => (
+    <button
+      key={status.value}
+      type="button"
+      onClick={() => setHCPCurrentStatus(status.value)}
+      className={`px-2 py-1 rounded-md text-[10px] font-medium border transition whitespace-nowrap cursor-pointer
+        ${
+          HCPCurrentStatus === status.value
+            ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+            : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+        }`}
+    >
+      {status.label}
+    </button>
+  ))}
+</div>
+}
+
+
           {((UpdateMainFilter !== "Timesheet") && (UpdateMainFilter !== 'Deployment')) &&
             <div className="flex justify-between gap-3 md:w-[330px]">
 
