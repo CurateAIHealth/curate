@@ -3,7 +3,7 @@
 
 
 import { toProperCaseLive } from "@/Lib/Actions";
-import { ClearEnquiry, GetUserInformation, UpdateClientStatusinCallEnquiry, UpdateClientStatusToProcessing } from "@/Lib/user.action";
+import { ClearEnquiry, GetUserInformation, UpdateClientStatusinCallEnquiry, UpdateClientStatusToProcessing, UpdatedUserJoingDate } from "@/Lib/user.action";
 import { Refresh } from "@/Redux/action";
 import {
   Phone,
@@ -36,10 +36,12 @@ interface CallEnquiryUser {
 interface Props {
   data: CallEnquiryUser[];
   title?: string;
+  SearchData:any
 }
 
 export default function CallEnquiryList({
   data,
+  SearchData,
   title = "Call Enquiries",
 }: Props) {
  
@@ -86,7 +88,11 @@ const SendWhatsAppConfirmation=()=>{
   }
 }
 
-console.log('Check For Contact----',data)
+
+
+
+
+
 const UpdatedFilterUserType = useMemo(() => {
   return data
     .filter((each) => {
@@ -103,7 +109,19 @@ const UpdatedFilterUserType = useMemo(() => {
         const matchesYear =
           !SearchYear || date.getFullYear() === Number(SearchYear);
 
-        return matchesMonth && matchesYear;
+
+          const matchesSearchResult =
+    !SearchData ||
+    [each.FirstName, each.Email, each.ContactNumber]
+      .filter(Boolean)
+      .some((value) =>
+        value
+          .toString()
+          .toLowerCase()
+          .includes(SearchData.toLowerCase())
+      );
+
+        return matchesMonth && matchesYear&&matchesSearchResult;
       };
 
       return checkDate(each.createdAt) || checkDate(each.LeadDate);
@@ -131,6 +149,39 @@ const GRID_COLS =
 
 
   
+
+
+const lastUpdatedDates: Record<string, string> = {};
+
+const UpdateJoiningDate = async (
+  ClientName: any,
+  ClientUserId: any,
+  UpdatedValue: any
+) => {
+  try {
+    
+    if (!UpdatedValue) return;
+
+   
+    if (lastUpdatedDates[ClientUserId] === UpdatedValue) return;
+
+    lastUpdatedDates[ClientUserId] = UpdatedValue;
+
+    dispatch(Refresh("Please Wait..."));
+
+    const PriorityResult: any = await UpdatedUserJoingDate(
+      ClientUserId,
+      UpdatedValue
+    );
+
+    if (PriorityResult.success === true) {
+      dispatch(Refresh(`Lead Date Updated Successfully`));
+    }
+  } catch (err: any) {
+    console.error(err);
+  }
+};
+
 
   return (
     <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 w-full">
@@ -200,7 +251,7 @@ if(Post.success){
   className={`hidden md:grid ${GRID_COLS} gap-4 px-4 py-3 text-xs bg-gradient-to-r from-teal-600 to-emerald-500 text-white text-[10px] font-semibold`}
 >
   <span>S.No</span>
-  <span>Date</span>
+  <span className="text-center">Date</span>
   <span>Lead Source</span>
   <span>Client Name</span>
   <span>Phone</span>
@@ -221,9 +272,39 @@ if(Post.success){
   <span className="text-gray-500 font-medium">
     {index + 1}
   </span>
- <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
-    <CalendarDays size={12} />
-    {new Date(user.createdAt).toLocaleDateString()}
+ <span className="flex items-center justify-start gap-1 text-xs text-gray-400 whitespace-nowrap">
+ <input
+                            
+                              className="
+    h-8 w-[90px] px-1
+    rounded-xl
+    bg-white
+    border border-slate-300
+    text-[10px] font-semibold text-slate-700
+    shadow-sm
+
+    transition-all duration-200 ease-in-out
+
+    hover:border-slate-400 hover:shadow-md
+    focus:outline-none
+    focus:border-[#62e0d9]
+    focus:ring-2 focus:ring-[#caf0f8]
+text-left
+    disabled:bg-slate-100 disabled:cursor-not-allowed
+
+  "
+                       
+   type="text"
+  placeholder="DD-MM-YYYY"
+  defaultValue={user.LeadDate || ""}
+  onKeyDown={(e: any) => {
+    if (e.key === "Enter") {
+      const val = e.currentTarget.value;
+      
+      UpdateJoiningDate(user.FirstName, user.userId, val);
+    }
+  }}
+                            />
   </span>
    <span className="font-medium text-gray-800 truncate">
   {toProperCaseLive(user.NewLead) || "Not Provided"}

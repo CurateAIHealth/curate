@@ -20,11 +20,12 @@ import {
   UpdateUserCurrentstatus,
   UpdateUserEmailVerificationstatus,
   GetUserPDRInfo,
-  UpdateUserCurrentstatusInHCPView
+  UpdateUserCurrentstatusInHCPView,
+  
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 ,Hourglass ,BadgeCheck, MapPin,FileCheck,FileX, Router, List } from 'lucide-react';
+import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 ,Hourglass ,BadgeCheck, MapPin,FileCheck,FileX, Router, List, Calendar1 } from 'lucide-react';
 import { CurrrentPDRUserId, GetCurrentDeploymentData, Refresh, Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateClient, UpdateClientSuggetion, UpdateFetchedInformation, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
 import { ClientEnquiry_Filters, filterColors, HCPFilters, hyderabadAreas, LeadSources, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
@@ -36,7 +37,7 @@ import { HCAList } from '@/Redux/reducer';
 import WorkingOn from '@/Components/CurrentlyWoring/page';
 import axios from 'axios';
 import { setTimeout } from 'timers/promises';
-import { decrypt, encrypt, normalizeDate, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
+import { decrypt, encrypt, getPopularArea, normalizeDate, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
 import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 import { LoadingData } from '@/Components/Loading/page';
 import ReplacementsTable from '@/Components/ReplacementsTable/page';
@@ -257,8 +258,8 @@ const GetHCPTypeCount = (HCPType: string) => {
         : each.ClientStatus === search);
 
         
-    const notAdmin =
-      each.Email?.toLowerCase() !== "admin@curatehealth.in";
+    // const notAdmin =
+    //   each.Email?.toLowerCase() !== "admin@curatehealth.in";
 
 
       
@@ -312,15 +313,15 @@ const GetHCPTypeCount = (HCPType: string) => {
       matchesStatus &&
       matchesSearchResult &&
       matchesCurrentStatus &&
-      matchesDate &&
-      notAdmin
+      matchesDate 
+      // &&notAdmin
     );
   })
   .slice()
   .reverse();
 
  
-
+console.log("Check-----",Finel.filter((each:any)=>each.id==="2383a38f-8e39-47a0-bce1-f1f04ba20295"))
 
   const filterByMonthAndYear = (
     each: any,
@@ -528,12 +529,12 @@ if (DeleteEnquiry?.success) {
   const UpdateClientPriority = async (ClientName: any, ClientUserId: any, UpdatedValue: any) => {
     try {
    
-       dispatch(Refresh(`Please Wait,${ClientName} Priority Updateding...`))
+       dispatch(Refresh(`Please Wait,${ClientName} ...`))
       const PriorityResult: any = await UpdatedClientPriority(ClientUserId, UpdatedValue)
 
       if (PriorityResult.success === true) {
      
-         dispatch(Refresh(`${ClientName} Priority Updated Successfully`))
+         dispatch(Refresh(`${ClientName}  Updated Successfully`))
       }
     } catch (err: any) {
 
@@ -558,34 +559,49 @@ if (DeleteEnquiry?.success) {
   const UpdatePreviewUserType = async (ClientName: any, ClientUserId: any, UpdatedValue: any) => {
     try {
       
-       dispatch(Refresh(`Please Wait,${ClientName} Priority Updateding...`))
+       dispatch(Refresh(`Please Wait,${ClientName} ...`))
       const AreaUpdateResult: any = await UpdatedPreviewUserType(ClientUserId, UpdatedValue)
 
       if (AreaUpdateResult.success === true) {
       
-         dispatch(Refresh(`${ClientName} Priority Updated Successfully`))
+         dispatch(Refresh(`${ClientName}  Updated Successfully`))
       }
     } catch (err: any) {
 
     }
   }
 
+const lastUpdatedDates: Record<string, string> = {};
 
+const UpdateJoiningDate = async (
+  ClientName: any,
+  ClientUserId: any,
+  UpdatedValue: any
+) => {
+  try {
+    
+    if (!UpdatedValue) return;
 
-  const UpdateJoiningDate = async (ClientName: any, ClientUserId: any, UpdatedValue: any) => {
-    try {
-     
-       dispatch(Refresh(`Please Wait,${ClientName} Priority Updateding...`))
-      const PriorityResult: any = await UpdatedUserJoingDate(ClientUserId, UpdatedValue)
+    
+   
+    if (lastUpdatedDates[ClientUserId] === UpdatedValue) return;
 
-      if (PriorityResult.success === true) {
-      
-         dispatch(Refresh(`${ClientName} Priority Updated Successfully`))
-      }
-    } catch (err: any) {
+    lastUpdatedDates[ClientUserId] = UpdatedValue;
 
+    dispatch(Refresh("Please Wait..."));
+
+    const PriorityResult: any = await UpdatedUserJoingDate(
+      ClientUserId,
+      UpdatedValue
+    );
+
+    if (PriorityResult.success === true) {
+      dispatch(Refresh(`Lead Date Updated Successfully`));
     }
+  } catch (err: any) {
+    console.error(err);
   }
+};
 
   const UpdateAssignHca = async (UserIDClient: any, UserIdHCA: any, ClientName: any, ClientEmail: any, ClientContact: any, Adress: any, HCAName: any, HCAContact: any) => {
     
@@ -651,6 +667,7 @@ return
       <div>
         {search === "CallEnquiry" ? <CallEnquiryList
           data={callEnquiryArray}
+          SearchData={SearchResult}
           title="Recent Call Enquiries"
         />
           : <div className="w-full">
@@ -722,8 +739,8 @@ return
                       <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white  text-[10px] font-semibold">
                         <tr>
                           <th className="px-2 py-2 w-[4%]">S.No</th>
-                          {UpdateduserType === "patient" &&
-                            <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Date</th>}
+                      
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">{UpdateduserType === "patient"?"Date":"Joining Date"}</th>
                           {UpdateduserType === "patient" &&
                             <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Lead Source</th>}
                           {UpdateduserType === "patient" &&
@@ -765,17 +782,16 @@ return
                             key={index}
                             
                           >
+                          
                             <td className='pl-4'>{index + 1}</td>
-                       
-                            {UpdateduserType === "patient" && <td><input
-                              type="date"
-                              value={user.LeadDate || ''}
+                       <td><input
+                             
                               className="
-    h-11 w-[120px] px-2
+    h-8 w-[70px] px-1
     rounded-xl
     bg-white
     border border-slate-300
-    text-xs font-semibold text-slate-700
+    text-[10px] font-semibold text-slate-700
     shadow-sm
 
     transition-all duration-200 ease-in-out
@@ -788,9 +804,20 @@ return
     disabled:bg-slate-100 disabled:cursor-not-allowed
 
   "
-                              onChange={(e: any) => UpdateJoiningDate(user.FirstName, user.userId, e.target.value)}
+                             type="text"
+  placeholder="DD-MM-YYYY"
+  defaultValue={user.LeadDate || ""}
+  onKeyDown={(e: any) => {
+    if (e.key === "Enter") {
+      const val = e.currentTarget.value;
+      
+      UpdateJoiningDate(user.FirstName, user.userId, val);
+    }
+  }}
+  
                             />
-                            </td>}
+
+                            </td>
                             {UpdateduserType === "patient" &&
                               <td className='pl-6'>{toProperCaseLive(user.LeadSource) || "Not Mentioned"} <button
                                     onClick={() => setEditingUserId(user.userId)}
@@ -993,7 +1020,7 @@ return
                               </td>}
                             {/* <td className="px-2 py-2 break-words">{user?.Email?.toLowerCase()||"Not Provided"}</td> */}
                             <td className="px-2 py-2">
-                              {user?.Contact ? `+91${user.Contact}` : "Not Provided"}
+                              {user?.Contact ? `${user.Contact}` : "Not Provided"}
                             </td>
 
 
@@ -1016,7 +1043,8 @@ return
                                         : "italic text-slate-400"
                                       }`}
                                   >
-                                    {user.ServiceLocation ||user.Location|| "Not mentioned"}
+                                   
+                                     {getPopularArea(user.ServiceLocation ||user.Location|| "Not mentioned")}
                                   </span>
 
                                 
@@ -1086,7 +1114,9 @@ return
   )}
                             </td>
                             {user.userType === "patient" && (
+                            
                               <td className="px-2 py-2">
+                                  
                                 <select
                                   className={`w-full px-2 py-2 rounded-xl text-center font-medium transition-all duration-200 cursor-pointer ${user.ClientStatus === "Placced"
                                       ? "text-[13px] font-bold shadow-lg"
@@ -1380,6 +1410,12 @@ Awaiting Conversion
       }>
    Call Enquiry
       </button>
+       <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("HCP List"));
+        dispatch(UpdateUserType("healthcare-assistant"));
+    setShowOptions(false)}
+      }>
+   HCP List
+      </button>
       <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("Deployment"));
       dispatch(UpdateUserType("patient"));
     setShowOptions(false)}
@@ -1462,6 +1498,8 @@ Awaiting Conversion
       "
                 />
               </div>}
+
+            
             <button
               onClick={handleLogout}
               className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
@@ -1590,7 +1628,7 @@ Awaiting Conversion
         `}
       >
         {/* {each} ({GetHCPTypeCount(each)}) */} {each}({MonthlyCount?.filter(
-                            (Try) => Try.PreviewUserType === each &&Try.userType==="healthcare-assistant" 
+                            (Try) => Try.PreviewUserType === each &&Try.userType!=="healthcare-assistant"
                           )?.length || 0
                           })
       </span>
