@@ -1166,7 +1166,7 @@ patientWeight:HCA.patientWeight||"",
       Location: HCA.Location || "",
       ServiceType: HCA.ServiceType || "",
       HealthCard: HCA.HealthCard || "",
-ClientStatus:HCA.ClientStatus||"",
+      ClientStatus:HCA.ClientStatus||"Waiting List",
       ExpectedService: HCA.ExpectedService || "",
       ReasonForService: HCA.ReasonForService || "",
 
@@ -4044,9 +4044,10 @@ export const UpdatedUserJoingDate = async (
       { userId: UserId }, 
       {
         $set: {
-          LeadDate: UpdatedStatus, 
-          createdAt:new Date (UpdatedStatus).toISOString(),
-        
+
+          LeadDate: new Date(UpdatedStatus).toISOString().split("T")[0],
+          createdAt: new Date(UpdatedStatus).toISOString().split("T")[0],
+
         },
       },
       {
@@ -4212,6 +4213,7 @@ export const UpdateUserCurrentstatusInHCPView = async (
     };
   }
 };
+
 
 
 
