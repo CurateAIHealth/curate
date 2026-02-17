@@ -1628,7 +1628,7 @@ Awaiting Conversion
         `}
       >
         {/* {each} ({GetHCPTypeCount(each)}) */} {each}({MonthlyCount?.filter(
-                            (Try) => Try.PreviewUserType === each &&Try.userType!=="healthcare-assistant"
+                            (Try) => Try.PreviewUserType === each &&Try.userType==="healthcare-assistant"
                           )?.length || 0
                           })
       </span>
