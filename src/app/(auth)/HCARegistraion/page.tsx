@@ -714,10 +714,8 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
             Documents: Docs,
             UserId: generatedUserId,
             DocumentSkipReason: ReasonValue,
-            userType:
-              CurrentUserType === "HCA"
-                ? "healthcare-assistant"
-                : CurrentUserType,
+            userType:"healthcare-assistant"
+              
           };
 
           await PostHCAFullRegistration(FinelForm);
