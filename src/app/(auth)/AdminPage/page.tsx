@@ -258,8 +258,8 @@ const GetHCPTypeCount = (HCPType: string) => {
         : each.ClientStatus === search);
 
         
-    const notAdmin =
-      each.Email?.toLowerCase() !== "admin@curatehealth.in";
+    // const notAdmin =
+    //   each.Email?.toLowerCase() !== "admin@curatehealth.in";
 
 
       
@@ -313,15 +313,15 @@ const GetHCPTypeCount = (HCPType: string) => {
       matchesStatus &&
       matchesSearchResult &&
       matchesCurrentStatus &&
-      matchesDate &&
-      notAdmin
+      matchesDate 
+      // &&notAdmin
     );
   })
   .slice()
   .reverse();
 
  
-
+console.log("Check-----",Finel.filter((each:any)=>each.id==="2383a38f-8e39-47a0-bce1-f1f04ba20295"))
 
   const filterByMonthAndYear = (
     each: any,
@@ -782,6 +782,7 @@ return
                             key={index}
                             
                           >
+                          
                             <td className='pl-4'>{index + 1}</td>
                        <td><input
                              
@@ -1409,6 +1410,12 @@ Awaiting Conversion
       }>
    Call Enquiry
       </button>
+       <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("HCP List"));
+        dispatch(UpdateUserType("healthcare-assistant"));
+    setShowOptions(false)}
+      }>
+   HCP List
+      </button>
       <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("Deployment"));
       dispatch(UpdateUserType("patient"));
     setShowOptions(false)}
@@ -1621,7 +1628,7 @@ Awaiting Conversion
         `}
       >
         {/* {each} ({GetHCPTypeCount(each)}) */} {each}({MonthlyCount?.filter(
-                            (Try) => Try.PreviewUserType === each &&Try.userType==="healthcare-assistant" 
+                            (Try) => Try.PreviewUserType === each &&Try.userType!=="healthcare-assistant"
                           )?.length || 0
                           })
       </span>

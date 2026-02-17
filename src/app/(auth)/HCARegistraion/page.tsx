@@ -597,6 +597,11 @@ const HEIGHT_OPTIONS = Array.from(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
 
+      if(form.emailId==="admin@curatehealth.in"){
+        alert("Your Useing AdminEmail.")
+        return
+      }
+
       if (CurrentUserType === null) {
         alert("UserType Not Selected");
         return;
@@ -659,7 +664,7 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
               : CurrentUserType;
 
           const payload: any = {
-            userType: UpdateCurrentUserType,
+            userType: "healthcare-assistan",
             FirstName: form.firstName || "",
             SurName: form.surname || "",
             LastName:form.lastName||'',
