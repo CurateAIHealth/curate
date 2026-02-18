@@ -2130,6 +2130,85 @@ return safeUsers
   }
 }
 
+export const UpdateClientTimeSheet=async(ImpClientId:any,ImpData:any)=>{
+  try{
+const cluster=await clientPromise
+const db=cluster.db("CurateInformation")
+const collection=db.collection("Deployment")
+const result=await collection.updateOne(
+  {ClientId:ImpClientId},
+  {
+     $set: {
+      
+      CareTakerPrice: ImpData?.CareTakerPrice,
+      StartDate: ImpData?.startDate,
+      EndDate: ImpData?.endDate,
+      ClientName: ImpData?.clientName,
+      patientName: ImpData?.patientName,
+      ClientContact: ImpData?.clientPhone,
+      HCAName: ImpData?.hcpName,
+      referralName: ImpData?.referralName,
+      hcpSource: ImpData?.hcpSource,
+      invoice: ImpData?.invoice
+        
+        }
+  })
+
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Client not found",
+      }
+    }
+
+    if (result.modifiedCount === 0) {
+      return {
+        success: true,
+        message: "No changes made",
+      }
+    }
+
+    return {
+      success: true,
+      message: "Client TimeSheet updated successfully",
+    }
+  }catch(e){
+
+  }
+}
+
+export const DeleteClientFromDeolyment = async (ImpClientId: any) => {
+  try {
+    const cluster = await clientPromise
+    const db = cluster.db("CurateInformation")
+    const collection = db.collection("Deployment")
+
+    const result = await collection.deleteOne({
+      ClientId: ImpClientId,
+    })
+
+    if (result.deletedCount === 0) {
+      return {
+        success: false,
+        message: "Client not found",
+      }
+    }
+
+    return {
+      success: true,
+      message: "Client deleted successfully",
+    }
+  } catch (e) {
+    console.log("DeleteClientFromDeolyment Error:", e)
+    return {
+      success: false,
+      message: "Something went wrong while deleting",
+    }
+  }
+}
+
+
 export const GetReplacementInfo=async()=>{
   try{
 const cluster=await clientPromise

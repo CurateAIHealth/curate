@@ -1,8 +1,8 @@
 "use client";
 
-import { EditAttendanceByClientId, GetDeploymentInfo, UpdateAllPendingAttendance } from "@/Lib/user.action";
+import { DeleteClientFromDeolyment, EditAttendanceByClientId, GetDeploymentInfo, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus } from "@/Lib/user.action";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
-import { Eye, X } from "lucide-react";
+import { Eye, FilePenLine, LucidePencil, Pencil, PencilIcon, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import React, { useState, useMemo, useEffect } from "react";
@@ -11,6 +11,8 @@ import MissingAttendence from "../MissingAttendence/page";
 import PaymentModal from "../PaymentInfoModel/page";
 import { months, years } from "@/Lib/Content";
 import { getDaysInMonth } from "@/Lib/Actions";
+import DeletePopup from "../DeleteTimesheetPopUp/page";
+import { EditDeploymentPopup } from "../TimeSheetEditPopUp/page";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -26,6 +28,11 @@ const [showFullMonth,setShowFullMonth]=useState(false)
 const [ParticularDate,SetParticularDate]=useState<any>()
 const [AttenseceInformation,setAttenseceInformation]=useState<any>()
 const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+const [showEditPopup, setShowEditPopup] = useState(false);
+
+const [editForm, setEditForm] = useState<any>(null);
+const [showDeletePopup, setShowDeletePopup] = useState(false)
+const [deleteItem, setDeleteItem] = useState<any>(null)
 const [selectedYear, setSelectedYear] = useState(currentYear);
 const [showPaymentModal, setShowPaymentModal] = useState(false);
 const [billingRecord, setBillingRecord] = useState<any>(null);
@@ -70,7 +77,7 @@ const getMonthKey = (record: any): string => {
 
       const formattedData: any = {};
       PlacementInformation.forEach((record: any) => {
-        console.log("Checkkkkkkkkkkkk,",record)
+        
       const monthKey = getMonthKey(record);
 
         if (!formattedData[monthKey]) formattedData[monthKey] = [];
@@ -208,6 +215,12 @@ CareTakerPrice||""
     let index = name.charCodeAt(0) % categoryColors.length;
     return categoryColors[index];
   };
+const handleEditChange = (key: string, value: any) => {
+  setEditForm((prev:any) => ({
+    ...prev,
+    [key]: value
+  }));
+};
 
 
 const processedData = useMemo(() => {
@@ -305,12 +318,17 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
 
 }
 }
+
+
+
+
+
   return (
     <div className="relative  bg-gradient-to-br from-green-50 via-white to-blue-50 p-6">
 
      <header className="mb-6">
   <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-    {/* Title Section */}
+
     <div>
       <h1 className="text-2xl sm:text-3xl font-semibold tet-gray-800 tracking-tight flex items-center gap-2">
         🩺 Curate Health — Time Sheet
@@ -320,9 +338,9 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
       </p>
     </div>
 
-    {/* Actions */}
+    
     <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 w-full lg:w-auto">
-      {/* Buttons */}
+     
       <button
         onClick={() => setShowMissingCalendar(true)}
         className="px-4 py-2 text-sm bg-blue-500 text-white cursor-pointer rounded-lg shadow hover:bg-blue-800 w-full sm:w-auto"
@@ -369,7 +387,7 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
         />
       </div>
 
-      {/* Month */}
+     
       <select
         value={selectedMonth}
         onChange={(e) => setSelectedMonth(e.target.value)}
@@ -384,7 +402,7 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
         ))}
       </select>
 
-      {/* Year */}
+     
       <select
         value={selectedYear}
         onChange={(e) => setSelectedYear(e.target.value)}
@@ -414,43 +432,103 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
     }}
   />
 )}
+
+<DeletePopup
+  open={showDeletePopup}
+  data={deleteItem}
+  StatusMessage={StatusMessage}
+  title="Delete Record"
+  message={(item:any)=>`Delete ${item?.clientName || "this item"} ?`}
+  onClose={() => setShowDeletePopup(false)}
+  onConfirm={async (item: any) => {
+  try {
+    if (!item?.ClientId) {
+      SetStatusMessage("Invalid record")
+      return
+    }
+
+    SetStatusMessage("Processing...")
+
+    const updateResult = await UpdateHCAnstatus(
+      item?.hcpId,
+      "Available for Work"
+    )
+
+    if (!updateResult?.success) {
+      SetStatusMessage(updateResult?.message || "HCP update failed")
+      return
+    }
+
+    const postInfo = await DeleteClientFromDeolyment(item.ClientId)
+
+    if (!postInfo?.success) {
+      SetStatusMessage(postInfo?.message || "Delete failed")
+      return
+    }
+
+    SetStatusMessage(postInfo.message)
+
+    setTimeout(() => {
+      setShowDeletePopup(false)
+      SetStatusMessage("")
+    }, 2000)
+  } catch (err) {
+    console.error("Delete Flow Error:", err)
+    SetStatusMessage("Something went wrong")
+  }
+}}
+
+/>
     
+<EditDeploymentPopup
+  open={showEditPopup}
+  data={editForm}
+  StatusMessage={StatusMessage}
+  onClose={() => setShowEditPopup(false)}
+  onChange={(field, value) =>
+    setEditForm((prev:any) => ({ ...prev, [field]: value }))
+  }
+  onSave={async(data:any) => {
+const PostInfo=await UpdateClientTimeSheet(data.ClientId,data)
+if(PostInfo?.success){
+  SetStatusMessage(PostInfo.message)
+  setTimeout(()=>{
+ setShowEditPopup(false)
+ SetStatusMessage("")
+  },2000)
+
+}
+   
+  }}
+/>
 
 
 <div className="relative max-h-[64vh] overflow-y-auto overflow-x-auto bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md rounded-2xl">
 
-<div className="relative w-full overflow-hidden rounded-xl border border-gray-200 bg-white">
-  <table className="w-full border-collapse text-[11px] md:text-sm text-gray-800">
+<div className="relative w-full overflow-x-auto rounded-xl border border-gray-200 bg-white">
+  <table className="w-full table-auto border-collapse text-[10px] md:text-sm text-gray-800">
     <thead className="sticky top-0 z-20 bg-blue-500 text-white">
       <tr>
-          <th className="text-center pl-1">S.No</th>
+        <Th>S No</Th>
         <Th>Invoice</Th>
         <Th>Start</Th>
         <Th>End</Th>
-        <Th className="max-w-[140px]">Client</Th>
-
-        <Th className="hidden lg:table-cell max-w-[120px]">Patient</Th>
-        <Th className="hidden xl:table-cell max-w-[140px]">Referral</Th>
-
-        <Th className="max-w-[140px]">HCP</Th>
-
-        <Th className="hidden lg:table-cell">HCP Ref</Th>
-        <Th className="hidden xl:table-cell">Vendor</Th>
-
-        <Th className="text-right">Charge</Th>
-
-        <th className="bg-amber-500 ">PD</th  >
-          <th className="bg-amber-500 ">AD</th  >
-            <th className="bg-amber-500 ">HP</th  >
-    
-
+        <Th className="max-w-[160px]">Client</Th>
+        <Th className="hidden lg:table-cell max-w-[160px]">Patient</Th>
+        <Th className="hidden xl:table-cell max-w-[160px]">Referral</Th>
+        <Th className="text-left">HCP</Th>
+        <Th className="text-left">HCP Ref</Th>
+        <Th>Vendor</Th>
+        <Th className="text-left">Charge</Th>
+        <th className="bg-amber-500 text-center min-w-[40px]">PD</th>
+        <th className="bg-amber-500 text-center min-w-[40px]">AD</th>
+        <th className="bg-amber-500 text-center min-w-[40px]">HP</th>
         <Th className="bg-cyan-600 text-center">
           {new Date().getDate()}
         </Th>
-
-        <Th className="sticky right-0 bg-cyan-600 text-center">
-          Action
-        </Th>
+        <Th className="bg-cyan-600 text-center">Action</Th>
+        <Th className="bg-cyan-600 text-center">Edit</Th>
+        <Th className="bg-red-500 text-center">Delete</Th>
       </tr>
     </thead>
 
@@ -466,57 +544,53 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
               idx % 2 ? "bg-white" : "bg-green-50/40"
             } hover:bg-green-100/40`}
           >
-            <td className="text-center">{idx+1}</td>
-            <Td className="truncate">{r.invoice}</Td>
-            <Td className="truncate">{r.startDate}</Td>
-            <Td className="truncate">{r.endDate}</Td>
+            <Td className="text-center">{idx + 1}</Td>
 
-           <td
-       className="truncate hidden xl:table-cell font-bold max-w-[140px]"
-              title={r.clientName}
+            <Td className="text-[11px] font-bold break-words">{r.invoice}</Td>
+            <Td className="break-words">{r.startDate}</Td>
+            <Td className="break-words">{r.endDate}</Td>
+
+            <td
+              className="hidden xl:table-cell font-bold break-words max-w-[160px]"
               onClick={() => RouteToClient(r.ClientId, r.clientName)}
             >
               {r.clientName}
             </td>
 
-            <Td className="truncate hidden lg:table-cell max-w-[140px]">
+            <Td className="hidden lg:table-cell break-words max-w-[160px]">
               {r.patientName}
             </Td>
 
-            <Td className="truncate hidden xl:table-cell font-bold max-w-[140px]">
+            <Td className="hidden xl:table-cell font-bold break-words max-w-[160px]">
               {r.referralName || "-"}
             </Td>
 
             <td
-            className="truncate hidden xl:table-cell font-bold max-w-[140px]"
-              title={r.hcpName}
+              className="font-bold hover:text-blue-600 cursor-pointer hover:underline break-words"
               onClick={() => RouteToClient(r.hcpId, r.hcpName)}
             >
               {r.hcpName}
             </td>
 
-            <Td className="truncate hidden lg:table-cell">
-              {r.hcpSource || "-"}
-            </Td>
+            <Td className="break-words">{r.hcpSource || "-"}</Td>
 
-            <Td className="truncate hidden xl:table-cell">
+            <Td className="hidden xl:table-cell break-words">
               {r.VendorName || "-"}
             </Td>
 
-            <td className="text-right font-semibold text-xs whitespace-nowrap p-1">
-              ₹{r.CareTakerPrice}/Day
-            </td>
+            <Td className="font-bold break-words">₹{r.CareTakerPrice}</Td>
 
-            <Td className="bg-amber-50 text-center font-bold">{r.pd}</Td>
-            <Td className="bg-amber-50 text-center font-bold">{r.ad}</Td>
-            <Td className="bg-amber-50 text-center font-bold">{r.hp}</Td>
+            <td className="bg-amber-50 text-center font-bold">{r.pd}</td>
+            <td className="bg-amber-50 text-center font-bold">{r.ad}</td>
+            <td className="bg-amber-50 text-center font-bold">{r.hp}</td>
 
             <Td className="text-left">
-              {dayStatus === "-" ? <span className="flex flex-col items-center leading-[10px] text-[9px] font-semibold text-gray-600">
-  <span>Not</span>
-  <span>Marked</span>
-</span>
- : (
+              {dayStatus === "-" ? (
+                <span className="flex flex-col items-center leading-[10px] text-[9px] font-semibold text-gray-600">
+                  <span>Not</span>
+                  <span>Marked</span>
+                </span>
+              ) : (
                 <>
                   <DayBadge status={dayStatus as DayStatus} />
                   <p
@@ -535,24 +609,50 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
               )}
             </Td>
 
-            <Td className="sticky right-0 bg-white text-center">
+            <Td className="  bg-white text-center">
               <button
-                className="px-1 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600 cursor-pointer"
+                className="px-2 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600 cursor-pointer"
                 onClick={() => {
                   setShowFullMonth(true)
-                  setAttendenceInfo(r),
-                  console.log("Check for Days-----",r)
+                  setAttendenceInfo(r)
                 }}
               >
                 Full Month
               </button>
             </Td>
+
+            <td className="bg-white align-middle text-center">
+              <div className="flex items-center justify-center">
+                <FilePenLine
+                  className="cursor-pointer"
+                  onClick={() => {
+                    setEditForm({ ...r })
+                    setShowEditPopup(true)
+                  }}
+                />
+              </div>
+            </td>
+
+            <td className=" bg-white align-middle text-center">
+              <div className="flex items-center justify-center">
+                <Trash2
+                  className="cursor-pointer text-red-600"
+                  onClick={() => {
+                    setDeleteItem(r)
+                    setShowDeletePopup(true)
+                  }}
+                />
+              </div>
+            </td>
           </tr>
         )
       })}
     </tbody>
   </table>
 </div>
+
+
+
 
 
 
@@ -992,56 +1092,76 @@ function Th({
   className = "",
 }: React.PropsWithChildren<{ className?: string }>) {
   return (
-    <th className={`px-4 py-2 font-semibold text-sm whitespace-nowrap ${className}`}>
+    <th className={`px-3 py-2 font-semibold text-sm whitespace-normal break-words ${className}`}>
       {children}
     </th>
-  );
+  )
 }
 
 function Td({
   children,
   className = "",
 }: React.PropsWithChildren<{ className?: string }>) {
-  return <td className={`px-4 py-2 whitespace-nowrap ${className}`}>{children}</td>;
+  return (
+    <td className={`px-3 py-2 text-left whitespace-normal break-words align-top ${className}`}>
+      {children}
+    </td>
+  )
 }
 
 function DayBadge({ status }: { status: DayStatus }) {
+  const Wrapper = ({ children }: any) => (
+    <div className="flex items-center justify-center w-full">
+      {children}
+    </div>
+  );
+
   if (status === "P") {
     return (
-      <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 text-emerald-600 bg-white shadow-sm">
-        {status}
-      </span>
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 text-emerald-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
     );
   }
 
   if (status === "HP") {
     return (
-      <div className="relative w-8 h-8 rounded-full border-2 border-emerald-500 overflow-hidden shadow-sm flex items-center justify-center text-[10px] font-semibold text-emerald-600">
-        <div className="absolute left-0 top-0 w-1/2 h-full bg-emerald-500" />
-        <span className="relative z-10">HP</span>
-      </div>
+      <Wrapper>
+        <div className="relative w-8 h-8 rounded-full border-2 border-emerald-500 overflow-hidden shadow-sm flex items-center justify-center text-[10px] font-semibold text-emerald-600">
+          <div className="absolute left-0 top-0 w-1/2 h-full bg-emerald-500" />
+          <span className="relative z-10">HP</span>
+        </div>
+      </Wrapper>
     );
   }
 
   if (status === "A") {
     return (
-      <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-rose-600 text-rose-600 bg-white shadow-sm">
-        {status}
-      </span>
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-rose-600 text-rose-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
     );
   }
 
   if (status === "NA") {
     return (
-      <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-gray-500 text-gray-600 bg-white shadow-sm">
-        {status}
-      </span>
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-gray-500 text-gray-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
     );
   }
 
   return (
-    <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border border-gray-400 text-gray-500 bg-white shadow-sm">
-      {status}
-    </span>
+    <Wrapper>
+      <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border border-gray-400 text-gray-500 bg-white shadow-sm">
+        {status}
+      </span>
+    </Wrapper>
   );
 }
