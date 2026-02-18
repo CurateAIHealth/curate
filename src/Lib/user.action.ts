@@ -2145,7 +2145,6 @@ const result=await collection.updateOne(
       EndDate: ImpData?.endDate,
       ClientName: ImpData?.clientName,
       patientName: ImpData?.patientName,
-      ClientContact: ImpData?.clientPhone,
       HCAName: ImpData?.hcpName,
       referralName: ImpData?.referralName,
       hcpSource: ImpData?.hcpSource,

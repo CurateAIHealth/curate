@@ -1,5 +1,5 @@
 "use client";
-
+let deploymentCache: any[] = [];
 import { DeleteClientFromDeolyment, EditAttendanceByClientId, GetDeploymentInfo, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus } from "@/Lib/user.action";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
 import { Eye, FilePenLine, LucidePencil, Pencil, PencilIcon, Trash2, X } from "lucide-react";
@@ -13,6 +13,7 @@ import { months, years } from "@/Lib/Content";
 import { getDaysInMonth } from "@/Lib/Actions";
 import DeletePopup from "../DeleteTimesheetPopUp/page";
 import { EditDeploymentPopup } from "../TimeSheetEditPopUp/page";
+import { LoadingData } from "../Loading/page";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -21,7 +22,7 @@ const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function InvoiceMedicalTable() {
  const now = new Date();
- 
+ const [isChecking, setIsChecking] = useState(true);
 const currentYear = now.getFullYear().toString();
 const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
@@ -71,67 +72,90 @@ const getMonthKey = (record: any): string => {
 
 
 
-  useEffect(() => {
-    const Fetch = async () => {
-      const PlacementInformation: any = await GetDeploymentInfo();
-      if (!PlacementInformation || PlacementInformation.length === 0) return;
 
-      const formattedData: any = {};
-      PlacementInformation.forEach((record: any) => {
-        
+useEffect(() => {
+  const Fetch = async () => {
+
+    // 🔎 check if cache exists for this StatusMessage
+    const cached = deploymentCache.find(
+      (c) => c.key === `${StatusMessage}_${showMissingCalendar}`
+    );
+
+    if (cached) {
+      setClientsInformation(cached.data);
+      setIsChecking(false);
+      return;
+    }
+
+    const PlacementInformation: any = await GetDeploymentInfo();
+    if (!PlacementInformation || PlacementInformation.length === 0) {
+      setIsChecking(false);
+      return;
+    }
+
+    const formattedData: any = {};
+
+    PlacementInformation.forEach((record: any) => {
       const monthKey = getMonthKey(record);
 
-        if (!formattedData[monthKey]) formattedData[monthKey] = [];
-        formattedData[monthKey].push({
-          invoice: record.invoice || "",
-          startDate: record.StartDate || "",
-          endDate: record.EndDate || "",
-          status: record.Status || "",
-          location: record.Address || "N/A",
-          clientPhone: record.ClientContact || "",
-          clientName: record.ClientName || "",
-          ClientId: record.ClientId || "",
-          patientName: record.patientName || "",
-          referralName: record.referralName || "",
-          hcp: "Assist",
-          VendorName: record.VendorName || "Curate",
-          Type: record.Type || "HCA",
-          hcpId: record.HCAId || "",
-          hcpName: record.HCAName || "",
-          hcpPhone: record.HCAContact || "",
-          hcpSource: record.hcpSource || "",
-          provider: record.provider || "",
-          payTerms: record.payTerms || "",
-          cTotal: Number(record.cTotal) || 0,
-          cPay: Number(record.cPay) || 0,
-          hcpTotal: Number(record.hcpTotal) || 0,
-          hcpPay: Number(record.hcpPay) || 0,
-          days: record.Attendance || [],
-          CareTakerPrice:record.
-CareTakerPrice||""
-        });
+      if (!formattedData[monthKey]) formattedData[monthKey] = [];
+
+      formattedData[monthKey].push({
+        invoice: record.invoice || "",
+        startDate: record.StartDate || "",
+        endDate: record.EndDate || "",
+        status: record.Status || "",
+        location: record.Address || "N/A",
+        clientPhone: record.ClientContact || "",
+        clientName: record.ClientName || "",
+        ClientId: record.ClientId || "",
+        patientName: record.patientName || "",
+        referralName: record.referralName || "",
+        hcp: "Assist",
+        VendorName: record.VendorName || "Curate",
+        Type: record.Type || "HCA",
+        hcpId: record.HCAId || "",
+        hcpName: record.HCAName || "",
+        hcpPhone: record.HCAContact || "",
+        hcpSource: record.hcpSource || "",
+        provider: record.provider || "",
+        payTerms: record.payTerms || "",
+        cTotal: Number(record.cTotal) || 0,
+        cPay: Number(record.cPay) || 0,
+        hcpTotal: Number(record.hcpTotal) || 0,
+        hcpPay: Number(record.hcpPay) || 0,
+        days: record.Attendance || [],
+        CareTakerPrice: record.CareTakerPrice || "",
       });
+    });
 
-      setClientsInformation(formattedData);
-    };
+    // ✅ store new cache entry
+    deploymentCache.push({
+      key: `${StatusMessage}_${showMissingCalendar}`,
+      data: formattedData,
+    });
 
-    Fetch();
-  }, [StatusMessage,showMissingCalendar]);
+    setClientsInformation(formattedData);
+    setIsChecking(false);
+  };
+
+  Fetch();
+}, [StatusMessage, showMissingCalendar]);
 
  
 
-  // Current month key and records
+
   const monthKey = `${selectedYear}-${selectedMonth}`;
   const data: any[] = ClientsInformation[monthKey] || [];
 
-  // How many days in this month
+
   const daysInMonth = new Date(
     Number(selectedYear),
     Number(selectedMonth),
     0
   ).getDate();
 
-  // First day index & total cells for full 6-week grid
+ 
   const { firstDayIndex, totalCells } = useMemo(() => {
     const firstDay = new Date(
       Number(selectedYear),
@@ -186,7 +210,6 @@ CareTakerPrice||""
     return Object.values(summaryMap).filter((p: any) => p.pendingCount > 0);
   }, [ClientsInformation, monthKey, selectedMonth, selectedYear]);
 
-  // Day → list of HCPs pending (for current month)
   const pendingByDay = useMemo(() => {
     const map: Record<number, string[]> = {};
 
@@ -201,7 +224,6 @@ CareTakerPrice||""
     return map;
   }, [pendingSummary]);
 
-  // Colors for HCP chips
   const categoryColors = [
     "bg-red-100 text-red-700 border-red-200",
     "bg-blue-100 text-blue-700 border-blue-200",
@@ -321,6 +343,11 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
 }
 
 
+ if (isChecking) {
+    return (
+      <LoadingData/>
+    );
+  }
 
 
 
@@ -490,6 +517,8 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
     setEditForm((prev:any) => ({ ...prev, [field]: value }))
   }
   onSave={async(data:any) => {
+    SetStatusMessage("Please Wait.....")
+    console.log("Check Data-----",data)
 const PostInfo=await UpdateClientTimeSheet(data.ClientId,data)
 if(PostInfo?.success){
   SetStatusMessage(PostInfo.message)
@@ -735,7 +764,14 @@ className={`
               {r.hcpName}
             </td>
 
-            <Td className="font-bold break-words">₹{r.CareTakerPrice}</Td>
+          <Td className="font-bold break-words">
+  {r.CareTakerPrice
+    ? String(r.CareTakerPrice).includes("₹")
+      ? r.CareTakerPrice
+      : `₹${r.CareTakerPrice}`
+    : "₹0"}
+</Td>
+
 
             {showFull && <Td className="break-words">{r.patientName}</Td>}
             {showFull && <Td className="break-words">{r.referralName||"-"}</Td>}
