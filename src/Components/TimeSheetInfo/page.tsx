@@ -21,6 +21,7 @@ const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function InvoiceMedicalTable() {
  const now = new Date();
+ 
 const currentYear = now.getFullYear().toString();
 const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
@@ -29,7 +30,7 @@ const [ParticularDate,SetParticularDate]=useState<any>()
 const [AttenseceInformation,setAttenseceInformation]=useState<any>()
 const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 const [showEditPopup, setShowEditPopup] = useState(false);
-
+const [showFull,setShowFull]=useState(false)
 const [editForm, setEditForm] = useState<any>(null);
 const [showDeletePopup, setShowDeletePopup] = useState(false)
 const [deleteItem, setDeleteItem] = useState<any>(null)
@@ -505,7 +506,7 @@ if(PostInfo?.success){
 
 <div className="relative max-h-[64vh] overflow-y-auto overflow-x-auto bg-white/80 backdrop-blur-sm border border-gray-200 shadow-md rounded-2xl">
 
-<div className="relative w-full overflow-x-auto rounded-xl border border-gray-200 bg-white">
+{/* <div className="relative w-full overflow-x-auto rounded-xl border border-gray-200 bg-white">
   <table className="w-full table-auto border-collapse text-[10px] md:text-sm text-gray-800">
     <thead className="sticky top-0 z-20 bg-blue-500 text-white">
       <tr>
@@ -649,8 +650,167 @@ if(PostInfo?.success){
       })}
     </tbody>
   </table>
+</div> */}
+<div className="m-2">
+  <button
+    onClick={() => setShowFull(!showFull)}
+className={`
+  px-4 py-1 text-[11px] font-semibold
+  rounded-full
+  transition-all duration-300 cursor-pointer
+  ${showFull?
+     "bg-slate-200 text-slate-700 hover:bg-slate-300 bg-gray-200 border shadow-md":"bg-green-600 text-white shadow-md"}
+`}
+
+  >
+    {showFull ? "Show Less" : "Show Full Table"}
+  </button>
 </div>
 
+
+<div className="relative w-full overflow-x-auto rounded-xl border border-gray-200 bg-white">
+  <table className="w-full border-collapse text-[10px] md:text-sm text-gray-800">
+    <thead className="sticky top-0 z-20 bg-blue-500 text-white">
+      <tr>
+        <Th className={`${showFull?"":"w-[5%]"} text-center`}>S No</Th>
+        <Th className={`${showFull?"":"w-[12%]"}`}>Invoice</Th>
+        <Th className={`${showFull?"":"w-[12%]"}`}>Start</Th>
+        <Th className={`${showFull?"":"w-[12%]"}`}>End</Th>
+        <Th className={`${showFull?"":"w-[20%]"}`}>Client</Th>
+        <Th className={`${showFull?"":"w-[15%]"}`}>HCP</Th>
+        <Th className={`${showFull?"":"w-[12%]"}`}>Charge</Th>
+
+        {showFull && <Th className="max-w-[160px]">Patient</Th>}
+        {showFull && <Th className="max-w-[160px]">Referral</Th>}
+        {showFull && <Th className="text-left">HCP Ref</Th>}
+        {showFull && <Th>Vendor</Th>}
+        {showFull && <th className="bg-amber-500 text-center min-w-[40px]">PD</th>}
+        {showFull && <th className="bg-amber-500 text-center min-w-[40px]">AD</th>}
+        {showFull && <th className="bg-amber-500 text-center min-w-[40px]">HP</th>}
+
+        <Th className={`${showFull?"":"w-[6%]"} bg-cyan-600 text-center`}>
+          {new Date().getDate()}
+        </Th>
+        <Th className={`${showFull?"":"w-[10%]"} bg-cyan-600 text-center`}>
+          Action
+        </Th>
+        <Th className={`${showFull?"":"w-[6%]"} bg-cyan-600 text-center`}>
+          Edit
+        </Th>
+        <Th className={`${showFull?"":"w-[6%]"} bg-red-500 text-center`}>
+          Delete
+        </Th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {processedData.map((r:any,idx:number)=>{
+        const todayIndex=new Date().getDate()-1
+        const dayStatus=r.days?.[todayIndex]??"-"
+
+        return(
+          <tr
+            key={idx}
+            className={`border-t ${
+              idx%2?"bg-white":"bg-green-50/40"
+            } hover:bg-green-100/40`}
+          >
+            <Td className="text-center align-middle">{idx+1}</Td>
+
+            <Td className="font-bold break-words">{r.invoice}</Td>
+            <Td className="break-words">{r.startDate}</Td>
+            <Td className="break-words">{r.endDate}</Td>
+
+            <td
+              className="font-bold break-words align-middle"
+              onClick={()=>RouteToClient(r.ClientId,r.clientName)}
+            >
+              {r.clientName}
+            </td>
+
+            <td
+              className="font-bold break-words align-middle"
+              onClick={()=>RouteToClient(r.hcpId,r.hcpName)}
+            >
+              {r.hcpName}
+            </td>
+
+            <Td className="font-bold break-words">₹{r.CareTakerPrice}</Td>
+
+            {showFull && <Td className="break-words">{r.patientName}</Td>}
+            {showFull && <Td className="break-words">{r.referralName||"-"}</Td>}
+            {showFull && <Td className="break-words">{r.hcpSource||"-"}</Td>}
+            {showFull && <Td className="break-words">{r.VendorName||"-"}</Td>}
+            {showFull && <td className="bg-amber-50 text-center font-bold">{r.pd}</td>}
+            {showFull && <td className="bg-amber-50 text-center font-bold">{r.ad}</td>}
+            {showFull && <td className="bg-amber-50 text-center font-bold">{r.hp}</td>}
+
+            <Td className="text-center align-middle">
+              {dayStatus==="-"?(
+                <span className="flex flex-col items-center leading-[10px] text-[9px] font-semibold text-gray-600">
+                  <span>Not</span>
+                  <span>Marked</span>
+                </span>
+              ):(
+               <div className="flex flex-col items-center gap-1">
+                  <DayBadge status={dayStatus as DayStatus}/>
+                  <p
+                    className="text-[10px] text-blue-600 cursor-pointer hover:underline"
+                    onClick={()=>{
+                      SetShowUpdateAttendece(true)
+                      setAttenseceInformation(r)
+                      setStatus("Choose")
+                      SetStatusMessage("")
+                      SetParticularDate(new Date().getDate())
+                    }}
+                  >
+                    Edit
+                  </p>
+                </div>
+              )}
+            </Td>
+
+            <Td className="text-center align-middle">
+              <button
+                className="px-2 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600"
+                onClick={()=>{
+                  setShowFullMonth(true)
+                  setAttendenceInfo(r)
+                }}
+              >
+                Full Month
+              </button>
+            </Td>
+
+            <td className="align-middle text-center">
+              <div className="flex items-center justify-center">
+                <FilePenLine
+                  className="cursor-pointer"
+                  onClick={()=>{
+                    setEditForm({...r})
+                    setShowEditPopup(true)
+                  }}
+                />
+              </div>
+            </td>
+
+            <td className="align-middle text-center">
+              <div className="flex items-center justify-center">
+                <Trash2
+                  className="cursor-pointer text-red-600"
+                  onClick={()=>{
+                    setDeleteItem(r)
+                    setShowDeletePopup(true)
+                  }}
+                />
+              </div>
+            </td>
+          </tr>
+        )
+      })}
+    </tbody>
+  </table>
+</div>
 
 
 
@@ -698,7 +858,7 @@ if(PostInfo?.success){
                   <div className="flex flex-col items-center gap-1">
                     <DayBadge status={dayStatus as DayStatus} />
                     <p
-                      className="text-[9px] cursor-pointer text-blue-600 hover:text-blue-900 hover:underline"
+                      className="text-[9px] cursor-pointer mr-4 text-blue-600 hover:text-blue-900 hover:underline"
                       onClick={() => {
                         SetShowUpdateAttendece(!ShowUpdateAttendece)
                         setAttenseceInformation(attendanceInfo)
@@ -1092,7 +1252,7 @@ function Th({
   className = "",
 }: React.PropsWithChildren<{ className?: string }>) {
   return (
-    <th className={`px-3 py-2 font-semibold text-sm whitespace-normal break-words ${className}`}>
+    <th className={`px-3 py-2 font-semibold text-sm text-left align-middle ${className}`}>
       {children}
     </th>
   )
@@ -1103,12 +1263,11 @@ function Td({
   className = "",
 }: React.PropsWithChildren<{ className?: string }>) {
   return (
-    <td className={`px-3 py-2 text-left whitespace-normal break-words align-top ${className}`}>
+    <td className={`px-3 py-2 text-left align-middle ${className}`}>
       {children}
     </td>
   )
 }
-
 function DayBadge({ status }: { status: DayStatus }) {
   const Wrapper = ({ children }: any) => (
     <div className="flex items-center justify-center w-full">
