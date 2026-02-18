@@ -50,6 +50,8 @@ const ClientTable = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [selectedHCP,setselectedHCP]=useState<any>()
   const [selectedCase, setSelectedCase] = useState<any>(null);
+
+const [showWarning, setShowWarning] = useState(false);
 const [ReplacementTime,setReplacementTime]=useState("")
 const [ReplacementDate,setReplacementDate]=useState("")
   const [UpdatedCareTakerStatus,setUpdatedCareTakerStatus]=useState("")
@@ -106,9 +108,10 @@ const router=useRouter()
 useEffect(() => {
   let mounted = true;
 
-  const fetchData = async (forceFresh = false) => {
+  const fetchData = async () => {
     try {
-      // 🔹 Use cache only when not forcing fresh data
+      const forceFresh = !!ActionStatusMessage; 
+
       if (
         !forceFresh &&
         cachedUsersFullInfo &&
@@ -158,13 +161,13 @@ useEffect(() => {
     }
   };
 
-  // 🔥 Always fetch fresh when ActionStatusMessage changes
-  fetchData(true);
+  fetchData();
 
   return () => {
     mounted = false;
   };
 }, [ActionStatusMessage]);
+
 
 
 
@@ -695,9 +698,18 @@ SetCareTakerName(Name)
 
 const HandleRemove=async(Info: any,Name:any)=>{
   try{
-
-    
+SetActionStatusMessage("Please Wait...")
+    console.log("Check-----",Info)
 const RemoeClientFromDeploy=await RemoveClient(Info.Client_Id)
+const updateResult = await UpdateHCAnstatus(
+      Info.HCA_Id,
+      "Active"
+    )
+
+    if (!updateResult?.success) {
+      SetActionStatusMessage(updateResult?.message || "HCP update failed")
+      return
+    }
 if(RemoeClientFromDeploy.success){
   SetActionStatusMessage(RemoeClientFromDeploy.message)
   setRefreshKey(1)
@@ -1272,7 +1284,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
     active:scale-95 
     cursor-pointer
   "
-  onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setSelectedCase(c),setReplacementDate("")}}
+  onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false)}}
 >
   Reassignment
 </button>
@@ -1372,12 +1384,38 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
     <label className="text-[12px] font-medium text-gray-700">
       Replacement Date ({new Date(ReplacementDate).toLocaleDateString("EN-In")||''})
     </label>
-    <input
-      type="date"
-      onChange={(e)=>setReplacementDate(e.target.value)}
-      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-    />
+<input
+  type="date"
+  value={ReplacementDate}
+  onChange={(e) => {
+    const value = e.target.value;
+    setReplacementDate(value);
+
+    if (!value) {
+      setShowWarning(false);
+      return;
+    }
+
+    const selected = new Date(value);
+    const today = new Date();
+
+    const isCurrentMonth =
+      selected.getMonth() === today.getMonth() &&
+      selected.getFullYear() === today.getFullYear();
+
+    
+    setShowWarning(!isCurrentMonth);
+  }}
+  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+             focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+/>
+
+{showWarning && (
+  <p className="text-xs text-center text-red-500 mt-1">
+    ⚠ Selected date Sholud be belongs to the current month
+  </p>
+)}
+
   </div>
 
   <div className="flex flex-col space-y-1">
@@ -1482,7 +1520,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
               inline-flex items-center justify-center
               px-7 py-3 text-sm font-semibold rounded-full transition-all
               ${
-                selectedHCP&&selectedReason &&
+                selectedHCP&&selectedReason &&showWarning===false&&
                 (selectedReason !== "Other" || otherReason)
                   ? "text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 active:scale-95"
                   : "bg-gray-200 text-gray-500 cursor-not-allowed"
@@ -1556,7 +1594,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
  <td     className="inline-block px-1 ml-4 cursor-pointer py-2 text-[10px] mt-4 hover:bg-gray-100 hover:rounded-full font-medium cursor-pointer ">
             <button
             className="cursor-pointer"
-             onClick={() => {setShowAssignPopup(true),setselectedClient(c),setselectedAssignHCP(null)}}
+             onClick={() => {setShowAssignPopup(true),setselectedClient(c),setselectedAssignHCP(null),SetActionStatusMessage("")}}
             >
        <Plus size={19} className="h-5 w-5 text-center text-teal-600"/>
             </button>
@@ -1574,7 +1612,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
             <button
             
               className="px-3 py-2 text-xs font-medium cursor-pointer rounded-lg hover:rounded-full hover:bg-gray-100"
-              onClick={() => HandleRemove(c,c.HCA_Name)}
+              onClick={() => {HandleRemove(c,c.HCA_Name),SetActionStatusMessage("")}}
             >
               <CircleX size={22} className="text-red-600" />
 

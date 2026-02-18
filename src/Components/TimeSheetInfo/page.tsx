@@ -477,15 +477,15 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
 
     SetStatusMessage("Processing...")
 
-    // const updateResult = await UpdateHCAnstatus(
-    //   item?.hcpId,
-    //   "Available for Work"
-    // )
+    const updateResult = await UpdateHCAnstatus(
+      item?.hcpId,
+      "Active"
+    )
 
-    // if (!updateResult?.success) {
-    //   SetStatusMessage(updateResult?.message || "HCP update failed")
-    //   return
-    // }
+    if (!updateResult?.success) {
+      SetStatusMessage(updateResult?.message || "HCP update failed")
+      return
+    }
 
     const postInfo = await DeleteClientFromDeolyment(item.ClientId)
 
