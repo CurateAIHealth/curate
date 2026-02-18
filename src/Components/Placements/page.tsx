@@ -1272,7 +1272,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
     active:scale-95 
     cursor-pointer
   "
-  onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setSelectedCase(c)}}
+  onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setSelectedCase(c),setReplacementDate("")}}
 >
   Reassignment
 </button>
@@ -1369,8 +1369,8 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
           (selectedReason !== "Other" || otherReason) && (
        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
   <div className="flex flex-col space-y-1">
-    <label className="text-sm font-medium text-gray-700">
-      Replacement Date
+    <label className="text-[12px] font-medium text-gray-700">
+      Replacement Date ({new Date(ReplacementDate).toLocaleDateString("EN-In")||''})
     </label>
     <input
       type="date"
@@ -1381,11 +1381,12 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
   </div>
 
   <div className="flex flex-col space-y-1">
-    <label className="text-sm font-medium text-gray-700">
+    <label className="text-[12px] font-medium text-gray-700">
       Replacement Time
     </label>
     <input
       type="time"
+      
       onChange={(e)=>setReplacementTime(e.target.value)}
       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
                  focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
