@@ -2174,7 +2174,11 @@ const result=await collection.updateOne(
       message: "Client TimeSheet updated successfully",
     }
   }catch(e){
-
+  console.error(e)
+  return {
+    success: false,
+    message: "Update failed"
+  }
   }
 }
 

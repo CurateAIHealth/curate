@@ -239,7 +239,7 @@ const GetHCPTypeCount = (HCPType: string) => {
     PreviewUserType: each.PreviewUserType||"None",
     PDRStatus:each.PDRStatus||"No Available"
   }));
-
+console.log("Check----",Finel)
   const UpdatedFilterUserType = Finel
   .filter((each) => {
 

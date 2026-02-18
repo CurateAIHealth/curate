@@ -664,7 +664,7 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
               : CurrentUserType;
 
           const payload: any = {
-            userType: "healthcare-assistan",
+            userType: "healthcare-assistant",
             FirstName: form.firstName || "",
             SurName: form.surname || "",
             LastName:form.lastName||'',

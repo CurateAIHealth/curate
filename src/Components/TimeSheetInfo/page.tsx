@@ -450,15 +450,15 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
 
     SetStatusMessage("Processing...")
 
-    const updateResult = await UpdateHCAnstatus(
-      item?.hcpId,
-      "Available for Work"
-    )
+    // const updateResult = await UpdateHCAnstatus(
+    //   item?.hcpId,
+    //   "Available for Work"
+    // )
 
-    if (!updateResult?.success) {
-      SetStatusMessage(updateResult?.message || "HCP update failed")
-      return
-    }
+    // if (!updateResult?.success) {
+    //   SetStatusMessage(updateResult?.message || "HCP update failed")
+    //   return
+    // }
 
     const postInfo = await DeleteClientFromDeolyment(item.ClientId)
 
@@ -670,7 +670,7 @@ className={`
 
 <div className="relative w-full overflow-x-auto rounded-xl border border-gray-200 bg-white">
   <table className="w-full border-collapse text-[10px] md:text-sm text-gray-800">
-    <thead className="sticky top-0 z-20 bg-blue-500 text-white">
+    <thead className="sticky top-0 z-20 bg-gradient-to-r from-teal-600 to-emerald-500 text-white">
       <tr>
         <Th className={`${showFull?"":"w-[5%]"} text-center`}>S No</Th>
         <Th className={`${showFull?"":"w-[12%]"}`}>Invoice</Th>
@@ -684,17 +684,17 @@ className={`
         {showFull && <Th className="max-w-[160px]">Referral</Th>}
         {showFull && <Th className="text-left">HCP Ref</Th>}
         {showFull && <Th>Vendor</Th>}
-        {showFull && <th className="bg-amber-500 text-center min-w-[40px]">PD</th>}
-        {showFull && <th className="bg-amber-500 text-center min-w-[40px]">AD</th>}
-        {showFull && <th className="bg-amber-500 text-center min-w-[40px]">HP</th>}
+        {showFull && <th className=" text-white text-center min-w-[40px]">PD</th>}
+        {showFull && <th className="text-white text-center min-w-[40px]">AD</th>}
+        {showFull && <th className=" text-white text-center min-w-[40px]">HP</th>}
 
-        <Th className={`${showFull?"":"w-[6%]"} bg-cyan-600 text-center`}>
+        <Th className={`${showFull?"":"w-[6%]"}  text-center`}>
           {new Date().getDate()}
         </Th>
-        <Th className={`${showFull?"":"w-[10%]"} bg-cyan-600 text-center`}>
+        <Th className={`${showFull?"":"w-[10%]"} text-center`}>
           Action
         </Th>
-        <Th className={`${showFull?"":"w-[6%]"} bg-cyan-600 text-center`}>
+        <Th className={`${showFull?"":"w-[6%]"}  text-center`}>
           Edit
         </Th>
         <Th className={`${showFull?"":"w-[6%]"} bg-red-500 text-center`}>
@@ -711,7 +711,7 @@ className={`
         return(
           <tr
             key={idx}
-            className={`border-t ${
+            className={`border-t border-gray-300 ${
               idx%2?"bg-white":"bg-green-50/40"
             } hover:bg-green-100/40`}
           >
