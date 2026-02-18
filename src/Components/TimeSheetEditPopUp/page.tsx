@@ -53,11 +53,14 @@ export function EditDeploymentPopup<T>({
           </Field>
 
           <Field label="Start Date">
+            <div>
             <input
               value={(data as any).startDate || ""}
               onChange={(e) => onChange("startDate", e.target.value)}
               className="Input"
             />
+         
+           </div>
           </Field>
 
           <Field label="End Date">
@@ -175,18 +178,27 @@ export function EditDeploymentPopup<T>({
 }
 
 
-  const inputStyle =
-" rounded-xl border border-gray-200 bg-white/70 px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition shadow-sm";
+
+
+
+const inputStyle =
+"rounded-xl border border-gray-200 bg-white/70 px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:w-full transition shadow-sm";
+
 function Field({ label, children }: any) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="font-semibold">
-        {label}
-      </label>
-     <p className={inputStyle}>
-       {children}
-     </p>
-     
+      <label className="font-semibold">{label}</label>
+
+   
+      <div className={inputStyle}>
+        {children}
+      </div>
+
+      {(label === "Start Date" || label === "End Date") && (
+        <p className="text-gray-500 text-[9px]">
+          Enter in India Date Formate DD/MM/YYYY
+        </p>
+      )}
     </div>
   );
 }
