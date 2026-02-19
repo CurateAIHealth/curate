@@ -1384,7 +1384,15 @@ console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
 
               <button
                 type="button"
-                onClick={() => {dispatch(UpdatePreviewStatus(false));dispatch(UpdateFetchedInformation(formData))}}
+                onClick={() => {dispatch(UpdatePreviewStatus(false));const payload = {
+  ...formData,
+  UpdatedAt: formData?.UpdatedAt
+    ? new Date(formData.UpdatedAt).toISOString()
+    : null,
+};
+
+dispatch(UpdateFetchedInformation(payload));
+}}
                 className="w-[200-px] cursor-pointer  text-center md:w-auto flex items-center justify-center gap-2 px-4 py-3 md:px-5 md:py-2 text-sm md:text-base font-medium rounded-xl shadow-sm transition-shadow duration-150
           bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:shadow-lg active:shadow-md
           focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 disabled:opacity-60 disabled:cursor-not-allowed"

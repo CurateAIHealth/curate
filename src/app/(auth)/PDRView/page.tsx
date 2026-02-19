@@ -198,20 +198,24 @@ const phoneNumber='919347877159'
 }
 
 const UpdatePopup = async (a: any) => {
+  SetActionStatusMessage("Please Wait.....");
   dispatch(GetCurrentDeploymentData(a));
 
   const data = await GetUserInformation(a.Client_Id);
 
+  const { UpdatedAt, CreatedAt, updatedAt, createdAt, ...rest } = data;
+
   dispatch(
     UpdateFetchedInformation({
-      ...data,
-      updatedAt: normalizeDate(data.updatedAt),
-      createdAt: normalizeDate(data.createdAt),
+      ...rest,
+      UpdatedAt: normalizeDate(UpdatedAt),
+      CreatedAt: normalizeDate(CreatedAt),
     })
   );
 
   Router.push("/PDR");
 };
+
 
 
   const ExtendTimeSheet = async (a: any) => {
