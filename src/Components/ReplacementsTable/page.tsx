@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { LoadingData } from "../Loading/page";
 
 let ReplacementCach : any[] | null = null;
 let ReplacementReasonsCache: any[] | null = null;
@@ -13,7 +14,7 @@ const ReplacementTable = ({ StatusMessage }: any) => {
   const [rawData, setRawData] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [HeadingSearch,setHeadingSearch]=useState('')
-
+  const [isChecking, setIsChecking] = useState(true);
  const now = new Date();
 
 
@@ -31,6 +32,7 @@ const router=useRouter()
       if(ReplacementCach&&ReplacementReasonsCache){
         setRawData(ReplacementCach);
         setReplacementReasons(ReplacementReasonsCache)
+        setIsChecking(false)
         return
       }
       const [PlacementInformation,ReplacementReasons]=await Promise.all([
@@ -80,6 +82,7 @@ ReplacementCach=formatted?? [],
 ReplacementReasonsCache=ReplacementReasons?? []
       setRawData(formatted);
       setReplacementReasons(ReplacementReasons?? [])
+      setIsChecking(false)
     };
 
     Fetch();
@@ -143,14 +146,29 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
 
 
 
-console.log("Check For Message----",GetReplacementMessage("a289361b-3601-4ba6-ad96-191726ad200d","1109de7f-ae0b-41af-a49c-b11f44cae47b")
-)
+ if (isChecking) {
+    return (
+<div className="flex flex-col items-center justify-center h-full gap-3">
+  
+
+  <div className="w-8 h-8 border-4 border-gray-300 border-t-teal-500 rounded-full animate-spin"></div>
+
+
+  <p className="text-sm font-medium text-gray-600 tracking-wide">
+    Please wait...
+  </p>
+
+</div>
+
+    );
+  }
+
   return (
     <div className="space-y-4">
 
 
       <div className="flex flex-wrap gap-3 items-center justify-end">
-        <p>{month}</p>
+        
        
         <input
           type="text"

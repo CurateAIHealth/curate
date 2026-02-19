@@ -347,13 +347,13 @@ const UpdatePDRInfo = async () => {
       }
 
       setUpdatingStatus("PDR created successfully. Redirecting...");
-      setTimeout(() => router.push("/Invoices"), 3000);
+      setTimeout(() => router.push("/Invoices"), 1500);
       return;
     }
 
   
     setUpdatingStatus("PDR updated successfully. Redirecting...");
-    setTimeout(() => router.push("/Invoices"), 3000);
+    setTimeout(() => router.push("/Invoices"), 1500);
 
   } catch (error) {
     console.error(error);

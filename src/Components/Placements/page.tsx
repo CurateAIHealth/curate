@@ -7,7 +7,7 @@ let cachedTermination:any[]
 
 import React, { useEffect, useState } from "react";
 import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -50,6 +50,7 @@ const ClientTable = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [selectedHCP,setselectedHCP]=useState<any>()
   const [selectedCase, setSelectedCase] = useState<any>(null);
+const [searchHCA, setSearchHCA] = useState("");
 
 const [showWarning, setShowWarning] = useState(false);
 const [ReplacementTime,setReplacementTime]=useState("")
@@ -108,33 +109,35 @@ const router=useRouter()
 useEffect(() => {
   let mounted = true;
 
+  const isInitialLoad = ActionStatusMessage === "";
+  const isSuccessUpdate = ActionStatusMessage?.includes("Successfully");
+
+  
+  if (!isInitialLoad && !isSuccessUpdate) return;
+
   const fetchData = async () => {
     try {
-      const forceFresh = !!ActionStatusMessage; 
+      setIsChecking(true);
 
-      if (
-        !forceFresh &&
-        cachedUsersFullInfo &&
-        cachedDeploymentInfo &&
-        cachedReplacementInfo &&
-        cachedTermination
-      ) {
-        setUsers([...cachedUsersFullInfo]);
+ 
+      if (isSuccessUpdate) {
+  
+        const placementInfo = await GetDeploymentInfo();
+
+        if (!mounted) return;
+
+        cachedDeploymentInfo = placementInfo ?? [];
         setClientsInformation([...cachedDeploymentInfo]);
-        setReplacementInformation([...cachedReplacementInfo]);
-        SetterminationInfo([...cachedTermination]);
-        setIsChecking(false);
         return;
       }
 
+ 
       const [
-        ,
         usersResult,
         placementInfo,
         replacementInfo,
         terminationInfo,
       ] = await Promise.all([
-        GetRegidterdUsers(),
         GetUsersFullInfo(),
         GetDeploymentInfo(),
         GetReplacementInfo(),
@@ -148,16 +151,16 @@ useEffect(() => {
       cachedReplacementInfo = replacementInfo ?? [];
       cachedTermination = terminationInfo ?? [];
 
-      setUsers(cachedUsersFullInfo);
-      setClientsInformation(cachedDeploymentInfo);
-      setReplacementInformation(cachedReplacementInfo);
-      SetterminationInfo(cachedTermination);
+      setUsers([...cachedUsersFullInfo]);
+      setClientsInformation([...cachedDeploymentInfo]);
+      setReplacementInformation([...cachedReplacementInfo]);
+      SetterminationInfo([...cachedTermination]);
 
       dispatch(UpdateSubHeading("On Service"));
     } catch (err) {
-      console.error("Fetch error:", err);
+      console.error(err);
     } finally {
-      mounted && setIsChecking(false);
+      if (mounted) setIsChecking(false);
     }
   };
 
@@ -167,6 +170,7 @@ useEffect(() => {
     mounted = false;
   };
 }, [ActionStatusMessage]);
+
 
 
 
@@ -413,8 +417,8 @@ const normalizedAttendance =
 
   
     await Promise.all([
-      UpdateUserContactVerificationstatus(clientId, "Placed"),
-      UpdateHCAnstatus(hcaUserId, "Assigned"),
+      UpdateUserContactVerificationstatus(clientId, "Converted"),
+      UpdateHCAnstatus(hcaUserId, "Active"),
       UpdateHCAnstatusInFullInformation(hcaUserId),
     ]);
 
@@ -565,7 +569,7 @@ const UpdatePopup=async(a:any)=>{
 }
 
   const ExtendTimeSheet = async () => {
-SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
+SetActionStatusMessage("Please Wait Working On Service Extention")
 
     // const PostTimeSheet: any = await TestInserTimeSheet(DateofToday, LastDateOfMonth, ExtendInfo.Status, ExtendInfo.Address, ExtendInfo.contact, ExtendInfo.name, ExtendInfo.PatientName, ExtendInfo.Patient_PhoneNumber, ExtendInfo.RreferralName, ExtendInfo.HCA_Id, ExtendInfo.Client_Id, ExtendInfo.HCA_Name, ExtendInfo.HCAContact, ExtendInfo.
     //   hcpSource, ExtendInfo.provider, ExtendInfo.payTerms, ExtendInfo.cTotal, ExtendInfo.cPay, ExtendInfo.hcpTotal, ExtendInfo.hcpPay, CurrentMonth, ["P"], TimeStamp, ExtendInfo.invoice, ExtendInfo.Type)
@@ -696,28 +700,47 @@ SetCareTakerName(Name)
     setShowDeletePopup(true);
   };
 
-const HandleRemove=async(Info: any,Name:any)=>{
-  try{
-SetActionStatusMessage("Please Wait...")
-    console.log("Check-----",Info)
-const RemoeClientFromDeploy=await RemoveClient(Info.Client_Id)
-const updateResult = await UpdateHCAnstatus(
-      Info.HCA_Id,
-      "Active"
-    )
-
-    if (!updateResult?.success) {
-      SetActionStatusMessage(updateResult?.message || "HCP update failed")
-      return
-    }
-if(RemoeClientFromDeploy.success){
-  SetActionStatusMessage(RemoeClientFromDeploy.message)
-  setRefreshKey(1)
-}
-  }catch(err:any){
-
+const HandleRemove = async (Info: any, Name: any) => {
+  if (!Info?.Client_Id || !Info?.HCA_Id) {
+    SetActionStatusMessage("Invalid data. Please refresh and try again.");
+    return;
   }
-}
+
+  try {
+    SetActionStatusMessage("Please wait...");
+
+    console.log("Check-----", Info);
+
+ 
+    const removeDeployRes = await RemoveClient(Info.Client_Id);
+    if (!removeDeployRes?.success) {
+      SetActionStatusMessage(removeDeployRes?.message || "Failed to remove client from deployment");
+      return;
+    }
+
+    const removeTimesheetRes = await RemoveClientFromTimeSheet(Info.Client_Id);
+    if (!removeTimesheetRes?.success) {
+      SetActionStatusMessage(removeTimesheetRes?.message || "Failed to remove client from timesheet");
+      return;
+    }
+
+  
+    const updateResult = await UpdateHCAnstatus(Info.HCA_Id, "Active");
+    if (!updateResult?.success) {
+      SetActionStatusMessage(updateResult?.message || "HCP update failed");
+      return;
+    }
+
+   
+    SetActionStatusMessage("Client Removed Successfully");
+    setRefreshKey((prev:any) => prev + 1);
+
+  } catch (err: any) {
+    console.error("HandleRemove Error:", err);
+    SetActionStatusMessage("Something went wrong. Please try again.");
+  }
+};
+
 
 const confirmDelete = async (selectedReason: string) => {
   if (!TerminationInfo) {
@@ -768,7 +791,7 @@ const confirmDelete = async (selectedReason: string) => {
     );
 
    if (deleteTimeSheetResponse?.success) {
-  SetActionStatusMessage("Placement deleted successfully.");
+  SetActionStatusMessage("Placement deleted Successfully.");
 
   setTimeout(() => {
     setShowDeletePopup(false);
@@ -801,12 +824,8 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((item) =>
   )
 );
 
-console.log("Check for ----",FinelTimeSheet)
 const today:any = new Date().getDate();
 const isInvoiceDay = [ 28, 29, 30, 31].includes(today);
-console.log("Test Today------",isInvoiceDay
-
-)
 
 
 
@@ -814,9 +833,10 @@ const UpdateReplacement = async (
   Available_HCP: any,
   Exsting_HCP: any
 ) => {
+ SetActionStatusMessage("Please wait...");
 
   try {
-    SetActionStatusMessage("Please wait...");
+   
 
   
     if (!Available_HCP?.userId || !Exsting_HCP?.HCA_Id) {
@@ -877,9 +897,10 @@ const UpdateReplacement = async (
   const reove=await DeleteHCAStatus(Exsting_HCP.HCA_Id)
 
 
-    SetActionStatusMessage("Replacement updated successfully.");
+    SetActionStatusMessage("Replacement updated Successfully.");
       setTimeout(() => {
     setShowReassignmentPopUp(!ShowReassignmentPopUp)
+    setReplacementDate("")
   }, 400);
 
    
@@ -903,7 +924,7 @@ GetInfo.serviceCharges
 );
 
 if (success) {
- SetActionStatusMessage("Price updated successfully,Refresh To Get Updated Price");
+ SetActionStatusMessage("Price updated Successfully,Refresh To Get Updated Price");
 } else {
 SetActionStatusMessage("Update failed");
 }
@@ -1284,7 +1305,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
     active:scale-95 
     cursor-pointer
   "
-  onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false)}}
+  onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA("")}}
 >
   Reassignment
 </button>
@@ -1436,24 +1457,41 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
         {selectedReason &&
           (selectedReason !== "Other" || otherReason) && (
             <div>
-              <select
-  className="w-full p-2 text-sm border rounded-lg cursor-pointer text-center"
-   value={selectedHCP?.userId || ""}
-  onChange={(e) => {
-    const selected = HCA_List.find(
-      (hca) => hca.userId === e.target.value
-    );
-    setselectedHCP(selected);
-  }}
->
-  <option value="">Assign New HCA</option>
+    <div className="flex flex-col gap-2">
 
-  {HCA_List.map((each) => (
-    <option key={each.id} value={each.userId}>
-      {each.FirstName}
-    </option>
-  ))}
-</select>
+
+  <input
+    type="text"
+    placeholder="Search user..."
+    value={searchHCA}
+    onChange={(e) => setSearchHCA(e.target.value)}
+    className="w-full p-2 text-sm border rounded-lg"
+  />
+
+
+  <select
+    className="w-full p-2 text-sm border rounded-lg cursor-pointer text-center"
+    value={selectedHCP?.userId || ""}
+    onChange={(e) => {
+      const selected = HCA_List.find(
+        (hca) => hca.userId === e.target.value
+      );
+      setselectedHCP(selected);
+    }}
+  >
+    <option value="">Assign New HCA</option>
+
+
+    {HCA_List.filter((hca: any) =>
+  hca.FirstName?.toLowerCase().includes(searchHCA.toLowerCase())
+).map((each: any) => (
+      <option key={each.id} value={each.userId}>
+        {each.FirstName}
+      </option>
+    ))}
+  </select>
+
+</div>
 
 
               <select
@@ -1500,6 +1538,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
   </p>
 )}
 
+
         <div className="flex justify-end gap-4 pt-2">
           <button
             onClick={() => setShowReassignmentPopUp(false)}
@@ -1512,7 +1551,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
             onClick={() => UpdateReplacement(selectedHCP, selectedCase)}
             disabled={
               !(
-               selectedHCP&& selectedReason &&
+               selectedHCP&& selectedReason &&UpdatedCareTakerStatus&&
                 (selectedReason !== "Other" || otherReason)
               )
             }
@@ -1520,7 +1559,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
               inline-flex items-center justify-center
               px-7 py-3 text-sm font-semibold rounded-full transition-all
               ${
-                selectedHCP&&selectedReason &&showWarning===false&&
+                selectedHCP&&selectedReason &&UpdatedCareTakerStatus&&showWarning===false&&
                 (selectedReason !== "Other" || otherReason)
                   ? "text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 active:scale-95"
                   : "bg-gray-200 text-gray-500 cursor-not-allowed"
@@ -1577,7 +1616,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
   ) : (
     <button
       className="px-4 py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full"
-     onClick={() =>{ UpdatePopup(c),setSelectedDate("")}}
+     onClick={() =>{ UpdatePopup(c),setSelectedDate(""),setShowWarning(false),SetActionStatusMessage("")}}
     >
       <ChevronsRight size={22} className="text-teal-600"/>
     </button>
@@ -1765,11 +1804,33 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
         <input
           type="date"
           value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
+          onChange={(e) => {
+              const value = e.target.value;
+setSelectedDate(e.target.value)
+    if (!value) {
+      setShowWarning(false);
+      return;
+    }
+
+    const selected = new Date(value);
+    const today = new Date();
+
+    const isCurrentMonth =
+      selected.getMonth() === today.getMonth() &&
+      selected.getFullYear() === today.getFullYear();
+
+    
+    setShowWarning(!isCurrentMonth);
+
+          }}
           className="w-full border rounded-lg px-3 py-2 text-sm"
         />
       </div>
-
+{showWarning && (
+  <p className="text-xs text-center text-red-500 mt-1">
+    ⚠ Selected date Sholud be belongs to the current month
+  </p>
+)}
     
       {lastDateOfMonth && (
         <div className="mb-4">
@@ -1814,7 +1875,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
       <div className="border-t border-gray-200 my-4"></div>
 
      
-     {selectedDate&& <div className="flex justify-center gap-4">
+     {selectedDate&&!showWarning&& <div className="flex justify-center gap-4">
         <button
           onClick={() => setshowExtendPopup(false)}
           className="px-5 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100"

@@ -2282,7 +2282,7 @@ export const UpdateReplacmentData = async (
     const updatedAttendance = Array.isArray(existingInfo.Attendance)
       ? [...existingInfo.Attendance, attendanceEntry]
       : [attendanceEntry];
-
+console.log("Check Issue------",updatedAttendance)
    
     const replacementData = {
       ...existingInfo,
@@ -2291,7 +2291,7 @@ export const UpdateReplacmentData = async (
       NewHCAId: Available_HCP?.userId,
       NewHCAName: Available_HCP?.FirstName,
       NewHCAContact: Available_HCP?.Contact,
-       ReplacementDate:ReplacementDate,
+      ReplacementDate:ReplacementDate,
       ReplacementTime:ReplacementTime,
     };
 
@@ -2804,6 +2804,35 @@ export const RemoveClient = async (userId: string) => {
     const client = await clientPromise;
     const db = client.db("CurateInformation");
     const collection = db.collection("Deployment");
+
+    const result = await collection.deleteOne({
+      ClientId: userId
+    });
+
+    if (result.deletedCount === 0) {
+      return {
+        success: false,
+        message: "No enquiry found to delete",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Client Removed Successfully",
+    };
+  } catch (error) {
+    console.error("Error deleting enquiry:", error);
+    return {
+      success: false,
+      message: "Failed to delete enquiry",
+    };
+  }
+};
+export const RemoveClientFromTimeSheet = async (userId: string) => {
+  try {
+    const client = await clientPromise;
+    const db = client.db("CurateInformation");
+    const collection = db.collection("TimeSheet");
 
     const result = await collection.deleteOne({
       ClientId: userId
