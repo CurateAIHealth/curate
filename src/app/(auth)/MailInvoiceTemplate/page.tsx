@@ -1,7 +1,7 @@
 "use client";
 
 import { useSelector } from "react-redux";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {  getDaysBetween } from "@/Lib/Actions";
 import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import axios from "axios";
@@ -16,6 +16,8 @@ type RoundType = "none" | "nearest" | "up" | "down";
 
 export default function InvoiceForm() {
   const InvoiceData = useSelector((state: any) => state.InvoiceInfo);
+  const [isEditing, setIsEditing] = useState(false);
+
 
   const [ShowServices,setShowServices]=useState(false)
   const [otherExpenses, setOtherExpenses] = useState<any>();
@@ -40,6 +42,32 @@ const [selected, setSelected] = useState<any>({
   section: "",
   tdsRate: ""
 });
+  const invoice = {
+    number: InvoiceData?.id||InvoiceData?.Invoice,
+    date: InvoiceData?.StartDate,
+    dueDate: InvoiceData?.ServiceEndDate,
+    serviceFrom: InvoiceData?.StartDate,
+    serviceTo: InvoiceData?.ServiceEndDate,
+    status: InvoiceData?.status,
+  };
+
+  const billTo = {
+    name: InvoiceData?.ClientName,
+    patientName: InvoiceData?.name,
+    contact: InvoiceData?.contact,
+    email: InvoiceData?.Email,
+    addressLines: InvoiceData?.Adress,
+  };
+
+  const start = InvoiceData?.StartDate;
+  const end = InvoiceData?.ServiceEndDate;
+
+  const days = getDaysBetween(start, end);
+const [formData, setFormData] = useState<any>({
+      billTo: billTo || {},
+    invoice: invoice || {},
+    days: days || "",
+});
 
 
   const handleSelect = (e:any) => {
@@ -50,10 +78,7 @@ const [selected, setSelected] = useState<any>({
   };
 
  
-  const start = InvoiceData?.StartDate;
-  const end = InvoiceData?.ServiceEndDate;
-
-  const days = getDaysBetween(start, end);
+  
   const perDay = Number(InvoiceData?.CareTakeCharge?.replace("₹", "") || 0);
 
   const regFee = Number(InvoiceData?.RegistrationFee || 0);
@@ -80,22 +105,7 @@ const [services, setServices] = useState([
   const roundingDifference = finalTotal - rawTotal;
   const balanceDue:any = finalTotal - advance;
 
-  const invoice = {
-    number: InvoiceData?.id||InvoiceData?.Invoice,
-    date: InvoiceData?.StartDate,
-    dueDate: InvoiceData?.ServiceEndDate,
-    serviceFrom: InvoiceData?.StartDate,
-    serviceTo: InvoiceData?.ServiceEndDate,
-    status: InvoiceData?.status,
-  };
 
-  const billTo = {
-    name: InvoiceData?.ClientName,
-    patientName: InvoiceData?.name,
-    contact: InvoiceData?.contact,
-    email: InvoiceData?.Email,
-    addressLines: InvoiceData?.Adress,
-  };
 
   const items = [
     {
@@ -333,7 +343,12 @@ const addOtherService = () => {
   setSelectedService(null);
 };
 
-
+  const handleChange = (key: any, value: any) => {
+    setFormData((prev:any) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
 
   const getStatusStyles = (status: string | undefined) => {
     if (!status) return "bg-gray-100 text-gray-700 border-gray-200";
@@ -411,9 +426,15 @@ const addOtherService = () => {
           <div className="flex flex-col items-end gap-2">
             <div className="flex items-center gap-3">
               <span className="text-xs uppercase text-slate-500">Invoice ID</span>
-              <span className="px-3 py-1 rounded-full bg-slate-900 text-white text-sm font-mono">
+              {isEditing? <input
+              className="w-fit text-center  text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              value={formData.invoice.number  || ""}
+              onChange={(e) => handleChange("name", e.target.value)}
+              placeholder="invoice number"
+            />:<span className="px-3 py-1 rounded-full bg-slate-900 text-white text-sm font-mono">
                 {invoice.number || "--"}
-              </span>
+              </span>}
+              
             </div>
             <div
               className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-medium ${getStatusStyles(
@@ -441,7 +462,7 @@ const addOtherService = () => {
       
           <div className="space-y-6">
 
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
+            {/* <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
               <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-slate-800">
                   Customer & Patient Information
@@ -466,8 +487,208 @@ const addOtherService = () => {
                 <StatItem label="Service To" value={invoice.serviceTo || "--"} />
                  <StatItem label="Days" value={days|| "--"} />
               </div>
-            </div>
+            </div> */}
+ <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
+      <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-slate-800">
+          Customer & Patient Information
+        </h2>
 
+        <div className="flex items-center gap-2">
+          {isEditing ? (
+            <>
+              <button
+                onClick={() => {
+                  setFormData({
+  billTo,
+  invoice,
+  days,
+});
+
+                  setIsEditing(false);
+                }}
+                className="text-xs px-3 py-1 rounded-lg bg-slate-200 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditing(false);
+                }}
+                className="text-xs px-3 py-1 rounded-lg bg-indigo-600 text-white cursor-pointer"
+              >
+                Save
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="text-xs px-3 py-1 rounded-lg border border-slate-300 cursor-pointer"
+            >
+              Edit
+            </button>
+          )}
+        </div>
+      </div>
+
+     <div className="px-6 py-4 grid grid-cols-1 md:grid-cols-2 gap-5">
+  {isEditing ? (
+    <>
+      <input
+        className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        value={formData.billTo?.name || ""}
+        onChange={(e) =>
+          setFormData((prev:any) => ({
+            ...prev,
+            billTo: { ...prev.billTo, name: e.target.value },
+          }))
+        }
+        placeholder="Customer Name"
+      />
+
+      <input
+        className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        value={formData.billTo?.patientName || ""}
+        onChange={(e) =>
+          setFormData((prev:any) => ({
+            ...prev,
+            billTo: { ...prev.billTo, patientName: e.target.value },
+          }))
+        }
+        placeholder="Patient Name"
+      />
+
+      <input
+        className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        value={formData.billTo?.contact || ""}
+        onChange={(e) =>
+          setFormData((prev:any) => ({
+            ...prev,
+            billTo: { ...prev.billTo, contact: e.target.value },
+          }))
+        }
+        placeholder="Phone Number"
+      />
+
+      <input
+        className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        value={formData.billTo?.email || ""}
+        onChange={(e) =>
+          setFormData((prev:any) => ({
+            ...prev,
+            billTo: { ...prev.billTo, email: e.target.value },
+          }))
+        }
+        placeholder="Email"
+      />
+
+      <input
+        className="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        value={formData.billTo?.addressLines || ""}
+        onChange={(e) =>
+          setFormData((prev:any) => ({
+            ...prev,
+            billTo: { ...prev.billTo, addressLines: e.target.value },
+          }))
+        }
+        placeholder="Address"
+      />
+    </>
+  ) : (
+    <>
+      <InfoField label="Customer Name" value={formData.billTo?.name} />
+      <InfoField label="Patient Name" value={formData.billTo?.patientName} />
+      <InfoField label="Phone Number" value={formData.billTo?.contact} />
+      <InfoField label="Email" value={formData.billTo?.email} />
+      <InfoField label="Address" value={formData.billTo?.addressLines} />
+    </>
+  )}
+</div>
+
+
+     <div className="border-t border-slate-100 px-6 py-3 grid grid-cols-2 md:grid-cols-5 gap-3 bg-slate-50/70">
+  {isEditing ? (
+    <>
+      
+      <input
+        type="text"
+        className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        placeholder="Invoice Date"
+        value={formData.invoice?.date || ""}
+        onChange={(e) =>
+          setFormData((prev:any) => ({
+            ...prev,
+            invoice: { ...prev.invoice, date: e.target.value },
+          }))
+        }
+      />
+
+      <input
+        type="text"
+        className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        placeholder="Due Date"
+        value={formData.invoice?.dueDate || ""}
+        onChange={(e) =>
+          setFormData((prev:any) => ({
+            ...prev,
+            invoice: { ...prev.invoice, dueDate: e.target.value },
+          }))
+        }
+      />
+
+      <input
+        type="text"
+        className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        placeholder="Service From"
+        value={formData.invoice?.serviceFrom || ""}
+        onChange={(e) =>
+          setFormData((prev:any) => ({
+            ...prev,
+            invoice: { ...prev.invoice, serviceFrom: e.target.value },
+          }))
+        }
+      />
+
+      <input
+        type="text"
+        className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        placeholder="Service To"
+        value={formData.invoice?.serviceTo || ""}
+        onChange={(e) =>
+          setFormData((prev:any) => ({
+            ...prev,
+            invoice: { ...prev.invoice, serviceTo: e.target.value },
+          }))
+        }
+      />
+
+      <input
+        type="text"
+        className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        placeholder="Days"
+        value={formData.days || ""}
+        onChange={(e) =>
+          setFormData((prev:any) => ({
+            ...prev,
+            days: e.target.value,
+          }))
+        }
+      />
+   <p className="text-red-600 text-[9px] text-center">
+         ⚠️ Enter All Dates  in India Date Formate DD/MM/YYYY
+        </p> </>
+  ) : (
+    <>
+      <StatItem label="Invoice Date" value={invoice.date || "--"} />
+      <StatItem label="Due Date" value={invoice.dueDate || "--"} />
+      <StatItem label="Service From" value={invoice.serviceFrom || "--"} />
+      <StatItem label="Service To" value={invoice.serviceTo || "--"} />
+      <StatItem label="Days" value={days || "--"} />
+    </>
+  )}
+</div>
+
+    </div>
           
             <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
               <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
@@ -656,14 +877,26 @@ const addOtherService = () => {
         ))}
       </select>
 
-     {selected ? (
+ {(selected?.typeOfPayment ||
+  selected?.taxType ||
+  selected?.section ||
+  selected?.tdsRate) && (
   <div className="p-1 m-1 rounded w-[99%] border bg-gray-50">
-    <p><strong>Type of Payment:</strong> {selected?.typeOfPayment ?? "N/A"}</p>
-    <p><strong>Tax Type:</strong> {selected?.taxType ?? "N/A"}</p>
-    <p><strong>Section:</strong> {selected?.section ?? "N/A"}</p>
-    <p><strong>TDS Rate:</strong> {selected?.tdsRate ?? "N/A"}</p>
+    {selected?.typeOfPayment && (
+      <p><strong>Type of Payment:</strong> {selected.typeOfPayment}</p>
+    )}
+    {selected?.taxType && (
+      <p><strong>Tax Type:</strong> {selected.taxType}</p>
+    )}
+    {selected?.section && (
+      <p><strong>Section:</strong> {selected.section}</p>
+    )}
+    {selected?.tdsRate && (
+      <p><strong>TDS Rate:</strong> {selected.tdsRate}</p>
+    )}
   </div>
-):null}
+)}
+
 
     </div>
               <div className="px-6 py-4 space-y-3 text-sm">

@@ -73,22 +73,31 @@ const getMonthKey = (record: any): string => {
 
 
 
+const isSuccess = StatusMessage?.includes("Successfully");
+
 useEffect(() => {
   const Fetch = async () => {
+    setIsChecking(true);
 
-    // 🔎 check if cache exists for this StatusMessage
-    const cached = deploymentCache.find(
-      (c) => c.key === `${StatusMessage}_${showMissingCalendar}`
-    );
+    if (isSuccess) {
+      deploymentCache.length = 0;
+    }
 
-    if (cached) {
-      setClientsInformation(cached.data);
-      setIsChecking(false);
-      return;
+    const cacheKey = `${showMissingCalendar}`;
+
+    if (!isSuccess) {
+      const cached = deploymentCache.find((c) => c.key === cacheKey);
+
+      if (cached) {
+        setClientsInformation(cached.data);
+        setIsChecking(false);
+        return;
+      }
     }
 
     const PlacementInformation: any = await GetDeploymentInfo();
-    if (!PlacementInformation || PlacementInformation.length === 0) {
+
+    if (!PlacementInformation?.length) {
       setIsChecking(false);
       return;
     }
@@ -97,7 +106,6 @@ useEffect(() => {
 
     PlacementInformation.forEach((record: any) => {
       const monthKey = getMonthKey(record);
-
       if (!formattedData[monthKey]) formattedData[monthKey] = [];
 
       formattedData[monthKey].push({
@@ -126,21 +134,27 @@ useEffect(() => {
         hcpPay: Number(record.hcpPay) || 0,
         days: record.Attendance || [],
         CareTakerPrice: record.CareTakerPrice || "",
+        Month:record.Month
       });
     });
 
-    // ✅ store new cache entry
-    deploymentCache.push({
-      key: `${StatusMessage}_${showMissingCalendar}`,
-      data: formattedData,
-    });
+    if (!isSuccess) {
+      deploymentCache.push({
+        key: cacheKey,
+        data: formattedData,
+      });
+    }
 
     setClientsInformation(formattedData);
     setIsChecking(false);
   };
 
   Fetch();
-}, [StatusMessage, showMissingCalendar]);
+}, [isSuccess, showMissingCalendar]);
+
+
+
+
 
  
 
@@ -319,28 +333,45 @@ const NumberOfDaysInMonth = getDaysInMonth(
   Number(selectedYear)
 );
 
-const EditAttendence=async()=>{
+const EditAttendence = async () => {
+  try {
+    if (!AttenseceInformation?.ClientId) return;
 
-try{
-  SetStatusMessage(`Updateing${status} Day....`)
-const date = new Date();
+    SetStatusMessage(`Updating ${status} day...`);
 
+    const flexDate = `${selectedYear}-${selectedMonth}-${String(
+      ParticularDate
+    ).padStart(2, "0")}`;
 
+    const yearMonth = `${selectedYear}-${selectedMonth}`;
 
-const FlexDat = `${selectedYear}-${selectedMonth}-${String(ParticularDate).padStart(2, "0")}`;
+    const response = await EditAttendanceByClientId(
+      AttenseceInformation.ClientId,
+      yearMonth,
+      flexDate,
+      status,
+      "Admin"
+    );
 
+    if (response?.success) {
+      SetStatusMessage(`✅ ${response.message}`);
 
-const yearMonth = date.toISOString().slice(0, 7);
+      setTimeout(() => {
+        setShowFullMonth(false);
+        SetShowUpdateAttendece((prev: boolean) => !prev);
+         SetStatusMessage("")
+      }, 2500);
+    } else {
+      SetStatusMessage(response?.message || "Failed to update attendance");
+    }
+  } catch (error: any) {
+    console.error("EditAttendence Error:", error);
+    SetStatusMessage(
+      error?.message || "Something went wrong while updating attendance"
+    );
+  }
+};
 
-
-const fullDate = date.toISOString().slice(0, 10);
-const EditSelectedAttendece=await EditAttendanceByClientId(AttenseceInformation.ClientId,yearMonth,FlexDat,status,"Admin")
-SetStatusMessage(`✅${EditSelectedAttendece.message}`);
-
-}catch(err:any){
-
-}
-}
 
 
  if (isChecking) {
@@ -469,6 +500,7 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
   message={(item:any)=>`Delete ${item?.clientName || "this item"} ?`}
   onClose={() => setShowDeletePopup(false)}
   onConfirm={async (item: any) => {
+   
   try {
     if (!item?.ClientId) {
       SetStatusMessage("Invalid record")
@@ -476,18 +508,21 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
     }
 
     SetStatusMessage("Processing...")
-
+ console.log("Check to Issue",item.
+hcpId
+)
     const updateResult = await UpdateHCAnstatus(
       item?.hcpId,
       "Active"
     )
 
-    if (!updateResult?.success) {
-      SetStatusMessage(updateResult?.message || "HCP update failed")
-      return
-    }
+   if (updateResult?.success === false && updateResult?.message !== "No records were updated.") {
+  SetStatusMessage(updateResult?.message || "HCP update failed")
+  return
+}
 
-    const postInfo = await DeleteClientFromDeolyment(item.ClientId)
+
+    const postInfo = await DeleteClientFromDeolyment(item.ClientId,item.Month)
 
     if (!postInfo?.success) {
       SetStatusMessage(postInfo?.message || "Delete failed")
@@ -519,7 +554,7 @@ SetStatusMessage(`✅${EditSelectedAttendece.message}`);
   onSave={async(data:any) => {
     SetStatusMessage("Please Wait.....")
     console.log("Check Data-----",data)
-const PostInfo=await UpdateClientTimeSheet(data.ClientId,data)
+const PostInfo=await UpdateClientTimeSheet(data.ClientId,data.Month,data)
 if(PostInfo?.success){
   SetStatusMessage(PostInfo.message)
   setTimeout(()=>{
@@ -759,7 +794,7 @@ className={`
 
             <td
               className="font-bold break-words align-middle"
-              onClick={()=>RouteToClient(r.hcpId,r.hcpName)}
+              // onClick={()=>RouteToClient(r.hcpId,r.hcpName)}
             >
               {r.hcpName}
             </td>
@@ -812,6 +847,7 @@ className={`
                 onClick={()=>{
                   setShowFullMonth(true)
                   setAttendenceInfo(r)
+                  SetStatusMessage("")
                 }}
               >
                 Full Month
@@ -837,6 +873,7 @@ className={`
                   onClick={()=>{
                     setDeleteItem(r)
                     setShowDeletePopup(true)
+                   SetStatusMessage("")
                   }}
                 />
               </div>
@@ -889,7 +926,21 @@ className={`
                 </span>
 
                 {dayStatus === "-" ? (
-                  <span className="text-gray-400 text-xs">-</span>
+                 <div>
+                   <span className="text-gray-400 text-xs">-</span>
+                   <p
+                      className="text-[9px] cursor-pointer mr-4 text-blue-600 hover:text-blue-900 hover:underline"
+                      onClick={() => {
+                        SetShowUpdateAttendece(!ShowUpdateAttendece)
+                        setAttenseceInformation(attendanceInfo)
+                        SetParticularDate(i + 1)
+                        setStatus("Choose")
+                        SetStatusMessage("")
+                      }}
+                    >
+                      Edit
+                    </p>
+                 </div>
                 ) : (
                   <div className="flex flex-col items-center gap-1">
                     <DayBadge status={dayStatus as DayStatus} />

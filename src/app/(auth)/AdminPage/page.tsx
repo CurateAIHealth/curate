@@ -759,6 +759,9 @@ return
                     <th className="px-2 py-2 w-[12%]">Aadhar</th> */}
                           <th className="px-2 py-2 w-[12%]">Location</th>
                           <th className="px-2 py-2 w-[14%]">Email Verification</th>
+                          {UpdateduserType === "healthcare-assistant" && (
+                            <th className="px-4 py-2 w-[14%]">Working Status</th>
+                          )}
                           {UpdateduserType !== "healthcare-assistant" && (
                             <th className="px-4 py-2 w-[14%]">Client Status</th>
                           )}
@@ -1134,6 +1137,53 @@ return
 
                               </td>
                             )}
+
+                           {UpdateduserType === "healthcare-assistant" && (() => {
+  const workingStatus = HCPWorkingStatus(user.userId);
+  const isAssigned =
+    Array.isArray(workingStatus) && workingStatus.includes("Assigned");
+
+  const handleUpdate = async () => {
+ dispatch(Refresh("Please Wait....."))
+    const res = await UpdateHCAnstatus(user.userId, "Available for Work");
+    
+     dispatch(Refresh(res.message))
+  };
+
+  return (
+    <td className="px-2 py-2">
+      
+
+      {isAssigned ? (
+       <div className="flex flex-col items-center justify-center text-center gap-1">
+  
+  {/* Current Status */}
+  <p className="inline-flex items-center gap-1.5 rounded-full 
+                 bg-gradient-to-r from-red-500 to-rose-500 
+                 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
+    🚫 Assigned
+  </p>
+
+ 
+  <button
+    onClick={handleUpdate}
+    className="text-[11px] font-medium text-blue-600 
+               hover:text-blue-700 hover:underline  cursor-pointer
+               transition"
+  >
+    Make Unassigned
+  </button>
+
+</div>
+
+      ):<p className="inline-flex items-center rounded-full bg-amber-50 text-amber-600 text-xs font-semibold px-3 py-1 border border-amber-200">
+  Yet to be Placed
+</p>
+}
+    </td>
+  );
+})()}
+
                             {/* {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
                         <td className="px-2 py-2">
                           <select
@@ -1165,7 +1215,7 @@ return
                               <td className="">
                              
                                 <select
-                                  className={` text-center  px-2 py-1 rounded-lg border cursor-pointer text-xs sm:text-sm transition-all duration-200 font-semibold
+                                  className={` text-center w-[160px]  px-2 py-1 rounded-lg border cursor-pointer text-xs sm:text-sm transition-all duration-200 font-semibold
       ${user.CurrentStatus === "Available"
                                       ? "bg-green-100 border-green-300 text-green-800"
                                       : user.CurrentStatus === "Sick"
@@ -1390,6 +1440,24 @@ Awaiting Conversion
 
     return address ?? "Not Entered";
   };
+
+  const HCPWorkingStatus=(A:any)=>{
+    try{
+   if (!UserFullInfo?.length || !A) return "Not Entered";
+
+    const address =
+      UserFullInfo
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.["Status"];
+
+    return address ?? "Not Entered";
+
+
+    }catch(err:any){
+
+    }
+  }
 
 
 

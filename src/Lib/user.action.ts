@@ -2130,77 +2130,88 @@ return safeUsers
   }
 }
 
-export const UpdateClientTimeSheet=async(ImpClientId:any,ImpData:any)=>{
-  try{
-const cluster=await clientPromise
-const db=cluster.db("CurateInformation")
-const collection=db.collection("Deployment")
-const result=await collection.updateOne(
-  {ClientId:ImpClientId},
-  {
-     $set: {
-      
-      CareTakerPrice: ImpData?.CareTakerPrice,
-      StartDate: ImpData?.startDate,
-      EndDate: ImpData?.endDate,
-      ClientName: ImpData?.clientName,
-      patientName: ImpData?.patientName,
-      HCAName: ImpData?.hcpName,
-      referralName: ImpData?.referralName,
-      hcpSource: ImpData?.hcpSource,
-      invoice: ImpData?.invoice
-        
-        }
-  })
-
-
-    if (result.matchedCount === 0) {
-      return {
-        success: false,
-        message: "Client not found",
-      }
-    }
-
-    if (result.modifiedCount === 0) {
-      return {
-        success: true,
-        message: "No changes made",
-      }
-    }
-
-    return {
-      success: true,
-      message: "Client TimeSheet updated successfully",
-    }
-  }catch(e){
-  console.error(e)
-  return {
-    success: false,
-    message: "Update failed"
-  }
-  }
-}
-
-export const DeleteClientFromDeolyment = async (ImpClientId: any) => {
+export const UpdateClientTimeSheet = async (
+  ImpClientId: any,
+  ImpDate: any,
+  ImpData: any
+) => {
   try {
     const cluster = await clientPromise
     const db = cluster.db("CurateInformation")
     const collection = db.collection("Deployment")
 
+    const date = new Date(ImpDate)
+    const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`
+console.log("Check Month Key-----",ImpDate)
+    const result = await collection.updateOne(
+      {
+        ClientId: ImpClientId,
+        Month: ImpDate
+      },
+      {
+        $set: {
+          CareTakerPrice: ImpData?.CareTakerPrice ?? "",
+          StartDate: ImpData?.startDate ?? "",
+          EndDate: ImpData?.endDate ?? "",
+          ClientName: ImpData?.clientName ?? "",
+          patientName: ImpData?.patientName ?? "",
+          HCAName: ImpData?.hcpName ?? "",
+          referralName: ImpData?.referralName ?? "",
+          hcpSource: ImpData?.hcpSource ?? "",
+          invoice: ImpData?.invoice ?? "",
+          Month: monthKey
+        }
+      },
+      {
+        upsert: true   // ⭐ prevents duplicate logic problems
+      }
+    )
+
+    return {
+      success: true,
+      message:
+        result.upsertedCount > 0
+          ? "New Month Created"
+          : result.modifiedCount === 0
+          ? "No changes made"
+          : "Client TimeSheet updated Successfully"
+    }
+  } catch (e) {
+    console.error("UpdateClientTimeSheet Error:", e)
+    return {
+      success: false,
+      message: "Update failed"
+    }
+  }
+}
+
+
+export const DeleteClientFromDeolyment = async (
+  ImpClientId: any,
+  ImpDate: any
+) => {
+  try {
+    const cluster = await clientPromise
+    const db = cluster.db("CurateInformation")
+    const collection = db.collection("Deployment")
+
+ 
+
     const result = await collection.deleteOne({
       ClientId: ImpClientId,
+      Month: ImpDate
     })
 
     if (result.deletedCount === 0) {
       return {
         success: false,
-        message: "Client not found",
+        message: "Client not found for this month",
       }
     }
 
     return {
       success: true,
-      message: "Client deleted successfully",
+      message: "Client deleted Successfully",
     }
   } catch (e) {
     console.log("DeleteClientFromDeolyment Error:", e)
@@ -2210,6 +2221,7 @@ export const DeleteClientFromDeolyment = async (ImpClientId: any) => {
     }
   }
 }
+
 
 
 export const GetReplacementInfo=async()=>{
@@ -2555,8 +2567,8 @@ export const UpdatehcpDailyAttendce = async (
 
 export const EditAttendanceByClientId = async (
   clientId: string,
-  Month: string,                // "2026-02" or "2026-2"
-  attendenceDate: string,       // "YYYY-MM-DD"
+  Month: string,
+  attendenceDate: string,
   status: "FULL" | "HALF" | "ABSENT",
   UpdatedBy: string
 ) => {
@@ -2565,7 +2577,6 @@ export const EditAttendanceByClientId = async (
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Deployment");
 
-    // Normalize Month to DB format (YYYY-M)
     const normalizeMonth = (month: string) => {
       const [year, m] = month.split("-");
       return `${year}-${Number(m)}`;
@@ -2573,45 +2584,72 @@ export const EditAttendanceByClientId = async (
 
     const normalizedMonth = normalizeMonth(Month);
 
-    // Map status to flags
     const statusMap = {
       FULL: { HCPAttendence: true, AdminAttendece: true },
-      HALF: { HCPAttendence: true, AdminAttendece: false }, // or flip if needed
+      HALF: { HCPAttendence: true, AdminAttendece: false },
       ABSENT: { HCPAttendence: false, AdminAttendece: false },
     };
 
     const flags = statusMap[status];
 
-    // Update attendance for the given date
-    const result = await collection.updateOne(
-      {
-        ClientId: clientId,
-        Month: normalizedMonth,
-        "Attendance.AttendenceDate": {
-          $gte: new Date(`${attendenceDate}T00:00:00.000Z`),
-          $lte: new Date(`${attendenceDate}T23:59:59.999Z`),
-        },
-      },
-      {
-        $set: {
-          "Attendance.$.HCPAttendence": flags.HCPAttendence,
-          "Attendance.$.AdminAttendece": flags.AdminAttendece,
-          "Attendance.$.UpdatedAt": new Date(),
-          "Attendance.$.UpdatedBy": UpdatedBy || "",
-        },
-      }
-    );
+    const start = new Date(`${attendenceDate}T00:00:00.000Z`);
 
-    if (result.matchedCount === 0) {
+    const existing = await collection.findOne({
+      ClientId: clientId,
+      Month: normalizedMonth,
+      Attendance: {
+        $elemMatch: { AttendenceDate: start },
+      },
+    });
+
+    if (existing) {
+      await collection.updateOne(
+        {
+          ClientId: clientId,
+          Month: normalizedMonth,
+          "Attendance.AttendenceDate": start,
+        },
+        {
+          $set: {
+            "Attendance.$.HCPAttendence": flags.HCPAttendence,
+            "Attendance.$.AdminAttendece": flags.AdminAttendece,
+            "Attendance.$.UpdatedAt": new Date(),
+            "Attendance.$.UpdatedBy": UpdatedBy || "",
+          },
+        }
+      );
+
       return {
-        success: false,
-        message: "Attendance record not found for this date.",
+        success: true,
+        message: "Attendance updated Successfully.",
       };
     }
 
+    const newAttendance = {
+      AttendenceDate: start,
+      HCPAttendence: flags.HCPAttendence,
+      AdminAttendece: flags.AdminAttendece,
+      CreatedAt: new Date(),
+      UpdatedAt: new Date(),
+      UpdatedBy: UpdatedBy || "",
+    };
+
+    await collection.updateOne(
+      {
+        ClientId: clientId,
+        Month: normalizedMonth,
+      },
+      {
+        $push: {
+          Attendance: newAttendance as any,
+        },
+      },
+      { upsert: true }
+    );
+
     return {
       success: true,
-      message: "Attendance updated successfully.",
+      message: "Attendance created and added Successfully.",
     };
   } catch (error: any) {
     console.error("❌ Error editing attendance:", error);
@@ -2621,6 +2659,8 @@ export const EditAttendanceByClientId = async (
     };
   }
 };
+
+
 
 export const GetInvoiceInfo=async()=>{
   try{
@@ -4394,60 +4434,60 @@ export const UpdateClientStatusinCallEnquiry = async (
 };
 
 
-export const UpdateHCAnstatus = async (
-  UserId: string,
-  AvailableStatus: string
-) => {
-  try {
-    const Cluster = await clientPromise;
-    const Db = Cluster.db("CurateInformation");
+  export const UpdateHCAnstatus = async (
+    UserId: any,
+    AvailableStatus: string
+  ) => {
+    try {
+      const Cluster = await clientPromise;
+      const Db = Cluster.db("CurateInformation");
 
-    const RegistrationCollection = Db.collection("Registration");
-    const CompliteCollection = Db.collection("CompliteRegistrationInformation");
-
-
-    const updateRegistration = await RegistrationCollection.updateOne(
-      { userId: UserId },
-      {
-        $set: {
-          Status: AvailableStatus,
-          CurrentStatus: AvailableStatus,
-        },
-      }
-    );
-  
-  
-   const removeStatusFromComplite = await CompliteCollection.updateOne(
-  { "HCAComplitInformation.UserId": UserId },
-  {
-    $set: {
-      "HCAComplitInformation.CurrentStatus": AvailableStatus,
-    },
-    $unset: {
-      "HCAComplitInformation.Status": "",
-    },
-  }
-);
+      const RegistrationCollection = Db.collection("Registration");
+      const CompliteCollection = Db.collection("CompliteRegistrationInformation");
 
 
-
-
-    if (
-      updateRegistration.modifiedCount === 0 &&
-      removeStatusFromComplite.modifiedCount === 0
-    ) {
-      return { success: false, message: "No records were updated." };
+      const updateRegistration = await RegistrationCollection.updateOne(
+        { userId: UserId },
+        {
+          $set: {
+            Status: AvailableStatus,
+            CurrentStatus: AvailableStatus,
+          },
+        }
+      );
+    
+    
+    const removeStatusFromComplite = await CompliteCollection.updateOne(
+    { "HCAComplitInformation.UserId": UserId },
+    {
+      $set: {
+        "HCAComplitInformation.CurrentStatus": AvailableStatus,
+      },
+      $unset: {
+        "HCAComplitInformation.Status": "",
+      },
     }
+  );
 
-    return {
-      success: true,
-      message: "Status updated and removed successfully.",
-    };
-  } catch (err: any) {
-    console.error("UpdateHCAnstatus Error:", err);
-    return { success: false, message: "Internal server error." };
-  }
-};
+
+
+
+      if (
+        updateRegistration.modifiedCount === 0 &&
+        removeStatusFromComplite.modifiedCount === 0
+      ) {
+        return { success: false, message: "No records were updated." };
+      }
+
+      return {
+        success: true,
+        message: "Status updated and removed Successfully.",
+      };
+    } catch (err: any) {
+      console.error("UpdateHCAnstatus Error:", err);
+      return { success: false, message: "Internal server error." };
+    }
+  };
 
 
 export const DeleteHCAStatus = async (UserId: string) => {
