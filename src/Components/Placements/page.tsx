@@ -1,8 +1,9 @@
 "use client";
-let cachedUsersFullInfo: any;
-let cachedDeploymentInfo: any[] | null = null;
-let cachedReplacementInfo:any[]
-let cachedTermination:any[]
+let cachedUsersFullInfo: any[] = [];
+let cachedDeploymentInfo: any[] = [];
+let cachedReplacementInfo: any[] = [];
+let cachedTermination: any[] = [];
+
 
 
 import React, { useEffect, useState } from "react";
@@ -109,29 +110,20 @@ const router=useRouter()
 useEffect(() => {
   let mounted = true;
 
-  const isInitialLoad = ActionStatusMessage === "";
   const isSuccessUpdate = ActionStatusMessage?.includes("Successfully");
-
-  
-  if (!isInitialLoad && !isSuccessUpdate) return;
 
   const fetchData = async () => {
     try {
       setIsChecking(true);
 
- 
-      if (isSuccessUpdate) {
-  
-        const placementInfo = await GetDeploymentInfo();
-
-        if (!mounted) return;
-
-        cachedDeploymentInfo = placementInfo ?? [];
+      if (!isSuccessUpdate && cachedDeploymentInfo?.length > 0) {
+        setUsers([...cachedUsersFullInfo]);
         setClientsInformation([...cachedDeploymentInfo]);
+        setReplacementInformation([...cachedReplacementInfo]);
+        SetterminationInfo([...cachedTermination]);
         return;
       }
 
- 
       const [
         usersResult,
         placementInfo,
@@ -170,6 +162,8 @@ useEffect(() => {
     mounted = false;
   };
 }, [ActionStatusMessage]);
+
+
 
 
 
@@ -1462,10 +1456,10 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
 
   <input
     type="text"
-    placeholder="Search user..."
+    placeholder="Search HCA..."
     value={searchHCA}
     onChange={(e) => setSearchHCA(e.target.value)}
-    className="w-full p-2 text-sm border rounded-lg"
+    className="w-full p-2 text-sm text-center border rounded-lg"
   />
 
 

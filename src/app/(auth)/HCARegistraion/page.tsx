@@ -424,9 +424,9 @@ useEffect(() => {
           let age = today.getFullYear() - dob.getFullYear();
           const m = today.getMonth() - dob.getMonth();
           if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-          if (age < 18) {
-            alert('⚠️ Warning: Age must be at least 18 years.');
-          }
+          // if (age < 18) {
+          //   alert('⚠️ Warning: Age must be at least 18 years.');
+          // }
         }
       }
     },
@@ -1560,20 +1560,37 @@ form.HusbendContact!=="Not Available"&&
                 />
 
 
-                {form.dateOfBirth && (
-                  <p className="mt-1 text-xs text-gray-500">
-                    Age:{' '}
-                    {(() => {
-                      const dob = new Date(form.dateOfBirth);
-                      const today = new Date();
-                      let age = today.getFullYear() - dob.getFullYear();
-                      const m = today.getMonth() - dob.getMonth();
-                      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-                      return age;
-                    })()}{' '}
-                    years
-                  </p>
-                )}
+              {form.dateOfBirth && (() => {
+  const dob = new Date(form.dateOfBirth);
+  const today = new Date();
+
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+
+  return (
+    <>
+      <p className="mt-1 text-xs text-gray-500">
+        Age: {age} years
+      </p>
+
+   
+      {age < 14 && (
+        <p className="text-xs text-red-600 text-center font-medium mt-1">
+         ⚠️ Warning: Individuals below 14 years may not be eligible under child safety and labor protection regulations.
+        </p>
+      )}
+
+  
+      {age >= 14 && age < 18 && (
+        <p className="text-xs text-amber-700 text-center mt-1">
+            ⚠️ Legal Notice: As this HCP is Minor,Make Sure Have Proper approval From Guardian.
+        </p>
+      )}
+    </>
+  );
+})()}
+
               </div>
 
          <div className="w-full">
