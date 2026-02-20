@@ -14,6 +14,8 @@ import { getDaysInMonth } from "@/Lib/Actions";
 import DeletePopup from "../DeleteTimesheetPopUp/page";
 import { EditDeploymentPopup } from "../TimeSheetEditPopUp/page";
 import { LoadingData } from "../Loading/page";
+import TimeSheetTerminationTable from "../Time Sheet Terminations/page";
+import TimeSheetReplacementTable from "../Time Sheet Terminations/page";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -24,6 +26,7 @@ export default function InvoiceMedicalTable() {
  const now = new Date();
  const [isChecking, setIsChecking] = useState(true);
 const currentYear = now.getFullYear().toString();
+const [CurrentTimeSheetScreen,setCurrentTimeSheetScreen]=useState("TimeSheet")
 const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
 const [showFullMonth,setShowFullMonth]=useState(false)
@@ -371,17 +374,7 @@ const EditAttendence = async () => {
     );
   }
 };
-
-
-
- if (isChecking) {
-    return (
-      <LoadingData/>
-    );
-  }
-
-
-
+const PresentScreen=()=>{
   return (
     <div className="relative  bg-gradient-to-br from-green-50 via-white to-blue-50 p-6">
 
@@ -716,7 +709,8 @@ if(PostInfo?.success){
   </table>
 </div> */}
 <div className="m-2">
-  <button
+  <div className="flex items-center justify-between">
+     <button
     onClick={() => setShowFull(!showFull)}
 className={`
   px-4 py-1 text-[11px] font-semibold
@@ -729,6 +723,31 @@ className={`
   >
     {showFull ? "Show Less" : "Show Full Table"}
   </button>
+  <div className="flex items-center gap-3">
+  <button
+    className="flex items-center gap-2 px-4 py-2 rounded-lg 
+               bg-white text-blue-600 text-sm font-medium
+               border border-blue-200 shadow-sm
+               hover:bg-blue-50 hover:border-blue-300
+               active:scale-[0.98] transition-all cursor-pointer"
+
+               onClick={()=>setCurrentTimeSheetScreen("Repleasment")}
+  >
+    🔄 Replacements
+  </button>
+
+  <button
+    className="flex items-center gap-2 px-4 py-2 rounded-lg 
+               bg-white text-rose-600 text-sm font-medium
+               border border-rose-200 shadow-sm
+               hover:bg-rose-50 hover:border-rose-300
+               active:scale-[0.98] transition-all cursor-pointer"
+  >
+    ⛔ Terminations
+  </button>
+</div>
+  </div>
+ 
 </div>
 
 
@@ -1330,6 +1349,31 @@ className={`
       )}
     </div>
   );
+}
+const TimeSheetScreens=()=>{
+  switch(CurrentTimeSheetScreen){
+case "TimeSheet":
+  return PresentScreen();
+  case "Repleasment":
+    return <TimeSheetReplacementTable UpdateScreen={(A:any)=>setCurrentTimeSheetScreen(A)}/>;
+    default:
+      return null
+  }
+}
+
+ if (isChecking) {
+    return (
+      <LoadingData/>
+    );
+  }
+
+
+
+  return(
+    <div>
+      {TimeSheetScreens()}
+    </div>
+  )
 }
 
 
