@@ -407,7 +407,31 @@ const addOtherService = () => {
 {ShowMailTemplate?    <div className="min-h-screen bg-slate-50 py-8 px-4">
       <div className="max-w-6xl mx-auto space-y-6">
 
-    
+    <div className="w-full border rounded-md bg-white shadow-sm px-3 py-2">
+  <div className="flex items-center gap-4 text-sm text-gray-600">
+
+    <button className="flex items-center gap-1 hover:text-blue-600 transition cursor-pointer"  onClick={() => setIsEditing(true)}>
+      ✏️ <span>Edit</span>
+    </button>
+
+    <button className="flex items-center gap-1 hover:text-blue-600 transition cursor-pointer">
+      📧 <span>Send Email</span>
+    </button>
+
+    <button className="flex items-center gap-1 hover:text-blue-600 transition cursor-pointer">
+      🔗 <span>Share</span>
+    </button>
+
+    <button className="flex items-center gap-1 hover:text-blue-600 transition cursor-pointer">
+      🖨️ <span>PDF/Print</span>
+    </button>
+
+    <button className="ml-auto px-2 py-1 rounded hover:bg-gray-100">
+      ⋯
+    </button>
+
+  </div>
+</div>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-2 ">
          <img src="Icons/Curate-logoq.png" onClick={()=>Router.push("/DashBoard")}  className="h-20 w-auto"/>
@@ -495,7 +519,7 @@ const addOtherService = () => {
         </h2>
 
         <div className="flex items-center gap-2">
-          {isEditing ? (
+          {isEditing && (
             <>
               <button
                 onClick={() => {
@@ -520,14 +544,7 @@ const addOtherService = () => {
                 Save
               </button>
             </>
-          ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="text-xs px-3 py-1 rounded-lg border border-slate-300 cursor-pointer"
-            >
-              Edit
-            </button>
-          )}
+          ) }
         </div>
       </div>
 

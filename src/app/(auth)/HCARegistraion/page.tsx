@@ -1575,18 +1575,18 @@ form.HusbendContact!=="Not Available"&&
       </p>
 
    
-      {age < 14 && (
+      {age < 18 && (
         <p className="text-xs text-red-600 text-center font-medium mt-1">
-         ⚠️ Warning: Individuals below 14 years may not be eligible under child safety and labor protection regulations.
+         ⚠️ Warning: Individuals below 18 years may not be eligible under child safety and labor protection regulations.
         </p>
       )}
 
   
-      {age >= 14 && age < 18 && (
+      {/* {age >= 14 && age < 18 && (
         <p className="text-xs text-amber-700 text-center mt-1">
             ⚠️ Legal Notice: As this HCP is Minor,Make Sure Have Proper approval From Guardian.
         </p>
-      )}
+      )} */}
     </>
   );
 })()}
