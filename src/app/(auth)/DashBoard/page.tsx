@@ -1379,13 +1379,13 @@ setNotificationStatus("Notification Send Succesfully")
             />
           </div>
              <div className="w-full">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Patient Name <span className="text-red-500">*</span></label> 
+            <label className="block text-xs font-medium text-gray-500 mb-1">Patient Name </label> 
             <input
               type="text"
               name="patientName"
               onChange={handleChange}
               placeholder="Patient Full name"
-              required
+              
               className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
             />
           </div>
@@ -1490,12 +1490,13 @@ setNotificationStatus("Notification Send Succesfully")
           </div>
         <div className="relative">
   <label className="block text-xs font-medium text-gray-500 mb-2">
-    Lead Source 
+    Lead Source <span className="text-red-500">*</span>
   </label>
 
   <input
     type="text"
     value={EnquiryForm.NewLead}
+    required
     placeholder="Type Lead Source"
     className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
     onChange={(e) => {

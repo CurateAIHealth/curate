@@ -273,6 +273,7 @@ if(Post.success){
     {index + 1}
   </span>
  <span className="flex items-center justify-start gap-1 text-xs text-gray-400 whitespace-nowrap">
+ 
  <input
                             
                               className="
@@ -305,6 +306,7 @@ text-left
     }
   }}
                             />
+                            
   </span>
    <span className="font-medium text-gray-800 truncate">
   {toProperCaseLive(user.NewLead) || "Not Provided"}
