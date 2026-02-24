@@ -137,7 +137,8 @@ useEffect(() => {
         hcpPay: Number(record.hcpPay) || 0,
         days: record.Attendance || [],
         CareTakerPrice: record.CareTakerPrice || "",
-        Month:record.Month
+        Month:record.Month,
+        Replacement:record.Replacement
       });
     });
 
@@ -204,6 +205,7 @@ useEffect(() => {
 
     currentRecords.forEach((rec: any) => {
       const pending = (rec.days || []).filter((a: any) => {
+        console.log ("Check for Replasment Date------",a)
         if (!(a.HCPAttendence === true && a.AdminAttendece === false))
           return false;
     
@@ -800,7 +802,19 @@ className={`
           >
             <Td className="text-center align-middle">{idx+1}</Td>
 
-            <Td className="font-bold break-words">{r.invoice}</Td>
+            <Td className="font-bold break-words"> {r.Replacement ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <img
+                    src="Icons/RegisterIcone.png"
+                    alt="Replacement"
+                    className="w-7 h-7 object-contain"
+                  />
+                 {r.invoice}
+                </span>
+              ) : (
+               r.invoice
+              )}</Td>
+            
             <Td className="break-words">{r.startDate}</Td>
             <Td className="break-words">{r.endDate}</Td>
 
@@ -934,7 +948,7 @@ className={`
         >
           {Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
             const dayStatus = attendanceInfo.days?.[i] ?? "-"
-
+console.log("Check Replasement Status-----", attendanceInfo)
             return (
               <div
                 key={i}

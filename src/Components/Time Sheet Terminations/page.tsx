@@ -1,6 +1,6 @@
 "use client";
 import { filterColors, Placements_Filters, years } from "@/Lib/Content";
-import { GetReasonsInfoInfo, GetReplacementInfo } from "@/Lib/user.action";
+import { GetReasonsInfoInfo, GetReplacementInfo, GetUsersFullInfo } from "@/Lib/user.action";
 import { UpdateClient, UpdateMonthFilter, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import { useRouter } from "next/navigation";
 
@@ -13,6 +13,8 @@ type TimeSheetReplacementTableProps = {
 }
 let ReplacementCach : any[] | null = null;
 let ReplacementReasonsCache: any[] | null = null;
+
+let compliteHCPFullInfo: any[] | null = null;
 const TimeSheetReplacementTable =  ({
 
   UpdateScreen,
@@ -30,7 +32,9 @@ const month=useSelector((state:any)=>state.FilterMonth)
 const year=useSelector((state:any)=>state.FilterYear) 
 
 const [ReplacementReasons,setReplacementReasons]=useState<any[]>([]);
+const [HCPSalaryData,setHCPSalaryData]=useState<any[]>([]);
 const [showPopup, setShowPopup] = useState(false);
+const [showPermissionPopup,setShowPermissionPopup]=useState(false)
 const [popupInfo, setPopupInfo] = useState("");
 const dispatch=useDispatch()
 const router=useRouter()
@@ -40,12 +44,15 @@ const router=useRouter()
       if(ReplacementCach&&ReplacementReasonsCache){
         setRawData(ReplacementCach);
         setReplacementReasons(ReplacementReasonsCache)
+        setHCPSalaryData(compliteHCPFullInfo??[])
         setIsChecking(false)
         return
       }
-      const [PlacementInformation,ReplacementReasons]=await Promise.all([
+      const [PlacementInformation,ReplacementReasons,HCPFullInfo]=await Promise.all([
         GetReplacementInfo(),
-        GetReasonsInfoInfo()
+        GetReasonsInfoInfo(),
+        GetUsersFullInfo()
+     
 
       ])
       // const PlacementInformation: any = await GetReplacementInfo();
@@ -70,7 +77,7 @@ const router=useRouter()
 
         patientName: record.patientName || "",
         referralName: record.referralName || "",
-
+CareTakerPrice:record.CareTakerPrice,
         hcpName: record.HCAName || "",
         hcpPhone: record.HCAContact || "",
         hcpSource: record.hcpSource || "",
@@ -87,9 +94,11 @@ const router=useRouter()
       }));
       console.log('Check for Ids-------',formatted)
 ReplacementCach=formatted?? [],
+compliteHCPFullInfo=HCPFullInfo??[],
 ReplacementReasonsCache=ReplacementReasons?? []
       setRawData(formatted);
       setReplacementReasons(ReplacementReasons?? [])
+      setHCPSalaryData(HCPFullInfo??[])
       setIsChecking(false)
     };
 
@@ -152,6 +161,20 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
 
 };
 
+const GetHCPSalary=(A:any)=>{
+  try{
+const HCPSalaryInfo=HCPSalaryData.map((each:any)=>each.HCAComplitInformation
+)
+
+const FinelExpectedSalaryInfo:any=HCPSalaryInfo.filter((each:any)=>each.UserId===A)
+
+return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||null
+
+  }catch(err:any){
+
+  }
+}
+console.log("Check For Salary Info--------",)
 
 
  if (isChecking) {
@@ -324,6 +347,7 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
             </td>
 
             <td className="px-4 py-3">
+            
               <button
                 onClick={() => {
                     console.log("Check Attendence-----",item)
@@ -336,8 +360,13 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
               </button>
             </td>
 
-            <td className="px-4 py-3 text-right font-semibold text-gray-800">₹{item.cTotal}</td>
-            <td className="px-4 py-3 text-right font-semibold text-gray-800">₹{item.hcpTotal}</td>
+            <td className="px-4 py-3 text-right font-semibold text-gray-800">{item.CareTakerPrice
+    ? String(item.CareTakerPrice).includes("₹")
+      ? item.CareTakerPrice
+      : `₹${item.CareTakerPrice}`
+    : "₹0"}/D</td>
+            <td className="px-4 py-3 text-right font-semibold text-gray-800">{GetHCPSalary(item.AssignedHCA_id)?String(GetHCPSalary(item.AssignedHCA_id)).includes("₹")?GetHCPSalary(item.AssignedHCA_id):`₹${GetHCPSalary(item.AssignedHCA_id)}`:"₹0"}/D</td>
+            
           </tr>
         ))
       )}
@@ -439,6 +468,9 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
                   >
                     {status}
                   </span>
+                <p className="text-xs sm:text-[10px] mt-2 font-semibold text-blue-700 cursor-pointer hover:underline" onClick={()=>setShowPermissionPopup(!showPermissionPopup)}>
+  Edit
+</p>
                 </div>
               );
             })}
@@ -454,6 +486,60 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
           Close
         </button>
       </div>
+    </div>
+  </div>
+)}
+
+{/* Permission Popup */}
+{showPermissionPopup && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    
+    <div className="w-[92%] max-w-md rounded-xl bg-white shadow-xl border border-gray-200 animate-[zoomIn_.2s_ease-out]">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b">
+        <h2 className="text-sm sm:text-base font-semibold text-gray-800">
+          Permission From Management
+        </h2>
+
+        <button
+          onClick={() => setShowPermissionPopup(false)}
+          className="text-gray-400 hover:text-gray-700 text-lg"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="p-4 space-y-3">
+        <p className="text-xs sm:text-sm text-gray-600">
+          This action requires approval from management. Please confirm
+          before continuing.
+        </p>
+
+        <textarea
+          placeholder="Add note or reason..."
+          className="w-full rounded-lg border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          rows={3}
+        />
+      </div>
+
+      {/* Footer */}
+      <div className="flex justify-end gap-2 px-4 py-3 border-t bg-gray-50 rounded-b-xl">
+        <button
+          onClick={() => setShowPermissionPopup(false)}
+          className="px-3 py-1.5 text-xs sm:text-sm rounded-md border border-gray-300 hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+
+        <button
+          className="px-3 py-1.5 text-xs sm:text-sm rounded-md bg-gradient-to-br from-[#00A9A5] to-[#005f61] text-white font-medium"
+        >
+          Request Permission
+        </button>
+      </div>
+
     </div>
   </div>
 )}

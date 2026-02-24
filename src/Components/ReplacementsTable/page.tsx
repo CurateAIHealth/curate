@@ -1,6 +1,6 @@
 "use client";
 import { filterColors, Placements_Filters, years } from "@/Lib/Content";
-import { GetReasonsInfoInfo, GetReplacementInfo } from "@/Lib/user.action";
+import { GetReasonsInfoInfo, GetReplacementInfo, GetUsersFullInfo } from "@/Lib/user.action";
 import { UpdateClient, UpdateMonthFilter, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import { useRouter } from "next/navigation";
 
@@ -10,6 +10,7 @@ import { LoadingData } from "../Loading/page";
 
 let ReplacementCach : any[] | null = null;
 let ReplacementReasonsCache: any[] | null = null;
+let compliteHCPFullInfo: any[] | null = null;
 const ReplacementTable = ({ StatusMessage }: any) => {
   const [rawData, setRawData] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -20,7 +21,7 @@ const ReplacementTable = ({ StatusMessage }: any) => {
 
 const month=useSelector((state:any)=>state.FilterMonth) 
 const year=useSelector((state:any)=>state.FilterYear) 
-
+const [HCPSalaryData,setHCPSalaryData]=useState<any[]>([]);
 const [ReplacementReasons,setReplacementReasons]=useState<any[]>([]);
 const [showPopup, setShowPopup] = useState(false);
 const [popupInfo, setPopupInfo] = useState("");
@@ -32,12 +33,14 @@ const router=useRouter()
       if(ReplacementCach&&ReplacementReasonsCache){
         setRawData(ReplacementCach);
         setReplacementReasons(ReplacementReasonsCache)
+         setHCPSalaryData(compliteHCPFullInfo??[])
         setIsChecking(false)
         return
       }
-      const [PlacementInformation,ReplacementReasons]=await Promise.all([
+      const [PlacementInformation,ReplacementReasons,HCPFullInfo]=await Promise.all([
         GetReplacementInfo(),
-        GetReasonsInfoInfo()
+        GetReasonsInfoInfo(),
+        GetUsersFullInfo()
 
       ])
       // const PlacementInformation: any = await GetReplacementInfo();
@@ -59,7 +62,7 @@ const router=useRouter()
         clientName: record.ClientName || "",
         clientPhone: record.ClientContact || "",
         ClientId: record.ClientId || "",
-
+        CareTakerPrice:record.CareTakerPrice,
         patientName: record.patientName || "",
         referralName: record.referralName || "",
 
@@ -82,6 +85,7 @@ ReplacementCach=formatted?? [],
 ReplacementReasonsCache=ReplacementReasons?? []
       setRawData(formatted);
       setReplacementReasons(ReplacementReasons?? [])
+      setHCPSalaryData(HCPFullInfo??[])
       setIsChecking(false)
     };
 
@@ -144,6 +148,19 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
 
 };
 
+const GetHCPSalary=(A:any)=>{
+  try{
+const HCPSalaryInfo=HCPSalaryData.map((each:any)=>each.HCAComplitInformation
+)
+
+const FinelExpectedSalaryInfo:any=HCPSalaryInfo.filter((each:any)=>each.UserId===A)
+
+return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||null
+
+  }catch(err:any){
+
+  }
+}
 
 
  if (isChecking) {
@@ -285,8 +302,13 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
 
 
 
-                  <td className="px-3 py-2 text-right">₹{item.cTotal}</td>
-                  <td className="px-3 py-2 text-right">₹{item.hcpTotal}</td>
+                  <td className="px-3 py-2 text-right">{item.CareTakerPrice
+    ? String(item.CareTakerPrice).includes("₹")
+      ? item.CareTakerPrice
+      : `₹${item.CareTakerPrice}`
+    : "₹0"}/D</td>
+                 <td className="px-4 py-3 text-right font-semibold text-gray-800">{GetHCPSalary(item.AssignedHCA_id)?String(GetHCPSalary(item.AssignedHCA_id)).includes("₹")?GetHCPSalary(item.AssignedHCA_id):`₹${GetHCPSalary(item.AssignedHCA_id)}`:"₹0"}/D</td>
+           
                 </tr>
               ))
             )}

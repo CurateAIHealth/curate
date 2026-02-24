@@ -109,6 +109,7 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
     patientGender:'',
     HCPPreferGender:"",
     NewLead:"",
+    CurateNewLead:'',
     PreferredLanguage:"",
     ClientArea: '',
     ClientNote: "",
@@ -508,6 +509,7 @@ patientName:EnquiryForm.patientName||"",
       HCPPreferGender: EnquiryForm.HCPPreferGender || "",
       PreferredLanguage: EnquiryForm.PreferredLanguage || "",
       NewLead:EnquiryForm.NewLead||'',
+      CurateNewLead:EnquiryForm.CurateNewLead||'',
       Location: EnquiryForm.ClientArea || "",
       ServiceType: EnquiryForm.ServiceType || "",
       HealthCard: EnquiryForm.patientHealthCard || "",
@@ -947,7 +949,7 @@ setNotificationStatus("Notification Send Succesfully")
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard
+      Hi Admin – Welcome to Admin Dashboard.
     </span>
   </div>
 
@@ -1202,8 +1204,8 @@ setNotificationStatus("Notification Send Succesfully")
                     open={showPermissionPopup}
                     onClose={() => setShowPermissionPopup(false)}
                   />
-
-        <main className="p-4 sm:p-2 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
+{/* <main className="flex-1 overflow-y-auto p-4 sm:p-3 lg:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6"> */}
+<main className="p-4">
           <div className="lg:col-span-8 space-y-6">
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
@@ -1241,7 +1243,7 @@ setNotificationStatus("Notification Send Succesfully")
 
                   <div className="relative group inline-block">
                     <h2 className="text-base sm:text-lg font-bold text-gray-700 mt-1 cursor-pointer">
-                      {tab.count}
+                      {tab.count||0}
                     </h2>
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-max max-w-xs rounded-md bg-gray-800 text-white text-[10px] px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap text-center">
                       {tab.count > 0
@@ -1503,6 +1505,53 @@ setNotificationStatus("Notification Send Succesfully")
       const value = e.target.value;
 
       setEnquiryForm({ ...EnquiryForm, NewLead: value });
+
+      if (!value.trim()) {
+        setShowLeadSuggestions(false);
+        return;
+      }
+
+      const results = LeadSources.filter((item) =>
+        item.toLowerCase().includes(value.toLowerCase())
+      );
+
+      setFilteredLeads(results);
+      setShowLeadSuggestions(results.length > 0); 
+    }}
+  />
+
+  {showLeadSuggestions && (
+    <div className="absolute z-20 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto">
+      {filteredLeads.map((lead, index) => (
+        <p
+          key={index}
+          className="px-4 py-2 text-sm cursor-pointer hover:bg-gray-100"
+          onClick={() => {
+            setEnquiryForm({ ...EnquiryForm, NewLead: lead });
+            setShowLeadSuggestions(false);
+          }}
+        >
+          {lead}
+        </p>
+      ))}
+    </div>
+  )}
+</div>
+  <div className="relative">
+  <label className="block text-xs font-medium text-gray-500 mb-2">
+    Curate Lead Source 
+  </label>
+
+  <input
+    type="text"
+    value={EnquiryForm.CurateNewLead}
+    required
+    placeholder="Type Curate Lead Source"
+    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
+    onChange={(e) => {
+      const value = e.target.value;
+
+      setEnquiryForm({ ...EnquiryForm, CurateNewLead: value });
 
       if (!value.trim()) {
         setShowLeadSuggestions(false);
@@ -1893,7 +1942,7 @@ setNotificationStatus("Notification Send Succesfully")
 
 
 
-         <div className="lg:col-span-4 space-y-4">
+         {/* <div className="lg:col-span-4 space-y-4">
   <div className="bg-white flex flex-col p-2 sm:p-4 rounded-xl shadow-md">
     <h2 className="text-base sm:text-lg font-semibold mb-3 text-gray-700">
       Active Bench List
@@ -1973,7 +2022,7 @@ Contact}
       </button>
     </div>
   </div>
-</div>
+</div> */}
 
 
 

@@ -8,7 +8,7 @@ let cachedTermination: any[] = [];
 
 import React, { useEffect, useState } from "react";
 import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -19,6 +19,7 @@ import ReplacementsTable from "../ReplacementsTable/page";
 import { getDaysBetween, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
 import { useRouter } from "next/navigation";
 import { div } from "framer-motion/client";
+import SalaryPopup from "../HCPSalary/page";
 
 
 
@@ -52,7 +53,7 @@ const ClientTable = () => {
   const [selectedHCP,setselectedHCP]=useState<any>()
   const [selectedCase, setSelectedCase] = useState<any>(null);
 const [searchHCA, setSearchHCA] = useState("");
-
+const [ShowCareTakerPriceUpdate,setShowCareTakerPriceUpdate]=useState(false)
 const [showWarning, setShowWarning] = useState(false);
 const [ReplacementTime,setReplacementTime]=useState("")
 const [ReplacementDate,setReplacementDate]=useState("")
@@ -327,10 +328,12 @@ const normalizedAttendance =
     invoice: each.invoice,
     ServiceCharge:each.CareTakerPrice,
     StartDate:each.StartDate,
-    EndDate:each.EndDate
+    EndDate:each.EndDate,
+    Month:each.Month,
+    Replacement:each.Replacement
   };
 });
-
+console.log("Check for Amount----",users)
  const filterProfilePic = (users || []).map(
         (each: any) => each?.HCAComplitInformation ?? {}
       );
@@ -351,7 +354,8 @@ const normalizedAttendance =
     ClientStatus: each.ClientStatus,
     Status: each.Status,
     provider:each.provider,
-    payTerms:each.payTerms
+    payTerms:each.payTerms,
+    HCPPrice:Math.round(Number(each.PaymentforStaff)) / 30||"Not Provided"
   }));
 
  const handleDelete = () => {
@@ -363,12 +367,24 @@ const normalizedAttendance =
   };
 
   const UpdateAssignHca = async () => {
-  try {
-   
-    if (!selectedClient || !selectedAssignHCP) {
+      if (!selectedClient || !selectedAssignHCP) {
       SetActionStatusMessage("Invalid client or HCA selection.");
       return;
     }
+
+
+    if(selectedAssignHCP.HCPPrice==="Not Provided"){
+  SetActionStatusMessage("")
+setShowAssignPopup(!showAssignPopup)
+setShowCareTakerPriceUpdate(true)
+
+
+
+return
+}
+  try {
+   
+  
 
     const {
       Client_Id: clientId,
@@ -829,6 +845,15 @@ const UpdateReplacement = async (
 ) => {
  SetActionStatusMessage("Please wait...");
 
+if(Available_HCP.HCPPrice==="Not Provided"){
+  SetActionStatusMessage("")
+  setShowReassignmentPopUp(!ShowReassignmentPopUp)
+setShowCareTakerPriceUpdate(true)
+
+
+
+return
+}
   try {
    
 
@@ -1056,7 +1081,24 @@ const OmServiceView = () => {
     }}
   />
 )} */}
+  <SalaryPopup
+  open={ShowCareTakerPriceUpdate}
+  defaultSalary={""}
+  StatusMsg={ActionStatusMessage}
+  title={selectedHCP?.FirstName||selectedAssignHCP?.FirstName}
+  onClose={() => setShowCareTakerPriceUpdate(false)}
+  onSubmit={async(value) => {
+   
+    const UpdateSalary= await HCASalaryUpdate(selectedHCP?.id||selectedAssignHCP?.id,value)
+    if(UpdateSalary.success){
+    SetActionStatusMessage(`${selectedHCP?.FirstName||selectedAssignHCP?.FirstName} ${UpdateSalary.message}`)
+setTimeout(()=>{
+setShowCareTakerPriceUpdate(false)
+},2300)
+    }
 
+  }}
+/>
   {ClientsInformation.length === 0 && (
     <div className="flex flex-col items-center justify-center gap-6 h-[60vh] mt-10 rounded-3xl bg-white/60 backdrop-blur-lg border border-gray-200 shadow-2xl p-12">
       <p className="text-3xl font-extrabold text-gray-900 text-center">
@@ -1167,9 +1209,20 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
            <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
            {i+1}
           </td>
-          <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
-            {toProperCaseLive(c.name)}
-          </td>
+        <td className="px-1 py-3 font-semibold text-xs text-gray-900 break-words">
+  {c.Replacement ? (
+    <span className="inline-flex items-center gap-1.5">
+      <img
+        src="Icons/RegisterIcone.png"
+        alt="Replacement"
+        className="w-5 h-5 object-contain"
+      />
+      {toProperCaseLive(c.name)}
+    </span>
+  ) : (
+    toProperCaseLive(c.name)
+  )}
+</td>
 {/* <td className="px-3 py-3 text-gray-700 text-xs">
   {!c?.ServiceCharge ? (
     <span className="text-red-600 font-medium">
@@ -1259,7 +1312,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
       items-start
       gap-1
       px-1 py-1
-      text-[10px]
+      text-[11px]
       font-medium
       rounded-md
       bg-white
@@ -1268,7 +1321,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
     "
   >
     🩺
-    <span className="hover:underline font-semibold line-clamp-2 break-words leading-tight">
+    <span className="hover:underline font-semibold line-clamp-0 mb-4 break-words leading-tight">
       {toProperCaseLive(c.HCA_Name)}
     </span>
   </span>
@@ -1299,7 +1352,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
     active:scale-95 
     cursor-pointer
   "
-  onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA("")}}
+  onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA("")}}
 >
   Reassignment
 </button>
@@ -1627,7 +1680,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
  <td     className="inline-block px-1 ml-4 cursor-pointer py-2 text-[10px] mt-4 hover:bg-gray-100 hover:rounded-full font-medium cursor-pointer ">
             <button
             className="cursor-pointer"
-             onClick={() => {setShowAssignPopup(true),setselectedClient(c),setselectedAssignHCP(null),SetActionStatusMessage("")}}
+             onClick={() => {setShowAssignPopup(true),setselectedClient(c),setselectedAssignHCP(null),setselectedHCP(null),SetActionStatusMessage("")}}
             >
        <Plus size={19} className="h-5 w-5 text-center text-teal-600"/>
             </button>
@@ -1710,7 +1763,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
           className="w-full h-10 px-3 text-sm border border-gray-300 rounded-md bg-white
                      focus:outline-none focus:ring-1 focus:ring-emerald-600
                      focus:border-emerald-600"
-          value={selectedHCP?.userId || ""}
+          value={selectedAssignHCP?.userId || ""}
         onChange={(e) => {
     const selected:any = HCA_List.find(
       (hca) => hca.userId === e.target.value

@@ -60,7 +60,7 @@ export const UpdateDocterInformation = async (doctorInfo: {
 
     return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
       insertedId: result.insertedId.toString(),
     };
   } catch (error) {
@@ -120,7 +120,7 @@ export const UpdateNurseInfo = async (NurseInfor: {
 
     return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
       insertedId: result.insertedId.toString(),
     };
   } catch (error) {
@@ -162,7 +162,7 @@ export const UpdateCurateFamilyInfo = async (FamilyInfo: any[]) => {
 
     return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
       insertedIds: Object.values(result.insertedIds).map(id => id.toString()),
     };
 
@@ -236,7 +236,7 @@ export const IntrestedHCP = async (inputUserId: any, HCPid: any) => {
       return { success: false, message: 'User not found or no changes made.' };
     }
 
-    return { success: true, message: 'Password updated successfully.' };
+    return { success: true, message: 'Password updated Successfully.' };
   } catch (err: any) {
 
   }
@@ -267,7 +267,7 @@ export const UpdatePassword = async (UpdatedData: { UpdatedUserid: any, NewUpdat
       return { success: false, message: 'User not found or no changes made.' };
     }
 
-    return { success: true, message: 'Password updated successfully.' };
+    return { success: true, message: 'Password updated Successfully.' };
   } catch (err: any) {
 
   }
@@ -398,7 +398,7 @@ export const UpdateVendorInformation = async (Patient: any) => {
 
     return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
       insertedId: result.insertedId.toString(),
     };
 
@@ -495,7 +495,7 @@ export const UpdatePatientInformation = async (Patient: {
 
     return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
       insertedId: result.insertedId.toString(),
     };
   } catch (error) {
@@ -573,7 +573,7 @@ export const UpdateNewLeadInformation = async (FinelPostingData: any) => {
 
     return {
       success: true,
-      message: "Lead information updated successfully ✅",
+      message: "Lead information updated Successfully ✅",
       modifiedCount: result.modifiedCount,
       upsertedId: result.upsertedId?.toString() || null,
     };
@@ -674,7 +674,7 @@ export const UpdatePDR = async (
       return { success: false, message: "User not found" };
     }
 
-    return { success: true, message: "Patient data updated successfully" };
+    return { success: true, message: "Patient data updated Successfully" };
 
   } catch (error: any) {
     console.error("Update Error:", error.message);
@@ -712,7 +712,7 @@ const endOfMonthFormatted = endOfMonth.toLocaleDateString("en-IN");
 
     return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
  insertedId: Invoice.insertedId.toString(),
     };
     
@@ -769,7 +769,7 @@ export const UpdateOrganisation = async (Organisation: {
 
     return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
       insertedId: result.insertedId.toString(),
     };
   } catch (err: any) {
@@ -921,7 +921,7 @@ export const UpdateStatusPayment=async(InvoiceId:any)=>{
 
     return {
       success: true,
-      message: "PDR Status updated successfully.",
+      message: "PDR Status updated Successfully.",
     };
   }catch(err:any){
     
@@ -1019,7 +1019,7 @@ StaffType:HCA.StaffType,
 
     return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
       insertedId: result.insertedId.toString(),
     };
   } catch (err: any) {
@@ -1115,7 +1115,7 @@ export const PostEmployInfo = async (EMP: any) => {
 
     return {
       success: true,
-      message: "Employee registered successfully",
+      message: "Employee registered Successfully",
       insertedId: result.insertedId.toString(),
     };
   } catch (err: any) {
@@ -1163,6 +1163,7 @@ patientWeight:HCA.patientWeight||"",
       HCPPreferGender: HCA.HCPPreferGender || "",
       PreferredLanguage: HCA.PreferredLanguage || "",
       NewLead:HCA.NewLead||"",
+      CurateNewLead:HCA.CurateNewLead||'',
       Location: HCA.Location || "",
       ServiceType: HCA.ServiceType || "",
       HealthCard: HCA.HealthCard || "",
@@ -1182,7 +1183,7 @@ patientWeight:HCA.patientWeight||"",
 
     return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
       insertedId: result.insertedId.toString(),
     };
   } catch (err: any) {
@@ -1290,7 +1291,7 @@ export const PostFullRegistration = async (Info: any) => {
 
     return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
       insertedId: FinelResult.insertedId.toString(),
     };
   } catch (err: any) {
@@ -1437,7 +1438,7 @@ export const PostHCAFullRegistration = async (Info: any) => {
 
     return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
       insertedId: FinelResult.insertedId.toString(),
     };
   } catch (err: any) {
@@ -1470,7 +1471,7 @@ const TimeSheetDataInsert=await collection.insertOne({
 })
 return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
       insertedId: TimeSheetDataInsert.insertedId.toString(),
     };
   }catch(e){
@@ -1549,7 +1550,7 @@ export const TestInserTimeSheet = async (
 
 return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
       insertedId: TimeSheetDataInsert.insertedId.toString(),
     };
   } catch (error: any) {
@@ -1766,7 +1767,7 @@ export const UpdatePdrStatus = async (UserId: any) => {
 
     return {
       success: true,
-      message: "PDR Status updated successfully.",
+      message: "PDR Status updated Successfully.",
     };
   } catch (err: any) {
     return { success: false, message: err.message };
@@ -1788,7 +1789,7 @@ const UpdateStatus=await Collection.updateOne(
 )
  return {
       success: true,
-      message: "PDR Status updated successfully.",
+      message: "PDR Status updated Successfully.",
     };
   }catch(err:any){
 
@@ -1906,7 +1907,7 @@ export const UpdateAttendence = async (
 
     return {
       success: true,
-      message: `✅ Attendance marked successfully on ${new Date().toLocaleDateString(
+      message: `✅ Attendance marked Successfully on ${new Date().toLocaleDateString(
         "en-IN"
       )}`,
     };
@@ -2052,7 +2053,7 @@ const DeleteResult=await collection.deleteMany({ClientId:clientId})
    if (DeleteResult.deletedCount > 0) {
       return {
         success: true,
-        message: `${DeleteResult.deletedCount} timesheet(s) deleted successfully.`,
+        message: `${DeleteResult.deletedCount} timesheet(s) deleted Successfully.`,
       };
     } else {
       return {
@@ -2089,7 +2090,7 @@ const TimeSheetDataInsert=await collection.insertOne({
 })
 return {
       success: true,
-      message: "You registered successfully with Curate Digital AI",
+      message: "You registered Successfully with Curate Digital AI",
       insertedId: TimeSheetDataInsert.insertedId.toString(),
     };
   }catch(e){
@@ -2288,13 +2289,14 @@ export const UpdateReplacmentData = async (
       AdminAttendece: false,
       UpdatedAt: new Date(),
       UpdatedBy: UpdatedBy || "",
+      Replacement:true
     };
 
    
     const updatedAttendance = Array.isArray(existingInfo.Attendance)
       ? [...existingInfo.Attendance, attendanceEntry]
       : [attendanceEntry];
-console.log("Check Issue------",updatedAttendance)
+
    
     const replacementData = {
       ...existingInfo,
@@ -2311,14 +2313,19 @@ console.log("Check Issue------",updatedAttendance)
 
    
     const UpdateReplasementInfo = await deploymentCollection.updateOne(
-      { HCAId: Exsting_HCP.HCA_Id },
+      { HCAId: Exsting_HCP.HCA_Id,
+        Month:Exsting_HCP.Month
+       },
       {
         $set: {
           HCAId: Available_HCP.userId,
           HCAName: Available_HCP.FirstName,
-          HCAContact: Available_HCP.Contact
-        },$push: {
-        Attendance: attendanceEntry   
+          HCAContact: Available_HCP.Contact,
+          // CareTakerPrice:Available_HCP.CareTakerPrice,
+          Replacement:true,
+          Attendance: [attendanceEntry]
+        // },$push: {
+        // Attendance: attendanceEntry   
       } as any
       }
     );
@@ -2329,7 +2336,7 @@ console.log("Check Issue------",updatedAttendance)
 
     return {
       success: true,
-      message: "Replacement updated successfully",
+      message: "Replacement updated Successfully",
       update: UpdateReplasementInfo
     };
 
@@ -2367,7 +2374,7 @@ export const UpdateReason = async (
 
     return {
       success: true,
-      message: "Replacement updated successfully",
+      message: "Replacement updated Successfully",
 
     };
 
@@ -2402,7 +2409,7 @@ export const PostReason = async (
 
     return {
       success: true,
-      message: "Replacement updated successfully",
+      message: "Replacement updated Successfully",
 
     };
 
@@ -4190,7 +4197,7 @@ export const UpdatedUserJoingDate = async (
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
-
+console.log("Check Date Type----",UpdatedStatus)
     const result = await collection.updateOne(
       { userId: UserId }, 
       {
@@ -4353,8 +4360,8 @@ export const UpdateUserCurrentstatusInHCPView = async (
       success: true,
       message:
         updateComplite.upsertedCount === 1
-          ? "User status created and updated successfully"
-          : "User status updated successfully",
+          ? "User status created and updated Successfully"
+          : "User status updated Successfully",
     };
   } catch (err: any) {
     console.error("UpdateUserCurrentstatus Error:", err);
@@ -4387,7 +4394,7 @@ export const UpdateUserContactVerificationstatus = async (UserId: string,Contact
       return { success: false, message: 'Internal Error Try Again!' };
     }
 
-    return { success: true, message: 'Verification Status updated successfully.' };
+    return { success: true, message: 'Verification Status updated Successfully.' };
   } catch (err: any) {
     return err
   }
@@ -4425,8 +4432,8 @@ export const UpdateClientStatusinCallEnquiry = async (
     return {
       success: true,
       message: result.upsertedCount
-        ? "ClientStatus added successfully."
-        : "ClientStatus updated successfully.",
+        ? "ClientStatus added Successfully."
+        : "ClientStatus updated Successfully.",
     };
   } catch (err: any) {
     return { success: false, message: err.message };
@@ -4509,7 +4516,7 @@ export const DeleteHCAStatus = async (UserId: string) => {
       return { success: false, message: "Internal Error Try Again!" };
     }
 
-    return { success: true, message: "Status deleted successfully." };
+    return { success: true, message: "Status deleted Successfully." };
   } catch (err: any) {
     return err;
   }
@@ -4531,7 +4538,7 @@ const Try:any="Assigned"
       return { success: false, message: 'User not found!' };
     }
 
-    return { success: true, message: 'Verification Status updated successfully.' };
+    return { success: true, message: 'Verification Status updated Successfully.' };
   } catch (err: any) {
     return { success: false, message: err.message || 'Internal Error' };
   }
@@ -4553,12 +4560,57 @@ export const DeleteHCAStatusInFullInformation = async (Userid: string) => {
       return { success: false, message: "User not found!" };
     }
 
-    return { success: true, message: "Status key deleted successfully." };
+    return { success: true, message: "Status key deleted Successfully." };
   } catch (err: any) {
     return { success: false, message: err.message || "Internal Error" };
   }
 };
 
+export const HCASalaryUpdate = async (
+  Userid: string,
+  Amount: any
+): Promise<{ success: boolean; message: string }> => {
+  try {
+   
+    if (!Userid || Number(Amount) < 0) {
+      return { success: false, message: "Invalid salary data." };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("CompliteRegistrationInformation");
+
+    const result = await collection.updateOne(
+      { "HCAComplitInformation.UserId": Userid },
+      {
+        $set: {
+          
+          "HCAComplitInformation.PaymentforStaff": Amount,
+    
+        },
+      },
+    
+    );
+
+
+    if (result.matchedCount === 0) {
+      return { success: false, message: "User not found." };
+    }
+
+    if (result.modifiedCount === 0) {
+      return { success: true, message: "Salary already up to date." };
+    }
+
+    return { success: true, message: "Salary updated Successfully." };
+  } catch (error: unknown) {
+    console.error("HCASalaryUpdate Error:", error);
+
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Internal server error",
+    };
+  }
+};
 export const UpdateFinelVerification=async(inputUserId:any)=>{
 try{
       const Clustor = await clientPromise
@@ -4577,7 +4629,7 @@ try{
       return { success: false, message: 'User not found or no changes made.' };
     }
 
-    return { success: true, message: 'Password updated successfully.' };
+    return { success: true, message: 'Password updated Successfully.' };
 }catch(err:any){
 
 }
@@ -4602,7 +4654,7 @@ export const UpdateRemainderTimer = async (UserId: any, NewTime: string, NewDate
       return { success: false, message: 'User not found or no changes made.' };
     }
 
-    return { success: true, message: 'Password updated successfully.' };
+    return { success: true, message: 'Password updated Successfully.' };
   } catch (err: any) {
 
   }

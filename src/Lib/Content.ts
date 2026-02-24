@@ -1316,8 +1316,9 @@ export const LeadSources = [
   "Pandu",
   "Swaroop I",
   "Soumya Ranjan",
+  "Kiran"
   
-"Other"
+
   
 ];
 export const REFERRAL_SOURCE_TYPES: string[] = [
