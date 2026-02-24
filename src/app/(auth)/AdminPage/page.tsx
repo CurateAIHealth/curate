@@ -36,13 +36,14 @@ import StatusPopup from '@/Components/PDRStatusPopup/page';
 import { HCAList } from '@/Redux/reducer';
 import WorkingOn from '@/Components/CurrentlyWoring/page';
 import axios from 'axios';
-import { setTimeout } from 'timers/promises';
+
 import { decrypt, encrypt, getPopularArea, normalizeDate, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
 import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 import { LoadingData } from '@/Components/Loading/page';
 import ReplacementsTable from '@/Components/ReplacementsTable/page';
 import CallEnquiryList from '@/Components/CallEnquiry/page';
 import { stat } from 'fs';
+import { ClientsPopup } from '@/Components/SentProfile/page';
 
 
 export default function UserTableList() {
@@ -54,6 +55,7 @@ export default function UserTableList() {
   const [HCPCurrentStatus,setHCPCurrentStatus]=useState("")
   const [SearchDate, SetSearchDate] = useState<any>(null)
   const now = new Date();
+  const [showClients, setShowClients] = useState(false);
   const SearchMonth = useSelector((state: any) => state.MonthFilterAdmin)
   const SearchYear = useSelector((state: any) => state.YearFilterAdmin)
   const [HCPPreviewtype,setHCPPreviewtype]=useState("")
@@ -63,9 +65,10 @@ const [SearchResult, setSearchResult] = useState("")
   const [LoginEmail, setLoginEmail] = useState("");
   const [DeleteInformation, SetDeleteInformation] = useState<any>()
   const [showOptions, setShowOptions] = useState(false);
-
+const [searchLead, setSearchLead] = useState("");
+const [showSuggestions, setShowSuggestions] = useState(true);
   const [ShowDeletePopUp, setShowDeletePopUp] = useState(false)
-  const Status = ["None",,"Converted", "Waiting List", "Lost",];
+  const Status = ["None","Converted", "Waiting List", "Lost",];
   const EmailVerificationStatus = ['Verified', 'Pending'];
   const CurrentStatusOptions = ["Active", "Sick", "Leave", "Terminated"];
 
@@ -196,6 +199,10 @@ const GetHCPTypeCount = (HCPType: string) => {
       console.error(err);
     }
   };
+
+  const filteredLeads = LeadSources.filter((lead: string) =>
+  lead.toLowerCase().includes(searchLead.toLowerCase())
+);
   const UpdateCurrentstatus = async (first: string, e: string, UserId: any) => {
   
       dispatch(Refresh(`Updating ${first} Current Status....`))
@@ -211,6 +218,8 @@ const GetHCPTypeCount = (HCPType: string) => {
 
 
   const callEnquiryArray = users.filter((each) => each.userType === 'CallEnquiry')
+
+  const clientsData= users.filter((each) => each.userType === 'patient')
 
   const Finel = users.map((each: any) => ({
     id: each.userId,
@@ -723,6 +732,14 @@ return
               </div>
 
             )}
+
+
+            <ClientsPopup
+  open={showClients}
+  onClose={() => setShowClients(false)}
+  clients={clientsData}
+  title="Clients List"
+/>
             <>
       <StatusPopup
         open={open}
@@ -761,6 +778,9 @@ return
                           <th className="px-2 py-2 w-[14%]">Email Verification</th>
                           {UpdateduserType === "healthcare-assistant" && (
                             <th className="px-4 py-2 w-[14%]">Working Status</th>
+                          )}
+                          {UpdateduserType === "healthcare-assistant" && (
+                            <th className="px-4 py-2 text-center w-[14%]">Inform</th>
                           )}
                           {UpdateduserType !== "healthcare-assistant" && (
                             <th className="px-4 py-2 w-[14%]">Client Status</th>
@@ -808,8 +828,20 @@ return
 
   "
                              type="text"
-  placeholder="DD-MM-YYYY"
+  placeholder="YYYY-MM-DD"
   defaultValue={user.LeadDate || ""}
+    onChange={(e: any) => {
+    let value = e.target.value.replace(/\D/g, ""); 
+
+ 
+    if (value.length > 4 && value.length <= 6) {
+      value = `${value.slice(0, 4)}-${value.slice(4)}`;
+    } else if (value.length > 6) {
+      value = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
+    }
+
+    e.target.value = value;
+  }}
   onKeyDown={(e: any) => {
     if (e.key === "Enter") {
       const val = e.currentTarget.value;
@@ -822,6 +854,7 @@ return
 
                             </td>
                             {UpdateduserType === "patient" &&
+                            
                               <td className='pl-6'>{toProperCaseLive(user.LeadSource) || "Not Mentioned"} <button
                                     onClick={() => setEditingUserId(user.userId)}
                                     className="
@@ -834,47 +867,69 @@ return
                                   >
                                     <Pencil size={12} />
                                   </button> {editingUserId === user.userId && (
-                                    <div
-                                      className="
-      absolute z-50
-      mt-2
-      w-56
-      rounded-xl
-      bg-white
-      border border-slate-200
-      shadow-[0_12px_30px_rgba(0,0,0,0.12)]
-      p-2
-      animate-in fade-in zoom-in-95
-    "
-                                    >
-                                      <select
-                                        autoFocus
-                                        onChange={(e) => {
-                                          UpdateClientServiceLocation(user.FirstName, user.userId, e.target.value)
-                                          setEditingUserId(null);
-                                        }}
-                                        onBlur={() => setEditingUserId(null)}
-                                        className="
-        h-10 w-full px-3
-        rounded-lg
-        border border-slate-300
-        bg-[#f8fafc]
-        text-sm font-medium text-slate-700
-        cursor-pointer
+                                   <div
+  className="
+    absolute z-50 mt-2 w-56 rounded-xl bg-white
+    border border-slate-200 shadow-[0_12px_30px_rgba(0,0,0,0.12)]
+    p-2 animate-in fade-in zoom-in-95
+  "
+>
 
-        focus:outline-none
-        focus:border-[#62e0d9]
-        focus:ring-2 focus:ring-[#caf0f8]
-      "
-                                      >
-                                        <option value="">Select Lead</option>
-                                        {LeadSources.map((area: any) => (
-                                          <option key={area} value={area}>
-                                            {area}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
+ <input
+  autoFocus
+  value={searchLead}
+  placeholder="Enter Lead"
+  onChange={(e) => {
+    setSearchLead(e.target.value);
+    setShowSuggestions(true);
+  }}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      UpdateClientServiceLocation(
+        user.FirstName,
+        user.userId,
+        searchLead   
+      );
+      setEditingUserId(null);
+    }
+  }}
+  onBlur={() => {
+    UpdateClientServiceLocation(
+      user.FirstName,
+      user.userId,
+      searchLead   
+    );
+    setEditingUserId(null);
+  }}
+  className="h-10 w-full px-3 rounded-lg border border-slate-300 bg-[#f8fafc]"
+/>
+
+
+  {showSuggestions && filteredLeads.length > 0 && (
+    <div className="mt-2 max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-white">
+      {filteredLeads.map((area: string) => (
+        <div
+          key={area}
+          onMouseDown={() => {
+            UpdateClientServiceLocation(
+              user.FirstName,
+              user.userId,
+              area
+            );
+            setSearchLead(area);
+            setEditingUserId(null);
+          }}
+          className="
+            px-3 py-2 text-sm cursor-pointer
+            hover:bg-[#f1f5f9] transition-colors
+          "
+        >
+          {area}
+        </div>
+      ))}
+    </div>
+  )}
+</div>
                                   )}</td>}
                                   
                             {UpdateduserType === "patient" &&
@@ -1183,7 +1238,19 @@ return
     </td>
   );
 })()}
+  {UpdateduserType === "healthcare-assistant" &&
+  
+  
+  <td className="md:px-8 md:py-2">
 
+                                <button
+  type="button"
+  className="px-1 py-1.5 text-xs sm:text-xs cursor-pointer font-medium rounded-md bg-white/60 hover:shadow-lg backdrop-blur border border-gray-200 text-gray-800 hover:bg-white transition shadow-sm"  onClick={() => setShowClients(true)}
+>
+  Send Profile
+</button>
+                              </td>
+  }
                             {/* {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
                         <td className="px-2 py-2">
                           <select
@@ -1215,7 +1282,7 @@ return
                               <td className="">
                              
                                 <select
-                                  className={` text-center w-[160px]  px-2 py-1 rounded-lg border cursor-pointer text-xs sm:text-sm transition-all duration-200 font-semibold
+                                  className={` text-center w-[120px]  px-2 py-1 rounded-lg border cursor-pointer text-xs sm:text-sm transition-all duration-200 font-semibold
       ${user.CurrentStatus === "Available"
                                       ? "bg-green-100 border-green-300 text-green-800"
                                       : user.CurrentStatus === "Sick"
@@ -1748,8 +1815,18 @@ onClick={()=>UpdateNavigattosuggetions()}
 
                 <select
                   value={SearchMonth}
-                  onChange={(e) => dispatch(UpdateAdminMonthFilter(e.target.value))}
-                  className="
+                  onChange={async (e) => {
+    const month = e.target.value;
+
+    dispatch(Refresh(`Please Wait... Fetching ${month || "All"} info...`));
+
+    // ⏳ wait until month data updates
+    await dispatch(UpdateAdminMonthFilter(month));
+
+    // ✅ now trigger fresh reload + message
+    dispatch(Refresh(`Successfully Fetched ${month || "All"} Data`));
+  }}
+                   className="
         w-full h-[44px] rounded-xl
         border border-gray-300
         px-4 text-sm bg-white text-gray-800

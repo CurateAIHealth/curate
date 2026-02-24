@@ -61,6 +61,7 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
   const [SearchOptions,setSearchOptions]=useState(false)
   const [loading, setLoading] = useState(true);
   const [showAssignedOnly, setShowAssignedOnly] = useState(true);
+  const [showAssignConfirm,setShowAssignConfirm]=useState(true)
 
   const dispatch = useDispatch();
   const router = useRouter();
@@ -149,8 +150,8 @@ const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
 
     const TimeSheetData: any[] = [attendanceRecord];
 
-    await UpdateUserContactVerificationstatus(UserIDClient, "Placed");
-    await UpdateHCAnstatus(UserIdHCA, "Assigned");
+    await UpdateUserContactVerificationstatus(UserIDClient, "Waiting List");
+    await UpdateHCAnstatus(UserIdHCA, "Active");
     await UpdateHCAnstatusInFullInformation(UserIdHCA);
 
     const PlacementInformation: any = await GetTimeSheetInfo();
@@ -655,7 +656,47 @@ const ShowAdditionHCPs = hcps.filter((each: HcpType) => {
 
 const activeClient = clients[0];
 
+console.log("Check Suitable HCP------",activeClient)
 
+
+if(showAssignConfirm){
+
+  return(
+   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
+  <div className="w-[92%] max-w-sm bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden flex">
+
+    <div className="w-1.5 " />
+
+    <div className="flex-1 p-5 text-center">
+      <div className="text-xl mb-2">⚠️</div>
+
+      <h2 className="text-sm font-semibold text-gray-800">
+        Assignment Confirmation
+      </h2>
+
+      <p className="text-sm text-gray-600 mt-2">
+        An HCP is already assigned. Do you want to assign another one?
+      </p>
+
+      <div className="flex justify-center gap-3 mt-4">
+        <button
+          onClick={() => setShowAssignConfirm(false)}
+          className="px-4 py-1 rounded-md border text-xs sm:text-sm hover:bg-gray-100"
+        >
+          No
+        </button>
+
+        <button className="px-4 py-1 rounded-md bg-gray-900 text-white text-xs sm:text-sm">
+          Yes
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+  )
+
+}
 
 if (!activeClient) {
   return (
