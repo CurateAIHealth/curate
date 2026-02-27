@@ -142,7 +142,7 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
   return (
     <div className="p-6 w-full">
       <h2 className="text-2xl font-bold text-center text-[#ff1493] mb-6">
-        HCP's Without Today's Attendance
+        HCP's Without Today's Attendance ( {new Date().toLocaleDateString("En-In")} )
       </h2>
      <div className="relative w-full max-w-sm">
   <input

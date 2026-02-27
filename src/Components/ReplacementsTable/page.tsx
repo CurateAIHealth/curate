@@ -1,16 +1,18 @@
 "use client";
 import { filterColors, Placements_Filters, years } from "@/Lib/Content";
-import { GetReasonsInfoInfo, GetReplacementInfo, GetUsersFullInfo } from "@/Lib/user.action";
+import { GetReasonsInfoInfo, GetRegidterdUsers, GetReplacementInfo, GetUsersFullInfo } from "@/Lib/user.action";
 import { UpdateClient, UpdateMonthFilter, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import { useRouter } from "next/navigation";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { LoadingData } from "../Loading/page";
+import { AssignSuitableIcon } from "@/Lib/Actions";
 
 let ReplacementCach : any[] | null = null;
 let ReplacementReasonsCache: any[] | null = null;
 let compliteHCPFullInfo: any[] | null = null;
+let RegisterdCacheInfo: any[] | null = null;
 const ReplacementTable = ({ StatusMessage }: any) => {
   const [rawData, setRawData] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -18,7 +20,7 @@ const ReplacementTable = ({ StatusMessage }: any) => {
   const [isChecking, setIsChecking] = useState(true);
  const now = new Date();
 
-
+  const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
 const month=useSelector((state:any)=>state.FilterMonth) 
 const year=useSelector((state:any)=>state.FilterYear) 
 const [HCPSalaryData,setHCPSalaryData]=useState<any[]>([]);
@@ -27,70 +29,80 @@ const [showPopup, setShowPopup] = useState(false);
 const [popupInfo, setPopupInfo] = useState("");
 const dispatch=useDispatch()
 const router=useRouter()
-  useEffect(() => {
-    const Fetch = async () => {
-
-      if(ReplacementCach&&ReplacementReasonsCache){
+useEffect(() => {
+  const Fetch = async () => {
+    try {
+      if (ReplacementCach?.length && ReplacementReasonsCache?.length) {
         setRawData(ReplacementCach);
-        setReplacementReasons(ReplacementReasonsCache)
-         setHCPSalaryData(compliteHCPFullInfo??[])
-        setIsChecking(false)
-        return
+        setReplacementReasons(ReplacementReasonsCache);
+        setHCPSalaryData(compliteHCPFullInfo ?? []);
+        setRegisterdUsers(RegisterdCacheInfo ?? []);
+        setIsChecking(false);
+        return;
       }
-      const [PlacementInformation,ReplacementReasons,HCPFullInfo]=await Promise.all([
+
+      const [
+        registeredUsersData,
+        placementInformation,
+        replacementReasons,
+        hcpFullInfo,
+      ] = await Promise.all([
+        GetRegidterdUsers(),
         GetReplacementInfo(),
         GetReasonsInfoInfo(),
-        GetUsersFullInfo()
+        GetUsersFullInfo(),
+      ]);
 
-      ])
-      // const PlacementInformation: any = await GetReplacementInfo();
-      // const ReplacementReasons:any= await GetReasonsInfoInfo()
-      if (!PlacementInformation || PlacementInformation.length === 0) return;
+      if (!placementInformation || placementInformation.length === 0) {
+        setIsChecking(false);
+        return;
+      }
 
-
-
-      const formatted = PlacementInformation.map((record: any) => ({
-        CurrentHCA_id:record.HCAId||"",
-        AssignedHCA_id:record.NewHCAId||"",
+      const formatted = placementInformation.map((record: any) => ({
+        CurrentHCA_id: record.HCAId || "",
+        AssignedHCA_id: record.NewHCAId || "",
         Month: record.Month || "Unknown",
         invoice: record.invoice || "",
         startDate: record.StartDate || "",
         endDate: record.EndDate || "",
         status: record.Status || "Inactive",
         location: record.Address || "N/A",
-        NewHCA:record.NewHCAName,
+        NewHCA: record.NewHCAName,
         clientName: record.ClientName || "",
         clientPhone: record.ClientContact || "",
         ClientId: record.ClientId || "",
-        CareTakerPrice:record.CareTakerPrice,
+        CareTakerPrice: record.CareTakerPrice,
         patientName: record.patientName || "",
         referralName: record.referralName || "",
-
         hcpName: record.HCAName || "",
         hcpPhone: record.HCAContact || "",
         hcpSource: record.hcpSource || "",
-
         provider: record.provider || "",
         payTerms: record.payTerms || "",
-
         cTotal: Number(record.cTotal) || 0,
         cPay: Number(record.cPay) || 0,
         hcpTotal: Number(record.hcpTotal) || 0,
         hcpPay: Number(record.hcpPay) || 0,
-
         days: record.Attendance || [],
       }));
-      console.log('Check for Ids-------',formatted)
-ReplacementCach=formatted?? [],
-ReplacementReasonsCache=ReplacementReasons?? []
-      setRawData(formatted);
-      setReplacementReasons(ReplacementReasons?? [])
-      setHCPSalaryData(HCPFullInfo??[])
-      setIsChecking(false)
-    };
 
-    Fetch();
-  }, [StatusMessage]);
+      ReplacementCach = formatted ?? [];
+      ReplacementReasonsCache = replacementReasons ?? [];
+      RegisterdCacheInfo = registeredUsersData ?? [];
+compliteHCPFullInfo=hcpFullInfo ?? []
+      setRawData(formatted);
+      setReplacementReasons(replacementReasons ?? []);
+      setHCPSalaryData(hcpFullInfo ?? []);
+      setRegisterdUsers(registeredUsersData ?? []);
+      setIsChecking(false);
+    } catch (error) {
+      setIsChecking(false);
+      console.error(error);
+    }
+  };
+
+  Fetch();
+}, [StatusMessage]);
   
   const ShowDompleteInformation = async (userId: any, ClientName: any) => {
     if (userId) {
@@ -147,6 +159,30 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
 
 
 };
+
+
+
+   const GetHCPGender = (A: any) => {
+    if (!HCPSalaryData?.length) return "Not Entered";
+
+    const address =
+      HCPSalaryData
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.['Gender']||"Not Provided";
+
+    return address ?? "Not Entered";
+  };
+
+
+     const GetHCPType = (A: any) => {
+    if (!RegisterdUsers?.length || !A) return "Not Entered";
+
+    const CurrentPreviewUserType:any =
+      RegisterdUsers.filter((each:any)=>each.userId===A)
+
+    return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
+  };
 
 const GetHCPSalary=(A:any)=>{
   try{
@@ -251,17 +287,26 @@ return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||nul
               </tr>
             ) : (
               filteredData.map((item, idx) => (
-                <tr key={idx} className="border-t hover:bg-gray-50">
+                <tr key={idx} className="border-t border-gray-200 bg-gray-50">
                   <td className="px-3 py-2">{idx+1}</td>
                   <td className="px-3 py-2">{item.invoice}</td>
                   <td className="px-3 py-2">{item.clientName}</td>
                   <td className="px-3 py-2">{item.patientName}</td>
-                  <td className="px-3 py-2 hover:underline hover:text-blue-900 cursor-pointer"
-                  onClick={()=>ShowDompleteInformation(item.CurrentHCA_id,item.hcpName)}
-                  >{item.hcpName}</td>
-                      <td className="px-3 py-2 hover:underline hover:text-blue-900 cursor-pointer"
-                  onClick={()=>ShowDompleteInformation(item.AssignedHCA_id,item.NewHCA)}
-                  >{item.NewHCA}</td>
+                  <td className="px-3 py-2 flex items-center gap-2 hover:underline hover:text-blue-900 cursor-pointer"
+                    onClick={() => ShowDompleteInformation(item.CurrentHCA_id, item.hcpName)}
+                  >
+            
+                   
+                    <img className='h-5 w-5' src={AssignSuitableIcon(GetHCPGender(item.CurrentHCA_id), GetHCPType(item.CurrentHCA_id))} />
+                    {item.hcpName}</td>
+
+                  <td className="px-3 py-2  hover:underline hover:text-blue-900 cursor-pointer"
+                    onClick={() => ShowDompleteInformation(item.AssignedHCA_id, item.NewHCA)}>
+                      <div className="flex items-center">
+                             <img className='h-5 w-5' src={AssignSuitableIcon(GetHCPGender(item.AssignedHCA_id), GetHCPType(item.AssignedHCA_id))} />
+                    {item.NewHCA}
+                      </div>
+               </td>
                   
                   {/* <td className="px-3 py-2">
                     <span

@@ -550,6 +550,7 @@ const handleLogout = () => {
             <tr>
                 <th className="px-6 py-4">S.No</th>
               <th className="px-6 py-4">Client Name</th>
+                    <th className="px-6 py-4">HCP Name</th>
               <th className="px-6 py-4">Contact</th>
               <th className="px-6 py-4">Location</th>
               <th className="px-8 py-4 ">Status</th>
@@ -564,6 +565,7 @@ const handleLogout = () => {
               >
                      <td className="px-6 py-4 font-semibold text-gray-900">{i+1}</td>
                 <td className="px-6 py-4 font-semibold text-gray-900">{c.name}</td>
+                <td className="px-6 py-4 font-semibold text-gray-900">{c.HCA_Name}</td>
                 <td className="px-6 py-4">{c.contact}</td>
                 <td className="px-6 py-4 text-gray-600 truncate max-w-[200px]">{c.location}</td>
                 <td className="px-6 py-4">

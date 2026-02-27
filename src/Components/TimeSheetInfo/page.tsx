@@ -1,8 +1,10 @@
 "use client";
 let deploymentCache: any[] = [];
-import { DeleteClientFromDeolyment, EditAttendanceByClientId, GetDeploymentInfo, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus } from "@/Lib/user.action";
+let cachedUsersFullInfo: any[] = [];
+let cachedRegisterdUsers: any[] = [];
+import { DeleteClientFromDeolyment, EditAttendanceByClientId, GetDeploymentInfo, GetRegidterdUsers, GetUsersFullInfo, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus } from "@/Lib/user.action";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
-import { Eye, FilePenLine, LucidePencil, Pencil, PencilIcon, Trash2, X } from "lucide-react";
+import { CheckCircle, Eye, FilePenLine, LucidePencil, Pencil, PencilIcon, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import React, { useState, useMemo, useEffect } from "react";
@@ -10,7 +12,7 @@ import { useDispatch } from "react-redux";
 import MissingAttendence from "../MissingAttendence/page";
 import PaymentModal from "../PaymentInfoModel/page";
 import { months, years } from "@/Lib/Content";
-import { getDaysInMonth } from "@/Lib/Actions";
+import { AssignSuitableIcon, getDaysInMonth } from "@/Lib/Actions";
 import DeletePopup from "../DeleteTimesheetPopUp/page";
 import { EditDeploymentPopup } from "../TimeSheetEditPopUp/page";
 import { LoadingData } from "../Loading/page";
@@ -29,6 +31,10 @@ const currentYear = now.getFullYear().toString();
 const [CurrentTimeSheetScreen,setCurrentTimeSheetScreen]=useState("TimeSheet")
 const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
+  const [open, setOpen] = useState(false);
+   const [Attendecestatus, setAttendenceStatus] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 const [showFullMonth,setShowFullMonth]=useState(false)
 const [ParticularDate,SetParticularDate]=useState<any>()
 const [AttenseceInformation,setAttenseceInformation]=useState<any>()
@@ -47,6 +53,8 @@ const [ShowUpdateAttendece,SetShowUpdateAttendece]=useState(false)
   const [showPendingCalendar, setShowPendingCalendar] = useState(false);
    const [showMissingCalendar, setShowMissingCalendar] = useState(false);
     const [status, setStatus] =useState<any>('')
+    const [users, setUsers] = useState<any[]>([]);
+      const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
   const [StatusMessage,SetStatusMessage]=useState<any>("")
 const [SearchResult,setSearchResult]=useState("")
   const dispatch = useDispatch();
@@ -93,12 +101,21 @@ useEffect(() => {
 
       if (cached) {
         setClientsInformation(cached.data);
+          setUsers([...cachedUsersFullInfo]);
+        setRegisterdUsers([...cachedRegisterdUsers])
         setIsChecking(false);
         return;
       }
     }
 
-    const PlacementInformation: any = await GetDeploymentInfo();
+   
+
+    const [RegisterdUsers,
+      usersResult, PlacementInformation] = await Promise.all([
+        GetRegidterdUsers(),
+        GetUsersFullInfo(),
+        GetDeploymentInfo()
+      ])
 
     if (!PlacementInformation?.length) {
       setIsChecking(false);
@@ -148,8 +165,11 @@ useEffect(() => {
         data: formattedData,
       });
     }
-
+cachedRegisterdUsers=RegisterdUsers??[]
+    cachedUsersFullInfo=usersResult??[]
     setClientsInformation(formattedData);
+    setRegisterdUsers([...cachedRegisterdUsers])
+      setUsers([...cachedUsersFullInfo]);
     setIsChecking(false);
   };
 
@@ -264,25 +284,82 @@ const handleEditChange = (key: string, value: any) => {
   }));
 };
 
+// const processedData = useMemo(() => { 
+//   const search = SearchResult?.toLowerCase().trim() || "";
+
+//   return data
+   
+//     .filter((record: any) => {
+//       if (!search) return true;
+
+//       const name = record.clientName?.toLowerCase() || "";
+//       const phone = record.clientPhone?.toString() || "";
+
+//       return (
+//         name.includes(search) ||
+//         phone.includes(search)
+//       );
+//     })
+
+   
+//     .map((record: any) => {
+//       const dayStatusArray = Array.from({ length: 31 }, () => "-");
+
+//       (record.days || []).forEach((att: any) => {
+//         const dateObj = new Date(att.AttendenceDate);
+//         const day = dateObj.getDate();
+
+//         const hcp = att.HCPAttendence === true;
+//         const admin = att.AdminAttendece === true;
+
+//         let status: DayStatus = "A";
+
+//         if (hcp && admin) status = "P";
+//         else if (hcp || admin) status = "HP";
+
+//         if (day >= 1 && day <= 31) {
+//           dayStatusArray[day - 1] = status;
+//         }
+//       });
+
+//       const counts = dayStatusArray.reduce(
+//         (acc: any, v: string) => {
+//           if (v === "P") acc.pd++;
+//           if (v === "A") acc.ad++;
+//           if (v === "HP") acc.hp++;
+//           return acc;
+//         },
+//         { pd: 0, ad: 0, hp: 0 }
+//       );
+
+//       return {
+//         ...record,
+//         days: dayStatusArray,
+//         ...counts,
+//       };
+//     });
+// }, [data, SearchResult]);
 
 const processedData = useMemo(() => {
   const search = SearchResult?.toLowerCase().trim() || "";
 
   return data
-   
     .filter((record: any) => {
       if (!search) return true;
 
       const name = record.clientName?.toLowerCase() || "";
       const phone = record.clientPhone?.toString() || "";
 
-      return (
-        name.includes(search) ||
-        phone.includes(search)
-      );
+      return name.includes(search) || phone.includes(search);
     })
 
-   
+    .sort((a: any, b: any) => {
+      const getInvoiceNumber = (inv: string) =>
+        Number(inv?.replace("INV#", "") || 0);
+
+      return getInvoiceNumber(a.invoice) - getInvoiceNumber(b.invoice);
+    })
+
     .map((record: any) => {
       const dayStatusArray = Array.from({ length: 31 }, () => "-");
 
@@ -338,6 +415,28 @@ const NumberOfDaysInMonth = getDaysInMonth(
   Number(selectedYear)
 );
 
+   const GetHCPGender = (A: any) => {
+    if (!users?.length || !A) return "Not Entered";
+
+    const address =
+      users
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.['Gender']||"Not Provided";
+
+    return address ?? "Not Entered";
+  };
+
+
+     const GetHCPType = (A: any) => {
+    if (!RegisterdUsers?.length || !A) return "Not Entered";
+
+    const CurrentPreviewUserType:any =
+      RegisterdUsers.filter((each:any)=>each.userId===A)
+
+    return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
+  };
+
 const EditAttendence = async () => {
   try {
     if (!AttenseceInformation?.ClientId) return;
@@ -384,10 +483,11 @@ const PresentScreen=()=>{
   <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
 
     <div>
-      <h1 className="text-2xl sm:text-3xl font-semibold tet-gray-800 tracking-tight flex items-center gap-2">
-        🩺 Curate Health — Time Sheet
+      <h1 className="text-1xl sm:text-1xl font-semibold tet-gray-800 tracking-tight flex items-center gap-2">
+        {/* 🩺 Curate Health — Time Sheet */}
+        Time Sheet
       </h1>
-      <p className="text-gray-500 mt-1 text-sm sm:text-base">
+      <p className="text-gray-500 mt-1 text-xs ">
         View invoice and attendance details by month and year.
       </p>
     </div>
@@ -548,8 +648,8 @@ hcpId
   }
   onSave={async(data:any) => {
     SetStatusMessage("Please Wait.....")
-    console.log("Check Data-----",data)
-const PostInfo=await UpdateClientTimeSheet(data.ClientId,data.Month,data)
+    console.log("Check Data-----",data.hcpId)
+const PostInfo=await UpdateClientTimeSheet(data.ClientId,data.hcpId,data.Month,data)
 if(PostInfo?.success){
   SetStatusMessage(PostInfo.message)
   setTimeout(()=>{
@@ -796,9 +896,9 @@ className={`
         return(
           <tr
             key={idx}
-            className={`border-t border-gray-300 ${
+            className={`border-t border-gray-100 ${
               idx%2?"bg-white":"bg-green-50/40"
-            } hover:bg-green-100/40`}
+            } `}
           >
             <Td className="text-center align-middle">{idx+1}</Td>
 
@@ -809,7 +909,7 @@ className={`
                     alt="Replacement"
                     className="w-7 h-7 object-contain"
                   />
-                 {r.invoice}
+                 {r.invoice||"Not Provided"}
                 </span>
               ) : (
                r.invoice
@@ -829,7 +929,10 @@ className={`
               className="font-bold break-words align-middle"
               // onClick={()=>RouteToClient(r.hcpId,r.hcpName)}
             >
+               <div className="flex items-center gap-2">
+                  <img className='h-5 w-5' src={AssignSuitableIcon(GetHCPGender(r.hcpId),GetHCPType(r.hcpId))}/>
               {r.hcpName}
+              </div>
             </td>
 
           <Td className="font-bold break-words">
@@ -928,9 +1031,180 @@ className={`
     <div className="bg-white w-full max-w-[900px] rounded-xl shadow-xl">
 
       <div className="flex items-center justify-between px-4 py-3 border-b">
-        <h3 className="text-sm font-semibold text-gray-800">
+        <div className="flex flex-col items-center">
+          <h3 className="text-sm font-semibold text-gray-800">
           Monthly Attendance
         </h3>
+       <button
+  className="
+    flex items-center gap-2
+    px-2 py-2.5
+    bg-green-600
+    hover:bg-green-700
+    text-white
+    text-xs cursor-pointer
+    font-semibold
+    rounded-lg
+    shadow-md
+    transition-all
+    duration-200
+  "
+    onClick={() => setOpen(true)}
+>
+  <CheckCircle size={16} />
+  Submit Attendance for Selected Period
+</button>
+
+ {open && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md animate-fadeIn">
+    
+    <div className="w-[95%] max-w-lg bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] overflow-hidden">
+
+    
+      <div className="relative px-4 py-5 bg-gradient-to-br from-[#00A9A5] to-[#005f61] text-white">
+        <h2 className="text-xl font-semibold tracking-wide">
+          Edit Attendance
+        </h2>
+
+        <button
+          onClick={() => setOpen(false)}
+          className="absolute top-4 right-4 p-1 rounded-full cursor-pointer hover:bg-white/20 transition"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="px-6 py-6 space-y-5">
+
+        {/* Attendance Status */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Attendance Status
+          </label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="
+              w-full
+              bg-gray-50
+              border border-gray-200
+              rounded-xl
+              px-4 py-3
+              text-sm
+              focus:outline-none
+              focus:ring-2
+              focus:ring-blue-500
+              focus:border-blue-500
+              transition
+            "
+          >
+            <option value="">Select Status</option>
+            <option value="Full Day">Full Day</option>
+            <option value="Half Day">Half Day</option>
+            <option value="Absent">Absent</option>
+          </select>
+        </div>
+
+        {/* Date Fields */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              From Date
+            </label>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="
+                w-full
+                bg-gray-50
+                border border-gray-200
+                rounded-xl
+                px-4 py-3
+                text-sm
+                focus:outline-none
+                focus:ring-2
+                focus:ring-green-500
+                focus:border-green-500
+                transition
+              "
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              To Date
+            </label>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="
+                w-full
+                bg-gray-50
+                border border-gray-200
+                rounded-xl
+                px-4 py-3
+                text-sm
+                focus:outline-none
+                focus:ring-2
+                focus:ring-green-500
+                focus:border-green-500
+                transition
+              "
+            />
+          </div>
+
+        </div>
+
+        {/* Divider */}
+        <div className="border-t pt-5 flex justify-end gap-3">
+
+          <button
+            onClick={() => setOpen(false)}
+            className="
+              px-5 py-2.5
+              text-sm font-medium
+              rounded-xl
+              border border-gray-300
+              text-gray-600
+              hover:bg-gray-100
+              transition
+            "
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={() => {
+              console.log(status, fromDate, toDate);
+              setOpen(false);
+            }}
+            className="
+              px-6 py-2.5
+              text-sm font-semibold
+              rounded-xl
+           bg-gradient-to-br from-[#00A9A5] to-[#005f61] cursor-pointer
+              text-white
+              shadow-md
+              hover:shadow-lg
+              hover:scale-[1.02]
+              active:scale-95
+              transition-all
+            "
+          >
+            Confirm
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
+          </div>
         <button
           onClick={() => setShowFullMonth(false)}
           className="text-gray-500 hover:text-red-600"

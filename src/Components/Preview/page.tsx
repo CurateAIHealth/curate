@@ -97,6 +97,7 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
   const DeploaymentInformation = useSelector(
     (state: any) => state.DeploaymentData
   );
+  
   const TimeStampInfo = useSelector(
     (state: any) => state.TimeStampInfo
   );
@@ -254,9 +255,10 @@ const UpdatePDRInfo = async () => {
       setUpdatingStatus("Failed! Try again.");
       return;
     }
+ 
 
-
-    const pdrRes = await GetUserPDRInfo(data.userId);
+    const pdrRes = await GetUserPDRInfo( DeploaymentInformation.Client_Id,
+                              DeploaymentInformation.HCA_Id,);
     if (!pdrRes?.success || !pdrRes?.data) {
       setUpdatingStatus("Error fetching PDR info");
       return;
@@ -338,7 +340,8 @@ const UpdatePDRInfo = async () => {
 
       const [invoiceRes, statusRes] = await Promise.all([
         PostInvoice(UpdatedData, Advance, invoiceNo),
-        UpdatePdrStatus(data.userId),
+        UpdatePdrStatus( DeploaymentInformation.Client_Id,
+                              DeploaymentInformation.HCA_Id,),
       ]);
 
       if (!invoiceRes?.success || !statusRes?.success) {

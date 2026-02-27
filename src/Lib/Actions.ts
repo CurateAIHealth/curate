@@ -372,4 +372,28 @@ export const getPopularArea = (address = "") => {
   return "Hyderabad"; // safe fallback
 };
 
- 
+export  const AssignSuitableIcon = (A: any, B: any) => {
+  const gender = A?.toLowerCase();
+  const type = B?.toUpperCase();
+
+  switch (type) {
+
+    case "HCA":
+      if (gender === "male") return "/Icons/HCAMale.png";
+      if (gender === "female") return "/Icons/HCAFemale.png";
+      break;
+
+    case "HCN":
+      if (gender === "male") return "/Icons/HCNMale.png";
+      if (gender === "female") return "/Icons/HCNFeamle.png";
+      break;
+
+    case "HCP":
+      if (gender === "male") return "/Icons/HCPMale.png";
+      if (gender === "female") return "/Icons/HCPFemale.png";
+      break;
+
+    default:
+      return "/Icons/DefaultProfileIcon.png";
+  }
+};

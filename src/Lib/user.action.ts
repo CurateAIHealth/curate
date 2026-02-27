@@ -991,7 +991,7 @@ export const HCARegistration = async (HCA: HCAInfo) => {
       ContactNumber: encrypt(HCA.ContactNumber),
       Email: encrypt(HCA.Email),
       Location:HCA.Location,
-CurrentStatus:HCA.CurrentStatus||"Active",
+CurrentStatus:HCA.CurrentStatus||"Training",
 StaffType:HCA.StaffType,
 
       emailHash: hashValue(HCA.Email.toLowerCase()),
@@ -1345,6 +1345,7 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "Ration Card No": Info.rationCardNo ? encrypt(Info.rationCardNo) : null,
 
       "CurrentCity":Info.CurrentCity||'',
+      
       "CurrentState":Info.CurrentState||'',
       "Permanent Address": Info.permanentAddress,
       "CurrentHouseNo":Info.CurrentHouseNo||'',
@@ -1749,14 +1750,16 @@ const isExists = await collection.findOne({
 
 
 
-export const UpdatePdrStatus = async (UserId: any) => {
+export const UpdatePdrStatus = async (UserId: any,hcpId:any) => {
   try {
     const Cluster = await clientPromise;
     const Db = Cluster.db("CurateInformation");
     const Collection = Db.collection("TimeSheet");
 
     const UpdateVerificationStatus = await Collection.updateOne(
-      { ClientId: UserId },
+      { ClientId: UserId,
+        HCAId:hcpId
+      },
       {
         $set: {
           PDRStatus: true,
@@ -1796,7 +1799,28 @@ const UpdateStatus=await Collection.updateOne(
   }
 }
 
-export const GetUserPDRInfo = async (UserId: any) => {
+export const GetUserPDRInfo = async (UserId: any,hcaid:any) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("TimeSheet");
+
+    const userPDR = await Collection.findOne({ ClientId: UserId,
+HCAId:hcaid });
+
+    if (!userPDR) {
+      return { success: false, message: "No PDR Record Found" };
+    }
+
+
+    const safeDoc = JSON.parse(JSON.stringify(userPDR));
+
+    return { success: true, data: safeDoc };
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+};
+export const GetPopUpUserPDRInfo = async (UserId: any,) => {
   try {
     const Cluster = await clientPromise;
     const Db = Cluster.db("CurateInformation");
@@ -1815,7 +1839,7 @@ export const GetUserPDRInfo = async (UserId: any) => {
   } catch (err: any) {
     return { success: false, message: err.message };
   }
-};
+}
 
 
 
@@ -2133,6 +2157,7 @@ return safeUsers
 
 export const UpdateClientTimeSheet = async (
   ImpClientId: any,
+  ImpHCPId:any,
   ImpDate: any,
   ImpData: any
 ) => {
@@ -2147,6 +2172,7 @@ console.log("Check Month Key-----",ImpDate)
     const result = await collection.updateOne(
       {
         ClientId: ImpClientId,
+        HCAId:ImpHCPId,
         Month: ImpDate
       },
       {
@@ -2782,17 +2808,19 @@ console.log("Check For Price---",careTakerPrice)
 };
 
 
-export const SuitableHCPUpdate = async (ClientId: any, HCPId: any) => {
+export const SuitableHCPUpdate = async (ClientId: any,Impid:any, HCPId: any) => {
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
-    const collection = db.collection("Registration");
+    const collection = db.collection("TimeSheet");
 
     const updateResult = await collection.updateOne(
-      { userId: ClientId },
+      { ClientId: ClientId,
+        HCAId:Impid,
+       },
       {
         $set: {
-          SuitableHCP: HCPId,
+          HCAId: HCPId,
           updatedAt: new Date(),
         },
       }
@@ -2846,14 +2874,15 @@ export const ClearEnquiry = async (userId: string) => {
 };
 
 
-export const RemoveClient = async (userId: string) => {
+export const RemoveClient = async (userId: string,HCPId:any) => {
   try {
     const client = await clientPromise;
     const db = client.db("CurateInformation");
     const collection = db.collection("Deployment");
 
     const result = await collection.deleteOne({
-      ClientId: userId
+      ClientId: userId,
+HCAId:HCPId,
     });
 
     if (result.deletedCount === 0) {
@@ -2882,7 +2911,8 @@ export const RemoveClientFromTimeSheet = async (userId: string) => {
     const collection = db.collection("TimeSheet");
 
     const result = await collection.deleteOne({
-      ClientId: userId
+      ClientId: userId,
+
     });
 
     if (result.deletedCount === 0) {

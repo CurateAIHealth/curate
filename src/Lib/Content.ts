@@ -2618,13 +2618,13 @@ export const popularAreas = [
 
 
 
-export const HCPFilters=[
-   { label: "⚪ None", value: "None" },
-    { label: "🟢 Active", value: "Active" },
-    { label: "🟢 Available for Work", value: "Available for Work" },
-    { label: "🟡 Sick", value: "Sick" },
-    { label: "🔵 Leave", value: "Leave" },
-    { label: "🟣 Bench", value: "Bench" },
-   
-    { label: "🔴 Terminated", value: "Terminated" },
-  ]
+export const HCPFilters = [
+  { label: "⚪ None", value: "None" },
+  { label: "🟠 Training", value: "Training" },
+  { label: "🟢 Active", value: "Active" },
+  { label: "🟢 Available for Work", value: "Available for Work" },
+  { label: "🟡 Sick", value: "Sick" },
+  { label: "🔵 Leave", value: "Leave" },
+  { label: "🟣 Bench", value: "Bench" },
+  { label: "🔴 Terminated", value: "Terminated" },
+]
