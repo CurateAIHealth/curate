@@ -21,6 +21,7 @@ import {
   UpdateUserEmailVerificationstatus,
   GetUserPDRInfo,
   UpdateUserCurrentstatusInHCPView,
+  GetPopUpUserPDRInfo,
   
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
@@ -37,7 +38,7 @@ import { HCAList } from '@/Redux/reducer';
 import WorkingOn from '@/Components/CurrentlyWoring/page';
 import axios from 'axios';
 
-import { decrypt, encrypt, getPopularArea, normalizeDate, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
+import { AssignSuitableIcon, decrypt, encrypt, getPopularArea, normalizeDate, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
 import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 import { LoadingData } from '@/Components/Loading/page';
 import ReplacementsTable from '@/Components/ReplacementsTable/page';
@@ -648,7 +649,7 @@ const UpdateJoiningDate = async (
 
 const UpdatePopup = async (a: any) => {
 setOpen(true)
-     const pdrRes = await GetUserPDRInfo(a.userId);
+     const pdrRes = await GetPopUpUserPDRInfo(a.userId);
   
      if (pdrRes.success===false||pdrRes.data.PDRStatus === false){
 setLoading(false)
@@ -657,7 +658,7 @@ return
   dispatch(GetCurrentDeploymentData(a));
 
 //  dispatch(Refresh("Redirecting to PDR…"))
-  const data = await GetUserInformation(a.userId);
+  const data = await GetUserInformation(a.userId)
 
   dispatch(
     UpdateFetchedInformation({
@@ -984,7 +985,7 @@ return
         "
                                     title="Edit service area"
                                   >
-                                    <Pencil size={14} />
+                                    {/* <Pencil size={14} /> */}
                                   </button>
 
 
@@ -1047,7 +1048,12 @@ return
                             }
                             className="rounded-full h-7 w-7 sm:h-10 sm:w-10 object-cover"
                           /> */}
+{UpdateduserType === "healthcare-assistant" &&
 
+
+
+<img className='h-4' src={AssignSuitableIcon(GetHCPGender(user.id),user.PreviewUserType)}/>
+}
                                 <span className="font-semibold  ">
                                   {toProperCaseLive(user.FirstName)}
 
@@ -1113,10 +1119,13 @@ return
 
                                 </div>
                               ) : (
-                                <span className="text-sm text-slate-700">
+   <div className="flex items-center gap-2">
+                                 <MapPin size={14} className="text-green-600 shrink-0" />
+                                <span className="text-[12px] text-slate-700">
                                  
                                   {GetPermanentAddress(user.userId)}
                                 </span>
+                                </div>
                               )}
                             </td>
 
@@ -1300,13 +1309,14 @@ return
                                   }
                                 >
 
-                                  <option value="Active">🟢 Active</option>
-                                  <option value="Available for Work">🟢 Available for Work</option>
-                                  <option value="Sick">🟡 Sick</option>
-                                  <option value="Leave">🔵 Leave</option>
-                                  <option value="Bench">🟣 Bench</option>
-                                  <option value="None">⚪ None</option>
-                                  <option value="Terminated">🔴 Terminated</option>
+                                 <option value="Active">🟢 Active</option>
+<option value="Available for Work">🟢 Available for Work</option>
+<option value="Training">🟠 Training</option>
+<option value="Sick">🟡 Sick</option>
+<option value="Leave">🔵 Leave</option>
+<option value="Bench">🟣 Bench</option>
+<option value="None">⚪ None</option>
+<option value="Terminated">🔴 Terminated</option>
                                 </select>
                               </td>
 
@@ -1503,10 +1513,28 @@ Awaiting Conversion
       UserFullInfo
         ?.map((each: any) => each?.HCAComplitInformation)
         ?.find((info: any) => info?.UserId === A)
-      ?.["Permanent Address"];
+      ?.["PermanentState"]||"Not Provided";
 
     return address ?? "Not Entered";
   };
+
+
+    const GetHCPGender = (A: any) => {
+    if (!UserFullInfo?.length || !A) return "Not Entered";
+
+    const address =
+      UserFullInfo
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.['Gender']||"Not Provided";
+
+    return address ?? "Not Entered";
+  };
+
+
+
+
+
 
   const HCPWorkingStatus=(A:any)=>{
     try{
@@ -1781,7 +1809,7 @@ onClick={()=>UpdateNavigattosuggetions()}
             
           </button> */}
     {UpdateduserType === "healthcare-assistant" &&
-     <div className="w-[320px] flex flex-wrap items-center justify-center gap-1">
+     <div className="w-[360px] flex flex-wrap items-center justify-center gap-1">
   {HCPFilters.map((status) => (
     <button
       key={status.value}

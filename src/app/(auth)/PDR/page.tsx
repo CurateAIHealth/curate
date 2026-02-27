@@ -74,7 +74,10 @@ import { useRouter } from 'next/navigation'
     const ShowPreviewData = useSelector((state: any) => state.CurrentPreview)
 const [service, setService] = useState("");
   const [otherService, setOtherService] = useState("");
-
+  const DeploaymentInformation = useSelector(
+    (state: any) => state.DeploaymentData
+  );
+ 
   const options = [
     "Business Vendor",
     "Baby Care",
@@ -102,7 +105,7 @@ useEffect(() => {
 }, [reduxFormData]);
 
 
-console.log("Check for Selected HCP Infromation-----",formData.serviceCharges)
+console.log("Check for Selected HCP Infromation-----",formData)
 
     const handleChange = (key: string, value: any) => {
       setFormData((prev: any) => ({ ...prev, [key]: value }));
@@ -244,7 +247,7 @@ if (url) {
     provider:each.provider,
     payTerms:each.payTerms
   }));
-const GetHCPName=Finel.filter((each:any)=>each.userId===formData.SuitableHCP)
+const GetHCPName=Finel.filter((each:any)=>each.userId=== DeploaymentInformation.HCA_Id)
 console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
 )
 
@@ -371,17 +374,19 @@ console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
                             }
                             setselectedHCP(selectedHCP);
                             if (formData?.SuitableHCP) {
-                              await UpdateHCAnstatus(formData.SuitableHCP, "Available");
+                              await UpdateHCAnstatus(formData.SuitableHCP, "Active");
                             }
                             const updateResponse = await SuitableHCPUpdate(
-                              formData.userId,
+                              DeploaymentInformation.Client_Id,
+                              DeploaymentInformation.HCA_Id,
                               selectedHCP.userId
                             );
                             if (updateResponse.success) {
-                              await UpdateHCAnstatus(selectedHCP.userId, "Assigned");
+                              await UpdateHCAnstatus(selectedHCP.userId, "Active");
                             }
  setFormData((prev: any) => ({ ...prev, SuitableHCP: selectedHCP.userId }));
                             setStatusMessage(updateResponse.message);
+                            router.push('/PDRView')
                           } catch (error) {
                             console.error("HCP assignment error:", error);
                             setStatusMessage("Something went wrong while assigning healthcare professional");

@@ -1,11 +1,14 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Stethoscope, Shirt, CircleX, Search, X } from "lucide-react";
-import { GetReasonsInfoInfo, GetTerminationInfo } from "@/Lib/user.action";
+import { GetReasonsInfoInfo, GetRegidterdUsers, GetTerminationInfo, GetUsersFullInfo } from "@/Lib/user.action";
 import { LoadingData } from "../Loading/page";
 import { Placements_Filters, filterColors, years } from "@/Lib/Content";
+import { AssignSuitableIcon } from "@/Lib/Actions";
 let terminationCache: any[] | null = null;
 let ReplacementReasonsCache: any[] | null = null;
+let RegisredUsersCache: any[] | null = null;
+let CompliteInfoCache: any[] | null = null;
 interface TerminationData {
   id: string;
   clientName: string;
@@ -17,6 +20,8 @@ interface TerminationData {
 
 const TerminationTable: React.FC = () => {
   const [placements, setPlacements] = useState<any[]>([]);
+   const [users, setUsers] = useState<any[]>([]);
+   const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
   const [ReplacementReasons,setReplacementReasons]=useState<any[]>([]);
  const [rawData, setRawData] = useState<any[]>([]);
    const [search, setSearch] = useState("");
@@ -39,21 +44,30 @@ useEffect(() => {
     try {
       if (terminationCache) {
         setPlacements(terminationCache);
+         setRegisterdUsers(RegisredUsersCache??[])
+          setUsers(CompliteInfoCache??[]);
          setReplacementReasons(ReplacementReasonsCache?? [])
         setIsChecking(false);
         return;
       }
 
-       const [FetchData,ReplacementReasons]=await Promise.all([
-              GetTerminationInfo(),
+      const [RegisterdUsers,
+        usersResult, FetchData, ReplacementReasons] = await Promise.all([
+          GetRegidterdUsers(),
+          GetUsersFullInfo(),
+          GetTerminationInfo(),
           GetReasonsInfoInfo()
-      
-            ])
+
+        ])
 
       ReplacementReasonsCache = ReplacementReasons ?? []
-
+      RegisredUsersCache=RegisterdUsers??[]
+      CompliteInfoCache=usersResult??[]
+      setRegisterdUsers(RegisredUsersCache??[])
+      setUsers(CompliteInfoCache??[])
       const Result = FetchData?.map((each: any) => ({
         ClientId: each.ClientId,
+        HCA_Id:each.HCAid,
         clientName: each.ClientName,
         contact: each.HCAContact,
         location: each.Adress,
@@ -74,7 +88,27 @@ useEffect(() => {
   Fetch();
 }, []);
 
+ const GetHCPGender = (A: any) => {
+    if (!users?.length || !A) return "Not Entered";
 
+    const address =
+      users
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.['Gender']||"Not Provided";
+
+    return address ?? "Not Entered";
+  };
+
+
+     const GetHCPType = (A: any) => {
+    if (!RegisterdUsers?.length || !A) return "Not Entered";
+
+    const CurrentPreviewUserType:any =
+      RegisterdUsers.filter((each:any)=>each.userId===A)
+
+    return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
+  };
 console.log("Checking Count------",ReplacementReasons)
   const handleDelete = (id: string) => {
     setPlacements((prev) => prev.filter((placement) => placement.id !== id));
@@ -291,10 +325,10 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
 
             {/* HCA */}
             <td className="px-6 py-4">
-              <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700 transition group-hover:bg-indigo-100">
-                <Stethoscope size={16} />
+              <span className="inline-flex items-center gap-2 rounded-full  px-3 py-1.5 text-sm font-medium border border-gray-200 hover:shadow-lg  transition group-hover:bg-indigo-100">
+              <img className='h-5 w-5 hover:w-10 hover:h-10' src={AssignSuitableIcon(GetHCPGender(placement.HCA_Id),GetHCPType(placement.HCA_Id))}/>
                 {placement.hcaName||"NA"}
-                <Shirt size={14} className="text-pink-500" />
+               
               </span>
             </td>
 

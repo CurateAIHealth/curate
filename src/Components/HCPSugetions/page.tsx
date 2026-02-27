@@ -7,7 +7,7 @@ import { Update_Main_Filter_Status, UpdateClient, UpdateClientSuggetion, UpdateR
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import * as htmlToImage from 'html-to-image';
-import { GetInformedUsers, GetTimeSheetInfo, IntrestedHCP, PostConfirmationInfo, TestInsertTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateUserContactVerificationstatus } from '@/Lib/user.action';
+import { GetInformedUsers,  GetTimeSheetInfo, IntrestedHCP, PostConfirmationInfo, TestInsertTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateUserContactVerificationstatus } from '@/Lib/user.action';
 import axios from 'axios';
 import { calculateAgeIndianFormat } from '@/Lib/Actions';
 import { HyderabadAreas, PROFESSIONAL_SKILL_OPTIONS, TestData } from '@/Lib/Content';
@@ -61,7 +61,8 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
   const [SearchOptions,setSearchOptions]=useState(false)
   const [loading, setLoading] = useState(true);
   const [showAssignedOnly, setShowAssignedOnly] = useState(true);
-  const [showAssignConfirm,setShowAssignConfirm]=useState(true)
+  const [showAssignConfirm,setShowAssignConfirm]=useState(false)
+  const [TimeSheetData,setTimeSheetData]=useState<any>([])
 
   const dispatch = useDispatch();
   const router = useRouter();
@@ -97,14 +98,29 @@ console.log("Test Informed Information-----",ExsitingInformedUsers)
 
   const fetchUsers = async () => {
     const informedUsers:any = await GetInformedUsers();
+    const TimeSheetDataa:any =await GetTimeSheetInfo()
+
+    
     if (!mounted) return;
     setExsitingInformedUsers(informedUsers);
+    setTimeSheetData(TimeSheetDataa)
     setLoading(false);
   };
 
   fetchUsers();
   return () => { mounted = false };
 }, [updatedRefresh]);
+
+const activeClient = clients?.[selectedClientIndex];
+useEffect(() => {
+  if (!activeClient) return;
+
+  const availability = TimeSheetData.filter(
+    (each: any) => each.ClientId === activeClient.userId
+  );
+console.log("Check file-----",TimeSheetData)
+  setShowAssignConfirm(availability.length > 0);
+}, [TimeSheetData, activeClient]);
 
   const ShowDompleteInformation = (userId: any, ClientName: any) => {
     if (userId) {
@@ -654,9 +670,8 @@ const ShowAdditionHCPs = hcps.filter((each: HcpType) => {
    const AssignedHcps = hcps.filter((hcp: any) => !Array.isArray(hcp?.Status) || !hcp.Status.includes("Assigned") );
 
 
-const activeClient = clients[0];
 
-console.log("Check Suitable HCP------",activeClient)
+
 
 
 if(showAssignConfirm){
@@ -686,7 +701,7 @@ if(showAssignConfirm){
           No
         </button>
 
-        <button className="px-4 py-1 rounded-md bg-gray-900 text-white text-xs sm:text-sm">
+        <button className="px-4 py-1 rounded-md bg-gray-900 text-white text-xs sm:text-sm" onClick={() => setShowAssignConfirm(false)}>
           Yes
         </button>
       </div>

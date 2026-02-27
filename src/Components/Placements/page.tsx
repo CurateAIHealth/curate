@@ -3,6 +3,7 @@ let cachedUsersFullInfo: any[] = [];
 let cachedDeploymentInfo: any[] = [];
 let cachedReplacementInfo: any[] = [];
 let cachedTermination: any[] = [];
+let cachedRegisterdUsers: any[] = [];
 
 
 
@@ -16,7 +17,7 @@ import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
 import { filterColors, months, Placements_Filters, years } from "@/Lib/Content";
 import ReplacementsTable from "../ReplacementsTable/page";
-import { getDaysBetween, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
+import { AssignSuitableIcon, getDaysBetween, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
 import { useRouter } from "next/navigation";
 import { div } from "framer-motion/client";
 import SalaryPopup from "../HCPSalary/page";
@@ -47,6 +48,7 @@ const ClientTable = () => {
   const [ClientsInformation, setClientsInformation] = useState<Deployment[]>([]);
   const [ReplacementInformation,setReplacementInformation]=useState<Replace[]>([])
   const [terminationInfo,SetterminationInfo]=useState<Termination[]>([])
+    const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
   const [selectedAssignHCP,setselectedAssignHCP]=useState<any>()
   const [selectedClient,setselectedClient]=useState<any>()
   const [isChecking, setIsChecking] = useState(true);
@@ -122,15 +124,18 @@ useEffect(() => {
         setClientsInformation([...cachedDeploymentInfo]);
         setReplacementInformation([...cachedReplacementInfo]);
         SetterminationInfo([...cachedTermination]);
+        setRegisterdUsers([...cachedRegisterdUsers])
         return;
       }
 
       const [
+        RegisterdUsers,
         usersResult,
         placementInfo,
         replacementInfo,
         terminationInfo,
       ] = await Promise.all([
+         GetRegidterdUsers() ,
         GetUsersFullInfo(),
         GetDeploymentInfo(),
         GetReplacementInfo(),
@@ -143,11 +148,12 @@ useEffect(() => {
       cachedDeploymentInfo = placementInfo ?? [];
       cachedReplacementInfo = replacementInfo ?? [];
       cachedTermination = terminationInfo ?? [];
-
+    cachedRegisterdUsers=RegisterdUsers??[]
       setUsers([...cachedUsersFullInfo]);
       setClientsInformation([...cachedDeploymentInfo]);
       setReplacementInformation([...cachedReplacementInfo]);
       SetterminationInfo([...cachedTermination]);
+       setRegisterdUsers([...cachedRegisterdUsers])
 
       dispatch(UpdateSubHeading("On Service"));
     } catch (err) {
@@ -168,7 +174,7 @@ useEffect(() => {
 
 
 
-
+console.log("Check for Current Test Case------",RegisterdUsers)
 
 useEffect(() => {
   if (!selectedDate) {
@@ -537,7 +543,27 @@ const SelectedCareTakerCharges=GetInfo.serviceCharges
   }
 };
 
+   const GetHCPGender = (A: any) => {
+    if (!users?.length || !A) return "Not Entered";
 
+    const address =
+      users
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.['Gender']||"Not Provided";
+
+    return address ?? "Not Entered";
+  };
+
+
+     const GetHCPType = (A: any) => {
+    if (!RegisterdUsers?.length || !A) return "Not Entered";
+
+    const CurrentPreviewUserType:any =
+      RegisterdUsers.filter((each:any)=>each.userId===A)
+
+    return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
+  };
   const isDeleteDisabled =
     !selectedReason || (selectedReason === "Other" && !otherReason.trim());
   const UpdateClient_UserId = (id: any,Name:any) => {
@@ -722,7 +748,7 @@ const HandleRemove = async (Info: any, Name: any) => {
     console.log("Check-----", Info);
 
  
-    const removeDeployRes = await RemoveClient(Info.Client_Id);
+    const removeDeployRes = await RemoveClient(Info.Client_Id,Info?.HCA_Id);
     if (!removeDeployRes?.success) {
       SetActionStatusMessage(removeDeployRes?.message || "Failed to remove client from deployment");
       return;
@@ -1303,28 +1329,18 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
 
 
  <td
-  className="px-3 py-3 max-w-[140px]"
+  className="px-1 py-3 text-center"
   onClick={() => ShowDompleteInformation(c.HCA_Id, c.HCA_Name)}
 >
-  <span
-    className="
-      inline-flex
-      items-start
-      gap-1
-      px-1 py-1
-      text-[11px]
-      font-medium
-      rounded-md
-      bg-white
-      cursor-pointer
-      hover:text-blue-800
-    "
-  >
-    🩺
-    <span className="hover:underline font-semibold line-clamp-0 mb-4 break-words leading-tight">
+  
+    <div className="flex flex-col items-center ml-2">
+    <img className='h-4 w-4' src={AssignSuitableIcon(GetHCPGender(c.HCA_Id),GetHCPType(c.HCA_Id))}/>
+ 
+   
+    <span className="hover:underline font-semibold text-[10px] line-clamp-0 mb-4 break-words leading-tight">
       {toProperCaseLive(c.HCA_Name)}
     </span>
-  </span>
+</div>
 </td>
 
 

@@ -1,19 +1,20 @@
 "use client";
 import { filterColors, Placements_Filters, years } from "@/Lib/Content";
-import { GetReasonsInfoInfo, GetReplacementInfo, GetUsersFullInfo } from "@/Lib/user.action";
+import { GetReasonsInfoInfo, GetRegidterdUsers, GetReplacementInfo, GetUsersFullInfo } from "@/Lib/user.action";
 import { UpdateClient, UpdateMonthFilter, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import { useRouter } from "next/navigation";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { LoadingData } from "../Loading/page";
+import { AssignSuitableIcon } from "@/Lib/Actions";
 type TimeSheetReplacementTableProps = {
 
   UpdateScreen: (Status: any) => void
 }
 let ReplacementCach : any[] | null = null;
 let ReplacementReasonsCache: any[] | null = null;
-
+let cachedRegisterdUsers: any[] = [];
 let compliteHCPFullInfo: any[] | null = null;
 const TimeSheetReplacementTable =  ({
 
@@ -33,6 +34,7 @@ const year=useSelector((state:any)=>state.FilterYear)
 
 const [ReplacementReasons,setReplacementReasons]=useState<any[]>([]);
 const [HCPSalaryData,setHCPSalaryData]=useState<any[]>([]);
+const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
 const [showPopup, setShowPopup] = useState(false);
 const [showPermissionPopup,setShowPermissionPopup]=useState(false)
 const [popupInfo, setPopupInfo] = useState("");
@@ -45,10 +47,12 @@ const router=useRouter()
         setRawData(ReplacementCach);
         setReplacementReasons(ReplacementReasonsCache)
         setHCPSalaryData(compliteHCPFullInfo??[])
+         setRegisterdUsers([...cachedRegisterdUsers])
         setIsChecking(false)
         return
       }
-      const [PlacementInformation,ReplacementReasons,HCPFullInfo]=await Promise.all([
+      const [RegisterdUsers,PlacementInformation,ReplacementReasons,HCPFullInfo]=await Promise.all([
+        GetRegidterdUsers() ,
         GetReplacementInfo(),
         GetReasonsInfoInfo(),
         GetUsersFullInfo()
@@ -96,7 +100,9 @@ CareTakerPrice:record.CareTakerPrice,
 ReplacementCach=formatted?? [],
 compliteHCPFullInfo=HCPFullInfo??[],
 ReplacementReasonsCache=ReplacementReasons?? []
+cachedRegisterdUsers=RegisterdUsers??[]
       setRawData(formatted);
+       setRegisterdUsers([...cachedRegisterdUsers])
       setReplacementReasons(ReplacementReasons?? [])
       setHCPSalaryData(HCPFullInfo??[])
       setIsChecking(false)
@@ -160,6 +166,28 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
 
 
 };
+
+   const GetHCPGender = (A: any) => {
+    if (!HCPSalaryData?.length || !A) return "Not Entered";
+
+    const address =
+      HCPSalaryData
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.['Gender']||"Not Provided";
+
+    return address ?? "Not Entered";
+  };
+
+
+     const GetHCPType = (A: any) => {
+    if (!RegisterdUsers?.length || !A) return "Not Entered";
+
+    const CurrentPreviewUserType:any =
+      RegisterdUsers.filter((each:any)=>each.userId===A)
+
+    return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
+  };
 
 const GetHCPSalary=(A:any)=>{
   try{
@@ -322,14 +350,18 @@ console.log("Check For Salary Info--------",)
             <td
               className="px-4 py-3 hover:underline hover:text-blue-900 cursor-pointer font-medium text-gray-700"
               onClick={() => ShowDompleteInformation(item.CurrentHCA_id, item.hcpName)}
-            >
+            > <div className="flex  items-center gap-2">
+               <img className='h-4 w-4' src={AssignSuitableIcon(GetHCPGender(item.CurrentHCA_id),GetHCPType(item.CurrentHCA_id))}/>
               {item.hcpName}
+              </div>
             </td>
             <td
               className="px-4 py-3 hover:underline hover:text-blue-900 cursor-pointer font-medium text-gray-700"
               onClick={() => ShowDompleteInformation(item.AssignedHCA_id, item.NewHCA)}
-            >
+            >    <div className="flex  items-center gap-2">
+                <img className='h-4 w-4' src={AssignSuitableIcon(GetHCPGender(item.AssignedHCA_id),GetHCPType(item.AssignedHCA_id))}/>
               {item.NewHCA}
+              </div>
             </td>
             <td className="px-4 py-3 text-gray-600">{item.startDate}</td>
             <td className="px-4 py-3 text-gray-600">{item.endDate}</td>
