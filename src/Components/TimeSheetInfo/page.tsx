@@ -505,7 +505,7 @@ const UpdateAttendecByDateRange = async () => {
       return
     }
 
-    SetStatusMessage(`Updating ${status} day...`);
+    SetStatusMessage(`Updating ${status} day Attendance from Date ${new Date(fromDate).getDate()} to ${new Date(toDate).getDate()} ...`);
 
     const flexDate = `${selectedYear}-${selectedMonth}-${String(
       ParticularDate
