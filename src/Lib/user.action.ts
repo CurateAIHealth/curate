@@ -2693,6 +2693,105 @@ export const EditAttendanceByClientId = async (
   }
 };
 
+export const EditAttendanceByDateRange = async (
+  clientId: string,
+  Month: string,
+  startDate: string,   // "2026-02-12"
+  endDate: string,     // "2026-02-19"
+  status: "FULL" | "HALF" | "ABSENT",
+  UpdatedBy: string
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const normalizeMonth = (month: string) => {
+      const [year, m] = month.split("-");
+      return `${year}-${Number(m)}`;
+    };
+
+    const normalizedMonth = normalizeMonth(Month);
+
+    const statusMap = {
+      FULL: { HCPAttendence: true, AdminAttendece: true },
+      HALF: { HCPAttendence: true, AdminAttendece: false },
+      ABSENT: { HCPAttendence: false, AdminAttendece: false },
+    };
+
+    const flags = statusMap[status];
+
+    const start = new Date(`${startDate}T00:00:00.000Z`);
+    const end = new Date(`${endDate}T00:00:00.000Z`);
+
+    let currentDate = new Date(start);
+
+    while (currentDate <= end) {
+      const existing = await collection.findOne({
+        ClientId: clientId,
+        Month: normalizedMonth,
+        Attendance: {
+          $elemMatch: { AttendenceDate: currentDate },
+        },
+      });
+
+      if (existing) {
+        await collection.updateOne(
+          {
+            ClientId: clientId,
+            Month: normalizedMonth,
+            "Attendance.AttendenceDate": currentDate,
+          },
+          {
+            $set: {
+              "Attendance.$.HCPAttendence": flags.HCPAttendence,
+              "Attendance.$.AdminAttendece": flags.AdminAttendece,
+              "Attendance.$.UpdatedAt": new Date(),
+              "Attendance.$.UpdatedBy": UpdatedBy || "",
+            },
+          }
+        );
+      } else {
+        const newAttendance = {
+          AttendenceDate: new Date(currentDate),
+          HCPAttendence: flags.HCPAttendence,
+          AdminAttendece: flags.AdminAttendece,
+          CreatedAt: new Date(),
+          UpdatedAt: new Date(),
+          UpdatedBy: UpdatedBy || "",
+        };
+
+        await collection.updateOne(
+          {
+            ClientId: clientId,
+            Month: normalizedMonth,
+          },
+          {
+            $push: {
+              Attendance: newAttendance as any,
+            },
+          },
+          { upsert: true }
+        );
+      }
+
+      // Move to next day
+      currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+    }
+
+    return {
+      success: true,
+      message: "Attendance updated Successfully for selected date range.",
+    };
+  } catch (error: any) {
+    console.error("❌ Error editing attendance:", error);
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+};
+
 
 
 export const GetInvoiceInfo=async()=>{

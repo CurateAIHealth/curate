@@ -695,7 +695,7 @@ if(showAssignConfirm){
 
       <div className="flex justify-center gap-3 mt-4">
         <button
-          onClick={() => setShowAssignConfirm(false)}
+          onClick={() => {router.push("/AdminPage")}}
           className="px-4 py-1 rounded-md border text-xs sm:text-sm hover:bg-gray-100"
         >
           No
