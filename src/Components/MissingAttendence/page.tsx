@@ -6,6 +6,7 @@ import { LoadingData } from "../Loading/page"
 import { useSelector } from "react-redux"
 
 
+
 const MissingAttendence = () => {
   const [AttendenceInfo, SetAttendenceInfo] = useState<any>([])
   const [isChecking, setisChecking] = useState<any>(true)
@@ -19,17 +20,14 @@ const MissingAttendence = () => {
   const [ChooseMultiple,setChooseMultiple]=useState(true)
   const [selectedHCPIds,setselectedHCPIds]=useState<any>([])
   const [SearchResults,setSearchResults]=useState("")
-const getTodayDate = () => {
-  const today = new Date();
-  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-};
 
-const [selectedDate, setSelectedDate] = useState(getTodayDate());
+
+const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
 
 const selectedDateObject = new Date(selectedDate);
 
 
-  useEffect(() => {
+useEffect(() => {
   let mounted = true;
 
   const isInitialLoad = StatusMessage === "";
@@ -39,17 +37,21 @@ const selectedDateObject = new Date(selectedDate);
 
   const fetchFreshData = async () => {
     try {
+      // Use cache instantly
+      if (!isSuccessUpdate && cachedDeploymentInfo?.length) {
+        SetAttendenceInfo(cachedDeploymentInfo);
+        return;
+      }
+
       setisChecking(true);
 
-      const deploymentData = isSuccessUpdate
-        ? await GetDeploymentInfo() // force fresh fetch
-        : cachedDeploymentInfo ?? await GetDeploymentInfo(); // use cache if exists
+      const deploymentData = await GetDeploymentInfo();
 
       if (!mounted) return;
 
-      cachedDeploymentInfo = deploymentData;
+      cachedDeploymentInfo = deploymentData ?? [];
+      SetAttendenceInfo(cachedDeploymentInfo);
 
-      SetAttendenceInfo(deploymentData);
     } catch (err) {
       console.error("Fetch error:", err);
     } finally {
@@ -63,7 +65,6 @@ const selectedDateObject = new Date(selectedDate);
     mounted = false;
   };
 }, [StatusMessage]);
-  const today = new Date().toISOString().split("T")[0];
 
 	
 const normalizeDate = (value: any) => {
@@ -132,7 +133,12 @@ const hasToday = attendance.some((a: any) =>
 const UpdateCurrentAttendence = async () => {
   setStatusMessage("Please Wait...");
 
-  const UpdateDailyattendece = await UpdatehcpDailyAttendce(selectedYear, selectedMonth)
+
+      const UpdateDailyattendece = await UpdatehcpDailyAttendce(
+      selectedYear,
+      selectedMonth,
+      selectedDate
+    );
 
   if (UpdateDailyattendece.success) {
     setStatusMessage("HCPs Attendance Updated Successfully ✅");
@@ -158,6 +164,7 @@ const UpdateCurrentAttendence = async () => {
 
     if (AttendenceUpdateResult.success) {
       setStatusMessage(AttendenceUpdateResult.message);
+    
     }
   } catch (err) {
     console.error(err);
@@ -186,7 +193,7 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
 
     }
   }
-  console.log("Test Selected HCP Id's---",result)
+
   if (isChecking) {
     return <LoadingData />
   }
