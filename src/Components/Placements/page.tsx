@@ -624,7 +624,9 @@ serviceCharge
    }
       const attendance = [
         {
-          AttendenceDate: today,
+          AttendenceDate:  new Date()
+      .toISOString()
+      .split("T")[0],
           HCPAttendence: true,
           AdminAttendece: true,
         },
@@ -660,7 +662,8 @@ serviceCharge
         currentMonth,
         attendance,
         TimeStampInfo,
-         ExtendInfo.invoice,
+        //  ExtendInfo.invoice,
+        "",
         ExtendInfo.Type,
         CareTakerCharges,
         ClientAttendece
@@ -1329,18 +1332,46 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
 
 
  <td
-  className="px-1 py-3 text-center"
+  className="px-1 py-3 text-center cursor-pointer"
   onClick={() => ShowDompleteInformation(c.HCA_Id, c.HCA_Name)}
 >
-  
-    <div className="flex flex-col items-center ml-2">
-    <img className='h-4 w-4' src={AssignSuitableIcon(GetHCPGender(c.HCA_Id),GetHCPType(c.HCA_Id))}/>
- 
-   
-    <span className="hover:underline font-semibold text-[10px] line-clamp-0 mb-4 break-words leading-tight">
+  <div className="relative flex flex-col items-center  group w-fit mx-auto">
+
+    <img
+      className="h-4 w-4"
+      src={
+        AssignSuitableIcon(
+          GetHCPGender(c.HCA_Id),
+          GetHCPType(c.HCA_Id)
+        ).image
+      }
+    />
+
+
+    <span className="hover:underline font-semibold text-[10px] mb-4 break-words leading-tight">
       {toProperCaseLive(c.HCA_Name)}
     </span>
-</div>
+
+  
+    <div
+      className="absolute -top-12 left-1/2 -translate-x-1/2
+                 opacity-0 group-hover:opacity-100
+                 translate-y-2 group-hover:translate-y-0
+                 transition-all duration-300 ease-out
+                 bg-gradient-to-br from-[#00A9A5] to-[#005f61]
+                 text-white text-xs font-medium
+                 px-3 py-2 rounded-xl shadow-xl
+                 whitespace-nowrap pointer-events-none z-50"
+    >
+      {
+        AssignSuitableIcon(
+          GetHCPGender(c.HCA_Id),
+          GetHCPType(c.HCA_Id)
+        ).caseType
+      }
+    </div>
+
+  </div>
 </td>
 
 

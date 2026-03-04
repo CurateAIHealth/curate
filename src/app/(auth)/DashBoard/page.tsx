@@ -1539,7 +1539,7 @@ setNotificationStatus("Notification Send Succesfully")
 </div>
   <div className="relative">
   <label className="block text-xs font-medium text-gray-500 mb-2">
-    Curate Lead Source 
+    Curate Lead Source <span className="text-red-500">*</span>
   </label>
 
   <input

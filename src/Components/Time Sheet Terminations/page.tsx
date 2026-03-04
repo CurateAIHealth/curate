@@ -347,22 +347,84 @@ console.log("Check For Salary Info--------",)
             <td className="px-4 py-3 text-gray-700">{item.invoice}</td>
             <td className="px-4 py-3 text-gray-800 font-medium">{item.clientName}</td>
             <td className="px-4 py-3 text-gray-700">{item.patientName}</td>
+          <td
+  className="px-4 py-3 hover:underline hover:text-blue-900 cursor-pointer font-medium text-gray-700"
+  onClick={() => ShowDompleteInformation(item.CurrentHCA_id, item.hcpName)}
+>
+  <div className="relative flex items-center gap-2 group">
+    
+    {/* Icon */}
+    <img
+      className="h-4 w-4"
+      src={
+        AssignSuitableIcon(
+          GetHCPGender(item.CurrentHCA_id),
+          GetHCPType(item.CurrentHCA_id)
+        ).image
+      }
+    />
+
+    {item.hcpName}
+
+
+    <div className="absolute left-0 -top-10 z-50 
+                    opacity-0 group-hover:opacity-100 
+                    translate-y-2 group-hover:translate-y-0
+                    transition-all duration-300 ease-out
+                    bg-gradient-to-br from-[#00A9A5] to-[#005f61]
+                    text-white text-xs font-medium
+                    px-3 py-2 rounded-xl shadow-xl
+                    whitespace-nowrap pointer-events-none">
+      {
+        AssignSuitableIcon(
+          GetHCPGender(item.CurrentHCA_id),
+          GetHCPType(item.CurrentHCA_id)
+        ).caseType
+      }
+    </div>
+
+  </div>
+</td>
             <td
-              className="px-4 py-3 hover:underline hover:text-blue-900 cursor-pointer font-medium text-gray-700"
-              onClick={() => ShowDompleteInformation(item.CurrentHCA_id, item.hcpName)}
-            > <div className="flex  items-center gap-2">
-               <img className='h-4 w-4' src={AssignSuitableIcon(GetHCPGender(item.CurrentHCA_id),GetHCPType(item.CurrentHCA_id))}/>
-              {item.hcpName}
-              </div>
-            </td>
-            <td
-              className="px-4 py-3 hover:underline hover:text-blue-900 cursor-pointer font-medium text-gray-700"
-              onClick={() => ShowDompleteInformation(item.AssignedHCA_id, item.NewHCA)}
-            >    <div className="flex  items-center gap-2">
-                <img className='h-4 w-4' src={AssignSuitableIcon(GetHCPGender(item.AssignedHCA_id),GetHCPType(item.AssignedHCA_id))}/>
-              {item.NewHCA}
-              </div>
-            </td>
+  className="px-4 py-3 hover:underline hover:text-blue-900 cursor-pointer font-medium text-gray-700"
+  onClick={() => ShowDompleteInformation(item.AssignedHCA_id, item.NewHCA)}
+>
+  <div className="relative flex items-center gap-2 group">
+
+    {/* Icon */}
+    <img
+      className="h-4 w-4"
+      src={
+        AssignSuitableIcon(
+          GetHCPGender(item.AssignedHCA_id),
+          GetHCPType(item.AssignedHCA_id)
+        ).image
+      }
+    />
+
+    {item.NewHCA}
+
+    {/* Premium Tooltip */}
+    <div
+      className="absolute left-0 -top-10 z-50
+                 opacity-0 group-hover:opacity-100
+                 translate-y-2 group-hover:translate-y-0
+                 transition-all duration-300 ease-out
+                 bg-gradient-to-br from-[#00A9A5] to-[#005f61]
+                 text-white text-xs font-medium
+                 px-3 py-2 rounded-xl shadow-xl
+                 whitespace-nowrap pointer-events-none"
+    >
+      {
+        AssignSuitableIcon(
+          GetHCPGender(item.AssignedHCA_id),
+          GetHCPType(item.AssignedHCA_id)
+        ).caseType
+      }
+    </div>
+
+  </div>
+</td>
             <td className="px-4 py-3 text-gray-600">{item.startDate}</td>
             <td className="px-4 py-3 text-gray-600">{item.endDate}</td>
 

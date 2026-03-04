@@ -1845,11 +1845,12 @@ export const GetPopUpUserPDRInfo = async (UserId: any,) => {
 
 export const UpdateAttendence = async (
   hcpId: string,
-  Month: string, 
+  ImpMonth: any, 
   Status: {
     HCPAttendence: boolean;
     AdminAttendece: boolean;
   },
+  ImpDate:any,
   UpdatedBy: string
 ) => {
   try {
@@ -1861,18 +1862,23 @@ export const UpdateAttendence = async (
 
     const normalizeMonth = (month: string) => {
       const [year, m] = month.split("-");
-      return `${year}-${Number(m)}`;
+      return `${year}-${(m)}`;
     };
 
-    const normalizedMonth = normalizeMonth(Month);
+    // const normalizedMonth = normalizeMonth(Month);
 
 
-    const todayKey = new Date().toISOString().slice(0, 10);
+    const todayKey = new Date(ImpDate).toISOString().slice(0, 10);
+ const normalizeMonthKey = (key: string) => {
+      const [year, month] = key.split("-");
+      return `${year}-${Number(month)}`; 
+    };
 
+    const normalizedImpMonth = normalizeMonthKey(ImpMonth);
    
     const deploy = await collection.findOne({
       HCAId: hcpId,
-      Month: normalizedMonth,
+      Month: ImpMonth,
     });
 
     if (!deploy) {
@@ -1931,9 +1937,7 @@ export const UpdateAttendence = async (
 
     return {
       success: true,
-      message: `✅ Attendance marked Successfully on ${new Date().toLocaleDateString(
-        "en-IN"
-      )}`,
+      message: `✅ Attendance marked Successfully on ${ImpDate}`,
     };
   } catch (error: any) {
     console.error("❌ Error updating attendance:", error);
@@ -1943,6 +1947,8 @@ export const UpdateAttendence = async (
     };
   }
 };
+
+
 
 
 
@@ -2513,7 +2519,7 @@ export const UpdatehcpDailyAttendce = async (
     const collection = db.collection("Deployment");
 
     
-    const monthKey = `${selectedYear}-${Number(selectedMonth)}`;
+    const monthKey = `${selectedYear}-${selectedMonth}`;
 
    
     const todayKey = new Date().toISOString().slice(0, 10);
@@ -2597,10 +2603,9 @@ export const UpdatehcpDailyAttendce = async (
     };
   }
 };
-
 export const EditAttendanceByClientId = async (
   clientId: string,
-  Month: string,
+  Month: any,
   attendenceDate: string,
   status: "FULL" | "HALF" | "ABSENT",
   UpdatedBy: string
@@ -2626,7 +2631,7 @@ export const EditAttendanceByClientId = async (
     const flags = statusMap[status];
 
     const start = new Date(`${attendenceDate}T00:00:00.000Z`);
-
+console.log("Check attendece Date------",start)
     const existing = await collection.findOne({
       ClientId: clientId,
       Month: normalizedMonth,
@@ -2654,7 +2659,7 @@ export const EditAttendanceByClientId = async (
 
       return {
         success: true,
-        message: "Attendance updated Successfully.",
+        message: "Attendance updated Successfully ✅.",
       };
     }
 
@@ -2682,7 +2687,7 @@ export const EditAttendanceByClientId = async (
 
     return {
       success: true,
-      message: "Attendance created and added Successfully.",
+      message: "Attendance created and added Successfully ✅.",
     };
   } catch (error: any) {
     console.error("❌ Error editing attendance:", error);
