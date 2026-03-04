@@ -46,7 +46,8 @@ ImportedUserId,
     HCPAttendence: true,
     AdminAttendece: false
   },
-TimeStampData
+now,
+TimeStampData,
 );
 
      

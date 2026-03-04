@@ -1,10 +1,12 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Stethoscope, Shirt, CircleX, Search, X } from "lucide-react";
 import { GetReasonsInfoInfo, GetRegidterdUsers, GetTerminationInfo, GetUsersFullInfo } from "@/Lib/user.action";
 import { LoadingData } from "../Loading/page";
 import { Placements_Filters, filterColors, years } from "@/Lib/Content";
 import { AssignSuitableIcon } from "@/Lib/Actions";
+import { useDispatch, useSelector } from "react-redux";
+import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 let terminationCache: any[] | null = null;
 let ReplacementReasonsCache: any[] | null = null;
 let RegisredUsersCache: any[] | null = null;
@@ -29,16 +31,16 @@ const TerminationTable: React.FC = () => {
  
   const now = new Date();
  
- const [year, setYear] = useState(String(now.getFullYear()));
- const [month, setMonth] = useState<any>(now.getMonth() + 1);
+
 
 const [isChecking, setIsChecking] = useState(true);
 const [showPopup, setShowPopup] = useState(false);
 const [popupInfo, setPopupInfo] = useState("");
 
 
-
-
+const month=useSelector((state:any)=>state.FilterMonth) 
+const year=useSelector((state:any)=>state.FilterYear)
+const dispatch=useDispatch()
 useEffect(() => {
   const Fetch = async () => {
     try {
@@ -73,6 +75,7 @@ useEffect(() => {
         location: each.Adress,
         hcaName: each.HCAName,
         TimeSheetAttendence: each.Attendence,
+        StartDate:each.StartDate,
         status: "Terminated",
       })) ?? [];
 
@@ -120,21 +123,32 @@ console.log("Checking Count------",ReplacementReasons)
     );
   }
 
-const FilterValues = placements.filter((each: any) => {
-  if (!search) return true;
+const FilterValues =
+  placements?.filter((item) => {
+    const searchText = search?.toLowerCase() || "";
 
-  const name = each?.clientName?.toLowerCase() || "";
-  const contact = String(each?.contact || "");
+    const matchesSearch =
+      !searchText ||
+      item.clientName?.toLowerCase().includes(searchText) ||
+      item.patientName?.toLowerCase().includes(searchText) ||
+      item.invoice?.toLowerCase().includes(searchText) ||
+      item.clientPhone?.includes(searchText);
 
-  const searchValue = search.toLowerCase();
+    if (!item.StartDate) return false;
 
-  return (
-    name.includes(searchValue) ||
-    contact.includes(searchValue)
-  );
-});
+    const [, itemMonth, itemYear] = item.StartDate.split("/");
 
+    const matchesMonth = month
+      ? Number(itemMonth) === Number(month)
+      : true;
 
+    const matchesYear = year
+      ? Number(itemYear) === Number(year)
+      : true;
+
+    return matchesSearch && matchesMonth && matchesYear;
+  }) || [];
+console.log("Check Placement Datta-----",placements)
 const GetReplacementMessage = (A: any) => {
 
   const results =ReplacementReasons?.filter((each: any) => each?.HCA_id=== A ) ?? [];
@@ -197,12 +211,12 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
         </svg>
       </div>
 
-      {/* Filters */}
+   
       <div className="flex gap-2 w-full md:w-auto">
         <select
           className="w-full md:w-auto border px-3 py-2 rounded-md text-sm bg-white"
           value={month}
-          onChange={(e) => setMonth(e.target.value)}
+            onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
         >
           <option value="">All Months</option>
           {[...Array(12)].map((_, i) => (
@@ -215,7 +229,7 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
         <select
           className="w-full md:w-auto border px-3 py-2 rounded-md text-sm bg-white"
           value={year}
-          onChange={(e) => setYear(e.target.value)}
+            onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
         >
           <option value="">All Years</option>
           {years.map((year) => (
@@ -325,14 +339,47 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
 
             {/* HCA */}
             <td className="px-6 py-4">
-              <span className="inline-flex items-center gap-2 rounded-full  px-3 py-1.5 text-sm font-medium border border-gray-200 hover:shadow-lg  transition group-hover:bg-indigo-100">
-              <img className='h-5 w-5 hover:w-10 hover:h-10' src={AssignSuitableIcon(GetHCPGender(placement.HCA_Id),GetHCPType(placement.HCA_Id))}/>
-                {placement.hcaName||"NA"}
-               
-              </span>
-            </td>
+  <div className="relative inline-block group">
 
-            {/* STATUS */}
+    <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium border border-gray-200 hover:shadow-lg transition group-hover:bg-indigo-100 cursor-pointer">
+      
+      {/* Icon */}
+      <img
+        className="h-5 w-5 transition-all duration-300 group-hover:scale-110"
+        src={
+          AssignSuitableIcon(
+            GetHCPGender(placement.HCA_Id),
+            GetHCPType(placement.HCA_Id)
+          ).image
+        }
+      />
+
+      {placement.hcaName || "NA"}
+    </span>
+
+   
+    <div
+      className="absolute left-1/2 -translate-x-1/2 -top-12 z-50
+                 opacity-0 group-hover:opacity-100
+                 translate-y-2 group-hover:translate-y-0
+                 transition-all duration-300 ease-out
+                 bg-gradient-to-br from-[#00A9A5] to-[#005f61]
+                 text-white text-xs font-medium
+                 px-3 py-2 rounded-xl shadow-xl
+                 whitespace-nowrap pointer-events-none"
+    >
+      {
+        AssignSuitableIcon(
+          GetHCPGender(placement.HCA_Id),
+          GetHCPType(placement.HCA_Id)
+        ).caseType
+      }
+    </div>
+
+  </div>
+</td>
+
+           
             <td className="px-6 py-4">
               <span
                 className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold shadow-sm ${

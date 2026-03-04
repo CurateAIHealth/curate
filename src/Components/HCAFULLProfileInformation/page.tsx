@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useState, } from 'react';
 import Image from 'next/image';
 import axios from 'axios';
-import { GetHCACompliteInformation, GetUserCompliteInformation, GetUserInformation, UpdateClientComplitInformation, UpdateHCAComplitInformation } from '@/Lib/user.action';
+import { GetHCACompliteInformation, GetUserCompliteInformation, GetUserInformation, HCASalaryUpdate, UpdateClientComplitInformation, UpdateHCAComplitInformation } from '@/Lib/user.action';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import { Pencil, X } from 'lucide-react';
+import { Pencil, User, X } from 'lucide-react';
 import { PROFESSIONAL_SKILL_OPTIONS } from '@/Lib/Content';
 import { LoadingData } from '../Loading/page';
 import { Update_Main_Filter_Status, UpdateUserType } from '@/Redux/action';
@@ -17,6 +17,7 @@ const TABS = ['Personal Info', 'Bank Details', 'Documents', 'Work Experience', '
 type DocumentKeys = 'ProfilePic' | 'AdharCard' | 'PanCard' | 'AccountPassBook' | 'CertificatOne' | 'CertificatTwo';
 
 type UserData = {
+  HCPSalary: any;
   firstName: string;
   surname: string;
   title: string;
@@ -63,6 +64,8 @@ const [loadingDocs, setLoadingDocs] = useState<Record<string, boolean>>({});
 const [SubmitstatusMessage,setSubmitstatusMessage]=useState("")
   const [isChecking, setIsChecking] = useState(true);
   const [ProfetionlSkillsEdit,setProfetionlSkillsEdit]=useState(false)
+    const [isEditing, setIsEditing] = useState(false);
+
   const [ShowPassword,setShowPassword]=useState<any>("")
 const Router=useRouter()
 const dispatch=useDispatch()
@@ -114,7 +117,8 @@ preferredService:"",
     panNumber: "CYGPN6926A",
     rationCardNo: "10042011284",
 ProfetionSkill:[],
-    DocumentSkipReason:""
+    DocumentSkipReason:'',
+    HCPSalary:"",
   });
 
 useEffect(()=>{
@@ -160,6 +164,7 @@ useEffect(()=>{
   paymentService: FilterValue["Payment Service"] || "",
   preferredService: FilterValue["Preferred Service"] || "",
   DocumentSkipReason: FilterValue["DocumentSkipReason"] || "",
+  HCPSalary:FilterValue['PaymentforStaff']||'',
   ProfetionSkill:FilterValue['Professional Skill']||FilterValue.ProfessionalSkills||'',
 
     Documents: {
@@ -188,6 +193,18 @@ useEffect(()=>{
     Fetch()
 },[])
 
+
+
+  const handleSave =async () => {
+    setSubmitstatusMessage("Please Wait....")
+const UpdateSalary:any=await HCASalaryUpdate(ImportedUserId,user.HCPSalary)
+console.log("Check For Salary Update----",UpdateSalary)
+if(UpdateSalary.success){
+  setSubmitstatusMessage("Salary Updated Successfully.")
+  setIsEditing(false);
+}
+   
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -286,6 +303,9 @@ console.log("Checkkkkk------", user.Documents)
             {ProfetionlSkillsEdit?<p onClick={()=>setProfetionlSkillsEdit(!ProfetionlSkillsEdit)} className='border p-1 text-green-800 cursor-pointer h-8 shadow-lg rounded-md'>Save</p>: <Pencil className='cursor-pointer h-5 w-5' onClick={()=>setProfetionlSkillsEdit(!ProfetionlSkillsEdit)}/>}
           
               </div>
+              <div>
+
+              </div>
           
           {ProfetionlSkillsEdit?<div className="flex flex-wrap gap-2">
                {PROFESSIONAL_SKILL_OPTIONS.map((skill) => (
@@ -314,9 +334,9 @@ console.log("Checkkkkk------", user.Documents)
 </div>
 }
           </div>
-       
+   
         <div className="grid md:grid-cols-2 gap-4">
-        
+     
           <TextInput label="First Name" name="firstName" value={user.firstName} onChange={handleChange} />
                     <TextInput label="SurName" name="surname" value={user.surname} onChange={handleChange} />
           <TextInput label="Gender" name="gender" value={user.gender} onChange={handleChange} />
@@ -336,6 +356,7 @@ console.log("Checkkkkk------", user.Documents)
           <TextInput label="Mole/Body Mark 1" name="moleBodyMark1" value={user.moleBodyMark1} onChange={handleChange} />
           <TextInput label="Mole/Body Mark 2" name="moleBodyMark2" value={user.moleBodyMark2} onChange={handleChange} />
           <TextInput label="PreferredService" name="preferredService" value={user.preferredService} onChange={handleChange} />
+
      
 
         </div>
@@ -381,7 +402,7 @@ console.log("Checkkkkk------", user.Documents)
                           <path d="M12 0C8.686 0 6 2.686 6 6v12c0 3.314 2.686 6 6 6s6-2.686 6-6V6c0-3.314-2.686-6-6-6zm3 18h-6v-2h6v2zm0-4h-6v-2h6v2zm0-4h-6V8h6v2z" />
                         </svg>
                       </div>:
-                       <img src={value} alt={key} className="w-full h-40 object-cover rounded border" />}
+                       <img src={value||''} alt={key} className="w-full h-40 object-cover rounded border" />}
                   </div>
                 )}
               </div>
@@ -485,6 +506,65 @@ console.log("Data of Birth---",user.dateOfBirth)
                 {tab}
               </button>
             ))}
+               <div className="flex items-center">
+  {isEditing ? (
+    <div className="flex items-center gap-1 bg-white shadow-sm border border-gray-200 rounded-xl px-1 py-2">
+      <input
+        type="text"
+        value={user.HCPSalary}
+        onChange={(e) => setUser({ ...user, HCPSalary: e.target.value })}
+        className="w-22 px-3 py-1.5 text-sm border border-gray-300 rounded-lg 
+                   focus:outline-none focus:ring-2 focus:ring-indigo-400 
+                   focus:border-indigo-400 transition"
+        placeholder="Enter salary"
+      />
+
+      <button
+        onClick={handleSave}
+        className="px-4 py-1.5 text-sm font-medium rounded-lg 
+                   bg-emerald-500 text-white 
+                   hover:bg-emerald-600 transition"
+      >
+        Save
+      </button>
+
+      <button
+        onClick={() => setIsEditing(false)}
+        className="px-4 py-1.5 text-sm font-medium rounded-lg 
+                   bg-gray-100 text-gray-700 
+                   hover:bg-gray-200 transition"
+      >
+        Cancel
+      </button>
+    </div>
+  ) : (
+    <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 
+                    rounded-xl px-4 py-2 shadow-sm hover:shadow-md transition">
+      
+      <div className="flex flex-col">
+        <span className="text-xs text-gray-500">HCP Salary</span>
+        <span className="text-base font-semibold text-gray-800">
+          ₹ {user.HCPSalary}
+        </span>
+        <p className="text-xs text-gray-600">
+      Per day amount:{" "}
+      <span className="font-semibold text-green-600">
+        ₹{Math.round(Number(user.HCPSalary) / 30)}
+      </span>
+    </p>
+      </div>
+
+      <button
+        onClick={() => setIsEditing(true)}
+        className="ml-2 px-3 py-1 text-xs font-medium rounded-full 
+                   bg-indigo-100 text-indigo-600 
+                   hover:bg-indigo-200 transition"
+      >
+        Edit
+      </button>
+    </div>
+  )}
+</div>
                {ShowPassword&& <div className="w-[150px] ml-auto border-gray-400 shadow-lg flex items-center gap-3 p-2 rounded-2xl 
                 bg-white shadow-md border border-gray-100">
             <div className="w-9 h-9 flex items-center justify-center 

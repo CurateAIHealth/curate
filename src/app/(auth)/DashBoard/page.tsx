@@ -949,7 +949,7 @@ setNotificationStatus("Notification Send Succesfully")
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard
+      Hi Admin – Welcome to Admin Dashboard.
     </span>
   </div>
 
@@ -1539,7 +1539,7 @@ setNotificationStatus("Notification Send Succesfully")
 </div>
   <div className="relative">
   <label className="block text-xs font-medium text-gray-500 mb-2">
-    Curate Lead Source 
+    Curate Lead Source <span className="text-red-500">*</span>
   </label>
 
   <input

@@ -292,21 +292,86 @@ return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||nul
                   <td className="px-3 py-2">{item.invoice}</td>
                   <td className="px-3 py-2">{item.clientName}</td>
                   <td className="px-3 py-2">{item.patientName}</td>
-                  <td className="px-3 py-2 flex items-center gap-2 hover:underline hover:text-blue-900 cursor-pointer"
-                    onClick={() => ShowDompleteInformation(item.CurrentHCA_id, item.hcpName)}
-                  >
-            
-                   
-                    <img className='h-5 w-5' src={AssignSuitableIcon(GetHCPGender(item.CurrentHCA_id), GetHCPType(item.CurrentHCA_id))} />
-                    {item.hcpName}</td>
+                 <td
+  className="px-3 py-2 cursor-pointer hover:underline hover:text-blue-900"
+  onClick={() => ShowDompleteInformation(item.CurrentHCA_id, item.hcpName)}
+>
+  <div className="relative flex items-center gap-2 group w-fit">
 
-                  <td className="px-3 py-2  hover:underline hover:text-blue-900 cursor-pointer"
-                    onClick={() => ShowDompleteInformation(item.AssignedHCA_id, item.NewHCA)}>
-                      <div className="flex items-center">
-                             <img className='h-5 w-5' src={AssignSuitableIcon(GetHCPGender(item.AssignedHCA_id), GetHCPType(item.AssignedHCA_id))} />
-                    {item.NewHCA}
-                      </div>
-               </td>
+  
+    <img
+      className="h-5 w-5"
+      src={
+        AssignSuitableIcon(
+          GetHCPGender(item.CurrentHCA_id),
+          GetHCPType(item.CurrentHCA_id)
+        ).image
+      }
+    />
+
+    {item.hcpName}
+
+   
+    <div
+      className="absolute left-0 -top-11 z-50
+                 opacity-0 group-hover:opacity-100
+                 translate-y-2 group-hover:translate-y-0
+                 transition-all duration-300 ease-out
+               bg-gradient-to-br from-[#00A9A5] to-[#005f61]
+                 text-white text-xs font-medium
+                 px-3 py-2 rounded-xl shadow-xl
+                 whitespace-nowrap pointer-events-none"
+    >
+      {
+        AssignSuitableIcon(
+          GetHCPGender(item.CurrentHCA_id),
+          GetHCPType(item.CurrentHCA_id)
+        ).caseType
+      }
+    </div>
+
+  </div>
+</td>
+<td
+  className="px-3 py-2 cursor-pointer hover:underline hover:text-blue-900"
+  onClick={() => ShowDompleteInformation(item.AssignedHCA_id, item.NewHCA)}
+>
+  <div className="relative flex items-center gap-2 group w-fit">
+
+    {/* Icon */}
+    <img
+      className="h-5 w-5"
+      src={
+        AssignSuitableIcon(
+          GetHCPGender(item.AssignedHCA_id),
+          GetHCPType(item.AssignedHCA_id)
+        ).image
+      }
+    />
+
+    {item.NewHCA}
+
+    {/* Premium Tooltip */}
+    <div
+      className="absolute left-0 -top-11 z-50
+                 opacity-0 group-hover:opacity-100
+                 translate-y-2 group-hover:translate-y-0
+                 transition-all duration-300 ease-out
+                 bg-gradient-to-br from-[#00A9A5] to-[#005f61]
+                 text-white text-xs font-medium
+                 px-3 py-2 rounded-xl shadow-xl
+                 whitespace-nowrap pointer-events-none"
+    >
+      {
+        AssignSuitableIcon(
+          GetHCPGender(item.AssignedHCA_id),
+          GetHCPType(item.AssignedHCA_id)
+        ).caseType
+      }
+    </div>
+
+  </div>
+</td>
                   
                   {/* <td className="px-3 py-2">
                     <span

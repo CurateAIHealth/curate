@@ -866,7 +866,7 @@ return
         "
                                     title="Edit service area"
                                   >
-                                    <Pencil size={12} />
+                                    {/* <Pencil size={12} /> */}
                                   </button> {editingUserId === user.userId && (
                                    <div
   className="
@@ -933,33 +933,54 @@ return
 </div>
                                   )}</td>}
                                   
-                            {UpdateduserType === "patient" &&
-                              <td>
-                                <select
-                                  className={`
-    h-11 w-fit  px-3
-     cursor-pointer
-    rounded-xl bg-white
-    border border-slate-300
-    text-sm font-semibold text-slate-700
-    shadow-sm
-    transition-all duration-200 ease-in-out
+                          {UpdateduserType === "patient" && (
+  <td className="overflow-visible">
+    <div className="relative inline-block group ml-4">
 
-    hover:border-slate-400 hover:shadow-md
-    focus:outline-none
-    focus:border-[#62e0d9]
-    focus:ring-2 focus:ring-[#caf0f8]
-  `}
-                                  value={user?.ClientPriority ?? "Stable"}
+      <select
+        className="
+          h-11 w-fit px-3 cursor-pointer
+          rounded-xl bg-white
+          border border-slate-300
+          text-sm font-semibold text-slate-700
+          shadow-sm
+          transition-all duration-200 ease-in-out
+          hover:border-slate-400 hover:shadow-md
+          focus:outline-none
+          focus:border-[#62e0d9]
+          focus:ring-2 focus:ring-[#caf0f8]
+        "
+        value={user?.ClientPriority ?? "Stable"}
+        onChange={(e) =>
+          UpdateClientPriority(user.FirstName, user.userId, e.target.value)
+        }
+      >
+        <option value="Important" title="Important Client">⭐ </option> 
+        <option value="Stable" title="Stable Client">🟢 </option> 
+        <option value="VIP" title="VIP Client">👑 </option> 
+        <option value="Critical" title="Critical Client">🔴 </option>
+      </select>
 
-                                  onChange={(e) => UpdateClientPriority(user.FirstName, user.userId, e.target.value)}
-                                >
-                                  <option value="Important">⭐</option>
-                                  <option value="stable">🟢 </option>
-                                  <option value="VIP">👑</option>
-                                  <option value="Critical">🔴 </option>
-                                </select>
-                              </td>}
+      {/* Tooltip */}
+      <div
+        className="
+          absolute top-full mt-2 left-1/2 -translate-x-1/2
+          whitespace-nowrap
+          rounded-lg bg-slate-900 text-white
+          text-xs font-medium px-3 py-1.5
+          opacity-0 scale-95
+          transition-all duration-200
+          group-hover:opacity-100 group-hover:scale-100
+          shadow-xl pointer-events-none
+          z-50
+        "
+      >
+        {user?.ClientPriority ?? "Stable"}
+      </div>
+
+    </div>
+  </td>
+)}
                             {UpdateduserType === "healthcare-assistant" &&
                               <td className="px-6 py-2 break-words">
 
@@ -1052,7 +1073,7 @@ return
 
 
 
-<img className='h-4' src={AssignSuitableIcon(GetHCPGender(user.id),user.PreviewUserType)}/>
+<img className='h-4' src={AssignSuitableIcon(GetHCPGender(user.id),user.PreviewUserType).image}/>
 }
                                 <span className="font-semibold  ">
                                   {toProperCaseLive(user.FirstName)}

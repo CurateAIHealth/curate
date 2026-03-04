@@ -1,6 +1,6 @@
 'use client'
-
-import { GetDeploymentInfo, UpdatehcpDailyAttendce, UpdateAttendence, UpdateMultipleAttendance } from "@/Lib/user.action"
+let cachedDeploymentInfo: any = null;
+import { GetDeploymentInfo, UpdatehcpDailyAttendce, UpdateAttendence, UpdateMultipleAttendance, EditAttendanceByClientId } from "@/Lib/user.action"
 import { useEffect, useState } from "react"
 import { LoadingData } from "../Loading/page"
 import { useSelector } from "react-redux"
@@ -11,7 +11,7 @@ const MissingAttendence = () => {
   const [isChecking, setisChecking] = useState<any>(true)
   const [StatusMessage, setStatusMessage] = useState("")
   const now = new Date();
-  const currentYear = now.getFullYear().toString();
+  const currentYear = now.getFullYear().toString()
   const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
   const TimeStampData = useSelector((state: any) => state.TimeStampInfo)
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
@@ -19,38 +19,92 @@ const MissingAttendence = () => {
   const [ChooseMultiple,setChooseMultiple]=useState(true)
   const [selectedHCPIds,setselectedHCPIds]=useState<any>([])
   const [SearchResults,setSearchResults]=useState("")
+const getTodayDate = () => {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+};
+
+const [selectedDate, setSelectedDate] = useState(getTodayDate());
+
+const selectedDateObject = new Date(selectedDate);
 
 
   useEffect(() => {
-    const Fetch = async () => {
-      try {
-        const PlacementInformation: any = await GetDeploymentInfo();
-        SetAttendenceInfo(PlacementInformation)
-        setisChecking(false)
-      } catch (err: any) {
-      }
-    }
+  let mounted = true;
 
-    Fetch()
-  },[StatusMessage])
+  const isInitialLoad = StatusMessage === "";
+  const isSuccessUpdate = StatusMessage?.includes("Successfully");
+
+  if (!isInitialLoad && !isSuccessUpdate) return;
+
+  const fetchFreshData = async () => {
+    try {
+      setisChecking(true);
+
+      const deploymentData = isSuccessUpdate
+        ? await GetDeploymentInfo() // force fresh fetch
+        : cachedDeploymentInfo ?? await GetDeploymentInfo(); // use cache if exists
+
+      if (!mounted) return;
+
+      cachedDeploymentInfo = deploymentData;
+
+      SetAttendenceInfo(deploymentData);
+    } catch (err) {
+      console.error("Fetch error:", err);
+    } finally {
+      if (mounted) setisChecking(false);
+    }
+  };
+
+  fetchFreshData();
+
+  return () => {
+    mounted = false;
+  };
+}, [StatusMessage]);
   const today = new Date().toISOString().split("T")[0];
 
+	
+const normalizeDate = (value: any) => {
+  if (!value) return "";
+
+  // If already in YYYY-MM-DD format
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  // If in DD/MM/YYYY format
+  if (typeof value === "string" && value.includes("/")) {
+    const [day, month, year] = value.split("/");
+    if (year && month && day) {
+      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    }
+  }
+
+
+  const d = new Date(value);
+
+  if (isNaN(d.getTime())) return "";
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
  const result = AttendenceInfo.filter((item: any) => {
   const attendance = Array.isArray(item.Attendance)
     ? item.Attendance
     : [];
 
 
-  const hasToday = attendance.some((a: any) => {
-    if (!a?.AttendenceDate) return false;
 
-    const dateOnly = new Date(a.AttendenceDate)
-      .toISOString()
-      .split("T")[0];
+const hasToday = attendance.some((a: any) =>
+  normalizeDate(a?.dateKey || a?.AttendenceDate) === normalizeDate(selectedDate)
+);
 
-    return dateOnly === today;
-  });
-
+  
   
   const matchesSearch = SearchResults
     ? item.HCAName?.toLowerCase().includes(SearchResults.toLowerCase())
@@ -58,61 +112,58 @@ const MissingAttendence = () => {
 
  
   const isCurrentMonth = (() => {
-    if (!item.StartDate) return false;
+  if (!item.StartDate) return false;
 
-    const [day, month, year] = item.StartDate.split("/").map(Number);
-    const startDate = new Date(year, month - 1, day);
+  const [day, month, year] = item.StartDate.split("/").map(Number);
+  const startDate = new Date(year, month - 1, day);
 
-    const now = new Date();
-    return (
-      startDate.getMonth() === now.getMonth() &&
-      startDate.getFullYear() === now.getFullYear()
-    );
-  })();
+  const selected = new Date(selectedDate);
+
+  return (
+    startDate.getMonth() === selected.getMonth() &&
+    startDate.getFullYear() === selected.getFullYear()
+  );
+})();
 
 
   return !hasToday && matchesSearch && isCurrentMonth;
 });
 
+const UpdateCurrentAttendence = async () => {
+  setStatusMessage("Please Wait...");
 
-  const UpdateCurrentAttendence = async () => {
-    try {
-      setStatusMessage("Please Wait...")
-      const UpdateDailyattendece = await UpdatehcpDailyAttendce(selectedYear, selectedMonth)
-      if (UpdateDailyattendece.success === true) {
-        setStatusMessage("HCPs Today's Attendance Updated Succesfully ✅")
-      }
+  const UpdateDailyattendece = await UpdatehcpDailyAttendce(selectedYear, selectedMonth)
 
-    } catch (err: any) {
-
-    }
+  if (UpdateDailyattendece.success) {
+    setStatusMessage("HCPs Attendance Updated Successfully ✅");
   }
+};
+;
+ const handleUpdate = async (A: any) => {
+  setStatusMessage("Please Wait...");
 
-  const handleUpdate = async (A: any) => {
+  try {
+    const flexDate = `${selectedYear}-${selectedMonth}-${String(
+       new Date(selectedDate).getDate()
+    ).padStart(2, "0")}`;
+    console.log("First Check-----",`${selectedYear}-${selectedMonth}`)
+    console.log("Second Check----",flexDate)
+    const AttendenceUpdateResult: any = await EditAttendanceByClientId(
+      A,
+      `${selectedYear}-${selectedMonth}`, 
+      flexDate,                      
+      "FULL",
+      TimeStampData
+    );
 
-    setStatusMessage("Please Wait...")
-    try {
-      const AttendenceUpdateResult: any = await UpdateAttendence(
-        A,
-        `${currentYear}-${currentMonth}`,
-        {
-          HCPAttendence: true,
-          AdminAttendece: true
-        },
-        TimeStampData
-      );
-
-      if (AttendenceUpdateResult.success === true) {
-        setStatusMessage(AttendenceUpdateResult.message)
-      }
-
-
-
-
-    } catch (err) {
-
+    if (AttendenceUpdateResult.success) {
+      setStatusMessage(AttendenceUpdateResult.message);
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setStatusMessage("Something went wrong");
+  }
+};
 
   const UpdateMultipleAttendence=async()=>{
     try{
@@ -141,10 +192,55 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
   }
   return (
     <div className="p-6 w-full">
-      <h2 className="text-2xl font-bold text-center text-[#ff1493] mb-6">
-        HCP's Without Today's Attendance ( {new Date().toLocaleDateString("En-In")} )
+   <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-6">
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    
+    <div>
+      <h2 className="text-2xl font-semibold text-gray-800 tracking-tight">
+        HCPs Without Attendance {selectedYear} {Number(selectedMonth)}
       </h2>
-     <div className="relative w-full max-w-sm">
+      <p className="text-sm text-gray-500 mt-1">
+        {new Date(selectedDate).toLocaleDateString("en-IN", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
+      </p>
+    </div>
+
+    <div className="flex items-center gap-3">
+      <label className="text-sm text-gray-600 font-medium">
+        Select Date
+      </label>
+      <input
+        type="date"
+        value={selectedDate}
+        onChange={(e:any) =>{ setSelectedDate(e.target.value); setSelectedYear(new Date(e.target.value).getFullYear().toString());setSelectedMonth(String(new Date(e.target.value).getMonth() + 1).padStart(2, "0"))}}
+        className="
+          rounded-lg 
+          border border-gray-300 
+          bg-white 
+          px-3 py-2 
+          text-sm 
+          text-gray-700
+          focus:outline-none
+          focus:ring-2 focus:ring-[#1392d3]/40
+          focus:border-[#1392d3]
+          transition
+        "
+      />
+    </div>
+
+  </div>
+</div>
+  {result.length !== 0&&
+<div className="w-full flex items-center justify-between">
+           
+                <button className=" p-2  shadow-lg  bg-[#1392d3] text-white rounded-md cursor-pointer m-2 text-xs" onClick={UpdateCurrentAttendence}>Check In All HCP's </button>
+                {/* <button className=" p-2  shadow-lg  bg-[#cbd5e1] text-grey-800 rounded-md cursor-pointer m-2 text-xs" onClick={()=>{if(ChooseMultiple){ setChooseMultiple(false);}else{ UpdateMultipleAttendence(); setChooseMultiple(true);}}}>{ChooseMultiple?"Select Multiple HCP's":"Check In Selected HCP's"}</button> */}
+              
+                   <div className="relative w-full max-w-sm">
   <input
     type="search"
     placeholder="Search..."
@@ -170,11 +266,11 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
     🔍
   </span>
 </div>
-
+              </div>}
 
       {result.length === 0 ? (
         <p className="text-green-600 font-semibold text-center">
-          🎉 All HCPs have marked attendance today!
+          🎉 All HCPs have marked attendance !
         </p>
       ) : (
         <div className=" flex flex-col overflow-x-auto shadow-xl rounded-xl  border-gray-200">
@@ -183,10 +279,7 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
                 ? "bg-green-100 text-green-700 border border-green-300"
                 : "bg-red-100 text-red-700 border border-red-300"
               }`}>{StatusMessage}</p>}
-              <div className="flex gap-2">
-                <button className=" p-2  shadow-lg  bg-[#1392d3] text-white rounded-md cursor-pointer m-2 text-xs" onClick={UpdateCurrentAttendence}>Check In All HCP's</button>
-                <button className=" p-2  shadow-lg  bg-[#cbd5e1] text-grey-800 rounded-md cursor-pointer m-2 text-xs" onClick={()=>{if(ChooseMultiple){ setChooseMultiple(false);}else{ UpdateMultipleAttendence(); setChooseMultiple(true);}}}>{ChooseMultiple?"Select Multiple HCP's":"Check In Selected HCP's"}</button>
-              </div>
+              
           </div>
           <div className="max-h-[500px] overflow-y-auto border rounded-lg">
   <table className="w-full text-center border-collapse">
@@ -234,7 +327,7 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
               <button
                 className="bg-teal-800 text-white px-6 py-2 rounded-md
                            font-medium hover:opacity-90 active:scale-95 transition"
-                onClick={() => handleUpdate(item.HCAId)}
+                onClick={() => handleUpdate(item.ClientId)}
               >
                 ✔ {item.HCAName}'s Attendance Check-in
               </button>

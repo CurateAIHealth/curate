@@ -18,6 +18,7 @@ import { EditDeploymentPopup } from "../TimeSheetEditPopUp/page";
 import { LoadingData } from "../Loading/page";
 import TimeSheetTerminationTable from "../Time Sheet Terminations/page";
 import TimeSheetReplacementTable from "../Time Sheet Terminations/page";
+import TerminationTable from "../Terminations/page";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -35,6 +36,7 @@ const [attendanceInfo,setAttendenceInfo]=useState<any>()
    const [Attendecestatus, setAttendenceStatus] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [ShowAttendencePopUp,setShowAttendencePopUp]=useState(false)
 const [showFullMonth,setShowFullMonth]=useState(false)
 const [ParticularDate,SetParticularDate]=useState<any>()
 const [AttenseceInformation,setAttenseceInformation]=useState<any>()
@@ -153,7 +155,13 @@ useEffect(() => {
         hcpTotal: Number(record.hcpTotal) || 0,
         hcpPay: Number(record.hcpPay) || 0,
         days: record.Attendance || [],
-        CareTakerPrice: record.CareTakerPrice || "",
+        CareTakerPrice: record.CareTakerPrice
+  ? `₹${Math.round(
+      parseFloat(
+        String(record.CareTakerPrice).replace(/[^0-9.]/g, "")
+      )
+    )}`
+  : "",
         Month:record.Month,
         Replacement:record.Replacement
       });
@@ -274,7 +282,10 @@ cachedRegisterdUsers=RegisterdUsers??[]
   ];
 
 
-
+const today = new Date();
+const localDate = `${today.getFullYear()}-${String(
+  today.getMonth() + 1
+).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   const getHCPColor = (name: string) => {
     let index = name.charCodeAt(0) % categoryColors.length;
@@ -417,11 +428,24 @@ console.log("Check Days----",processedData)
 
     const UpdateCurrentAttendence = async () => {
       try {
+        setShowAttendencePopUp(true)
         SetStatusMessage("Please Wait...")
-        const UpdateDailyattendece = await UpdatehcpDailyAttendce(selectedYear, selectedMonth)
+        const localDate = `${today.getFullYear()}-${String(
+  today.getMonth() + 1
+).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const UpdateDailyattendece = await UpdatehcpDailyAttendce(selectedYear, selectedMonth)
         if (UpdateDailyattendece.success === true) {
-          SetStatusMessage("HCPs Today's Attendance Updated Succesfully ✅")
+          SetStatusMessage("HCPs Today's Attendance Updated Succesfully")
+          setTimeout(()=>{
+            setShowAttendencePopUp(false)
+        SetStatusMessage("")
+          },2000)
         }
+
+
+
+
+        SetStatusMessage("HCPs Today's Attendance Updated Succesfully ✅")
   
       } catch (err: any) {
   
@@ -550,7 +574,8 @@ const PresentScreen=()=>{
     <div>
       <h1 className="text-1xl sm:text-1xl font-semibold tet-gray-800 tracking-tight flex items-center gap-2">
         {/* 🩺 Curate Health — Time Sheet */}
-        Time Sheet
+     {selectedYear} {selectedMonth}
+        Time Sheet {}
       </h1>
       <p className="text-gray-500 mt-1 text-xs ">
         View invoice and attendance details by month and year.
@@ -917,7 +942,50 @@ className={`
  
 </div>
 
+{ShowAttendencePopUp && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn">
+    
+    <div className="relative w-[92%] max-w-md bg-white rounded-2xl shadow-2xl p-6 transform animate-scaleIn">
 
+ 
+      <button
+         onClick={() => setShowAttendencePopUp(false)}
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg"
+      >
+        ✕
+      </button>
+
+   
+      <div className="flex items-center justify-center w-16 h-16 mx-auto rounded-full bg-emerald-100">
+        <span className="text-3xl text-emerald-600">✔</span>
+      </div>
+
+      
+      <h2 className="mt-5 text-center text-lg font-semibold text-gray-800">
+        {StatusMessage}
+      </h2>
+
+      
+      {StatusMessage === "Please Wait..." && (
+        <div className="mt-4 flex justify-center">
+          <div className="w-6 h-6 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+
+    
+      {StatusMessage !== "Please Wait..." && (
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => setShowAttendencePopUp(false)}
+            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-md transition"
+          >
+            Close
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+)}
 <div className="relative w-full overflow-x-auto rounded-xl border border-gray-200 bg-white">
   <table className="w-full border-collapse text-[10px] md:text-sm text-gray-800">
     <thead className="sticky top-0 z-20 bg-gradient-to-r from-teal-600 to-emerald-500 text-white">
@@ -996,17 +1064,17 @@ className={`
           >
             <Td className="text-center align-middle">{idx+1}</Td>
 
-            <Td className="font-bold break-words"> {r.Replacement ? (
+            <Td className="font-bold text-center break-words"> {r.Replacement ? (
                 <span className="inline-flex items-center gap-1.5">
                   <img
                     src="Icons/RegisterIcone.png"
                     alt="Replacement"
                     className="w-7 h-7 object-contain"
                   />
-                 {r.invoice||"Not Provided"}
+                 {r.invoice||"Yet to Sent Invoice"}
                 </span>
               ) : (
-               r.invoice
+               r.invoice||"Yet to Sent Invoice"
               )}</Td>
             
             <Td className="break-words">{r.startDate}</Td>
@@ -1019,15 +1087,41 @@ className={`
               {r.clientName}
             </td>
 
-            <td
-              className="font-bold break-words align-middle"
-              // onClick={()=>RouteToClient(r.hcpId,r.hcpName)}
-            >
-               <div className="flex items-center gap-2">
-                  <img className='h-5 w-5' src={AssignSuitableIcon(GetHCPGender(r.hcpId),GetHCPType(r.hcpId))}/>
-              {r.hcpName}
-              </div>
-            </td>
+          <td className="font-bold break-words align-middle">
+  <div className="relative flex items-center gap-2 group w-fit">
+
+    <img
+      className="h-5 w-5"
+      src={
+        AssignSuitableIcon(
+          GetHCPGender(r.hcpId),
+          GetHCPType(r.hcpId)
+        ).image
+      }
+    />
+
+    {r.hcpName}
+
+    <div
+      className="absolute left-0 -top-11 z-50
+                 opacity-0 group-hover:opacity-100
+                 translate-y-2 group-hover:translate-y-0
+                 transition-all duration-300 ease-out
+                 bg-gradient-to-br from-[#00A9A5] to-[#005f61]
+                 text-white text-xs font-medium
+                 px-3 py-2 rounded-xl shadow-xl
+                 whitespace-nowrap pointer-events-none"
+    >
+      {
+        AssignSuitableIcon(
+          GetHCPGender(r.hcpId),
+          GetHCPType(r.hcpId)
+        ).caseType
+      }
+    </div>
+
+  </div>
+</td>
 
           <Td className="font-bold break-words">
   {r.CareTakerPrice
@@ -1748,6 +1842,9 @@ case "TimeSheet":
   return PresentScreen();
   case "Repleasment":
     return <TimeSheetReplacementTable UpdateScreen={(A:any)=>setCurrentTimeSheetScreen(A)}/>;
+
+    case "Termination":
+   return <TerminationTable/>;
     default:
       return null
   }
