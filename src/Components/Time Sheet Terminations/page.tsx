@@ -232,7 +232,7 @@ console.log("Check For Salary Info--------",)
   {/* Action Buttons */}
   <div className="flex items-center gap-3">
     <button
-      onClick={() => UpdateScreen("")}
+      onClick={() => UpdateScreen("Termination")}
       className="flex items-center gap-2 px-4 py-2 rounded-xl
                  bg-rose-50 text-rose-600 text-sm font-semibold
                  border border-rose-200

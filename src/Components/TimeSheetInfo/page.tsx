@@ -18,7 +18,9 @@ import { EditDeploymentPopup } from "../TimeSheetEditPopUp/page";
 import { LoadingData } from "../Loading/page";
 import TimeSheetTerminationTable from "../Time Sheet Terminations/page";
 import TimeSheetReplacementTable from "../Time Sheet Terminations/page";
-import TerminationTable from "../Terminations/page";
+
+import { CurrentRegisterUser } from "@/Redux/reducer";
+import TimeSheetTerminationTableInfo from "../TimeSheetTerminationTableInfo/page";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -29,8 +31,9 @@ export default function InvoiceMedicalTable() {
  const now = new Date();
  const [isChecking, setIsChecking] = useState(true);
 const currentYear = now.getFullYear().toString();
-const [CurrentTimeSheetScreen,setCurrentTimeSheetScreen]=useState("TimeSheet")
 const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
+const [CurrentTimeSheetScreen,setCurrentTimeSheetScreen]=useState("TimeSheet")
+
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
   const [open, setOpen] = useState(false);
    const [Attendecestatus, setAttendenceStatus] = useState("");
@@ -54,6 +57,8 @@ const [ShowUpdateAttendece,SetShowUpdateAttendece]=useState(false)
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [showPendingCalendar, setShowPendingCalendar] = useState(false);
    const [showMissingCalendar, setShowMissingCalendar] = useState(false);
+   
+      const [showAttendeceMissingCalendar, setshowAttendeceMissingCalendar] = useState(false);
     const [status, setStatus] =useState<any>('')
     const [users, setUsers] = useState<any[]>([]);
       const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
@@ -433,9 +438,15 @@ console.log("Check Days----",processedData)
         const localDate = `${today.getFullYear()}-${String(
   today.getMonth() + 1
 ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  const UpdateDailyattendece = await UpdatehcpDailyAttendce(selectedYear, selectedMonth)
+  // const UpdateDailyattendece = await UpdatehcpDailyAttendce(selectedYear, selectedMonth)
+    const UpdateDailyattendece = await UpdatehcpDailyAttendce(
+    selectedYear,
+    selectedMonth,
+     new Date().toISOString().split("T")[0]
+  );
+
         if (UpdateDailyattendece.success === true) {
-          SetStatusMessage("HCPs Today's Attendance Updated Succesfully")
+          SetStatusMessage("HCPs Today's Attendance Updated Successfully")
           setTimeout(()=>{
             setShowAttendencePopUp(false)
         SetStatusMessage("")
@@ -574,7 +585,7 @@ const PresentScreen=()=>{
     <div>
       <h1 className="text-1xl sm:text-1xl font-semibold tet-gray-800 tracking-tight flex items-center gap-2">
         {/* 🩺 Curate Health — Time Sheet */}
-     {selectedYear} {selectedMonth}
+  
         Time Sheet {}
       </h1>
       <p className="text-gray-500 mt-1 text-xs ">
@@ -586,7 +597,7 @@ const PresentScreen=()=>{
     <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 w-full lg:w-auto">
      
       <button
-        onClick={() => setShowMissingCalendar(true)}
+        onClick={() => setshowAttendeceMissingCalendar(true)}
         className="px-4 py-2 text-sm bg-blue-500 text-white cursor-pointer rounded-lg shadow hover:bg-blue-800 w-full sm:w-auto"
       >
         View Missing Attendance
@@ -934,6 +945,7 @@ className={`
                border border-rose-200 shadow-sm
                hover:bg-rose-50 hover:border-rose-300
                active:scale-[0.98] transition-all cursor-pointer"
+                onClick={()=>setCurrentTimeSheetScreen("Termination")}
   >
     ⛔ Terminations
   </button>
@@ -1005,7 +1017,7 @@ className={`
         {showFull && <th className=" text-white text-center min-w-[40px]">PD</th>}
         {showFull && <th className="text-white text-center min-w-[40px]">AD</th>}
         {showFull && <th className=" text-white text-center min-w-[40px]">HP</th>}
-
+{currentMonth===selectedMonth&&currentYear===selectedYear&&
         <Th className={`${showFull?"":"w-[6%]"}  text-center`}>
    <div className="flex flex-col items-center justify-between
                 w-16 h-12
@@ -1017,10 +1029,12 @@ className={`
   
   <div className="flex  items-center leading-none">
     <CalendarDays size={10} />
-    <span className="text-[10px] ml-1 font-semibold">
-      {new Date().getDate()}
+    <span className="text-[9px] ml-1 font-semibold">
+      {/* {new Date().getDate()} */}
+      {new Date().toLocaleDateString("En-In")}
     </span>
   </div>
+
 
 
   <button
@@ -1037,7 +1051,7 @@ className={`
   </button>
 
 </div>
-        </Th>
+        </Th>}
         <Th className={`${showFull?"":"w-[10%]"} text-center`}>
           Action
         </Th>
@@ -1139,7 +1153,7 @@ className={`
             {showFull && <td className="bg-amber-50 text-center font-bold">{r.pd}</td>}
             {showFull && <td className="bg-amber-50 text-center font-bold">{r.ad}</td>}
             {showFull && <td className="bg-amber-50 text-center font-bold">{r.hp}</td>}
-
+{currentMonth===selectedMonth&&currentYear===selectedYear&&
             <Td className="text-center align-middle">
               {dayStatus==="-"?(
                 <span className="flex flex-col items-center leading-[10px] text-[9px] font-semibold text-gray-600">
@@ -1164,7 +1178,7 @@ className={`
                 </div>
               )}
             </Td>
-
+      }
             <Td className="text-center align-middle">
               <button
                 className="px-2 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600"
@@ -1602,10 +1616,10 @@ console.log("Check Replasement Status-----", attendanceInfo)
           </div>
         </div>
       )}
-{showMissingCalendar&&  <div className=" flex flex-col fixed inset-0 z-50 bg-black/85">
+{showAttendeceMissingCalendar&&  <div className=" flex flex-col fixed inset-0 z-50 bg-black/85">
         <div className="flex justify-end mt-4 mr-2">
           <button
-                onClick={() => setShowMissingCalendar(false)}
+                onClick={() => {setshowAttendeceMissingCalendar(false);SetStatusMessage("Successfully Fetched Updated Info")}}
                 className="inline-flex  cursor-pointer gap-2 rounded-full border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100"
               >
                 <X size={16} />
@@ -1844,7 +1858,7 @@ case "TimeSheet":
     return <TimeSheetReplacementTable UpdateScreen={(A:any)=>setCurrentTimeSheetScreen(A)}/>;
 
     case "Termination":
-   return <TerminationTable/>;
+   return <TimeSheetTerminationTableInfo UpdateTerminationScreen={(A:any)=>setCurrentTimeSheetScreen(A) }/>;
     default:
       return null
   }

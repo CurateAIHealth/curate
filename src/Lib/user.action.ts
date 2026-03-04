@@ -2510,21 +2510,19 @@ export const PostReason = async (
 };
 export const UpdatehcpDailyAttendce = async (
   selectedYear: string | number,
-  selectedMonth: string | number
+  selectedMonth: string | number,
+  selectedDate: string
 ) => {
   try {
-    
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Deployment");
 
-    
-    const monthKey = `${selectedYear}-${selectedMonth}`;
+    const monthKey = `${selectedYear}-${Number(selectedMonth)}`;
 
-   
-    const todayKey = new Date().toISOString().slice(0, 10);
+    const dateObj = new Date(selectedDate);
+    const selectedDateKey = dateObj.toISOString().slice(0, 10);
 
-    
     const records = await collection.find({ Month: monthKey }).toArray();
 
     if (!records.length) {
@@ -2534,47 +2532,42 @@ export const UpdatehcpDailyAttendce = async (
       };
     }
 
-    let operations: any[] = [];
+    const operations: any[] = [];
 
-   
     for (const record of records) {
-      
       const cleanedAttendance = Array.isArray(record.Attendance)
-        ? record.Attendance.filter(
-            (a: any) =>
-              a &&
-              typeof a === "object" &&
-              a.AttendenceDate
-          )
+        ? record.Attendance.filter((a: any) => a && typeof a === "object")
         : [];
 
-     
-      const alreadyMarked = cleanedAttendance.some(
-        (a: any) =>
-          new Date(a.AttendenceDate)
-            .toISOString()
-            .slice(0, 10) === todayKey
-      );
+      const alreadyMarked = cleanedAttendance.some((a: any) => {
+        if (a?.dateKey) {
+          return a.dateKey === selectedDateKey;
+        }
+        if (a?.AttendenceDate) {
+          const key = new Date(a.AttendenceDate).toISOString().slice(0, 10);
+          return key === selectedDateKey;
+        }
+        return false;
+      });
 
       if (alreadyMarked) continue;
 
-   
       const attendanceEntry = {
-        dateKey: todayKey,
-        AttendenceDate: new Date(),
+        dateKey: selectedDateKey,
+        AttendenceDate: dateObj,
         HCPAttendence: true,
         AdminAttendece: true,
+        CreatedAt: new Date(),
         UpdatedAt: new Date(),
         UpdatedBy: "Admin",
       };
 
-      
       operations.push({
         updateOne: {
           filter: { _id: record._id },
           update: {
+            $push: { Attendance: attendanceEntry },
             $set: {
-              Attendance: [...cleanedAttendance, attendanceEntry],
               UpdatedAt: new Date(),
               UpdatedBy: "Admin",
             },
@@ -2583,7 +2576,6 @@ export const UpdatehcpDailyAttendce = async (
       });
     }
 
-    
     const result =
       operations.length > 0
         ? await collection.bulkWrite(operations)
@@ -2592,10 +2584,9 @@ export const UpdatehcpDailyAttendce = async (
     return {
       success: true,
       updated: result?.modifiedCount || 0,
-      message: `${result?.modifiedCount || 0} attendance records updated for today.`,
+      message: `${result?.modifiedCount || 0} attendance records updated.`,
     };
   } catch (error: any) {
-    console.error("❌ Error updating attendance:", error);
     return {
       success: false,
       message: "Error occurred while updating attendance.",
