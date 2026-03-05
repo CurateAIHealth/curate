@@ -1297,7 +1297,7 @@ return
     <div className="flex flex-col items-center justify-center gap-1 bg-white border border-gray-200 rounded-lg p-2 w-full">
       <input
         type="text"
-        value={UpdatedHCPSalary||'0'}
+        value={UpdatedHCPSalary||''}
         onChange={(e: any) => SetUpdatedHCPSalary(e.target.value)}
         className="w-[70px] px-1 text-center py-1 text-[10px] border border-gray-300 rounded
                    focus:outline-none focus:ring-1 focus:ring-indigo-400"
@@ -1325,7 +1325,7 @@ return
 
       <div className="flex w-[70px] items-center gap-2 mt-1">
         <span className="text-[10px] font-semibold text-gray-800">
-          ₹ {GetHCPPayment(user.userId)}
+          ₹ {UpdatedHCPSalary&&SelectedHCPSalaryId===user.userId?UpdatedHCPSalary:GetHCPPayment(user.userId)}
         </span>
 
         <button
@@ -1608,7 +1608,6 @@ const handleSave =async (A:any) => {
  dispatch(Refresh(`Please Wait....`))
 const UpdateSalary:any=await HCASalaryUpdate(A,UpdatedHCPSalary)
 if(UpdateSalary.success){
-
    dispatch(Refresh("Salary Updated Successfully."))
   setIsEditing(false);
 }
@@ -1705,6 +1704,10 @@ if(UpdateSalary.success){
       <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>router.push("/PDRView")}>
     PDR 
       </button>
+      <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>router.push("/PaymentsInfo")}>
+    Payments 
+      </button>
+      
     </div>
   )}
     <button

@@ -412,7 +412,7 @@ const pendingPdr = timesheets.filter((t: any) => {
         bg: "bg-green-500",
       },
       {
-        name: "Referral Pay",
+        name: "Payments",
         count: stats.ReferalCount,
         icon: IndianRupee,
         bg: "bg-orange-500",
@@ -870,6 +870,9 @@ const Switching = (name: string) => {
     case "Invoices":
       router.push("/Invoices");
       break;
+        case "Payments":
+      router.push("/PaymentsInfo");
+      break;
 
     case "Registration":
       router.push("/UserTypeRegistration");
@@ -949,7 +952,7 @@ setNotificationStatus("Notification Send Succesfully")
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard
+      Hi Admin – Welcome to Admin Dashboard.
     </span>
   </div>
 
