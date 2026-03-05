@@ -616,9 +616,9 @@ CheckPaymentStatus:CurrentPaymentStatus
     <div className="flex justify-between items-center px-5 py-3 border-b border-gray-400">
       <div>
         <p className="text-sm font-medium text-gray-800">Invoice list</p>
-        <p className="text-xs text-gray-500">
+        {/* <p className="text-xs text-gray-500">
           Showing {paginatedData.length} of {filteredInvoices.length} filtered invoices
-        </p>
+        </p> */}
       </div>
  <>
     {status === "Updating Payment Status..." && (
@@ -644,43 +644,43 @@ CheckPaymentStatus:CurrentPaymentStatus
       </button>
     </div>
 
-    <div className="w-full">
-      <div
-        className="
-        grid text-xs font-semibold text-gray-600 bg-[#f9fafc] border-b px-5 py-2 gap-2
-        grid-cols-3 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-12
-        "
-      >
-        <div>Patient / Client</div>
-        <div>Contact</div>
-        <div className="hidden sm:block">Status</div>
-        <div className="hidden sm:block">Due Date</div>
-        <div className="hidden md:block">Total Amount</div>
-        <div className="hidden md:block">Advance Paid</div>
-        <div className="hidden md:block">Balance</div>
-        <div className="hidden lg:block">Remarks</div>
-        <div>Actions</div>
-        <div>Edit</div>
-        <div>Payment Status</div>
-        <div>Download</div>
-      </div>
-    </div>
+  <div className="w-full border rounded-md overflow-hidden">
+  <div
+    className="
+    grid text-xs font-semibold text-white bg-teal-800 border-b px-4 py-3 gap-2
+    grid-cols-3 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-12
+    "
+  >
+    <div>Patient / Client</div>
+    <div>Contact</div>
+    <div className="hidden sm:block">Status</div>
+    <div className="hidden sm:block">Due Date</div>
+    <div className="hidden md:block">Total Amount</div>
+    <div className="hidden md:block">Advance Paid</div>
+    <div className="hidden md:block">Balance</div>
+    <div className="hidden lg:block">Remarks</div>
+    <div>Actions</div>
+    <div>Edit</div>
+    <div>Payment Status</div>
+    <div>Download</div>
+  </div>
 
-    {paginatedData.map((inv, index) => {
-      const dueInfo = getDueStatus(inv.StartDate);
+  <div className="max-h-[600px] overflow-y-auto">
+    {filteredInvoices?.map((inv: any, index: any) => {
+      const dueInfo = getDueStatus(inv.StartDate)
+
       const total =
         getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
-          Number(String(inv.CareTakeCharge || "0").replace("₹", ""))
- +
-        Number(inv.RegistrationFee);
+          Number(String(inv.CareTakeCharge || "0").replace("₹", "")) +
+        Number(inv.RegistrationFee)
 
-      const balance = Number(total) - Number(inv.AdvanceReceived||0);
+      const balance = Number(total) - Number(inv.AdvanceReceived || 0)
 
       return (
         <div
-           key={`${inv.id}-${inv.createdAt || index}`}
+          key={`${inv.id}-${inv.createdAt || index}`}
           className="
-          grid px-4 py-3 border-b text-sm gap-2 hover:bg-[#f7f9fd] transition
+          grid px-4 py-3 border-b border-gray-200 text-sm gap-2 hover:bg-[#f7f9fd] transition
           grid-cols-3 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-12
           "
         >
@@ -706,22 +706,26 @@ CheckPaymentStatus:CurrentPaymentStatus
               {inv.status}
             </span>
           </div>
- {inv.PaymentStatus ? <span className="px-3 py-1 rounded-full text-[8px] text-center font-medium  text-green-600 border border-green-300">
-                Received with in Due Date
-              </span> : 
-          <div className="hidden sm:block">
-            {dueInfo.status === "overdue" ? (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600 border border-red-300">
-                Overdue
-              </span>
-            ) : (
-              <span className="text-gray-700 text-xs">{dueInfo.label}</span>
-            )}
-          </div>}
+
+          {inv.PaymentStatus ? (
+            <span className="px-3 py-1 rounded-full text-[8px] text-center font-medium text-green-600 border border-green-300">
+              Received within Due Date
+            </span>
+          ) : (
+            <div className="hidden sm:block">
+              {dueInfo.status === "overdue" ? (
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600 border border-red-300">
+                  Overdue
+                </span>
+              ) : (
+                <span className="text-gray-700 text-xs">{dueInfo.label}</span>
+              )}
+            </div>
+          )}
 
           <div className="hidden md:block">₹{total}/-</div>
 
-          <div className="hidden md:block">₹{Number(inv.AdvanceReceived)||0}/-</div>
+          <div className="hidden md:block">₹{Number(inv.AdvanceReceived) || 0}/-</div>
 
           <div className="hidden md:block">₹{Number(balance)}/-</div>
 
@@ -736,7 +740,7 @@ CheckPaymentStatus:CurrentPaymentStatus
           <div className="flex items-center">
             {inv.status === "Draft" ? (
               <button
-                className="px-2 py-1  rounded-md text-[13px] flex items-center gap-2 text-red-500"
+                className="px-2 py-1 rounded-md text-[13px] flex items-center gap-2 text-red-500"
                 onClick={() => UpdateInvoiceMailTemplate(inv)}
               >
                 <SquarePen className="w-4 h-4" /> Edit & Send
@@ -752,34 +756,24 @@ CheckPaymentStatus:CurrentPaymentStatus
             <Pencil className="w-4 h-4" onClick={() => EditInvoice(inv.id)} />
           </div>
 
-    <div
-  className={`flex px-1 py-1 text-[10px] font-medium border rounded-md w-fit h-fit 
-  items-center gap-2 relative 
-  ${inv.PaymentStatus
-    ? "border-green-400 text-green-600 bg-green-50"
-    : "border-red-400 text-red-600 bg-red-50"
-  }`}
->
-  {inv.PaymentStatus ? "Received" : "Due"}
+          <div
+            className={`flex px-1 py-1 text-[10px] font-medium border rounded-md w-fit h-fit items-center gap-2 ${
+              inv.PaymentStatus
+                ? "border-green-400 text-green-600 bg-green-50"
+                : "border-red-400 text-red-600 bg-red-50"
+            }`}
+          >
+            {inv.PaymentStatus ? "Received" : "Due"}
 
-  {!inv.PaymentStatus && (
-    <button
-      className="
-        transition-all duration-300
-        px-3 py-[3px]
-        bg-teal-800 text-white text-[10px]
-        rounded-full shadow-sm
-        cursor-pointer
-        hover:bg-teal-900
-      "
-      onClick={() => UpdatePaymentStatus(inv.id)}
-    >
-      Update
-    </button>
-  )}
-</div>
-
-
+            {!inv.PaymentStatus && (
+              <button
+                className="px-3 py-[3px] bg-teal-800 text-white text-[10px] rounded-full hover:bg-teal-900"
+                onClick={() => UpdatePaymentStatus(inv.id)}
+              >
+                Update
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center cursor-pointer">
             {inv.status !== "Draft" && (
@@ -787,14 +781,16 @@ CheckPaymentStatus:CurrentPaymentStatus
             )}
           </div>
         </div>
-      );
+      )
     })}
+  </div>
+</div>
   </div>
 </div>
 
 
 
-          <div className="flex justify-between items-center mt-5 text-xs text-gray-600">
+          {/* <div className="flex justify-between items-center mt-5 text-xs text-gray-600">
             <span>Page {page} of {totalPages}</span>
 
             <div className="flex gap-2">
@@ -814,7 +810,7 @@ CheckPaymentStatus:CurrentPaymentStatus
                 Next
               </button>
             </div>
-          </div>
+          </div> */}
         </div> :
         <div id="invoice-pdf-area">
           <ReusableInvoice

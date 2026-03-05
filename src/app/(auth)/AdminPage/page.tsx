@@ -22,6 +22,7 @@ import {
   GetUserPDRInfo,
   UpdateUserCurrentstatusInHCPView,
   GetPopUpUserPDRInfo,
+  HCASalaryUpdate,
   
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
@@ -60,11 +61,14 @@ export default function UserTableList() {
   const SearchMonth = useSelector((state: any) => state.MonthFilterAdmin)
   const SearchYear = useSelector((state: any) => state.YearFilterAdmin)
   const [HCPPreviewtype,setHCPPreviewtype]=useState("")
+  const [UpdatedHCPSalary,SetUpdatedHCPSalary]=useState<any>()
 const [SearchResult, setSearchResult] = useState("")
   const [search, setSearch] = useState('');
+   const [isEditing, setIsEditing] = useState(false);
   const [AsignStatus, setAsignStatus] = useState("")
   const [LoginEmail, setLoginEmail] = useState("");
   const [DeleteInformation, SetDeleteInformation] = useState<any>()
+  const [SelectedHCPSalaryId,setSelectedHCPSalaryId]=useState()
   const [showOptions, setShowOptions] = useState(false);
 const [searchLead, setSearchLead] = useState("");
 const [showSuggestions, setShowSuggestions] = useState(true);
@@ -783,6 +787,9 @@ return
                           {UpdateduserType === "healthcare-assistant" && (
                             <th className="px-4 py-2 text-center w-[14%]">Inform</th>
                           )}
+                          {UpdateduserType === "healthcare-assistant" && (
+                            <th className="px-4 py-2 text-center w-[14%]">Payment</th>
+                          )}
                           {UpdateduserType !== "healthcare-assistant" && (
                             <th className="px-4 py-2 w-[14%]">Client Status</th>
                           )}
@@ -1280,7 +1287,65 @@ return
   Send Profile
 </button>
                               </td>
+                              
   }
+{UpdateduserType === "healthcare-assistant" &&
+  <td className="md:px-8 md:py-2">
+                              
+        <div className="flex items-center justify-center w-fit">
+  {isEditing&&SelectedHCPSalaryId===user.userId ? (
+    <div className="flex flex-col items-center justify-center gap-1 bg-white border border-gray-200 rounded-lg p-2 w-full">
+      <input
+        type="text"
+        value={UpdatedHCPSalary||'0'}
+        onChange={(e: any) => SetUpdatedHCPSalary(e.target.value)}
+        className="w-[70px] px-1 text-center py-1 text-[10px] border border-gray-300 rounded
+                   focus:outline-none focus:ring-1 focus:ring-indigo-400"
+      />
+
+      <div className="flex gap-1">
+        <button
+          onClick={() => handleSave(user.userId)}
+          className="flex-1 px-1 py-1 text-[8px] font-medium text-white bg-emerald-500 rounded hover:bg-emerald-600"
+        >
+          Save
+        </button>
+
+        <button
+          onClick={() => setIsEditing(false)}
+          className="flex-1 px-1 py-1 text-[8px] font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  ) : (
+    <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 w-full">
+      <p className="text-[8px] text-gray-500 leading-none">HCP Salary</p>
+
+      <div className="flex w-[70px] items-center gap-2 mt-1">
+        <span className="text-[10px] font-semibold text-gray-800">
+          ₹ {GetHCPPayment(user.userId)}
+        </span>
+
+        <button
+          onClick={() => {setIsEditing(true);setSelectedHCPSalaryId(user.userId);SetUpdatedHCPSalary(GetHCPPayment(user.userId))}}
+          className="text-[9px] text-indigo-600 bg-indigo-50 px-1 cursor-pointer py-[2px] rounded"
+        >
+          <Pencil size={9}/>
+        </button>
+      </div>
+
+      <p className="text-[9px] text-gray-500 leading-none mt-1">
+        Per day:
+        <span className="ml-1 font-semibold text-green-600">
+          ₹{Math.round(Number(GetHCPPayment(user.userId)) / 30)}
+        </span>
+      </p>
+    </div>
+  )}
+</div>
+                              </td>}
                             {/* {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
                         <td className="px-2 py-2">
                           <select
@@ -1537,6 +1602,28 @@ Awaiting Conversion
       ?.["PermanentState"]||"Not Provided";
 
     return address ?? "Not Entered";
+  };
+const handleSave =async (A:any) => {
+  setIsEditing(false)
+ dispatch(Refresh(`Please Wait....`))
+const UpdateSalary:any=await HCASalaryUpdate(A,UpdatedHCPSalary)
+if(UpdateSalary.success){
+
+   dispatch(Refresh("Salary Updated Successfully."))
+  setIsEditing(false);
+}
+   
+  };
+   const GetHCPPayment = (A: any) => {
+    if (!UserFullInfo?.length || !A) return "Not Entered";
+
+    const address =
+      UserFullInfo
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.["PaymentforStaff"]||0;
+
+    return Number(address) 
   };
 
 
@@ -1835,7 +1922,7 @@ onClick={()=>UpdateNavigattosuggetions()}
     <button
       key={status.value}
       type="button"
-      onClick={() => setHCPCurrentStatus(status.value)}
+      onClick={() => {setHCPCurrentStatus(status.value);dispatch(UpdateAdminMonthFilter("")),dispatch(UpdateAdminYearFilter(""))}}
       className={`px-2 py-1 rounded-md text-[10px] font-medium border transition whitespace-nowrap cursor-pointer
         ${
           HCPCurrentStatus === status.value
