@@ -322,6 +322,7 @@ text-left
       {user.ContactNumber || "Awaiting Info"}
     </span>
   </span>
+  
 <span className="flex items-center w-fit text-center">
   <div className="relative w-fit text-center">
     <select

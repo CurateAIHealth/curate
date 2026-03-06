@@ -1243,6 +1243,41 @@ RegistrationFee:RegistrationFee,
   }
 };
 
+export const PostHCPSalaryRequest = async (
+HCPInfo:any,
+RequestedSalary:any,
+From:any
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Notifications");
+
+    const payload = {
+      HCPId:HCPInfo.userId,
+      HCPName:HCPInfo.FirstName,
+      RequestedSalary:RequestedSalary,
+      Message:`Salary Update Request for ${HCPInfo.FirstName} To ₹${RequestedSalary}/- Per Month, (₹${Math.round(Number(RequestedSalary) / 30)} per day) from ${From}`,
+      Date:new Date().toISOString().split("T")[0],
+      Type:"HCP Salary Request",
+      Status :"Pending"
+    };
+
+    const result = await collection.insertOne(payload);
+
+    return {
+      success: true,
+      message:"Notification Send Succesfully"
+    };
+  } catch (err: any) {
+    console.error("PostCallEnquiryNotification error:", err);
+
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+};
 
 
 export const PostFullRegistration = async (Info: any) => {
@@ -2942,7 +2977,12 @@ export const SuitableHCPUpdate = async (ClientId: any,Impid:any, HCPId: any) => 
 
 export const ClearEnquiry = async (userId: string) => {
   try {
-    const client = await clientPromise;
+  console.time("Mongo Connect");
+
+const client = await clientPromise;
+
+console.timeEnd("Mongo Connect");
+
     const db = client.db("CurateInformation");
     const collection = db.collection("Registration");
 
@@ -4546,7 +4586,9 @@ export const UpdateClientStatusinCallEnquiry = async (
           ClientStatus: ContactStatus,
           userType: isPatient ? "patient" : "CallEnquiry",
         },
-      },
+      }
+
+      ,
       { upsert: true } 
     );
 
@@ -4787,11 +4829,309 @@ export const UpdateRemainderTimer = async (UserId: any, NewTime: string, NewDate
 }
 
 
+export const GetDashboardStats = async () => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const Registration = db.collection("Registration");
+    const Deployment = db.collection("Deployment");
+    const Invoices = db.collection("Invoices");
+    const Timesheet = db.collection("Timesheet");
+
+    const now = new Date();
+
+    const currentUTCYear = now.getUTCFullYear();
+    const currentUTCMonth = now.getUTCMonth();
+
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    const [users, deployments, invoices, timesheets] = await Promise.all([
+      Registration.find(
+        {},
+        { projection: { userType: 1, LeadDate: 1, createdAt: 1 } }
+      ).toArray(),
+
+      Deployment.find(
+        {},
+        { projection: { StartDate: 1, ClientId: 1 } }
+      ).toArray(),
+
+      Invoices.find(
+        {},
+        { projection: { DeployDate: 1, status: 1 } }
+      ).toArray(),
+
+      Timesheet.find(
+        {},
+        { projection: { StartDate: 1, PDRStatus: 1 } }
+      ).toArray(),
+    ]);
+
+    let monthReg = 0;
+    let patientCount = 0;
+    let healthcareUserCount = 0;
+    let vendor = 0;
+
+    const VALID_USER_TYPES = new Set(["healthcare-assistant"]);
+
+    const getISODate = (value: any) => {
+      if (!value) return null;
+      if (value instanceof Date) return value;
+      if (typeof value === "string") return new Date(value);
+      if (value?.toDate) return value.toDate();
+      return null;
+    };
+
+    for (const u of users) {
+      const leadDate = getISODate(u.LeadDate);
+      const createdDate = getISODate(u.createdAt);
+
+      const isCurrentMonth =
+        (leadDate &&
+          leadDate.getUTCFullYear() === currentUTCYear &&
+          leadDate.getUTCMonth() === currentUTCMonth)
+          
+        //   ||
+        // (createdDate &&
+        //   createdDate.getUTCFullYear() === currentUTCYear &&
+        //   createdDate.getUTCMonth() === currentUTCMonth);
+
+      if (!isCurrentMonth) continue;
+
+      monthReg++;
+
+      if (u.userType === "patient" || u.userType === "CallEnquiry") {
+        patientCount++;
+      } else if (VALID_USER_TYPES.has(u.userType)) {
+        healthcareUserCount++;
+      } else {
+        vendor++;
+      }
+    }
+
+    const deployedUnique = deployments.filter((i: any) => {
+      if (!i?.StartDate || !i?.ClientId) return false;
+
+      const [, month, year] = i.StartDate.split("/").map(Number);
+
+      return month === currentMonth && year === currentYear;
+    });
+
+    const invoiceFiltered = invoices.filter((i: any) => {
+      if (!i?.DeployDate) return false;
+
+      const [, month, year] = i.DeployDate.split("/").map(Number);
+
+      return month === currentMonth && year === currentYear && i.status !== "Draft";
+    });
+
+    const PDRcurrentMonth = now.getMonth();
+    const PDRcurrentYear = now.getFullYear();
+
+    const pendingPdr = timesheets.filter((t: any) => {
+      if (!t.StartDate || t.PDRStatus !== false) return false;
+
+      const [day, month, year] = t.StartDate.split("/").map(Number);
+
+      const date = new Date(year, month - 1, day);
+
+      if (isNaN(date.getTime())) return false;
+
+      return (
+        date.getMonth() === PDRcurrentMonth &&
+        date.getFullYear() === PDRcurrentYear
+      );
+    }).length;
+
+    return {
+      success: true,
+      data: {
+        registeredUsers: patientCount,
+        hcpListCount: healthcareUserCount,
+        vendorsCount: vendor,
+        hostelAttendanceCount: 0,
+        registrationCount: monthReg,
+        invoiceCount: invoiceFiltered.length,
+        deployedLength: deployedUnique.length,
+        timesheetcount: deployedUnique.length,
+        pendingPdrCount: pendingPdr,
+        documentComplianceCount: 0,
+        Notifications: 0,
+        Employs: 0,
+      },
+    };
+  } catch (error) {
+    console.error("Dashboard Error:", error);
+
+    return {
+      success: false,
+      data: {},
+    };
+  }
+};
 
 
 
 
 
+
+
+
+const safeDecrypt = (value: any) => {
+  try {
+    if (
+      value &&
+      typeof value === "object" &&
+      "iv" in value &&
+      "content" in value
+    ) {
+      return decrypt(value);
+    }
+    return value;
+  } catch (err) {
+    console.warn("Decryption failed:", err);
+    return value;
+  }
+};
+
+export const GetDashboardData = async (userId: string) => {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        message: "UserId is required",
+        data: null,
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const Users = db.collection("Registration");
+    const UsersFullInfo = db.collection("CompliteRegistrationInformation");
+    const Deployment = db.collection("Deployment");
+
+    const [profileRaw, registeredUsersRaw, fullInfoRaw, deployedLength] =
+      await Promise.all([
+        Users.findOne(
+          { userId },
+          {
+            projection: {
+              _id: 0,
+              userId: 1,
+              FirstName: 1,
+              Email: 1,
+            },
+          }
+        ),
+
+       Users.find({}).toArray(),
+
+        UsersFullInfo.find(
+          {},
+          {
+            projection: {
+              _id: 0,
+            },
+          }
+        ).toArray(),
+
+        Deployment.countDocuments({}),
+      ]);
+
+    // decrypt profile
+    const profile =
+      profileRaw &&
+      Object.fromEntries(
+        Object.entries(profileRaw).map(([key, value]) => [
+          key,
+          safeDecrypt(value),
+        ])
+      );
+
+    // decrypt registered users
+    // const registeredUsers = registeredUsersRaw.map((user: any) => {
+    //   const decryptedUser: any = {};
+
+    //   for (const [key, value] of Object.entries(user)) {
+    //     decryptedUser[key] = safeDecrypt(value);
+    //   }
+
+    //   return decryptedUser;
+    // });
+
+    
+    const safeUsers = registeredUsersRaw.map((user: any) => {
+      const decryptedUser: any = {
+        ...user,
+        _id: user._id?.toString() ?? null,
+      };
+
+      for (const [key, value] of Object.entries(user)) {
+        if (
+          value &&
+          typeof value === "object" &&
+          "iv" in value &&
+          "content" in value
+        ) {
+          try {
+            decryptedUser[key] = decrypt(value as { iv: string; content: string });
+          } catch (e) {
+            console.warn(`Failed to decrypt field ${key} for user ${user._id}:`, e);
+            decryptedUser[key] = value;
+          }
+        }
+      }
+
+      return decryptedUser;
+    });
+
+    // decrypt full info fields
+    const fullInfo = fullInfoRaw.map((user: any) => {
+      const info = user.HCAComplitInformation || {};
+
+      return {
+        ...user,
+        HCAComplitInformation: {
+          ...info,
+          HCPFirstName: safeDecrypt(info["First Name"]),
+          HCPContactNumber: safeDecrypt(info["Mobile Number"]),
+          HCPEmail: safeDecrypt(info["EmailId"]),
+          HCPSurName: safeDecrypt(info["Surname"]),
+          HCPAdharNumber: safeDecrypt(info["Aadhar Card No"]),
+          "Phone No 1": safeDecrypt(info["Phone No 1"]),
+          "Phone No 2": safeDecrypt(info["Phone No 2"]),
+          "Email Id": safeDecrypt(info["Email Id"]),
+          "Client Aadhar No": safeDecrypt(info["Client Aadhar No"]),
+          "Patient Aadhar Number": safeDecrypt(info["Patient Aadhar Number"]),
+          "Alternative Client Contact": safeDecrypt(
+            info["Alternative Client Contact"]
+          ),
+        },
+      };
+    });
+
+    return {
+      success: true,
+      data: {
+        profile: profile || null,
+        registeredUsers: safeUsers || [],
+        fullInfo: fullInfo || [],
+        deployedLength: deployedLength || 0,
+      },
+    };
+  } catch (error) {
+    console.error("Dashboard Fetch Error:", error);
+
+    return {
+      success: false,
+      message: "Failed to fetch dashboard data",
+      data: null,
+    };
+  }
+};
 
 
 
