@@ -201,11 +201,11 @@ useEffect(() => {
         }
       }
 
-      console.time("Dashboard Fetch");
+    
 
       const result: any = await GetDashboardData(userId);
 
-      console.timeEnd("Dashboard Fetch");
+  
 
       if (!mounted || !result?.success) return;
 
@@ -1674,8 +1674,9 @@ Awaiting Conversion
 
 
   const handleLogout = () => {
-    dispatch(Update_Main_Filter_Status(""))
+    
     router.push('/DashBoard');
+    dispatch(Update_Main_Filter_Status(""))
  dispatch(Refresh(""))
   };
 
