@@ -246,7 +246,7 @@ const GetHCPTypeCount = (HCPType: string) => {
     CurrentStatus: each.CurrentStatus || "None",
     LeadSource: each.Source||each.NewLead,
     ClientPriority: each.ClientPriority,
-    CreatedAt: each.createdAt,
+    // CreatedAt: each.createdAt,
     LeadDate: each.LeadDate,
     ServiceArea: each.ServiceArea,
     ServiceLocation: each.ServiceArea,
@@ -301,25 +301,28 @@ console.log("Check----",Finel)
 
     // Date Checker
     const checkDate = (value: any) => {
-      if (!value) return false;
+  if (!value) return false;
 
-      const date = new Date(value);
-      if (isNaN(date.getTime())) return false;
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return false;
 
-      const matchesMonth =
-        !SearchMonth ||
-        date.toLocaleString("default", { month: "long" }) === SearchMonth;
+  const monthNames = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
 
-      const matchesYear =
-        !SearchYear || date.getFullYear() === Number(SearchYear);
+  const matchesMonth =
+    !SearchMonth || monthNames[date.getMonth()] === SearchMonth;
 
-      return matchesMonth && matchesYear;
-    };
+  const matchesYear =
+    !SearchYear || date.getFullYear() === Number(SearchYear);
 
-    const matchesDate =
-      (!SearchMonth && !SearchYear) ||
-      checkDate(each.LeadDate) ||
-      checkDate(each.CreatedAt);
+  return matchesMonth && matchesYear;
+};
+
+  const matchesDate =
+  (!SearchMonth && !SearchYear) ||
+  checkDate(each.LeadDate);
 
     return (
       HCPUserType&&
@@ -358,7 +361,7 @@ console.log("Check-----",Finel.filter((each:any)=>each.id==="2383a38f-8e39-47a0-
       return matchesMonth && matchesYear;
     };
 
-    return checkDate(each.LeadDate) || checkDate(each.CreatedAt);
+    return checkDate(each.LeadDate);
   };
 
 
@@ -652,27 +655,45 @@ const UpdateJoiningDate = async (
   }
 
 const UpdatePopup = async (a: any) => {
-setOpen(true)
-     const pdrRes = await GetPopUpUserPDRInfo(a.userId);
-  
-     if (pdrRes.success===false||pdrRes.data.PDRStatus === false){
-setLoading(false)
-return
-     }
-  dispatch(GetCurrentDeploymentData(a));
+  try {
+    setOpen(true);
+    setLoading(true);
 
-//  dispatch(Refresh("Redirecting to PDR…"))
-  const data = await GetUserInformation(a.userId)
+    const pdrRes = await GetPopUpUserPDRInfo(a.userId);
 
-  dispatch(
-    UpdateFetchedInformation({
-      ...data,
-      updatedAt: normalizeDate(data.updatedAt),
-      createdAt: normalizeDate(data.createdAt),
-    })
-  );
+ 
+    if ( pdrRes?.data?.PDRStatus === false) {
+      setLoading(false);
+      return;
+    }
+    if (!pdrRes?.success ) {
+      setLoading(false);
+      dispatch(Refresh("No PDR Record Found"))
+      return;
+    }
 
-  router.push("/PDR");
+
+    dispatch(GetCurrentDeploymentData(a));
+
+    const data = await GetUserInformation(a.userId);
+
+    if (data) {
+      dispatch(
+        UpdateFetchedInformation({
+          ...data,
+          updatedAt: normalizeDate(data.updatedAt),
+          createdAt: normalizeDate(data.createdAt),
+        })
+      );
+    }
+
+    router.push("/PDR");
+
+  } catch (error) {
+    console.error("UpdatePopup error:", error);
+  } finally {
+    setLoading(false);
+  }
 };
 
 
@@ -815,9 +836,8 @@ return
                           >
                           
                             <td className='pl-4'>{index + 1}</td>
-                       <td><input
-                             
-                              className="
+                       <td>
+                       {/* <input className="
     h-8 w-[70px] px-1
     rounded-xl
     bg-white
@@ -835,30 +855,30 @@ return
     disabled:bg-slate-100 disabled:cursor-not-allowed
 
   "
-                             type="text"
-  placeholder="YYYY-MM-DD"
-  defaultValue={user.LeadDate || ""}
-    onChange={(e: any) => {
-    let value = e.target.value.replace(/\D/g, ""); 
+  value={user.LeadDate || ""}
+  onChange={(e) =>
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.userId === user.userId
+          ? { ...u, LeadDate: e.target.value }
+          : u
+      )
+    )
+  }
+/> */}
+<p className="
+    h-6 pt-1 w-[90px] px-1
+    rounded-xl
+    bg-white
+    border border-slate-300
+    text-[10px] font-semibold text-slate-700
+    shadow-sm
 
- 
-    if (value.length > 4 && value.length <= 6) {
-      value = `${value.slice(0, 4)}-${value.slice(4)}`;
-    } else if (value.length > 6) {
-      value = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
-    }
+    text-center
 
-    e.target.value = value;
-  }}
-  onKeyDown={(e: any) => {
-    if (e.key === "Enter") {
-      const val = e.currentTarget.value;
-      
-      UpdateJoiningDate(user.FirstName, user.userId, val);
-    }
-  }}
-  
-                            />
+  ">{user.LeadDate || ""}</p>
+
+
 
                             </td>
                             {UpdateduserType === "patient" &&
@@ -1957,13 +1977,13 @@ onClick={()=>UpdateNavigattosuggetions()}
                   onChange={async (e) => {
     const month = e.target.value;
 
-    dispatch(Refresh(`Please Wait... Fetching ${month || "All"} info...`));
+    // dispatch(Refresh(`Please Wait... Fetching ${month || "All"} info...`));
 
     // ⏳ wait until month data updates
-    await dispatch(UpdateAdminMonthFilter(month));
+     dispatch(UpdateAdminMonthFilter(month));
 
     // ✅ now trigger fresh reload + message
-    dispatch(Refresh(`Successfully Fetched ${month || "All"} Data`));
+    // dispatch(Refresh(`Successfully Fetched ${month || "All"} Data`));
   }}
                    className="
         w-full h-[44px] rounded-xl

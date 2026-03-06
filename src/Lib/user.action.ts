@@ -1176,7 +1176,7 @@ patientWeight:HCA.patientWeight||"",
       comments: HCA.ClientNote || "",
 
       LeadDate: new Date().toISOString().split("T")[0],
-      createdAt: new Date(),
+      // createdAt: new Date(),
       updatedAt: new Date(),
     };
     const result = await collection.insertOne(encryptedData);

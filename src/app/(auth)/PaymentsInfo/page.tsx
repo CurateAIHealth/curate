@@ -471,7 +471,7 @@ const [SearchResult, setSearchResult] = useState("")
             
           <button
             onClick={() => setShowFull(!showFull)}
-            className="bg-gradient-to-br from-[#00A9A5] to-[#005f61] text-white mt-4 cursor-pointer px-5 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition"
+            className="bg-gradient-to-br from-[#00A9A5] to-[#005f61] text-white mt-4 cursor-pointer px-2 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition"
           >
             {showFull ? "Show Less Columns" : "Show Full Table"}
           </button>
