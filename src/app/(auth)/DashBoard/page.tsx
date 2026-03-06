@@ -39,7 +39,7 @@ import {
   UpdateUserInformation,
   UpdateUserType,
 } from "@/Redux/action";
-import { CallEnquiryRegistration, GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, PostCallEnquiryNotification } from "@/Lib/user.action";
+import { CallEnquiryRegistration, GetDashboardStats, GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, PostCallEnquiryNotification } from "@/Lib/user.action";
 
 
 
@@ -98,6 +98,7 @@ const [languageInput, setLanguageInput] = useState("");
 const [languageOptions, setLanguageOptions] = useState<string[]>([]);
 const [showLeadSuggestions, setShowLeadSuggestions] = useState(false);
 const [filteredLeads, setFilteredLeads] = useState<string[]>([])
+
 const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
   const [EnquiryForm, setEnquiryForm] = useState<any>({
@@ -143,219 +144,105 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   });
 
 const DASHBOARD_CACHE_KEY = "dashboardStats";
-const CACHE_TTL = 10* 60 * 1000;
+const CACHE_TTL = 10 * 60 * 1000;
+
 const BENCH_CACHE_KEY = "benchListInfo";
 const BENCH_CACHE_TTL = 10 * 60 * 1000;
 
-  useEffect(() => {
-    let mounted = true;
+useEffect(() => {
+  let mounted = true;
 
-    const run = async () => {
-       const userId = localStorage.getItem("UserId");
-          if (userId) {
+  const run = async () => {
+    const userId = localStorage.getItem("UserId");
+
+    if (userId) {
       const user = await GetUserInformation(userId);
       if (mounted && user?.Email) {
-   
-         dispatch(CurrentLoginUser(user?.Email))
+        dispatch(CurrentLoginUser(user.Email));
       }
     }
-      const cachedStats = localStorage.getItem(DASHBOARD_CACHE_KEY);
-      const cachedBench = localStorage.getItem(BENCH_CACHE_KEY);
 
-      let statsValid = false;
-      let benchValid = false;
+    const cachedStats = localStorage.getItem(DASHBOARD_CACHE_KEY);
+    const cachedBench = localStorage.getItem(BENCH_CACHE_KEY);
 
-      if (cachedStats) {
-        const { data, timestamp } = JSON.parse(cachedStats);
-        if (Date.now() - timestamp < CACHE_TTL) {
-          setStats(data);
-          statsValid = true;
-        }
+    let statsValid = false;
+    let benchValid = false;
+
+    // Dashboard Cache
+    if (cachedStats) {
+      const { data, timestamp } = JSON.parse(cachedStats);
+
+      if (Date.now() - timestamp < CACHE_TTL) {
+        setStats(data);
+        statsValid = true;
       }
+    }
 
-      if (cachedBench) {
-        const { data, timestamp } = JSON.parse(cachedBench);
-        if (Date.now() - timestamp < CACHE_TTL) {
-          setBenchSource(data);
-          benchValid = true;
-        }
+    // Bench Cache
+    if (cachedBench) {
+      const { data, timestamp } = JSON.parse(cachedBench);
+
+      if (Date.now() - timestamp < BENCH_CACHE_TTL) {
+        setBenchSource(data);
+        benchValid = true;
       }
+    }
 
-      if (statsValid && benchValid) {
-        setLoading(false);
-        return;
-      }
+    // If both cached stop API calls
+    if (statsValid && benchValid) {
+      setLoading(false);
+      return;
+    }
 
-  
-
-      const [user, results] = await Promise.all([
-        userId ? GetUserInformation(userId) : null,
-        Promise.allSettled([
-          GetRegidterdUsers(),
-          GetUsersFullInfo(),
-          GetDeploymentInfo(),
-          GetInvoiceInfo(),
-          GetTimeSheetInfo(),
-        ]),
+    try {
+      const [statsRes, benchRes] = await Promise.all([
+        GetDashboardStats(),
+        GetUsersFullInfo(),
       ]);
 
       if (!mounted) return;
 
-      
+      if (statsRes?.success) {
+        setStats(statsRes.data);
 
-      const getArr = (r: any) =>
-        r.status === "fulfilled"
-          ? Array.isArray(r.value)
-            ? r.value
-            : r.value?.data ?? []
-          : [];
-
-      const [
-        registeredUsers,
-        fullUsers,
-        deployments,
-        invoices,
-        timesheets,
-      ] = results.map(getArr);
-
-      if (fullUsers.length > 0) {
-        setBenchSource(fullUsers);
         localStorage.setItem(
-          BENCH_CACHE_KEY,
-          JSON.stringify({ data: fullUsers, timestamp: Date.now() })
+          DASHBOARD_CACHE_KEY,
+          JSON.stringify({
+            data: statsRes.data,
+            timestamp: Date.now(),
+          })
         );
       }
 
-    let patient = 0;
-let hcp = 0;
-let vendor = 0;
-let active = 0;
-let monthReg = 0;
-let currentMonthPatientCount = 0;
+      // Bench Users
+      const benchUsers =
+        Array.isArray(benchRes) ? benchRes : benchRes?.data ?? [];
 
-      const now = new Date();
-      const activeSet = new Set<string>();
+      if (benchUsers.length > 0) {
+        setBenchSource(benchUsers);
 
-
-
-
-const currentUTCYear = now.getUTCFullYear();
-const currentUTCMonth = now.getUTCMonth(); 
-
-const VALID_USER_TYPES = new Set([
-  "healthcare-assistant",
-  
-]);
-
-const getISODate = (value: any): Date | null => {
-  if (!value) return null;
-
-  if (value instanceof Date) return value;
-  if (typeof value === "string") return new Date(value);
-  if (value?.toDate) return value.toDate();
-
-  return null;
-};
-
-
-let healthcareUserCount = 0;
-
-for (const u of registeredUsers) {
-  const leadDate = getISODate(u.LeadDate);
-  const createdDate = getISODate(u.createdAt);
-
-  const isCurrentMonth =
-    (leadDate &&
-      leadDate.getUTCFullYear() === currentUTCYear &&
-      leadDate.getUTCMonth() === currentUTCMonth) ||
-    (createdDate &&
-      createdDate.getUTCFullYear() === currentUTCYear &&
-      createdDate.getUTCMonth() === currentUTCMonth);
- 
-  if (!isCurrentMonth) continue;
- monthReg++;
-
-
-   if (u.userType === "patient" || u.userType === "CallEnquiry") {
-    currentMonthPatientCount++;
-  } else if (VALID_USER_TYPES.has(u.userType)) {
-    healthcareUserCount++;
-  } else {
-    vendor++;
-  }
-}
-
-
-
-
- 
-const currentMonth = now.getMonth() + 1; 
-const currentYear = now.getFullYear();
-
-const deployedUnique =  deployments
-      .filter((i: any) => {
-        if (!i?.StartDate || !i?.ClientId) return false;
-
-        const [, month, year] = i.StartDate.split("/").map(Number);
-        return month === currentMonth && year === currentYear;
-      })
-
-const Invoice =  invoices
-      .filter((i: any) => {
-        if (!i?.DeployDate) return false;
-
-        const [, month, year] = i.DeployDate.split("/").map(Number);
-        return month === currentMonth && year === currentYear && i.status!=="Draft";
-      })
-const PDRcurrentMonth = now.getMonth();
-const PDRcurrentYear = now.getFullYear();
-
-const pendingPdr = timesheets.filter((t: any) => {
-  if (!t.StartDate || t.PDRStatus !== false) return false;
-
-  const [day, month, year] = t.StartDate.split("/").map(Number);
-
-  const date = new Date(year, month - 1, day);
-
-  
-  if (isNaN(date.getTime())) return false;
-
-  return (
-    date.getMonth() === PDRcurrentMonth &&
-    date.getFullYear() === PDRcurrentYear
-  );
-}).length;
-
-
-      const finalStats = {
-        registeredUsers: currentMonthPatientCount,
-        hcpListCount: healthcareUserCount,
-        vendorsCount: vendor,
-        hostelAttendanceCount: active,
-        registrationCount: monthReg,
-        invoiceCount: Invoice.length,
-        deployedLength: deployedUnique.length,
-        timesheetcount: deployedUnique.length,
-        pendingPdrCount: pendingPdr,
-        documentComplianceCount: 0,
-        Notifications: 0,
-        Employs: 0,
-      };
-
-      setStats(finalStats);
-      localStorage.setItem(
-        DASHBOARD_CACHE_KEY,
-        JSON.stringify({ data: finalStats, timestamp: Date.now() })
-      );
+        localStorage.setItem(
+          BENCH_CACHE_KEY,
+          JSON.stringify({
+            data: benchUsers,
+            timestamp: Date.now(),
+          })
+        );
+      }
 
       setLoading(false);
-    };
+    } catch (error) {
+      console.error("Dashboard Load Error:", error);
+      setLoading(false);
+    }
+  };
 
-    run();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  run();
+
+  return () => {
+    mounted = false;
+  };
+}, []);
 
   const BenchList = useMemo(() => {
     if (!benchSource) return [];
@@ -496,7 +383,7 @@ const pendingPdr = timesheets.filter((t: any) => {
       }
       const generatedUserId = uuidv4()
        const payload: any = {
-      userType: "CallEnquiry",
+      userType:"CallEnquiry",
       userId: generatedUserId,
 
       FirstName: EnquiryForm.ClientName || "",
@@ -513,7 +400,7 @@ patientName:EnquiryForm.patientName||"",
       Location: EnquiryForm.ClientArea || "",
       ServiceType: EnquiryForm.ServiceType || "",
       HealthCard: EnquiryForm.patientHealthCard || "",
-ClientStatus:EnquiryForm.ClientStatus||"",
+ClientStatus:EnquiryForm.ClientStatus||"Save",
       ExpectedService: EnquiryForm.ExpectedService || "",
       ReasonForService: EnquiryForm.Reasonforservice || "",
 
@@ -1577,7 +1464,7 @@ setNotificationStatus("Notification Send Succesfully")
           key={index}
           className="px-4 py-2 text-sm cursor-pointer hover:bg-gray-100"
           onClick={() => {
-            setEnquiryForm({ ...EnquiryForm, NewLead: lead });
+            setEnquiryForm({ ...EnquiryForm, CurateNewLead: lead });
             setShowLeadSuggestions(false);
           }}
         >

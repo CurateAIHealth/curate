@@ -8,8 +8,9 @@ import { GetNotificationsInformation } from "@/Lib/user.action";
 type FilterType = "All" | "Pending" | "Approved" | "Rejected" | "Read";
 
 interface NotificationItem {
+  Date: any;
   _id: string;
-  Type: "LEAVE_REQUEST" | "EXPENSE_REQUEST" | "INFO" | "SYSTEM";
+  Type: "LEAVE_REQUEST" | "EXPENSE_REQUEST" | "INFO" | "SYSTEM"|"HCP Salary Request";
   ReferenceId?: string;
   UserId: string;
   EmployeeName?: string;
@@ -129,7 +130,7 @@ export default function NotificationsCenter() {
 
    
       <div className="flex gap-3 flex-wrap">
-        {(["All", "Pending", "Approved", "Rejected", "Read"] as FilterType[]).map(
+        {(["All", "Pending", "Approved", "Rejected", "Read",] as FilterType[]).map(
           (status) => (
             <button
               key={status}
@@ -173,7 +174,7 @@ export default function NotificationsCenter() {
            
             <div className="pl-4">
               <h3 className="text-sm font-semibold text-slate-800 uppercase">
-                {item.Type.replace("_", " ")}
+                {item.Type}
               </h3>
 
               <p className="text-slate-700 mt-1">
@@ -181,11 +182,11 @@ export default function NotificationsCenter() {
               </p>
 
               <p className="text-xs text-slate-400 mt-2">
-                {new Date(item.CreatedAt).toLocaleString("en-IN")}
+            {item.Date}
               </p>
             </div>
 
-            {(item.Type === "LEAVE_REQUEST" ||
+            {(item.Type === "LEAVE_REQUEST" || item.Type==="HCP Salary Request"||
               item.Type === "EXPENSE_REQUEST") &&
               item.Status === "Pending" && (
                 <div className="flex gap-3">

@@ -23,6 +23,8 @@ import {
   UpdateUserCurrentstatusInHCPView,
   GetPopUpUserPDRInfo,
   HCASalaryUpdate,
+  PostHCPSalaryRequest,
+  GetDashboardData,
   
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
@@ -95,9 +97,76 @@ const RESTRICTED_EMAILS = new Set([
   "sravanthicurate@gmail.com",
   "srinivasnew0803@gmail.com",
 ]);
+const DASHBOARD_CACHE_KEY = "dashboard_cache";
+const CACHE_TTL = 20 * 60 * 1000; 
+// useEffect(() => {
+//   let mounted = true;
 
+//   const isInitialLoad = updatedStatusMsg === "";
+//   const isSuccessUpdate = updatedStatusMsg?.includes("Successfully");
+
+//   if (!isInitialLoad && !isSuccessUpdate) return;
+
+//   const fetchFreshData = async () => {
+//     try {
+//       const userId = localStorage.getItem("UserId");
+//       if (!userId) return;
+
+//       setIsChecking(true);
+
+//       console.time("GetUserInformation");
+//       const profilePromise = GetUserInformation(userId);
+//       console.timeEnd("GetUserInformation");
+
+//       console.time("GetRegidterdUsers");
+//       const usersPromise = GetRegidterdUsers();
+//       console.timeEnd("GetRegidterdUsers");
+
+//       console.time("GetUsersFullInfo");
+//       const fullInfoPromise = GetUsersFullInfo();
+//       console.timeEnd("GetUsersFullInfo");
+
+//       console.time("GetDeploymentInfo");
+//       const deployedPromise = GetDeploymentInfo();
+//       console.timeEnd("GetDeploymentInfo");
+// console.time("Total Fetch");
+
+// const [profile, registeredUsers, fullInfo, deployedLength] =
+//   await Promise.all([
+//     profilePromise,
+//     usersPromise,
+//     fullInfoPromise,
+//     deployedPromise,
+//   ]);
+
+// console.timeEnd("Total Fetch");
+//       if (!mounted) return;
+
+//       cachedUserInfo = profile;
+//       cachedRegisteredUsers = registeredUsers;
+//       cachedFullInfo = fullInfo;
+//       cachedDeployed = deployedLength;
+
+//       setUsers(registeredUsers);
+//       setUserFirstName(profile?.FirstName);
+//       setLoginEmail(profile?.Email);
+//       setFullInfo(fullInfo);
+//     } catch (e) {
+//       console.error("Fetch error:", e);
+//     } finally {
+//       if (mounted) setIsChecking(false);
+//     }
+//   };
+
+//   fetchFreshData();
+
+//   return () => {
+//     mounted = false;
+//   };
+// }, [updatedStatusMsg]);
 useEffect(() => {
   let mounted = true;
+
   const isInitialLoad = updatedStatusMsg === "";
   const isSuccessUpdate = updatedStatusMsg?.includes("Successfully");
 
@@ -110,24 +179,52 @@ useEffect(() => {
 
       setIsChecking(true);
 
-      const [profile, registeredUsers, fullInfo, deployedLength] = await Promise.all([
-        isSuccessUpdate ? GetUserInformation(userId) : (cachedUserInfo ?? GetUserInformation(userId)),
-        isSuccessUpdate ? GetRegidterdUsers() : (cachedRegisteredUsers ?? GetRegidterdUsers()),
-        isSuccessUpdate ? GetUsersFullInfo() : (cachedFullInfo ?? GetUsersFullInfo()),
-        isSuccessUpdate ? GetDeploymentInfo() : (cachedDeployed ?? GetDeploymentInfo()),
-      ]);
+      // ✅ check cache
+      const cached = localStorage.getItem(DASHBOARD_CACHE_KEY);
 
-      if (!mounted) return;
+      if (cached) {
+        const parsed = JSON.parse(cached);
 
-      cachedUserInfo = profile;
-      cachedRegisteredUsers = registeredUsers;
-      cachedFullInfo = fullInfo;
-      cachedDeployed = deployedLength;
+        if (Date.now() - parsed.timestamp < CACHE_TTL) {
+          const { profile, registeredUsers, fullInfo, deployedLength } = parsed.data;
+
+          if (mounted) {
+            setUsers(registeredUsers);
+            setUserFirstName(profile?.FirstName);
+            setLoginEmail(profile?.Email);
+            setFullInfo(fullInfo);
+            setIsChecking(false);
+          }
+
+          console.log("Loaded from cache");
+          return;
+        }
+      }
+
+    
+
+      const result: any = await GetDashboardData(userId);
+
+  
+
+      if (!mounted || !result?.success) return;
+
+      const { profile, registeredUsers, fullInfo, deployedLength } = result.data;
+
+      // ✅ save cache
+      localStorage.setItem(
+        DASHBOARD_CACHE_KEY,
+        JSON.stringify({
+          timestamp: Date.now(),
+          data: result.data,
+        })
+      );
 
       setUsers(registeredUsers);
       setUserFirstName(profile?.FirstName);
       setLoginEmail(profile?.Email);
       setFullInfo(fullInfo);
+
     } catch (e) {
       console.error("Fetch error:", e);
     } finally {
@@ -141,7 +238,6 @@ useEffect(() => {
     mounted = false;
   };
 }, [updatedStatusMsg]);
-
 useEffect(() => {
   const email = cachedUserInfo?.Email?.toLowerCase();
   if (!email) return;
@@ -173,12 +269,12 @@ const GetHCPTypeCount = (HCPType: string) => {
 
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
    
-      dispatch(Refresh(`Updating ${first} Contact Status....`))
+      dispatch(Refresh(`Updating ${first} Client Status....`))
     try {
       const res = await UpdateUserContactVerificationstatus(UserId, e);
       if (res?.success === true) {
        
-          dispatch(Refresh(`${first} Verification Status Updated Successfully`))
+          dispatch(Refresh(`${first} Client Status Updated Successfully`))
       }
     } catch (err: any) {
       console.error(err);
@@ -253,7 +349,7 @@ const GetHCPTypeCount = (HCPType: string) => {
     PreviewUserType: each.PreviewUserType||"None",
     PDRStatus:each.PDRStatus||"No Available"
   }));
-console.log("Check----",Finel)
+console.log("Check----",users)
   const UpdatedFilterUserType = Finel
   .filter((each) => {
 
@@ -265,11 +361,12 @@ console.log("Check----",Finel)
 
 
       
-    const matchesStatus =
-      !search ||
-      (search === "None"
-        ? !each.ClientStatus
-        : each.ClientStatus === search);
+   const matchesStatus =
+  !search ||
+  (
+    (search === "None" ? !each.ClientStatus : each.ClientStatus === search) &&
+    each.userType === "patient"
+  );
 
         
     // const notAdmin =
@@ -338,7 +435,7 @@ console.log("Check----",Finel)
   .reverse();
 
  
-console.log("Check-----",Finel.filter((each:any)=>each.id==="2383a38f-8e39-47a0-bce1-f1f04ba20295"))
+console.log("Check for the Issue------",UpdatedFilterUserType)
 
   const filterByMonthAndYear = (
     each: any,
@@ -1288,7 +1385,7 @@ const UpdatePopup = async (a: any) => {
 
 </div>
 
-      ):<p className="inline-flex items-center rounded-full bg-amber-50 text-amber-600 text-xs font-semibold px-3 py-1 border border-amber-200">
+      ):<p className="inline-flex items-center rounded-full bg-amber-50 text-amber-600 text-xs font-semibold px-1 py-1 border border-amber-200">
   Yet to be Placed
 </p>
 }
@@ -1325,7 +1422,7 @@ const UpdatePopup = async (a: any) => {
 
       <div className="flex gap-1">
         <button
-          onClick={() => handleSave(user.userId)}
+          onClick={() => handleSave(user)}
           className="flex-1 px-1 py-1 text-[8px] font-medium text-white bg-emerald-500 rounded hover:bg-emerald-600"
         >
           Save
@@ -1577,8 +1674,9 @@ Awaiting Conversion
 
 
   const handleLogout = () => {
-    dispatch(Update_Main_Filter_Status(""))
+    
     router.push('/DashBoard');
+    dispatch(Update_Main_Filter_Status(""))
  dispatch(Refresh(""))
   };
 
@@ -1626,9 +1724,10 @@ Awaiting Conversion
 const handleSave =async (A:any) => {
   setIsEditing(false)
  dispatch(Refresh(`Please Wait....`))
-const UpdateSalary:any=await HCASalaryUpdate(A,UpdatedHCPSalary)
+ 
+const UpdateSalary:any=await PostHCPSalaryRequest(A,UpdatedHCPSalary,UserFirstName)
 if(UpdateSalary.success){
-   dispatch(Refresh("Salary Updated Successfully."))
+   dispatch(Refresh("Salary update request submitted to management. You will be notified once the status is updated."))
   setIsEditing(false);
 }
    
@@ -1872,7 +1971,7 @@ if(UpdateSalary.success){
                       {
                         UpdateMainFilter === "Call Enquiry"
                           ? `${each} (${MonthlyCount?.filter(
-                            (Try) => Try.ClientStatus === each || Try.userType === each
+                            (Try) => (Try.ClientStatus === each && Try.userType==="patient")|| Try.userType === each
                           )?.length || 0
                           })`
                           : each
@@ -1921,7 +2020,7 @@ if(UpdateSalary.success){
           }
         `}
       >
-        {/* {each} ({GetHCPTypeCount(each)}) */} {each}({MonthlyCount?.filter(
+ {each}({MonthlyCount?.filter(
                             (Try) => Try.PreviewUserType === each &&Try.userType==="healthcare-assistant"
                           )?.length || 0
                           })
