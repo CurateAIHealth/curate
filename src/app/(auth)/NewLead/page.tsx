@@ -6,7 +6,7 @@ import MedicationSchedule from "@/Components/Medications/page";
 import { normalizeDate } from "@/Lib/Actions";
 import { ClientEnquiry_Filters, filterColors, Headings, Health_Card, healthcareServices, HomeAssistance, hyderabadAreas, indianFamilyRelations, IndianLanguages, LeadSources, Main_Filters, medicalSpecializations, Patient_Home_Supply_Needs, patientCategories, physioSpecializations, SERVICE_SUBTYPE_MAP,  } from "@/Lib/Content";
 import { GetRegidterdUsers, GetUserInformation, UpdateNewLeadInformation } from "@/Lib/user.action";
-import { Refresh, Update_Current_Client_Status, Update_Main_Filter_Status, UpdateFetchedInformation } from "@/Redux/action";
+import { Refresh, Update_Current_Client_Status, Update_Main_Filter_Status, UpdateClientSuggetion, UpdateFetchedInformation } from "@/Redux/action";
 import { a } from "framer-motion/client";
 import { AlertCircle, Info, ListFilter, LogOut, PhoneCall, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -364,8 +364,8 @@ const handleCmChange = (value: string) => {
     }
   };
   const handleLogout = () => {
-    dispatch(Update_Main_Filter_Status(""))
-    router.push('/DashBoard');
+    
+    router.push('/AdminPage');
  dispatch(Refresh(""))
   };
 
@@ -382,20 +382,22 @@ const handleCmChange = (value: string) => {
 console.log("Check Response-----",FinelPostingData)
     const PostResult = await UpdateNewLeadInformation(FinelPostingData);
     if (PostResult.success) {
-     
-        const data = await GetUserInformation(FetchedInfo.userId);
+          setStatusMessage(`${PostResult.message},Riderecting to HCP Suggetion....`);
+       router.push("/Clientsuggetions")
+         dispatch(UpdateClientSuggetion(PDRFilledUser))
+      //   const data = await GetUserInformation(FetchedInfo.userId);
 
-      setStatusMessage(`${PostResult.message},Riderecting to PDR....`);
+  
 
-      dispatch(
-        UpdateFetchedInformation({
-          ...data,
-          updatedAt: normalizeDate(data?.updatedAt),
-          createdAt: normalizeDate(data?.createdAt),
-        })
-      );
+      // dispatch(
+      //   UpdateFetchedInformation({
+      //     ...data,
+      //     updatedAt: normalizeDate(data?.updatedAt),
+      //     createdAt: normalizeDate(data?.createdAt),
+      //   })
+      // );
 
-      router.push("/PDR");
+      // router.push("/PDR");
      
       
       // dispatch(Update_Current_Client_Status(formData.ClientStatus))
@@ -445,7 +447,9 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
           />
 
           <h1 className="text-base sm:text-lg md:text-xl font-medium text-[#ff1493] tracking-wide leading-snug flex items-center justify-center gap-2">
-            Call Enquiry & Firsthand Info  <p
+            Call Enquiry & Firsthand Info  
+            
+            {/* <p
             className={`${statusMessage === "Your Lead Registration Completed,Riderecting to Admin Page..."
                 ? "text-green-800"
                 : statusMessage === "Please Select Client Status"
@@ -455,7 +459,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
 
           >
             {statusMessage}
-          </p>
+          </p> */}
             <span className="bg-white text-teal-500 rounded-full p-2 shadow-sm text-lg flex items-center justify-center">
               <PhoneCall />
             </span>
@@ -474,7 +478,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
           onClick={handleLogout}
           className="hidden md:flex items-center cursor-pointer gap-2 px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
         >
-          <LogOut size={20} /> DashBoard
+         Admin Page
         </button>
       </div>
 
