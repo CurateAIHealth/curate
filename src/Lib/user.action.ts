@@ -5038,7 +5038,12 @@ export const GetDashboardData = async (userId: string) => {
           }
         ).toArray(),
 
-        Deployment.countDocuments({}),
+       Deployment.find(
+  {},
+  {
+    projection: { _id: 0 },
+  }
+).toArray(),
       ]);
 
     // decrypt profile
