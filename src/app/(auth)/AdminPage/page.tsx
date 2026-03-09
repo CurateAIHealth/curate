@@ -73,6 +73,7 @@ const [SearchResult, setSearchResult] = useState("")
   const [SelectedHCPSalaryId,setSelectedHCPSalaryId]=useState()
   const [showOptions, setShowOptions] = useState(false);
 const [searchLead, setSearchLead] = useState("");
+const [DeploymentInfo,SetDeploymentInfo]=useState<any[]>([])
 const [showSuggestions, setShowSuggestions] = useState(true);
   const [ShowDeletePopUp, setShowDeletePopUp] = useState(false)
   const Status = ["None","Converted", "Waiting List", "Lost",];
@@ -97,8 +98,7 @@ const RESTRICTED_EMAILS = new Set([
   "sravanthicurate@gmail.com",
   "srinivasnew0803@gmail.com",
 ]);
-const DASHBOARD_CACHE_KEY = "dashboard_cache";
-const CACHE_TTL = 20 * 60 * 1000; 
+
 // useEffect(() => {
 //   let mounted = true;
 
@@ -164,6 +164,9 @@ const CACHE_TTL = 20 * 60 * 1000;
 //     mounted = false;
 //   };
 // }, [updatedStatusMsg]);
+const DASHBOARD_CACHE_KEY = "dashboard_cache";
+const CACHE_TTL = 20 * 60 * 1000;
+
 useEffect(() => {
   let mounted = true;
 
@@ -179,39 +182,39 @@ useEffect(() => {
 
       setIsChecking(true);
 
-      // ✅ check cache
-      const cached = localStorage.getItem(DASHBOARD_CACHE_KEY);
+      // ❗ Use cache only for initial load
+      if (isInitialLoad) {
+        const cached = localStorage.getItem(DASHBOARD_CACHE_KEY);
 
-      if (cached) {
-        const parsed = JSON.parse(cached);
+        if (cached) {
+          const parsed = JSON.parse(cached);
 
-        if (Date.now() - parsed.timestamp < CACHE_TTL) {
-          const { profile, registeredUsers, fullInfo, deployedLength } = parsed.data;
+          if (Date.now() - parsed.timestamp < CACHE_TTL) {
+            const { profile, registeredUsers, fullInfo, deployedLength } = parsed.data;
 
-          if (mounted) {
-            setUsers(registeredUsers);
-            setUserFirstName(profile?.FirstName);
-            setLoginEmail(profile?.Email);
-            setFullInfo(fullInfo);
-            setIsChecking(false);
+            if (mounted) {
+              setUsers(registeredUsers);
+              setUserFirstName(profile?.FirstName);
+              setLoginEmail(profile?.Email);
+              setFullInfo(fullInfo);
+              SetDeploymentInfo(deployedLength);
+              setIsChecking(false);
+            }
+
+            console.log("Loaded from cache");
+            return;
           }
-
-          console.log("Loaded from cache");
-          return;
         }
       }
 
-    
-
-      const result: any = await GetDashboardData(userId);
-
-  
+      // ✅ Always fetch fresh data after update success
+      const result:any = await GetDashboardData(userId);
 
       if (!mounted || !result?.success) return;
 
       const { profile, registeredUsers, fullInfo, deployedLength } = result.data;
 
-      // ✅ save cache
+      // save cache
       localStorage.setItem(
         DASHBOARD_CACHE_KEY,
         JSON.stringify({
@@ -224,6 +227,7 @@ useEffect(() => {
       setUserFirstName(profile?.FirstName);
       setLoginEmail(profile?.Email);
       setFullInfo(fullInfo);
+      SetDeploymentInfo(deployedLength);
 
     } catch (e) {
       console.error("Fetch error:", e);
@@ -266,10 +270,10 @@ const GetHCPTypeCount = (HCPType: string) => {
     return 0;
   }
 };
-
+console.log("Check Current Task Information------",DeploymentInfo)
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
    
-      dispatch(Refresh(`Updating ${first} Client Status....`))
+      dispatch(Refresh(`Updating Client Status....`))
     try {
       const res = await UpdateUserContactVerificationstatus(UserId, e);
       if (res?.success === true) {
@@ -287,7 +291,7 @@ const GetHCPTypeCount = (HCPType: string) => {
   };
   const UpdateEmailVerificationStatus = async (first: string, e: string, UserId: any) => {
    
-     dispatch(Refresh(`Updating ${first} Email Verification Status....`))
+     dispatch(Refresh(`Updating Email Verification Status....`))
 
     try {
       const res = await UpdateUserEmailVerificationstatus(UserId, e);
