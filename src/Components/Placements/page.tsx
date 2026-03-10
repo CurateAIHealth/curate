@@ -8,7 +8,7 @@ let cachedRegisterdUsers: any[] = [];
 
 
 import React, { useEffect, useState } from "react";
-import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X } from "lucide-react";
+import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert } from "lucide-react";
 import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
@@ -53,6 +53,7 @@ const ClientTable = () => {
   const [selectedClient,setselectedClient]=useState<any>()
   const [isChecking, setIsChecking] = useState(true);
   const [selectedHCP,setselectedHCP]=useState<any>()
+  const [ShowFreezPopUp,setShowFreezPopUp]=useState(false)
   const [selectedCase, setSelectedCase] = useState<any>(null);
 const [searchHCA, setSearchHCA] = useState("");
 const [ShowCareTakerPriceUpdate,setShowCareTakerPriceUpdate]=useState(false)
@@ -81,6 +82,8 @@ const now = new Date();
 const SearchMonth=useSelector((state:any)=>state.FilterMonth) 
 const SearchYear=useSelector((state:any)=>state.FilterYear) 
 
+
+const [status, setStatus] = useState("Active");
 
 
 const [enableStatus,setenableStatus]=useState(false)
@@ -336,7 +339,8 @@ const normalizedAttendance =
     StartDate:each.StartDate,
     EndDate:each.EndDate,
     Month:each.Month,
-    Replacement:each.Replacement
+    Replacement:each.Replacement,
+    
   };
 });
 console.log("Check for Amount----",users)
@@ -732,7 +736,9 @@ if (deploymentRes.success) {
     TimeSheet_Info.TimeSheet = updatedTimeSheet;
     setClientsInformation([...ClientsInformation]);
   };
-
+const toggleStatus = () => {
+  setStatus((prev) => (prev === "Active" ? "Freeze" : "Active"));
+};
   const handleDeleteClick = (Info: any,Name:any) => {
     SetTerminationInfo(Info)
 SetCareTakerName(Name)
@@ -1142,6 +1148,45 @@ setShowCareTakerPriceUpdate(false)
 
   {ClientsInformation.length > 0 && (
     <div className="w-full max-h-[75vh] overflow-y-auto rounded-2xl shadow-xl">
+      {ShowFreezPopUp && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
+    
+    <div className="bg-white rounded-xl p-6 w-[320px] shadow-xl text-center animate-scaleIn">
+      
+      <div className="flex justify-center mb-3">
+        <CircleAlert className="w-10 h-10 text-red-500" />
+      </div>
+
+      <h2 className="text-lg font-semibold mb-2">
+        Freeze Deployment?
+      </h2>
+
+      <p className="text-sm text-gray-600 mb-4">
+        This Deployment will not be able to access the system until reactivated.
+      </p>
+
+      <div className="flex justify-center gap-3">
+        <button
+          onClick={() => setShowFreezPopUp(false)}
+          className="px-4 py-1 text-sm rounded-md border hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={() => {
+           
+            setShowFreezPopUp(false);
+          }}
+          className="px-4 py-1 text-sm rounded-md bg-red-500 text-white hover:bg-red-600"
+        >
+          Freeze
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
   <table className="w-full table-fixed border-collapse bg-white">
     
   
@@ -1376,14 +1421,30 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
 
 
 
+<td className="px-1 py-3 break-words">
+  <div
+    className={`flex items-center gap-2 rounded-full px-3 py-1 ${
+      c.Status === "Active"
+        ? "bg-green-100 text-emerald-700"
+        : "bg-red-100 text-red-700"
+    }`}
+  >
+    {c.Status === "Active" ? (
+      <CircleCheckBig className="w-4 h-4 text-emerald-600" />
+    ) : (
+      <CirclePause className="w-4 h-4 text-red-600" />
+    )}
 
-          <td className="px-1 pl-4 py-3 break-words">
-            <div className="flex items-center gap-2 rounded-full bg-green-100 p-1">
-              <CircleCheckBig className="w-3 h-3 text-emerald-600" />
-              <p className="text-xs font-medium text-emerald-700">Active</p>
-            </div>
-          </td>
-
+    <select
+      className="bg-transparent text-xs font-medium outline-none cursor-pointer appearance-none"
+      value={c.Status}
+      onChange={(e) => {setStatus(e.target.value);setShowFreezPopUp(true)}}
+    >
+      <option value="Active">Active</option>
+      <option value="Freeze">Freeze</option>
+    </select>
+  </div>
+</td>
           <td className="px-3 py-3 break-words">
          <button
   className="

@@ -969,12 +969,12 @@ export const HCARegistration = async (HCA: HCAInfo) => {
       ],
     });
 
-    // if (existingHCA) {
-    //   return {
-    //     success: false,
-    //     message: "An account with these details already exists.",
-    //   };
-    // }
+    if (existingHCA) {
+      return {
+        success: false,
+        message: "An account with these details already exists.",
+      };
+    }
 
     
     const encryptedData = {
@@ -2977,11 +2977,10 @@ export const SuitableHCPUpdate = async (ClientId: any,Impid:any, HCPId: any) => 
 
 export const ClearEnquiry = async (userId: string) => {
   try {
-  console.time("Mongo Connect");
+
 
 const client = await clientPromise;
 
-console.timeEnd("Mongo Connect");
 
     const db = client.db("CurateInformation");
     const collection = db.collection("Registration");
@@ -3008,6 +3007,37 @@ console.timeEnd("Mongo Connect");
   }
 };
 
+export const ClearHCPEnquiry = async (userId: string) => {
+  try {
+
+
+const client = await clientPromise;
+
+
+    const db = client.db("CurateInformation");
+    const collection = db.collection("CompliteRegistrationInformation");
+
+    const result = await collection.deleteOne({    "HCAComplitInformation.UserId":userId });
+
+    if (result.deletedCount === 0) {
+      return {
+        success: false,
+        message: "No enquiry found to delete",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Enquiry deleted Successfully",
+    };
+  } catch (error) {
+    console.error("Error deleting enquiry:", error);
+    return {
+      success: false,
+      message: "Failed to delete enquiry",
+    };
+  }
+};
 
 export const RemoveClient = async (userId: string,HCPId:any) => {
   try {
@@ -3357,13 +3387,17 @@ export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: an
   "Ration Card No": Info.rationCardNo ? encrypt(Info.rationCardNo) : null,
   "Voter ID No": Info.voterIdNo ? encrypt(Info.voterIdNo) : null,
 
-
+"BankAccountHolderName":Info.BankAccountHolderName||"",
   "Permanent Address": Info.permanentAddress || null,
   "Current Address": Info.currentAddress || null,
   "City/Postcode Permanent": Info.cityPostcodePermanent || null,
   "City/Postcode Current": Info.cityPostcodeCurrent || null,
 
+"Mother Name":Info.motherName||"",
+"Father Name":Info.fatherName||"",
+"Husband Name":Info.husbendName||'',
 
+"Guardian":Info.Guardian||'',
   "Height": Info.height || null,
   "Weight": Info.weight || null,
   "Hair Colour": Info.hairColour || null,
@@ -3411,7 +3445,7 @@ export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: an
 
   
   "Payment Service": Info.paymentService || null,
-  "BankAccountHolderName": Info.BankAccountHolderName ? encrypt(Info.BankAccountHolderName) : null,
+  // "BankAccountHolderName": Info.BankAccountHolderName ? encrypt(Info.BankAccountHolderName) : null,
   "Payment Bank Account Number": Info.paymentBankAccountNumber ? encrypt(Info.paymentBankAccountNumber) : null,
   "IFSC Code": Info.ifscCode ? encrypt(Info.ifscCode) : null,
   "Bank Branch Name": Info.Bankbranchname || null,

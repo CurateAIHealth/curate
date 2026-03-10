@@ -28,7 +28,11 @@ type UserData = {
   currentAddress: string;
   permanentAddress: string;
   maritalStatus: string;
-
+motherName:any,
+fatherName:any,
+husbendName:any,
+Guardian:any,
+BankAccountHolderName:any,
   height: string;
   weight: string;
   complexion: string;
@@ -79,6 +83,11 @@ const NameoftheClient=useSelector((state:any)=>state.ClientName)
     dateOfBirth: "1996-11-19",
     emailId: "Sn2551720@gmail.com",
     mobileNumber: "7846989381",
+    motherName:"",
+    fatherName:"",
+    husbendName:"",
+    Guardian:"",
+    BankAccountHolderName:"",
     currentAddress: "OU Colony ,shaikpet,Manikanda",
     permanentAddress: "KARCHHABADI,Karchabadi,Karchabadi",
     maritalStatus: "Single",
@@ -133,6 +142,10 @@ useEffect(()=>{
     firstName: FilterValue["First Name"] || "",
   surname: FilterValue["Surname"] || "",
   gender: FilterValue["Gender"] || "",
+  motherName:FilterValue["Mother Name"]||'',
+  fatherName:FilterValue["Father Name"]||"",
+  husbendName:FilterValue["Husband Name"]||"",
+  Guardian:FilterValue["Guardian"]||"",
   dateOfBirth: FilterValue["Date of Birth"] || "",
   emailId: FilterValue["EmailId"] || "",
   mobileNumber: FilterValue["Mobile Number"] || "",
@@ -148,6 +161,7 @@ useEffect(()=>{
   moleBodyMark1: FilterValue["Mole/Body Mark 1"] || "",
   moleBodyMark2: FilterValue["Mole/Body Mark 2"] || "",
   Bankbranchname: FilterValue["Bank Branch Name"] || "",
+  BankAccountHolderName:FilterValue['BankAccountHolderName']||"",
   Branchcity: FilterValue["Branch City"] || "",
   Branchpincode: FilterValue["Branch Pincode"] || "",
   Branchstate: FilterValue["Branch State"] || "",
@@ -338,9 +352,12 @@ console.log("Checkkkkk------", user.Documents)
         <div className="grid md:grid-cols-2 gap-4">
      
           <TextInput label="First Name" name="firstName" value={user.firstName} onChange={handleChange} />
-                    <TextInput label="SurName" name="surname" value={user.surname} onChange={handleChange} />
+          <TextInput label="SurName" name="surname" value={user.surname} onChange={handleChange} />
           <TextInput label="Gender" name="gender" value={user.gender} onChange={handleChange} />
-          
+          <TextInput label="FatherName" name="fatherName" value={user.fatherName} onChange={handleChange} />
+          <TextInput label="MotherName" name="motherName" value={user.motherName} onChange={handleChange} />
+          <TextInput label="HusbendName" name="husbendName" value={user.husbendName} onChange={handleChange} />
+            <TextInput label="Guardian" name="Guardian" value={user.Guardian} onChange={handleChange} />
           <TextInput label="Date of Birth" name="dateOfBirth" type="date" value={user.dateOfBirth} onChange={handleChange} />
           <TextInput label="Email" name="emailId" type="email" value={user.emailId} onChange={handleChange} />
           <TextInput label="Mobile Number" name="mobileNumber" type="tel" value={user.mobileNumber} onChange={handleChange} />
@@ -366,6 +383,7 @@ console.log("Checkkkkk------", user.Documents)
       return (
         <div className="grid md:grid-cols-2 gap-4">
           <TextInput label="Bank Name" name="paymentBankName" value={user.paymentBankName} onChange={handleChange} />
+                    <TextInput label="Account Holder Name" name="BankAccountHolderName" value={user.BankAccountHolderName} onChange={handleChange} />
           <TextInput label="Account Number" name="paymentBankAccountNumber" value={user.paymentBankAccountNumber} onChange={handleChange} />
           <TextInput label="IFSC Code" name="ifscCode" value={user.ifscCode} onChange={handleChange} />
           <TextInput label="Branch Name" name="Bankbranchname" value={user.Bankbranchname} onChange={handleChange} />
