@@ -25,6 +25,7 @@ import {
   HCASalaryUpdate,
   PostHCPSalaryRequest,
   GetDashboardData,
+  ClearHCPEnquiry,
   
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
@@ -182,7 +183,7 @@ useEffect(() => {
 
       setIsChecking(true);
 
-      // ❗ Use cache only for initial load
+    
       if (isInitialLoad) {
         const cached = localStorage.getItem(DASHBOARD_CACHE_KEY);
 
@@ -207,14 +208,13 @@ useEffect(() => {
         }
       }
 
-      // ✅ Always fetch fresh data after update success
       const result:any = await GetDashboardData(userId);
 
       if (!mounted || !result?.success) return;
 
       const { profile, registeredUsers, fullInfo, deployedLength } = result.data;
 
-      // save cache
+
       localStorage.setItem(
         DASHBOARD_CACHE_KEY,
         JSON.stringify({
@@ -549,28 +549,53 @@ console.log("Check for the Issue------",UpdatedFilterUserType)
     dispatch(UpdateUserType(e.target.value));
   };
 
-  const DeleteClient = async () => {
-    try {
+ const DeleteClient = async () => {
+  try {
+    if (!DeleteInformation?.userId) return;
+
+    dispatch(Refresh("Please wait Deleting Profile..."));
+
+   
+     const workingStatus = HCPWorkingStatus(DeleteInformation.userId);
+  const isAssigned =
+    Array.isArray(workingStatus) && workingStatus.includes("Assigned");
+    if (isAssigned) {
+      dispatch(Refresh("HCP currently on service – deletion not allowed"));
       
-       dispatch(Refresh("Please Wait Deleteing Client....."))
-      const DeleteEnquiry = await ClearEnquiry(DeleteInformation.userId)
-if (DeleteEnquiry?.success) {
-  
- dispatch(Refresh("Client Deleted Successfully"))
-  const timer:any = setInterval(() => {
-    setShowDeletePopUp(false)
-  }, 2000)
+        setTimeout(() => {
+        setShowDeletePopUp(false);
+        dispatch(Refresh(null))
+      }, 2000);
+      return;
+    }
 
-  return () => clearTimeout(timer)
-}
+    let response;
 
 
-
-
-    } catch (err: any) {
+    if (DeleteInformation.userType === "healthcare-assistant") {
+      response = await ClearHCPEnquiry(DeleteInformation.userId);
 
     }
+
+   
+    response = await ClearEnquiry(DeleteInformation.userId);
+
+    if (response?.success) {
+      dispatch(Refresh("Profile deleted Successfully"));
+
+      setTimeout(() => {
+        setShowDeletePopUp(false);
+        dispatch(Refresh(null))
+      }, 2000);
+    } else {
+      dispatch(Refresh("Failed to delete profile"));
+    }
+
+  } catch (err) {
+    console.error("DeleteClient error:", err);
+    dispatch(Refresh("Something went wrong while deleting the profile"));
   }
+};
 
   const UpdateFilterValue = (UpdatedValue: any) => {
          dispatch(Refresh(''))
@@ -821,11 +846,11 @@ const UpdatePopup = async (a: any) => {
 
                   <div className="px-8 pt-6 pb-8 text-center">
                     <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
-                      Delete Client
+                      Are You Sure Want to Delete ?
                     </h2>
 
                     <p className="mt-3 text-sm text-gray-600 leading-relaxed">
-                      This client and all associated data will be permanently deleted.
+                      all associated data will be permanently deleted.
                       This action cannot be undone.
                     </p>
 
@@ -926,7 +951,7 @@ const UpdatePopup = async (a: any) => {
                           <th className="px-4 py-2 text-center w-[10%]">PDR</th>}
                             
                           {UpdateduserType === 'patient' && <th className="px-2 py-2 w-[10%]">Suitable HCP</th>}
-                          {UpdateduserType === 'patient' && <th className="px-2 py-2 w-[10%]">Delete</th>}
+                          <th className="px-2 py-2 w-[10%]">Delete</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -1332,7 +1357,10 @@ const UpdatePopup = async (a: any) => {
                             {user.userType === "patient" && (
                             
                               <td className="px-2 py-2">
-                                  
+                              
+                                  {GetUserCurrentStatus(user.userId)?<p className="text-[10px] text-center font-bold text-gray-800 border-l-4 border-green-500 border p-1 shadow-lg rounded-md">
+  On Deployment
+</p>:
                                 <select
                                   className={`w-full px-2 py-2 rounded-xl text-center font-medium transition-all duration-200 cursor-pointer ${user.ClientStatus === "Placced"
                                       ? "text-[13px] font-bold shadow-lg"
@@ -1346,7 +1374,7 @@ const UpdatePopup = async (a: any) => {
                                       {status === "Deployed" ? "Deployed ✅" : status}
                                     </option>
                                   ))}
-                                </select>
+                                </select>}
 
                               </td>
                             )}
@@ -1418,7 +1446,7 @@ const UpdatePopup = async (a: any) => {
     <div className="flex flex-col items-center justify-center gap-1 bg-white border border-gray-200 rounded-lg p-2 w-full">
       <input
         type="text"
-        value={UpdatedHCPSalary||''}
+        value={GetHCPPayment(user.userId)||''}
         onChange={(e: any) => SetUpdatedHCPSalary(e.target.value)}
         className="w-[70px] px-1 text-center py-1 text-[10px] border border-gray-300 rounded
                    focus:outline-none focus:ring-1 focus:ring-indigo-400"
@@ -1450,7 +1478,7 @@ const UpdatePopup = async (a: any) => {
         </span>
 
         <button
-          onClick={() => {setIsEditing(true);setSelectedHCPSalaryId(user.userId);SetUpdatedHCPSalary(GetHCPPayment(user.userId))}}
+          onClick={() => {setIsEditing(true);setSelectedHCPSalaryId(user.userId)}}
           className="text-[9px] text-indigo-600 bg-indigo-50 px-1 cursor-pointer py-[2px] rounded"
         >
           <Pencil size={9}/>
@@ -1576,7 +1604,7 @@ Awaiting Conversion
 
                                 </button>
                               </td>}
-                            {UpdateduserType === 'patient' &&
+                            
                               <td className="md:px-8 md:py-2">
 
                                 <button
@@ -1584,10 +1612,10 @@ Awaiting Conversion
                                   className="flex   cursor-pointer items-center gap-2 w-full sm:w-auto justify-center  py-2
     h-10 text-[9px] transition-all duration-150"
                                 >
-                                  <Trash onClick={() => { setShowDeletePopUp(true), SetDeleteInformation(user) }} />
+                                  <Trash onClick={() => { setShowDeletePopUp(true), SetDeleteInformation(user),dispatch(Refresh(null)) }} />
 
                                 </button>
-                              </td>}
+                              </td>
                           </tr>
                         ))}
                       </tbody>
@@ -1681,7 +1709,7 @@ Awaiting Conversion
     
     router.push('/DashBoard');
     dispatch(Update_Main_Filter_Status(""))
- dispatch(Refresh(""))
+ 
   };
 
   const handleMainLogout = async () => {
@@ -1784,6 +1812,25 @@ if(UpdateSalary.success){
     }
   }
 
+  const GetUserCurrentStatus:any=(UserId:any)=>{
+    try{
+ if (!DeploymentInfo?.length || !UserId) return "Not Entered";
+ 
+
+const monthNames = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
+
+  const  SelectedMonth=`${SearchYear}-${monthNames.indexOf(SearchMonth)+1}`
+    const address =
+      DeploymentInfo?.find((info: any) => info?.ClientId ===UserId &&info?.Month===SelectedMonth)
+
+    return address;
+    }catch(err:any){
+
+    }
+  }
 
 
 
@@ -1799,12 +1846,15 @@ if(UpdateSalary.success){
     <div className="absolute top-12 left-0 bg-white border border-gray-200 rounded-xl shadow-lg w-40 py-2 z-50">
       <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("Call Enquiry"));
       dispatch(UpdateUserType("patient"));
+      dispatch(UpdateAdminMonthFilter(new Date(now.getFullYear(), now.getMonth()).toLocaleString("default", { month: "long" })));
+  dispatch(UpdateAdminYearFilter(String(now.getFullYear())))
     setShowOptions(false)}
       }>
    Call Enquiry
       </button>
        <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("HCP List"));
         dispatch(UpdateUserType("healthcare-assistant"));
+
     setShowOptions(false)}
       }>
    HCP List
@@ -2083,8 +2133,9 @@ onClick={()=>UpdateNavigattosuggetions()}
     // dispatch(Refresh(`Please Wait... Fetching ${month || "All"} info...`));
 
     // ⏳ wait until month data updates
-     dispatch(UpdateAdminMonthFilter(month));
-
+   
+  dispatch(UpdateAdminMonthFilter(month));
+  
     // ✅ now trigger fresh reload + message
     // dispatch(Refresh(`Successfully Fetched ${month || "All"} Data`));
   }}

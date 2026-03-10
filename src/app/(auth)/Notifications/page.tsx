@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { CheckCircle, XCircle, Bell } from "lucide-react";
 import axios from "axios";
 import { GetNotificationsInformation } from "@/Lib/user.action";
+import { useRouter } from "next/navigation";
+import { LoadingData } from "@/Components/Loading/page";
 
 type FilterType = "All" | "Pending" | "Approved" | "Rejected" | "Read";
 
@@ -27,7 +29,7 @@ export default function NotificationsCenter() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>("All");
-
+const router=useRouter()
 
   const fetchNotifications = async () => {
     try {
@@ -77,10 +79,14 @@ export default function NotificationsCenter() {
       setActionLoading(null);
     }
   };
+  const handleLogout = () => {
+    
+    router.push('/DashBoard');
 
+  };
  
   if (loading) {
-    return <p className="text-slate-500 text-sm">Loading notifications…</p>;
+    return <LoadingData />
   }
 
   if (!loading && notifications.length === 0) {
@@ -94,10 +100,10 @@ export default function NotificationsCenter() {
  
  <div className="
   relative
-  rounded-3xl
+ 
   px-5 py-3
   flex items-center justify-between
-  bg-white/70
+  bg-gradient-to-br from-[#00A9A5] to-[#005f61]
   backdrop-blur-xl
   border border-white/30
   shadow-sm
@@ -105,26 +111,33 @@ export default function NotificationsCenter() {
 
 
   <div className="flex items-center gap-3">
-    <div className="p-2 rounded-xl bg-slate-900/80">
-      <Bell className="text-white" size={18} />
-    </div>
-
-    <div>
-      <h2 className="text-xl font-semibold text-slate-900">
-        Notifications
-      </h2>
-      <p className="text-slate-500 text-xs">
-        System alerts, requests & updates
-      </p>
-    </div>
-  </div>
-
-  
-  <img
+     <img
     src="https://curate-pearl.vercel.app/Icons/Curate-logoq.png"
     alt="Curate Health Care"
     className="h-9 w-auto opacity-90"
   />
+
+    <div>
+      
+      <h2 className="text-xl font-semibold text-white">
+        Notifications
+      </h2>
+      <p className="text-white text-xs">
+        System alerts, requests & updates
+      </p>
+    </div>
+     <div className="p-2 rounded-xl ">
+      <Bell className="text-white" size={28} />
+    </div>
+  </div>
+
+         <button
+              onClick={handleLogout}
+              className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+            >
+              DashBoard
+            </button>
+
 </div>
 
 
