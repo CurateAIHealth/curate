@@ -572,14 +572,14 @@ console.log("Data of Birth---",user.dateOfBirth)
     </p>
       </div>
 
-      <button
+      {/* <button
         onClick={() => setIsEditing(true)}
         className="ml-2 px-3 py-1 text-xs font-medium rounded-full 
                    bg-indigo-100 text-indigo-600 
                    hover:bg-indigo-200 transition"
       >
         Edit
-      </button>
+      </button> */}
     </div>
   )}
 </div>

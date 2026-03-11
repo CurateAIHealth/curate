@@ -1180,6 +1180,9 @@ className={`
             </Td>
       }
             <Td className="text-center align-middle">
+              {r.status==="Freeze"?<p className="inline-flex items-center px-3 py-1 text-xs font-bold tracking-wide text-red-700 bg-purple-100 rounded-md shadow-sm">
+  ❄ On Freeze
+</p>:
               <button
                 className="px-2 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600"
                 onClick={()=>{
@@ -1192,7 +1195,7 @@ className={`
                 }}
               >
                 Full Month
-              </button>
+              </button>}
             </Td>
 
             <td className="align-middle text-center">
@@ -1432,54 +1435,72 @@ className={`
             gridTemplateColumns: "repeat(7, minmax(0, 1fr))"
           }}
         >
-          {Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
-            const dayStatus = attendanceInfo.days?.[i] ?? "-"
-console.log("Check Replasement Status-----", attendanceInfo)
-            return (
-              <div
-                key={i}
-                className="border rounded-md py-2 flex flex-col items-center justify-center"
-              >
-                <span className="text-[10px] text-gray-500 mb-1">
-                  Day {i + 1}
-                </span>
+     
 
-                {dayStatus === "-" ? (
-                 <div>
-                   <span className="text-gray-400 text-xs">-</span>
-                   <p
-                      className="text-[9px] cursor-pointer mr-4 text-blue-600 hover:text-blue-900 hover:underline"
-                      onClick={() => {
-                        SetShowUpdateAttendece(!ShowUpdateAttendece)
-                        setAttenseceInformation(attendanceInfo)
-                        SetParticularDate(i + 1)
-                        setStatus("Choose")
-                        SetStatusMessage("")
-                      }}
-                    >
-                      Edit
-                    </p>
-                 </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-1">
-                    <DayBadge status={dayStatus as DayStatus} />
-                    <p
-                      className="text-[9px] cursor-pointer mr-4 text-blue-600 hover:text-blue-900 hover:underline"
-                      onClick={() => {
-                        SetShowUpdateAttendece(!ShowUpdateAttendece)
-                        setAttenseceInformation(attendanceInfo)
-                        SetParticularDate(i + 1)
-                        setStatus("Choose")
-                        SetStatusMessage("")
-                      }}
-                    >
-                      Edit
-                    </p>
-                  </div>
-                )}
-              </div>
-            )
-          })}
+{Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
+  const today = new Date().getDate();
+  const dayStatus = attendanceInfo.days?.[i] ?? "-";
+  const isFutureDate = i + 1 > today;
+
+  return (
+    <div
+      key={i}
+      className="border rounded-md py-2 flex flex-col items-center justify-center"
+    >
+      <span className="text-[10px] text-gray-500 mb-1">
+        Day {i + 1}
+      </span>
+
+      {dayStatus === "-" ? (
+        <div>
+          <span className="text-gray-400 text-xs">-</span>
+
+          <p
+            className={`text-[9px] mr-4 ${
+              isFutureDate
+                ? "text-gray-300 cursor-not-allowed"
+                : "cursor-pointer text-blue-600 hover:text-blue-900 hover:underline"
+            }`}
+            onClick={() => {
+              if (isFutureDate) return;
+
+              SetShowUpdateAttendece(!ShowUpdateAttendece);
+              setAttenseceInformation(attendanceInfo);
+              SetParticularDate(i + 1);
+              setStatus("Choose");
+              SetStatusMessage("");
+            }}
+          >
+            Edit
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-1">
+          <DayBadge status={dayStatus} />
+
+          <p
+            className={`text-[9px] mr-4 ${
+              isFutureDate
+                ? "text-gray-300 cursor-not-allowed"
+                : "cursor-pointer text-blue-600 hover:text-blue-900 hover:underline"
+            }`}
+            onClick={() => {
+              if (isFutureDate) return;
+
+              SetShowUpdateAttendece(!ShowUpdateAttendece);
+              setAttenseceInformation(attendanceInfo);
+              SetParticularDate(i + 1);
+              setStatus("Choose");
+              SetStatusMessage("");
+            }}
+          >
+            Edit
+          </p>
+        </div>
+      )}
+    </div>
+  );
+})}
         </div>
       </div>
 

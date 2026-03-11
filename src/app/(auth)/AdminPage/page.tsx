@@ -57,6 +57,7 @@ export default function UserTableList() {
   const [users, setUsers] = useState<any[]>([]);
   const [isChecking, setIsChecking] = useState(true);
   const [UserFirstName, setUserFirstName] = useState("");
+
   const [HCPCurrentStatus,setHCPCurrentStatus]=useState("")
   const [SearchDate, SetSearchDate] = useState<any>(null)
   const now = new Date();
@@ -89,6 +90,7 @@ const [showSuggestions, setShowSuggestions] = useState(true);
   const UpdateduserType = useSelector((state: any) => state.ViewHCPList)
   const CurrentCount = useSelector((state: any) => state.updatedCount)
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const updatedStatusMsg=useSelector((each:any)=>each.GlobelRefresh)
 const RESTRICTED_EMAILS = new Set([
   "info@curatehealth.in",
@@ -166,7 +168,7 @@ const RESTRICTED_EMAILS = new Set([
 //   };
 // }, [updatedStatusMsg]);
 const DASHBOARD_CACHE_KEY = "dashboard_cache";
-const CACHE_TTL = 20 * 60 * 1000;
+const CACHE_TTL = 10 * 60 * 1000;
 
 useEffect(() => {
   let mounted = true;
@@ -554,7 +556,11 @@ console.log("Check for the Issue------",UpdatedFilterUserType)
     if (!DeleteInformation?.userId) return;
 
     dispatch(Refresh("Please wait Deleting Profile..."));
-
+ if (loggedInEmail !== "srivanikasham@curatehealth.in") {
+     
+              dispatch(Refresh('You don’t have the required permissions to proceed'))
+        return
+      }
    
      const workingStatus = HCPWorkingStatus(DeleteInformation.userId);
   const isAssigned =
@@ -1446,7 +1452,7 @@ const UpdatePopup = async (a: any) => {
     <div className="flex flex-col items-center justify-center gap-1 bg-white border border-gray-200 rounded-lg p-2 w-full">
       <input
         type="text"
-        value={GetHCPPayment(user.userId)||''}
+        value={UpdatedHCPSalary?UpdatedHCPSalary:GetHCPPayment(user.userId)}
         onChange={(e: any) => SetUpdatedHCPSalary(e.target.value)}
         className="w-[70px] px-1 text-center py-1 text-[10px] border border-gray-300 rounded
                    focus:outline-none focus:ring-1 focus:ring-indigo-400"
@@ -1478,7 +1484,7 @@ const UpdatePopup = async (a: any) => {
         </span>
 
         <button
-          onClick={() => {setIsEditing(true);setSelectedHCPSalaryId(user.userId)}}
+          onClick={() => {setIsEditing(true);setSelectedHCPSalaryId(user.userId),SetUpdatedHCPSalary(GetHCPPayment(user.userId))}}
           className="text-[9px] text-indigo-600 bg-indigo-50 px-1 cursor-pointer py-[2px] rounded"
         >
           <Pencil size={9}/>
@@ -1753,17 +1759,42 @@ Awaiting Conversion
 
     return address ?? "Not Entered";
   };
-const handleSave =async (A:any) => {
-  setIsEditing(false)
- dispatch(Refresh(`Please Wait....`))
- 
-const UpdateSalary:any=await PostHCPSalaryRequest(A,UpdatedHCPSalary,UserFirstName)
-if(UpdateSalary.success){
-   dispatch(Refresh("Salary update request submitted to management. You will be notified once the status is updated."))
-  setIsEditing(false);
-}
-   
-  };
+const handleSave = async (data: any) => {
+  try {
+    setIsEditing(false);
+    dispatch(Refresh("Please Wait...."));
+
+    const updateSalary = await PostHCPSalaryRequest(
+      data,
+      UpdatedHCPSalary,
+      UserFirstName
+    );
+
+    if (updateSalary?.success) {
+      dispatch(
+        Refresh(
+          "Salary update request submitted to management. You will be notified once the status is updated."
+        )
+      );
+
+      const phoneNumber = "8977975659";
+      const message =
+        "Hi Sir, Kindly requesting HCP salary update. Please check notification in the application. Thank you.";
+
+      const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+        message
+      )}`;
+
+      window.open(whatsappURL, "_blank");
+
+      SetUpdatedHCPSalary(null);
+      setIsEditing(false);
+    }
+  } catch (error) {
+    console.error("Salary update error:", error);
+    dispatch(Refresh("Something went wrong. Please try again."));
+  }
+};
    const GetHCPPayment = (A: any) => {
     if (!UserFullInfo?.length || !A) return "Not Entered";
 

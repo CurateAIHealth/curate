@@ -27,7 +27,7 @@ export default function PatientForm() {
     Location: '',
     VerificationStatus: 'Pending',
     TermsAndConditions: "Accepted",
-    EmailVerification: false,
+    EmailVerification: true,
     FinelVerification: false,
     ClientStatus: "Client Enquiry"
 
@@ -204,7 +204,7 @@ export default function PatientForm() {
       if (!result.success) {
         setSubmissionRequest(true);
         setStatusMessage(result.message);
-
+  router.push('/sign-in');
         return;
       }
       const EmailComponent = memo(({ UpdatedFilterUserId }: { UpdatedFilterUserId: string }) => (

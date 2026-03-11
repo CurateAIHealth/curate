@@ -3,13 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle, XCircle, Bell } from "lucide-react";
 import axios from "axios";
-import { GetNotificationsInformation } from "@/Lib/user.action";
+import { GetNotificationsInformation, HCASalaryUpdate, UpdateNotificationType } from "@/Lib/user.action";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
+import { useDispatch, useSelector } from "react-redux";
+import { Refresh } from "@/Redux/action";
 
 type FilterType = "All" | "Pending" | "Approved" | "Rejected" | "Read";
 
 interface NotificationItem {
+  HCPId: string;
   Date: any;
   _id: string;
   Type: "LEAVE_REQUEST" | "EXPENSE_REQUEST" | "INFO" | "SYSTEM"|"HCP Salary Request";
@@ -29,23 +32,26 @@ export default function NotificationsCenter() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>("All");
+    const updatedStatusMsg=useSelector((each:any)=>each.GlobelRefresh)
 const router=useRouter()
+const dispatch=useDispatch()
+const [refreshKey, setRefreshKey] = useState(0);
 
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      const res: any = await GetNotificationsInformation();
-      setNotifications(res || []);
-    } catch (err) {
-      console.error("Fetch Notifications Error", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchNotifications = async () => {
+  try {
+    setLoading(true);
+    const res: any = await GetNotificationsInformation();
+    setNotifications(res || []);
+  } catch (err) {
+    console.error("Fetch Notifications Error", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+useEffect(() => {
+  fetchNotifications();
+}, [refreshKey]);
 
 
   const filteredNotifications = useMemo(() => {
@@ -54,31 +60,73 @@ const router=useRouter()
   }, [notifications, filter]);
 
   
-  const handleAction = async (
-    notificationId: string,
-    referenceId: string | undefined,
-    type: string,
-    action: "Approved" | "Rejected"
-  ) => {
-    if (!referenceId) return;
-
-    try {
-      setActionLoading(notificationId);
-
-      await axios.post("/api/notification-action", {
-        notificationId,
-        referenceId,
-        type,
-        action,
-      });
-
-      await fetchNotifications();
-    } catch (err) {
-      console.error("Notification Action Error", err);
-    } finally {
-      setActionLoading(null);
+ const handleAction = async (
+  info: any,
+  action: "Approved" | "Rejected"
+) => {
+  try {
+    if (!info?.HCPId) {
+      dispatch(Refresh("Invalid notification data."));
+      return;
     }
-  };
+
+    const phoneNumber = "7386145659";
+
+    if (action === "Rejected") {
+      const updateStatus = await UpdateNotificationType(info.HCPId, action);
+
+      if (!updateStatus?.success) {
+        dispatch(Refresh("Failed to update notification status."));
+        return;
+      }
+
+      const message = `Hi, unfortunately HCP ${info.HCPName} salary request was not approved. Please contact management for more information.`;
+
+      const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+        message
+      )}`;
+
+      window.open(whatsappURL, "_blank");
+
+      dispatch(Refresh("Salary request rejected and notification updated successfully."));
+      setRefreshKey(prev => prev + 1);
+      return;
+    }
+
+    const updateSalary = await HCASalaryUpdate(
+      info.HCPId,
+      info.RequestedSalary
+    );
+
+    if (!updateSalary?.success) {
+      dispatch(Refresh("Salary update failed."));
+      return;
+    }
+
+    const updateStatus = await UpdateNotificationType(info.HCPId, action);
+
+    if (!updateStatus?.success) {
+      dispatch(Refresh("Salary updated but notification status update failed."));
+      return;
+    }
+
+    const message = `Hi, the requested salary for HCP ${info.HCPName} has been updated to ${info.RequestedSalary}. Please check the application.`;
+
+    const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+      message
+    )}`;
+
+    window.open(whatsappURL, "_blank");
+
+    dispatch(Refresh("Salary updated and notification processed successfully."));
+    setRefreshKey(prev => prev + 1);
+  } catch (err) {
+    console.error("Notification Action Error:", err);
+    dispatch(Refresh("Something went wrong. Please try again."));
+  } finally {
+    setActionLoading(null);
+  }
+};
   const handleLogout = () => {
     
     router.push('/DashBoard');
@@ -142,8 +190,9 @@ const router=useRouter()
 
 
    
-      <div className="flex gap-3 flex-wrap">
-        {(["All", "Pending", "Approved", "Rejected", "Read",] as FilterType[]).map(
+      <div className="flex items-center justify-between p-3 flex-wrap">
+      <div className="flex gap-4 items-center">
+          {(["All", "Pending", "Approved", "Rejected", "Read",] as FilterType[]).map(
           (status) => (
             <button
               key={status}
@@ -160,6 +209,12 @@ const router=useRouter()
             </button>
           )
         )}
+      </div>
+  {updatedStatusMsg && (
+  <div className="mt-3 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700 shadow-sm">
+    {updatedStatusMsg}
+  </div>
+)}
       </div>
 
     
@@ -206,15 +261,14 @@ const router=useRouter()
                   <button
                     onClick={() =>
                       handleAction(
-                        item._id,
-                        item.ReferenceId,
-                        item.Type,
+                      item,
                         "Approved"
                       )
                     }
                     disabled={actionLoading === item._id}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition disabled:opacity-50"
                   >
+                  
                     <CheckCircle size={16} />
                     Approve
                   </button>
@@ -222,9 +276,7 @@ const router=useRouter()
                   <button
                     onClick={() =>
                       handleAction(
-                        item._id,
-                        item.ReferenceId,
-                        item.Type,
+                      item,
                         "Rejected"
                       )
                     }

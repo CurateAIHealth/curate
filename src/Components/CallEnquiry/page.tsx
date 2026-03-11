@@ -66,7 +66,7 @@ export default function CallEnquiryList({
       const userId = localStorage.getItem("UserId");
     
    
-      if (loggedInEmail === "srivanikasham@curatehealth.in") {
+      if (loggedInEmail !== "srivanikasham@curatehealth.in") {
      
               dispatch(Refresh('You don’t have the required permissions to proceed'))
         return

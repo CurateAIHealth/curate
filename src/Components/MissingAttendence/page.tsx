@@ -328,9 +328,13 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
               Pending
             </span>
           </td>
-
+      {item.Status==="Freeze"?<button className="mt-2 inline-flex items-center px-3 py-1 text-xs font-bold tracking-wide text-red-700 bg-purple-100 rounded-md shadow-sm">
+  ❄ On Freeze
+</button>:
           <td className="py-3 px-4 flex items-center justify-center text-gray-700">
             {ChooseMultiple && (
+
+        
               <button
                 className="bg-teal-800 text-white px-6 py-2 rounded-md
                            font-medium hover:opacity-90 active:scale-95 transition"
@@ -353,7 +357,7 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
                 }}
               />
             )}
-          </td>
+          </td>}
         </tr>
       ))}
     </tbody>

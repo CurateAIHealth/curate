@@ -33,6 +33,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useDispatch, useSelector } from "react-redux";
 import {
   CurrentLoginUser,
+  Refresh,
   Update_Main_Filter_Status,
   UpdateClient,
   UpdateTimeStamp,
@@ -147,7 +148,7 @@ const DASHBOARD_CACHE_KEY = "dashboardStats";
 const CACHE_TTL = 30 * 60 * 1000;
 
 const BENCH_CACHE_KEY = "benchListInfo";
-const BENCH_CACHE_TTL = 10 * 60 * 1000;
+const BENCH_CACHE_TTL = 1* 60 * 1000;
 
 useEffect(() => {
   let mounted = true;
@@ -157,8 +158,10 @@ useEffect(() => {
 
     if (userId) {
       const user = await GetUserInformation(userId);
+      console.log("Check for First Name-----",user)
       if (mounted && user?.Email) {
         dispatch(CurrentLoginUser(user.Email));
+        SetProfileName(user.FirstName)
       }
     }
 
@@ -411,7 +414,7 @@ ClientStatus:EnquiryForm.ClientStatus||"Save",
       const registrationResult = await CallEnquiryRegistration(payload);
 
       if (registrationResult.success === true) {
-        setEnquiryMessage("Client Enquiry Registered Successfully");
+        setEnquiryMessage("Client Enquiry Registered Successfully, Please Wait Navigating to Call Enquiry DashBoard !");
 
 //         if((EnquiryForm.ClientStatus!="Waiting List")||(EnquiryForm.ClientStatus!="Lost")){
 // setShowNotification(true)
@@ -419,7 +422,11 @@ ClientStatus:EnquiryForm.ClientStatus||"Save",
 
         setTimeout(() => {
           setShowCallEnquiry(false);
-        }, 3500);
+           dispatch(Update_Main_Filter_Status('Call Enquiry'));
+      dispatch(UpdateUserType("patient"));
+      router.push("/AdminPage");
+         dispatch(Refresh("New Call Enquiry Added  Successfully"));
+        }, 1500);
       }
 
     } catch (err: any) {
@@ -640,6 +647,7 @@ const TAB_ACCESS_CONTROL: Record<string, string[]> = {
   "Deployment": [
     "tsiddu805@gmail.com",
     "panducurate@gmail.com",
+    "srivanikasham@curatehealth.in",
   ],
 
   "Timesheet": [
@@ -653,6 +661,9 @@ const TAB_ACCESS_CONTROL: Record<string, string[]> = {
 
   "Payments": [
     "info@curatehealth.in",
+     "tsiddu805@gmail.com",
+    "panducurate@gmail.com",
+    "srivanikasham@curatehealth.in",
   ],
 
   "HCP List": [
@@ -686,6 +697,7 @@ const TAB_ACCESS_CONTROL: Record<string, string[]> = {
 
   "Notifications": [
     "info@curatehealth.in",
+     "kirancuratehealth@gmail.com"
   ],
 
   "Hostel Attendance": [
@@ -839,7 +851,7 @@ setNotificationStatus("Notification Send Succesfully")
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard.
+      Hi Admin – Welcome to Admin Dashboard
     </span>
   </div>
 

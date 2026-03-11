@@ -90,7 +90,7 @@ export default function ForgotPassword() {
         alert("Check Your Email to Update Your Password")
         
         setMailStatusMessage('Email sent successfully!');
-        // router.push('/sign-in');
+        router.push('/sign-in');
       } catch (error) {
 
         setMailStatusMessage('Error sending email. Please try again later.');
