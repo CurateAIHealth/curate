@@ -176,17 +176,40 @@ export const UpdateCurateFamilyInfo = async (FamilyInfo: any[]) => {
   }
 };
 
-export const GetUserIdwithEmail = async (Mail: any) => {
+export const GetUserIdwithEmail = async (Mail: string) => {
   try {
-    const cluster = await clientPromise
-    const Db = cluster.db("CurateInformation")
-    const Collection = Db.collection("Registration")
-    const FinelResult: any = await Collection.findOne({ Email: Mail })
-    return FinelResult.userId
-  } catch (err: any) {
+    const cluster = await clientPromise;
+    const Db = cluster.db("CurateInformation");
+    const Collection = Db.collection("Registration");
 
+
+    const users = await Collection
+      .find({}, { projection: { Email: 1, userId: 1 } })
+      .toArray();
+
+    for (const user of users) {
+      let decryptedEmail: any = user.Email;
+
+      if (
+        decryptedEmail &&
+        typeof decryptedEmail === "object" &&
+        "iv" in decryptedEmail &&
+        "content" in decryptedEmail
+      ) {
+        decryptedEmail = decrypt(decryptedEmail);
+      }
+
+      if (decryptedEmail === Mail) {
+        return user.userId;
+      }
+    }
+
+    return null;
+  } catch (err) {
+    console.error("Error in GetUserIdwithEmail:", err);
+    return null;
   }
-}
+};
 
 
 export const SignInRessult = async (SignInfor: { Name: any; Password: any }) => {
@@ -444,8 +467,7 @@ export const UpdatePatientInformation = async (Patient: {
     const existingDoctor = await collection.findOne({
       $or: [
         { emailHash: hashValue(Patient.Email.toLowerCase()) },
-        { phoneHash: hashValue(Patient.ContactNumber) },
-        { aadharHash: hashValue(Patient.AadharNumber) },
+      
       ],
     });
 
@@ -1279,7 +1301,59 @@ From:any
   }
 };
 
+export const UpdateNotificationType = async (
+  ImpHCPId: string,
+  ImpStatus: string
+) => {
+  try {
+    if (!ImpHCPId || !ImpStatus) {
+      return {
+        success: false,
+        message: "HCPId and Status are required",
+      };
+    }
 
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Notifications");
+
+    const result = await collection.updateOne(
+      { HCPId: ImpHCPId },
+      {
+        $set: {
+          Status: ImpStatus,
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Notification not found",
+      };
+    }
+
+    if (result.modifiedCount === 0) {
+      return {
+        success: true,
+        message: "Status already up to date",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Notification status updated successfully",
+    };
+  } catch (error: unknown) {
+    console.error("UpdateNotificationType error:", error);
+
+    return {
+      success: false,
+      message: "Failed to update notification status",
+    };
+  }
+};
 export const PostFullRegistration = async (Info: any) => {
   try {
     const cluster = await clientPromise;
@@ -2569,48 +2643,96 @@ export const UpdatehcpDailyAttendce = async (
 
     const operations: any[] = [];
 
-    for (const record of records) {
-      const cleanedAttendance = Array.isArray(record.Attendance)
-        ? record.Attendance.filter((a: any) => a && typeof a === "object")
-        : [];
+    // for (const record of records) {
+    //   const cleanedAttendance = Array.isArray(record.Attendance)
+    //     ? record.Attendance.filter((a: any) => a && typeof a === "object")
+    //     : [];
 
-      const alreadyMarked = cleanedAttendance.some((a: any) => {
-        if (a?.dateKey) {
-          return a.dateKey === selectedDateKey;
-        }
-        if (a?.AttendenceDate) {
-          const key = new Date(a.AttendenceDate).toISOString().slice(0, 10);
-          return key === selectedDateKey;
-        }
-        return false;
-      });
+    //   const alreadyMarked = cleanedAttendance.some((a: any) => {
+    //     if (a?.dateKey) {
+    //       return a.dateKey === selectedDateKey;
+    //     }
+    //     if (a?.AttendenceDate) {
+    //       const key = new Date(a.AttendenceDate).toISOString().slice(0, 10);
+    //       return key === selectedDateKey;
+    //     }
+    //     return false;
+    //   });
 
-      if (alreadyMarked) continue;
+    //   if (alreadyMarked) continue;
 
-      const attendanceEntry = {
-        dateKey: selectedDateKey,
-        AttendenceDate: dateObj,
-        HCPAttendence: true,
-        AdminAttendece: true,
-        CreatedAt: new Date(),
-        UpdatedAt: new Date(),
-        UpdatedBy: "Admin",
-      };
+    //   const attendanceEntry = {
+    //     dateKey: selectedDateKey,
+    //     AttendenceDate: dateObj,
+    //     HCPAttendence: true,
+    //     AdminAttendece: true,
+    //     CreatedAt: new Date(),
+    //     UpdatedAt: new Date(),
+    //     UpdatedBy: "Admin",
+    //   };
 
-      operations.push({
-        updateOne: {
-          filter: { _id: record._id },
-          update: {
-            $push: { Attendance: attendanceEntry },
-            $set: {
-              UpdatedAt: new Date(),
-              UpdatedBy: "Admin",
-            },
-          },
-        },
-      });
+    //   operations.push({
+    //     updateOne: {
+    //       filter: { _id: record._id },
+    //       update: {
+    //         $push: { Attendance: attendanceEntry },
+    //         $set: {
+    //           UpdatedAt: new Date(),
+    //           UpdatedBy: "Admin",
+    //         },
+    //       },
+    //     },
+    //   });
+    // }
+for (const record of records) {
+
+
+  if (record.Status === "Freeze") {
+    continue;
+  }
+
+  const cleanedAttendance = Array.isArray(record.Attendance)
+    ? record.Attendance.filter((a: any) => a && typeof a === "object")
+    : [];
+
+  const alreadyMarked = cleanedAttendance.some((a: any) => {
+    if (a?.dateKey) {
+      return a.dateKey === selectedDateKey;
     }
 
+    if (a?.AttendenceDate) {
+      const key = new Date(a.AttendenceDate).toISOString().slice(0, 10);
+      return key === selectedDateKey;
+    }
+
+    return false;
+  });
+
+  if (alreadyMarked) continue;
+
+  const attendanceEntry = {
+    dateKey: selectedDateKey,
+    AttendenceDate: dateObj,
+    HCPAttendence: true,
+    AdminAttendece: true,
+    CreatedAt: new Date(),
+    UpdatedAt: new Date(),
+    UpdatedBy: "Admin",
+  };
+
+  operations.push({
+    updateOne: {
+      filter: { _id: record._id },
+      update: {
+        $push: { Attendance: attendanceEntry },
+        $set: {
+          UpdatedAt: new Date(),
+          UpdatedBy: "Admin",
+        },
+      },
+    },
+  });
+}
     const result =
       operations.length > 0
         ? await collection.bulkWrite(operations)

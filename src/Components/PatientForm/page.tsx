@@ -27,7 +27,7 @@ export default function PatientForm() {
     Location: '',
     VerificationStatus: 'Pending',
     TermsAndConditions: "Accepted",
-    EmailVerification: false,
+    EmailVerification: true,
     FinelVerification: false,
     ClientStatus: "Client Enquiry"
 
