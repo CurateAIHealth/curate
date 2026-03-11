@@ -204,7 +204,7 @@ export default function PatientForm() {
       if (!result.success) {
         setSubmissionRequest(true);
         setStatusMessage(result.message);
-
+  router.push('/sign-in');
         return;
       }
       const EmailComponent = memo(({ UpdatedFilterUserId }: { UpdatedFilterUserId: string }) => (

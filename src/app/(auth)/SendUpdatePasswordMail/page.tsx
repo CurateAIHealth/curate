@@ -75,22 +75,22 @@ export default function ForgotPassword() {
       setMailStatusMessage('Sending email to update your password...');
       try {
         const FilterUserId = await GetUserIdwithEmail(email);
-alert(FilterUserId)
+
         const htmlComponent = ReactDOMServer.renderToString(
           <EmailComponent UpdatedFilterUserId={FilterUserId} />
         );
 
-        // await axios.post('/api/MailSend', {
-        //   to: email,
-        //   subject: 'Update Password with Curate Digital AI Health',
-        //   html: htmlComponent,
-        // });
+        await axios.post('/api/MailSend', {
+          to: email,
+          subject: 'Update Password with Curate Digital AI Health',
+          html: htmlComponent,
+        });
 
         
         alert("Check Your Email to Update Your Password")
         
         setMailStatusMessage('Email sent successfully!');
-        // router.push('/sign-in');
+        router.push('/sign-in');
       } catch (error) {
 
         setMailStatusMessage('Error sending email. Please try again later.');
