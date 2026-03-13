@@ -36,6 +36,7 @@ import {
   Refresh,
   Update_Main_Filter_Status,
   UpdateClient,
+  UpdateRefresh,
   UpdateTimeStamp,
   UpdateUserInformation,
   UpdateUserType,
@@ -74,7 +75,7 @@ export default function Dashboard() {
   const router =useRouter()
   const dispatch = useDispatch();
   
-  const updatedRefresh = useSelector((afterEach: any) => afterEach.updatedCount);
+  const updatedRefreshCount = useSelector((afterEach: any) => afterEach.updatedCount);
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
   const [OtherArea,setOtherArea]=useState<any>("")
   const [NotificationStatus,setNotificationStatus]=useState('')
@@ -126,6 +127,7 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
     const [showHealthCardSuggestions, setShowHealthCardSuggestions] =
     useState(false);
  const [DiscountPrice, setDiscountPrice] = useState<any>(1500)
+ const [UserPasswordValues,SetPasswordValues]=useState()
   const [ClientDiscount, SetClientDiscount] = useState<any>(0)
   const [stats, setStats] = useState<any>({
     registeredUsers: "Loading...",
@@ -145,107 +147,161 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   });
 
 const DASHBOARD_CACHE_KEY = "dashboardStats";
-const CACHE_TTL = 30 * 60 * 1000;
+const CACHE_TTL = 20 * 60 * 1000;
 
 const BENCH_CACHE_KEY = "benchListInfo";
-const BENCH_CACHE_TTL = 1* 60 * 1000;
+const BENCH_CACHE_TTL = 20* 60 * 1000;
 
+// useEffect(() => {
+//   let mounted = true;
+
+//   const run = async () => {
+//     const userId = localStorage.getItem("UserId");
+
+//     if (userId) {
+//       const user = await GetUserInformation(userId);
+//       console.log("Check for First Name-----",user)
+//       if (mounted && user?.Email) {
+//         dispatch(CurrentLoginUser(user.Email));
+//         SetProfileName(user.FirstName)
+//         SetPasswordValues(user?.PasswordValue)
+//       }
+//     }
+
+//     const cachedStats = localStorage.getItem(DASHBOARD_CACHE_KEY);
+//     const cachedBench = localStorage.getItem(BENCH_CACHE_KEY);
+
+//     let statsValid = false;
+//     let benchValid = false;
+
+//     // Dashboard Cache
+//     if (cachedStats) {
+//       const { data, timestamp } = JSON.parse(cachedStats);
+
+//       if (Date.now() - timestamp < CACHE_TTL) {
+//         setStats(data);
+//         statsValid = true;
+//       }
+//     }
+
+//     // Bench Cache
+//     if (cachedBench) {
+//       const { data, timestamp } = JSON.parse(cachedBench);
+
+//       if (Date.now() - timestamp < BENCH_CACHE_TTL) {
+//         setBenchSource(data);
+//         benchValid = true;
+//       }
+//     }
+
+//     // If both cached stop API calls
+//     if (statsValid && benchValid) {
+//       setLoading(false);
+//       return;
+//     }
+
+//     try {
+//       const [statsRes, benchRes] = await Promise.all([
+//         GetDashboardStats(),
+//         GetUsersFullInfo(),
+//       ]);
+
+//       if (!mounted) return;
+
+//       if (statsRes?.success) {
+//         setStats(statsRes.data);
+
+//         localStorage.setItem(
+//           DASHBOARD_CACHE_KEY,
+//           JSON.stringify({
+//             data: statsRes.data,
+//             timestamp: Date.now(),
+//           })
+//         );
+//       }
+
+//       // Bench Users
+//       const benchUsers =
+//         Array.isArray(benchRes) ? benchRes : benchRes?.data ?? [];
+
+//       if (benchUsers.length > 0) {
+//         setBenchSource(benchUsers);
+
+//         localStorage.setItem(
+//           BENCH_CACHE_KEY,
+//           JSON.stringify({
+//             data: benchUsers,
+//             timestamp: Date.now(),
+//           })
+//         );
+//       }
+
+//       setLoading(false);
+//     } catch (error) {
+//       console.error("Dashboard Load Error:", error);
+//       setLoading(false);
+//     }
+//   };
+
+//   run();
+
+//   return () => {
+//     mounted = false;
+//   };
+// }, []);
+const run = useCallback(async () => {
+  const userId = localStorage.getItem("UserId");
+
+  if (userId) {
+    const user = await GetUserInformation(userId);
+
+    if (user?.Email) {
+      dispatch(CurrentLoginUser(user.Email));
+      SetProfileName(user.FirstName);
+      SetPasswordValues(user?.PasswordValue);
+    }
+  }
+
+  try {
+    const [statsRes, benchRes] = await Promise.all([
+      GetDashboardStats(),
+      GetUsersFullInfo(),
+    ]);
+
+    if (statsRes?.success) {
+      setStats(statsRes.data);
+
+      localStorage.setItem(
+        DASHBOARD_CACHE_KEY,
+        JSON.stringify({
+          data: statsRes.data,
+          timestamp: Date.now(),
+        })
+      );
+    }
+
+    const benchUsers =
+      Array.isArray(benchRes) ? benchRes : benchRes?.data ?? [];
+
+    setBenchSource(benchUsers);
+
+    localStorage.setItem(
+      BENCH_CACHE_KEY,
+      JSON.stringify({
+        data: benchUsers,
+        timestamp: Date.now(),
+      })
+    );
+
+    setLoading(false);
+  } catch (error) {
+    console.error("Dashboard Load Error:", error);
+    setLoading(false);
+  }
+}, [dispatch]);
 useEffect(() => {
-  let mounted = true;
-
-  const run = async () => {
-    const userId = localStorage.getItem("UserId");
-
-    if (userId) {
-      const user = await GetUserInformation(userId);
-      console.log("Check for First Name-----",user)
-      if (mounted && user?.Email) {
-        dispatch(CurrentLoginUser(user.Email));
-        SetProfileName(user.FirstName)
-      }
-    }
-
-    const cachedStats = localStorage.getItem(DASHBOARD_CACHE_KEY);
-    const cachedBench = localStorage.getItem(BENCH_CACHE_KEY);
-
-    let statsValid = false;
-    let benchValid = false;
-
-    // Dashboard Cache
-    if (cachedStats) {
-      const { data, timestamp } = JSON.parse(cachedStats);
-
-      if (Date.now() - timestamp < CACHE_TTL) {
-        setStats(data);
-        statsValid = true;
-      }
-    }
-
-    // Bench Cache
-    if (cachedBench) {
-      const { data, timestamp } = JSON.parse(cachedBench);
-
-      if (Date.now() - timestamp < BENCH_CACHE_TTL) {
-        setBenchSource(data);
-        benchValid = true;
-      }
-    }
-
-    // If both cached stop API calls
-    if (statsValid && benchValid) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const [statsRes, benchRes] = await Promise.all([
-        GetDashboardStats(),
-        GetUsersFullInfo(),
-      ]);
-
-      if (!mounted) return;
-
-      if (statsRes?.success) {
-        setStats(statsRes.data);
-
-        localStorage.setItem(
-          DASHBOARD_CACHE_KEY,
-          JSON.stringify({
-            data: statsRes.data,
-            timestamp: Date.now(),
-          })
-        );
-      }
-
-      // Bench Users
-      const benchUsers =
-        Array.isArray(benchRes) ? benchRes : benchRes?.data ?? [];
-
-      if (benchUsers.length > 0) {
-        setBenchSource(benchUsers);
-
-        localStorage.setItem(
-          BENCH_CACHE_KEY,
-          JSON.stringify({
-            data: benchUsers,
-            timestamp: Date.now(),
-          })
-        );
-      }
-
-      setLoading(false);
-    } catch (error) {
-      console.error("Dashboard Load Error:", error);
-      setLoading(false);
-    }
-  };
-
   run();
-
-  return () => {
-    mounted = false;
-  };
-}, []);
+}, [run,updatedRefreshCount]);
 
   const BenchList = useMemo(() => {
     if (!benchSource) return [];
@@ -810,7 +866,6 @@ setNotificationStatus("Notification Send Succesfully")
 
 
 
-  
  
 
   const UpdateNewLead = async () => {
@@ -851,13 +906,13 @@ setNotificationStatus("Notification Send Succesfully")
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard
+      Hi Admin – Welcome to Admin Dashboard.
     </span>
   </div>
 
   
   <div className="flex items-center gap-3 sm:gap-5 w-full sm:w-auto justify-between sm:justify-end">
- 
+
     <div className="flex items-center bg-gray-800 px-2 sm:px-3 py-1 rounded-lg flex-1 sm:flex-none">
       <Search size={18} className="text-gray-400" />
       <input
@@ -1017,7 +1072,9 @@ setNotificationStatus("Notification Send Succesfully")
       <button
       type="button"
         onClick={() => {
-          handleLogout();
+          localStorage.removeItem("UserId");
+    router.prefetch("/");
+    router.push("/");
           setShowProfileOptions(false);
         }}
         className="
@@ -1051,7 +1108,15 @@ setNotificationStatus("Notification Send Succesfully")
 
   <ProfileDrawer
   open={openProfile}
-  onClose={() => setOpenProfile(false)}
+  onClose={() => {
+  setOpenProfile(false);
+  localStorage.removeItem(DASHBOARD_CACHE_KEY);
+  localStorage.removeItem(BENCH_CACHE_KEY);
+
+
+  dispatch(UpdateRefresh(1));
+}}
+  Password={UserPasswordValues}
   profileName={ProfileName}
   ProfileEmail={loggedInEmail}
   Designation="Developer"

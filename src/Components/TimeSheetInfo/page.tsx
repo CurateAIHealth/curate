@@ -2,7 +2,7 @@
 let deploymentCache: any[] = [];
 let cachedUsersFullInfo: any[] = [];
 let cachedRegisterdUsers: any[] = [];
-import { DeleteClientFromDeolyment, EditAttendanceByClientId, EditAttendanceByDateRange, GetDeploymentInfo, GetRegidterdUsers, GetUsersFullInfo, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus, UpdatehcpDailyAttendce } from "@/Lib/user.action";
+import { DeleteClientFromDeolyment, EditAttendanceByClientId, EditAttendanceByDateRange, GetAllUsersData, GetDeploymentInfo, GetRegidterdUsers, GetUsersFullInfo, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus, UpdatehcpDailyAttendce } from "@/Lib/user.action";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
 import { CalendarDays, CheckCircle, Eye, FilePenLine, LucidePencil, Pencil, PencilIcon, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -117,21 +117,30 @@ useEffect(() => {
 
    
 
-    const [RegisterdUsers,
-      usersResult, PlacementInformation] = await Promise.all([
-        GetRegidterdUsers(),
-        GetUsersFullInfo(),
-        GetDeploymentInfo()
-      ])
+    // const [RegisterdUsers,
+    //   usersResult, PlacementInformation] = await Promise.all([
+    //     GetRegidterdUsers(),
+    //     GetUsersFullInfo(),
+    //     GetDeploymentInfo()
+    //   ])
 
-    if (!PlacementInformation?.length) {
+
+      const {
+  RegisterdUsers,
+  usersResult,
+  placementInfo,
+  replacementInfo,
+  terminationInfo,
+} = await GetAllUsersData();
+
+    if (!placementInfo?.length) {
       setIsChecking(false);
       return;
     }
 
     const formattedData: any = {};
 
-    PlacementInformation.forEach((record: any) => {
+    placementInfo.forEach((record: any) => {
       const monthKey = getMonthKey(record);
       if (!formattedData[monthKey]) formattedData[monthKey] = [];
 

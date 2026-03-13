@@ -9,7 +9,7 @@ let cachedRegisterdUsers: any[] = [];
 
 import React, { useEffect, useState } from "react";
 import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -131,19 +131,26 @@ useEffect(() => {
         return;
       }
 
-      const [
-        RegisterdUsers,
-        usersResult,
-        placementInfo,
-        replacementInfo,
-        terminationInfo,
-      ] = await Promise.all([
-         GetRegidterdUsers() ,
-        GetUsersFullInfo(),
-        GetDeploymentInfo(),
-        GetReplacementInfo(),
-        GetTerminationInfo(),
-      ]);
+      // const [
+      //   RegisterdUsers,
+      //   usersResult,
+      //   placementInfo,
+      //   replacementInfo,
+      //   terminationInfo,
+      // ] = await Promise.all([
+      //    GetRegidterdUsers() ,
+      //   GetUsersFullInfo(),
+      //   GetDeploymentInfo(),
+      //   GetReplacementInfo(),
+      //   GetTerminationInfo(),
+      // ]);
+      const {
+  RegisterdUsers,
+  usersResult,
+  placementInfo,
+  replacementInfo,
+  terminationInfo,
+} = await GetAllUsersData();
 
       if (!mounted) return;
 
