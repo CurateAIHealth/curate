@@ -2439,6 +2439,7 @@ export const StaffEmails = [
   "sravanthicurate@gmail.com",
   "srinivasnew0803@gmail.com",
   "rpandu823@gmail.com",
+  "shreeshmacurate@gmail.com"
 ]
 
 
