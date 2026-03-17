@@ -516,6 +516,7 @@ const EditAttendence = async () => {
 
     const response = await EditAttendanceByClientId(
       AttenseceInformation.ClientId,
+      AttenseceInformation.hcpId,
       yearMonth,
       flexDate,
       status,
@@ -559,6 +560,7 @@ const UpdateAttendecByDateRange = async () => {
 
     const response = await EditAttendanceByDateRange(
       attendanceInfo.ClientId,
+         attendanceInfo.hcpId,
       yearMonth,
       fromDate,
       toDate,
@@ -1094,6 +1096,7 @@ className={`
                     alt="Replacement"
                     className="w-7 h-7 object-contain"
                   />
+                  
                  {r.invoice||"Yet to Sent Invoice"}
                 </span>
               ) : (

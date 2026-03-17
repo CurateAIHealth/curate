@@ -54,12 +54,12 @@ const ShowMailTemplate=useSelector((A:any)=>A.RevertInvoices)
 
     Fetch()
   }, [status,(ShowMailTemplate)])
-  console.log('Check for Month------',monthFilter)
+
   const downloadExcel = () => {
     const exportData = paginatedData.map((inv) => {
       const totalAmount =
         getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
-        Number(inv.CareTakeCharge.replace("₹", "")) +
+        Number(inv.CareTakeCharge) +
         Number(inv.RegistrationFee);
 
       const balance =
@@ -280,9 +280,9 @@ const filteredInvoices = useMemo(() => {
     page * pageSize
   );
 
-  const totalDraft = computedInvoices.filter((x: any) => x.status === "Draft").length;
-  const totalSent = computedInvoices.filter((x: any) => x.status === "Sent").length;
-  const totalOverdue = computedInvoices.filter((x: any) => x.status === "Overdue").length;
+  const totalDraft = filteredInvoices.filter((x: any) => x.status === "Draft").length;
+  const totalSent = filteredInvoices.filter((x: any) => x.status === "Sent").length;
+  const totalOverdue = filteredInvoices.filter((x: any) => x.status === "Overdue").length;
 
   const currentYear = new Date().getFullYear();
 
@@ -448,7 +448,7 @@ CheckPaymentStatus:CurrentPaymentStatus
     </div>
   </div>
 
-  {/* Right: Actions */}
+
   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
     <button
       onClick={handleLogout}
@@ -513,13 +513,13 @@ CheckPaymentStatus:CurrentPaymentStatus
 
   <div className="flex items-center gap-2 bg-green-50 border-l-4 border-green-600 text-green-700 p-2 rounded w-full md:w-auto">
     <p className="text-xs font-semibold whitespace-nowrap">✔ Total Received</p>
-    <h3 className="text-sm md:text-base font-bold">₹{  BalancePaid}/-</h3>
+    <h3 className="text-sm md:text-base font-bold">{  BalancePaid}/-</h3>
   </div>
 
 
   <div className="flex items-center gap-2 bg-red-50 border-l-4 border-red-600 text-red-700 p-2 rounded w-full md:w-auto">
     <p className="text-xs font-semibold whitespace-nowrap">⚠ Pending Amount</p>
-    <h3 className="text-sm md:text-base font-bold">₹{BalanceDue}/-</h3>
+    <h3 className="text-sm md:text-base font-bold">{BalanceDue}/-</h3>
   </div>
 
   
@@ -603,7 +603,7 @@ CheckPaymentStatus:CurrentPaymentStatus
 
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <SummaryCard label="Total Invoices" value={paginatedData.length} subtleLabel="All statuses" borderColor="#1392d3" />
+              <SummaryCard label="Total Invoices" value={filteredInvoices.length} subtleLabel="All statuses" borderColor="#1392d3" />
               <SummaryCard label="Draft" value={totalDraft} subtleLabel="Need review" borderColor="#50c896" />
               <SummaryCard label="Sent" value={totalSent} subtleLabel="Shared with Client" borderColor="#1392d3" />
               <SummaryCard label="Overdue" value={totalOverdue} subtleLabel="Needs follow-up" borderColor="#ff1493" />
@@ -645,145 +645,169 @@ CheckPaymentStatus:CurrentPaymentStatus
     </div>
 
   <div className="w-full border rounded-md overflow-hidden">
-  <div
-    className="
-    grid text-xs font-semibold text-white bg-teal-800 border-b px-4 py-3 gap-2
-    grid-cols-3 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-12
-    "
-  >
-    <div>Patient / Client</div>
-    <div>Contact</div>
-    <div className="hidden sm:block">Status</div>
-    <div className="hidden sm:block">Due Date</div>
-    <div className="hidden md:block">Total Amount</div>
-    <div className="hidden md:block">Advance Paid</div>
-    <div className="hidden md:block">Balance</div>
-    <div className="hidden lg:block">Remarks</div>
-    <div>Actions</div>
-    <div>Edit</div>
-    <div>Payment Status</div>
-    <div>Download</div>
-  </div>
+ <div
+  className="
+  grid items-center
+  text-xs font-semibold text-white
+  bg-teal-800 border-b px-4 py-3 gap-2
 
-  <div className="max-h-[600px] overflow-y-auto">
-    {filteredInvoices?.map((inv: any, index: any) => {
-      const dueInfo = getDueStatus(inv.StartDate)
+  grid-cols-3
+  sm:grid-cols-5
+  md:grid-cols-8
+  lg:grid-cols-11
+  "
+>
+  <div>Patient / Client</div>
+  <div>Contact</div>
 
-      const total =
-        getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
-          Number(String(inv.CareTakeCharge || "0").replace("₹", "")) +
-        Number(inv.RegistrationFee)
+  <div className="hidden sm:block">Status</div>
+  <div className="hidden sm:block">Due Date</div>
 
-      const balance = Number(total) - Number(inv.AdvanceReceived || 0)
+  <div className="hidden md:block">Total Amount</div>
+  <div className="hidden md:block">Advance Paid</div>
+  <div className="hidden md:block">Balance</div>
 
-      return (
-        <div
-          key={`${inv.id}-${inv.createdAt || index}`}
-          className="
-          grid px-4 py-3 border-b border-gray-200 text-sm gap-2 hover:bg-[#f7f9fd] transition
-          grid-cols-3 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-12
-          "
-        >
-          <div className="flex flex-col">
-            <span className="font-medium">{inv.name}</span>
-            <span className="text-[9px] text-gray-500">Invoice ID: {inv.id}</span>
-          </div>
+  <div>Actions</div>
+  <div className="hidden lg:block">Edit</div>
+  <div className="hidden lg:block">Payment Status</div>
+  <div className="hidden lg:block">Download</div>
+</div>
 
-          <div>+91{inv.contact}</div>
+<div className="max-h-[600px] overflow-y-auto">
+  {filteredInvoices?.map((inv: any, index: any) => {
+    const dueInfo = getDueStatus(inv.StartDate)
 
-          <div className="hidden sm:block">
-            <span
-              className={
-                "px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 " +
-                statusStyles[inv.status]
-              }
-            >
-              {inv.status === "Sent" ? (
-                <CheckCircle className="w-3 h-3" />
-              ) : (
-                <Clock className="w-3 h-3" />
-              )}
-              {inv.status}
-            </span>
-          </div>
+    const total =
+      getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
+        Number(String(inv.CareTakeCharge || "0").replace("₹", "")) +
+      Number(inv.RegistrationFee)
 
-          {inv.PaymentStatus ? (
-            <span className="px-3 py-1 rounded-full text-[8px] text-center font-medium text-green-600 border border-green-300">
-              Received within Due Date
-            </span>
-          ) : (
-            <div className="hidden sm:block">
-              {dueInfo.status === "overdue" ? (
-                <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600 border border-red-300">
-                  Overdue
-                </span>
-              ) : (
-                <span className="text-gray-700 text-xs">{dueInfo.label}</span>
-              )}
-            </div>
-          )}
+    const balance = Number(total) - Number(inv.AdvanceReceived || 0)
 
-          <div className="hidden md:block">₹{total}/-</div>
+    return (
+      <div
+        key={`${inv.id}-${inv.createdAt || index}`}
+        className="
+        grid items-center px-4 py-3 border-b border-gray-200 text-sm gap-2
+        hover:bg-[#f7f9fd] transition
 
-          <div className="hidden md:block">₹{Number(inv.AdvanceReceived) || 0}/-</div>
-
-          <div className="hidden md:block">₹{Number(balance)}/-</div>
-
-          <div className="hidden lg:block">
-            <input
-              type="text"
-              className="border rounded-md w-[100px] text-[13px] pl-2"
-              placeholder="Enter Remark..."
-            />
-          </div>
-
-          <div className="flex items-center">
-            {inv.status === "Draft" ? (
-              <button
-                className="px-2 py-1 rounded-md text-[13px] flex items-center gap-2 text-red-500"
-                onClick={() => UpdateInvoiceMailTemplate(inv)}
-              >
-                <SquarePen className="w-4 h-4" /> Edit & Send
-              </button>
-            ) : (
-              <button className="text-green-700 flex items-center gap-1 text-[13px]">
-                <CheckCircle className="w-4 h-4" /> Sent
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center cursor-pointer">
-            <Pencil className="w-4 h-4" onClick={() => EditInvoice(inv.id)} />
-          </div>
-
-          <div
-            className={`flex px-1 py-1 text-[10px] font-medium border rounded-md w-fit h-fit items-center gap-2 ${
-              inv.PaymentStatus
-                ? "border-green-400 text-green-600 bg-green-50"
-                : "border-red-400 text-red-600 bg-red-50"
-            }`}
-          >
-            {inv.PaymentStatus ? "Received" : "Due"}
-
-            {!inv.PaymentStatus && (
-              <button
-                className="px-3 py-[3px] bg-teal-800 text-white text-[10px] rounded-full hover:bg-teal-900"
-                onClick={() => UpdatePaymentStatus(inv.id)}
-              >
-                Update
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center cursor-pointer">
-            {inv.status !== "Draft" && (
-              <Download onClick={() => DownloadInvoice(inv.id)} />
-            )}
-          </div>
+        grid-cols-3
+        sm:grid-cols-5
+        md:grid-cols-8
+        lg:grid-cols-11
+        "
+      >
+        {/* Patient */}
+        <div className="flex flex-col">
+          <span className="font-medium">{inv.name}</span>
+          <span className="text-[9px] text-gray-500">
+            Invoice ID: {inv.id}
+          </span>
         </div>
-      )
-    })}
-  </div>
+
+        {/* Contact */}
+        <div>+91{inv.contact}</div>
+
+        {/* Status */}
+        <div className="hidden sm:block">
+          <span
+            className={
+              "px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 " +
+              statusStyles[inv.status]
+            }
+          >
+            {inv.status === "Sent" ? (
+              <CheckCircle className="w-3 h-3" />
+            ) : (
+              <Clock className="w-3 h-3" />
+            )}
+            {inv.status}
+          </span>
+        </div>
+
+        {/* Due */}
+        {inv.PaymentStatus ? (
+          <span className="hidden sm:block px-3 py-1 rounded-full text-[10px] text-center font-medium text-green-600 border border-green-300">
+            Paid
+          </span>
+        ) : (
+          <div className="hidden sm:block">
+            {dueInfo.status === "overdue" ? (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600 border border-red-300">
+                Overdue
+              </span>
+            ) : (
+              <span className="text-gray-700 text-xs">{dueInfo.label}</span>
+            )}
+          </div>
+        )}
+
+        <div className="hidden md:block">{total}/-</div>
+
+
+        <div className="hidden md:block">
+          {  Number(inv.AdvanceReceived)|| 0}/-
+        </div>
+
+  
+        <div className="hidden md:block">{ Number(balance).toFixed(2)}/-</div>
+
+        {/* Actions */}
+        <div className="flex items-center">
+          {inv.status === "Draft" ? (
+            <button
+              className="px-2 py-1 rounded-md text-[13px] flex items-center gap-2 text-red-500"
+              onClick={() => UpdateInvoiceMailTemplate(inv)}
+            >
+              <SquarePen className="w-4 h-4" />
+              Edit & Send
+            </button>
+          ) : (
+            <button className="text-green-700 flex items-center gap-1 text-[13px]">
+              <CheckCircle className="w-4 h-4" />
+              Sent
+            </button>
+          )}
+        </div>
+
+        {/* Edit */}
+        <div className="hidden lg:flex items-center cursor-pointer">
+          <Pencil
+            className="w-4 h-4"
+            onClick={() => EditInvoice(inv.id)}
+          />
+        </div>
+
+        {/* Payment Status */}
+        <div
+          className={`hidden lg:flex px-1 py-1 text-[10px] font-medium border rounded-md w-fit h-fit items-center gap-2 ${
+            inv.PaymentStatus
+              ? "border-green-400 text-green-600 bg-green-50"
+              : "border-red-400 text-red-600 bg-red-50"
+          }`}
+        >
+          {inv.PaymentStatus ? "Received" : "Due"}
+
+          {!inv.PaymentStatus && (
+            <button
+              className="px-3 py-[3px] bg-teal-800 text-white text-[10px] rounded-full hover:bg-teal-900"
+              onClick={() => UpdatePaymentStatus(inv.id)}
+            >
+              Update
+            </button>
+          )}
+        </div>
+
+        {/* Download */}
+        <div className="hidden lg:flex items-center cursor-pointer">
+          {inv.status !== "Draft" && (
+            <Download onClick={() => DownloadInvoice(inv.id)} />
+          )}
+        </div>
+      </div>
+    )
+  })}
+</div>
 </div>
   </div>
 </div>

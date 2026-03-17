@@ -2753,6 +2753,7 @@ for (const record of records) {
 };
 export const EditAttendanceByClientId = async (
   clientId: string,
+  hcpId:any,
   Month: any,
   attendenceDate: string,
   status: "FULL" | "HALF" | "ABSENT",
@@ -2782,6 +2783,7 @@ export const EditAttendanceByClientId = async (
 console.log("Check attendece Date------",start)
     const existing = await collection.findOne({
       ClientId: clientId,
+      HCAId:hcpId,
       Month: normalizedMonth,
       Attendance: {
         $elemMatch: { AttendenceDate: start },
@@ -2792,6 +2794,7 @@ console.log("Check attendece Date------",start)
       await collection.updateOne(
         {
           ClientId: clientId,
+           HCAId:hcpId,
           Month: normalizedMonth,
           "Attendance.AttendenceDate": start,
         },
@@ -2823,6 +2826,7 @@ console.log("Check attendece Date------",start)
     await collection.updateOne(
       {
         ClientId: clientId,
+            HCAId:hcpId,
         Month: normalizedMonth,
       },
       {
@@ -2848,6 +2852,7 @@ console.log("Check attendece Date------",start)
 
 export const EditAttendanceByDateRange = async (
   clientId: string,
+  HCPId:any,
   Month: string,
   startDate: string,   // "2026-02-12"
   endDate: string,     // "2026-02-19"
@@ -2882,6 +2887,7 @@ export const EditAttendanceByDateRange = async (
     while (currentDate <= end) {
       const existing = await collection.findOne({
         ClientId: clientId,
+        HCAId:HCPId,
         Month: normalizedMonth,
         Attendance: {
           $elemMatch: { AttendenceDate: currentDate },
@@ -2892,6 +2898,7 @@ export const EditAttendanceByDateRange = async (
         await collection.updateOne(
           {
             ClientId: clientId,
+             HCAId:HCPId,
             Month: normalizedMonth,
             "Attendance.AttendenceDate": currentDate,
           },
@@ -2917,6 +2924,7 @@ export const EditAttendanceByDateRange = async (
         await collection.updateOne(
           {
             ClientId: clientId,
+             HCAId:HCPId,
             Month: normalizedMonth,
           },
           {
