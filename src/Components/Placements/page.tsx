@@ -68,7 +68,7 @@ const [ReplacementDate,setReplacementDate]=useState("")
     status: ""
   })
   const [refreshKey, setRefreshKey] = useState(0);
-
+const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const [CareTakerName,SetCareTakerName]=useState('')
   const [HCPName,setHCPName]=useState("")
   const [ShowReassignmentPopUp,setShowReassignmentPopUp]=useState(false)
@@ -757,7 +757,10 @@ const HandleRemove = async (Info: any, Name: any) => {
     SetActionStatusMessage("Invalid data. Please refresh and try again.");
     return;
   }
-
+ if (loggedInEmail!=="srivanikasham@curatehealth.in") {
+    SetActionStatusMessage("Access denied. You do not have authorization to perform this action. Management approval is required.");
+    return;
+  }
   try {
     SetActionStatusMessage("Please wait...");
 

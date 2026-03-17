@@ -145,7 +145,7 @@ const UpdateCurrentAttendence = async () => {
   }
 };
 ;
- const handleUpdate = async (A: any) => {
+ const handleUpdate = async (A: any,B:any) => {
   setStatusMessage("Please Wait...");
 
   try {
@@ -156,6 +156,7 @@ const UpdateCurrentAttendence = async () => {
     console.log("Second Check----",flexDate)
     const AttendenceUpdateResult: any = await EditAttendanceByClientId(
       A,
+      B,
       `${selectedYear}-${selectedMonth}`, 
       flexDate,                      
       "FULL",
@@ -338,7 +339,7 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
               <button
                 className="bg-teal-800 text-white px-6 py-2 rounded-md
                            font-medium hover:opacity-90 active:scale-95 transition"
-                onClick={() => handleUpdate(item.ClientId)}
+                onClick={() => handleUpdate(item.ClientId,item.HCAId)}
               >
                 ✔ {item.HCAName}'s Attendance Check-in
               </button>
