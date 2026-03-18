@@ -155,13 +155,13 @@ useEffect(() => {
 
 
   }));
- const handleDelete = () => {
-    if (selectedReason === "Other") {
-      confirmDelete(otherReason.trim());
-    } else {
-      confirmDelete(selectedReason);
-    }
-  };
+//  const handleDelete = () => {
+//     if (selectedReason === "Other") {
+//       confirmDelete(otherReason.trim());
+//     } else {
+//       confirmDelete(selectedReason);
+//     }
+//   };
 
   const isDeleteDisabled =
     !selectedReason || (selectedReason === "Other" && !otherReason.trim());
@@ -286,24 +286,24 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
     setShowDeletePopup(true);
   };
 
-  const confirmDelete = async(selectedReason: string) => {
-    if (deleteTargetId) {
-        SetActionStatusMessage("Please Wait Deleting Placement...")
+  // const confirmDelete = async(selectedReason: string) => {
+  //   if (deleteTargetId) {
+  //       SetActionStatusMessage("Please Wait Deleting Placement...")
 
-           const UpdateHcaStatus= await UpdateHCAnstatus(deleteTargetId?.HCA_Id,"Available")
-         const UpdateStatus=await UpdateUserContactVerificationstatus(deleteTargetId.Client_Id,"Converted")
-           const DeleteTimeSheetData=await DeleteDeployMent(deleteTargetId.Client_Id)
-           const PostTimeSheet:any = await InserTerminationData(deleteTargetId.Client_Id, deleteTargetId?.HCA_Id, deleteTargetId.name, deleteTargetId.email, deleteTargetId.contact,deleteTargetId.location, deleteTargetId.role, deleteTargetId.HCAContact, deleteTargetId.TimeSheet)
-                console.log("Compare Data--",DeleteTimeSheetData)
-                if(DeleteTimeSheetData.success===true){
-          SetActionStatusMessage("Seccessfully Deleted Placement")
+  //          const UpdateHcaStatus= await UpdateHCAnstatus(deleteTargetId?.HCA_Id,"Available")
+  //        const UpdateStatus=await UpdateUserContactVerificationstatus(deleteTargetId.Client_Id,"Converted")
+  //          const DeleteTimeSheetData=await DeleteDeployMent(deleteTargetId.Client_Id)
+  //          const PostTimeSheet:any = await InserTerminationData(deleteTargetId.Client_Id, deleteTargetId?.HCA_Id, deleteTargetId.name, deleteTargetId.email, deleteTargetId.contact,deleteTargetId.location, deleteTargetId.role, deleteTargetId.HCAContact, deleteTargetId.TimeSheet)
+               
+  //               if(DeleteTimeSheetData.success===true){
+  //         SetActionStatusMessage("Seccessfully Deleted Placement")
 
-                }
+  //               }
            
-    }
-    setShowDeletePopup(false);
-    setDeleteTargetId(null);
-  };
+  //   }
+  //   setShowDeletePopup(false);
+  //   setDeleteTargetId(null);
+  // };
 
 
 const FilterFinelTimeSheet = FinelTimeSheet.filter((each: any) => {

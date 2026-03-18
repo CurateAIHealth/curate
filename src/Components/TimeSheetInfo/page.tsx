@@ -88,7 +88,7 @@ const getMonthKey = (record: any): string => {
 
 
 
-
+const DateRange = new Date().toISOString().split("T")[0]
 
 
 const isSuccess = StatusMessage?.includes("Successfully");
@@ -729,7 +729,7 @@ hcpId
 }
 
 
-    const postInfo = await DeleteClientFromDeolyment(item.ClientId,item.Month)
+    const postInfo = await DeleteClientFromDeolyment(item.ClientId,item.hcpId,item.Month)
 
     if (!postInfo?.success) {
       SetStatusMessage(postInfo?.message || "Delete failed")
@@ -1362,6 +1362,7 @@ className={`
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
+                max={DateRange}
               className="
                 w-full
                 bg-gray-50

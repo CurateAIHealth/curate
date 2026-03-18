@@ -819,7 +819,8 @@ const confirmDelete = async (selectedReason: string) => {
 
 
     const deleteTimeSheetResponse = await DeleteDeployMent(
-      TerminationInfo.Client_Id
+      TerminationInfo.Client_Id,
+      TerminationInfo.HCA_Id
     );
 
   
