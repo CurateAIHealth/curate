@@ -64,9 +64,9 @@ const visibleReviews = showAllReviews
       const email = ProfileInformation?.Email?.toLowerCase();
       if (StaffEmails.includes(email)) {
         
-                   const user = await GetUserInformation(localValue);
-                   console.log("Check Email-----",user?.Email)
-                   dispatch(CurrentLoginUser(user?.Email))
+                  //  const user = await GetUserInformation(localValue);
+                   console.log("Check Email-----",ProfileInformation?.Email)
+                   dispatch(CurrentLoginUser(ProfileInformation?.Email))
         router.push("/DashBoard");
         return;
       }

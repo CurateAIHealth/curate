@@ -2182,13 +2182,14 @@ export const UpdateMultipleAttendance = async (
 
 
 
-export const DeleteDeployMent=async(clientId:any)=>{
+export const DeleteDeployMent=async(clientId:any,HCPId:any)=>{
 
   try{
 const Cluster= await clientPromise
 const db=Cluster.db("CurateInformation")
 const collection=db.collection("Deployment")
-const DeleteResult=await collection.deleteMany({ClientId:clientId})
+const DeleteResult=await collection.deleteOne({ClientId:clientId,
+HCAId:HCPId})
    if (DeleteResult.deletedCount > 0) {
       return {
         success: true,
@@ -2330,6 +2331,7 @@ console.log("Check Month Key-----",ImpDate)
 
 export const DeleteClientFromDeolyment = async (
   ImpClientId: any,
+  ImpHCPId:any,
   ImpDate: any
 ) => {
   try {
@@ -2341,6 +2343,7 @@ export const DeleteClientFromDeolyment = async (
 
     const result = await collection.deleteOne({
       ClientId: ImpClientId,
+      HCAId:ImpHCPId,
       Month: ImpDate
     })
 
@@ -2780,7 +2783,7 @@ export const EditAttendanceByClientId = async (
     const flags = statusMap[status];
 
     const start = new Date(`${attendenceDate}T00:00:00.000Z`);
-console.log("Check attendece Date------",start)
+
     const existing = await collection.findOne({
       ClientId: clientId,
       HCAId:hcpId,
