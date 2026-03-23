@@ -771,7 +771,8 @@ const TAB_ACCESS_CONTROL: Record<string, string[]> = {
     "srinivasnew0803@gmail.com",
     "srivanikasham@curatehealth.in",
     "info@curatehealth.in",
-    "gouricurate@gmail.com"
+    "gouricurate@gmail.com",
+    "shreeshmacurate@gmail.com"
   ],
 };
 
@@ -906,7 +907,7 @@ setNotificationStatus("Notification Send Succesfully")
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard.
+      Hi Admin – Welcome to Admin Dashboard
     </span>
   </div>
 
