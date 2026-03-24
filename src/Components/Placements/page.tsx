@@ -56,6 +56,7 @@ const ClientTable = () => {
   const [ShowFreezPopUp,setShowFreezPopUp]=useState(false)
   const [selectedCase, setSelectedCase] = useState<any>(null);
 const [searchHCA, setSearchHCA] = useState("");
+const [ShowcreatIvocePopup,setShowcreatIvocePopup]=useState(false)
 const [ShowCareTakerPriceUpdate,setShowCareTakerPriceUpdate]=useState(false)
 const [showWarning, setShowWarning] = useState(false);
 const [ReplacementTime,setReplacementTime]=useState("")
@@ -977,6 +978,14 @@ return
   
 };
 
+  const CreateInvoice = async (InvoiceData:any) => {
+    try {
+      setShowcreatIvocePopup(!ShowcreatIvocePopup),
+        SetActionStatusMessage("Please wait while your invoice is being generated.")
+    } catch (err: any) {
+
+    }
+  }
 
 
 const UpdateServiceCharge=async(A:any)=>{
@@ -1155,7 +1164,39 @@ setShowCareTakerPriceUpdate(false)
       </p>
     </div>
   )}
+{ShowcreatIvocePopup&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md">
+  <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-6">
+    
+  <div className="flex items-center justify-between  w-fill ">
+<div>
+  <h2 className="text-lg font-semibold text-gray-800 mb-2">
+      Creating Invoice
+    </h2>
 
+    <p className="text-xs text-gray-500 mb-4">
+      {ActionStatusMessage}
+    </p>
+    </div>
+        <img
+            src="/Icons/Curate-logoq.png"
+            className="h-12"
+            alt="Company Logo"
+          />
+    </div>
+{ActionStatusMessage==="Please wait while your invoice is being generated."&&
+    <div className="flex items-center gap-3">
+      <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></div>
+      <span className="text-sm text-gray-600">Processing...</span>
+    </div>}
+
+    <div className="mt-6 flex justify-end">
+      <button className="text-sm px-4 py-1.5 border border-gray-300 cursor-pointer rounded-md hover:bg-gray-100" onClick={()=>{setShowcreatIvocePopup(!ShowcreatIvocePopup),SetActionStatusMessage("")}}>
+        Cancel
+      </button>
+    </div>
+
+  </div>
+</div>}
 
   {ClientsInformation.length > 0 && (
     <div className="w-full max-h-[75vh] overflow-y-auto rounded-2xl shadow-xl">
@@ -1225,11 +1266,11 @@ setShowCareTakerPriceUpdate(false)
       Patient Name
     </th>
 
-    <th className="w-[120px] px-2 py-2 text-left">
+    <th className="w-[96px] px-2 py-2 text-left">
       Contact
     </th>
 
-    <th className="min-w-[100px] max-w-[140px] px-2 py-2 text-left truncate">
+    <th className="px-2 py-2 text-left truncate">
       Location
     </th>
 
@@ -1254,7 +1295,9 @@ setShowCareTakerPriceUpdate(false)
         Invoice
       </th>
     )}
-
+ <th className="w-[70px] px-2 py-2 text-center">
+        Invoice
+      </th>
     <th className="w-[120px] px-2 py-2 text-center">
       Service Continue
     </th>
@@ -1294,7 +1337,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
            <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
            {i+1}
           </td>
-        <td className="px-1 py-3 font-semibold text-xs text-gray-900 break-words">
+        <td className="px-1 py-3 font-semibold text-[11px] text-gray-900 break-words">
   {c.Replacement ? (
     <span className="inline-flex items-center gap-1.5">
       <img
@@ -1330,10 +1373,10 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
     </div>
   )}
 </td> */}
-    <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
+    <td className="px-2 py-3 font-semibold text-[11px] text-gray-900 break-words">
             {c.StartDate}
           </td>   
-          <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
+          <td className="px-2 py-3 font-semibold text-[11px] text-gray-900 break-words">
             {c.EndDate}
           </td>
 <td className="px-3 py-3 text-gray-700 text-xs">
@@ -1375,11 +1418,11 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
             {toProperCaseLive(c.PatientName)}
           </td>
 
-          <td className="px-3 py-3 text-gray-700  text-xs break-words">
+          <td className="px-2 py-3 text-gray-700  text-xs break-words">
             {c.contact}
           </td>
 
-       <td className="px-1 py-3 text-gray-900 font-semibold text-[11px] flex items-center gap-1">
+       <td className="px-1 py-3 text-gray-900 font-semibold text-[10px] flex items-center gap-1">
   <MapPin size={14} className="text-green-600 shrink-0" />
   {getPopularArea(c.location)}
 </td>
@@ -1456,7 +1499,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
     </select>
   </div>
 </td>
-          <td className="px-3 py-3 break-words">
+          <td className="px-4 py-3 break-words">
          <button
   className="
     px-1 py-1
@@ -1740,6 +1783,8 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
   </div>
 )}
 
+
+
           
           </td>
 
@@ -1767,7 +1812,26 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
 
           )}
 
-  
+  <td className="px-3 py-3 text-center">
+<button  className="
+    px-1 py-1
+    text-[9px] font-semibold
+   text-emerald-600
+border border-emerald-500
+    rounded-lg
+
+    transition-all duration-300
+  shadow-[0_0_0_0_rgba(16,185,129,0.5)]
+hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
+    bg-gray-150
+    active:scale-95 
+    cursor-pointer
+  "
+  onClick={()=>CreateInvoice(c)}
+  >
+  Create
+</button>
+</td>
 
 <td className="px-3 py-3 text-center break-words">
   {isMatch ? (
