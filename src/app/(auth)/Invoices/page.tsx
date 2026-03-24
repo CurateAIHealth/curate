@@ -774,7 +774,8 @@ CheckPaymentStatus:CurrentPaymentStatus
         <div className="hidden lg:flex items-center cursor-pointer">
           <Pencil
             className="w-4 h-4"
-            onClick={() => EditInvoice(inv.id)}
+            // onClick={() => EditInvoice(inv.id)}
+               onClick={() => UpdateInvoiceMailTemplate(inv)}
           />
         </div>
 
