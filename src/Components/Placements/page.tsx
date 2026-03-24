@@ -9,7 +9,7 @@ let cachedRegisterdUsers: any[] = [];
 
 import React, { useEffect, useState } from "react";
 import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus,  } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -56,6 +56,7 @@ const ClientTable = () => {
   const [ShowFreezPopUp,setShowFreezPopUp]=useState(false)
   const [selectedCase, setSelectedCase] = useState<any>(null);
 const [searchHCA, setSearchHCA] = useState("");
+const [FreezeInformation,setFreezeInformation]=useState<any>()
 const [ShowcreatIvocePopup,setShowcreatIvocePopup]=useState(false)
 const [ShowCareTakerPriceUpdate,setShowCareTakerPriceUpdate]=useState(false)
 const [showWarning, setShowWarning] = useState(false);
@@ -242,7 +243,23 @@ const matchesSearchAndMonth = (
   return matchesSearch && matchesMonth && matchesYear;
 };
 
+  const UpdateFreezeInformation = async() => {
 
+    try {
+      SetActionStatusMessage("Please Wait.....")
+
+      const UpdateFreezeStatus=await UpdateDeploymentStatus(FreezeInformation.Client_Id,FreezeInformation.HCA_Id,FreezeInformation.Month,status)
+      if(UpdateFreezeStatus.success){
+              SetActionStatusMessage(UpdateFreezeStatus.message)
+              setTimeout(()=>{
+                  setShowFreezPopUp(false);
+              },3000)
+      }
+    
+    } catch (err: any) {
+
+    }
+  }
   const ShowDompleteInformation = async (userId: any, ClientName: any) => {
     if (userId) {
       dispatch(UpdateClient(ClientName));
@@ -978,10 +995,36 @@ return
   
 };
 
-  const CreateInvoice = async (InvoiceData:any) => {
+  const CreateInvoice = async (InvoiceData: any) => {
     try {
       setShowcreatIvocePopup(!ShowcreatIvocePopup),
-        SetActionStatusMessage("Please wait while your invoice is being generated.")
+        SetActionStatusMessage("Please wait while your invoice is being generated."
+          
+        )
+
+      const ExistingInfo: any = await getCreatedInvoiceInfo(InvoiceData.
+        Client_Id, InvoiceData.StartDate
+      );
+      if (ExistingInfo) {
+        SetActionStatusMessage("Invoice already exists");
+        return;
+      }
+      const UpdatedData = {
+        userId: InvoiceData.Client_Id,
+        serviceLocation: InvoiceData.Address,
+        FirstName: InvoiceData.name,
+        patientName: InvoiceData.PatientName,
+        ContactNumber: InvoiceData.contact,
+        Email: InvoiceData.email,
+        serviceCharges: InvoiceData.ServiceCharge,
+        RegistrationFee: 0,
+      }
+   
+      const CompliteInvoiceInfo=await PostInvoiceFromDeployment(UpdatedData, 0, '',InvoiceData.StartDate)
+      if(CompliteInvoiceInfo?.success){
+     SetActionStatusMessage(CompliteInvoiceInfo.message)
+      }
+
     } catch (err: any) {
 
     }
@@ -990,8 +1033,13 @@ return
 
 const UpdateServiceCharge=async(A:any)=>{
   SetActionStatusMessage("Please Wait...")
+  alert(A)
 const GetInfo=await  GetUserInformation(A)
-console.log('Check for Informatio-----',GetInfo.serviceCharges)
+
+if(!GetInfo.serviceCharges){
+ SetActionStatusMessage("Service Charges Not Found")
+ return
+}
 const { success } = await updateServicePrice(
   A,
 GetInfo.serviceCharges
@@ -1173,7 +1221,7 @@ setShowCareTakerPriceUpdate(false)
       Creating Invoice
     </h2>
 
-    <p className="text-xs text-gray-500 mb-4">
+    <p className={`text-xs ${ActionStatusMessage==="Invoice already exists"?"text-red-600":"text-gray-500"} mb-4`}>
       {ActionStatusMessage}
     </p>
     </div>
@@ -1216,7 +1264,7 @@ setShowCareTakerPriceUpdate(false)
       <p className="text-sm text-gray-600 mb-4">
         This Deployment will not be able to access the system until reactivated.
       </p>
-
+<p>{ActionStatusMessage}</p>
       <div className="flex justify-center gap-3">
         <button
           onClick={() => setShowFreezPopUp(false)}
@@ -1226,10 +1274,7 @@ setShowCareTakerPriceUpdate(false)
         </button>
 
         <button
-          onClick={() => {
-           
-            setShowFreezPopUp(false);
-          }}
+          onClick={UpdateFreezeInformation}
           className="px-4 py-1 text-sm rounded-md bg-red-500 text-white hover:bg-red-600"
         >
           Freeze
@@ -1492,7 +1537,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
     <select
       className="bg-transparent text-xs font-medium outline-none cursor-pointer appearance-none"
       value={c.Status}
-      onChange={(e) => {setStatus(e.target.value);setShowFreezPopUp(true)}}
+      onChange={(e) => {setStatus(e.target.value);setShowFreezPopUp(true);setFreezeInformation(c);SetActionStatusMessage('')}}
     >
       <option value="Active">Active</option>
       <option value="Freeze">Freeze</option>
@@ -1833,11 +1878,11 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
 </button>
 </td>
 
-<td className="px-3 py-3 text-center break-words">
+<td className="px-1 py-3 text-center break-words">
   {isMatch ? (
     <p className="inline-flex items-center justify-center px-1 py-1 
-              text-[10px] 
-              font-medium text-emerald-700 
+              text-[9px] 
+               text-emerald-700 
               bg-emerald-50 border border-emerald-200 
               rounded-full whitespace-nowrap">
   Already On Service

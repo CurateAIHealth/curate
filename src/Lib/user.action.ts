@@ -734,7 +734,7 @@ const endOfMonthFormatted = endOfMonth.toLocaleDateString("en-IN");
 
     return {
       success: true,
-      message: "You registered Successfully with Curate Digital AI",
+      message: "Invoice Successfully with Curate Digital AI",
  insertedId: Invoice.insertedId.toString(),
     };
     
@@ -743,6 +743,44 @@ const endOfMonthFormatted = endOfMonth.toLocaleDateString("en-IN");
   }
 }
 
+export const PostInvoiceFromDeployment = async (InvoiseInfo:any,AdvanceAmount:any,InvoiceNumber:any,ImpDate:any) => {
+  try {
+    
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Invoices");
+   const now = new Date();
+const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+const endOfMonthFormatted = endOfMonth.toLocaleDateString("en-IN");
+
+    const Invoice =await  collection.insertOne({
+      Invoice:InvoiceNumber,
+      DeployDate: ImpDate,
+      ClienId:InvoiseInfo.userId,
+      SeriviceStartDate:  ImpDate,
+      ServiceEndDate: endOfMonthFormatted,
+      Adress: InvoiseInfo.serviceLocation,
+      ClientName:InvoiseInfo.FirstName,
+      Patient: InvoiseInfo.patientName,
+      contact: InvoiseInfo.ContactNumber,
+      Email:InvoiseInfo.Email,
+      AdvanceReceived: AdvanceAmount || "",
+      CareTakeChare: InvoiseInfo.serviceCharges,
+      RegistrationFee:InvoiseInfo.RegistrationFee,
+      status: "Draft",
+      PaymentStatus:false
+    });
+
+    return {
+      success: true,
+      message: "Invoice Successfully with Curate Digital AI",
+ insertedId: Invoice.insertedId.toString(),
+    };
+    
+  } catch (err: any) {
+
+  }
+}
 
 
 export const UpdateOrganisation = async (Organisation: {
@@ -2956,7 +2994,27 @@ export const EditAttendanceByDateRange = async (
   }
 };
 
+export const getCreatedInvoiceInfo = async (
+  clientId: string,
+  startDate: string
+) => {
+  try {
+    const db = (await clientPromise).db("CurateInformation");
 
+    return await db.collection("Invoices").findOne(
+      {
+        ClienId: clientId,
+        SeriviceStartDate: startDate,
+      },
+      {
+        projection: { _id: 0 }, // return only needed fields if possible
+      }
+    );
+  } catch (error) {
+    console.error("Error fetching invoice info:", error);
+    return null;
+  }
+};
 
 export const GetInvoiceInfo=async()=>{
   try{
@@ -3193,6 +3251,38 @@ HCAId:HCPId,
     return {
       success: true,
       message: "Client Removed Successfully",
+    };
+  } catch (error) {
+    console.error("Error deleting enquiry:", error);
+    return {
+      success: false,
+      message: "Failed to delete enquiry",
+    };
+  }
+};
+export const UpdateDeploymentStatus = async (userId: string, HCPId: any,MonthValue:any, ImpValue: any) => {
+  try {
+    const client = await clientPromise;
+    const db = client.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const result = await collection.updateOne({
+      ClientId: userId,
+      HCAId: HCPId,
+      Month:MonthValue
+
+    }, {
+      $set: {
+        
+Status: ImpValue
+      }
+    });
+
+
+
+    return {
+      success: true,
+      message: "Client Deployment Status Updated  Successfully",
     };
   } catch (error) {
     console.error("Error deleting enquiry:", error);

@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut } from "lucide-react";
+import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { GetInvoiceInfo, GetSentInvoiceData, UpdateStatusPayment } from "@/Lib/user.action";
 import { GeneratePDF, getDaysBetween } from "@/Lib/Actions";
 import { LoadingData } from "@/Components/Loading/page";
 
-import { UpdateInvoiceInfo, UpdateInvoiceIntialStatus, UpdateInvoiceStatus } from "@/Redux/action";
+import { Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateInvoiceInfo, UpdateInvoiceIntialStatus, UpdateInvoiceStatus, UpdateUserType } from "@/Redux/action";
 import { useDispatch, useSelector } from "react-redux";
 import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import { useRouter } from "next/navigation";
+
 
 type InvoiceStatus = "Draft" | "Sent" | "Overdue";
 
@@ -29,7 +30,7 @@ export default function InvoicesPage() {
   const now = new Date();
   const [monthFilter, setMonthFilter] =useState<any>(now.getMonth() + 1);
   const [yearFilter, setYearFilter] =useState(String(now.getFullYear()));
-
+  const [showOptions, setShowOptions] = useState(false);
   const [FetchedInfo, setFetchedInfo] = useState<any>([])
   const [isChecking, setisChecking] = useState(true)
   const [isSending, setIsSending] = useState(false);
@@ -44,16 +45,21 @@ export default function InvoicesPage() {
   const pageSize = 4;
 const invoiceEditStatus = useSelector((s: any) => s.InvoiceEditStatus);
 const ShowMailTemplate=useSelector((A:any)=>A.RevertInvoices)
-  useEffect(() => {
-    const Fetch = async () => {
-      const FetchInvioces = await GetInvoiceInfo();
+const refreshInvoices = async () => {
+  try {
+    setisChecking(true)
+    const data = await GetInvoiceInfo()
+    setFetchedInfo(data)
+  } catch (err) {
+    console.error("Error fetching invoices:", err)
+  } finally {
+    setisChecking(false)
+  }
+}
 
-      setFetchedInfo(FetchInvioces)
-      setisChecking(false)
-    }
-
-    Fetch()
-  }, [status,(ShowMailTemplate)])
+useEffect(() => {
+  refreshInvoices()
+}, [status])
 
   const downloadExcel = () => {
     const exportData = paginatedData.map((inv) => {
@@ -136,30 +142,6 @@ const ShowMailTemplate=useSelector((A:any)=>A.RevertInvoices)
     }
   }
 
-const BalanceDue = FetchedInfo
-  ?.filter((each: any) => each?.PaymentStatus === false)
-  .map((each: any) => Number(each?.balanceDue) || 0)
-  .reduce((total: number, value: number) => total + value, 0);
-const BalancePaid = FetchedInfo
-  ?.filter((each: any) => each?.PaymentStatus === true)
-  .reduce((total: number, each: any) => {
-    const balance = Number(each?.balanceDue) || 0;
-    const advance =
-      Number(each?.AdvanceReceived) ||
-      Number(each?.AdvancePaid) ||
-      0;
-
-    return total + balance + advance;
-  }, 0);
-
-
-const RefundAmount = FetchedInfo
-  ?.filter((each: any) => 
-    each?.PaymentStatus === true &&
-    each?.marginStatus?.type === "Refund"
-  )
-  .map((each: any) => Number(each?.marginStatus?.amount) || 0)
-  .reduce((total: number, value: number) => total + value, 0);
 
 
   const EditInvoice = async (id: any) => {
@@ -198,7 +180,8 @@ const RefundAmount = FetchedInfo
       RegistrationFee: each.RegistrationFee,
       CareTakeCharge: each.CareTakeChare,
       AdvanceReceived: each.AdvanceReceived||each.AdvancePaid,
-      PaymentStatus:each.PaymentStatus
+      PaymentStatus:each.PaymentStatus,
+      balanceDue:each.balanceDue
 
 
     }
@@ -221,7 +204,7 @@ const RefundAmount = FetchedInfo
 
     return {
       ...inv,
-      status: newStatus,
+      OverDuestatus: newStatus,
       dueInfo
     };
   });
@@ -265,6 +248,10 @@ const filteredInvoices = useMemo(() => {
     );
   }
 
+  if (filter!=="All"){
+    data=data.filter((each:any)=>each.status===filter)
+  }
+
   return data;
 }, [computedInvoices, monthFilter, yearFilter, search]);
 
@@ -287,6 +274,33 @@ const filteredInvoices = useMemo(() => {
   const currentYear = new Date().getFullYear();
 
   const availableYears = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
+
+  const BalanceDue = filteredInvoices
+  ?.filter((each: any) => each?.PaymentStatus === false)
+  .map((each: any) => Number(each?.balanceDue) || 0)
+  .reduce((total: number, value: number) => total + value, 0);
+  
+const BalancePaid = filteredInvoices
+  ?.filter((each: any) => each?.PaymentStatus === true)
+  .reduce((total: number, each: any) => {
+    const balance = Number(each?.balanceDue) || 0;
+    const advance =
+      Number(each?.AdvanceReceived) ||
+      Number(each?.AdvancePaid) ||
+      0;
+
+    return total + balance + advance;
+  }, 0);
+
+
+const RefundAmount = filteredInvoices
+  ?.filter((each: any) => 
+    each?.PaymentStatus === true &&
+    each?.marginStatus?.type === "Refund"
+  )
+  .map((each: any) => Number(each?.marginStatus?.amount) || 0)
+  .reduce((total: number, value: number) => total + value, 0);
+
 
 const UpdatePaymentStatus=async(A:any)=>{
   setStatus("Updating Payment Status...")
@@ -426,12 +440,61 @@ CheckPaymentStatus:CurrentPaymentStatus
 
 
          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-
-  <div className="flex items-center gap-4">
+  {showOptions && (
+        <div className="absolute top-12 left-0 bg-white border border-gray-200 rounded-xl shadow-lg w-40 py-2 z-50">
+          <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("Call Enquiry"));
+          dispatch(UpdateUserType("patient"));
+          dispatch(UpdateAdminMonthFilter(new Date(now.getFullYear(), now.getMonth()).toLocaleString("default", { month: "long" })));
+      dispatch(UpdateAdminYearFilter(String(now.getFullYear())))
+        setShowOptions(false)}
+          }>
+       Call Enquiry
+          </button>
+           <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("HCP List"));
+            dispatch(UpdateUserType("healthcare-assistant"));
+      Router.push("/AdminPage")
+        setShowOptions(false)}
+          }>
+       HCP List
+          </button>
+          <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("Deployment"));
+          dispatch(UpdateUserType("patient"));
+            Router.push("/AdminPage")
+        setShowOptions(false)}
+          }>
+         Deployment
+          </button>
+           <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("Timesheet"));
+          dispatch(UpdateUserType("patient"));
+          Router.push("/AdminPage")
+        setShowOptions(false)}
+          }>
+          Timesheet
+          </button>
+          <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>Router.push("/Invoices")}>
+          Invoice
+          </button>
+          <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>Router.push("/PDRView")}>
+        PDR 
+          </button>
+          <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>Router.push("/PaymentsInfo")}>
+        Payments 
+          </button>
+          
+        </div>
+      )}
+  <div className="flex items-center ">
+      
+        <button
+          onClick={() => setShowOptions(!showOptions)}
+          className="rounded-lg hover:bg-gray-100 transition cursor-pointer"
+        >
+             <List size={40} className='text-teal-800  p-2'/>
+        </button>
     <img
       src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
       alt="Curate Health Services Logo"
-      className="h-14 md:h-20 w-auto object-contain"
+      className="h-14 md:h-20 "
     />
 
     <div className="flex flex-col">
@@ -537,7 +600,7 @@ CheckPaymentStatus:CurrentPaymentStatus
 
                 <div className="flex flex-wrap gap-2 items-center">
                   <span className="text-xs text-gray-500">Status</span>
-                  {["All", "Draft", "Sent", "Overdue"].map((s) => {
+                  {["All", "Draft", "Sent", ].map((s) => {
                     const active = filter === s;
                     return (
                       <button
@@ -615,7 +678,7 @@ CheckPaymentStatus:CurrentPaymentStatus
   <div className="min-w-[900px]">
     <div className="flex justify-between items-center px-5 py-3 border-b border-gray-400">
       <div>
-        <p className="text-sm font-medium text-gray-800">Invoice list</p>
+        <p className="text-sm font-medium text-gray-800">Invoice list</p> 
         {/* <p className="text-xs text-gray-500">
           Showing {paginatedData.length} of {filteredInvoices.length} filtered invoices
         </p> */}
@@ -645,32 +708,37 @@ CheckPaymentStatus:CurrentPaymentStatus
     </div>
 
   <div className="w-full border rounded-md overflow-hidden">
- <div
+<div
   className="
-  grid items-center
+  grid items-center whitespace-nowrap
   text-xs font-semibold text-white
-  bg-teal-800 border-b px-4 py-3 gap-2
+  bg-teal-800 border-b px-4 py-3 gap-3
 
   grid-cols-3
   sm:grid-cols-5
-  md:grid-cols-8
-  lg:grid-cols-11
-  "
+  md:grid-cols-9
+  lg:grid-cols-13
+"
 >
-  <div>Patient / Client</div>
-  <div>Contact</div>
 
-  <div className="hidden sm:block">Status</div>
-  <div className="hidden sm:block">Due Date</div>
+  <div className="col-span-1">S No.</div>
+  <div className="col-span-2 sm:col-span-2 md:col-span-2 lg:col-span-2">
+    Patient / Client
+  </div>
 
-  <div className="hidden md:block">Total Amount</div>
-  <div className="hidden md:block">Advance Paid</div>
-  <div className="hidden md:block">Balance</div>
+  <div className="hidden sm:block sm:col-span-1">Contact</div>
+  <div className="hidden sm:block sm:col-span-1">Status</div>
+  <div className="hidden sm:block sm:col-span-1">Due Date</div>
 
-  <div>Actions</div>
-  <div className="hidden lg:block">Edit</div>
-  <div className="hidden lg:block">Payment Status</div>
-  <div className="hidden lg:block">Download</div>
+  <div className="hidden md:block md:col-span-1">Total</div>
+  <div className="hidden md:block md:col-span-1">Advance</div>
+  <div className="hidden md:block md:col-span-1">Balance</div>
+
+  <div className="col-span-1">Actions</div>
+
+  <div className="hidden lg:block lg:col-span-1">Edit</div>
+  <div className="hidden lg:block lg:col-span-1">Payment</div>
+  <div className="hidden lg:block lg:col-span-1">Download</div>
 </div>
 
 <div className="max-h-[600px] overflow-y-auto">
@@ -687,17 +755,18 @@ CheckPaymentStatus:CurrentPaymentStatus
     return (
       <div
         key={`${inv.id}-${inv.createdAt || index}`}
-        className="
-        grid items-center px-4 py-3 border-b border-gray-200 text-sm gap-2
-        hover:bg-[#f7f9fd] transition
+          className="
+  grid items-center px-4 py-3 border-b border-gray-200 text-sm gap-3
+  hover:bg-[#f7f9fd] transition whitespace-nowrap
 
-        grid-cols-3
-        sm:grid-cols-5
-        md:grid-cols-8
-        lg:grid-cols-11
-        "
+  grid-cols-3
+  sm:grid-cols-5
+  md:grid-cols-9
+  lg:grid-cols-[100px_180px_100px_100px_100px_100px_100px_100px_100px_80px_100px_100px]
+"
       >
         {/* Patient */}
+            <div>{index+1}</div>
         <div className="flex flex-col">
           <span className="font-medium">{inv.name}</span>
           <span className="text-[9px] text-gray-500">
@@ -705,11 +774,11 @@ CheckPaymentStatus:CurrentPaymentStatus
           </span>
         </div>
 
-        {/* Contact */}
-        <div>+91{inv.contact}</div>
+        <div className="text-left text-xs">+91{inv.contact}</div>
 
         {/* Status */}
         <div className="hidden sm:block">
+    
           <span
             className={
               "px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 " +
@@ -725,7 +794,7 @@ CheckPaymentStatus:CurrentPaymentStatus
           </span>
         </div>
 
-        {/* Due */}
+ 
         {inv.PaymentStatus ? (
           <span className="hidden sm:block px-3 py-1 rounded-full text-[10px] text-center font-medium text-green-600 border border-green-300">
             Paid
@@ -754,9 +823,10 @@ CheckPaymentStatus:CurrentPaymentStatus
 
         {/* Actions */}
         <div className="flex items-center">
+              
           {inv.status === "Draft" ? (
             <button
-              className="px-2 py-1 rounded-md text-[13px] flex items-center gap-2 text-red-500"
+              className="px-1 py-1 rounded-md text-[11px] flex items-center cursor-pointer gap-2 text-red-500"
               onClick={() => UpdateInvoiceMailTemplate(inv)}
             >
               <SquarePen className="w-4 h-4" />
@@ -799,12 +869,29 @@ CheckPaymentStatus:CurrentPaymentStatus
           )}
         </div>
 
-        {/* Download */}
-        <div className="hidden lg:flex items-center cursor-pointer">
-          {inv.status !== "Draft" && (
-            <Download onClick={() => DownloadInvoice(inv.id)} />
-          )}
-        </div>
+    
+        <div className="hidden lg:flex justify-center cursor-pointer relative group">
+  {inv.status !== "Draft" ? (
+    <Download onClick={() => DownloadInvoice(inv.id)} />
+  ) : (
+    <>
+      <Loader className="text-red-600" />
+
+  
+      <div
+        className="
+        absolute right-full mb-2 right-0
+        hidden group-hover:block
+        bg-black text-white text-[10px] px-2 py-1 rounded
+        whitespace-nowrap
+        z-50
+      "
+      >
+        Send invoice then we'll let you download
+      </div>
+    </>
+  )}
+</div>
       </div>
     )
   })}

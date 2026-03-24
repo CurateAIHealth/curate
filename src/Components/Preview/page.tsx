@@ -330,7 +330,8 @@ const UpdatePDRInfo = async () => {
         deploymentInvoice,
         DeploaymentInformation.Type,
         data.serviceCharges,
-        ClientAttendece
+        ClientAttendece,
+        
       );
 
       if (!deploymentRes?.success) {
