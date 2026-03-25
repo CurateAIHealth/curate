@@ -69,7 +69,7 @@ const [SubmitstatusMessage,setSubmitstatusMessage]=useState("")
   const [isChecking, setIsChecking] = useState(true);
   const [ProfetionlSkillsEdit,setProfetionlSkillsEdit]=useState(false)
     const [isEditing, setIsEditing] = useState(false);
-
+const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const [ShowPassword,setShowPassword]=useState<any>("")
 const Router=useRouter()
 const dispatch=useDispatch()
@@ -211,7 +211,7 @@ useEffect(()=>{
 
   const handleSave =async () => {
     setSubmitstatusMessage("Please Wait....")
-const UpdateSalary:any=await HCASalaryUpdate(ImportedUserId,user.HCPSalary)
+const UpdateSalary:any=await HCASalaryUpdate(ImportedUserId,user.HCPSalary,loggedInEmail)
 console.log("Check For Salary Update----",UpdateSalary)
 if(UpdateSalary.success){
   setSubmitstatusMessage("Salary Updated Successfully.")
