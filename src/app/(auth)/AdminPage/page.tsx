@@ -1478,18 +1478,37 @@ const UpdatePopup = async (a: any) => {
     <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 w-full">
       <p className="text-[8px] text-gray-500 leading-none">HCP Salary</p>
 
-      <div className="flex w-[70px] items-center gap-2 mt-1">
-        <span className="text-[10px] font-semibold text-gray-800">
-          ₹ {UpdatedHCPSalary&&SelectedHCPSalaryId===user.userId?UpdatedHCPSalary:GetHCPPayment(user.userId)}
-        </span>
+      <div className="relative group flex w-[70px] items-center gap-2 mt-1">
+  
+  <div
+    className="
+      absolute bottom-full right-0 mb-1
+      hidden group-hover:block
+      bg-black text-white text-[10px] px-2 py-1 rounded
+      whitespace-nowrap
+      z-50
+    "
+  >
+    {GetHCPPaymentApproved(user.userId)}
+  </div>
 
-        <button
-          onClick={() => {setIsEditing(true);setSelectedHCPSalaryId(user.userId),SetUpdatedHCPSalary(GetHCPPayment(user.userId))}}
-          className="text-[9px] text-indigo-600 bg-indigo-50 px-1 cursor-pointer py-[2px] rounded"
-        >
-          <Pencil size={9}/>
-        </button>
-      </div>
+  <span className="text-[10px] font-semibold text-gray-800">
+    ₹ {UpdatedHCPSalary && SelectedHCPSalaryId === user.userId
+        ? UpdatedHCPSalary
+        : GetHCPPayment(user.userId)}
+  </span>
+
+  <button
+    onClick={() => {
+      setIsEditing(true);
+      setSelectedHCPSalaryId(user.userId);
+      SetUpdatedHCPSalary(GetHCPPayment(user.userId));
+    }}
+    className="text-[9px] text-indigo-600 bg-indigo-50 px-1 cursor-pointer py-[2px] rounded"
+  >
+    <Pencil size={9} />
+  </button>
+</div>
 
       <p className="text-[9px] text-gray-500 leading-none mt-1">
         Per day:
@@ -1805,6 +1824,18 @@ const handleSave = async (data: any) => {
       ?.["PaymentforStaff"]||0;
 
     return Number(address) 
+  };
+
+    const GetHCPPaymentApproved = (A: any) => {
+    if (!UserFullInfo?.length || !A) return "Not Entered";
+
+    const address =
+      UserFullInfo
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.["ApprovedBy"]||"Not Updated Yet";
+console.log("Check for Current Task-------",address)
+    return address==="Not Updated Yet"?address:`Salary Updated By ${address}`
   };
 
 

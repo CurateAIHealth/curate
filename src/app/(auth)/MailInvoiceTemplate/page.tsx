@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import { SaveInvoiceData, UpdateInvoice, UpdateInvoiceData } from "@/Lib/user.action";
 import { Plus,CircleX } from "lucide-react";
 import { paymentData, serviceOptions } from "@/Lib/Content";
+import RefundReceipt from "@/Components/RefundReceipt/page";
+import EditRefund from "@/Components/EditRefundComponent/page";
 
 
 
@@ -25,6 +27,7 @@ export default function InvoiceForm() {
   const [discountValue, setDiscountValue] = useState<any>();
   const [roundType, setRoundType] = useState<RoundType>("none");
   const [Mailstatus,setMailstatus]=useState(true)
+  const [ShowRefundReceipt,setShowRefundReceipt]=useState(false)
   const [selectedService, setSelectedService] = useState<any>(null);
 const [otherService, setOtherService] = useState({
   name: "",
@@ -33,7 +36,17 @@ const [otherService, setOtherService] = useState({
 });
 
   const Router=useRouter()
-  
+    const refundData = {
+    receiptId: "RR-001",
+    invoiceId: "INV-100",
+    clientName: "Ravi Kumar",
+    serviceStartDate: "2026-03-01",
+    serviceEndDate: "2026-03-10",
+    perDayCharge: 1200,
+    clientPaymentDays: 7,
+    refundRequestDate: "2026-03-12",
+    reason: "Service stopped early"
+  };
   const [ShowMailTemplate, setShowMailTemplate] = useState(true);
 const [isSending, setIsSending] = useState(false);
 const [selected, setSelected] = useState<any>({
@@ -360,6 +373,9 @@ const addOtherService = () => {
   };
 
   return (
+    <div>
+{ShowRefundReceipt?<EditRefund initialData={refundData} />:
+   
    <>{isSending && (
   <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
     {Mailstatus?
@@ -372,9 +388,9 @@ const addOtherService = () => {
       <p className="text-sm text-slate-500 mt-1">
         Sending Invoice Email
       </p>
-    </div>:<div className="bg-white shadow-xl rounded-2xl px-8 py-6 text-center w-[90%] max-w-sm">
+    </div>:<div className="bg-white shadow-xl rounded-2xl px-4 py-6 text-center w-[90%] ">
 
-  {/* Animated Tick Mark */}
+
   <div className="flex items-center justify-center mb-4">
     <svg
       className="h-14 w-14 text-green-600 animate-[tick_0.5s_ease-out_forwards]"
@@ -405,30 +421,45 @@ const addOtherService = () => {
   </div>
 )}
 {ShowMailTemplate?    <div className="min-h-screen bg-slate-50 py-8 px-4">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
 
     <div className="w-full border rounded-md bg-white shadow-sm px-3 py-2">
-  <div className="flex items-center gap-4 text-sm text-gray-600">
+  <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
 
-    <button className="flex items-center gap-1 hover:text-blue-600 transition cursor-pointer"  onClick={() => setIsEditing(true)}>
+    <button 
+      className="flex items-center gap-1 hover:text-blue-600 transition"
+      onClick={() => setIsEditing(true)}
+    >
       ✏️ <span>Edit</span>
     </button>
 
-    <button className="flex items-center gap-1 hover:text-blue-600 transition cursor-pointer">
+    <button className="flex items-center gap-1 hover:text-blue-600 transition">
       📧 <span>Send Email</span>
     </button>
 
-    <button className="flex items-center gap-1 hover:text-blue-600 transition cursor-pointer">
+    <button className="flex items-center gap-1 hover:text-blue-600 transition">
       🔗 <span>Share</span>
     </button>
 
-    <button className="flex items-center gap-1 hover:text-blue-600 transition cursor-pointer">
+    <button className="flex items-center gap-1 hover:text-blue-600 transition">
       🖨️ <span>PDF/Print</span>
     </button>
 
-    <button className="ml-auto px-2 py-1 rounded hover:bg-gray-100">
-      ⋯
+    <button 
+      className="flex items-center gap-1 hover:text-red-600 transition"
+      onClick={() => setShowRefundReceipt(!ShowRefundReceipt)}
+    >
+      💸 <span>Refund</span>
     </button>
+
+    <div className="w-full sm:w-auto sm:ml-auto">
+      <button 
+        className="w-full sm:w-auto bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white px-3 py-1 rounded"
+        onClick={() => Router.push("/Invoices")}
+      >
+        Invoice
+      </button>
+    </div>
 
   </div>
 </div>
@@ -998,7 +1029,8 @@ const addOtherService = () => {
       />
     </div>
 }
-    </>
+    </>}
+     </div>
   );
 }
 

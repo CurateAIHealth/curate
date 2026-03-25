@@ -8,8 +8,8 @@ let cachedRegisterdUsers: any[] = [];
 
 
 import React, { useEffect, useState } from "react";
-import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus,  } from "@/Lib/user.action";
+import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical } from "lucide-react";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest,  } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -56,6 +56,8 @@ const ClientTable = () => {
   const [ShowFreezPopUp,setShowFreezPopUp]=useState(false)
   const [selectedCase, setSelectedCase] = useState<any>(null);
 const [searchHCA, setSearchHCA] = useState("");
+const [ShowMoreOptions,setShowMoreOptions]=useState(false)
+const [MoreInfoId,setMoreInfoId]=useState<any>()
 const [FreezeInformation,setFreezeInformation]=useState<any>()
 const [ShowcreatIvocePopup,setShowcreatIvocePopup]=useState(false)
 const [ShowCareTakerPriceUpdate,setShowCareTakerPriceUpdate]=useState(false)
@@ -268,7 +270,39 @@ const matchesSearchAndMonth = (
       router.push("/UserInformation");
     }
   };
+const PostRefunRequest = async (data: any) => {
+  try {
+ 
+    SetActionStatusMessage("Please Wait....");
 
+    const updateSalary = await PostRefundRequest(
+      data,
+      loggedInEmail
+    );
+
+    if (updateSalary?.success) {
+      SetActionStatusMessage(
+          "Refund Request request submitted to management. You will be notified once the status is updated."
+        )
+      
+
+      const phoneNumber = "9000114333";
+      const message =
+        "Hi Medam, Kindly requesting Refund Request update. Please check notification in the application. Thank you.";
+
+      const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+        message
+      )}`;
+
+      window.open(whatsappURL, "_blank");
+
+    
+    }
+  } catch (error) {
+    console.error("Salary update error:", error);
+   SetActionStatusMessage("Something went wrong. Please try again.");
+  }
+};
 const GenerateBillPDF=async(Info:any)=>{
 
 const GetInvoiceList=await  GetInvoiceInfo();
@@ -771,6 +805,7 @@ SetCareTakerName(Name)
   };
 
 const HandleRemove = async (Info: any, Name: any) => {
+
   if (!Info?.Client_Id || !Info?.HCA_Id) {
     SetActionStatusMessage("Invalid data. Please refresh and try again.");
     return;
@@ -782,7 +817,6 @@ const HandleRemove = async (Info: any, Name: any) => {
   try {
     SetActionStatusMessage("Please wait...");
 
-    console.log("Check-----", Info);
 
  
     const removeDeployRes = await RemoveClient(Info.Client_Id,Info?.HCA_Id);
@@ -1192,7 +1226,7 @@ const OmServiceView = () => {
   onClose={() => setShowCareTakerPriceUpdate(false)}
   onSubmit={async(value) => {
    
-    const UpdateSalary= await HCASalaryUpdate(selectedHCP?.id||selectedAssignHCP?.id,value)
+    const UpdateSalary= await HCASalaryUpdate(selectedHCP?.id||selectedAssignHCP?.id,value,loggedInEmail)
     if(UpdateSalary.success){
     SetActionStatusMessage(`${selectedHCP?.FirstName||selectedAssignHCP?.FirstName} ${UpdateSalary.message}`)
 setTimeout(()=>{
@@ -1355,7 +1389,7 @@ setShowCareTakerPriceUpdate(false)
       Terminate
     </th>
       <th className="w-[70px] px-2 py-2 text-center">
-      Remove
+   More
     </th>
   </tr>
 </thead>
@@ -1922,16 +1956,69 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
               <Trash />
             </button>
           </td>
-               <td className="px-3 py-3 text-center break-words">
-            <button
-            
-              className="px-3 py-2 text-xs font-medium cursor-pointer rounded-lg hover:rounded-full hover:bg-gray-100"
-              onClick={() => {HandleRemove(c,c.HCA_Name),SetActionStatusMessage("")}}
-            >
-              <CircleX size={22} className="text-red-600" />
 
-            </button>
-          </td>
+ 
+<td className="px-3 py-3 text-center break-words relative">
+  
+ 
+  {ShowMoreOptions && MoreInfoId === c.Client_Id && (
+    <>
+    
+      <div
+        className="fixed inset-0 z-40"
+        onClick={() => {
+          setShowMoreOptions(false);
+          setMoreInfoId(null);
+        }}
+      />
+
+      <div className=" flex flex-col absolute right-full mr-2 top-0 w-48 bg-white border border-gray-300 rounded-2xl shadow-xl z-50">
+        <div className="flex justify-end">
+<button className=" text-[9px]  p-1 border rounded-lg mr-1 mt-1 cursor-pointer hover:bg-gray-100"   onClick={() => {
+            setShowMoreOptions(false);
+            setMoreInfoId(null);
+              SetActionStatusMessage("");
+          }}>Close</button>
+</div>
+        <button
+          className="flex items-center  cursor-pointer gap-3 w-full px-4 py-3 text-sm hover:bg-gray-200 rounded-t-2xl"
+          onClick={() => {
+            HandleRemove(c, c.HCA_Name);
+       
+
+          }}
+        >
+       
+          <span className="font-medium text-gray-800">Remove Deployment</span>
+        </button>
+
+        <div className="h-px bg-gray-200 mx-3" />
+
+        <button
+          className="w-full text-left px-4 py-3 text-sm cursor-pointer hover:bg-gray-200 rounded-b-2xl"
+          onClick={()=>PostRefunRequest(c)}
+        >
+          Raise Refund Request
+        </button>   
+
+
+        
+      </div>
+    </>
+  )}
+
+  <button
+    className="px-3 py-2 text-xs font-medium cursor-pointer rounded-lg hover:rounded-full hover:bg-gray-100"
+    onClick={() => {
+      setShowMoreOptions(true);
+      setMoreInfoId(c.Client_Id);
+           SetActionStatusMessage("");
+    }}
+  >
+    <EllipsisVertical className="text-gray-800" />
+  </button>
+
+</td>
  
         </tr>
       )
