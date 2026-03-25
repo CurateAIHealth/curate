@@ -23,7 +23,7 @@ type Props = {
   receiptId: string;
   invoiceId: string;
   clientName: string;
-
+patientName:any,
   serviceStartDate: string;
   serviceEndDate: string;
 
@@ -61,9 +61,8 @@ const RefundReceipt: React.FC<Props> = ({
   const refundAmount = refundDays * perDayCharge;
 
   return (
-    <div className="max-w-6xl mx-auto bg-white shadow-lg border rounded-lg p-8 text-sm text-gray-700">
+    <div className="mx-auto bg-white shadow-lg border rounded-lg p-8 text-sm text-gray-700">
 
-      {/* HEADER */}
       <div className="flex justify-between items-start border-b pb-6">
 
         <div>
@@ -89,7 +88,7 @@ const RefundReceipt: React.FC<Props> = ({
 
           <img
             src={company.logo}
-            className="h-14 mb-2 ml-auto"
+            className="h-20 mb-2 ml-auto"
           />
 
           <p className="font-semibold text-lg text-pink-600">
@@ -250,7 +249,7 @@ const RefundReceipt: React.FC<Props> = ({
 
       </div>
 
-      {/* FOOTER */}
+     
       <div className="text-center text-pink-600 mt-12 text-sm">
 
         A Complete Home Healthcare Professionals.  

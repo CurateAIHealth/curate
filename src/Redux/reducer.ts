@@ -297,7 +297,7 @@ export const AdminMonthFilter = (state: any = new Date(now.getFullYear(), now.ge
 }
 
 
-export const LoginUserEmail=(state:any="tets",action:any)=>{
+export const LoginUserEmail=(state:any="",action:any)=>{
     switch(action.type){
 case "CurrentLoginUser":
     return action.payload;

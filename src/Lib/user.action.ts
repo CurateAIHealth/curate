@@ -5,7 +5,7 @@ import { decrypt, encrypt, hashValue, verifySHA256 } from "./Actions";
 import clientPromise from "./db";
 import { TimeStamp } from "@/Redux/reducer";
 import { data, symbol } from "framer-motion/client";
-import { VendorFieldMap } from "./Content";
+import { Departments, VendorFieldMap } from "./Content";
 
 export const UpdateDocterInformation = async (doctorInfo: {
   userType: any,
@@ -1320,7 +1320,45 @@ From:any
       Message:`Salary Update Request for ${HCPInfo.FirstName} To ₹${RequestedSalary}/- Per Month, (₹${Math.round(Number(RequestedSalary) / 30)} per day) from ${From}`,
       Date:new Date().toISOString().split("T")[0],
       Type:"HCP Salary Request",
-      Status :"Pending"
+      Status :"Pending",
+        Department:"HCP"
+    };
+
+    const result = await collection.insertOne(payload);
+
+    return {
+      success: true,
+      message:"Notification Send Succesfully"
+    };
+  } catch (err: any) {
+    console.error("PostCallEnquiryNotification error:", err);
+
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+};
+
+
+export const PostRefundRequest = async (
+ClientInfo:any,
+
+From:any
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Notifications");
+
+    const payload = {
+      ClientId:ClientInfo.Client_Id,
+      ClientName:ClientInfo.name,
+      Message:`Refund Request for ${ClientInfo.name}  from ${From}`,
+      Date:new Date().toISOString().split("T")[0],
+      Type:"Refund Request",
+      Status :"Pending",
+      Department:"Accounts"
     };
 
     const result = await collection.insertOne(payload);
@@ -1357,6 +1395,60 @@ export const UpdateNotificationType = async (
 
     const result = await collection.updateOne(
       { HCPId: ImpHCPId },
+      {
+        $set: {
+          Status: ImpStatus,
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Notification not found",
+      };
+    }
+
+    if (result.modifiedCount === 0) {
+      return {
+        success: true,
+        message: "Status already up to date",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Notification status updated successfully",
+    };
+  } catch (error: unknown) {
+    console.error("UpdateNotificationType error:", error);
+
+    return {
+      success: false,
+      message: "Failed to update notification status",
+    };
+  }
+};
+export const UpdateRefundNotificationType = async (
+  ImpHCPId: string,
+  ImpStatus: string
+) => {
+  try {
+    if (!ImpHCPId || !ImpStatus) {
+      return {
+        success: false,
+        message: "HCPId and Status are required",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Notifications");
+
+    const result = await collection.updateOne(
+      { 
+ClientId: ImpHCPId },
       {
         $set: {
           Status: ImpStatus,
@@ -4992,7 +5084,8 @@ export const DeleteHCAStatusInFullInformation = async (Userid: string) => {
 
 export const HCASalaryUpdate = async (
   Userid: string,
-  Amount: any
+  Amount: any,
+  ApprovedBy:any
 ): Promise<{ success: boolean; message: string }> => {
   try {
    
@@ -5010,6 +5103,7 @@ export const HCASalaryUpdate = async (
         $set: {
           
           "HCAComplitInformation.PaymentforStaff": Amount,
+          "HCAComplitInformation.ApprovedBy" :ApprovedBy
     
         },
       },

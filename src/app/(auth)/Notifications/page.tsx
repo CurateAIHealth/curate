@@ -12,10 +12,11 @@ import { Refresh } from "@/Redux/action";
 type FilterType = "All" | "Pending" | "Approved" | "Rejected" | "Read";
 
 interface NotificationItem {
+  Department: any;
   HCPId: string;
   Date: any;
   _id: string;
-  Type: "LEAVE_REQUEST" | "EXPENSE_REQUEST" | "INFO" | "SYSTEM"|"HCP Salary Request";
+  Type: "LEAVE_REQUEST" | "EXPENSE_REQUEST" | "INFO" | "SYSTEM"|"HCP Salary Request" |"Refund Request";
   ReferenceId?: string;
   UserId: string;
   EmployeeName?: string;
@@ -36,7 +37,7 @@ export default function NotificationsCenter() {
 const router=useRouter()
 const dispatch=useDispatch()
 const [refreshKey, setRefreshKey] = useState(0);
-
+  const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
 const fetchNotifications = async () => {
   try {
     setLoading(true);
@@ -50,7 +51,11 @@ const fetchNotifications = async () => {
 };
 
 useEffect(() => {
+   if(loggedInEmail===""){
+    router.push("/DashBoard")
+  }
   fetchNotifications();
+ 
 }, [refreshKey]);
 
 
@@ -62,7 +67,8 @@ useEffect(() => {
   
  const handleAction = async (
   info: any,
-  action: "Approved" | "Rejected"
+  action: "Approved" | "Rejected",
+  Dept:any
 ) => {
   try {
     if (!info?.HCPId) {
@@ -70,7 +76,8 @@ useEffect(() => {
       return;
     }
 
-    const phoneNumber = "7386145659";
+if(Dept==="HCP"){
+      const phoneNumber = "7386145659";
 
     if (action === "Rejected") {
       const updateStatus = await UpdateNotificationType(info.HCPId, action);
@@ -95,14 +102,21 @@ useEffect(() => {
 
     const updateSalary = await HCASalaryUpdate(
       info.HCPId,
-      info.RequestedSalary
+      info.RequestedSalary,
+      loggedInEmail
     );
 
     if (!updateSalary?.success) {
       dispatch(Refresh("Salary update failed."));
       return;
     }
+   const Successmessage = `Hi,  ${info.HCPName} HCP Salary request was  approved. Please contact management for more information.`;
 
+      const SuccesswhatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+        Successmessage
+      )}`;
+
+      window.open(SuccesswhatsappURL, "_blank");
     const updateStatus = await UpdateNotificationType(info.HCPId, action);
 
     if (!updateStatus?.success) {
@@ -120,6 +134,60 @@ useEffect(() => {
 
     dispatch(Refresh("Salary updated and notification processed successfully."));
     setRefreshKey(prev => prev + 1);
+    return
+}
+
+if(Dept==="Accounts"){
+  const phoneNumber = "7386145659";
+
+    if (action === "Rejected") {
+      const updateStatus = await UpdateNotificationType(info.HCPId, action);
+
+      if (!updateStatus?.success) {
+        dispatch(Refresh("Failed to update notification status."));
+        return;
+      }
+
+      const message = `Hi, unfortunately  ${info.ClientName} Refund request was not approved. Please contact management for more information.`;
+
+      const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+        message
+      )}`;
+
+      window.open(whatsappURL, "_blank");
+
+      dispatch(Refresh("Salary request rejected and notification updated successfully."));
+      setRefreshKey(prev => prev + 1);
+      return;
+    }
+
+  
+   const Successmessage = `Hi,  ${info.ClientName} Refund request was  approved. Please contact management for more information.`;
+
+      const SuccesswhatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+        Successmessage
+      )}`;
+
+      window.open(SuccesswhatsappURL, "_blank");
+    const updateStatus = await UpdateNotificationType(info.HCPId, action);
+
+    if (!updateStatus?.success) {
+      dispatch(Refresh("Salary updated but notification status update failed."));
+      return;
+    }
+
+    const message = `Hi, the requested salary for HCP ${info.HCPName} has been updated to ${info.RequestedSalary}. Please check the application.`;
+
+    const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+      message
+    )}`;
+
+    window.open(whatsappURL, "_blank");
+
+    dispatch(Refresh("Salary updated and notification processed successfully."));
+    setRefreshKey(prev => prev + 1);
+    return
+}
   } catch (err) {
     console.error("Notification Action Error:", err);
     dispatch(Refresh("Something went wrong. Please try again."));
@@ -219,9 +287,18 @@ useEffect(() => {
 
     
       <div className="space-y-4">
-        {filteredNotifications.map((item) => (
+        {filteredNotifications.map((item,_id) => (
+          <div  key={item._id}>
+             {(
+  item.Type === "LEAVE_REQUEST" ||
+  (item.Type === "HCP Salary Request" && loggedInEmail === "kirancuratehealth@gmail.com") ||
+  item.Type === "EXPENSE_REQUEST" ||
+  (item.Type === "Refund Request" &&
+    (loggedInEmail === "shreeshmacurate@gmail.com" ||
+     loggedInEmail === "srivanikasham@curatehealth.in@gmail.com"))
+) && item.Status === "Pending" && (
           <div
-            key={item._id}
+           
             className="relative bg-white rounded-3xl border border-slate-200 shadow-md hover:shadow-xl transition-all p-6 flex justify-between items-start"
           >
       
@@ -254,15 +331,14 @@ useEffect(() => {
               </p>
             </div>
 
-            {(item.Type === "LEAVE_REQUEST" || item.Type==="HCP Salary Request"||
-              item.Type === "EXPENSE_REQUEST") &&
-              item.Status === "Pending" && (
+           
                 <div className="flex gap-3">
                   <button
                     onClick={() =>
                       handleAction(
                       item,
-                        "Approved"
+                        "Approved",
+                           item.Department
                       )
                     }
                     disabled={actionLoading === item._id}
@@ -277,7 +353,8 @@ useEffect(() => {
                     onClick={() =>
                       handleAction(
                       item,
-                        "Rejected"
+                        "Rejected",
+                        item.Department
                       )
                     }
                     disabled={actionLoading === item._id}
@@ -287,8 +364,11 @@ useEffect(() => {
                     Reject
                   </button>
                 </div>
-              )}
+             
           </div>
+           )}
+             </div>
+             
         ))}
       </div>
     </div>
