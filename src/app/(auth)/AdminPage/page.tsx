@@ -1833,9 +1833,9 @@ const handleSave = async (data: any) => {
       UserFullInfo
         ?.map((each: any) => each?.HCAComplitInformation)
         ?.find((info: any) => info?.UserId === A)
-      ?.["ApprovedBy"]||"Not Updated Yet";
+      ?.["ApprovedBy"]||"Salary Not Updated Yet";
 console.log("Check for Current Task-------",address)
-    return address==="Not Updated Yet"?address:`Salary Updated By ${address}`
+    return address==="Salary Not Updated Yet"?address:`Salary Updated By ${address}`
   };
 
 

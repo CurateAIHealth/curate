@@ -12,7 +12,37 @@ import { paymentData, serviceOptions } from "@/Lib/Content";
 import RefundReceipt from "@/Components/RefundReceipt/page";
 import EditRefund from "@/Components/EditRefundComponent/page";
 
+{/* <RefundReceipt
+        receiptId="REF#2026_1"
+        invoiceId="INV#2026_2"
+        patientName="B. Satya Narayana"
 
+        serviceStartDate="2026-01-01"
+        serviceEndDate="2026-01-31"
+
+        perDayCharge={833.3}
+        clientPaymentDays={20}
+
+        refundRequestDate="05/02/2026"
+        reason="Client discontinued service"
+
+        company={{
+          name: "Curate Health Services LLP",
+          address: "15/10030, Brindavanam Colony",
+          city: "Beeramguda",
+          state: "Telangana 502032",
+          logo:      "https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
+        }}
+
+        bankDetails={{
+          bankName: "UCO Bank",
+          accountHolder: "B. Satya Narayana",
+          accountNumber: "01140210002278",
+          ifsc: "UCBA0000114",
+          branch: "Beeramguda",
+          city: "Hyderabad",
+          state: "Telangana"
+        }} clientName={""}/> */}
 
 type RoundType = "none" | "nearest" | "up" | "down";
 
@@ -375,6 +405,13 @@ const addOtherService = () => {
   return (
     <div>
 {ShowRefundReceipt?<EditRefund initialData={refundData} />:
+
+
+
+
+
+
+
    
    <>{isSending && (
   <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
