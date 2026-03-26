@@ -325,200 +325,313 @@ const recalcTotals = () => {
   )}
 </>
 
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "15px" }}>
-        <div style={{ width: "8px", height: "100px", background: colors.primary, borderRadius: "0 8px 8px 0" }} />
-        <div style={{ flex: 1, display: "flex", justifyContent: "space-between", marginLeft: "16px" }}>
-          <div>
-            <h1 style={{ fontSize: "32px", fontWeight: "bold", letterSpacing: "2px", margin: 0, color: colors.primary }}>INVOICE</h1>
-            <p style={{ marginTop: "6px", color: "#475569", fontSize: "16px" }}>Invoice ID: #{invoice.number}</p>
-          </div>
-          <img src="https://curate-pearl.vercel.app/Icons/Curate-logoq.png" onClick={()=>Router.push("/DashBoard")}  style={{ height: 70 }} />
-        </div>
-      </div>
-
-
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-
-
-        <div style={{ width: "50%" }}>
-          <h4 style={{ fontSize: 18, fontWeight: 600 }}>Bill To</h4>
 
 
 
 
 
-          <div style={{ marginTop: 18, fontSize: 14 }}>
-            <strong>Invoice Date:</strong>{" "}
-            {InvoiceStatus ? <input className="border ml-1" value={editInvoice.date || ""} onChange={e => setEditInvoice({ ...editInvoice, date: e.target.value,serviceFrom:e.target.value })} /> : invoice.date}
 
-            <br /><strong>Due Date:</strong>{" "}
-            {InvoiceStatus ? <input className="border ml-1" value={editInvoice.dueDate || ""} onChange={e => setEditInvoice({ ...editInvoice, dueDate: e.target.value,serviceTo:e.target.value })} /> : invoice.dueDate}
 
-            <br /><strong>Terms:</strong>{" "}
-           {getDaysBetween(editInvoice.date,editInvoice.dueDate)||0} Days
-          </div>
-        </div>
 
-        <div style={{ width: "50%", textAlign: "right" }}>
-          <h3 style={{ fontWeight: "bold", fontSize: 20, color: colors.pink }}>{company.name}</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div style={{ fontFamily: "Arial", padding: 30, maxWidth: 900, margin: "auto", background: "#fff" }}>
+
+<div style={{ display: "flex", height: 30, width: "100%" }}>
+  {/* First 10% (green) */}
+  <div style={{ width: "10%", background: "#50c896" }} />
+
+  {/* Middle (text area) */}
+  <div
+    style={{
+      background: "#fffcfc",
+      padding: "0 10px",
+      display: "flex",
+      alignItems: "center",
+      color: "#000",
+      fontWeight: "bold"
+    }}
+  >
+    INVOICE
+  </div>
+
+  {/* Remaining space (green) */}
+  <div style={{ flex: 1, background: "#50c896" }} />
+</div>
+
+  {/* HEADER */}
+  <table width="100%">
+    <tr>
+
+      {/* LEFT */}
+      <td valign="top">
+        <h4 style={{ marginBottom: 6, color: "#374151" }}>Invoice To:</h4>
+        <b style={{ fontSize: 16 }}>{billTo.patientName || "-"}</b><br />
+        <span style={{ fontSize: 13, color: "#6b7280" }}>
           {company.addressLines?.map((x, i) => <div key={i}>{x}</div>)}
-          <p><b>Patient Name:</b> {billTo.patientName || "-"}</p>
+        </span>
+      </td>
 
-          <p><b>Service Dates:</b><br />
-            {InvoiceStatus ? <>
-              <input className="border mr-1 w-24" value={editInvoice.serviceFrom || ""}
-                onChange={e => setEditInvoice({ ...editInvoice, serviceFrom: e.target.value })} />
-              to
-              <input className="border ml-1 w-24" value={editInvoice.serviceTo || ""}
-                onChange={e => setEditInvoice({ ...editInvoice, serviceTo: e.target.value })} />
-            </> :
-              `${invoice.serviceFrom} to ${invoice.serviceTo}`}
-          </p>
-        </div></div>
+      {/* RIGHT */}
+     <td align="right" valign="top">
+  <div style={{ display: "inline-block", textAlign: "right" }}>
+    
+    <img
+      src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
+      onClick={() => Router.push("/DashBoard")}
+      style={{
+        height: 105,
+        display: "block",
+        marginBottom: 4
+      }}
+    />
 
+    <span
+      style={{
+        fontSize: 10,
+        color: "#0b0b0b",
+        lineHeight: "14px",
+        display: "block"
+      }}
+    >
+      H. No. 2-117/7-53, Anagha Datta Nilayam,<br />
+      2-117/3, Manikonda Road,<br />
+      Behind Preetham Hospital, OU Colony,<br />
+      Shaikpet, Hyderabad, Telangana – 500104
+    </span>
 
+  </div>
+</td>
 
+    </tr>
+  </table>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 10 }}>
-        <thead>
-          <tr style={{ background: colors.primary, color: "white" }}>
-            <th style={{ padding: "8px", textAlign: "left" }}>#</th>
-            <th style={{ padding: "8px", textAlign: "left" }}>
-              Service &amp; Description
-            </th>
-            <th style={{ padding: "8px", textAlign: "right" }}>Days</th>
-            <th style={{ padding: "8px", textAlign: "right" }}>Rate</th>
-            <th style={{ padding: "8px", textAlign: "right" }}>Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          {renderItems.map((it, i) => (
-            <tr key={i}>
-              <td>{i + 1}</td>
-              <td>{InvoiceStatus ? <input className="border p-1 w-full" value={it.description} onChange={e => updateItem(i, "description", e.target.value)} /> : it.description}</td>
-              <td align="right">{InvoiceStatus ? <input className="border p-1 w-14 text-right" value={it.days} onChange={e => updateItem(i, "days", e.target.value)} /> : it.days}</td>
-              <td align="right">{InvoiceStatus ? <input className="border p-1 w-20 text-right" value={it.rate} onChange={e => updateItem(i, "rate", e.target.value)} /> : `₹${it.rate}`}</td>
-              <td align="right">₹{it.amount}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {InvoiceStatus && <Plus className="bg-teal-800 p-2 ml-2 mb-2 rounded-md text-white cursor-pointer h-8 w-8" onClick={() => setShowServices(!ShowServices)} />}
+  {/* META */}
+  <table width="100%" style={{ marginTop: 10 }}>
+    <tr>
+      <td></td>
+      {/* <td align="right" style={{ fontSize: 13 }}>
+       
+        <b>Date:</b>{" "}
+        {InvoiceStatus
+          ? <input value={editInvoice.date || ""} onChange={e => setEditInvoice({ ...editInvoice, date: e.target.value, serviceFrom: e.target.value })} />
+          : invoice.date}
+      </td> */}
+    </tr>
+  </table>
 
-      {ShowServices && (
-        <tbody>
-          <tr className="border-t border-slate-100 hover:bg-slate-50/60">
-            <td colSpan={5} className="px-4 py-2">
-              <select
-                className="border border-slate-200 text-sm px-2 py-1 rounded-lg bg-white"
-                value={selectedService}
-                onChange={(e) => {
-                  const code = e.target.value;
-                  setSelectedService(code);
+  {/* SERVICE DATES */}
+  <div style={{ marginTop: 10, fontSize: 13 }}>
+   <b>Invoice#:</b> {invoice.number}<br />
+    <b>Service Dates:</b>{" "}
+    {InvoiceStatus ? (
+      <>
+        <input value={editInvoice.serviceFrom || ""} onChange={e => setEditInvoice({ ...editInvoice, serviceFrom: e.target.value })} />
+        {" "}to{" "}
+        <input value={editInvoice.serviceTo || ""} onChange={e => setEditInvoice({ ...editInvoice, serviceTo: e.target.value })} />
+      </>
+    ) : `${invoice.serviceFrom} to ${invoice.serviceTo}`}
+  </div>
 
-                  if (!code) return;
+  {/* TABLE */}
+  <table width="100%" style={{ marginTop: 20, fontSize: 14, borderCollapse: "collapse" }}>
 
-                  const service: any = serviceOptions.find((s: any) => s.code === code);
+    <thead>
+      <tr style={{ background: "#1392d3", color: "#fff" }}>
+        <th align="left" style={{ padding: "10px 6px" }}>SL.</th>
+        <th align="left" style={{ padding: "10px 6px" }}>Item Description</th>
+        <th align="right" style={{ padding: "10px 6px" }}>Price</th>
+        <th align="right" style={{ padding: "10px 6px" }}>Qty.</th>
+        <th align="right" style={{ padding: "10px 6px" }}>Total</th>
+      </tr>
+    </thead>
 
-                 if (service) {
-  const newItem = {
-    description: service.name,
-    days: 1,
-    rate: service.rate || 0,
-    amount: (1 * (service.rate || 0)).toFixed(2),
-  };
+    <tbody>
+      {renderItems.map((it, i) => (
+        <tr key={i} style={{ background: i % 2 === 0 ? "#f3f4f6" : "#fff" }}>
 
-  const updated = [...editItems, newItem];
-  setEditItems(updated);
+          <td style={{ padding: "10px 6px" }}>{i + 1}</td>
 
-  recalcTotals(); 
-}
+          <td style={{ padding: "10px 6px" }}>
+            {InvoiceStatus
+              ? <input value={it.description} onChange={e => updateItem(i, "description", e.target.value)} />
+              : it.description}
+          </td>
 
-                }}
-              >
-                <option value="">Select Service</option>
-                {serviceOptions.map((opt: any, idx) => (
-                  <option key={idx} value={opt.code}>
-                    {opt.name}
-                  </option>
-                ))}
-              </select>
-            </td>
-          </tr>
-        </tbody>
-      )}
+          <td align="right" style={{ padding: "10px 6px" }}>
+            {InvoiceStatus
+              ? <input value={it.rate} onChange={e => updateItem(i, "rate", e.target.value)} />
+              : `₹${it.rate}`}
+          </td>
 
+          <td align="right" style={{ padding: "10px 6px" }}>
+            {InvoiceStatus
+              ? <input value={it.days} onChange={e => updateItem(i, "days", e.target.value)} />
+              : it.days}
+          </td>
 
-      <div style={{ display: "flex", marginTop: 30, gap: 25 }}>
+          <td align="right" style={{ padding: "10px 6px", fontWeight: 500 }}>
+            ₹{it.amount}
+          </td>
 
+        </tr>
+      ))}
+    </tbody>
+  </table>
 
-        <div style={{ width: "50%" }}>
-          <h4>Payment Method</h4>
-          <img src="https://curate-pearl.vercel.app/Icons/PaymentScanner.png" style={{ height: 120 }} />
-          <p><b>Account Name:</b> Curate Health Services</p>
-          <p><b>Bank Name:</b> UCO Bank</p>
-          <p><b>Account Number:</b> 01140210002278</p>
-          <p><b>IFSC:</b> UCBA0000114</p>
-          <p><b>UPI:</b> curateservices@ucobank</p>
+  {/* ADD SERVICE */}
+  {InvoiceStatus && (
+    <div style={{ marginTop: 10 }}>
+      <select value={selectedService} onChange={(e) => {
+        const code = e.target.value;
+        setSelectedService(code);
+
+        const service: any = serviceOptions.find((s: any) => s.code === code);
+
+        if (service) {
+          const newItem = {
+            description: service.name,
+            days: 1,
+            rate: service.rate || 0,
+            amount: (1 * (service.rate || 0)).toFixed(2),
+          };
+
+          const updated = [...editItems, newItem];
+          setEditItems(updated);
+          recalcTotals();
+        }
+      }}>
+        <option value="">Select Service</option>
+        {serviceOptions.map((opt: any, idx) => (
+          <option key={idx} value={opt.code}>{opt.name}</option>
+        ))}
+      </select>
+    </div>
+  )}
+
+  {/* BOTTOM */}
+  <table width="100%" style={{ marginTop: 30 }}>
+    <tr>
+
+      {/* LEFT */}
+      <td valign="top">
+
+        {/* SCANNER */}
+        <img
+          src="https://curate-pearl.vercel.app/Icons/PaymentScanner.png"
+          style={{ height: 90, marginBottom: 10 }}
+        />
+
+        <div style={{ fontSize: 12 }}>
+          <b>Payment Info</b><br />
+          Account Name: Curate Health Services<br />
+          Bank Name: UCO Bank<br />
+          Account Number: 01140210002278<br />
+          IFSC: UCBA0000114<br />
+          UPI: curateservices@ucobank
         </div>
 
-        <div style={{ width: "50%", background: "#f1f5f9", padding: "12px", borderRadius: 10, maxWidth: 300, marginLeft: "auto" }}>
-          {renderRow("Discount", display.Discount, updateTotals, InvoiceStatus, "green")}
-          {renderRow("AdvancePaid", display.AdvancePaid, updateTotals, InvoiceStatus, "green")}
-          {renderRow("Tax", display.Tax, updateTotals, InvoiceStatus, "red")}
+        <p style={{ marginTop: 15, fontSize: 12 }}>
+          <b>Terms & Conditions</b>
+        </p>
+        <ol style={{ fontSize: 11, color: "#6b7280" }}>
+          {terms.map((t, i) => <li key={i}>{t}</li>)}
+        </ol>
+
+      </td>
+
+      {/* RIGHT TOTALS */}
+      <td align="right" valign="top">
+
+        <table style={{ width: 260 }}>
+
+          {renderRow("Discount", display.Discount, updateTotals, InvoiceStatus)}
+          {renderRow("AdvancePaid", display.AdvancePaid, updateTotals, InvoiceStatus)}
+          {renderRow("Tax", display.Tax, updateTotals, InvoiceStatus)}
           {renderRow("RegistraionFee", display.RegistraionFee, updateTotals, InvoiceStatus)}
           {renderRow("OtherExpenses", display.OtherExpenses, updateTotals, InvoiceStatus)}
-{/* 
-          <Row label="Total" value={display.total} /> */}
-            {totals.CheckPaymentStatus&&<Row label="Payment Received" value={initialBalanceDue} bold  />}
-        {totals.CheckPaymentStatus!==true&&  <Row label="Balance Due" value={display.balanceDue} bold red />}
-          {(totals.CheckPaymentStatus&&display?.marginStatus?.type !== "Extra Amount")&&<Row label="Balance Due" value={0} bold red />}
-          { (totals.CheckPaymentStatus&&display?.marginStatus?.type === "Extra Amount")&&<Row label="Balance Due" value={display.marginStatus.amount.toFixed(2)} bold red />}
 
-          {/* <p style={{ marginTop: 6 }}>In Words:
-            <b style={{ textDecoration: "underline" }}>
-              {numberToWords(display.balanceDue || 0)} ONLY
-            </b>
-          </p> */}
-          {display.marginStatus && (
-  <p style={{
-    marginTop: "10px",
-    fontWeight: "bold",
-    color:
-      display.marginStatus.type === "Refund"
-        ? "green"
-        : display.marginStatus.type === "Extra Amount"
-        ? "red"
-        : "blue"
-  }}>
-    {display.marginStatus.type}: ₹{display.marginStatus.amount.toFixed(2)}
-  </p>
-)}
+          {/* TOTAL HIGHLIGHT */}
+          <tr>
+            <td colSpan={2} style={{
+              background: "#50c896",
+              padding: "10px",
+              fontWeight: "bold",
+              textAlign: "right",
+              fontSize: 16
+            }}>
+              Total: ₹{display.balanceDue}
+            </td>
+          </tr>
 
-        </div></div>
+        </table>
+
+      </td>
+
+    </tr>
+  </table>
+
+  {/* FOOTER */}
+  <div style={{ marginTop: 30 }}>
+    <div style={{ height: 3, background: "#50c896", marginBottom: 10 }} />
+
+    <table width="100%" style={{ fontSize: 12 }}>
+      <tr>
+        <td>#</td>
+        <td align="center">A Complete Home Healthcare Professionals</td>
+        <td align="right">www.curatehealthservices.com</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
 
 
-      <div style={{ marginTop: "25px" }}>
-        <h5 style={{ fontWeight: 600, marginBottom: "6px" }}>Terms & Conditions</h5>
 
-        <ol
-          style={{
-            fontSize: "11px",
-            color: "#334155",
-            lineHeight: "14px",
-            paddingLeft: "18px"
-          }}
-        >
-          {terms.map((t, i) => (
-            <li key={i}>{t}</li>
-          ))}
-        </ol>
-      </div>
 
-      <h3 style={{ textAlign: "center", color: colors.pink, marginTop: 25 }}>
-        A Complete Home Healthcare Professionals. We care for your beloved.
-      </h3>
-      <p style={{ textAlign: "center", marginTop: 6 }}>www.curatehealthservices.com</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

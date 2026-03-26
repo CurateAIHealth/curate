@@ -56,8 +56,7 @@ const ClientTable = () => {
   const [ShowFreezPopUp,setShowFreezPopUp]=useState(false)
   const [selectedCase, setSelectedCase] = useState<any>(null);
 const [searchHCA, setSearchHCA] = useState("");
-const [ShowMoreOptions,setShowMoreOptions]=useState(false)
-const [MoreInfoId,setMoreInfoId]=useState<any>()
+
 const [FreezeInformation,setFreezeInformation]=useState<any>()
 const [ShowcreatIvocePopup,setShowcreatIvocePopup]=useState(false)
 const [ShowCareTakerPriceUpdate,setShowCareTakerPriceUpdate]=useState(false)
@@ -1357,11 +1356,11 @@ setShowCareTakerPriceUpdate(false)
       HCP Name
     </th>
 
-    <th className="w-[90px] px-2 py-2 text-center">
+    <th className="w-[80px] px-2 py-2 text-center">
       Status
     </th>
 
-    <th className="w-[110px] px-2 py-2 text-center">
+    <th className="w-[80px] px-2 py-2 text-center">
       Replacement
     </th>
 
@@ -1370,14 +1369,14 @@ setShowCareTakerPriceUpdate(false)
     </th>
 
     {(isInvoiceDay || enableStatus) && (
-      <th className="w-[80px] px-2 py-2 text-center">
+      <th className="w-[70px] px-2 py-2 text-center">
         Invoice
       </th>
     )}
- <th className="w-[70px] px-2 py-2 text-center">
+ <th className="w-[50px] px-2 py-2 text-center">
         Invoice
       </th>
-    <th className="w-[120px] px-2 py-2 text-center">
+    <th className="w-[100px] px-2 py-2 text-center">
       Service Continue
     </th>
 
@@ -1385,11 +1384,15 @@ setShowCareTakerPriceUpdate(false)
       Add HCP
     </th>
 
-    <th className="w-[70px] px-2 py-2 text-center">
+   
+      <th className="w-[70px] px-2 py-2 text-center">
+   Rise Refund
+    </th>
+     <th className="w-[70px] px-2 py-2 text-center">
       Terminate
     </th>
       <th className="w-[70px] px-2 py-2 text-center">
-   More
+   Remove
     </th>
   </tr>
 </thead>
@@ -1579,7 +1582,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
   </div>
 </td>
           <td className="px-4 py-3 break-words">
-         <button
+         {/* <button
   className="
     px-1 py-1
     text-[9px] font-semibold
@@ -1596,7 +1599,9 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
   onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA("")}}
 >
   Reassignment
-</button>
+</button> */}
+
+<img src="Icons/Repleasement.png" alt="Repleasement Icons"  className="h-6 ml-4 cursor-pointer "   onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA("")}}/>
 
 {ShowReassignmentPopUp && (
   <div
@@ -1892,7 +1897,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
           )}
 
   <td className="px-3 py-3 text-center">
-<button  className="
+{/* <button  className="
     px-1 py-1
     text-[9px] font-semibold
    text-emerald-600
@@ -1909,18 +1914,14 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
   onClick={()=>CreateInvoice(c)}
   >
   Create
-</button>
+</button> */}
+
+<img src="Icons/CreateInovoice.png" onClick={()=>CreateInvoice(c)} className="h-7 ml-3"/>
 </td>
 
 <td className="px-1 py-3 text-center break-words">
   {isMatch ? (
-    <p className="inline-flex items-center justify-center px-1 py-1 
-              text-[9px] 
-               text-emerald-700 
-              bg-emerald-50 border border-emerald-200 
-              rounded-full whitespace-nowrap">
-  Already On Service
-</p>
+    <img src="Icons/AlreadyOnService.png" className="h-8 ml-8"/>
 
   ) : (
     <button
@@ -1947,7 +1948,15 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
        <Plus size={19} className="h-5 w-5 text-center text-teal-600"/>
             </button>
           </td>
-          <td className="px-3 py-3 text-center break-words">
+        
+          <td className="px-3 py-3 text-center break-words relative">
+  
+
+
+        <img src="Icons/RiseRefund.png"  onClick={()=>PostRefunRequest(c)} className="h-9"/>
+
+</td>
+  <td className="px-3 py-3 text-center break-words">
             <button
             
               className="px-3 py-2 text-xs font-medium cursor-pointer rounded-lg hover:rounded-full hover:bg-gray-100"
@@ -1956,66 +1965,18 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
               <Trash />
             </button>
           </td>
-
  
 <td className="px-3 py-3 text-center break-words relative">
   
  
-  {ShowMoreOptions && MoreInfoId === c.Client_Id && (
-    <>
-    
-      <div
-        className="fixed inset-0 z-40"
-        onClick={() => {
-          setShowMoreOptions(false);
-          setMoreInfoId(null);
-        }}
-      />
-
-      <div className=" flex flex-col absolute right-full mr-2 top-0 w-48 bg-white border border-gray-300 rounded-2xl shadow-xl z-50">
-        <div className="flex justify-end">
-<button className=" text-[9px]  p-1 border rounded-lg mr-1 mt-1 cursor-pointer hover:bg-gray-100"   onClick={() => {
-            setShowMoreOptions(false);
-            setMoreInfoId(null);
-              SetActionStatusMessage("");
-          }}>Close</button>
-</div>
-        <button
-          className="flex items-center  cursor-pointer gap-3 w-full px-4 py-3 text-sm hover:bg-gray-200 rounded-t-2xl"
-          onClick={() => {
-            HandleRemove(c, c.HCA_Name);
-       
-
-          }}
-        >
-       
-          <span className="font-medium text-gray-800">Remove Deployment</span>
-        </button>
-
-        <div className="h-px bg-gray-200 mx-3" />
-
-        <button
-          className="w-full text-left px-4 py-3 text-sm cursor-pointer hover:bg-gray-200 rounded-b-2xl"
-          onClick={()=>PostRefunRequest(c)}
-        >
-          Raise Refund Request
-        </button>   
-
-
-        
-      </div>
-    </>
-  )}
 
   <button
     className="px-3 py-2 text-xs font-medium cursor-pointer rounded-lg hover:rounded-full hover:bg-gray-100"
     onClick={() => {
-      setShowMoreOptions(true);
-      setMoreInfoId(c.Client_Id);
-           SetActionStatusMessage("");
+      HandleRemove(c, c.HCA_Name);
     }}
   >
-    <EllipsisVertical className="text-gray-800" />
+    <CircleX className="text-red-600" />
   </button>
 
 </td>
