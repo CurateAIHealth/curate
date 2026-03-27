@@ -403,7 +403,8 @@ const recalcTotals = () => {
   <div style={{ display: "inline-block", textAlign: "right" }}>
     
     <img
-      src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
+     
+       src="https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png"
       onClick={() => Router.push("/DashBoard")}
       style={{
         height: 50,
