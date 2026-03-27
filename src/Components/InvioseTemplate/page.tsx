@@ -404,7 +404,7 @@ const recalcTotals = () => {
     
     <img
      
-       src="https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png"
+      //  src="https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png"
       onClick={() => Router.push("/DashBoard")}
       style={{
         height: 50,
