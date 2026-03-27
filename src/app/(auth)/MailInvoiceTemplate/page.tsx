@@ -260,7 +260,8 @@ invoice.number,
     console.log("HTML length:", html.length);
 
     const pdfResponse = await axios.post("/api/generate-pdf", { html });
-
+try{
+  
     console.log("PDF Response:", pdfResponse);
 
     const pdfBase64 = pdfResponse.data.pdf;
@@ -359,6 +360,9 @@ invoice.number,
 
       pdfBase64,
     });
+}catch(err:any){
+console.log ("Production error",err)
+}
 
 const UpdateInvoiceStatus=await UpdateInvoice(invoice.number)
 if(UpdateInvoiceStatus?.success===true){
