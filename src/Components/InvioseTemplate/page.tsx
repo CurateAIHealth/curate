@@ -188,8 +188,9 @@ const recalcTotals = () => {
     align-items:center;
     gap:20px;
   ">
-
-  
+    <img src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
+         alt="Curate Logo"
+           crossorigin="anonymous"
          style="height:70px;" />
 
     <div>
@@ -404,7 +405,8 @@ const recalcTotals = () => {
     
     <img
      
-     
+       src="https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png"
+       
       onClick={() => Router.push("/DashBoard")}
       style={{
         height: 50,
@@ -545,7 +547,7 @@ const recalcTotals = () => {
 
         {/* SCANNER */}
         <img
-
+          src="https://curate-pearl.vercel.app/Icons/PaymentScanner.png"
           style={{ height: 90, marginBottom: 10 }}
         />
 
