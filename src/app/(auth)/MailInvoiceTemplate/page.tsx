@@ -11,7 +11,7 @@ import { Plus,CircleX } from "lucide-react";
 import { paymentData, serviceOptions } from "@/Lib/Content";
 import RefundReceipt from "@/Components/RefundReceipt/page";
 import EditRefund from "@/Components/EditRefundComponent/page";
-import html2pdf from "html2pdf.js";
+
 {/* <RefundReceipt
         receiptId="REF#2026_1"
         invoiceId="INV#2026_2"
@@ -254,19 +254,21 @@ invoice.number,
 
   console.log("PostedSent Invoces Data----",save);
  
-   const pdfBlob = await html2pdf()
-      .from(element)
-      .set({
-        margin: 10,
-        filename: "invoice.pdf",
-        html2canvas: { scale: 2,
+  const { default: html2pdf } = await import("html2pdf.js");
 
-             useCORS: true,   // ✅ IMPORTANT
-      allowTaint: true // ✅ sometimes needed
-         },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      })
-      .outputPdf("blob");
+const pdfBlob = await html2pdf()
+  .from(element)
+  .set({
+    margin: 10,
+    filename: "invoice.pdf",
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+    },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+  })
+  .outputPdf("blob");
 
     // ✅ Convert blob → base64
     const base64 = await new Promise<string>((resolve) => {
