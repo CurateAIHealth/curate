@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import chromium from "@sparticuz/chromium";
-import puppeteer, { Browser } from "puppeteer-core";
+import puppeteer from "puppeteer-core";
 
 type ResponseData =
   | { pdf: string }
@@ -10,7 +10,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData>
 ) {
-  let browser: Browser | null = null;
+  let browser: any = null;
 
   try {
     console.log("🚀 PDF API called");
@@ -28,7 +28,7 @@ export default async function handler(
     console.log("ENV:", process.env.NODE_ENV);
 
     // ==============================
-    // 🚀 PRODUCTION
+    // 🚀 PRODUCTION (Vercel / Hostinger)
     // ==============================
     if (process.env.NODE_ENV === "production") {
       const executablePath = await chromium.executablePath();
@@ -39,10 +39,9 @@ export default async function handler(
         throw new Error("Chromium executable path is null");
       }
 
-      // ⚠️ Fix: cast to any for missing types
       const chromiumAny = chromium as any;
 
-      // Optional font load (safe)
+      // Optional font loading
       if (chromiumAny.font) {
         await chromiumAny.font(
           "https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.ttf"
@@ -50,7 +49,12 @@ export default async function handler(
       }
 
       browser = await puppeteer.launch({
-        args: chromium.args,
+        args: [
+          ...chromium.args,
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+        ],
         executablePath,
         defaultViewport: chromiumAny.defaultViewport || {
           width: 1280,
@@ -77,10 +81,24 @@ export default async function handler(
 
     const page = await browser.newPage();
 
+    // ==============================
+    // 🛡 OPTIONAL: Debug image issues
+    // ==============================
+    /*
+    await page.setRequestInterception(true);
+    page.on("request", (req) => {
+      if (req.resourceType() === "image") {
+        req.continue(); // change to req.abort() to test image issues
+      } else {
+        req.continue();
+      }
+    });
+    */
+
     console.log("📄 Setting HTML...");
 
     await page.setContent(html, {
-      waitUntil: "load",
+      waitUntil: "networkidle0",
       timeout: 60000,
     });
 
