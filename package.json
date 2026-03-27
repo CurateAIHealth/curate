@@ -12,9 +12,9 @@
     "@reduxjs/toolkit": "^2.8.2",
     "@sendgrid/mail": "^8.1.5",
   
-    "axios": "^1.10.0",
+  
     "bcryptjs": "^3.0.2",
-   
+  
     "cloudinary": "^2.7.0",
     "clsx": "^2.1.1",
     "dom-to-image-more": "^3.7.2",
@@ -30,8 +30,6 @@
     "next-cloudinary": "^6.16.0",
     "nodemailer": "^7.0.10",
     "puppeteer": "^24.40.0",
-      "@sparticuz/chromium": "123.0.1",
-    "puppeteer-core": "23.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
@@ -41,10 +39,14 @@
     "swr": "^2.3.6",
     "twilio": "^5.8.2",
     "uuid": "^11.1.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "@sparticuz/chromium": "123.0.0", 
+  "puppeteer-core": "123.0.0",
+  "axios": "^1.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+     "puppeteer": "123.0.0",
     "@types/file-saver": "^2.0.7",
     "@types/formidable": "^3.4.5",
     "@types/node": "^20",

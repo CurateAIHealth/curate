@@ -1,7 +1,8 @@
 {
   "functions": {
     "pages/api/generate-pdf.ts": {
-      "maxDuration": 60
+      "maxDuration": 30,
+      "memory": 1024
     }
   }
 }
