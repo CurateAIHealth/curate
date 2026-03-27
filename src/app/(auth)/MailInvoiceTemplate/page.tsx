@@ -275,7 +275,7 @@ invoice.number,
 
   <div style="text-align:center; padding: 25px 20px;">
     <img
-          src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
+          src="https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png"
           alt="Curate Health Services Logo"
           style="height: 90px; width: auto;"
 

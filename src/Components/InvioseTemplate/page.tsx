@@ -406,7 +406,7 @@ const recalcTotals = () => {
       src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
       onClick={() => Router.push("/DashBoard")}
       style={{
-        height: 105,
+        height: 50,
         display: "block",
         marginBottom: 4
       }}
