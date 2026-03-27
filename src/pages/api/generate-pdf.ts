@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import chromium from "@sparticuz/chromium";
-import puppeteer, { Browser } from "puppeteer-core";
+import puppeteer from "puppeteer-core";
 
 type ResponseData =
   | { pdf: string }
@@ -10,7 +10,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData>
 ) {
-  let browser: Browser | null = null;
+  let browser: any = null;
 
   try {
     console.log("🚀 PDF API called");
@@ -82,13 +82,13 @@ export default async function handler(
     const page = await browser.newPage();
 
     // ==============================
-    // 🛡 OPTIONAL: handle requests (debug images)
+    // 🛡 OPTIONAL: Debug image issues
     // ==============================
     /*
     await page.setRequestInterception(true);
     page.on("request", (req) => {
       if (req.resourceType() === "image") {
-        req.continue(); // change to req.abort() to debug image issues
+        req.continue(); // change to req.abort() to test image issues
       } else {
         req.continue();
       }
@@ -98,7 +98,7 @@ export default async function handler(
     console.log("📄 Setting HTML...");
 
     await page.setContent(html, {
-      waitUntil: "networkidle0", // ✅ FIXED
+      waitUntil: "networkidle0",
       timeout: 60000,
     });
 
