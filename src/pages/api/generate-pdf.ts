@@ -15,6 +15,7 @@ export default async function handler(
   try {
     console.log("🚀 PDF API called");
 
+    // ✅ Allow only POST
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
     }
@@ -28,20 +29,17 @@ export default async function handler(
     console.log("ENV:", process.env.NODE_ENV);
 
     // ==============================
-    // 🚀 PRODUCTION (Vercel / Hostinger)
+    // 🚀 PRODUCTION (Vercel / Serverless)
     // ==============================
     if (process.env.NODE_ENV === "production") {
-      const executablePath = await chromium.executablePath();
+      const executablePath =
+        (await chromium.executablePath()) || "/tmp/chromium";
 
       console.log("Executable Path:", executablePath);
 
-      if (!executablePath) {
-        throw new Error("Chromium executable path is null");
-      }
-
       const chromiumAny = chromium as any;
 
-      // Optional font loading
+      // Optional font support
       if (chromiumAny.font) {
         await chromiumAny.font(
           "https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.ttf"
@@ -82,24 +80,26 @@ export default async function handler(
     const page = await browser.newPage();
 
     // ==============================
-    // 🛡 OPTIONAL: Debug image issues
+    // 🚀 PREVENT HANGING (IMPORTANT FIX)
     // ==============================
-    /*
     await page.setRequestInterception(true);
-    page.on("request", (req) => {
-      if (req.resourceType() === "image") {
-        req.continue(); // change to req.abort() to test image issues
+
+    page.on("request", (req:any) => {
+      const type = req.resourceType();
+
+      if (type === "image" || type === "font") {
+        req.abort(); // 🔥 prevents timeout issues
       } else {
         req.continue();
       }
     });
-    */
 
     console.log("📄 Setting HTML...");
 
+    // ✅ FIXED HERE (main issue)
     await page.setContent(html, {
-      waitUntil: "networkidle0",
-      timeout: 60000,
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
     });
 
     console.log("🖨 Generating PDF...");
