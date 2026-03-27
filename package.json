@@ -29,7 +29,7 @@
     "next": "^16.0.8",
     "next-cloudinary": "^6.16.0",
     "nodemailer": "^7.0.10",
-    "puppeteer": "^24.40.0",
+  "puppeteer": "22.6.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
@@ -40,8 +40,8 @@
     "twilio": "^5.8.2",
     "uuid": "^11.1.0",
     "xlsx": "^0.18.5",
-    "@sparticuz/chromium": "123.0.0", 
-  "puppeteer-core": "123.0.0",
+  "@sparticuz/chromium": "123.0.1", 
+"puppeteer-core": "22.6.0",
   "axios": "^1.6.0"
   },
   "devDependencies": {
