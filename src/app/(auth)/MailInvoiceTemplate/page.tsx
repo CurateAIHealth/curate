@@ -253,9 +253,16 @@ invoice.number,
   });
 
   console.log("PostedSent Invoces Data----",save);
+ 
     const html = element.outerHTML;
+
+    // 👉 ADD DEBUG HERE
+    console.log("HTML length:", html.length);
+
     const pdfResponse = await axios.post("/api/generate-pdf", { html });
-    console.log("Check For Invoise Send Isssue------",pdfResponse)
+
+    console.log("PDF Response:", pdfResponse);
+
     const pdfBase64 = pdfResponse.data.pdf;
 
     await axios.post("/api/MailSend", {
@@ -361,7 +368,61 @@ if(UpdateInvoiceStatus?.success===true){
   }, 100);
 };
 
+// const handleSubmit = async () => {
+//   try {
+//     setIsSending(true);
+//     setShowMailTemplate(false);
 
+//     const element = document.getElementById("invoice-pdf-area");
+
+//     if (!element) {
+//       alert("Invoice HTML not found!");
+//       return;
+//     }
+
+//     const save = await UpdateInvoiceData(invoice.number, {
+//       invoice: invoiceProps.invoice,
+//       billTo: invoiceProps.billTo,
+//       items: invoiceProps.items,
+//       totals: invoiceProps.totals,
+//     });
+
+//     console.log("PostedSent Invoces Data----", save);
+
+//     const html = element.outerHTML;
+
+//     // 👉 ADD DEBUG HERE
+//     console.log("HTML length:", html.length);
+
+//     const pdfResponse = await axios.post("/api/generate-pdf", { html });
+
+//     console.log("PDF Response:", pdfResponse);
+
+//     const pdfBase64 = pdfResponse.data.pdf;
+
+//     await axios.post("/api/MailSend", {
+//       to: "tsiddu805@gmail.com",
+//       subject:
+//         "Request for Payment – Attached Invoice from Curate Health Services",
+//       html: `...your template...`,
+//       pdfBase64,
+//     });
+
+//     const UpdateInvoiceStatus = await UpdateInvoice(invoice.number);
+
+//     if (UpdateInvoiceStatus?.success === true) {
+//       setMailstatus(false);
+//     }
+
+//   } catch (error:any) {
+//     console.error("FULL FRONTEND ERROR:", error);
+//     console.error("SERVER ERROR:", error?.response?.data);
+
+//     alert("Failed to send invoice");
+//   } finally {
+//     setIsSending(false);
+//   }
+// };
 const NavigatetoInvoices=()=>{
   Router.push("/Invoices")
 }
