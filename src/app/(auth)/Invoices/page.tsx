@@ -494,7 +494,7 @@ CheckPaymentStatus:CurrentPaymentStatus
     <img
       src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
       alt="Curate Health Services Logo"
-      className="h-14 md:h-20 "
+      className="h-14 md:h-12 md:mr-4 "
     />
 
     <div className="flex flex-col">
