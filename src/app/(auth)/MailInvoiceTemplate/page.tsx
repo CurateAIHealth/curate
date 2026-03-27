@@ -256,13 +256,18 @@ invoice.number,
  
     const html = element.outerHTML;
 
-    // 👉 ADD DEBUG HERE
+  
     console.log("HTML length:", html.length);
 
-   
-try{
-   const pdfResponse = await axios.post("/api/generate-pdf", { html });
-    console.log("PDF Response:", pdfResponse);
+try {
+  const pdfResponse = await axios.post("/api/generate-pdf", { html });
+  console.log("PDF Response:", pdfResponse);
+} catch (err) {
+  console.error("❌ Axios Error:", err);
+}
+
+
+const pdfResponse:any=''
 
     const pdfBase64 = pdfResponse.data.pdf;
 
@@ -360,9 +365,6 @@ try{
 
       pdfBase64,
     });
-}catch(err:any){
-console.log ("Production error",err)
-}
 
 const UpdateInvoiceStatus=await UpdateInvoice(invoice.number)
 if(UpdateInvoiceStatus?.success===true){
