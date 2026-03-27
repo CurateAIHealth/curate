@@ -2,7 +2,7 @@
 
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import {  getDaysBetween } from "@/Lib/Actions";
+import {  getBase64Image, getDaysBetween } from "@/Lib/Actions";
 import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -257,12 +257,12 @@ invoice.number,
     const html = element.outerHTML;
 
   
-    console.log("HTML length:", html.length);
+console.log("HTML length:", html.length);
 
     const pdfResponse = await axios.post("/api/generate-pdf", { html });
 
     console.log("PDF Response:", pdfResponse);
-
+const Imagb64:any= await getBase64Image("https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png")
     const pdfBase64 = pdfResponse.data.pdf;
 
     await axios.post("/api/MailSend", {
@@ -283,7 +283,7 @@ invoice.number,
 
   <div style="text-align:center; padding: 25px 20px;">
     <img
-          src="https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png"
+          src="${Imagb64}"
           alt="Curate Health Services Logo"
           style="height: 90px; width: auto;"
 
@@ -1125,6 +1125,7 @@ const addOtherService = () => {
         billTo={invoiceProps.billTo}
         items={invoiceProps.items}
         totals={invoiceProps.totals}
+        
       />
     </div>
 }

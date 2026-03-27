@@ -400,3 +400,11 @@ export const AssignSuitableIcon = (A: any, B: any) => {
     caseType: type || "DEFAULT"  
   };
 };
+
+
+export const getBase64Image = async (url: any) => {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  const base64 = Buffer.from(arrayBuffer).toString("base64");
+  return `data:image/png;base64,${base64}`;
+};
