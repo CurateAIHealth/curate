@@ -259,15 +259,9 @@ invoice.number,
   
     console.log("HTML length:", html.length);
 
-try {
-  const pdfResponse = await axios.post("/api/generate-pdf", { html });
-  console.log("PDF Response:", pdfResponse);
-} catch (err) {
-  console.error("❌ Axios Error:", err);
-}
+    const pdfResponse = await axios.post("/api/generate-pdf", { html });
 
-
-const pdfResponse:any=''
+    console.log("PDF Response:", pdfResponse);
 
     const pdfBase64 = pdfResponse.data.pdf;
 
