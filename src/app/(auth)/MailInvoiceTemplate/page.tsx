@@ -255,6 +255,7 @@ invoice.number,
   console.log("PostedSent Invoces Data----",save);
     const html = element.outerHTML;
     const pdfResponse = await axios.post("/api/generate-pdf", { html });
+    console.log("Check For Invoise Send Isssue------",pdfResponse)
     const pdfBase64 = pdfResponse.data.pdf;
 
     await axios.post("/api/MailSend", {
