@@ -1,6 +1,6 @@
 import React, { JSX, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getDaysBetween, numberToWords } from "@/Lib/Actions";
+import { getBase64Image, getDaysBetween, numberToWords } from "@/Lib/Actions";
 import { company, payment, serviceOptions, terms } from "@/Lib/Content";
 import { Plus } from "lucide-react";
 import { UpdateInvoiceData } from "@/Lib/user.action";
@@ -54,6 +54,7 @@ export default function ReusableInvoice({
 const [initialBalanceDue, setInitialBalanceDue] = useState<number | null>(null);
 
 useEffect(() => {
+
   if (initialBalanceDue === null && display?.balanceDue !== undefined) {
     setInitialBalanceDue(display.balanceDue);
   }
@@ -188,8 +189,9 @@ const recalcTotals = () => {
     align-items:center;
     gap:20px;
   ">
-
-  
+    <img src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
+         alt="Curate Logo"
+           crossorigin="anonymous"
          style="height:70px;" />
 
     <div>
@@ -404,7 +406,8 @@ const recalcTotals = () => {
     
     <img
      
-     
+       src="https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png"
+        
       onClick={() => Router.push("/DashBoard")}
       style={{
         height: 50,
@@ -545,7 +548,8 @@ const recalcTotals = () => {
 
         {/* SCANNER */}
         <img
-
+          src="https://curate-pearl.vercel.app/Icons/PaymentScanner.png"
+           
           style={{ height: 90, marginBottom: 10 }}
         />
 

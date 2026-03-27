@@ -11,7 +11,7 @@ import { Plus,CircleX } from "lucide-react";
 import { paymentData, serviceOptions } from "@/Lib/Content";
 import RefundReceipt from "@/Components/RefundReceipt/page";
 import EditRefund from "@/Components/EditRefundComponent/page";
-
+import html2pdf from "html2pdf.js";
 {/* <RefundReceipt
         receiptId="REF#2026_1"
         invoiceId="INV#2026_2"
@@ -254,16 +254,38 @@ invoice.number,
 
   console.log("PostedSent Invoces Data----",save);
  
-    const html = element.outerHTML;
+   const pdfBlob = await html2pdf()
+      .from(element)
+      .set({
+        margin: 10,
+        filename: "invoice.pdf",
+        html2canvas: { scale: 2,
+
+             useCORS: true,   // ✅ IMPORTANT
+      allowTaint: true // ✅ sometimes needed
+         },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      })
+      .outputPdf("blob");
+
+    // ✅ Convert blob → base64
+    const base64 = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(pdfBlob);
+      reader.onloadend = () => {
+        resolve(reader.result as string);
+      };
+    });
+
 
   
-console.log("HTML length:", html.length);
 
-    const pdfResponse = await axios.post("/api/generate-pdf", { html });
 
-    console.log("PDF Response:", pdfResponse);
+    // const pdfResponse = await axios.post("/api/generate-pdf", { html });
+
+//     console.log("PDF Response:", pdfResponse);
 const Imagb64:any= await getBase64Image("https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png")
-    const pdfBase64 = pdfResponse.data.pdf;
+//     const pdfBase64 = pdfResponse.data.pdf;
 
     await axios.post("/api/MailSend", {
       to: "tsiddu805@gmail.com",
@@ -357,7 +379,7 @@ const Imagb64:any= await getBase64Image("https://www.curatehealthservices.com/Ic
 </div>
 `,
 
-      pdfBase64,
+     pdfBase64: base64.split(",")[1],
     });
 
 const UpdateInvoiceStatus=await UpdateInvoice(invoice.number)
