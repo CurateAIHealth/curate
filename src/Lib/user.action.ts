@@ -1351,14 +1351,57 @@ From:any
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Notifications");
 
+const payload = {
+  ClientId: ClientInfo.Client_Id,
+  ClientName: ClientInfo.name,
+  Message: `Refund request for ${ClientInfo.name}, assigned to HCP ${ClientInfo.HCA_Name}. Service period: ${ClientInfo.StartDate} to ${new Date().toISOString().split("T")[0]} (${ClientInfo.WorkingDays} days) at ${ClientInfo.ServiceCharge} per day. Refund requested for ${ClientInfo.RefundDays} days. Reason: ${ClientInfo.reason}. Additional notes: ${ClientInfo.notes}. Requested by ${From}.`,
+  HCPName: ClientInfo.HCPName,
+  ServiceDays: ClientInfo.ServiceDays,
+  Date: new Date().toISOString().split("T")[0],
+  Type: "Refund Request",
+  Status: "Pending",
+  Department: "Accounts"
+};
+
+    const result = await collection.insertOne(payload);
+
+    return {
+      success: true,
+      message:"Notification Send Succesfully"
+    };
+  } catch (err: any) {
+    console.error("PostCallEnquiryNotification error:", err);
+
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+};
+
+export const PostAttendeceEditRequest = async (
+ClientInfo:any,
+Reason:any,
+From:any
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Notifications");
+
     const payload = {
-      ClientId:ClientInfo.Client_Id,
-      ClientName:ClientInfo.name,
-      Message:`Refund Request for ${ClientInfo.name}  from ${From}`,
-      Date:new Date().toISOString().split("T")[0],
-      Type:"Refund Request",
-      Status :"Pending",
-      Department:"Accounts"
+      ClientId: ClientInfo.ClientId,
+      ClientName: ClientInfo.clientName,
+      Message: `Attendece Update Request for ${ClientInfo.hcpName}. On ${ClientInfo.flexDate} to ${ ClientInfo.status}. Reason: ${Reason}. Requested by ${From}.`,
+      HCPName: ClientInfo.hcpName,
+      HCPId: ClientInfo.hcpId,    
+      yearMonth: ClientInfo.yearMonth,
+      flexDate: ClientInfo.flexDate,
+      status: ClientInfo.status,
+      Date: new Date().toISOString().split("T")[0],
+      Type: "Attendance Edit Request",
+      Status: "Pending",
+      Department: "HCP"
     };
 
     const result = await collection.insertOne(payload);

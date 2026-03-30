@@ -119,40 +119,31 @@ export const years = Array.from(
   (_, i) => currentYear - 4 + i
 );
 
-export const getDaysBetween=(date1: any, date2: any)=> {
-
+export const getDaysBetween = (date1: any, date2: any) => {
   const parseDate = (input: any) => {
-
     if (input instanceof Date) return input;
-
-    
     if (typeof input === "number") return new Date(input);
 
-   
     let str = String(input).trim();
 
-    
     if (/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.test(str)) {
       const parts = str.includes("/") ? str.split("/") : str.split("-");
       const [day, month, year] = parts;
       return new Date(`${year}-${month}-${day}`);
     }
 
-  
     return new Date(str);
   };
 
   const d1 = parseDate(date1);
   const d2 = parseDate(date2);
 
- 
   d1.setHours(0, 0, 0, 0);
   d2.setHours(0, 0, 0, 0);
 
-
   const diff = Math.abs(d2.getTime() - d1.getTime());
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
-}
+  return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1; // 👈 fix
+};
 
 
 

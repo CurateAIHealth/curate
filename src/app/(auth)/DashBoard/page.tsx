@@ -27,6 +27,7 @@ import {
   Settings,
   Shield,
   Minimize2,
+  Share2,
 } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -1051,6 +1052,11 @@ setNotificationStatus("Notification Send Succesfully")
           Post Expense
         </button>
 
+
+<button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
+          <Share2  size={16} className="text-slate-500" />
+          referral
+        </button>
         <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
           <Shield size={16} className="text-slate-500" />
           Security

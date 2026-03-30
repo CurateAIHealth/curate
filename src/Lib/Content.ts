@@ -424,7 +424,7 @@ export const Main_Filters = ["Client Enquiry", "Placements", "Timesheet", "Refer
 
 export const ClientEnquiry_Filters = ["CallEnquiry", "Converted", "Waiting List", "Lost",  ];
 
-export const Placements_Filters = ["On Service", "Replacements", "Termination"];
+export const Placements_Filters = ["On Service", "Replacements", "Termination" ,"Awaiting Invoice"];
 
 export const Timesheet_Filters = ["Provider Staff", "Co-provider", "Curate"];
 
@@ -449,6 +449,7 @@ export const popularBanksInIndia = [
   "IDBI Bank",
   "Other"
 ];
+
 export const filterColors: Record<string, string> = {
 
   "Client Enquiry": "bg-blue-200 hover:bg-blue-400 text-gray-800",
@@ -467,6 +468,7 @@ export const filterColors: Record<string, string> = {
   "On Service": "bg-sky-200 hover:bg-sky-400 text-gray-800",
   "Replacements": "bg-pink-200 hover:bg-pink-400 text-gray-800",
   "Termination": "bg-rose-200 hover:bg-rose-400 text-gray-800",
+  "Awaiting Invoice": "bg-yellow-100 hover:bg-yellow-300 text-gray-800", 
 
 
   "Provider Staff": "bg-indigo-200 hover:bg-indigo-400 text-gray-800",

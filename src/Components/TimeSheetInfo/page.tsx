@@ -2,13 +2,13 @@
 let deploymentCache: any[] = [];
 let cachedUsersFullInfo: any[] = [];
 let cachedRegisterdUsers: any[] = [];
-import { DeleteClientFromDeolyment, EditAttendanceByClientId, EditAttendanceByDateRange, GetAllUsersData, GetDeploymentInfo, GetRegidterdUsers, GetUsersFullInfo, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus, UpdatehcpDailyAttendce } from "@/Lib/user.action";
+import { DeleteClientFromDeolyment, EditAttendanceByClientId, EditAttendanceByDateRange, GetAllUsersData, GetDeploymentInfo, GetRegidterdUsers, GetUsersFullInfo, PostAttendeceEditRequest, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus, UpdatehcpDailyAttendce } from "@/Lib/user.action";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
 import { CalendarDays, CheckCircle, Eye, FilePenLine, LucidePencil, Pencil, PencilIcon, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import MissingAttendence from "../MissingAttendence/page";
 import PaymentModal from "../PaymentInfoModel/page";
 import { months, years } from "@/Lib/Content";
@@ -51,6 +51,7 @@ const [showDeletePopup, setShowDeletePopup] = useState(false)
 const [deleteItem, setDeleteItem] = useState<any>(null)
 const [selectedYear, setSelectedYear] = useState(currentYear);
 const [showPaymentModal, setShowPaymentModal] = useState(false);
+const [AttendeceEditReason,SetAttendeceEditReason]=useState("")
 const [billingRecord, setBillingRecord] = useState<any>(null);
 const [ShowUpdateAttendece,SetShowUpdateAttendece]=useState(false)
   const [ClientsInformation, setClientsInformation] = useState<any>({});
@@ -64,6 +65,7 @@ const [ShowUpdateAttendece,SetShowUpdateAttendece]=useState(false)
       const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
   const [StatusMessage,SetStatusMessage]=useState<any>("")
 const [SearchResult,setSearchResult]=useState("")
+const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const dispatch = useDispatch();
   const router = useRouter();
 const getMonthKey = (record: any): string => {
@@ -100,7 +102,9 @@ useEffect(() => {
     if (isSuccess) {
       deploymentCache.length = 0;
     }
-
+ if(loggedInEmail===""){
+    router.push("/DashBoard")
+  }
     const cacheKey = `${showMissingCalendar}`;
 
     if (!isSuccess) {
@@ -506,31 +510,42 @@ const EditAttendence = async () => {
   try {
     if (!AttenseceInformation?.ClientId) return;
 
-    SetStatusMessage(`Updating ${status} day...`);
+    SetStatusMessage("Please Wait...");
 
     const flexDate = `${selectedYear}-${selectedMonth}-${String(
       ParticularDate
     ).padStart(2, "0")}`;
 
     const yearMonth = `${selectedYear}-${selectedMonth}`;
+const Info={...AttenseceInformation,flexDate,yearMonth,status}
 
-    const response = await EditAttendanceByClientId(
-      AttenseceInformation.ClientId,
-      AttenseceInformation.hcpId,
-      yearMonth,
-      flexDate,
-      status,
-      "Admin"
-    );
-
+    // const response = await EditAttendanceByClientId(
+    //   AttenseceInformation.ClientId,
+    //   AttenseceInformation.hcpId,
+    //   yearMonth,
+    //   flexDate,
+    //   status,
+    //   "Admin"
+    // );
+const response= await PostAttendeceEditRequest(Info,AttendeceEditReason,loggedInEmail)
     if (response?.success) {
+
+        const phoneNumber = "9000114333";
+      const message =
+        "Hi Medam, Kindly requesting AttendeceEdit  Request update. Please check notification in the application. Thank you.";
+
+      const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+        message
+      )}`;
+
+      window.open(whatsappURL, "_blank");
       SetStatusMessage(`✅ ${response.message}`);
 
       setTimeout(() => {
         setShowFullMonth(false);
         SetShowUpdateAttendece((prev: boolean) => !prev);
-         SetStatusMessage("")
-      }, 2500);
+   SetAttendeceEditReason("")
+      }, 3500);
     } else {
       SetStatusMessage(response?.message || "Failed to update attendance");
     }
@@ -1066,12 +1081,12 @@ className={`
         <Th className={`${showFull?"":"w-[10%]"} text-center`}>
           Action
         </Th>
-        <Th className={`${showFull?"":"w-[6%]"}  text-center`}>
+        {/* <Th className={`${showFull?"":"w-[6%]"}  text-center`}>
           Edit
         </Th>
         <Th className={`${showFull?"":"w-[6%]"} bg-red-500 text-center`}>
           Delete
-        </Th>
+        </Th> */}
       </tr>
     </thead>
 
@@ -1210,7 +1225,7 @@ className={`
               </button>}
             </Td>
 
-            <td className="align-middle text-center">
+            {/* <td className="align-middle text-center">
               <div className="flex items-center justify-center">
                 <FilePenLine
                   className="cursor-pointer"
@@ -1233,7 +1248,7 @@ className={`
                   }}
                 />
               </div>
-            </td>
+            </td> */}
           </tr>
         )
       })}
@@ -1558,6 +1573,26 @@ className={`
         <option value="ABSENT">Absent</option>
       </select>
     </div>
+
+<div className="flex flex-col  border-b px-2 py-3">
+  <label className="text-xs font-semibold text-gray-800">
+    Reason for Attendance Edit
+  </label>
+
+  <input
+    type="text"
+    value={AttendeceEditReason}
+    placeholder="Enter Here....."
+    onChange={(e: any) => SetAttendeceEditReason(e.target.value)}
+    style={{
+      padding: "10px 12px",
+      borderRadius: "6px",
+      border: "1px solid #ccc",
+      fontSize: "14px",
+      outline: "none"
+    }}
+  />
+</div>
 <div className="flex items-center-justify-between">
    {StatusMessage&&
             <p

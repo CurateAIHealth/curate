@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, Upload, AlertTriangle } from "lucide-react";
+import axios from "axios";
 
 interface PostExpenseModalProps {
   employeeId: string;
@@ -20,6 +21,7 @@ export default function PostExpenseModal({
 }: PostExpenseModalProps) {
   const today = new Date().toISOString().split("T")[0];
 const [ShowOtherExpence,setShowOtherExpence]=useState(false)
+const [StatusMessage,setStatusMessage]=useState("")
   const [form, setForm] = useState({
     billDate: "",
     submissionDate: today,
@@ -38,12 +40,65 @@ const [ShowOtherExpence,setShowOtherExpence]=useState(false)
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFile = (e: any) => {
+
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+
+const handleFile = async (e: any) => {
+  try {
+    setStatusMessage("Please Wait Uploading.......")
     const file = e.target.files?.[0];
-    if (file) {
-      setForm((prev) => ({ ...prev, receipt: file }));
+
+    if (!file) return;
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      alert("Invalid file type. Only JPG, PNG, and PDF are allowed.");
+      return;
     }
-  };
+
+  
+    if (file.size > MAX_FILE_SIZE) {
+      alert("File size exceeds 5MB limit.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    // Optional: set loading state
+    // setLoading(true);
+
+   const res = await axios.post('/api/Upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+    const url = res?.data?.url;
+
+    if (!url) {
+      throw new Error("Upload failed: No URL returned");
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      receipt: url,
+    }));
+setStatusMessage("Receipt Uploaded Successfully")
+  } catch (error: any) {
+    console.error("File upload error:", error);
+
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Something went wrong during upload";
+
+    alert(message);
+  } finally {
+    // setLoading(false);
+  }
+};
 
   const handleSubmit = () => {
     onSubmit({
@@ -70,10 +125,20 @@ const [ShowOtherExpence,setShowOtherExpence]=useState(false)
               </p>
             </div>
           </div>
-
+<div className="flex items-center gap-2">
+{StatusMessage&&<p
+  className={`text-sm px-3 py-2 rounded-md font-medium ${
+    StatusMessage.includes("Successfully")
+      ? "bg-green-100 text-green-700"
+      : "bg-red-100 text-red-700"
+  }`}
+>
+  {StatusMessage}
+</p>}
           <button onClick={onClose}>
             <X className="text-gray-500 hover:text-red-600" />
           </button>
+</div>
         </div>
 
         {/* BODY (NO SCROLL) */}
@@ -84,13 +149,13 @@ const [ShowOtherExpence,setShowOtherExpence]=useState(false)
             <label className="font-medium text-gray-700 mb-1 block">
               Receipt Upload
             </label>
-            <label className="h-[170px] border-2 border-dashed border-gray-400 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#005f61]">
+            {form.receipt?<img src={form.receipt}/>:<label className="h-[170px] border-2 border-dashed border-gray-400 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#005f61]">
               <Upload className="text-gray-500" />
               <p className="mt-2 text-gray-600">
-                {form.receipt ? form.receipt.name : "Upload bill / receipt"}
+              "Upload bill / receipt"
               </p>
               <input type="file" className="hidden" onChange={handleFile} />
-            </label>
+            </label>}
           </div>
 
          

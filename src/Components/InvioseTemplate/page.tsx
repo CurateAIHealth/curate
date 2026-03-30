@@ -388,6 +388,7 @@ const recalcTotals = () => {
 
   {/* HEADER */}
   <table width="100%">
+    <tbody>
     <tr>
 
       {/* LEFT */}
@@ -433,6 +434,7 @@ const recalcTotals = () => {
 </td>
 
     </tr>
+    </tbody>
   </table>
 
   {/* META */}
