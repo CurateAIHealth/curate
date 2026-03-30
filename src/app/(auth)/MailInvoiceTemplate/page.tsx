@@ -286,7 +286,7 @@ const pdfBlob = await html2pdf()
     // const pdfResponse = await axios.post("/api/generate-pdf", { html });
 
 //     console.log("PDF Response:", pdfResponse);
-const Imagb64:any= await getBase64Image("https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png")
+// const Imagb64:any= await getBase64Image("https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png")
 //     const pdfBase64 = pdfResponse.data.pdf;
 
     await axios.post("/api/MailSend", {
@@ -307,7 +307,7 @@ const Imagb64:any= await getBase64Image("https://www.curatehealthservices.com/Ic
 
   <div style="text-align:center; padding: 25px 20px;">
     <img
-          src="${Imagb64}"
+          src="https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png""
           alt="Curate Health Services Logo"
           style="height: 90px; width: auto;"
 

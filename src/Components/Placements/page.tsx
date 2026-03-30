@@ -21,6 +21,9 @@ import { AssignSuitableIcon, getDaysBetween, getPopularArea, rupeeToNumber, toPr
 import { useRouter } from "next/navigation";
 import { div } from "framer-motion/client";
 import SalaryPopup from "../HCPSalary/page";
+import RefundPopup from "../RefundRequestPopup/page";
+import AwaitingInvoice from "../AwaitingInvoice/page";
+
 
 
 
@@ -56,7 +59,7 @@ const ClientTable = () => {
   const [ShowFreezPopUp,setShowFreezPopUp]=useState(false)
   const [selectedCase, setSelectedCase] = useState<any>(null);
 const [searchHCA, setSearchHCA] = useState("");
-
+const [ShowRefundRequrstPopUp,setShowRefundRequrstPopUp]=useState(false)
 const [FreezeInformation,setFreezeInformation]=useState<any>()
 const [ShowcreatIvocePopup,setShowcreatIvocePopup]=useState(false)
 const [ShowCareTakerPriceUpdate,setShowCareTakerPriceUpdate]=useState(false)
@@ -124,7 +127,9 @@ useEffect(() => {
   const fetchData = async () => {
     try {
       setIsChecking(true);
-
+ if(loggedInEmail===""){
+    router.push("/DashBoard")
+  }
       if (!isSuccessUpdate && cachedDeploymentInfo?.length > 0) {
         setUsers([...cachedUsersFullInfo]);
         setClientsInformation([...cachedDeploymentInfo]);
@@ -271,7 +276,7 @@ const matchesSearchAndMonth = (
   };
 const PostRefunRequest = async (data: any) => {
   try {
- 
+ console.log("Check for Refund Request Data----",data)
     SetActionStatusMessage("Please Wait....");
 
     const updateSalary = await PostRefundRequest(
@@ -280,9 +285,7 @@ const PostRefunRequest = async (data: any) => {
     );
 
     if (updateSalary?.success) {
-      SetActionStatusMessage(
-          "Refund Request request submitted to management. You will be notified once the status is updated."
-        )
+    
       
 
       const phoneNumber = "9000114333";
@@ -294,7 +297,9 @@ const PostRefunRequest = async (data: any) => {
       )}`;
 
       window.open(whatsappURL, "_blank");
-
+  SetActionStatusMessage(
+          "Refund Request request submitted to management. You will be notified once the status is updated."
+        )
     
     }
   } catch (error) {
@@ -1191,7 +1196,7 @@ const OmServiceView = () => {
       ))}
     </select>
   </div>
-    <button
+    {/* <button
       onClick={() => setenableStatus(!enableStatus)}
       className="
         px-5 py-2.5 text-xs font-semibold
@@ -1203,7 +1208,7 @@ const OmServiceView = () => {
       "
     >
       {enableStatus ? "Disable Generate Bill" : "Enable Generate Bill"}
-    </button>
+    </button> */}
   </div>
   {/* {showPaymentModal && billingRecord && (
   <PaymentModal
@@ -1317,6 +1322,12 @@ setShowCareTakerPriceUpdate(false)
     </div>
   </div>
 )}
+{   <RefundPopup
+        isOpen={ShowRefundRequrstPopUp}
+        onClose={() => setShowRefundRequrstPopUp(false)}
+        data={selectedClient}
+        onSubmit={(A)=>(PostRefunRequest(A))}
+      />}
   <table className="w-full table-fixed border-collapse bg-white">
     
   
@@ -1352,7 +1363,7 @@ setShowCareTakerPriceUpdate(false)
       Location
     </th>
 
-    <th className="min-w-[120px] max-w-[150px] px-2 py-2 text-left truncate">
+    <th className="min-w-[100px]  px-2 py-2 text-center truncate">
       HCP Name
     </th>
 
@@ -1368,17 +1379,17 @@ setShowCareTakerPriceUpdate(false)
       Time Sheet
     </th>
 
-    {(isInvoiceDay || enableStatus) && (
+    {/* {(isInvoiceDay || enableStatus) && (
       <th className="w-[70px] px-2 py-2 text-center">
         Invoice
       </th>
-    )}
+    )} */}
  <th className="w-[50px] px-2 py-2 text-center">
         Invoice
       </th>
-    <th className="w-[100px] px-2 py-2 text-center">
+    {/* <th className="w-[100px] px-2 py-2 text-center">
       Service Continue
-    </th>
+    </th> */}
 
     <th className="w-[70px] px-2 py-2 text-center">
       Add HCP
@@ -1391,9 +1402,9 @@ setShowCareTakerPriceUpdate(false)
      <th className="w-[70px] px-2 py-2 text-center">
       Terminate
     </th>
-      <th className="w-[70px] px-2 py-2 text-center">
+      {/* <th className="w-[70px] px-2 py-2 text-center">
    Remove
-    </th>
+    </th> */}
   </tr>
 </thead>
 
@@ -1881,7 +1892,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
             </button>
           </td>
 
-          {(isInvoiceDay || enableStatus) && (
+          {/* {(isInvoiceDay || enableStatus) && (
            <td className="px-3 py-3 text-center">
   <button
     className="inline-block px-1 py-2 text-[9px] hover:bg-gray-100 hover:rounded-full font-medium cursor-pointer  text-white"
@@ -1894,7 +1905,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
   </button>
 </td>
 
-          )}
+          )} */}
 
   <td className="px-3 py-3 text-center">
 {/* <button  className="
@@ -1919,26 +1930,7 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
 <img src="Icons/CreateInovoice.png" onClick={()=>CreateInvoice(c)} className="h-7 ml-3"/>
 </td>
 
-<td className="px-1 py-3 text-center break-words">
-  {isMatch ? (
-    <img src="Icons/AlreadyOnService.png" className="h-8 ml-8"/>
 
-  ) : (
-    <button
-      className="px-4 py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full"
-     onClick={() =>{ UpdatePopup(c),setSelectedDate(""),setShowWarning(false),SetActionStatusMessage("")}}
-    >
-      <ChevronsRight size={22} className="text-teal-600"/>
-    </button>
-  )}
-
-   {/* <button
-      className="px-4 py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full"
-      onClick={() =>{ UpdatePopup(c),setSelectedDate("")}}
-    >
-  <ChevronsRight size={22} className="text-teal-600"/>
-    </button> */}
-</td>
 
  <td     className="inline-block px-1 ml-4 cursor-pointer py-2 text-[10px] mt-4 hover:bg-gray-100 hover:rounded-full font-medium cursor-pointer ">
             <button
@@ -1953,7 +1945,7 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
   
 
 
-        <img src="Icons/RiseRefund.png"  onClick={()=>PostRefunRequest(c)} className="h-9"/>
+        <img src="Icons/RiseRefund.png"  onClick={()=>{setShowRefundRequrstPopUp(true),setselectedClient(c)}} className="h-9"/>
 
 </td>
   <td className="px-3 py-3 text-center break-words">
@@ -1966,7 +1958,7 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
             </button>
           </td>
  
-<td className="px-3 py-3 text-center break-words relative">
+{/* <td className="px-3 py-3 text-center break-words relative">
   
  
 
@@ -1979,7 +1971,7 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
     <CircleX className="text-red-600" />
   </button>
 
-</td>
+</td> */}
  
         </tr>
       )
@@ -2708,6 +2700,9 @@ const GetFilterCount = (type: string) => {
         return <TerminationTable/>;
       case "Replacements":
         return <ReplacementsTable/>;
+
+        case "Awaiting Invoice":
+          return <AwaitingInvoice/>;
       default:
         return null;
     }

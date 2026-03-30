@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle, XCircle, Bell } from "lucide-react";
 import axios from "axios";
-import { GetNotificationsInformation, HCASalaryUpdate, UpdateNotificationType } from "@/Lib/user.action";
+import { EditAttendanceByClientId, GetNotificationsInformation, HCASalaryUpdate, UpdateNotificationType } from "@/Lib/user.action";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,7 +16,7 @@ interface NotificationItem {
   HCPId: string;
   Date: any;
   _id: string;
-  Type: "LEAVE_REQUEST" | "EXPENSE_REQUEST" | "INFO" | "SYSTEM"|"HCP Salary Request" |"Refund Request";
+  Type: "LEAVE_REQUEST" | "EXPENSE_REQUEST" | "INFO" | "SYSTEM"|"HCP Salary Request" |"Refund Request" | "Attendance Edit Request";
   ReferenceId?: string;
   UserId: string;
   EmployeeName?: string;
@@ -65,132 +65,127 @@ useEffect(() => {
   }, [notifications, filter]);
 
   
- const handleAction = async (
+const handleAction = async (
   info: any,
   action: "Approved" | "Rejected",
-  Dept:any
+  dept: "HCP" | "Accounts"
 ) => {
+  const phoneNumbers: Record<string, string> = {
+    HCP: "7386145659",
+    Accounts: "9392801069", 
+  };
+
+  const getPhone = () => phoneNumbers[dept] || phoneNumbers.HCP;
+
+  const sendWhatsApp = (message: string) => {
+    const phone = getPhone();
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+  };
+
+  const updateStatusSafe = async () => {
+    const res = await UpdateNotificationType(info?.HCPId, action);
+    if (!res?.success) throw new Error("Notification update failed");
+  };
+
   try {
     if (!info?.HCPId) {
       dispatch(Refresh("Invalid notification data."));
       return;
     }
 
-if(Dept==="HCP"){
-      const phoneNumber = "7386145659";
+    if (dept === "HCP") {
 
-    if (action === "Rejected") {
-      const updateStatus = await UpdateNotificationType(info.HCPId, action);
 
-      if (!updateStatus?.success) {
-        dispatch(Refresh("Failed to update notification status."));
+      if (action === "Approved" && info?.Type === "Attendance Edit Request") {
+        console.log("Info for Attendance Edit Request Approval----", info);
+        const response = await EditAttendanceByClientId(
+          info?.ClientId,
+          info?.HCPId,
+          info?.yearMonth,
+          info?.flexDate,
+          info?.status,
+          loggedInEmail
+        );
+
+        if (response?.success) {
+          sendWhatsApp(
+            `Attendance updated successfully for ${info?.
+HCPName
+} on ${info?.flexDate}.`
+          );
+          updateStatusSafe();
+           dispatch(Refresh("Attendance update Successfully."));
+           return
+        } else {
+          dispatch(Refresh("Attendance update failed."));
+          return;
+        }
+      }
+      if (action === "Rejected") {
+        await updateStatusSafe();
+
+        sendWhatsApp(
+          `HCP ${info?.HCPName} salary request was rejected.`
+        );
+
+        dispatch(Refresh("Rejected successfully."));
+        setRefreshKey((prev) => prev + 1);
         return;
       }
 
-      const message = `Hi, unfortunately HCP ${info.HCPName} salary request was not approved. Please contact management for more information.`;
+      const res = await HCASalaryUpdate(
+        info?.HCPId,
+        info?.RequestedSalary,
+        loggedInEmail
+      );
 
-      const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
-        message
-      )}`;
-
-      window.open(whatsappURL, "_blank");
-
-      dispatch(Refresh("Salary request rejected and notification updated successfully."));
-      setRefreshKey(prev => prev + 1);
-      return;
-    }
-
-    const updateSalary = await HCASalaryUpdate(
-      info.HCPId,
-      info.RequestedSalary,
-      loggedInEmail
-    );
-
-    if (!updateSalary?.success) {
-      dispatch(Refresh("Salary update failed."));
-      return;
-    }
-   const Successmessage = `Hi,  ${info.HCPName} HCP Salary request was  approved. Please contact management for more information.`;
-
-      const SuccesswhatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
-        Successmessage
-      )}`;
-
-      window.open(SuccesswhatsappURL, "_blank");
-    const updateStatus = await UpdateNotificationType(info.HCPId, action);
-
-    if (!updateStatus?.success) {
-      dispatch(Refresh("Salary updated but notification status update failed."));
-      return;
-    }
-
-    const message = `Hi, the requested salary for HCP ${info.HCPName} has been updated to ${info.RequestedSalary}. Please check the application.`;
-
-    const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
-      message
-    )}`;
-
-    window.open(whatsappURL, "_blank");
-
-    dispatch(Refresh("Salary updated and notification processed successfully."));
-    setRefreshKey(prev => prev + 1);
-    return
-}
-
-if(Dept==="Accounts"){
-  const phoneNumber = "7386145659";
-
-    if (action === "Rejected") {
-      const updateStatus = await UpdateNotificationType(info.HCPId, action);
-
-      if (!updateStatus?.success) {
-        dispatch(Refresh("Failed to update notification status."));
+      if (!res?.success) {
+        dispatch(Refresh("Salary update failed."));
         return;
       }
 
-      const message = `Hi, unfortunately  ${info.ClientName} Refund request was not approved. Please contact management for more information.`;
+      await updateStatusSafe();
 
-      const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
-        message
-      )}`;
+      sendWhatsApp(
+        `HCP ${info?.HCPName} salary updated to ${info?.RequestedSalary}.`
+      );
 
-      window.open(whatsappURL, "_blank");
-
-      dispatch(Refresh("Salary request rejected and notification updated successfully."));
-      setRefreshKey(prev => prev + 1);
+      dispatch(Refresh("Salary updated successfully."));
+      setRefreshKey((prev) => prev + 1);
       return;
     }
 
-  
-   const Successmessage = `Hi,  ${info.ClientName} Refund request was  approved. Please contact management for more information.`;
+   
+   
 
-      const SuccesswhatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
-        Successmessage
-      )}`;
+      
 
-      window.open(SuccesswhatsappURL, "_blank");
-    const updateStatus = await UpdateNotificationType(info.HCPId, action);
+      if (action === "Rejected") {
+        await updateStatusSafe();
 
-    if (!updateStatus?.success) {
-      dispatch(Refresh("Salary updated but notification status update failed."));
+        sendWhatsApp(
+          `${info?.ClientName} refund request was rejected.`
+        );
+
+        dispatch(Refresh("Rejected successfully."));
+        setRefreshKey((prev) => prev + 1);
+        return;
+      }
+
+      await updateStatusSafe();
+
+      sendWhatsApp(
+        `${info?.ClientName} request approved and processed successfully.`
+      );
+
+      dispatch(Refresh("Processed successfully."));
+      setRefreshKey((prev) => prev + 1);
       return;
-    }
-
-    const message = `Hi, the requested salary for HCP ${info.HCPName} has been updated to ${info.RequestedSalary}. Please check the application.`;
-
-    const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
-      message
-    )}`;
-
-    window.open(whatsappURL, "_blank");
-
-    dispatch(Refresh("Salary updated and notification processed successfully."));
-    setRefreshKey(prev => prev + 1);
-    return
-}
-  } catch (err) {
-    console.error("Notification Action Error:", err);
-    dispatch(Refresh("Something went wrong. Please try again."));
+    
+  } catch (err: any) {
+    console.error("Error:", err);
+    dispatch(Refresh(err.message || "Something went wrong."));
   } finally {
     setActionLoading(null);
   }
@@ -285,92 +280,83 @@ if(Dept==="Accounts"){
 )}
       </div>
 
-    
-      <div className="space-y-4">
-        {filteredNotifications.map((item,_id) => (
-          <div  key={item._id}>
-             {(
-  item.Type === "LEAVE_REQUEST" ||
-  (item.Type === "HCP Salary Request" && loggedInEmail === "kirancuratehealth@gmail.com") ||
-  item.Type === "EXPENSE_REQUEST" ||
-  (item.Type === "Refund Request" &&
-    (loggedInEmail === "shreeshmacurate@gmail.com" ||
-     loggedInEmail === "srivanikasham@curatehealth.in@gmail.com"))
-) && item.Status === "Pending" && (
-          <div
-           
-            className="relative bg-white rounded-3xl border border-slate-200 shadow-md hover:shadow-xl transition-all p-6 flex justify-between items-start"
-          >
-      
-            <span
-              className={`absolute left-0 top-6 h-12 w-1 rounded-r-full
+   <div className="space-y-6">
+  {filteredNotifications.map((item, _id) => (
+    <div key={item._id}>
+      {(
+        item.Type === "LEAVE_REQUEST" ||
+        (item.Type === "HCP Salary Request" && loggedInEmail === "kirancuratehealth@gmail.com") ||
+        item.Type === "EXPENSE_REQUEST" ||
+        ((item.Type === "Refund Request" || item.Type === "Attendance Edit Request") &&
+          (loggedInEmail === "shreeshmacurate@gmail.com" ||
+            loggedInEmail === "srinivasnew0803@gmail.com" ||
+            loggedInEmail === "srivanikasham@curatehealth.in@gmail.com"))
+      ) &&
+      (filter === "All" || item.Status === filter) && (
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm hover:shadow-md transition-all">
+
+            <div className="flex items-start gap-4 w-full">
+
+              <div
+                className={`flex h-12 w-12 items-center justify-center rounded-xl text-white font-bold text-sm
                 ${
                   item.Status === "Pending"
-                    ? "bg-yellow-400"
+                    ? "bg-amber-500"
                     : item.Status === "Approved"
-                    ? "bg-green-500"
+                    ? "bg-emerald-500"
                     : item.Status === "Rejected"
-                    ? "bg-red-500"
+                    ? "bg-rose-500"
                     : "bg-slate-400"
-                }
-              `}
-            />
+                }`}
+              >
+                {item.Type?.slice(0, 2)}
+              </div>
 
-           
-            <div className="pl-4">
-              <h3 className="text-sm font-semibold text-slate-800 uppercase">
-                {item.Type}
-              </h3>
+              <div className="flex flex-col w-full">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold text-slate-800 bg-rose-200 p-1 rounded-lg">
+                    {item.Type}
+                  </h3>
 
-              <p className="text-slate-700 mt-1">
-                {item.Message}
-              </p>
-
-              <p className="text-xs text-slate-400 mt-2">
-            {item.Date}
-              </p>
-            </div>
-
-           
-                <div className="flex gap-3">
-                  <button
-                    onClick={() =>
-                      handleAction(
-                      item,
-                        "Approved",
-                           item.Department
-                      )
-                    }
-                    disabled={actionLoading === item._id}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition disabled:opacity-50"
-                  >
                   
-                    <CheckCircle size={16} />
-                    Approve
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      handleAction(
-                      item,
-                        "Rejected",
-                        item.Department
-                      )
-                    }
-                    disabled={actionLoading === item._id}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition disabled:opacity-50"
-                  >
-                    <XCircle size={16} />
-                    Reject
-                  </button>
                 </div>
-             
+
+                <p className="text-sm text-slate-600 mt-1 leading-relaxed">
+                  {item.Message}
+                </p>
+
+               
+              </div>
+            </div>
+{item.Status!=="Approved"&&
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() =>
+                  handleAction(item, "Approved", item.Department)
+                }
+                disabled={actionLoading === item._id}
+                className="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50"
+              >
+                <CheckCircle size={16} />
+                Approve
+              </button>
+
+              <button
+                onClick={() =>
+                  handleAction(item, "Rejected", item.Department)
+                }
+                disabled={actionLoading === item._id}
+                className="flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition disabled:opacity-50"
+              >
+                <XCircle size={16} />
+                Reject
+              </button>
+            </div>}
           </div>
-           )}
-             </div>
-             
-        ))}
-      </div>
+        )}
+    </div>
+  ))}
+</div>
     </div>
   );
 }
