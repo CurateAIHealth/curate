@@ -5,7 +5,7 @@ let cachedReplacementInfo: any[] = [];
 let cachedTermination: any[] = [];
 let cachedRegisterdUsers: any[] = [];
 
-import { GetAllUsersData, GetUserInformation, InsertDeployment, updateServicePrice } from "@/Lib/user.action";
+import { GetAllUsersData, GetUserInformation, InsertDeployment, PostInvoiceFromDeployment, updateServicePrice } from "@/Lib/user.action";
 import { UpdateMonthFilter, UpdateSubHeading, UpdateYearFilter } from "@/Redux/action";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,21 +15,29 @@ import { AssignSuitableIcon, getDaysBetween, getPopularArea, rupeeToNumber, toPr
 import { CalendarCheck2, ChevronsRight, CircleCheckBig, CirclePause, MapPin, X } from "lucide-react";
 import { years } from "@/Lib/Content";
 
-const    AwaitingInvoice=()=>{
+const    AwaitingInvoice=({
+  users,
+  ClientsInformation,
+  RegisterdUsers,
+}: {
+  users: any;
+  ClientsInformation: any;
+  RegisterdUsers: any;
+})=>{
      const [ActionStatusMessage,SetActionStatusMessage]= useState<any>("");
      const [lastDateOfMonth, setLastDateOfMonth] = useState("");
        const [ExtendInfo,setExtendInfo]=useState<any>({})
        const [SearchResult,setSearchResult]=useState("")
        const [showWarning, setShowWarning] = useState(false);
        const [showExtendPopup,setshowExtendPopup]=useState(false)
-       const [users, setUsers] = useState<any[]>([]);
-         const [ClientsInformation, setClientsInformation] = useState<any[]>([]);
-          const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
+      //  const [users, setUsers] = useState<any[]>([]);
+      //    const [ClientsInformation, setClientsInformation] = useState<any[]>([]);
+      //     const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
           const [updateServiceCharge, setUpdateServiceCharge] = useState(false);
           const [serviceCharge, setServiceCharge] = useState("");
            const [ReplacementInformation,setReplacementInformation]=useState<any[]>([])
            const [terminationInfo,SetterminationInfo]=useState<any[]>([])
-       const [isChecking, setIsChecking] = useState(true);
+       const [isChecking, setIsChecking] = useState(false);
        const router=useRouter()
        const dispatch=useDispatch()
        const loggedInEmail=useSelector((each:any)=>each.loggedInEmail)
@@ -39,76 +47,80 @@ const    AwaitingInvoice=()=>{
          const [selectedDate, setSelectedDate] = useState("");
          const [selectedEndDate, setSelectedEndDate] = useState("");
     
-    useEffect(() => {
-      let mounted = true;
+    // useEffect(() => {
+    //   let mounted = true;
     
-      const isSuccessUpdate = ActionStatusMessage?.includes("Successfully");
+    //   const isSuccessUpdate = ActionStatusMessage?.includes("Successfully");
     
-      const fetchData = async () => {
-        try {
-          setIsChecking(true);
-     if(loggedInEmail===""){
-        router.push("/DashBoard")
-      }
-          if (!isSuccessUpdate && cachedDeploymentInfo?.length > 0) {
-            setUsers([...cachedUsersFullInfo]);
-            setClientsInformation([...cachedDeploymentInfo]);
-            setReplacementInformation([...cachedReplacementInfo]);
-            SetterminationInfo([...cachedTermination]);
-            setRegisterdUsers([...cachedRegisterdUsers])
-            return;
-          }
+    //   const fetchData = async () => {
+    //     try {
+    //       setIsChecking(true);
+    //  if(loggedInEmail===""){
+    //     router.push("/DashBoard")
+    //   }
+    //       if (!isSuccessUpdate && cachedDeploymentInfo?.length > 0) {
+    //         setUsers([...cachedUsersFullInfo]);
+    //         setClientsInformation([...cachedDeploymentInfo]);
+    //         setReplacementInformation([...cachedReplacementInfo]);
+    //         SetterminationInfo([...cachedTermination]);
+    //         setRegisterdUsers([...cachedRegisterdUsers])
+    //         return;
+    //       }
     
-          // const [
-          //   RegisterdUsers,
-          //   usersResult,
-          //   placementInfo,
-          //   replacementInfo,
-          //   terminationInfo,
-          // ] = await Promise.all([
-          //    GetRegidterdUsers() ,
-          //   GetUsersFullInfo(),
-          //   GetDeploymentInfo(),
-          //   GetReplacementInfo(),
-          //   GetTerminationInfo(),
-          // ]);
-          const {
-      RegisterdUsers,
-      usersResult,
-      placementInfo,
-      replacementInfo,
-      terminationInfo,
-    } = await GetAllUsersData();
+    //       // const [
+    //       //   RegisterdUsers,
+    //       //   usersResult,
+    //       //   placementInfo,
+    //       //   replacementInfo,
+    //       //   terminationInfo,
+    //       // ] = await Promise.all([
+    //       //    GetRegidterdUsers() ,
+    //       //   GetUsersFullInfo(),
+    //       //   GetDeploymentInfo(),
+    //       //   GetReplacementInfo(),
+    //       //   GetTerminationInfo(),
+    //       // ]);
+    //       const {
+    //   RegisterdUsers,
+    //   usersResult,
+    //   placementInfo,
+    //   replacementInfo,
+    //   terminationInfo,
+    // } = await GetAllUsersData();
     
-          if (!mounted) return;
+    //       if (!mounted) return;
     
-          cachedUsersFullInfo = usersResult ?? [];
-          cachedDeploymentInfo = placementInfo ?? [];
-          cachedReplacementInfo = replacementInfo ?? [];
-          cachedTermination = terminationInfo ?? [];
-        cachedRegisterdUsers=RegisterdUsers??[]
-          setUsers([...cachedUsersFullInfo]);
-          setClientsInformation([...cachedDeploymentInfo]);
-          setReplacementInformation([...cachedReplacementInfo]);
-          SetterminationInfo([...cachedTermination]);
-           setRegisterdUsers([...cachedRegisterdUsers])
+    //       cachedUsersFullInfo = usersResult ?? [];
+    //       cachedDeploymentInfo = placementInfo ?? [];
+    //       cachedReplacementInfo = replacementInfo ?? [];
+    //       cachedTermination = terminationInfo ?? [];
+    //     cachedRegisterdUsers=RegisterdUsers??[]
+    //       setUsers([...cachedUsersFullInfo]);
+    //       setClientsInformation([...cachedDeploymentInfo]);
+    //       setReplacementInformation([...cachedReplacementInfo]);
+    //       SetterminationInfo([...cachedTermination]);
+    //        setRegisterdUsers([...cachedRegisterdUsers])
     
-          dispatch(UpdateSubHeading("Awaiting Invoice"));
-        } catch (err) {
-          console.error(err);
-        } finally {
-          if (mounted) setIsChecking(false);
-        }
-      };
+    //       dispatch(UpdateSubHeading("Awaiting Invoice"));
+    //     } catch (err) {
+    //       console.error(err);
+    //     } finally {
+    //       if (mounted) setIsChecking(false);
+    //     }
+    //   };
     
-      fetchData();
+    //   fetchData();
     
-      return () => {
-        mounted = false;
-      };
-    }, [ActionStatusMessage]);
+    //   return () => {
+    //     mounted = false;
+    //   };
+    // }, [ActionStatusMessage]);
 
     useEffect(() => {
+
+           if(loggedInEmail===""){
+        router.push("/DashBoard")
+      }
       if (!selectedDate) {
         setLastDateOfMonth("");
         return;
@@ -251,11 +263,11 @@ const matchesSearchAndMonth = (
   const matchesYear =
     !searchYear || Number(year) === Number(searchYear);
 
-     const WorkingDays=getDaysBetween(item.EndDate, new Date().toISOString().split("T")[0])-1
+     const WorkingDays=getDaysBetween(item.EndDate, new Date().toISOString().split("T")[0])
 
   return matchesSearch && matchesMonth && matchesYear&&WorkingDays<=3;
 };
-const FilterFinelTimeSheet = FinelTimeSheet.filter((item) =>
+const FilterFinelTimeSheet = FinelTimeSheet.filter((item:any) =>
   matchesSearchAndMonth(
     item,
     SearchResult,
@@ -292,83 +304,212 @@ SetActionStatusMessage("Update failed");
 }
 
 
- const ExtendTimeSheet = async () => {
-SetActionStatusMessage("Please Wait Working On Service Extention")
+//  const ExtendTimeSheet = async () => {
+// SetActionStatusMessage("Please Wait Working On Service Extention")
 
-    // const PostTimeSheet: any = await TestInserTimeSheet(DateofToday, LastDateOfMonth, ExtendInfo.Status, ExtendInfo.Address, ExtendInfo.contact, ExtendInfo.name, ExtendInfo.PatientName, ExtendInfo.Patient_PhoneNumber, ExtendInfo.RreferralName, ExtendInfo.HCA_Id, ExtendInfo.Client_Id, ExtendInfo.HCA_Name, ExtendInfo.HCAContact, ExtendInfo.
-    //   hcpSource, ExtendInfo.provider, ExtendInfo.payTerms, ExtendInfo.cTotal, ExtendInfo.cPay, ExtendInfo.hcpTotal, ExtendInfo.hcpPay, CurrentMonth, ["P"], TimeStamp, ExtendInfo.invoice, ExtendInfo.Type)
+//     // const PostTimeSheet: any = await TestInserTimeSheet(DateofToday, LastDateOfMonth, ExtendInfo.Status, ExtendInfo.Address, ExtendInfo.contact, ExtendInfo.name, ExtendInfo.PatientName, ExtendInfo.Patient_PhoneNumber, ExtendInfo.RreferralName, ExtendInfo.HCA_Id, ExtendInfo.Client_Id, ExtendInfo.HCA_Name, ExtendInfo.HCAContact, ExtendInfo.
+//     //   hcpSource, ExtendInfo.provider, ExtendInfo.payTerms, ExtendInfo.cTotal, ExtendInfo.cPay, ExtendInfo.hcpTotal, ExtendInfo.hcpPay, CurrentMonth, ["P"], TimeStamp, ExtendInfo.invoice, ExtendInfo.Type)
     
-    const GetInfo=await  GetUserInformation(ExtendInfo.Client_Id)
+//     const GetInfo=await  GetUserInformation(ExtendInfo.Client_Id)
 
-    const StarteDate=new Date(selectedDate).toLocaleDateString("en-In")
-    const LastDate=new Date(selectedEndDate).toLocaleDateString("en-In")
-    const currentMonth = `${new Date(selectedDate).getFullYear()}-${new Date(selectedDate).getMonth() + 1}`;
-    const CareTakerCharges=serviceCharge?serviceCharge:GetInfo.serviceCharges
-   if(serviceCharge){
-     const { success } = await updateServicePrice(
-  ExtendInfo.Client_Id,
-serviceCharge
-);
-   }
-      const attendance = [
-        {
-          AttendenceDate:  new Date()
-      .toISOString()
-      .split("T")[0],
-          HCPAttendence: true,
-          AdminAttendece: true,
-        },
-      ];
-      const ClientAttendece = [
-        {
-          AttendenceDate: today,
-          AttendeceStatus: "Present"
-        }
-      ]
-      console.log('Check for Tha Datata-----',ExtendInfo)
- const deploymentRes = await InsertDeployment(
-        StarteDate,
-        LastDate,
-        "Active",
-        ExtendInfo.Address,
-        ExtendInfo.contact,
-        ExtendInfo.name,
-        ExtendInfo.PatientName,
-        ExtendInfo.Patient_PhoneNumber,
-        ExtendInfo.RreferralName,
-        ExtendInfo.HCA_Id,
-        ExtendInfo.Client_Id,
-        ExtendInfo.HCA_Name,
-        ExtendInfo.HCAContact,
-        "Google",
-        "Not Provided",
-        "PP",
-        "21000",
-        "700",
-        "1800",
-        CareTakerCharges,
-        currentMonth,
-        attendance,
-        TimeStamp,
-        //  ExtendInfo.invoice,
-        "",
-        ExtendInfo.Type,
-        CareTakerCharges,
-        ClientAttendece
-      );
-  
-if (deploymentRes.success) {
-  SetActionStatusMessage("TimeSheet Successfully Extended");
+//     const StarteDate=new Date(selectedDate).toLocaleDateString("en-In")
+//     const LastDate=new Date(selectedEndDate).toLocaleDateString("en-In")
+//     const currentMonth = `${new Date(selectedDate).getFullYear()}-${new Date(selectedDate).getMonth() + 1}`;
+//     const CareTakerCharges=serviceCharge?serviceCharge:GetInfo.serviceCharges
+//    if(serviceCharge){
+//      const { success } = await updateServicePrice(
+//   ExtendInfo.Client_Id,
+// serviceCharge
+// );
+//    }
+//       const attendance = [
+//         {
+//           AttendenceDate:  new Date()
+//       .toISOString()
+//       .split("T")[0],
+//           HCPAttendence: true,
+//           AdminAttendece: true,
+//         },
+//       ];
+//       const ClientAttendece = [
+//         {
+//           AttendenceDate: today,
+//           AttendeceStatus: "Present"
+//         }
+//       ]
+//       console.log('Check for Tha Datata-----',ExtendInfo)
+//  const deploymentRes = await InsertDeployment(
+//         StarteDate,
+//         LastDate,
+//         "Active",
+//         ExtendInfo.Address,
+//         ExtendInfo.contact,
+//         ExtendInfo.name,
+//         ExtendInfo.PatientName,
+//         ExtendInfo.Patient_PhoneNumber,
+//         ExtendInfo.RreferralName,
+//         ExtendInfo.HCA_Id,
+//         ExtendInfo.Client_Id,
+//         ExtendInfo.HCA_Name,
+//         ExtendInfo.HCAContact,
+//         "Google",
+//         "Not Provided",
+//         "PP",
+//         "21000",
+//         "700",
+//         "1800",
+//         CareTakerCharges,
+//         currentMonth,
+//         attendance,
+//         TimeStamp,
+//         //  ExtendInfo.invoice,
+//         "",
+//         ExtendInfo.Type,
+//         CareTakerCharges,
+//         ClientAttendece
+//       );
+//     const UpdatedData = {
+//           userId: ExtendInfo.Client_Id,
+//           serviceLocation: ExtendInfo.Address,
+//           FirstName: ExtendInfo.name,
+//           patientName: ExtendInfo.PatientName,
+//           ContactNumber: ExtendInfo.contact,
+//           Email: ExtendInfo.email,
+//           serviceCharges: CareTakerCharges,
+//           RegistrationFee: 0,
+//         }
+     
+//         const CompliteInvoiceInfo=await PostInvoiceFromDeployment(UpdatedData, 0, '',StarteDate,LastDate)
+//         if(CompliteInvoiceInfo?.success){
+//        SetActionStatusMessage(CompliteInvoiceInfo.message)
+//         }
+// if (deploymentRes.success) {
+//   SetActionStatusMessage("TimeSheet Successfully Extended");
 
-  setTimeout(() => {
-    setshowExtendPopup(false);
-    setSelectedDate("");
-    SetActionStatusMessage('')
-  }, 2000);
-}
+//   setTimeout(() => {
+//     setshowExtendPopup(false);
+//     setSelectedDate("");
+//     SetActionStatusMessage('')
+//   }, 2000);
+// }
 
     
+//   }
+
+
+
+
+const ExtendTimeSheet = async () => {
+  try {
+    SetActionStatusMessage("Please Wait Working On Service Extention");
+
+    if (!ExtendInfo?.Client_Id) {
+      throw new Error("Invalid client information");
+    }
+
+    const GetInfo = await GetUserInformation(ExtendInfo.Client_Id);
+
+    const startDateObj = new Date(selectedDate);
+    const endDateObj = new Date(selectedEndDate);
+
+    const StarteDate = startDateObj.toLocaleDateString("en-IN");
+    const LastDate = endDateObj.toLocaleDateString("en-IN");
+
+    const currentMonth = `${startDateObj.getFullYear()}-${startDateObj.getMonth() + 1}`;
+
+    const CareTakerCharges = serviceCharge || GetInfo?.serviceCharges;
+
+    // Update service price if provided
+    if (serviceCharge) {
+      await updateServicePrice(ExtendInfo.Client_Id, serviceCharge);
+    }
+
+    const attendance = [
+      {
+        AttendenceDate: new Date().toISOString().split("T")[0],
+        HCPAttendence: true,
+        AdminAttendece: true,
+      },
+    ];
+
+    const ClientAttendece = [
+      {
+        AttendenceDate: today,
+        AttendeceStatus: "Present",
+      },
+    ];
+
+    console.log("Check for Tha Datata-----", ExtendInfo);
+
+    const deploymentRes = await InsertDeployment(
+      StarteDate,
+      LastDate,
+      "Active",
+      ExtendInfo.Address,
+      ExtendInfo.contact,
+      ExtendInfo.name,
+      ExtendInfo.PatientName,
+      ExtendInfo.Patient_PhoneNumber,
+      ExtendInfo.RreferralName,
+      ExtendInfo.HCA_Id,
+      ExtendInfo.Client_Id,
+      ExtendInfo.HCA_Name,
+      ExtendInfo.HCAContact,
+      "Google",
+      "Not Provided",
+      "PP",
+      "21000",
+      "700",
+      "1800",
+      CareTakerCharges,
+      currentMonth,
+      attendance,
+      TimeStamp,
+      "",
+      ExtendInfo.Type,
+      CareTakerCharges,
+      ClientAttendece
+    );
+
+    const UpdatedData = {
+      userId: ExtendInfo.Client_Id,
+      serviceLocation: ExtendInfo.Address,
+      FirstName: ExtendInfo.name,
+      patientName: ExtendInfo.PatientName,
+      ContactNumber: ExtendInfo.contact,
+      Email: ExtendInfo.email,
+      serviceCharges: CareTakerCharges,
+      RegistrationFee: 0,
+    };
+
+    const CompliteInvoiceInfo = await PostInvoiceFromDeployment(
+      UpdatedData,
+      0,
+      "",
+      StarteDate,
+      LastDate
+    );
+
+    if (CompliteInvoiceInfo?.success) {
+      SetActionStatusMessage(CompliteInvoiceInfo.message);
+    }
+
+    if (deploymentRes?.success) {
+      SetActionStatusMessage("TimeSheet Successfully Extended");
+
+      setTimeout(() => {
+        setshowExtendPopup(false);
+        setSelectedDate("");
+        SetActionStatusMessage("");
+      }, 2000);
+    }
+  } catch (error: any) {
+    console.error("ExtendTimeSheet Error:", error);
+    SetActionStatusMessage(
+      error?.message || "Something went wrong while extending timesheet"
+    );
   }
+};
       if (isChecking) {
         return (
       <LoadingData/>
@@ -613,12 +754,28 @@ setSelectedEndDate(e.target.value)
         </div>
       )}
 
-   
+  {serviceCharge&& <div className="flex items-center">
+    <p className="text-gray-700 text-sm">
+  <span className="font-medium">Current Charges:</span>
+
+
+</p>
+  <div className="flex flex-col">  <span className="text-blue-600 text-xs font-semibold ml-1">
+    {serviceCharge}/day
+  </span>
+ {(selectedDate&& selectedEndDate)&&   <span className="text-blue-600 text-xs font-semibold ml-1">
+    
+    {(getDaysBetween(selectedDate, selectedEndDate) *
+             rupeeToNumber(serviceCharge)
+           ).toFixed(2) }/M
+  </span>}
+  </div>
+    </div>}
       <div className="flex items-center gap-2 mb-3">
         <input
           type="checkbox"
           checked={updateServiceCharge}
-          onChange={(e) => setUpdateServiceCharge(e.target.checked)}
+          onChange={(e) => {setServiceCharge(""),setUpdateServiceCharge(e.target.checked)}}
           className="w-4 h-4 accent-green-600"
         />
         <span className="text-sm text-gray-700">
@@ -724,7 +881,7 @@ setSelectedEndDate(e.target.value)
    ].indexOf(SearchMonth) + 1;
    
    const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(year) ===Number(now.getFullYear());
-   const WorkingDays=getDaysBetween(c.EndDate, new Date().toISOString().split("T")[0])-1
+   const WorkingDays=getDaysBetween(c.EndDate, new Date().toISOString().split("T")[0])
          return(
              <tr key={i} className="hover:bg-teal-50/30 transition-all">
               <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words text-center">
@@ -889,17 +1046,28 @@ setSelectedEndDate(e.target.value)
 
  <td className="px-1 py-3 text-center break-words">
      
-      {WorkingDays===1?`${WorkingDays} Day`:  `${WorkingDays} Days`   } 
+    <p className="hover:underline font-semibold text-[12px] mb-4 break-words leading-tight">  {WorkingDays===1?`${WorkingDays} Day`:  `${WorkingDays} Days`   } </p>
     
  
    </td>
+
    <td className="px-1 py-3 text-center break-words">
      {(isMatch
      && WorkingDays <= 3)? (
     
    <button
          className="px-4 py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full"
-        onClick={() =>{ UpdatePopup(c),setSelectedDate(""),setShowWarning(false),SetActionStatusMessage("")}}
+onClick={ () => {
+   SetActionStatusMessage("");
+
+
+  UpdatePopup(c);
+  setServiceCharge(rupeeToNumber(c.ServiceCharge).toFixed(2))
+  setSelectedDate("");
+  setSelectedEndDate("");
+  setShowWarning(false);
+  SetActionStatusMessage("");
+}}
        >
          <ChevronsRight size={22} className="text-teal-600"/>
        </button>

@@ -73,6 +73,7 @@ const RefundDays=getDaysBetween(new Date().toISOString().split("T")[0], data.End
                         ₹{rupeeToNumber(data.ServiceCharge).toFixed(2)}{" "}
                         <span className="text-gray-500">/D</span>
                       </span></p>
+                       <p><span className="font-medium">HCP Salary:</span> {data.StartDate} → {data.EndDate } </p>
           <p><span className="font-medium">Location:</span> {data.location}</p>
           <p><span className="font-medium">HCP:</span> {data.HCA_Name}</p>
           <p><span className="font-medium">Contact:</span> {data.contact}</p>

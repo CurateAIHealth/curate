@@ -743,22 +743,22 @@ const endOfMonthFormatted = endOfMonth.toLocaleDateString("en-IN");
   }
 }
 
-export const PostInvoiceFromDeployment = async (InvoiseInfo:any,AdvanceAmount:any,InvoiceNumber:any,ImpDate:any) => {
+export const PostInvoiceFromDeployment = async (InvoiseInfo:any,AdvanceAmount:any,InvoiceNumber:any,ImpDate:any,ImpLastDate:any) => {
   try {
     
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Invoices");
    const now = new Date();
-const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-const endOfMonthFormatted = endOfMonth.toLocaleDateString("en-IN");
+// const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+// const endOfMonthFormatted = endOfMonth.toLocaleDateString("en-IN");
 
     const Invoice =await  collection.insertOne({
       Invoice:InvoiceNumber,
       DeployDate: ImpDate,
       ClienId:InvoiseInfo.userId,
       SeriviceStartDate:  ImpDate,
-      ServiceEndDate: endOfMonthFormatted,
+      ServiceEndDate: ImpLastDate,
       Adress: InvoiseInfo.serviceLocation,
       ClientName:InvoiseInfo.FirstName,
       Patient: InvoiseInfo.patientName,
@@ -5535,8 +5535,137 @@ export const GetDashboardData = async (userId: string) => {
 
 
 
+// export const GetAllUsersData = async () => {
+//   try {
+//     const cluster = await clientPromise;
+//     const db = cluster.db("CurateInformation");
+
+//     const registrationCollection = db.collection("Registration");
+//     const fullInfoCollection = db.collection("CompliteRegistrationInformation");
+//     const deploymentCollection = db.collection("Deployment");
+//     const replacementCollection = db.collection("Replacement");
+//     const terminationCollection = db.collection("Termination");
+
+//     const safeDecrypt = (fieldValue: any) => {
+//       try {
+//         if (!fieldValue) return undefined;
+
+//         if (
+//           typeof fieldValue === "object" &&
+//           fieldValue.iv &&
+//           fieldValue.content
+//         ) {
+//           return decrypt(fieldValue);
+//         }
+
+//         return fieldValue;
+//       } catch {
+//         return fieldValue;
+//       }
+//     };
+
+//     const [
+//       registrationResult,
+//       fullInfoResult,
+//       deploymentResult,
+//       replacementResult,
+//       terminationResult,
+//     ] = await Promise.all([
+//       registrationCollection.find().toArray(),
+//       fullInfoCollection.find().toArray(),
+//       deploymentCollection.find().toArray(),
+//       replacementCollection.find().toArray(),
+//       terminationCollection.find().toArray(),
+//     ]);
+
+//     const registeredUsers = registrationResult.map((user: any) => {
+//       const decryptedUser: any = {
+//         ...user,
+//         _id: user._id?.toString() ?? null,
+//       };
+
+//       for (const [key, value] of Object.entries(user)) {
+//         if (
+//           value &&
+//           typeof value === "object" &&
+//           "iv" in value &&
+//           "content" in value
+//         ) {
+//           try {
+//             decryptedUser[key] = decrypt(
+//               value as { iv: string; content: string }
+//             );
+//           } catch {
+//             decryptedUser[key] = value;
+//           }
+//         }
+//       }
+
+//       return decryptedUser;
+//     });
+
+//     const usersFullInfo = fullInfoResult.map((user: any) => {
+//       const info: any = user.HCAComplitInformation || {};
+
+//       return {
+//         ...user,
+//         _id: user._id.toString(),
+//         HCAComplitInformation: {
+//           ...info,
+//           HCPFirstName: safeDecrypt(info["First Name"]),
+//           HCPContactNumber: safeDecrypt(info["Mobile Number"]),
+//           HCPEmail: safeDecrypt(info["EmailId"]),
+//           HCPSurName: safeDecrypt(info["Surname"]),
+//           HCPAdharNumber: safeDecrypt(info["Aadhar Card No"]),
+//           "Phone No 1": safeDecrypt(info["Phone No 1"]),
+//           "Phone No 2": safeDecrypt(info["Phone No 2"]),
+//           "Email Id": safeDecrypt(info["Email Id"]),
+//           "Client Aadhar No": safeDecrypt(info["Client Aadhar No"]),
+//           "Patient Aadhar Number": safeDecrypt(info["Patient Aadhar Number"]),
+//           "Alternative Client Contact": safeDecrypt(
+//             info["Alternative Client Contact"]
+//           ),
+//         },
+//       };
+//     });
+
+//     const mapIds = (data: any[]) =>
+//       data.map((item) => ({
+//         ...item,
+//         _id: item._id.toString(),
+//       }));
+
+//     return {
+//       RegisterdUsers: registeredUsers,
+//       usersResult: usersFullInfo,
+//       placementInfo: mapIds(deploymentResult),
+//       replacementInfo: mapIds(replacementResult),
+//       terminationInfo: mapIds(terminationResult),
+//     };
+//   } catch (err) {
+//     console.error("Error fetching all data:", err);
+//     return {
+//       RegisterdUsers: [],
+//       usersResult: [],
+//       placementInfo: [],
+//       replacementInfo: [],
+//       terminationInfo: [],
+//     };
+//   }
+// };
+
+let cache: any = null;
+let lastFetchTime = 0;
+
 export const GetAllUsersData = async () => {
   try {
+    const now = Date.now();
+
+    // ✅ Simple cache (30 sec)
+    if (cache && now - lastFetchTime < 30000) {
+      return cache;
+    }
+
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
 
@@ -5546,24 +5675,41 @@ export const GetAllUsersData = async () => {
     const replacementCollection = db.collection("Replacement");
     const terminationCollection = db.collection("Termination");
 
-    const safeDecrypt = (fieldValue: any) => {
+    // ✅ Faster decrypt helper (no Object.entries)
+    const safeDecrypt = (value: any) => {
       try {
-        if (!fieldValue) return undefined;
-
         if (
-          typeof fieldValue === "object" &&
-          fieldValue.iv &&
-          fieldValue.content
+          value &&
+          typeof value === "object" &&
+          value.iv &&
+          value.content
         ) {
-          return decrypt(fieldValue);
+          return decrypt(value);
         }
-
-        return fieldValue;
+        return value;
       } catch {
-        return fieldValue;
+        return value;
       }
     };
 
+    const decryptFields = (obj: any) => {
+      for (const key in obj) {
+        const value = obj[key];
+        if (
+          value &&
+          typeof value === "object" &&
+          value.iv &&
+          value.content
+        ) {
+          try {
+            obj[key] = decrypt(value);
+          } catch {}
+        }
+      }
+      return obj;
+    };
+
+    // ✅ Fetch all collections in parallel (same as before)
     const [
       registrationResult,
       fullInfoResult,
@@ -5578,56 +5724,45 @@ export const GetAllUsersData = async () => {
       terminationCollection.find().toArray(),
     ]);
 
-    const registeredUsers = registrationResult.map((user: any) => {
-      const decryptedUser: any = {
-        ...user,
-        _id: user._id?.toString() ?? null,
-      };
+    // ✅ Process in parallel (FASTER)
+    const registeredUsersPromise = Promise.resolve(
+      registrationResult.map((user: any) => {
+        const decryptedUser = decryptFields({ ...user });
+        return {
+          ...decryptedUser,
+          _id: user._id?.toString() ?? null,
+        };
+      })
+    );
 
-      for (const [key, value] of Object.entries(user)) {
-        if (
-          value &&
-          typeof value === "object" &&
-          "iv" in value &&
-          "content" in value
-        ) {
-          try {
-            decryptedUser[key] = decrypt(
-              value as { iv: string; content: string }
-            );
-          } catch {
-            decryptedUser[key] = value;
-          }
-        }
-      }
+    const usersFullInfoPromise = Promise.resolve(
+      fullInfoResult.map((user: any) => {
+        const info: any = user.HCAComplitInformation || {};
 
-      return decryptedUser;
-    });
-
-    const usersFullInfo = fullInfoResult.map((user: any) => {
-      const info: any = user.HCAComplitInformation || {};
-
-      return {
-        ...user,
-        _id: user._id.toString(),
-        HCAComplitInformation: {
-          ...info,
-          HCPFirstName: safeDecrypt(info["First Name"]),
-          HCPContactNumber: safeDecrypt(info["Mobile Number"]),
-          HCPEmail: safeDecrypt(info["EmailId"]),
-          HCPSurName: safeDecrypt(info["Surname"]),
-          HCPAdharNumber: safeDecrypt(info["Aadhar Card No"]),
-          "Phone No 1": safeDecrypt(info["Phone No 1"]),
-          "Phone No 2": safeDecrypt(info["Phone No 2"]),
-          "Email Id": safeDecrypt(info["Email Id"]),
-          "Client Aadhar No": safeDecrypt(info["Client Aadhar No"]),
-          "Patient Aadhar Number": safeDecrypt(info["Patient Aadhar Number"]),
-          "Alternative Client Contact": safeDecrypt(
-            info["Alternative Client Contact"]
-          ),
-        },
-      };
-    });
+        return {
+          ...user,
+          _id: user._id.toString(),
+          HCAComplitInformation: {
+            ...info,
+            HCPFirstName: safeDecrypt(info["First Name"]),
+            HCPContactNumber: safeDecrypt(info["Mobile Number"]),
+            HCPEmail: safeDecrypt(info["EmailId"]),
+            HCPSurName: safeDecrypt(info["Surname"]),
+            HCPAdharNumber: safeDecrypt(info["Aadhar Card No"]),
+            "Phone No 1": safeDecrypt(info["Phone No 1"]),
+            "Phone No 2": safeDecrypt(info["Phone No 2"]),
+            "Email Id": safeDecrypt(info["Email Id"]),
+            "Client Aadhar No": safeDecrypt(info["Client Aadhar No"]),
+            "Patient Aadhar Number": safeDecrypt(
+              info["Patient Aadhar Number"]
+            ),
+            "Alternative Client Contact": safeDecrypt(
+              info["Alternative Client Contact"]
+            ),
+          },
+        };
+      })
+    );
 
     const mapIds = (data: any[]) =>
       data.map((item) => ({
@@ -5635,13 +5770,33 @@ export const GetAllUsersData = async () => {
         _id: item._id.toString(),
       }));
 
-    return {
+    const [
+      registeredUsers,
+      usersFullInfo,
+      placementInfo,
+      replacementInfo,
+      terminationInfo,
+    ] = await Promise.all([
+      registeredUsersPromise,
+      usersFullInfoPromise,
+      Promise.resolve(mapIds(deploymentResult)),
+      Promise.resolve(mapIds(replacementResult)),
+      Promise.resolve(mapIds(terminationResult)),
+    ]);
+
+    const result = {
       RegisterdUsers: registeredUsers,
       usersResult: usersFullInfo,
-      placementInfo: mapIds(deploymentResult),
-      replacementInfo: mapIds(replacementResult),
-      terminationInfo: mapIds(terminationResult),
+      placementInfo,
+      replacementInfo,
+      terminationInfo,
     };
+
+    // ✅ Save cache
+    cache = result;
+    lastFetchTime = now;
+
+    return result;
   } catch (err) {
     console.error("Error fetching all data:", err);
     return {
@@ -5653,6 +5808,4 @@ export const GetAllUsersData = async () => {
     };
   }
 };
-
-
 

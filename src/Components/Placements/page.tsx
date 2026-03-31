@@ -120,6 +120,9 @@ const router=useRouter()
     (state: any) => state.TimeStampInfo
   );
 useEffect(() => {
+  if(loggedInEmail===""){
+    router.push("/DashBoard")
+  }
   let mounted = true;
 
   const isSuccessUpdate = ActionStatusMessage?.includes("Successfully");
@@ -127,9 +130,7 @@ useEffect(() => {
   const fetchData = async () => {
     try {
       setIsChecking(true);
- if(loggedInEmail===""){
-    router.push("/DashBoard")
-  }
+ 
       if (!isSuccessUpdate && cachedDeploymentInfo?.length > 0) {
         setUsers([...cachedUsersFullInfo]);
         setClientsInformation([...cachedDeploymentInfo]);
@@ -1058,7 +1059,7 @@ return
         RegistrationFee: 0,
       }
    
-      const CompliteInvoiceInfo=await PostInvoiceFromDeployment(UpdatedData, 0, '',InvoiceData.StartDate)
+      const CompliteInvoiceInfo=await PostInvoiceFromDeployment(UpdatedData, 0, '',InvoiceData.StartDate,InvoiceData.EndDate)
       if(CompliteInvoiceInfo?.success){
      SetActionStatusMessage(CompliteInvoiceInfo.message)
       }
@@ -1355,11 +1356,11 @@ setShowCareTakerPriceUpdate(false)
       Patient Name
     </th>
 
-    <th className="w-[96px] px-2 py-2 text-left">
+    <th className="w-[120px] px-2 py-2 text-left">
       Contact
     </th>
 
-    <th className="px-2 py-2 text-left truncate">
+    <th className="px-2 w-[120px] py-2 text-left truncate">
       Location
     </th>
 
@@ -1367,7 +1368,7 @@ setShowCareTakerPriceUpdate(false)
       HCP Name
     </th>
 
-    <th className="w-[80px] px-2 py-2 text-center">
+    <th className="w-[120px] px-2 py-2 text-center">
       Status
     </th>
 
@@ -1384,9 +1385,9 @@ setShowCareTakerPriceUpdate(false)
         Invoice
       </th>
     )} */}
- <th className="w-[50px] px-2 py-2 text-center">
+ {/* <th className="w-[50px] px-2 py-2 text-center">
         Invoice
-      </th>
+      </th> */}
     {/* <th className="w-[100px] px-2 py-2 text-center">
       Service Continue
     </th> */}
@@ -1907,8 +1908,15 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
 
           )} */}
 
-  <td className="px-3 py-3 text-center">
-{/* <button  className="
+
+
+
+
+
+
+
+  {/* <td className="px-3 py-3 text-center">
+<button  className="
     px-1 py-1
     text-[9px] font-semibold
    text-emerald-600
@@ -1925,10 +1933,10 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
   onClick={()=>CreateInvoice(c)}
   >
   Create
-</button> */}
+</button>
 
 <img src="Icons/CreateInovoice.png" onClick={()=>CreateInvoice(c)} className="h-7 ml-3"/>
-</td>
+</td> */}
 
 
 
@@ -2702,7 +2710,7 @@ const GetFilterCount = (type: string) => {
         return <ReplacementsTable/>;
 
         case "Awaiting Invoice":
-          return <AwaitingInvoice/>;
+          return <AwaitingInvoice users={users} ClientsInformation={ClientsInformation} RegisterdUsers={RegisterdUsers} />;
       default:
         return null;
     }
