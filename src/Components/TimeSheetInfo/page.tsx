@@ -509,6 +509,7 @@ const NumberOfDaysInMonth = getDaysInMonth(
 const EditAttendence = async () => {
   try {
     if (!AttenseceInformation?.ClientId) return;
+  
 
     SetStatusMessage("Please Wait...");
 
@@ -519,14 +520,25 @@ const EditAttendence = async () => {
     const yearMonth = `${selectedYear}-${selectedMonth}`;
 const Info={...AttenseceInformation,flexDate,yearMonth,status}
 
-    // const response = await EditAttendanceByClientId(
-    //   AttenseceInformation.ClientId,
-    //   AttenseceInformation.hcpId,
-    //   yearMonth,
-    //   flexDate,
-    //   status,
-    //   "Admin"
-    // );
+      if(flexDate===new Date().toISOString().split('T')[0]){
+const Dateresponse = await EditAttendanceByClientId(
+      AttenseceInformation.ClientId,
+      AttenseceInformation.hcpId,
+      yearMonth,
+      flexDate,
+      status,
+      "Admin"
+    );
+
+     SetStatusMessage(`✅ ${Dateresponse.message}`);
+
+      setTimeout(() => {
+        setShowFullMonth(false);
+        SetShowUpdateAttendece((prev: boolean) => !prev);
+   SetAttendeceEditReason("")
+      }, 3500);
+    return
+    }
 const response= await PostAttendeceEditRequest(Info,AttendeceEditReason,loggedInEmail)
     if (response?.success) {
 
@@ -601,6 +613,11 @@ const UpdateAttendecByDateRange = async () => {
     );
   }
 };
+
+
+    const flexDate = `${selectedYear}-${selectedMonth}-${String(
+      ParticularDate
+    ).padStart(2, "0")}`;
 const PresentScreen=()=>{
   return (
     <div className="relative  bg-gradient-to-br from-green-50 via-white to-blue-50 p-6">
@@ -1270,7 +1287,7 @@ className={`
           <h3 className="text-sm font-semibold text-gray-800">
           Monthly Attendance
         </h3>
-       <button
+       {/* <button
   className="
     flex items-center gap-2
     px-2 py-2.5
@@ -1288,7 +1305,7 @@ className={`
 >
   <CheckCircle size={16} />
   Submit Attendance for Selected Period
-</button>
+</button> */}
 
  {open && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md animate-fadeIn">
@@ -1573,6 +1590,7 @@ className={`
         <option value="ABSENT">Absent</option>
       </select>
     </div>
+{flexDate!==new Date().toISOString().split('T')[0]&&
 
 <div className="flex flex-col  border-b px-2 py-3">
   <label className="text-xs font-semibold text-gray-800">
@@ -1592,7 +1610,7 @@ className={`
       outline: "none"
     }}
   />
-</div>
+</div>}
 <div className="flex items-center-justify-between">
    {StatusMessage&&
             <p
