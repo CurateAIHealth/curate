@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { LoadingData } from "../Loading/page";
-import { AssignSuitableIcon, getDaysBetween, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
+import { AssignSuitableIcon, getDaysBetween, getDueDaysStatus, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
 import { CalendarCheck2, ChevronsRight, CircleCheckBig, CirclePause, MapPin, X } from "lucide-react";
 import { years } from "@/Lib/Content";
 
@@ -881,7 +881,7 @@ setSelectedEndDate(e.target.value)
    ].indexOf(SearchMonth) + 1;
    
    const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(year) ===Number(now.getFullYear());
-   const WorkingDays=getDaysBetween(c.EndDate, new Date().toISOString().split("T")[0])
+   const WorkingDays=getDueDaysStatus(c.EndDate)
          return(
              <tr key={i} className="hover:bg-teal-50/30 transition-all">
               <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words text-center">
@@ -1044,16 +1044,20 @@ setSelectedEndDate(e.target.value)
    
              )} */}
 
- <td className="px-1 py-3 text-center break-words">
+   <td className="px-1 py-3 text-center break-words">
      
-    <p className="hover:underline font-semibold text-[12px] mb-4 break-words leading-tight">  {WorkingDays===1?`${WorkingDays} Day`:  `${WorkingDays} Days`   } </p>
+    <p className="hover:underline font-semibold text-[12px] mb-4 break-words leading-tight">  {typeof WorkingDays === "number"
+  ? WorkingDays === 1
+    ? `${WorkingDays} Day`
+    : `${WorkingDays} Days`
+  : WorkingDays} </p>
     
  
    </td>
 
    <td className="px-1 py-3 text-center break-words">
      {(isMatch
-     && WorkingDays <= 3)? (
+     && Number(WorkingDays) <= 3)? (
     
    <button
          className="px-4 py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full"

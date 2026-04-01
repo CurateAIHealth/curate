@@ -145,7 +145,37 @@ export const getDaysBetween = (date1: any, date2: any) => {
   return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1; // 👈 fix
 };
 
+export const getDueDaysStatus = (targetDate: any) => {
+  const parseDate = (input: any) => {
+    if (input instanceof Date) return input;
+    if (typeof input === "number") return new Date(input);
 
+    let str = String(input).trim();
+
+    if (/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.test(str)) {
+      const parts = str.includes("/") ? str.split("/") : str.split("-");
+      const [day, month, year] = parts;
+      return new Date(`${year}-${month}-${day}`);
+    }
+
+    return new Date(str);
+  };
+
+  const today = new Date();
+  const due = parseDate(targetDate);
+
+  today.setHours(0, 0, 0, 0);
+  due.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.floor(
+    (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  // ✅ exact logic you asked
+  if (diffDays > 0) return diffDays;           // remaining days
+  if (diffDays === 0) return 0;                // today is last day
+  return `Extention Due by ${Math.abs(diffDays)} day`; // crossed
+};
 
 export const numberToWords=(num: any)=> {
   if (num === 0) return "zero";
