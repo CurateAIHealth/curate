@@ -1045,47 +1045,41 @@ setSelectedEndDate(e.target.value)
              )} */}
 
    <td className="px-1 py-3 text-center break-words">
-     
-    <p className="hover:underline font-semibold text-[12px] mb-4 break-words leading-tight">  {typeof WorkingDays === "number"
+     {!isMatch &&
+   ( (typeof WorkingDays === "number" && WorkingDays <= 3) || (typeof WorkingDays === "string" && WorkingDays.includes("Overdue")) )?  <p className="hover:underline font-semibold text-[12px] mb-4 break-words leading-tight">  {typeof WorkingDays === "number"
   ? WorkingDays === 1
     ? `${WorkingDays} Day`
     : `${WorkingDays} Days`
-  : WorkingDays} </p>
-    
+  : WorkingDays} </p>:    <p className="inline-block px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
+  On Service
+</p> }
+  
+
  
    </td>
 
-   <td className="px-1 py-3 text-center break-words">
-     {(isMatch
-     && Number(WorkingDays) <= 3)? (
-    
-   <button
-         className="px-4 py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full"
-onClick={ () => {
-   SetActionStatusMessage("");
+ <td className="px-1 py-3 text-center break-words">
+  {!isMatch &&
+   ( (typeof WorkingDays === "number" && WorkingDays <= 3) || (typeof WorkingDays === "string" && WorkingDays.includes("Overdue")) )? (
+    <button
+      className="px-4 py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full"
+      onClick={() => {
+        SetActionStatusMessage("");
 
-
-  UpdatePopup(c);
-  setServiceCharge(rupeeToNumber(c.ServiceCharge).toFixed(2))
-  setSelectedDate("");
-  setSelectedEndDate("");
-  setShowWarning(false);
-  SetActionStatusMessage("");
-}}
-       >
-         <ChevronsRight size={22} className="text-teal-600"/>
-       </button>
-     ) : (
-          <img src="Icons/AlreadyOnService.png" className="h-8 ml-8"/>
-     )}
-   
-      {/* <button
-         className="px-4 py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full"
-         onClick={() =>{ UpdatePopup(c),setSelectedDate("")}}
-       >
-     <ChevronsRight size={22} className="text-teal-600"/>
-       </button> */}
-   </td>
+        UpdatePopup(c);
+        setServiceCharge(rupeeToNumber(c.ServiceCharge).toFixed(2));
+        setSelectedDate("");
+        setSelectedEndDate("");
+        setShowWarning(false);
+        SetActionStatusMessage("");
+      }}
+    >
+      <ChevronsRight size={22} className="text-teal-600" />
+    </button>
+  ) : (
+    <img src="Icons/AlreadyOnService.png" className="h-8 ml-8" />
+  )}
+</td>
    
   
 
