@@ -171,10 +171,10 @@ export const getDueDaysStatus = (targetDate: any) => {
     (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
   );
 
-  // ✅ exact logic you asked
-  if (diffDays > 0) return diffDays;           // remaining days
-  if (diffDays === 0) return 0;                // today is last day
-  return `Extention Due by ${Math.abs(diffDays)} day`; // crossed
+ 
+  if (diffDays > 0) return diffDays;           
+  if (diffDays === 0) return 0;               
+  return `Extention Overdue by ${Math.abs(diffDays)} day`;
 };
 
 export const numberToWords=(num: any)=> {
