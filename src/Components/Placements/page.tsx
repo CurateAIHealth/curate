@@ -275,6 +275,16 @@ const matchesSearchAndMonth = (
       router.push("/UserInformation");
     }
   };
+
+
+  const GetPatientName = (A:any) => {
+  const filtered = RegisterdUsers?.find(
+    (each: any) => each.userId === A
+  );
+
+  return filtered
+};
+
 const PostRefunRequest = async (data: any) => {
   try {
  console.log("Check for Refund Request Data----",data)
@@ -340,6 +350,13 @@ const getUserInvoiceInfo = GetInvoiceList?.filter(
   SetActionStatusMessage("")
      router.push("/MailInvoiceTemplate")
 }
+const GetMonthlyCharges = (A:any) => {
+  const filtered = RegisterdUsers?.find(
+    (each: any) => each.userId === A
+  );
+
+  return filtered?.MonthlyServiceCharge || "Not Provided";
+};
 
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
 const normalizedAttendance =
@@ -399,6 +416,7 @@ const normalizedAttendance =
     hcpSource: each.hcpSource,
     hcpTotal: each.hcpTotal,
     invoice: each.invoice,
+    MonthlyServiceCharge: each.MonthlyServiceCharge,
     ServiceCharge:each.CareTakerPrice,
     StartDate:each.StartDate,
     EndDate:each.EndDate,
@@ -1055,7 +1073,9 @@ return
         patientName: InvoiceData.PatientName,
         ContactNumber: InvoiceData.contact,
         Email: InvoiceData.email,
-        serviceCharges: InvoiceData.ServiceCharge,
+       
+         serviceCharges:GetPatientName(InvoiceData.Client_Id)?.MonthlyServiceCharge || InvoiceData.ServiceCharge,
+  MonthlyPayment:GetPatientName(InvoiceData.Client_Id)?.MonthlyServiceCharge ?true:false,
         RegistrationFee: 0,
       }
    
@@ -1327,6 +1347,7 @@ setShowCareTakerPriceUpdate(false)
         isOpen={ShowRefundRequrstPopUp}
         onClose={() => setShowRefundRequrstPopUp(false)}
         data={selectedClient}
+        CompliteInfo={users}
         onSubmit={(A)=>(PostRefunRequest(A))}
       />}
   <table className="w-full table-fixed border-collapse bg-white">
@@ -1467,6 +1488,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
     </div>
   )}
 </td> */}
+
     <td className="px-2 py-3 font-semibold text-[11px] text-gray-900 break-words">
             {c.StartDate}
           </td>   
@@ -1474,22 +1496,8 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
             {c.EndDate}
           </td>
 <td className="px-3 py-3 text-gray-700 text-xs">
-  {!c?.ServiceCharge ? (
-    <div className="flex flex-col items-center gap-2">
-      <span className="text-red-600 text-[9px] whitespace-nowrap">
-        Care Taker Charge Missing
-      </span>
-
-      <button
-   onClick={()=>UpdateServiceCharge(c.Client_Id)}
-        className="px-2 py-0.5 text-[9px] font-semibold
-                   text-white bg-blue-600 hover:bg-blue-700 cursor-pointer
-                   rounded-md"
-      >
-        Get Price
-      </button>
-    </div>
-  ) : (
+ {GetMonthlyCharges(c.Client_Id)=== "Not Provided" ? 
+    
     <div className="flex flex-col leading-tight">
       <span>
         ₹{(
@@ -1503,8 +1511,13 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
         ₹{rupeeToNumber(c.ServiceCharge).toFixed(2)}{" "}
         <span className="text-gray-500">/D</span>
       </span>
-    </div>
-  )}
+    </div>:      <span>
+        <span className="text-[10px] text-green-900 underline">* Monthly Payment </span>
+         ₹{ GetMonthlyCharges(c.Client_Id)}/M
+       
+      
+      </span>}
+ 
 </td>
 
 

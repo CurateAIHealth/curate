@@ -58,6 +58,7 @@ import MarkAttendance from "@/Components/EmployAttendence/page";
 import axios from "axios";
 import PostExpense from "@/Components/Expences/page";
 import StaffNotificationModal from "@/Components/CallEnquiryNotification/page";
+import { tr } from "framer-motion/client";
 
 const DOCUMENT_KEYS = [
   "AadharAttachmentURL",
@@ -80,6 +81,8 @@ export default function Dashboard() {
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
   const [OtherArea,setOtherArea]=useState<any>("")
   const [NotificationStatus,setNotificationStatus]=useState('')
+  const [DailyChargeType,setDailyChargeType]=useState(true)
+  const [MonthlyChargeType,setMonthlyChargeType]=useState(false)
   const [ShowNotification,setShowNotification]=useState(false)
     const [DiscountStatus, SetDiscountStatus] = useState(true)
   const [showAccessDenied, setShowAccessDenied] = useState(false);
@@ -118,6 +121,7 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
     ClientArea: '',
     ClientNote: "",
     serviceCharges:"",
+    MonthlyServiceCharge:"",
     ServiceType:"",
     patientHealthCard:"",
     ExpectedService:"",
@@ -463,7 +467,7 @@ patientName:EnquiryForm.patientName||"",
 ClientStatus:EnquiryForm.ClientStatus||"Save",
       ExpectedService: EnquiryForm.ExpectedService || "",
       ReasonForService: EnquiryForm.Reasonforservice || "",
-
+MonthlyServiceCharge: EnquiryForm.MonthlyServiceCharge || "",
       serviceCharges: EnquiryForm.serviceCharges || "",
       ClientNote: EnquiryForm.ClientNote || "",
       RegistrationFee: DiscountPrice - ClientDiscount
@@ -908,7 +912,7 @@ setNotificationStatus("Notification Send Succesfully")
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard
+      Hi Admin – Welcome to Admin Dashboard.
     </span>
   </div>
 
@@ -1705,8 +1709,24 @@ setNotificationStatus("Notification Send Succesfully")
         </div>
 
        <div id="Charges" className="bg-white rounded-lg shadow p-4 space-y-2">
-            <h2 className="text-lg font-semibold text-teal-600">Charges</h2>
-            {["₹1200", "₹1000", "₹900", "Other"].map((charge) => (
+<div className="flex items-center gap-4">
+  <h2 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
+    Charges:
+  </h2>
+
+  <label className="flex items-center gap-1 cursor-pointer">
+    <input type="checkbox" className="accent-teal-600" checked={DailyChargeType} onChange={()=>{setMonthlyChargeType(!MonthlyChargeType),setDailyChargeType(!DailyChargeType)}}/>
+    <span className="text-sm text-gray-700">Daily</span>
+  </label>
+
+  <label className="flex items-center gap-1 cursor-pointer">
+    <input type="checkbox" className="accent-teal-600" checked={MonthlyChargeType} onChange={()=>{setMonthlyChargeType(!MonthlyChargeType),setDailyChargeType(!DailyChargeType)}}/>
+    <span className="text-sm text-gray-700">Monthly</span>
+  </label>
+</div>
+{DailyChargeType ?
+         <div>
+             {["₹1200", "₹1000", "₹900", "Other"].map((charge) => (
               <div key={charge} className="flex flex-col">
                 <label className="flex items-center text-sm">
                   <input
@@ -1761,6 +1781,15 @@ setNotificationStatus("Notification Send Succesfully")
                   )}
               </div>
             ))}
+         </div>:<input
+  type="text"
+  placeholder="Enter Monthly Amount"
+  onChange={(e:any)=>setEnquiryForm({...EnquiryForm,MonthlyServiceCharge:e.target.value})}
+  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md 
+             focus:outline-none focus:ring-2 focus:ring-teal-500 
+             focus:border-teal-500 placeholder-gray-400"
+/>}
+
             <div>
                 
               <p>Registration Charger: 1500</p>
@@ -1785,6 +1814,7 @@ setNotificationStatus("Notification Send Succesfully")
 
 
             </div>
+            {EnquiryForm.MonthlyServiceCharge}
             <div className="flex flex-col gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-200">
 
               <p className="text-gray-700 text-sm font-medium">

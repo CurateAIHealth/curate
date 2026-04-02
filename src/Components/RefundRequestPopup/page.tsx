@@ -1,22 +1,60 @@
 import { getDaysBetween, rupeeToNumber } from "@/Lib/Actions";
+import { GetUsersFullInfo } from "@/Lib/user.action";
 import { get } from "http";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 
 interface RefundPopupProps {
   isOpen: boolean;
   onClose: () => void;
   data: any;
+  CompliteInfo:any
   onSubmit: (refundData: any) => void;
 }
 
-export default function RefundPopup({ isOpen, onClose, data, onSubmit }: RefundPopupProps) {
+export default function RefundPopup({ isOpen, onClose, data,CompliteInfo, onSubmit }: RefundPopupProps) {
   const [refundType, setRefundType] = useState("full");
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
-  const [file, setFile] = useState(null);
+  const [showBankPopup, setShowBankPopup] = useState(false);
 
+const [bankDetails, setBankDetails] = useState({
+  accountNumber: "",
+  ifsc: "",
+  bankName: "",
+  accountHolder: ""
+});
+
+const handleAddBankInfo = () => {
+  setShowBankPopup(true);
+};
+const handleBankChange = (e: any) => {
+  const { name, value } = e.target;
+  setBankDetails((prev) => ({
+    ...prev,
+    [name]: value
+  }));
+};
   if (!isOpen) return null;
+  
+
+
+
+
+
+
+
+   const GetHCPPayment = (A: any) => {
+    if (!CompliteInfo?.length || !A) return "Not Entered";
+
+    const address =
+      CompliteInfo
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.["PaymentforStaff"]||0;
+
+    return Number(address) 
+  };
 
   const handleSubmit = (a:any) => {
     if (!reason) return;
@@ -40,6 +78,26 @@ const RefundDays=getDaysBetween(new Date().toISOString().split("T")[0], a.EndDat
 
   console.log("Refund Popup Data:", data);
 const RefundDays=getDaysBetween(new Date().toISOString().split("T")[0], data.EndDate)
+
+
+const perDayCharge = Number(rupeeToNumber(data.ServiceCharge).toFixed(2));
+
+const perDayHCP =
+  Math.round(Number(GetHCPPayment(data.HCA_Id)) / 30);
+
+// Days actually served
+const workedDays = Number(
+  getDaysBetween(data.StartDate, new Date().toISOString().split("T")[0])
+);
+
+// Profit per day
+const perDayProfit = perDayCharge - perDayHCP;
+
+// Total profit/loss
+const resultAmount = perDayProfit * workedDays;
+
+const isProfit = resultAmount >= 0;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-lg">
@@ -73,14 +131,50 @@ const RefundDays=getDaysBetween(new Date().toISOString().split("T")[0], data.End
                         ₹{rupeeToNumber(data.ServiceCharge).toFixed(2)}{" "}
                         <span className="text-gray-500">/D</span>
                       </span></p>
-                       <p><span className="font-medium">HCP Salary:</span> {data.StartDate} → {data.EndDate } </p>
+                       <p><span className="font-medium">HCP Salary:</span> {CompliteInfo?.length ?  `${Math.round(Number(GetHCPPayment(data.HCA_Id)) / 30)}/Day` : "Loading...."} </p>
           <p><span className="font-medium">Location:</span> {data.location}</p>
           <p><span className="font-medium">HCP:</span> {data.HCA_Name}</p>
           <p><span className="font-medium">Contact:</span> {data.contact}</p>
         </div>
 
-     
+     {/* <div>
+      <p>Service Bill:{Number(getDaysBetween(data.StartDate,new Date().toISOString().split("T")[0]))*Number(rupeeToNumber(data.ServiceCharge).toFixed(2))}</p>
+            <p>Refund Amount :{Number(getDaysBetween(data.StartDate,new Date().toISOString().split("T")[0]))*Number(rupeeToNumber(data.ServiceCharge).toFixed(2))}</p>
+     </div> */}
 
+
+    
+  <div className="flex  items-center justify-center gap-4 mt-2">
+    
+ 
+    <div className="flex flex-col items-center justify-center min-w-[180px] bg-green-200 rounded-2xl shadow-md p-2 border border-gray-100">
+      <p className="text-sm text-green-800 mb-1">Service Bill</p>
+      <p className="text-xl font-semibold text-gray-900">₹ {Number(getDaysBetween(data.StartDate,new Date().toISOString().split("T")[0]))*Number(rupeeToNumber(data.ServiceCharge).toFixed(2))}</p>
+    </div>
+
+   
+    <div className="flex flex-col items-center justify-center min-w-[180px] bg-red-200 rounded-2xl shadow-md p-2 border border-gray-100">
+      <p className="text-sm text-red-600 mb-1">Refund Amount</p>
+      <p className="text-xl font-semibold text-gray-900">₹ {Number(RefundDays-1)*Number(rupeeToNumber(data.ServiceCharge).toFixed(2))}</p>
+    </div>
+
+  </div>
+
+<div
+  className={`mt-4 flex items-center justify-between px-2 py-3 rounded-2xl shadow-md ${
+    isProfit
+      ? "bg-green-200 border border-green-200 text-green-800"
+      : "bg-red-200 border border-red-200 text-red-600"
+  }`}
+>
+  <span className="font-medium">
+    {isProfit ? "Net Profit" : "Net Loss"}
+  </span>
+
+  <span className="text-md font-bold">
+    ₹ {Math.abs(resultAmount).toFixed(2)}
+  </span>
+</div>
         <div className="mb-4">
           <div className="mb-1 text-sm font-medium">Reason</div>
           <select
@@ -96,8 +190,66 @@ const RefundDays=getDaysBetween(new Date().toISOString().split("T")[0], data.End
       
           </select>
         </div>
+{showBankPopup && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="w-full max-w-md bg-white rounded-2xl p-5 shadow-lg">
+      <h2 className="text-lg font-semibold mb-4">Bank Information</h2>
 
-        <div className="mb-4">
+      <input
+        type="text"
+        name="accountHolder"
+        placeholder="Account Holder Name"
+        value={bankDetails.accountHolder}
+        onChange={handleBankChange}
+        className="w-full mb-2 p-2 border rounded-lg"
+      />
+
+      <input
+        type="text"
+        name="accountNumber"
+        placeholder="Account Number"
+        value={bankDetails.accountNumber}
+        onChange={handleBankChange}
+        className="w-full mb-2 p-2 border rounded-lg"
+      />
+
+      <input
+        type="text"
+        name="ifsc"
+        placeholder="IFSC Code"
+        value={bankDetails.ifsc}
+        onChange={handleBankChange}
+        className="w-full mb-2 p-2 border rounded-lg"
+      />
+
+      <input
+        type="text"
+        name="bankName"
+        placeholder="Bank Name"
+        value={bankDetails.bankName}
+        onChange={handleBankChange}
+        className="w-full mb-4 p-2 border rounded-lg"
+      />
+
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => setShowBankPopup(false)}
+          className="px-3 py-1 border rounded-lg"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={() => setShowBankPopup(false)}
+          className="px-3 py-1 bg-green-600 text-white rounded-lg"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+        <div className="mb-2">
           <div className="mb-1 text-sm font-medium">Additional Notes</div>
           <textarea
             value={notes}
@@ -105,7 +257,11 @@ const RefundDays=getDaysBetween(new Date().toISOString().split("T")[0], data.End
             rows={3}
             className="w-full rounded-lg border p-2"
           />
+          <button className="text-blue-600 text-xs cursor-pointer hover:underline" onClick={handleAddBankInfo}>
+            Add Bank Information
+          </button>
         </div>
+        
 
 
 

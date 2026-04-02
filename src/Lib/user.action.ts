@@ -766,6 +766,8 @@ export const PostInvoiceFromDeployment = async (InvoiseInfo:any,AdvanceAmount:an
       Email:InvoiseInfo.Email,
       AdvanceReceived: AdvanceAmount || "",
       CareTakeChare: InvoiseInfo.serviceCharges,
+      MonthlyPayment:InvoiseInfo.MonthlyPayment || false,
+
       RegistrationFee:InvoiseInfo.RegistrationFee,
       status: "Draft",
       PaymentStatus:false
@@ -1230,7 +1232,7 @@ patientWeight:HCA.patientWeight||"",
       ClientStatus:HCA.ClientStatus||"Waiting List",
       ExpectedService: HCA.ExpectedService || "",
       ReasonForService: HCA.ReasonForService || "",
-
+MonthlyServiceCharge:HCA.MonthlyServiceCharge || "",
       serviceCharges: HCA.serviceCharges || "",
       RegistrationFee: HCA.RegistrationFee || 0,
       comments: HCA.ClientNote || "",
