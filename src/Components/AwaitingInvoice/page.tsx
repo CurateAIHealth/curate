@@ -5,7 +5,7 @@ let cachedReplacementInfo: any[] = [];
 let cachedTermination: any[] = [];
 let cachedRegisterdUsers: any[] = [];
 
-import { GetAllUsersData, GetUserInformation, InsertDeployment, PostInvoiceFromDeployment, updateServicePrice } from "@/Lib/user.action";
+import { DeleteDeployMent, GetAllUsersData, GetUserInformation, InsertDeployment, InserTerminationData, PostInvoiceFromDeployment, PostReason, UpdateHCAnstatus, updateServicePrice, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { UpdateMonthFilter, UpdateSubHeading, UpdateYearFilter } from "@/Redux/action";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -25,19 +25,27 @@ const    AwaitingInvoice=({
   RegisterdUsers: any;
 })=>{
      const [ActionStatusMessage,SetActionStatusMessage]= useState<any>("");
+       const [selectedReason, setSelectedReason] = useState("");
      const [lastDateOfMonth, setLastDateOfMonth] = useState("");
        const [ExtendInfo,setExtendInfo]=useState<any>({})
+       const [otherReason, setOtherReason] = useState("");
        const [SearchResult,setSearchResult]=useState("")
+       const [ReplacementDate,setReplacementDate]=useState("")
+       const [ReplacementTime,setReplacementTime]=useState("")
+        const [UpdatedCareTakerStatus,setUpdatedCareTakerStatus]=useState("")
        const [showWarning, setShowWarning] = useState(false);
        const [showExtendPopup,setshowExtendPopup]=useState(false)
       //  const [users, setUsers] = useState<any[]>([]);
       //    const [ClientsInformation, setClientsInformation] = useState<any[]>([]);
       //     const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
           const [updateServiceCharge, setUpdateServiceCharge] = useState(false);
+          const [TerminationInfo,SetTerminationInfo]=useState<any>()
           const [serviceCharge, setServiceCharge] = useState("");
            const [ReplacementInformation,setReplacementInformation]=useState<any[]>([])
            const [terminationInfo,SetterminationInfo]=useState<any[]>([])
        const [isChecking, setIsChecking] = useState(false);
+       const [CareTakerName,SetCareTakerName]=useState('')
+         const [showDeletePopup, setShowDeletePopup] = useState(false);
        const router=useRouter()
        const dispatch=useDispatch()
        const loggedInEmail=useSelector((each:any)=>each.loggedInEmail)
@@ -148,7 +156,13 @@ const    AwaitingInvoice=({
     return address ?? "Not Entered";
   };
 
+const GetPatientName = (A:any) => {
+  const filtered = RegisterdUsers?.find(
+    (each: any) => each.userId === A
+  );
 
+  return filtered
+};
      const GetHCPType = (A: any) => {
     if (!RegisterdUsers?.length || !A) return "Not Entered";
 
@@ -157,7 +171,11 @@ const    AwaitingInvoice=({
 
     return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
   };
-
+const handleDeleteClick = (Info: any,Name:any) => {
+    SetTerminationInfo(Info)
+SetCareTakerName(Name)
+    setShowDeletePopup(true);
+  };
     const now = new Date();
 
     const FinelTimeSheet = ClientsInformation.map((each: any) => {
@@ -396,8 +414,84 @@ SetActionStatusMessage("Update failed");
     
 //   }
 
+ const handleDelete = () => {
+    if (selectedReason === "Other") {
+      confirmDelete(otherReason.trim());
+    } else {
+      confirmDelete(selectedReason);
+    }
+  };
+const confirmDelete = async (selectedReason: string) => {
+  if (!TerminationInfo) {
+    SetActionStatusMessage("Unable to delete. Required information is missing.");
+    return;
+  }
+
+  try {
+    SetActionStatusMessage("Please wait, deleting placement...");
+
+    await UpdateHCAnstatus(
+      TerminationInfo.HCA_Id,
+      UpdatedCareTakerStatus
+    );
+
+ 
+    await UpdateUserContactVerificationstatus(
+      TerminationInfo.Client_Id,
+      "Lost"
+    );
 
 
+    const deleteTimeSheetResponse = await DeleteDeployMent(
+      TerminationInfo.Client_Id,
+      TerminationInfo.HCA_Id
+    );
+
+  
+    await PostReason(
+      TerminationInfo.HCA_Id,
+      TerminationInfo.Client_Id,
+      selectedReason,
+      otherReason,
+         ReplacementDate,
+      ReplacementTime,
+    );
+
+ 
+    await InserTerminationData(
+      TerminationInfo.Client_Id,
+      TerminationInfo.HCA_Id,
+      TerminationInfo.HCA_Name,
+      TerminationInfo.name,
+      TerminationInfo.email,
+      TerminationInfo.contact,
+      TerminationInfo.location,
+      TerminationInfo.HCAContact,
+      TerminationInfo.TimeSheet
+    );
+
+   if (deleteTimeSheetResponse?.success) {
+  SetActionStatusMessage("Placement deleted Successfully.");
+
+  setTimeout(() => {
+    setShowDeletePopup(false);
+  }, 400);
+}
+ else {
+      SetActionStatusMessage(
+        "Placement deleted, but some records could not be removed completely."
+      );
+    }
+  } catch (error) {
+    console.error("Error while deleting placement:", error);
+    SetActionStatusMessage(
+      "Something went wrong while deleting the placement. Please try again."
+    );
+  } finally {
+    setShowDeletePopup(false);
+    setDeleteTargetId(null);
+  }
+};
 
 const ExtendTimeSheet = async () => {
   try {
@@ -478,7 +572,8 @@ const ExtendTimeSheet = async () => {
       patientName: ExtendInfo.PatientName,
       ContactNumber: ExtendInfo.contact,
       Email: ExtendInfo.email,
-      serviceCharges: CareTakerCharges,
+     serviceCharges:GetPatientName(ExtendInfo.Client_Id)?.MonthlyServiceCharge || CareTakerCharges,
+      MonthlyPayment:GetPatientName(ExtendInfo.Client_Id)?.MonthlyServiceCharge ?true:false,
       RegistrationFee: 0,
     };
 
@@ -825,6 +920,178 @@ setSelectedEndDate(e.target.value)
     </div>
   </div>
 )}
+
+ {showDeletePopup && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="relative bg-white rounded-2xl shadow-2xl w-[420px] p-7 border border-gray-200">
+      
+     
+      <button
+        onClick={() => setShowDeletePopup(false)}
+        className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 transition cursor-pointer"
+        aria-label="Close"
+      >
+        ✕
+      </button>
+
+     
+      <div className="text-center mb-6 flex flex-col items-center gap-2">
+        <img
+          src="/Icons/Curate-logoq.png"
+          alt="Company Logo"
+          className="h-10 w-auto object-contain"
+        />
+
+        <h2 className="text-xl font-bold text-gray-800">
+          Request Termination
+        </h2>
+
+        <p className="text-sm text-gray-500 mt-1">
+          Please select a reason for requesting a Termination
+        </p>
+      </div>
+
+   
+      <div className="space-y-4">
+        <label className="block text-sm font-semibold text-gray-700">
+          Reason for Termination
+        </label>
+
+        <select
+          value={selectedReason}
+          onChange={(e) => setSelectedReason(e.target.value)}
+          className="
+            w-full rounded-xl border border-gray-300
+            px-4 py-2.5 text-sm
+            focus:outline-none focus:ring-2 focus:ring-teal-500
+          "
+        >
+          <option value="">-- Select Reason --</option>
+          <option value="Service Quality Issue">Service Quality Issue</option>
+          <option value="Staff Unavailable">Staff Unavailable</option>
+          <option value="Schedule Mismatch">Schedule Mismatch</option>
+          <option value="Patient Recovered">Patient Recovered</option>
+          <option value="Cost Concern">Cost Concern</option>
+          <option value="Other">Other</option>
+        </select>
+
+        {selectedReason === "Other" && (
+          <textarea
+            rows={3}
+            placeholder="Please specify the reason"
+            value={otherReason}
+            onChange={(e) => setOtherReason(e.target.value)}
+            className="
+              w-full rounded-xl border border-gray-300
+              px-4 py-2.5 text-sm resize-none
+              focus:outline-none focus:ring-2 focus:ring-teal-500
+            "
+          />
+        )}
+      </div>
+ {selectedReason &&
+          (selectedReason !== "Other" || otherReason) && (
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div className="flex flex-col space-y-1">
+    <label className="text-sm font-medium text-gray-700">
+      Termination Date
+    </label>
+    <input
+      type="date"
+      onChange={(e)=>setReplacementDate(e.target.value)}
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+    />
+  </div>
+
+  <div className="flex flex-col space-y-1">
+    <label className="text-sm font-medium text-gray-700">
+      Termination Time
+    </label>
+    <input
+      type="time"
+      onChange={(e)=>setReplacementTime(e.target.value)}
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+    />
+  </div>
+</div>
+          )}
+
+   
+      {selectedReason && (selectedReason !== "Other" || otherReason) && (
+        <div className="mt-4">
+          <select
+            className={`w-full p-2 text-sm border rounded-lg cursor-pointer text-center
+              ${
+                UpdatedCareTakerStatus === "Available"
+                  ? "bg-green-100 border-green-300 text-green-800"
+                  : UpdatedCareTakerStatus === "Sick"
+                  ? "bg-yellow-100 border-yellow-300 text-yellow-800"
+                  : UpdatedCareTakerStatus === "Leave"
+                  ? "bg-blue-100 border-blue-300 text-blue-800"
+                  : UpdatedCareTakerStatus === "Terminated"
+                  ? "bg-red-100 border-red-300 text-red-800"
+                  : "bg-gray-100 border-gray-300 text-gray-800"
+              }
+            `}
+            value={UpdatedCareTakerStatus || ""}
+            onChange={(e) => setUpdatedCareTakerStatus(e.target.value)}
+          >
+            <option>
+              Manage {toProperCaseLive(CareTakerName)} Status
+            </option>
+            <option value="Active">🟢 Active</option>
+            <option value="Available">🟢 Available for Work</option>
+            <option value="Sick">🟡 Sick</option>
+            <option value="Leave">🔵 Leave</option>
+            <option value="Bench">🟣 Bench</option>
+            <option value="None">⚪ None</option>
+            <option value="Terminated">🔴 Terminated</option>
+          </select>
+        </div>
+      )}
+ {ActionStatusMessage && (
+  <p
+    className={`mt-3 text-center text-sm font-medium ${
+      ActionStatusMessage === "Replacement Updated Sucessfull"|| ActionStatusMessage === "Placement deleted successfully."
+        ? "text-green-700"
+        : "text-gray-700"
+    }`}
+  >
+    {ActionStatusMessage}
+  </p>
+)}
+ 
+      <div className="flex justify-end gap-4 mt-8">
+        <button
+          onClick={() => setShowDeletePopup(false)}
+          className="
+            px-5 py-2.5 text-sm font-medium
+            text-gray-700 bg-gray-100 rounded-xl
+            hover:bg-gray-200 transition
+          "
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleDelete}
+          disabled={!selectedReason}
+          className="
+            px-5 py-2.5 text-sm font-semibold
+            text-white bg-teal-600 rounded-xl shadow-md
+            hover:bg-teal-700
+            disabled:opacity-50 disabled:cursor-not-allowed
+            transition
+          "
+        >
+          Confirm Termination
+        </button>
+      </div>
+    </div>
+  </div>
+)}
      <table className="w-full table-fixed border-collapse bg-white">
        
   <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white text-xs font-semibold shadow-md">
@@ -1050,7 +1317,13 @@ setSelectedEndDate(e.target.value)
   ? WorkingDays === 1
     ? `${WorkingDays} Day`
     : `${WorkingDays} Days`
-  : WorkingDays} </p>:    <p className="inline-block px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
+  : <div>
+    <p className="text-[10px]">{WorkingDays}</p>
+  <button
+      className="px-2 py-0.5 text-[9px] font-semibold
+                 text-white bg-red-600 hover:bg-red-700 cursor-pointer rounded-md"      
+      onClick={ () => handleDeleteClick(c,c.HCA_Name)}> Terminate</button>
+  </div>} </p>:    <p className="inline-block px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
   On Service
 </p> }
   
@@ -1128,3 +1401,7 @@ setSelectedEndDate(e.target.value)
 
 
 export default AwaitingInvoice;
+
+function setDeleteTargetId(arg0: null) {
+  throw new Error("Function not implemented.");
+}
