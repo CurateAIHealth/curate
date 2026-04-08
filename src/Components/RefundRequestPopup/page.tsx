@@ -1,5 +1,6 @@
 import { getDaysBetween, rupeeToNumber } from "@/Lib/Actions";
 import { GetUsersFullInfo } from "@/Lib/user.action";
+import axios from "axios";
 import { get } from "http";
 import { useState,useEffect } from "react";
 
@@ -22,14 +23,71 @@ const [bankDetails, setBankDetails] = useState({
   accountNumber: "",
   ifsc: "",
   bankName: "",
-  accountHolder: ""
+  accountHolder: "",
+  passBook:"",
+  branch:"",
 });
 
 const handleAddBankInfo = () => {
   setShowBankPopup(true);
 };
-const handleBankChange = (e: any) => {
+const handleBankChange = async(e: any) => {
   const { name, value } = e.target;
+  if (name === "passBook") {
+ const file = e.target.files?.[0];
+      const inputName = e.target.name;
+      if (!file) return;
+
+
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File too large. Max allowed is 10MB.');
+        return;
+      }
+
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg', 'application/pdf',];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Only image or video files are allowed.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await axios.post('/api/Upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+            setBankDetails((prev) => ({
+    ...prev,
+    [name]: res.data.url 
+  }));
+   return
+};
+    if (name === "ifsc" && value.length === 11) {
+    try {
+        setBankDetails((prev) => ({
+          ...prev,
+          bankName: "",
+          branch: "", 
+        }));
+      const res = await fetch(`https://ifsc.razorpay.com/${value}`);
+      const data = await res.json();
+
+      if (data) {
+        setBankDetails((prev) => ({
+          ...prev,
+          bankName: data.BANK,
+          branch: data.BRANCH, 
+        }));
+      }
+      return
+    } catch (err) {
+      console.error("Invalid IFSC");
+    }
+  }
   setBankDetails((prev) => ({
     ...prev,
     [name]: value
@@ -42,7 +100,7 @@ const handleBankChange = (e: any) => {
 
 
 
-
+console.log("Complete Info in Popup:", bankDetails);
 
    const GetHCPPayment = (A: any) => {
     if (!CompliteInfo?.length || !A) return "Not Entered";
@@ -68,15 +126,17 @@ const RefundDays=getDaysBetween(new Date().toISOString().split("T")[0], a.EndDat
       refundType,
       reason,
       notes,
+      bankDetails,
     WorkingDays,
-
-  RefundDays
+    RefundDays,
+    isProfit,
+    resultAmount
     });
 
     onClose();
   };
 
-  console.log("Refund Popup Data:", data);
+ 
 const RefundDays=getDaysBetween(new Date().toISOString().split("T")[0], data.EndDate)
 
 
@@ -115,7 +175,7 @@ const isProfit = resultAmount >= 0;
           </button>
         </div>
 </div>
-        <div className="mb-4 rounded-xl bg-gray-50 p-4 text-sm">
+        <div className="mb-4 rounded-xl bg-gray-50 p-2 text-sm">
           <p><span className="font-medium">Client:</span> {data.name}</p>
           <p><span className="font-medium">Patient:</span> {data.PatientName}</p>
           <p><span className="font-medium">Duration:</span> {data.StartDate} → {data.EndDate } </p>
@@ -147,15 +207,15 @@ const isProfit = resultAmount >= 0;
   <div className="flex  items-center justify-center gap-4 mt-2">
     
  
-    <div className="flex flex-col items-center justify-center min-w-[180px] bg-green-200 rounded-2xl shadow-md p-2 border border-gray-100">
+    <div className="flex flex-col items-center justify-center min-w-[180px] bg-green-200 rounded-2xl shadow-md p-1 border border-gray-100">
       <p className="text-sm text-green-800 mb-1">Service Bill</p>
-      <p className="text-xl font-semibold text-gray-900">₹ {Number(getDaysBetween(data.StartDate,new Date().toISOString().split("T")[0]))*Number(rupeeToNumber(data.ServiceCharge).toFixed(2))}</p>
+      <p className="text-sm font-semibold text-gray-900">₹ {Number(getDaysBetween(data.StartDate,new Date().toISOString().split("T")[0]))*Number(rupeeToNumber(data.ServiceCharge).toFixed(2))}</p>
     </div>
 
    
-    <div className="flex flex-col items-center justify-center min-w-[180px] bg-red-200 rounded-2xl shadow-md p-2 border border-gray-100">
+    <div className="flex flex-col items-center justify-center min-w-[180px] bg-red-200 rounded-2xl shadow-md p-1 border border-gray-100">
       <p className="text-sm text-red-600 mb-1">Refund Amount</p>
-      <p className="text-xl font-semibold text-gray-900">₹ {Number(RefundDays-1)*Number(rupeeToNumber(data.ServiceCharge).toFixed(2))}</p>
+      <p className="text-sm font-semibold text-gray-900">₹ {Number(RefundDays-1)*Number(rupeeToNumber(data.ServiceCharge).toFixed(2))}</p>
     </div>
 
   </div>
@@ -221,15 +281,34 @@ const isProfit = resultAmount >= 0;
         onChange={handleBankChange}
         className="w-full mb-2 p-2 border rounded-lg"
       />
+<div className="border-l-4 border-indigo-500 pl-4 py-2 shadow-lg rounded-md">
+  <p className="text-sm font-semibold text-gray-900">
+   🏦 {bankDetails.bankName}
+  </p>
+  <p className="text-xs text-gray-500">
+    📍 {bankDetails.branch}
+  </p>
+</div>
 
-      <input
-        type="text"
-        name="bankName"
-        placeholder="Bank Name"
-        value={bankDetails.bankName}
-        onChange={handleBankChange}
-        className="w-full mb-4 p-2 border rounded-lg"
-      />
+
+ <div className="w-full mb-4">
+  <label className="block mb-2 text-sm font-medium text-gray-700">
+    Upload Passbook
+  </label>
+
+  <input
+    type="file"
+    name="passBook"
+    onChange={handleBankChange}
+    className="w-full text-sm text-gray-600
+      file:mr-4 file:py-2 file:px-4
+      file:rounded-lg file:border-0
+      file:text-sm file:font-semibold
+      file:bg-blue-50 file:text-blue-700
+      hover:file:bg-blue-100
+      cursor-pointer border border-gray-300 rounded-lg p-2"
+  />
+</div>
 
       <div className="flex justify-end gap-2">
         <button

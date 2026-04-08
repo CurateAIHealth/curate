@@ -1342,6 +1342,71 @@ From:any
   }
 };
 
+export const PostReferalRequest = async (data: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Notifications");
+
+    let payload: any = {
+      ReferalId: data.ReferalId,
+      Type: "New Referral Request",
+      Status: "Pending",
+      Date: new Date().toISOString().split("T")[0],
+      Department: "Referral",
+      referralType: data.type, // staff | lead
+      percentage: data.percentage,
+      amount: data.amount,
+      notes: data.notes,
+    };
+
+    // 👉 STAFF REFERRAL
+    if (data.type === "staff") {
+      payload = {
+        ...payload,
+        candidateName: data.candidateName,
+        email: data.email,
+        phone: data.phone,
+        position: data.position,
+        experience: data.experience,
+        company: data.company,
+        relationship: data.relationship,
+
+        Message: `Staff Referral: ${data.candidateName} applied for ${data.position} (${data.experience} exp)`,
+      };
+    }
+
+    // 👉 LEAD REFERRAL
+    if (data.type === "lead") {
+      payload = {
+        ...payload,
+        clientName: data.clientName,
+        patientName: data.patientName,
+        location: data.location,
+        phone: data.phone,
+        referralSource: data.referralSource,
+        referredBy: data.referredBy,
+
+        Message: `Lead Referral: ${data.clientName} - Patient ${data.patientName} from ${data.location}`,
+      };
+    }
+
+    const result = await collection.insertOne(payload);
+
+    return {
+      success: true,
+      message: "Referral submitted successfully",
+    };
+  } catch (err: any) {
+    console.error("PostReferalRequest error:", err);
+
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+};
+
 
 export const PostRefundRequest = async (
 ClientInfo:any,
@@ -1357,9 +1422,14 @@ const payload = {
   ClientId: ClientInfo.Client_Id,
   ClientName: ClientInfo.name,
   Message: `Refund request for ${ClientInfo.name}, assigned to HCP ${ClientInfo.HCA_Name}. Service period: ${ClientInfo.StartDate} to ${new Date().toISOString().split("T")[0]} (${ClientInfo.WorkingDays} days) at ${ClientInfo.ServiceCharge} per day. Refund requested for ${ClientInfo.RefundDays} days. Reason: ${ClientInfo.reason}. Additional notes: ${ClientInfo.notes}. Requested by ${From}.`,
-  HCPName: ClientInfo.HCPName,
+  HCPName: ClientInfo.HCA_Name,
   ServiceDays: ClientInfo.ServiceDays,
   Date: new Date().toISOString().split("T")[0],
+  BankInformation: ClientInfo.bankDetails,
+   WorkingDays: ClientInfo.WorkingDays,
+    RefundDays:ClientInfo.RefundDays,
+   isProfit: ClientInfo.isProfit,
+    resultAmount:  ClientInfo.resultAmount,
   Type: "Refund Request",
   Status: "Pending",
   Department: "Accounts"
@@ -1438,15 +1508,20 @@ export const UpdateNotificationType = async (
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Notifications");
 
-    const result = await collection.updateOne(
+  const result = await collection.updateOne(
+  {
+    $or: [
       { HCPId: ImpHCPId },
-      {
-        $set: {
-          Status: ImpStatus,
-          updatedAt: new Date(),
-        },
-      }
-    );
+      { ReferalId: ImpHCPId }
+    ]
+  },
+  {
+    $set: {
+      Status: ImpStatus,
+      updatedAt: new Date(),
+    },
+  }
+);
 
     if (result.matchedCount === 0) {
       return {
@@ -5391,6 +5466,24 @@ const safeDecrypt = (value: any) => {
     return value;
   }
 };
+
+
+export const PostReferal=async(Info:any)=>{
+  try {
+const Cluster = await clientPromise
+    const Db = Cluster.db("CurateInformation")
+    const Collection = Db.collection("Referal")
+    const result = await Collection.insertOne(Info)
+       return {
+      success: true,
+      message: "Referral submitted successfully ✅",
+      insertedId: result.insertedId.toString(),
+    };
+
+  }catch(Err:any){
+
+  }
+}
 
 export const GetDashboardData = async (userId: string) => {
   try {
