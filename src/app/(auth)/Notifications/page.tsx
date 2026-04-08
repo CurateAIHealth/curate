@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle, XCircle, Bell } from "lucide-react";
+import { CheckCircle, XCircle, Bell, Eye } from "lucide-react";
 import axios from "axios";
 import { EditAttendanceByClientId, GetNotificationsInformation, HCASalaryUpdate, UpdateNotificationType } from "@/Lib/user.action";
 import { useRouter } from "next/navigation";
@@ -12,15 +12,20 @@ import { Refresh } from "@/Redux/action";
 type FilterType = "All" | "Pending" | "Approved" | "Rejected" | "Read";
 
 interface NotificationItem {
+  patientName: any;
+  clientName: any;
+  position: any;
+  candidateName: any;
   Department: any;
   HCPId: string;
   Date: any;
   _id: string;
-  Type: "LEAVE_REQUEST" | "EXPENSE_REQUEST" | "INFO" | "SYSTEM"|"HCP Salary Request" |"Refund Request" | "Attendance Edit Request";
+  Type: "LEAVE_REQUEST" | "EXPENSE_REQUEST" | "INFO" | "SYSTEM"|"HCP Salary Request" |"Refund Request" | "Attendance Edit Request" | "New Referral Request";
   ReferenceId?: string;
   UserId: string;
   EmployeeName?: string;
   Message: string;
+   referralType?: "staff" | "lead";
   Meta?: any;
   Status: "Pending" | "Approved" | "Rejected" | "Read";
   IsRead: boolean;
@@ -31,6 +36,9 @@ interface NotificationItem {
 export default function NotificationsCenter() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+const [selectedItem, setSelectedItem] = useState<any>(null);
+const [ShowBankInfo, setShowBankInfo] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>("All");
     const updatedStatusMsg=useSelector((each:any)=>each.GlobelRefresh)
@@ -84,7 +92,7 @@ const handleAction = async (
   };
 
   const updateStatusSafe = async () => {
-    const res = await UpdateNotificationType(info?.HCPId, action);
+    const res = await UpdateNotificationType(info?.HCPId||info?.ReferalId, action);
     if (!res?.success) throw new Error("Notification update failed");
   };
 
@@ -208,7 +216,95 @@ HCPName
   return (
     <div className="space-y-6">
 
- 
+ {showModal && selectedItem && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+    <div className="bg-white rounded-2xl shadow-lg w-[500px] p-6 relative">
+
+      <button
+        onClick={() => setShowModal(false)}
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+      >
+        ✖
+      </button>
+
+  
+     <div className="flex items-center justify-between 
+     w-full border-l-4 border-blue-500 pl-4 mb-4 shadow-sm p-1 rounded-md">
+     <img
+    src="/Icons/Curate-logo.png"
+  
+    alt="Logo"
+    className="w-10 h-10  rounded-xl"
+  />
+       <h2 className="text-lg font-semibold mb-4 text-gray-800">
+        Refund Details
+      </h2>
+      </div>
+
+   
+      <div className="space-y-2 text-sm text-gray-600">
+        <p><b>Client:</b> {selectedItem.ClientName}</p>
+        <p><b>HCP:</b> {selectedItem.HCPName}</p>
+        {/* <p><b>Service Days:</b> {selectedItem.ServiceDays}</p> */}
+        <p><b>Working Days:</b> {selectedItem.WorkingDays}</p>
+        <p><b>Refund Days:</b> {selectedItem.RefundDays}</p>
+        <p><b>Amount:</b> ₹{selectedItem.resultAmount}</p>
+          <p><b>Status:</b> {selectedItem.Status}</p>
+           <p><b>isProfit:</b> {selectedItem.isProfit?"Yes":"No"}</p>
+<div className="flex items-center gap-4 mb-2">
+  <p className="font-semibold text-gray-700">
+    Bank Info
+  </p>
+
+  <button
+    onClick={() => setShowBankInfo(!ShowBankInfo)}
+    className="flex items-center justify-center w-8 h-8 rounded-full border border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 transition-all duration-200"
+  >
+    <Eye size={16} />
+  </button>
+</div>
+{ShowBankInfo&&<div className="mt-3">
+  
+
+  <div className="bg-gray-50 border rounded-lg p-3 text-sm space-y-1">
+    <p><b>Account Holder:</b> {selectedItem.BankInformation.accountHolder || "-"}</p>
+    <p><b>Account Number:</b> {selectedItem.BankInformation.accountNumber || "-"}</p>
+    <p><b>IFSC:</b> {selectedItem.BankInformation.ifsc || "-"}</p>
+    <p><b>Bank Name:</b> {selectedItem.BankInformation.bankName || "-"}</p>
+    <p><b>Branch:</b> {selectedItem.BankInformation.branch || "-"}</p>
+
+
+      <p>
+        <b>Passbook:</b>{" "}
+        <a
+          href={selectedItem.BankInformation.passBook}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 underline"
+        >
+          View File
+        </a>
+      </p>
+    
+  </div>
+</div>}
+      
+        <p className="mt-3 text-gray-700">
+          <b>Message:</b> {selectedItem.Message}
+        </p>
+      </div>
+
+      <div className="flex justify-end mt-5">
+        <button
+          onClick={() => setShowModal(false)}
+          className="px-4 py-2 rounded-full bg-blue-450 cursor-pointer hover:bg-gray-200 text-sm"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
  <div className="
   relative
  
@@ -283,15 +379,16 @@ HCPName
    <div className="space-y-6">
   {filteredNotifications.map((item, _id) => (
     <div key={item._id}>
-      {(
-        item.Type === "LEAVE_REQUEST" ||
-        (item.Type === "HCP Salary Request" && loggedInEmail === "kirancuratehealth@gmail.com") ||
-        item.Type === "EXPENSE_REQUEST" ||
-        ((item.Type === "Refund Request" || item.Type === "Attendance Edit Request") &&
-          (loggedInEmail === "shreeshmacurate@gmail.com" ||
-            loggedInEmail === "srinivasnew0803@gmail.com" ||
-            loggedInEmail === "srivanikasham@curatehealth.in@gmail.com"))
-      ) &&
+{(
+  item.Type === "LEAVE_REQUEST" ||
+  item.Type === "New Referral Request" || 
+  (item.Type === "HCP Salary Request" && loggedInEmail === "kirancuratehealth@gmail.com") ||
+  item.Type === "EXPENSE_REQUEST" ||
+  ((item.Type === "Refund Request" || item.Type === "Attendance Edit Request") &&
+    (loggedInEmail === "shreeshmacurate@gmail.com" ||
+      loggedInEmail === "srinivasnew0803@gmail.com" ||
+      loggedInEmail === "srivanikasham@curatehealth.in@gmail.com"))
+) &&
       (filter === "All" || item.Status === filter) && (
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm hover:shadow-md transition-all">
 
@@ -321,14 +418,44 @@ HCPName
                   
                 </div>
 
-                <p className="text-sm text-slate-600 mt-1 leading-relaxed">
-                  {item.Message}
-                </p>
+           <p className="text-sm text-slate-600 mt-1 leading-relaxed">
+  {item.Type === "New Referral Request" ? (
+    <>
+      {item.referralType === "staff" && (
+        <>
+          👤 <b>{item.candidateName}</b> applied for{" "}
+          <b>{item.position}</b>
+        </>
+      )}
+
+      {item.referralType === "lead" && (
+        <>
+          🏥 Client: <b>{item.clientName}</b> - Patient{" "}
+          <b>{item.patientName}</b>
+        </>
+      )}
+    </>
+  ) : (
+    item.Message
+  )}
+</p>
 
                
               </div>
             </div>
-{item.Status!=="Approved"&&
+            {item.Type === "Refund Request" && (
+  <button
+    className="px-4 py-2 rounded-full border cursor-pointer border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 transition-all duration-200 text-sm font-medium"
+    onClick={() => {
+      setSelectedItem(item);
+      console.log("Selected Item for Modal:", item);
+      setShowModal(true);
+    }}
+  >
+    <Eye/>
+  </button>
+)}
+{item.Status!=="Approved"&& 
             <div className="flex gap-2 shrink-0">
               <button
                 onClick={() =>

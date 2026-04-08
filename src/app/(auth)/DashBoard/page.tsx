@@ -59,6 +59,7 @@ import axios from "axios";
 import PostExpense from "@/Components/Expences/page";
 import StaffNotificationModal from "@/Components/CallEnquiryNotification/page";
 import { tr } from "framer-motion/client";
+import ReferralPopup from "@/Components/ReferalPopup/page";
 
 const DOCUMENT_KEYS = [
   "AadharAttachmentURL",
@@ -80,6 +81,7 @@ export default function Dashboard() {
   const updatedRefreshCount = useSelector((afterEach: any) => afterEach.updatedCount);
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
   const [OtherArea,setOtherArea]=useState<any>("")
+  const [showReferalPopup,setshowReferalPopup]=useState(false)
   const [NotificationStatus,setNotificationStatus]=useState('')
   const [DailyChargeType,setDailyChargeType]=useState(true)
   const [MonthlyChargeType,setMonthlyChargeType]=useState(false)
@@ -912,7 +914,7 @@ setNotificationStatus("Notification Send Succesfully")
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard.
+      Hi Admin – Welcome to Admin Dashboard
     </span>
   </div>
 
@@ -1025,6 +1027,7 @@ setNotificationStatus("Notification Send Succesfully")
           onClick={() => {
             setOpenProfile(true);
             setShowProfileOptions(false);
+             setshowReferalPopup(false)
           }}
           className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
         >
@@ -1037,6 +1040,7 @@ setNotificationStatus("Notification Send Succesfully")
           onClick={() => {
             setAttendeceView(true);
             setShowProfileOptions(false);
+             setshowReferalPopup(false)
           }}
           className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
         >
@@ -1049,6 +1053,7 @@ setNotificationStatus("Notification Send Succesfully")
           onClick={() => {
             setOpenExpense(true);
             setShowProfileOptions(false);
+            setshowReferalPopup(false)
           }}
           className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
         >
@@ -1057,7 +1062,12 @@ setNotificationStatus("Notification Send Succesfully")
         </button>
 
 
-<button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
+                    <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100" onClick={
+                      () => {
+                        setshowReferalPopup(true), setOpenExpense(false);
+                        setShowProfileOptions(false);
+                      }
+                    }>
           <Share2  size={16} className="text-slate-500" />
           referral
         </button>
@@ -1178,6 +1188,8 @@ setNotificationStatus("Notification Send Succesfully")
     />
   </div>
 )}
+
+{showReferalPopup && <ReferralPopup onClose={() => setshowReferalPopup(false)} />}
  <PermissionDeniedPopup
                     open={showPermissionPopup}
                     onClose={() => setShowPermissionPopup(false)}
@@ -1709,7 +1721,10 @@ setNotificationStatus("Notification Send Succesfully")
         </div>
 
        <div id="Charges" className="bg-white rounded-lg shadow p-4 space-y-2">
-<div className="flex items-center gap-4">
+         <h2 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
+    Charges:
+  </h2>
+{/* <div className="flex items-center gap-4">
   <h2 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
     Charges:
   </h2>
@@ -1723,7 +1738,7 @@ setNotificationStatus("Notification Send Succesfully")
     <input type="checkbox" className="accent-teal-600" checked={MonthlyChargeType} onChange={()=>{setMonthlyChargeType(!MonthlyChargeType),setDailyChargeType(!DailyChargeType)}}/>
     <span className="text-sm text-gray-700">Monthly</span>
   </label>
-</div>
+</div> */}
 {DailyChargeType ?
          <div>
              {["₹1200", "₹1000", "₹900", "Other"].map((charge) => (
