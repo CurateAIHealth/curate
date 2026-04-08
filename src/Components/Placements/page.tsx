@@ -406,7 +406,7 @@ const normalizedAttendance =
     HCA_Name: each.HCAName,
     location: each.Address,
     TimeSheet: normalizedAttendance,
-    PatientName: each.patientName,
+    PatientName: each.patientName||"Not Provided",
     Patient_PhoneNumber: each.patientPhone,
     RreferralName: each.referralName,
     Type: each.Type,
@@ -1120,7 +1120,7 @@ const OmServiceView = () => {
        
     
            
-        <div className="flex itemcs-center gap-2 justify-end">
+        <div className="flex flex-wrap items-center gap-3 justify-between">
     
 {ActionStatusMessage && (
   <p
@@ -1133,14 +1133,17 @@ const OmServiceView = () => {
     {ActionStatusMessage}
   </p>
 )}
-            <div
+     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3">
+
+  {/* Search */}
+  <div
     className="
       flex items-center bg-white shadow-md rounded-xl
-      px-4 h-[36px]
+      px-4 h-[40px]
       border border-gray-200
       focus-within:border-indigo-500
       transition
-       md:w-[220px]
+      w-full sm:max-w-[250px]
     "
   >
     <svg
@@ -1162,52 +1165,41 @@ const OmServiceView = () => {
       type="search"
       placeholder="Search..."
       onChange={(e: any) => setSearchResult(e.target.value)}
-      className="
-        w-full bg-transparent outline-none
-        text-sm text-gray-700 placeholder-gray-400
-      "
+      className="w-full bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
     />
   </div>
 
-  <div className="w-full sm:w-[130px]">
-    {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
-      Month
-    </label> */}
+  {/* Filters */}
+  <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
 
+    {/* Month */}
     <select
       value={SearchMonth}
       onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
       className="
-        w-full h-[44px] rounded-xl
-        border border-gray-300
-        px-4 text-sm bg-white text-gray-800
+        w-full sm:w-[140px] h-[40px]
+        rounded-xl border border-gray-300
+        px-3 text-sm bg-white text-gray-800
         focus:outline-none focus:ring-2 focus:ring-indigo-500
-        focus:border-transparent transition-all
       "
     >
       <option value="">All Months</option>
       {[...Array(12)].map((_, i) => (
-            <option key={i} value={`${i + 1}`}>
-              {new Date(0, i).toLocaleString("default", { month: "long" })}
-            </option>
-          ))}
+        <option key={i} value={`${i + 1}`}>
+          {new Date(0, i).toLocaleString("default", { month: "long" })}
+        </option>
+      ))}
     </select>
-  </div>
-  
-    
-<div >
-    {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
-      Year
-    </label> */}
 
+    {/* Year */}
     <select
       value={SearchYear}
-       onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
+      onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
       className="
-        w-full rounded-xl border border-gray-300
-        px-4 py-3 text-sm bg-white text-gray-800
+        w-full sm:w-[120px] h-[40px]
+        rounded-xl border border-gray-300
+        px-3 text-sm bg-white text-gray-800
         focus:outline-none focus:ring-2 focus:ring-indigo-500
-        focus:border-transparent transition-all
       "
     >
       <option value="">All Years</option>
@@ -1217,7 +1209,9 @@ const OmServiceView = () => {
         </option>
       ))}
     </select>
+
   </div>
+</div>
     {/* <button
       onClick={() => setenableStatus(!enableStatus)}
       className="
@@ -1307,7 +1301,7 @@ setShowCareTakerPriceUpdate(false)
 </div>}
 
   {ClientsInformation.length > 0 && (
-    <div className="w-full max-h-[75vh] overflow-y-auto rounded-2xl shadow-xl">
+  <div className="w-full overflow-x-auto rounded-2xl shadow-xl">
       {ShowFreezPopUp && (
   <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
     
@@ -1351,10 +1345,10 @@ setShowCareTakerPriceUpdate(false)
         CompliteInfo={users}
         onSubmit={(A)=>(PostRefunRequest(A))}
       />}
-  <table className="w-full table-fixed border-collapse bg-white">
+  <table className="min-w-[900px] w-full border-collapse bg-white">
     
   
-  <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white  text-[10px] font-semibold">
+  <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white  text-[11px] font-semibold">
   <tr>
     <th className="w-10 px-2 py-2 text-left">S.No</th>
 
