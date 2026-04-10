@@ -485,7 +485,7 @@ setStatusMessage("Patient Details Updated Successfully");
                     onChange={handleChange}
                     className="form-checkbox text-teal-600"
                   />
-                  <span>12 Hours (Long Night)</span>
+                  <span> (Long Night)</span>
                 </label>
                 {errors.stayDuration && <p className="text-red-500 text-xs mt-1 font-medium">{errors.stayDuration}</p>}
               </div>
