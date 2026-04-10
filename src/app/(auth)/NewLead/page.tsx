@@ -280,6 +280,9 @@ setFetchedInfo(GetUserInfo)
 setFormData({...formData,clientPhone:GetUserInfo?.ContactNumber,
 clientEmail:GetUserInfo?.Email,
 clientName:GetUserInfo?.FirstName,
+patientName:GetUserInfo?.patientName,
+patientAge  :GetUserInfo?.patientAge,
+patientGender:GetUserInfo?.patientGender,
 NewLead:GetUserInfo?.LeadDate,
 ClientStatus:GetUserInfo?.ClientStatus,
 Source:GetUserInfo?.NewLead,
@@ -510,7 +513,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
         onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 overflow-y-auto pr-1 sm:pr-2">
           <div id="Client Card – ID" className="bg-white rounded-lg shadow p-4 space-y-3">
-            <h2 className="text-lg font-semibold text-teal-600">Client Card – ID</h2>
+            <h2 className="text-lg font-semibold text-teal-600">Client Information</h2>
            <input
   type="text"
   placeholder="Client Name"
@@ -750,7 +753,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
           </div>
 
           <div id="Patient Card – ID" className="bg-white rounded-lg shadow p-4 flex flex-col space-y-3">
-            <h2 className="text-lg font-semibold text-teal-600">Patient Card – ID</h2>
+            <h2 className="text-lg font-semibold text-teal-600">Patient information</h2>
             <input
               type="text"
               placeholder="Patient Name"

@@ -265,6 +265,28 @@ export const IntrestedHCP = async (inputUserId: any, HCPid: any) => {
   }
 }
 
+
+export const UpdateNotIntrestInformation=async(Info:any)=>{
+try{
+const Cluster = await clientPromise
+const db = Cluster.db("CurateInformation")
+const collection = db.collection("Registration")
+const Result= await collection.insertOne({
+ ClientName:Info.ClientName,
+ContactNumber:Info.ClientContact,
+Information:Info.ClientNote,
+ Type:"Not Intrested",
+ LeadDate: new Date().toISOString().split("T")[0],
+})
+ return {
+      success: true,
+      message: "New Call Enquiry Marked As Not Intrested  Successfully",
+      insertedId: Result.insertedId.toString(),
+    };
+}catch(err:any){}
+}
+
+
 export const UpdatePassword = async (UpdatedData: { UpdatedUserid: any, NewUpdatedPassword: any, NewConfirmUpdatedPassword: any }) => {
   try {
     const Clustor = await clientPromise
@@ -1211,31 +1233,35 @@ export const CallEnquiryRegistration = async (HCA: any) => {
       };
     }
     
-   const encryptedData: any = {
+    const encryptedData: any = {
       userType: HCA.userType,
       userId: HCA.userId,
 
       FirstName: HCA.FirstName ? encrypt(HCA.FirstName) : "",
-      patientName:HCA.patientName||"",
+      patientName: HCA.patientName || "",
       ContactNumber: HCA.ContactNumber,
       Email: encryptedEmail,
-patientWeight:HCA.patientWeight||"",
+      patientWeight: HCA.patientWeight || "",
       patientAge: HCA.patientAge || "",
       patientGender: HCA.patientGender || "",
       HCPPreferGender: HCA.HCPPreferGender || "",
       PreferredLanguage: HCA.PreferredLanguage || "",
-      NewLead:HCA.NewLead||"",
-      CurateNewLead:HCA.CurateNewLead||'',
+      NewLead: HCA.NewLead || "",
+      CurateNewLead: HCA.CurateNewLead || '',
       Location: HCA.Location || "",
       ServiceType: HCA.ServiceType || "",
       HealthCard: HCA.HealthCard || "",
-      ClientStatus:HCA.ClientStatus||"Waiting List",
+      ClientStatus: HCA.ClientStatus || "Waiting List",
       ExpectedService: HCA.ExpectedService || "",
       ReasonForService: HCA.ReasonForService || "",
-MonthlyServiceCharge:HCA.MonthlyServiceCharge || "",
+      MonthlyServiceCharge: HCA.MonthlyServiceCharge || "",
       serviceCharges: HCA.serviceCharges || "",
       RegistrationFee: HCA.RegistrationFee || 0,
       comments: HCA.ClientNote || "",
+      WorkingHours: HCA.WorkingHours,
+      WorkType: HCA.WorkType,
+      ExtraWorkingHours: HCA.ExtraWorkingHours,
+      ExtraWorkType: HCA.ExtraWorkType,
 
       LeadDate: new Date().toISOString().split("T")[0],
       // createdAt: new Date(),
@@ -1275,7 +1301,7 @@ export const PostCallEnquiryNotification = async (
 
       clientArea: NotificationInformation.ClientArea,
       clientNote: NotificationInformation.ClientNote,
-RegistrationFee:RegistrationFee,
+      RegistrationFee:RegistrationFee,
       serviceCharges: NotificationInformation.serviceCharges,
       serviceType: NotificationInformation.ServiceType,
       expectedService: NotificationInformation.ExpectedService,
@@ -1285,6 +1311,10 @@ RegistrationFee:RegistrationFee,
       patientHealthCard: NotificationInformation.patientHealthCard,
       EnquiryDate: new Date().toISOString().split("T")[0],
       NotifyEmploys:EmailList,
+      
+Message: `New Call Enquiry from ${NotificationInformation.ClientName} (${NotificationInformation.ClientContact}). Service Type: ${NotificationInformation.ServiceType}, Expected Service: ${NotificationInformation.ExpectedService}, Reason: ${NotificationInformation.Reasonforservice}. Client Status: ${NotificationInformation.ClientStatus}. Registration Fee: ₹${RegistrationFee}.`,
+         Type:"New Call Enquiry",
+      Status :"Pending",
       isRead: false,
       createdAt: new Date(),
     };

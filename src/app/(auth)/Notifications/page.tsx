@@ -12,6 +12,7 @@ import { Refresh } from "@/Redux/action";
 type FilterType = "All" | "Pending" | "Approved" | "Rejected" | "Read";
 
 interface NotificationItem {
+  NotifyEmploys: any;
   patientName: any;
   clientName: any;
   position: any;
@@ -20,7 +21,7 @@ interface NotificationItem {
   HCPId: string;
   Date: any;
   _id: string;
-  Type: "LEAVE_REQUEST" | "EXPENSE_REQUEST" | "INFO" | "SYSTEM"|"HCP Salary Request" |"Refund Request" | "Attendance Edit Request" | "New Referral Request";
+  Type: "LEAVE_REQUEST" | "EXPENSE_REQUEST" | "INFO" | "SYSTEM"|"HCP Salary Request" |"Refund Request" | "Attendance Edit Request" | "New Referral Request"|"New Call Enquiry";
   ReferenceId?: string;
   UserId: string;
   EmployeeName?: string;
@@ -383,6 +384,8 @@ HCPName
   item.Type === "LEAVE_REQUEST" ||
   item.Type === "New Referral Request" || 
   (item.Type === "HCP Salary Request" && loggedInEmail === "kirancuratehealth@gmail.com") ||
+  (item.Type === "New Call Enquiry" &&item.NotifyEmploys.includes(loggedInEmail))||
+  
   item.Type === "EXPENSE_REQUEST" ||
   ((item.Type === "Refund Request" || item.Type === "Attendance Edit Request") &&
     (loggedInEmail === "shreeshmacurate@gmail.com" ||
@@ -456,7 +459,13 @@ HCPName
   </button>
 )}
 {item.Status!=="Approved"&& 
-            <div className="flex gap-2 shrink-0">
+
+            <div>
+              {item.Type==="New Call Enquiry"?<button className="group cursor-pointer relative inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-teal-500 via-teal-600 to-teal-700 rounded-lg shadow-md hover:shadow-lg hover:from-teal-600 hover:to-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-1 transition-all duration-200">
+  
+  <span className="tracking-wide">Action</span>
+
+</button>:<div className="flex gap-2 shrink-0">
               <button
                 onClick={() =>
                   handleAction(item, "Approved", item.Department)
@@ -479,6 +488,7 @@ HCPName
                 Reject
               </button>
             </div>}
+              </div>}
           </div>
         )}
     </div>

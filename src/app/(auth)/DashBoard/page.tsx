@@ -42,7 +42,7 @@ import {
   UpdateUserInformation,
   UpdateUserType,
 } from "@/Redux/action";
-import { CallEnquiryRegistration, GetDashboardStats, GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, PostCallEnquiryNotification } from "@/Lib/user.action";
+import { CallEnquiryRegistration, GetDashboardStats, GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, PostCallEnquiryNotification, UpdateNotIntrestInformation } from "@/Lib/user.action";
 
 
 
@@ -105,10 +105,18 @@ const [BechListInfo,setBechListInfo]=useState<any>()
 const [languageInput, setLanguageInput] = useState("");
 const [languageOptions, setLanguageOptions] = useState<string[]>([]);
 const [showLeadSuggestions, setShowLeadSuggestions] = useState(false);
+
+  const [showExtra, setShowExtra] = useState(false);
+
+
+  const options = ["Stayin", "Long Day", "Long Night"];
 const [filteredLeads, setFilteredLeads] = useState<string[]>([])
 
 const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
+ 
+ 
+ 
   const [EnquiryForm, setEnquiryForm] = useState<any>({
     ClientName: "",
     patientName:"",
@@ -130,6 +138,10 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
     Reasonforservice:"",
     ClientStatus:"",
     patientWeight:'',
+    WorkingHours: "",
+    WorkType: "",
+    ExtraWorkingHours: "",
+    ExtraWorkType: ""
   })
     const [showHealthCardSuggestions, setShowHealthCardSuggestions] =
     useState(false);
@@ -472,7 +484,11 @@ ClientStatus:EnquiryForm.ClientStatus||"Save",
 MonthlyServiceCharge: EnquiryForm.MonthlyServiceCharge || "",
       serviceCharges: EnquiryForm.serviceCharges || "",
       ClientNote: EnquiryForm.ClientNote || "",
-      RegistrationFee: DiscountPrice - ClientDiscount
+      RegistrationFee: DiscountPrice - ClientDiscount,
+      WorkingHours:EnquiryForm. WorkingHours,
+    WorkType:EnquiryForm.WorkType ,
+    ExtraWorkingHours: EnquiryForm.ExtraWorkingHours,
+    ExtraWorkType: EnquiryForm.ExtraWorkType
     };
       const registrationResult = await CallEnquiryRegistration(payload);
 
@@ -863,6 +879,7 @@ if(PostinNotification.success){
 setNotificationStatus("Notification Send Succesfully")
  setTimeout(() => {
   setNotificationStatus("")
+ setShowCallEnquiry(false)
           setShowNotification(false);
         }, 2000);
 
@@ -914,7 +931,7 @@ setNotificationStatus("Notification Send Succesfully")
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard.
+      Hi Admin – Welcome to Admin Dashboard
     </span>
   </div>
 
@@ -1349,7 +1366,7 @@ setNotificationStatus("Notification Send Succesfully")
         <button
           type="button"
           onClick={() => setShowCallEnquiry(false)}
-          className="h-8 w-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-red-500 transition"
+          className="h-4 w-4 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-red-500 transition"
         >
           ✕
         </button>
@@ -1388,6 +1405,7 @@ setNotificationStatus("Notification Send Succesfully")
             <input
               type="tel"
               name="ClientContact"
+              autoComplete="off"
               required
               value={EnquiryForm.ClientContact || ""}
               onChange={(e) => {
@@ -1480,6 +1498,101 @@ setNotificationStatus("Notification Send Succesfully")
               ))}
             </div>
           </div>
+
+        <div className="w-[90%] space-y-4">
+
+      <div>
+        <label className="block text-xs font-medium text-gray-500 mb-2">
+          Working Hours <span className="text-red-500">*</span>
+        </label>
+
+        <select
+          name="WorkingHours"
+          onChange={handleChange}
+          className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="">Select hours</option>
+          {Array.from({ length: 24 }, (_, i) => i + 1).map((hour) => (
+            <option key={hour} value={hour}>
+              {hour} {hour === 1 ? "hour" : "hours"}
+            </option>
+          ))}
+        </select>
+      </div>
+
+     
+      <div className="flex gap-6">
+        {options.map((opt) => (
+          <label key={opt} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={EnquiryForm.WorkType === opt}
+              onChange={() => setEnquiryForm({ ...EnquiryForm, WorkType: opt })}
+              className="h-4 w-4 accent-indigo-500"
+            />
+            <span className="text-sm text-gray-700">{opt}</span>
+          </label>
+        ))}
+      </div>
+
+      {/* Button */}
+      {!showExtra && (
+        <button
+          type="button"
+          onClick={() => setShowExtra(true)}
+          className="text-sm bg-indigo-500 text-white px-3 py-1 rounded-md hover:bg-indigo-600"
+        >
+          Required Additional Hcp?
+        </button>
+      )}
+
+      {/* Extra Section */}
+      {showExtra && (
+        <div className="relative border-t pt-4 space-y-3">
+          {/* Close Icon */}
+          <button
+            type="button"
+            onClick={() => {
+              setShowExtra(false);
+              setEnquiryForm({ ...EnquiryForm, ExtraWorkingHours: "", ExtraWorkType: "" });
+            }}
+            className="absolute top-0 right-0 text-gray-400 hover:text-gray-600 text-lg"
+          >
+            ✕
+          </button>
+
+          {/* Dropdown */}
+          <select
+            name="ExtraWorkingHours"
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">Select hours</option>
+            {Array.from({ length: 24 }, (_, i) => i + 1).map((hour) => (
+              <option key={hour} value={hour}>
+                {hour} {hour === 1 ? "hour" : "hours"}
+              </option>
+            ))}
+          </select>
+
+    
+          <div className="flex gap-6">
+            {options.map((opt) => (
+              <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={EnquiryForm.ExtraWorkType === opt}
+                  onChange={() => setEnquiryForm({ ...EnquiryForm, ExtraWorkType: opt })}
+                  className="h-4 w-4 accent-indigo-500"
+                />
+                <span className="text-sm text-gray-700">{opt}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+
         <div className="relative">
   <label className="block text-xs font-medium text-gray-500 mb-2">
     Lead Source <span className="text-red-500">*</span>
@@ -1673,7 +1786,7 @@ setNotificationStatus("Notification Send Succesfully")
         )}
       </div>
      <div className="w-full max-w-md">
-        <label className="block text-xs font-medium text-gray-500 mb-2">Health Card</label>
+        <label className="block text-xs font-medium text-gray-500 mb-2">Health Condition</label>
       <div className="relative">
         <input
           type="text"
@@ -1722,7 +1835,7 @@ setNotificationStatus("Notification Send Succesfully")
 
        <div id="Charges" className="bg-white rounded-lg shadow p-4 space-y-2">
          <h2 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
-    Charges:
+   Day Charges:
   </h2>
 {/* <div className="flex items-center gap-4">
   <h2 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
@@ -1902,7 +2015,7 @@ setNotificationStatus("Notification Send Succesfully")
    <p className="text-lg  font-semibold text-gray-800 m-2 flex">Update Call Enquiry Status</p>
                           <div className="flex  gap-4 m-2">
               
-                            {["Save","Send","Lost", "Waiting List",].map((each: string, i: number) => (
+                            {["Save","Send","Lost", "Waiting List","Not Intrested"].map((each: string, i: number) => (
                               <button
                                 key={i}
                                 type="button"
@@ -1911,9 +2024,47 @@ setNotificationStatus("Notification Send Succesfully")
                                   } h-7 md:h-10 rounded-md shadow cursor-pointer ${filterColors[each] || "bg-gray-200 text-gray-800"
                                   }`}
                               
-                                onClick={
-                                  () =>{ setEnquiryForm({ ...EnquiryForm, ClientStatus: each },); if (each==="Send")setShowNotification(true)}
-                                }
+                                onClick={async() => {
+                                  setEnquiryMessage("")
+                                  setEnquiryForm({
+                                    ...EnquiryForm,
+                                    ClientStatus: each,
+                                  });
+                                  if (each === "Not Intrested") {
+                                    const result: any = await UpdateNotIntrestInformation(EnquiryForm);
+                                    setEnquiryMessage(result.message);
+                                    dispatch(Refresh(result.message))
+                                    setEnquiryForm({
+                                      ClientName: "",
+                                      patientName: "",
+                                      ClientContact: '',
+                                      ClientEmail: '',
+                                      patientAge: "",
+                                      patientGender: '',
+                                      HCPPreferGender: "",
+                                      NewLead: "",
+                                      CurateNewLead: '',
+                                      PreferredLanguage: "",
+                                      ClientArea: '',
+                                      ClientNote: "",
+                                      serviceCharges: "",
+                                      MonthlyServiceCharge: "",
+                                      ServiceType: "",
+                                      patientHealthCard: "",
+                                      ExpectedService: "",
+                                      Reasonforservice: "",
+                                      ClientStatus: "",
+                                      patientWeight: '',
+                                    })
+                                    setTimeout(() => { setEnquiryMessage(""); setShowCallEnquiry(false) }, 2000)
+                                    return;
+                                  }
+
+
+                                  if (each === "Send") {
+                                    setShowNotification(true);
+                                  }
+                                }}
 
 
                               >
@@ -1931,12 +2082,12 @@ setNotificationStatus("Notification Send Succesfully")
    PostNotificationInfo(emails)
   }}
 />
+       <p className={EnquiryMessage?.includes("Successfully")?'text-green-800 text-center mb-4':'text-red-500 text-center mb-4'}>{EnquiryMessage}</p>
 
-
-     
+     {EnquiryForm.ClientStatus!== "Not Interested" && 
 
       <div className=" flex items-center justify-between w-full px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 sticky bottom-0">
-       <p className={EnquiryMessage==="Client Enquiry Registered Successfully"?'text-green  -800':'text-red-500'}>{EnquiryMessage}</p>
+
        <div className="flex gap-4">
         <button
           type="button"
@@ -1953,7 +2104,7 @@ setNotificationStatus("Notification Send Succesfully")
           Save Enquiry
         </button>
         </div>
-      </div>
+      </div>}
 
     </div>
   </div>

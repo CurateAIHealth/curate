@@ -49,6 +49,7 @@ import ReplacementsTable from '@/Components/ReplacementsTable/page';
 import CallEnquiryList from '@/Components/CallEnquiry/page';
 import { stat } from 'fs';
 import { ClientsPopup } from '@/Components/SentProfile/page';
+import NotIntrestedTable from '@/Components/NotIntrested/page';
 
 
 export default function UserTableList() {
@@ -168,7 +169,7 @@ const RESTRICTED_EMAILS = new Set([
 //   };
 // }, [updatedStatusMsg]);
 const DASHBOARD_CACHE_KEY = "dashboard_cache";
-const CACHE_TTL = 10 * 60 * 1000;
+const CACHE_TTL = 5 * 60 * 1000;
 
 useEffect(() => {
   let mounted = true;
@@ -325,6 +326,9 @@ console.log("Check Current Task Information------",DeploymentInfo)
 
 
   const callEnquiryArray = users.filter((each) => each.userType === 'CallEnquiry')
+  const NotIntrestedArray= users.filter((each) => each.Type === 'Not Intrested')
+
+  console.log("Check for Not Intrested Array",NotIntrestedArray)
 
   const clientsData= users.filter((each) => each.userType === 'patient')
 
@@ -353,7 +357,8 @@ console.log("Check Current Task Information------",DeploymentInfo)
     ServiceArea: each.ServiceArea,
     ServiceLocation: each.ServiceArea,
     PreviewUserType: each.PreviewUserType||"None",
-    PDRStatus:each.PDRStatus||"No Available"
+    PDRStatus:each.PDRStatus||"No Available",
+    Type:each.Type
   }));
 console.log("Check----",users)
   const UpdatedFilterUserType = Finel
@@ -832,12 +837,14 @@ const UpdatePopup = async (a: any) => {
   const ClientEnquiryUserInterFace = () => {
     return (
       <div>
-        {search === "CallEnquiry" ? <CallEnquiryList
+        {search === "CallEnquiry" ? (<CallEnquiryList
           data={callEnquiryArray}
           SearchData={SearchResult}
           title="Recent Call Enquiries"
-        />
-          : <div className="w-full">
+        />) : search === "Not Intrested" ? (
+    <NotIntrestedTable data={NotIntrestedArray} />
+  ):(
+           <div className="w-full">
             {ShowDeletePopUp && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">
 
@@ -1263,6 +1270,7 @@ const UpdatePopup = async (a: any) => {
                               </div>
                               </td>}
                             {/* <td className="px-2 py-2 break-words">{user?.Email?.toLowerCase()||"Not Provided"}</td> */}
+                      
                             <td className="px-2 py-2">
                               {user?.Contact ? `${user.Contact}` : "Not Provided"}
                             </td>
@@ -1600,7 +1608,9 @@ const UpdatePopup = async (a: any) => {
                             </td>
                                  {UpdateduserType === 'patient' &&
                              <td className="px-2 py-2 text-center">
-                        {user.ClientStatus==="Converted" ?<div>{user?.PDRStatus==="Filled" ?
+                        {user.ClientStatus==="Converted" ?
+                        
+                        <div>{user?.PDRStatus==="Filled" ?
   <span className="inline-flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:shadow-lg
                    bg-emerald-100 text-emerald-600">
     <FileCheck size={18} strokeWidth={2.2} onClick={() => UpdatePopup(user)}/>
@@ -1618,8 +1628,7 @@ Awaiting Conversion
                             </td>}
                             {UpdateduserType === 'patient' &&
                               <td className="md:px-8 md:py-2">
-
-                                <button
+{user?.PDRStatus==="Filled" ? <button
                                   onClick={() => UpdateNavigattosuggetions(user.userId)}
                                   className="flex   cursor-pointer items-center gap-2 w-full sm:w-auto justify-center  py-2
  text-white    h-10 text-[9px] transition-all duration-150"
@@ -1627,7 +1636,10 @@ Awaiting Conversion
                                   {/* <img src="Icons/HCP.png" className='h-10 w-10 rounded-full'/> */}
                                   <img src="Icons/FemaleHCA.png" className='h-10 w-15 rounded-full' />
 
-                                </button>
+                                </button>: <p className="text-gray-700 text-center text-[10px]  w-[40px] opacity-50 cursor-not-allowed">
+  PDR Not Filled
+</p>}
+                               
                               </td>}
                             
                               <td className="md:px-8 md:py-2">
@@ -1710,7 +1722,7 @@ Awaiting Conversion
                 {updatedStatusMsg}
               </div>
             )}
-          </div>}
+          </div>)}
       </div>
 
     );
@@ -2087,7 +2099,7 @@ const monthNames = [
                       {
                         UpdateMainFilter === "Call Enquiry"
                           ? `${each} (${MonthlyCount?.filter(
-                            (Try) => (Try.ClientStatus === each && Try.userType==="patient")|| Try.userType === each
+                            (Try) => (Try.ClientStatus === each && Try.userType==="patient")|| Try.userType === each||Try.Type === each
                           )?.length || 0
                           })`
                           : each
