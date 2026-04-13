@@ -6,6 +6,7 @@ import clientPromise from "./db";
 import { TimeStamp } from "@/Redux/reducer";
 import { data, symbol } from "framer-motion/client";
 import { Departments, VendorFieldMap } from "./Content";
+import { title } from "process";
 
 export const UpdateDocterInformation = async (doctorInfo: {
   userType: any,
@@ -573,6 +574,8 @@ export const UpdateNewLeadInformation = async (FinelPostingData: any) => {
       patientAge: FinelPostingData.patientAge,
       patientGender: FinelPostingData.patientGender,
       patientWeight: FinelPostingData.patientWeight,
+      WeightReport: FinelPostingData.WeightReport,
+      HeightReport: FinelPostingData.HeightReport,
       patientHeight: FinelPostingData.patientHeight,
       comfortableLanguages: FinelPostingData.comfortableLanguages,
       patientType: FinelPostingData.patientType,
@@ -1236,7 +1239,7 @@ export const CallEnquiryRegistration = async (HCA: any) => {
     const encryptedData: any = {
       userType: HCA.userType,
       userId: HCA.userId,
-
+title: HCA.title || "",
       FirstName: HCA.FirstName ? encrypt(HCA.FirstName) : "",
       patientName: HCA.patientName || "",
       ContactNumber: HCA.ContactNumber,
@@ -1244,6 +1247,7 @@ export const CallEnquiryRegistration = async (HCA: any) => {
       patientWeight: HCA.patientWeight || "",
       patientAge: HCA.patientAge || "",
       patientGender: HCA.patientGender || "",
+      clientGender: HCA.clientGender || "",
       HCPPreferGender: HCA.HCPPreferGender || "",
       PreferredLanguage: HCA.PreferredLanguage || "",
       NewLead: HCA.NewLead || "",

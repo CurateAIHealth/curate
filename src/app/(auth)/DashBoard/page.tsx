@@ -60,6 +60,7 @@ import PostExpense from "@/Components/Expences/page";
 import StaffNotificationModal from "@/Components/CallEnquiryNotification/page";
 import { tr } from "framer-motion/client";
 import ReferralPopup from "@/Components/ReferalPopup/page";
+import { title } from "process";
 
 const DOCUMENT_KEYS = [
   "AadharAttachmentURL",
@@ -109,7 +110,7 @@ const [showLeadSuggestions, setShowLeadSuggestions] = useState(false);
   const [showExtra, setShowExtra] = useState(false);
 
 
-  const options = ["Stayin", "Long Day", "Long Night"];
+  const options = ["Stay In", "Long Day", "Long Night"];
 const [filteredLeads, setFilteredLeads] = useState<string[]>([])
 
 const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
@@ -118,12 +119,14 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
  
  
   const [EnquiryForm, setEnquiryForm] = useState<any>({
+    title: "",
     ClientName: "",
     patientName:"",
     ClientContact: '',
     ClientEmail: '',
     patientAge:"",
     patientGender:'',
+    clientGender:"",
     HCPPreferGender:"",
     NewLead:"",
     CurateNewLead:'',
@@ -463,7 +466,7 @@ useEffect(() => {
        const payload: any = {
       userType:"CallEnquiry",
       userId: generatedUserId,
-
+title: EnquiryForm.title || "",
       FirstName: EnquiryForm.ClientName || "",
       ContactNumber: EnquiryForm.ClientContact || "",
       Email: EnquiryForm.ClientEmail || "",
@@ -471,6 +474,7 @@ patientName:EnquiryForm.patientName||"",
       patientAge: EnquiryForm.patientAge || "",
       patientWeight:EnquiryForm.patientWeight||'',
       patientGender: EnquiryForm.patientGender || "",
+      clientGender: EnquiryForm.clientGender || "",
       HCPPreferGender: EnquiryForm.HCPPreferGender || "",
       PreferredLanguage: EnquiryForm.PreferredLanguage || "",
       NewLead:EnquiryForm.NewLead||'',
@@ -931,7 +935,7 @@ setNotificationStatus("Notification Send Succesfully")
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard
+      Hi Admin – Welcome to Admin Dashboard.
     </span>
   </div>
 
@@ -1378,20 +1382,45 @@ setNotificationStatus("Notification Send Succesfully")
 
           <div className="w-full">
             <label className="block text-xs font-medium text-gray-500 mb-1">Client Name <span className="text-red-500">*</span></label> 
-            <input
-              type="text"
-              name="ClientName"
-              onChange={handleChange}
-              placeholder="Full name"
-              required
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
-            />
+         <div className="flex gap-2">
+  <select
+    name="title"
+    onChange={handleChange}
+    required
+    className="rounded-lg border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-gray-800"
+  >
+    <option value="">Title</option>
+    <option value="Mr">Mr</option>
+    <option value="Mrs">Mrs</option>
+    <option value="Miss">Miss</option>
+   
+  </select>
+
+  <input
+    type="text"
+    name="ClientName"
+      onKeyDown={(e) => {
+    if (/[0-9]/.test(e.key)) {
+      e.preventDefault();
+    }
+  }}
+    onChange={handleChange}
+    placeholder="Full name"
+    required
+    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+  />
+</div>
           </div>
              <div className="w-full">
             <label className="block text-xs font-medium text-gray-500 mb-1">Patient Name </label> 
             <input
               type="text"
               name="patientName"
+                onKeyDown={(e) => {
+    if (/[0-9]/.test(e.key)) {
+      e.preventDefault();
+    }
+  }}
               onChange={handleChange}
               placeholder="Patient Full name"
               
@@ -1477,7 +1506,7 @@ setNotificationStatus("Notification Send Succesfully")
              
             </label>
             <div className="flex gap-6">
-              {["Male", "Female", "Other"].map((gender) => (
+              {["Male", "Female"].map((gender) => (
                 <label key={gender} className="flex items-center gap-2">
                   <input type="radio" name="patientGender" value={gender} className="h-5 w-5 accent-indigo-500" onChange={handleChange}/>
                   <span className="text-sm text-gray-700">{gender}</span>
@@ -1486,18 +1515,26 @@ setNotificationStatus("Notification Send Succesfully")
             </div>
           </div>
 
-          <div className="w-full">
-            <label className="block text-xs font-medium text-gray-500 mb-2">HCP Preferred</label>
-          
+
+            <div className="w-full">
+            <label className="block text-xs font-medium text-gray-500 mb-2">
+              Client Gender <span className="text-red-500">*</span>
+             
+            </label>
             <div className="flex gap-6">
-              {["Male", "Female"].map((opt) => (
-                <label key={opt} className="flex items-center gap-2">
-                  <input type="radio" name="HCPPreferGender" value={opt} className="h-5 w-5 accent-indigo-500" onChange={handleChange}/>
-                  <span className="text-sm text-gray-700">{opt}</span>
+              {["Male", "Female"].map((gender) => (
+                <label key={gender} className="flex items-center gap-2">
+                  <input type="radio" name="clientGender" value={gender} className="h-5 w-5 accent-indigo-500" onChange={handleChange}/>
+                  <span className="text-sm text-gray-700">{gender}</span>
                 </label>
               ))}
             </div>
           </div>
+
+
+         
+
+          
 
         <div className="w-[90%] space-y-4">
 
@@ -1640,6 +1677,18 @@ setNotificationStatus("Notification Send Succesfully")
     </div>
   )}
 </div>
+<div className="w-full mt-100px">
+            <label className="block text-xs font-medium text-gray-500 mb-2">HCP Preferred</label>
+          
+            <div className="flex gap-6">
+              {["Male", "Female"].map((opt) => (
+                <label key={opt} className="flex items-center gap-2">
+                  <input type="radio" name="HCPPreferGender" value={opt} className="h-5 w-5 accent-indigo-500" onChange={handleChange}/>
+                  <span className="text-sm text-gray-700">{opt}</span>
+                </label>
+              ))}
+            </div>
+          </div>
   <div className="relative">
   <label className="block text-xs font-medium text-gray-500 mb-2">
     Curate Lead Source <span className="text-red-500">*</span>
@@ -2015,7 +2064,7 @@ setNotificationStatus("Notification Send Succesfully")
    <p className="text-lg  font-semibold text-gray-800 m-2 flex">Update Call Enquiry Status</p>
                           <div className="flex  gap-4 m-2">
               
-                            {["Save","Send","Lost", "Waiting List","Not Intrested"].map((each: string, i: number) => (
+                            {["Save","Send","Lost", "Waiting List","Irrelevant "].map((each: string, i: number) => (
                               <button
                                 key={i}
                                 type="button"
@@ -2030,7 +2079,7 @@ setNotificationStatus("Notification Send Succesfully")
                                     ...EnquiryForm,
                                     ClientStatus: each,
                                   });
-                                  if (each === "Not Intrested") {
+                                  if (each === "Irrelevant ") {
                                     const result: any = await UpdateNotIntrestInformation(EnquiryForm);
                                     setEnquiryMessage(result.message);
                                     dispatch(Refresh(result.message))

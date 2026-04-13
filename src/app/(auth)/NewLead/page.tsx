@@ -56,6 +56,8 @@ export default function CallEnquiryForm() {
     patientAge: "",
     patientGender: [],
     patientWeight: "",
+    WeightReport: "",
+    HeightReport  : "",
     patientHeight: "",
     comfortableLanguages: [],
     patientType: "",
@@ -169,7 +171,7 @@ export default function CallEnquiryForm() {
     ClientStatus: "Waiting List",
   });
   const [heightCm, setHeightCm] = useState("");
-
+  const options = ["Actual", "Reported", "Estimated"];
   const [DiscountStatus, SetDiscountStatus] = useState(true)
   const [visible, setVisible] = useState(true);
   const [WarningMessage, setWarningMessage] = useState("");
@@ -1131,6 +1133,21 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
                 </p>
               </div>
             )}
+
+               <div className="flex items-center justify-center gap-6">
+                <p className="text-sm  text-gray-700 font-bold">Weight Report:</p>
+        {options.map((opt) => (
+          <label key={opt} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.WeightReport === opt}
+              onChange={()=>handleChange("WeightReport", opt)}
+              className="h-4 w-4 accent-indigo-500"
+            />
+            <span className="text-sm text-gray-700">{opt}</span>
+          </label>
+        ))}
+      </div>
             {/* <button type="button" className="bg-white/30 backdrop-blur-md  border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, Weight: !RemarkStatus.Weight }))} > {RemarkStatus.Weight ? "SAVE Remark" : "Add Remarks"} </button>
             {RemarkStatus.Weight && <textarea
               rows={4}
@@ -1216,6 +1233,20 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
     onChange={(e) => handleCmChange(e.target.value)}
     className="w-[130px] px-3 py-1.5 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-teal-500"
   />
+       <div className="flex items-center justify-center gap-6">
+                <p className="text-sm  text-gray-700 font-bold">Height Report:</p>
+        {options.map((opt) => (
+          <label key={opt} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.HeightReport === opt}
+              onChange={()=>handleChange("HeightReport", opt)}
+              className="h-4 w-4 accent-indigo-500"
+            />
+            <span className="text-sm text-gray-700">{opt}</span>
+          </label>
+        ))}
+      </div>
 </div>
 
             {/* <button type="button" className="bg-white/30 backdrop-blur-md  border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, Height: !RemarkStatus.Height }))} > {RemarkStatus.Height ? "SAVE Remark" : "Add Remarks"} </button>
