@@ -276,12 +276,12 @@ const Result= await collection.insertOne({
  ClientName:Info.ClientName,
 ContactNumber:Info.ClientContact,
 Information:Info.ClientNote,
- Type:"Not Intrested",
+ Type:"Irrelevant",
  LeadDate: new Date().toISOString().split("T")[0],
 })
  return {
       success: true,
-      message: "New Call Enquiry Marked As Not Intrested  Successfully",
+      message: "New Call Enquiry Marked As Irrelevant  Successfully",
       insertedId: Result.insertedId.toString(),
     };
 }catch(err:any){}
@@ -1240,6 +1240,7 @@ export const CallEnquiryRegistration = async (HCA: any) => {
       userType: HCA.userType,
       userId: HCA.userId,
 title: HCA.title || "",
+Patienttitle:HCA.Patienttitle||"",
       FirstName: HCA.FirstName ? encrypt(HCA.FirstName) : "",
       patientName: HCA.patientName || "",
       ContactNumber: HCA.ContactNumber,
@@ -3434,6 +3435,37 @@ const client = await clientPromise;
     return {
       success: true,
       message: "Enquiry deleted Successfully",
+    };
+  } catch (error) {
+    console.error("Error deleting enquiry:", error);
+    return {
+      success: false,
+      message: "Failed to delete enquiry",
+    };
+  }
+};
+
+export const UpdateNewComments = async (ImpuserId: string,ImpComments:any) => {
+  try {
+
+
+const client = await clientPromise;
+
+
+    const db = client.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const result = await collection.updateOne({ userId: ImpuserId }, {
+      $set: {
+        comments: ImpComments
+      }
+    });
+
+   
+
+    return {
+      success: true,
+      message: "Comments Updated Successfully",
     };
   } catch (error) {
     console.error("Error deleting enquiry:", error);

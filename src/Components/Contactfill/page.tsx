@@ -108,7 +108,7 @@ export default function FreeConsultationForm({ onClose }: Props) {
 
         <div className="mb-4 flex items-start space-x-2">
           <input
-            type="checkbox"
+            type="radio"
             name="agree"
             checked={formData.agree}
             onChange={handleChange}

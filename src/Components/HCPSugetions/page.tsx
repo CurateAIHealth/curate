@@ -836,7 +836,7 @@ Search For HCP Criteria
           {["HCA", "HCN", "HCPT"].map((type) => (
             <label key={type} className="flex items-center space-x-2">
               <input
-                type="checkbox"
+                type="radio"
                 checked={form.hcpType.includes(type)}
                 onChange={() => handleCheckboxChange("hcpType", type)}
                 className="accent-indigo-600"
@@ -863,7 +863,7 @@ Search For HCP Criteria
           ].map((qual) => (
             <label key={qual} className="flex items-center space-x-2">
               <input
-                type="checkbox"
+                type="radio"
                 checked={form.qualification.includes(qual)}
                 onChange={() => handleCheckboxChange("qualification", qual)}
                 className="accent-indigo-600"
@@ -917,7 +917,7 @@ Search For HCP Criteria
           ].map((condition) => (
             <label key={condition} className="flex items-center space-x-2">
               <input
-                type="checkbox"
+                type="radio"
                 checked={form.healthConditions.includes(condition)}
                 onChange={() => handleCheckboxChange("healthConditions", condition)}
                 className="accent-indigo-600"

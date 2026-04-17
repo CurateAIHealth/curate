@@ -1072,7 +1072,7 @@ const handleImageChange = useCallback(
                                       {PROFESSIONAL_SKILL_OPTIONS.map((skill) => (
                                         <label key={skill} className="flex items-center text-sm">
                                           <input
-                                            type="checkbox"
+                                            type="radio"
                                             className="mr-2 accent-purple-600"
                                             checked={form.professionalSkill.includes(skill)||false}
                                             onChange={() => handleSkillChange(skill)}
@@ -1228,7 +1228,7 @@ const handleImageChange = useCallback(
                                     <div className="flex items-center space-x-4">
                                         <label htmlFor="serviceHours12hrs" className="flex items-center cursor-pointer">
                                             <input
-                                                type="checkbox"
+                                                type="radio"
                                                 id="serviceHours12hrs"
                                                 name="serviceHours12hrs"
                                                 checked={form.serviceHours12hrs||false}
@@ -1239,7 +1239,7 @@ const handleImageChange = useCallback(
                                         </label>
                                         <label htmlFor="serviceHours24hrs" className="flex items-center cursor-pointer">
                                             <input
-                                                type="checkbox"
+                                                type="radio"
                                                 id="serviceHours24hrs"
                                                 name="serviceHours24hrs"
                                                 checked={form.serviceHours24hrs||false}

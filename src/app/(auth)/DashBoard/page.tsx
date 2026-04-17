@@ -28,12 +28,14 @@ import {
   Shield,
   Minimize2,
   Share2,
+  Info,
 } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 
 import { useDispatch, useSelector } from "react-redux";
 import {
   CurrentLoginUser,
+  mapEnquiryToForm,
   Refresh,
   Update_Main_Filter_Status,
   UpdateClient,
@@ -112,7 +114,7 @@ const [showLeadSuggestions, setShowLeadSuggestions] = useState(false);
 
   const options = ["Stay In", "Long Day", "Long Night"];
 const [filteredLeads, setFilteredLeads] = useState<string[]>([])
-
+const ImportedInformationOfCallEnquiry=useSelector((state:any)=>state.NotificationCallEnquiryInformation)
 const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
  
@@ -120,6 +122,7 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
  
   const [EnquiryForm, setEnquiryForm] = useState<any>({
     title: "",
+    Patienttitle:"",
     ClientName: "",
     patientName:"",
     ClientContact: '',
@@ -271,6 +274,26 @@ const BENCH_CACHE_TTL = 20* 60 * 1000;
 //     mounted = false;
 //   };
 // }, []);
+
+useEffect(() => {
+  if (ImportedInformationOfCallEnquiry) {
+
+    console.log("Imported Information-----",ImportedInformationOfCallEnquiry)
+    
+  const mapped = mapEnquiryToForm(ImportedInformationOfCallEnquiry);
+
+  setEnquiryForm((prev: any) => ({
+    ...prev,
+    ...mapped
+  }));
+
+    setShowCallEnquiry(true);
+    console.log(
+      "Check Imported Information of Call Enquiry-----",
+      ImportedInformationOfCallEnquiry
+    );
+  }
+}, [ImportedInformationOfCallEnquiry]);
 const run = useCallback(async () => {
   const userId = localStorage.getItem("UserId");
 
@@ -457,43 +480,55 @@ useEffect(() => {
 
   const UpdateCallEnquiry = async () => {
     setEnquiryMessage("Please Wait.....")
+     if(EnquiryForm.ClientName===""&&EnquiryForm.patientName===""&&EnquiryForm.ClientContact===""){
+      alert("Please Enter Client & Patient Name")
+      return
+    }
     try {
       if(!EnquiryForm.ClientStatus){
         setEnquiryMessage("Pleae Update Call Enquiry Status")
         return
       }
+
+      const isPatient =
+      EnquiryForm.ClientStatus === "Waiting List" ||
+      EnquiryForm.ClientStatus === "Lost";
+
+
+
       const generatedUserId = uuidv4()
-       const payload: any = {
-      userType:"CallEnquiry",
-      userId: generatedUserId,
-title: EnquiryForm.title || "",
-      FirstName: EnquiryForm.ClientName || "",
-      ContactNumber: EnquiryForm.ClientContact || "",
-      Email: EnquiryForm.ClientEmail || "",
-patientName:EnquiryForm.patientName||"",
-      patientAge: EnquiryForm.patientAge || "",
-      patientWeight:EnquiryForm.patientWeight||'',
-      patientGender: EnquiryForm.patientGender || "",
-      clientGender: EnquiryForm.clientGender || "",
-      HCPPreferGender: EnquiryForm.HCPPreferGender || "",
-      PreferredLanguage: EnquiryForm.PreferredLanguage || "",
-      NewLead:EnquiryForm.NewLead||'',
-      CurateNewLead:EnquiryForm.CurateNewLead||'',
-      Location: EnquiryForm.ClientArea || "",
-      ServiceType: EnquiryForm.ServiceType || "",
-      HealthCard: EnquiryForm.patientHealthCard || "",
-ClientStatus:EnquiryForm.ClientStatus||"Save",
-      ExpectedService: EnquiryForm.ExpectedService || "",
-      ReasonForService: EnquiryForm.Reasonforservice || "",
-MonthlyServiceCharge: EnquiryForm.MonthlyServiceCharge || "",
-      serviceCharges: EnquiryForm.serviceCharges || "",
-      ClientNote: EnquiryForm.ClientNote || "",
-      RegistrationFee: DiscountPrice - ClientDiscount,
-      WorkingHours:EnquiryForm. WorkingHours,
-    WorkType:EnquiryForm.WorkType ,
-    ExtraWorkingHours: EnquiryForm.ExtraWorkingHours,
-    ExtraWorkType: EnquiryForm.ExtraWorkType
-    };
+      const payload: any = {
+        userType: isPatient ? "patient" : "CallEnquiry",
+        userId: generatedUserId,
+        title: EnquiryForm.title || "",
+        Patienttitle: EnquiryForm.Patienttitle || "",
+        FirstName: EnquiryForm.ClientName || "",
+        ContactNumber: EnquiryForm.ClientContact || "",
+        Email: EnquiryForm.ClientEmail || "",
+        patientName: EnquiryForm.patientName || "",
+        patientAge: EnquiryForm.patientAge || "",
+        patientWeight: EnquiryForm.patientWeight || '',
+        patientGender: EnquiryForm.patientGender || "",
+        clientGender: EnquiryForm.clientGender || "",
+        HCPPreferGender: EnquiryForm.HCPPreferGender || "",
+        PreferredLanguage: EnquiryForm.PreferredLanguage || "",
+        NewLead: EnquiryForm.NewLead || '',
+        CurateNewLead: EnquiryForm.CurateNewLead || '',
+        Location: EnquiryForm.ClientArea || "",
+        ServiceType: EnquiryForm.ServiceType || "",
+        HealthCard: EnquiryForm.patientHealthCard || "",
+        ClientStatus: EnquiryForm.ClientStatus || "Save",
+        ExpectedService: EnquiryForm.ExpectedService || "",
+        ReasonForService: EnquiryForm.Reasonforservice || "",
+        MonthlyServiceCharge: EnquiryForm.MonthlyServiceCharge || "",
+        serviceCharges: EnquiryForm.serviceCharges || "",
+        ClientNote: EnquiryForm.ClientNote || "",
+        RegistrationFee: DiscountPrice - ClientDiscount,
+        WorkingHours: EnquiryForm.WorkingHours,
+        WorkType: EnquiryForm.WorkType,
+        ExtraWorkingHours: EnquiryForm.ExtraWorkingHours,
+        ExtraWorkType: EnquiryForm.ExtraWorkType
+      };
       const registrationResult = await CallEnquiryRegistration(payload);
 
       if (registrationResult.success === true) {
@@ -894,7 +929,45 @@ setNotificationStatus("Notification Send Succesfully")
 }
 
 
+const UpdateIrralaventInfo=async()=>{ 
 
+  try{
+   setEnquiryMessage("Please Wait....")
+                                 if(EnquiryForm.ClientName===""&&EnquiryForm.patientName===""&&EnquiryForm.ClientContact===""){
+      alert("Please Enter Client & Patient Name")
+      return
+    }
+const result: any = await UpdateNotIntrestInformation(EnquiryForm);
+                                    setEnquiryMessage(result.message);
+                                    dispatch(Refresh(result.message))
+                                    setEnquiryForm({
+                                      ClientName: "",
+                                      patientName: "",
+                                      ClientContact: '',
+                                      ClientEmail: '',
+                                      patientAge: "",
+                                      patientGender: '',
+                                      HCPPreferGender: "",
+                                      NewLead: "",
+                                      CurateNewLead: '',
+                                      PreferredLanguage: "",
+                                      ClientArea: '',
+                                      ClientNote: "",
+                                      serviceCharges: "",
+                                      MonthlyServiceCharge: "",
+                                      ServiceType: "",
+                                      patientHealthCard: "",
+                                      ExpectedService: "",
+                                      Reasonforservice: "",
+                                      ClientStatus: "",
+                                      patientWeight: '',
+                                    })
+                                    setTimeout(() => { setEnquiryMessage(""); setShowCallEnquiry(false) }, 2000)
+                                    return;
+  }catch(err:any){
+
+  }
+}
  
 
   const UpdateNewLead = async () => {
@@ -935,7 +1008,7 @@ setNotificationStatus("Notification Send Succesfully")
     <div className="flex items-center gap-2 min-w-0">
     <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
     <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard.
+      Hi Admin – Welcome to Admin Dashboard
     </span>
   </div>
 
@@ -1405,6 +1478,7 @@ setNotificationStatus("Notification Send Succesfully")
     }
   }}
     onChange={handleChange}
+     value={EnquiryForm.ClientName}
     placeholder="Full name"
     required
     className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
@@ -1413,9 +1487,24 @@ setNotificationStatus("Notification Send Succesfully")
           </div>
              <div className="w-full">
             <label className="block text-xs font-medium text-gray-500 mb-1">Patient Name </label> 
+             <div className="flex gap-2">
+              <select
+    name="Patienttitle"
+    onChange={handleChange}
+    required
+    className="rounded-lg border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-gray-800"
+  >
+    <option value="">Title</option>
+    <option value="Mr">Mr</option>
+    <option value="Mrs">Mrs</option>
+    <option value="Miss">Miss</option>
+   
+  </select>
             <input
               type="text"
               name="patientName"
+             
+              value={EnquiryForm.patientName}
                 onKeyDown={(e) => {
     if (/[0-9]/.test(e.key)) {
       e.preventDefault();
@@ -1426,6 +1515,7 @@ setNotificationStatus("Notification Send Succesfully")
               
               className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
             />
+            </div>
           </div>
 
           <div className="w-full">
@@ -1452,15 +1542,32 @@ setNotificationStatus("Notification Send Succesfully")
               !/^[6-9]\d{9}$/.test(EnquiryForm.ClientContact) && (
                 <p className="mt-1 text-xs text-red-500">Enter a valid Indian mobile number</p>
               )}
+             <div className="flex items-center gap-2 mt-2">
+      <button className="text-[10px] font-medium rounded-md cursor-pointer bg-blue-500 hover:bg-blue-600 text-white px-1 py-1 transition" onClick={UpdateIrralaventInfo}>
+        Irrelevant
+      </button>
+
+      <div className="relative group">
+        <Info className="w-3 h-3 text-gray-500 cursor-pointer" />
+
+     
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-2 py-1 whitespace-nowrap shadow-md">
+          Call Irrelevant to Our Service and Just Collecting Information
+        </div>
+      </div>
+    </div>
+{EnquiryMessage&&
+     <p className={EnquiryMessage?.includes("Successfully")?'text-green-800 text-center mb-4':'text-red-500 text-center mb-4'}>{EnquiryMessage}</p>}
           </div>
 
           <div className="w-full">
             <label className="block text-xs font-medium text-gray-500 mb-1">Email Address</label>
-          
+              
             <input
               type="email"
               name="ClientEmail"
               onChange={handleChange}
+               value={EnquiryForm.ClientEmail}
               placeholder="example@email.com"
               className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
@@ -1475,6 +1582,7 @@ setNotificationStatus("Notification Send Succesfully")
               type="number"
               name="patientAge"
               onChange={handleChange}
+              value={EnquiryForm.patientAge}
               min={0}
               max={120}
               placeholder="Enter age"
@@ -1492,6 +1600,7 @@ setNotificationStatus("Notification Send Succesfully")
             <input
               type="number"
               name="patientWeight"
+              value={EnquiryForm.patientWeight}
               onChange={handleChange}
               min={0}
               max={120}
@@ -1546,6 +1655,7 @@ setNotificationStatus("Notification Send Succesfully")
         <select
           name="WorkingHours"
           onChange={handleChange}
+          value={EnquiryForm.WorkingHours}
           className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <option value="">Select hours</option>
@@ -1562,9 +1672,17 @@ setNotificationStatus("Notification Send Succesfully")
         {options.map((opt) => (
           <label key={opt} className="flex items-center gap-2 cursor-pointer">
             <input
-              type="checkbox"
+              type="radio"
               checked={EnquiryForm.WorkType === opt}
-              onChange={() => setEnquiryForm({ ...EnquiryForm, WorkType: opt })}
+onChange={() => {
+  setEnquiryForm((prev: any) => ({
+    ...prev,
+    WorkType: opt,
+    ...(opt === "Stay In" && { WorkingHours: 24 }),
+    ...(opt === "Long Day" && { WorkingHours: 12 }),
+     ...(opt === "Long Night" && { WorkingHours: 12 }),
+  }));
+}}
               className="h-4 w-4 accent-indigo-500"
             />
             <span className="text-sm text-gray-700">{opt}</span>
@@ -1602,6 +1720,7 @@ setNotificationStatus("Notification Send Succesfully")
           <select
             name="ExtraWorkingHours"
             onChange={handleChange}
+            value={EnquiryForm.ExtraWorkingHours}
             className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="">Select hours</option>
@@ -1617,9 +1736,18 @@ setNotificationStatus("Notification Send Succesfully")
             {options.map((opt) => (
               <label key={opt} className="flex items-center gap-2 cursor-pointer">
                 <input
-                  type="checkbox"
+                  type="radio"
                   checked={EnquiryForm.ExtraWorkType === opt}
-                  onChange={() => setEnquiryForm({ ...EnquiryForm, ExtraWorkType: opt })}
+                
+                  onChange={() => {
+  setEnquiryForm((prev: any) => ({
+    ...prev,
+    ExtraWorkType: opt,
+    ...(opt === "Stay In" && { ExtraWorkingHours: 24 }),
+    ...(opt === "Long Day" && { ExtraWorkingHours: 12 }),
+     ...(opt === "Long Night" && { ExtraWorkingHours: 12 }),
+  }));
+}}
                   className="h-4 w-4 accent-indigo-500"
                 />
                 <span className="text-sm text-gray-700">{opt}</span>
@@ -1742,7 +1870,7 @@ setNotificationStatus("Notification Send Succesfully")
          
             <input
               type="text"
-              value={languageInput}
+              value={languageInput||EnquiryForm.PreferredLanguage}
               onChange={handleLanguageChange}
               placeholder="Type preferred language"
               className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
@@ -2064,7 +2192,7 @@ setNotificationStatus("Notification Send Succesfully")
    <p className="text-lg  font-semibold text-gray-800 m-2 flex">Update Call Enquiry Status</p>
                           <div className="flex  gap-4 m-2">
               
-                            {["Save","Send","Lost", "Waiting List","Irrelevant "].map((each: string, i: number) => (
+                            {["Save","Send","Lost", "Waiting List","Irrelevant"].map((each: string, i: number) => (
                               <button
                                 key={i}
                                 type="button"
@@ -2080,6 +2208,10 @@ setNotificationStatus("Notification Send Succesfully")
                                     ClientStatus: each,
                                   });
                                   if (each === "Irrelevant ") {
+                                                                  if(EnquiryForm.ClientName===""&&EnquiryForm.patientName===""&&EnquiryForm.ClientContact===""){
+      alert("Please Enter Client & Patient Name")
+      return
+    }
                                     const result: any = await UpdateNotIntrestInformation(EnquiryForm);
                                     setEnquiryMessage(result.message);
                                     dispatch(Refresh(result.message))
@@ -2111,6 +2243,10 @@ setNotificationStatus("Notification Send Succesfully")
 
 
                                   if (each === "Send") {
+                                      if(EnquiryForm.ClientName===""&&EnquiryForm.patientName===""&&EnquiryForm.ClientContact===""){
+      alert("Please Enter Client & Patient Name")
+      return
+    }
                                     setShowNotification(true);
                                   }
                                 }}

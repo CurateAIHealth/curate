@@ -3,7 +3,7 @@
 
 
 import { toProperCaseLive } from "@/Lib/Actions";
-import { ClearEnquiry, GetUserInformation, UpdateClientStatusinCallEnquiry, UpdateClientStatusToProcessing, UpdatedUserJoingDate } from "@/Lib/user.action";
+import { ClearEnquiry, GetUserInformation, PostCallEnquiryNotification, UpdateClientStatusinCallEnquiry, UpdateClientStatusToProcessing, UpdatedUserJoingDate, UpdateNewComments } from "@/Lib/user.action";
 import { Refresh } from "@/Redux/action";
 import {
   Phone,
@@ -12,10 +12,12 @@ import {
   CalendarDays,
   Trash2,
   Send,
+  Pencil,
 } from "lucide-react";
 
 import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import StaffNotificationModal from "../CallEnquiryNotification/page";
 
 interface CallEnquiryUser {
   ClientStatus: string | number | readonly string[] | undefined;
@@ -47,7 +49,10 @@ export default function CallEnquiryList({
  
   const SearchMonth=useSelector((state:any)=>state.MonthFilterAdmin)
   const SearchYear=useSelector((state:any)=>state.YearFilterAdmin)
-  
+  const [EditComments,setEditComments]=useState(false)
+  const [SelectedUserId,setSelectedUserId]=useState("")
+    const [ShowNotification,setShowNotification]=useState(false)
+  const [EditedComments,setEditedComments]=useState("")
     const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
       const StatusMessage=useSelector((each:any)=>each.GlobelRefresh)
   const dispatch=useDispatch()
@@ -59,6 +64,70 @@ export default function CallEnquiryList({
     );
   }
 
+  const UpdateComments=async(Id:any)=>{
+try{
+  dispatch(Refresh("Please Wait Updateing Comments...."))
+  const ComeetsResults=await UpdateNewComments(Id,EditedComments)
+if(ComeetsResults.success){
+  dispatch(Refresh(ComeetsResults.message))
+}
+}catch(err:any){
+
+}
+  }
+
+  const PostNotificationInfo=async(Emails: string[],User:any)=>{
+  try{
+   
+    dispatch(Refresh("Please Wait....."))
+     const RegistrationFee= 0
+     const EnquiryForm={
+       title: "",
+    Patienttitle:"",
+    ClientName: User.FirstName,
+    patientName:"",
+    ClientContact: User.ContactNumber,
+    ClientEmail: '',
+    patientAge:"",
+    patientGender:'',
+    clientGender:"",
+    HCPPreferGender:"",
+    NewLead: User.NewLead,
+    CurateNewLead:'',
+    PreferredLanguage:"",
+    ClientArea: User.Location,
+    ClientNote: "",
+    serviceCharges:"",
+    MonthlyServiceCharge:"",
+    ServiceType:"",
+    patientHealthCard:"",
+    ExpectedService:"",
+    Reasonforservice:"",
+    ClientStatus:"",
+    patientWeight:'',
+    WorkingHours: "",
+    WorkType: "",
+    ExtraWorkingHours: "",
+    ExtraWorkType: ""
+     }
+  const PostinNotification:any=await PostCallEnquiryNotification(EnquiryForm,Emails,RegistrationFee)
+  console.log('Chec Retuen Info-----',PostinNotification)
+  
+  
+  if(PostinNotification.success){
+  
+  dispatch(Refresh("Notification Send Succesfully"))
+   setTimeout(() => {
+   
+   setShowNotification(false)
+            setShowNotification(false);
+          }, 2000);
+  
+  }
+  }catch(err:any){
+  
+  }
+  }
 
   const handleDelete = async (Clearuser: CallEnquiryUser) => {
    
@@ -134,11 +203,15 @@ const UpdateClientStatus=async(UserId:any,Value:any)=>{
 try{
   
   dispatch(Refresh("Please Wait....."))
+
+  if(Value==="Send"){
+setShowNotification(true)
+  }
  
 const UpdateCurrentClientStatus=await   UpdateClientStatusinCallEnquiry(UserId,Value)
 if(UpdateCurrentClientStatus.success){
 
-  dispatch(Refresh("Status Updated Successfully"))
+  dispatch(Refresh(`Lead went to ${Value} page`))
 }
 }catch(err:any){
 
@@ -246,7 +319,7 @@ if(Post.success){
     </span> */}
   </div>
 
-  
+
 
 <div className="md:hidden space-y-4">
   {UpdatedFilterUserType.map((user, index) => (
@@ -306,7 +379,14 @@ text-left
       <div className="text-xs text-gray-600">
         📞   {user.ContactNumber || "Awaiting Info"}
       </div>
-
+  <StaffNotificationModal
+  open={ShowNotification}
+  subMessage={StatusMessage}
+  onClose={() => setShowNotification(false)}
+  onSend={(emails) => {
+   PostNotificationInfo(emails,user)
+  }}
+/>
       <div className="flex justify-between items-center">
         
 <span className="flex items-center w-fit text-center">
@@ -347,11 +427,39 @@ text-left
         📍 {user.Location || "Not Provided"}
       </div>
 
-      <div className="text-xs text-gray-400">
+       <div className="text-xs text-gray-500 space-y-1 max-w-xs">
+  {EditComments && user.userId === SelectedUserId ? (
+    <div className="flex flex-col gap-2">
+      <textarea
+        className="border rounded-md p-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+        placeholder="Enter your updated comments"
+        defaultValue={user.comments}
+        onChange={(e:any)=>setEditedComments(e.target.value)}
+      />
+{StatusMessage==="Please Wait Updateing Comments...."?<div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>:
+      <button className="self-start bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs transition" onClick={()=>UpdateComments(user.userId)}>
+        Save Comments
+        </button>}
+    </div>
+  ) : (
+    <div className="flex items-center justify-between gap-2">
+      <p className="truncate">
+        {toProperCaseLive(user.comments) || "No comments"}
+      </p>
 
-    {toProperCaseLive(user.comments) || "No comments"}
- 
-      </div>
+      <button
+        className="text-blue-500 hover:underline cursor-pointer text-xs"
+        onClick={() => {
+          setEditComments(true);
+          setSelectedUserId(user.userId);
+        }}
+      >
+        Edit
+      </button>
+    </div>
+  )}
+</div>
+       
     </div>
   ))}
 </div>
@@ -421,7 +529,14 @@ text-left
       <span>  {toProperCaseLive(user.NewLead) || "Not Provided"}</span>
       <span>{toProperCaseLive(user.FirstName) || "Not Provided"}</span>
       <span>{user.ContactNumber || "Awaiting Info"}</span>
-      
+        <StaffNotificationModal
+  open={ShowNotification}
+  subMessage={StatusMessage}
+  onClose={() => setShowNotification(false)}
+  onSend={(emails) => {
+   PostNotificationInfo(emails,user)
+  }}
+/>
 <span className="flex items-center w-fit text-center">
   <div className="relative w-fit text-center">
     <select
@@ -453,9 +568,39 @@ text-left
       {user.Location || "Not Provided"}
     </span>
   </span>
-     <span className="text-xs text-gray-500 truncate">
-    {toProperCaseLive(user.comments) || "No comments"}
-  </span>
+   <div className="text-xs text-gray-500 space-y-1 max-w-xs">
+  {EditComments && user.userId === SelectedUserId ? (
+    <div className="flex flex-col gap-2">
+      <textarea
+        className="border rounded-md p-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+        placeholder="Enter your updated comments"
+        defaultValue={user.comments}
+          onChange={(e:any)=>setEditedComments(e.target.value)}
+      />
+
+     {StatusMessage==="Please Wait Updateing Comments...."?<div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>:
+      <button className="self-start bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs transition" onClick={()=>UpdateComments(user.userId)}>
+        Save Comments
+        </button>}
+    </div>
+  ) : (
+    <div className="flex items-center justify-between gap-2">
+      <p className="truncate">
+        {toProperCaseLive(user.comments) || "No comments"}
+      </p>
+
+      <button
+        className="text-blue-500 hover:underline cursor-pointer text-xs"
+        onClick={() => {
+          setEditComments(true);
+          setSelectedUserId(user.userId);
+        }}
+      >
+        Edit
+      </button>
+    </div>
+  )}
+</div>
       {/* <button
           onClick={() => handleDelete(user)}
           className="text-red-500 text-xs"

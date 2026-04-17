@@ -37,7 +37,7 @@ const NotIntrestedTable: React.FC<NotInterestedProps> = ({ data = [] }) => {
                   {item.ContactNumber}
                 </td>
                 <td className="px-4 py-3 text-gray-500 max-w-xs truncate">
-                  {item.Information}
+                  {item.Information||"No Information Noted"}
                 </td>
                 <td className="px-4 py-3 text-red-500 font-medium">
                   {item.Type}

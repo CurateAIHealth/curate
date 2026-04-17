@@ -1960,7 +1960,7 @@ form.HusbendContact!=="Not Available"&&
             />
             <label className="flex items-center gap-2 mb-4 text-sm text-gray-700">
               <input
-                type="checkbox"
+                type="radio"
                 checked={sameAddress}
                 onChange={(e) => {
                   const checked = e.target.checked;
@@ -2121,7 +2121,7 @@ form.HusbendContact!=="Not Available"&&
                   className="flex items-start gap-2 text-sm text-gray-700"
                 >
                   <input
-                    type="checkbox"
+                    type="radio"
                     className="mt-0.5 accent-purple-600 shrink-0"
                     checked={form.professionalSkill.includes(skill)}
                     onChange={() => handleprofessionalSkillChange(skill)}
@@ -2198,7 +2198,7 @@ form.HusbendContact!=="Not Available"&&
                   className="flex items-start gap-2 text-sm text-gray-700"
                 >
                   <input
-                    type="checkbox"
+                    type="radio"
                     className="mt-0.5 accent-purple-600 shrink-0"
                     checked={form.HomeAssistance.includes(skill)}
                     onChange={() => handleHomeAssistanceChange(skill)}
@@ -2270,7 +2270,7 @@ form.HusbendContact!=="Not Available"&&
                   className="flex items-start gap-2 text-sm text-gray-700"
                 >
                   <input
-                    type="checkbox"
+                    type="radio"
                     className="mt-0.5 accent-purple-600 shrink-0"
                     checked={form.HandledSkills.includes(skill)}
                     onChange={() => UpdateHandledSkills(skill)}
@@ -3684,7 +3684,7 @@ form.HusbendContact!=="Not Available"&&
                       bg-white cursor-pointer hover:border-blue-400
                       transition-all">
       <input
-        type="checkbox"
+        type="radio"
         name="serviceHours12hrs"
         checked={form.serviceHours12hrs || false}
         onChange={handleChange}
@@ -3700,7 +3700,7 @@ form.HusbendContact!=="Not Available"&&
                       bg-white cursor-pointer hover:border-blue-400
                       transition-all">
       <input
-        type="checkbox"
+        type="radio"
         name="serviceHours24hrs"
         checked={form.serviceHours24hrs || false}
         onChange={handleChange}

@@ -347,7 +347,7 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
 
             {!ChooseMultiple && (
               <input
-                type="checkbox"
+                type="radio"
                 className="h-5 w-5 cursor-pointer accent-[#1392d3]"
                 onChange={(e) => {
                   setselectedHCPIds((prev: any) =>

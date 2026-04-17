@@ -237,3 +237,83 @@ export const CurrrentPDRUserId=(FilledIserId:any)=>{
         payload:FilledIserId
     }
 }
+
+export const UpdateCallEnquiryInformation=(CallEnquiryInformation:any)=>{
+    return{
+        type:"UpdateCallEnquiryInformation",
+        payload:CallEnquiryInformation
+    }
+}
+
+
+type EnquiryFormType = {
+  title: string;
+  ClientName: string;
+  patientName: string;
+  ClientContact: string;
+  ClientEmail: string;
+  patientAge: string;
+  patientGender: string;
+  clientGender: string;
+  HCPPreferGender: string;
+  NewLead: string;
+  CurateNewLead: string;
+  PreferredLanguage: string;
+  ClientArea: string;
+  ClientNote: string;
+  serviceCharges: string;
+  MonthlyServiceCharge: string;
+  ServiceType: string;
+  patientHealthCard: string;
+  ExpectedService: string;
+  Reasonforservice: string;
+  ClientStatus: string;
+  patientWeight: string;
+  WorkingHours: string;
+  WorkType: string;
+  ExtraWorkingHours: string;
+  ExtraWorkType: string;
+};
+
+export const mapEnquiryToForm = (data: any): Partial<EnquiryFormType> => ({
+  title: data?.title ?? data?.Type ?? "",
+
+  ClientName: data?.ClientName ?? data?.clientName ?? "",
+  patientName: data?.patientName ?? "",
+
+  ClientContact: data?.ClientContact ?? data?.clientContact ?? "",
+  ClientEmail: data?.ClientEmail ?? data?.clientEmail
+ ?? "",
+
+  patientAge: data?.patientAge ?? "",
+  patientGender: data?.patientGender ?? "",
+  clientGender: data?.clientGender ?? "",
+
+  HCPPreferGender: data?.HCPPreferGender ?? data?.hcpPreferGender ?? "",
+
+  NewLead: data?.NewLead ?? "",
+  CurateNewLead: data?.CurateNewLead ?? "",
+
+  PreferredLanguage: data?.PreferredLanguage ?? data?.preferredLanguage ?? "",
+
+  ClientArea: data?.ClientArea ?? data?.clientArea ?? "",
+  ClientNote: data?.ClientNote ?? data?.clientNote ?? "",
+
+  serviceCharges: data?.serviceCharges ?? "",
+  MonthlyServiceCharge: data?.MonthlyServiceCharge ?? "",
+
+  ServiceType: data?.ServiceType ?? data?.serviceType ?? "",
+
+  patientHealthCard: data?.patientHealthCard ?? "",
+
+  ExpectedService: data?.ExpectedService ?? data?.expectedService ?? "",
+  Reasonforservice: data?.Reasonforservice ?? data?.reasonForService ?? "",
+
+  ClientStatus: data?.ClientStatus ?? data?.clientStatus ?? "",
+
+  patientWeight: data?.patientWeight ?? "",
+  WorkingHours: data?.WorkingHours ?? "",
+  WorkType: data?.WorkType ?? "",
+  ExtraWorkingHours: data?.ExtraWorkingHours ?? "",
+  ExtraWorkType: data?.ExtraWorkType ?? ""
+});

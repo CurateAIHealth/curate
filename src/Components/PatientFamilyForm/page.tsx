@@ -293,7 +293,7 @@ export default function PatientFamilyForm() {
 
       <div className="flex items-center gap-2">
         <input
-          type="checkbox"
+          type="radio"
           className="cursor-pointer"
    checked={checkboxAccepted}
           onChange={(e) => setCheckboxAccepted(e.target.checked)}

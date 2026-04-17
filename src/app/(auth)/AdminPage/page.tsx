@@ -326,9 +326,9 @@ console.log("Check Current Task Information------",DeploymentInfo)
 
 
   const callEnquiryArray = users.filter((each) => each.userType === 'CallEnquiry')
-  const NotIntrestedArray= users.filter((each) => each.Type === 'Not Intrested')
+  const NotIntrestedArray= users.filter((each) => each.Type === 'Irrelevant')
 
-  console.log("Check for Not Intrested Array",NotIntrestedArray)
+ 
 
   const clientsData= users.filter((each) => each.userType === 'patient')
 
@@ -841,7 +841,7 @@ const UpdatePopup = async (a: any) => {
           data={callEnquiryArray}
           SearchData={SearchResult}
           title="Recent Call Enquiries"
-        />) : search === "Not Intrested" ? (
+        />) : search === "Irrelevant" ? (
     <NotIntrestedTable data={NotIntrestedArray} />
   ):(
            <div className="w-full">
@@ -925,8 +925,8 @@ const UpdatePopup = async (a: any) => {
                             <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">{UpdateduserType === "patient"?"Date":"Joining Date"}</th>
                           {UpdateduserType === "patient" &&
                             <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Lead Source</th>}
-                          {UpdateduserType === "patient" &&
-                            <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client Priority</th>}
+                          {/* {UpdateduserType === "patient" &&
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client Priority</th>} */}
                           {UpdateduserType === "healthcare-assistant" &&
                             <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">User type</th>}
                      {UpdateduserType === "healthcare-assistant"&&
@@ -1098,55 +1098,13 @@ const UpdatePopup = async (a: any) => {
   )}
 </div>
                                   )}</td>}
-                                  
-                          {UpdateduserType === "patient" && (
-  <td className="overflow-visible">
-    <div className="relative inline-block group ml-4">
 
-      <select
-        className="
-          h-11 w-fit px-3 cursor-pointer
-          rounded-xl bg-white
-          border border-slate-300
-          text-sm font-semibold text-slate-700
-          shadow-sm
-          transition-all duration-200 ease-in-out
-          hover:border-slate-400 hover:shadow-md
-          focus:outline-none
-          focus:border-[#62e0d9]
-          focus:ring-2 focus:ring-[#caf0f8]
-        "
-        value={user?.ClientPriority ?? "Stable"}
-        onChange={(e) =>
-          UpdateClientPriority(user.FirstName, user.userId, e.target.value)
-        }
-      >
-        <option value="Important" title="Important Client">⭐ </option> 
-        <option value="Stable" title="Stable Client">🟢 </option> 
-        <option value="VIP" title="VIP Client">👑 </option> 
-        <option value="Critical" title="Critical Client">🔴 </option>
-      </select>
 
-      {/* Tooltip */}
-      <div
-        className="
-          absolute top-full mt-2 left-1/2 -translate-x-1/2
-          whitespace-nowrap
-          rounded-lg bg-slate-900 text-white
-          text-xs font-medium px-3 py-1.5
-          opacity-0 scale-95
-          transition-all duration-200
-          group-hover:opacity-100 group-hover:scale-100
-          shadow-xl pointer-events-none
-          z-50
-        "
-      >
-        {user?.ClientPriority ?? "Stable"}
-      </div>
 
-    </div>
-  </td>
-)}
+
+                            
+
+
                             {UpdateduserType === "healthcare-assistant" &&
                               <td className="px-6 py-2 break-words">
 
@@ -1296,7 +1254,8 @@ const UpdatePopup = async (a: any) => {
                                       }`}
                                   >
                                    
-                                     {getPopularArea(user.ServiceLocation ||user.Location|| "Not mentioned")}
+                                     {/* {getPopularArea(user.ServiceLocation ||user.Location|| "Not mentioned")} */}
+                                     {user.ServiceLocation ||user.Location|| "Not mentioned"}
                                   </span>
 
                                 
@@ -1802,21 +1761,32 @@ const handleSave = async (data: any) => {
     );
 
     if (updateSalary?.success) {
+      const res:any=await axios.post("/api/Slack", {
+  userIds: "U08HWTFQCJ0",
+  isHighlight: true,
+  message: {
+    title: "HCP Salary Updates",
+    body: "Hi Sir, Kindly requesting HCP salary update. Please check notification in the application. Thank you.",
+  },
+});
+    console.log("Slack Results",res.data);
       dispatch(
         Refresh(
           "Salary update request submitted to management. You will be notified once the status is updated."
         )
       );
 
-      const phoneNumber = "8977975659";
-      const message =
-        "Hi Sir, Kindly requesting HCP salary update. Please check notification in the application. Thank you.";
+      // const phoneNumber = "8977975659";
+      // const message =
+      //   "Hi Sir, Kindly requesting HCP salary update. Please check notification in the application. Thank you.";
 
-      const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
-        message
-      )}`;
+        
 
-      window.open(whatsappURL, "_blank");
+      // const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+      //   message
+      // )}`;
+
+      // window.open(whatsappURL, "_blank");
 
       SetUpdatedHCPSalary(null);
       setIsEditing(false);

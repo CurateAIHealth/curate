@@ -324,3 +324,13 @@ switch(action.type){
 
 }
 }
+
+
+export const CallEnquiryInformationfromNotification=(state:any=null,action:any)=>{
+    switch(action.type){
+        case "UpdateCallEnquiryInformation":
+            return action.payload;
+            default:
+                return state    
+    }
+}

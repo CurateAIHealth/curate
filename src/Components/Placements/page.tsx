@@ -23,6 +23,7 @@ import { div } from "framer-motion/client";
 import SalaryPopup from "../HCPSalary/page";
 import RefundPopup from "../RefundRequestPopup/page";
 import AwaitingInvoice from "../AwaitingInvoice/page";
+import axios from "axios";
 
 
 
@@ -300,15 +301,14 @@ const PostRefunRequest = async (data: any) => {
     
       
 
-      const phoneNumber = "9000114333";
+      const phoneNumber = "U04S43V513N";
       const message =
-        "Hi Medam, Kindly requesting Refund Request update. Please check notification in the application. Thank you.";
+      
 
-      const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
-        message
-      )}`;
-
-      window.open(whatsappURL, "_blank");
+  await axios.post("/api/Slack", {
+     userIds: phoneNumber,
+     message:  "Hi Medam, Kindly requesting Refund Request update. Please check notification in the application. Thank you.",
+   });
   SetActionStatusMessage(
           "Refund Request request submitted to management. You will be notified once the status is updated."
         )
@@ -2180,7 +2180,7 @@ setSelectedDate(e.target.value)
    
       <div className="flex items-center gap-2 mb-3">
         <input
-          type="checkbox"
+          type="radio"
           checked={updateServiceCharge}
           onChange={(e) => setUpdateServiceCharge(e.target.checked)}
           className="w-4 h-4 accent-green-600"

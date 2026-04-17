@@ -668,7 +668,7 @@ error?.message || "Something went wrong while extending timesheet"
               </div>}
               <div className="flex items-center gap-2 mb-3">
                 <input
-                  type="checkbox"
+                  type="radio"
                   checked={updateServiceCharge}
                   onChange={(e) => { setServiceCharge(""), setUpdateServiceCharge(e.target.checked) }}
                   className="w-4 h-4 accent-green-600"

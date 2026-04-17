@@ -408,7 +408,7 @@ try{
           }}
         >
           <input
-            type="checkbox"
+            type="radio"
             checked={row.status === status}
             onChange={() => {
               UpdateAttendence(
