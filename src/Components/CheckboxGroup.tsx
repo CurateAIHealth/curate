@@ -73,7 +73,7 @@ import { useState, useEffect } from "react";
           {options.map((opt) => (
             <label key={opt} className="flex items-center gap-1 text-gray-700">
               <input
-                type="checkbox"
+                type="radio"
                 checked={
                   multiple
                     ? Array.isArray(selected) && selected.includes(opt)

@@ -251,7 +251,7 @@ const dispatch=useDispatch()
                 {daysList.map((day) => (
                   <label key={day.key} className="flex items-center gap-1 text-xs sm:text-sm">
                     <input
-                      type="checkbox"
+                      type="radio"
                       checked={entry.days[day.key]}
                       onChange={(e) =>
                         handleChange(weekIndex, entryIndex, 'days', e.target.checked, day.key)

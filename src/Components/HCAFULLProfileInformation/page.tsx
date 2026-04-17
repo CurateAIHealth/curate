@@ -325,7 +325,7 @@ console.log("Checkkkkk------", user.Documents)
                {PROFESSIONAL_SKILL_OPTIONS.map((skill) => (
                  <label key={skill} className="flex items-center text-sm">
                    <input
-                     type="checkbox"
+                     type="radio"
                      className="mr-2 accent-purple-600"
                      checked={user.ProfetionSkill.includes(skill)||false}
                      onChange={() => handleprofessionalSkillChange(skill)}

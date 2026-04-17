@@ -272,7 +272,7 @@ const VendorId=useSelector((state:any)=>state.ReferdUserId)
         {formData.ConfirmPassword && formData.Password !== formData.ConfirmPassword && <p className="text-red-500 text-sm">Passwords do not match</p>}
       </div>
       <div className="flex items-center gap-2 md:col-span-2">
-        <input type="checkbox" onChange={(e) => setCheckBoxStatus(e.target.checked)} />
+        <input type="radio" onChange={(e) => setCheckBoxStatus(e.target.checked)} />
         <label>Accept <a href="/TermsAndConditions" className="text-blue-600 underline">Terms & Conditions</a></label>
       </div>
       <p className={`md:col-span-2 text-center font-bold ${statusMessage.includes('successfully') ? 'text-green-700' : 'text-red-500'}`}>{statusMessage}</p>

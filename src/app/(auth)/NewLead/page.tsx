@@ -546,7 +546,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
                 {["Yes", "No"].map((g) => (
                   <label key={g} className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
                     <input
-                      type="checkbox"
+                      type="radio"
                       checked={formData.MainpointforPatient === g}
                       onChange={() =>
                         setFormData((prev: any) => ({ ...prev, MainpointforPatient: g }))
@@ -784,7 +784,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
                 {["Male", "Female", "Other"].map((g) => (
                   <label key={g} className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
                     <input
-                      type="checkbox"
+                      type="radio"
                       checked={formData.patientGender === g}
                       onChange={() => setFormData((prev: any) => ({ ...prev, patientGender: g }))}
                       className="mr-2 accent-purple-600"
@@ -1139,7 +1139,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
         {options.map((opt) => (
           <label key={opt} className="flex items-center gap-2 cursor-pointer">
             <input
-              type="checkbox"
+              type="radio"
               checked={formData.WeightReport === opt}
               onChange={()=>handleChange("WeightReport", opt)}
               className="h-4 w-4 accent-indigo-500"
@@ -1238,7 +1238,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
         {options.map((opt) => (
           <label key={opt} className="flex items-center gap-2 cursor-pointer">
             <input
-              type="checkbox"
+              type="radio"
               checked={formData.HeightReport === opt}
               onChange={()=>handleChange("HeightReport", opt)}
               className="h-4 w-4 accent-indigo-500"
@@ -1431,7 +1431,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
                       className="flex items-center gap-2 text-sm"
                     >
                       <input
-                        type="checkbox"
+                        type="radio"
                         checked={
                           formData.serviceSubTypes?.[
                             clean(opt)
@@ -1503,7 +1503,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
                   <div className="flex gap-6">
                     <label className="flex items-center gap-2">
                       <input
-                        type="checkbox"
+                        type="radio"
                         className="cursor-pointer accent-teal-600"
                         checked={
                           formData.ServiceWorkingHours?.[
@@ -1527,7 +1527,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
 
                     <label className="flex items-center gap-2">
                       <input
-                        type="checkbox"
+                        type="radio"
                         className="cursor-pointer accent-teal-600"
                         checked={
                           formData.ServiceWorkingHours?.[

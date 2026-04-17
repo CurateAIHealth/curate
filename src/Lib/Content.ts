@@ -422,7 +422,7 @@ export const HYDERABAD_LOCATIONS = [
 // ];
 export const Main_Filters = ["Client Enquiry", "Placements", "Timesheet", "Referral Pay", "Payments"];
 
-export const ClientEnquiry_Filters = ["CallEnquiry", "Converted", "Waiting List", "Lost","Not Intrested"  ];
+export const ClientEnquiry_Filters = ["CallEnquiry", "Converted", "Waiting List", "Lost","Irrelevant"  ];
 
 export const Placements_Filters = ["On Service", "Replacements", "Termination" ,"Awaiting Invoice"];
 
@@ -463,7 +463,7 @@ export const filterColors: Record<string, string> = {
   "Waiting List": "bg-purple-200 hover:bg-purple-400 text-gray-800",
   "Converted": "bg-green-200 hover:bg-green-400 text-gray-800",
   "Lost": "bg-red-200 hover:bg-red-400 text-gray-800",
-   "Not Intrested":  "bg-amber-200 hover:bg-amber-300 text-gray-800",
+   "Irrelevant":  "bg-amber-200 hover:bg-amber-300 text-gray-800",
 
 
   "On Service": "bg-sky-200 hover:bg-sky-400 text-gray-800",

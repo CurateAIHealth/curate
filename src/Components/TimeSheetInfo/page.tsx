@@ -21,6 +21,7 @@ import TimeSheetReplacementTable from "../Time Sheet Terminations/page";
 
 import { CurrentRegisterUser } from "@/Redux/reducer";
 import TimeSheetTerminationTableInfo from "../TimeSheetTerminationTableInfo/page";
+import axios from "axios";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -542,15 +543,16 @@ const Dateresponse = await EditAttendanceByClientId(
 const response= await PostAttendeceEditRequest(Info,AttendeceEditReason,loggedInEmail)
     if (response?.success) {
 
-        const phoneNumber = "9000114333";
-      const message =
+        const phoneNumber = "U04S43V513N";
+      const Impmessage =
         "Hi Medam, Kindly requesting AttendeceEdit  Request update. Please check notification in the application. Thank you.";
 
-      const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
-        message
-      )}`;
+    const res:any=await axios.post("/api/Slack", {
+  userIds:phoneNumber,
+  message: Impmessage,
+});
 
-      window.open(whatsappURL, "_blank");
+     
       SetStatusMessage(`✅ ${response.message}`);
 
       setTimeout(() => {

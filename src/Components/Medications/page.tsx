@@ -322,7 +322,7 @@ const dispatch=useDispatch()
                     {daysList.map((day) => (
                       <td key={day.key} className="border p-2 text-center">
                         <input
-                          type="checkbox"
+                          type="radio"
                           checked={entry.days[day.key]}
                           onChange={(e) =>
                             handleChange(

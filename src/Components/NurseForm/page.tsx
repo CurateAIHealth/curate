@@ -510,7 +510,7 @@ export default function NurseForm() {
       </div>
 <div className='flex gap-2'>
 <input
-  type="checkbox"
+  type="radio"
   className="cursor-pointer"
   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
     setCheckBoxStatus(e.target.checked)

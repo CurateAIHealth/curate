@@ -459,7 +459,7 @@ setStatusMessage("Patient Details Updated Successfully");
               <div className="space-y-2">
                 <label className="inline-flex items-center space-x-3 cursor-pointer">
                   <input
-                    type="checkbox"
+                    type="radio"
                     name="stayIn"
                     checked={form.stayIn}
                     onChange={handleChange}
@@ -469,7 +469,7 @@ setStatusMessage("Patient Details Updated Successfully");
                 </label>
                 <label className="inline-flex items-center space-x-3 cursor-pointer">
                   <input
-                    type="checkbox"
+                    type="radio"
                     name="longDay"
                     checked={form.longDay}
                     onChange={handleChange}
@@ -479,7 +479,7 @@ setStatusMessage("Patient Details Updated Successfully");
                 </label>
                 <label className="inline-flex items-center space-x-3 cursor-pointer">
                   <input
-                    type="checkbox"
+                    type="radio"
                     name="longNight"
                     checked={form.longNight}
                     onChange={handleChange}

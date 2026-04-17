@@ -97,7 +97,7 @@ bg-teal-700/30 hover:bg-teal-700/50 border border-teal-400/20 transition-all">
   <span className="absolute left-0 top-0 h-full w-1 bg-emerald-400 rounded-l-lg"></span>
 
   <input
-    type="checkbox"
+    type="radio"
     checked={selectedEmployEmails.length === employEmails.length}
     onChange={handleSelectAll}
     className="ml-2 w-4 h-4 accent-emerald-400"
@@ -115,7 +115,7 @@ bg-teal-700/30 hover:bg-teal-700/50 border border-teal-400/20 transition-all">
       className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer "
     >
       <input
-        type="checkbox"
+        type="radio"
         checked={selectedEmployEmails.includes(emp.Email)}
         onChange={() => handleSelectEmploy(emp.Email)}
         className="w-4 h-4 accent-indigo-600"

@@ -108,194 +108,24 @@ setStatusMessage("Receipt Uploaded Successfully")
     });
   };
 
-  const SentTestEmail=async ()=>{
-    try {
-      const ImageLink='https://res.cloudinary.com/db3dr9lf5/image/upload/v1775469496/uploads/zab8yjnkf8vnyij9mhkn.png'
-await axios.post("/api/MailSend", {
-  to: "tsiddu805@gmail.com",
-  subject: "🎉 Registration Successful – Welcome to Curate Health Care Pvt. Ltd.",
-html: `
-<div style="background:#eef2f7;padding:30px 10px;font-family:Arial, Helvetica, sans-serif;">
+ 
 
-  <div style="
-    max-width:760px;
-    margin:auto;
-    background:#ffffff;
-    border-radius:10px;
-    overflow:hidden;
-    border:1px solid #e5e7eb;
-  ">
 
-    <!-- WHITE HEADER (LOGO SAFE) -->
-    <div style="
-      background:#ffffff;
-      padding:18px 22px;
-      border-bottom:1px solid #e5e7eb;
-    ">
-      <table style="width:100%;">
-        <tr>
-          <td>
-            <img src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png" style="height:42px;" />
-          </td>
-          <td style="text-align:right;font-size:12px;color:#6b7280;">
-            Curate Health Care Pvt. Ltd.<br/>
-            Registration Confirmation
-          </td>
-        </tr>
-      </table>
-    </div>
+  // /api/test-slack.js
 
-    <!-- MAIN CONTENT -->
-    <table style="width:100%;border-collapse:collapse;">
-      <tr>
-
-        <!-- LEFT BRAND STRIP -->
-        <td style="
-          width:140px;
-          background:#1392d3;
-          color:#ffffff;
-          vertical-align:top;
-          padding:22px 14px;
-        ">
-          <div style="font-size:13px;line-height:20px;">
-            <strong>Healthcare Services</strong>
-          </div>
-
-          <div style="
-            margin-top:30px;
-            font-size:12px;
-            line-height:18px;
-            opacity:0.9;
-          ">
-            Reliable caregiver support and patient care solutions.
-          </div>
-
-          <!-- STATUS -->
-          <div style="
-            margin-top:40px;
-            background:#50c896;
-            padding:8px;
-            text-align:center;
-            border-radius:6px;
-            font-size:12px;
-            font-weight:600;
-          ">
-            ACTIVE
-          </div>
-        </td>
-
-        <!-- RIGHT CONTENT -->
-        <td style="padding:28px 26px;vertical-align:top;">
-
-          <!-- TITLE -->
-          <div style="
-            font-size:20px;
-            font-weight:700;
-            color:#111827;
-            margin-bottom:6px;
-          ">
-            Registration Confirmed
-          </div>
-
-          <div style="
-            font-size:13px;
-            color:#6b7280;
-            margin-bottom:18px;
-          ">
-            Your onboarding process has been successfully completed
-          </div>
-
-          <!-- MESSAGE -->
-          <p style="font-size:14px;color:#374151;line-height:22px;">
-            Dear <strong>Siddu</strong>,
-          </p>
-
-          <p style="font-size:14px;color:#374151;line-height:22px;">
-            We are pleased to confirm that your registration with 
-            <strong>Curate Health Care Pvt. Ltd.</strong> has been successfully completed.
-          </p>
-
-          <p style="font-size:14px;color:#374151;line-height:22px;">
-            Your account is now active and ready for service engagement.
-          </p>
-
-          <!-- DIVIDER -->
-          <div style="height:1px;background:#e5e7eb;margin:22px 0;"></div>
-
-          <!-- DETAILS -->
-          <table style="width:100%;font-size:14px;">
-            <tr>
-              <td style="color:#6b7280;">Name</td>
-              <td style="text-align:right;"><strong>Siddu</strong></td>
-            </tr>
-           
-          </table>
-
-          <!-- AGREEMENT -->
-          <div style="margin-top:26px;">
-
-            <div style="
-              font-size:14px;
-              font-weight:600;
-              margin-bottom:10px;
-              color:#111827;
-            ">
-              Agreement Document
-            </div>
-
-            <div style="
-              border:1px solid #e5e7eb;
-              border-radius:8px;
-              padding:12px;
-              background:#fafafa;
-            ">
-              <img 
-                src="${ImageLink}"
-                style="width:100%;border-radius:6px;"
-              />
-            </div>
-
-            <!-- BUTTON -->
-            <div style="margin-top:14px;">
-              <a href="${ImageLink}" target="_blank" style="
-                display:inline-block;
-                padding:10px 16px;
-                background:#ff1493;
-                color:#ffffff;
-                text-decoration:none;
-                border-radius:6px;
-                font-size:13px;
-                font-weight:600;
-              ">
-                View Agreement
-              </a>
-            </div>
-
-          </div>
-
-          <!-- FOOT -->
-          <p style="margin-top:24px;font-size:13px;color:#6b7280;">
-            For assistance, please contact our support team.
-          </p>
-
-          <p style="margin-top:16px;font-size:14px;">
-            <strong style="color:#1392d3;">Curate Health Care Pvt. Ltd.</strong>
-          </p>
-
-        </td>
-      </tr>
-    </table>
-
-  </div>
-
-</div>
-`
+const SentTestEmail=async()=> {
+  setStatusMessage("Sending Test Message to Slack.......")
+ const res:any=await axios.post("/api/Slack", {
+  userIds: ["U0992KS6811", "U04RYNQJJF7"],
+  isHighlight: true,
+  message: {
+    title: "Greetings from Curate Health Care Services",
+    body: "We have initiated notifications through the Slack application. This message is being used to inform all staff members about this new initiative and keep everyone updated accordingly.",
+  },
 });
-      setStatusMessage("Test Email Sent Successfully")
-    } catch (error) {
-      setStatusMessage("Failed to send Test Email")
-    }
-  }
+    console.log("Slack Results",res.data);
+  
+}
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
