@@ -7,7 +7,7 @@ import { Update_Main_Filter_Status, UpdateClient, UpdateClientSuggetion, UpdateR
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import * as htmlToImage from 'html-to-image';
-import { GetInformedUsers,  GetTimeSheetInfo, IntrestedHCP, PostConfirmationInfo, TestInsertTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateUserContactVerificationstatus } from '@/Lib/user.action';
+import { ClearClientTimeSheetInfo, GetInformedUsers,  GetTimeSheetInfo, IntrestedHCP, PostConfirmationInfo, TestInsertTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateUserContactVerificationstatus } from '@/Lib/user.action';
 import axios from 'axios';
 import { calculateAgeIndianFormat } from '@/Lib/Actions';
 import { HyderabadAreas, PROFESSIONAL_SKILL_OPTIONS, TestData } from '@/Lib/Content';
@@ -54,7 +54,7 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
 
   const [selectedClientIndex, setSelectedClientIndex] = useState<number>(0);
   const [ExsitingInformedUsers, setExsitingInformedUsers] = useState<any[]>([]);
-  const [StatusMessage, setStatusMessage] = useState('Test StatusMessage');
+  const [StatusMessage, setStatusMessage] = useState<any>();
   const [CurrentUserId, setCurrentUserId] = useState<any>('');
   const [SearchFilter,setSearchFilter]=useState("")
   const [SearchReasult,setSearchReasult]=useState("")
@@ -146,6 +146,22 @@ const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
   ClientContact: any, Adress: any, HCAName: any, HCAContact: any,
   patientName: any, patientPhone: any, Source: any, Type: any
 ) => {
+const PlacementInformation: any = await GetTimeSheetInfo();
+
+ const availability = TimeSheetData.filter(
+    (each: any) => each.ClientId === UserIDClient
+  );
+
+if(availability.length > 0){
+  setStatusMessage("Please Wait Clearing Previous PDR Information...");
+  
+  const UpdateInfo= await ClearClientTimeSheetInfo(UserIDClient,UserIdHCA)
+  if(UpdateInfo?.success){
+setStatusMessage("Client Prviouse Information deleted Successfully, Assigneing New HCP.....")
+  }
+
+}
+
 
   setCurrentUserId(UserIdHCA);
 
@@ -170,7 +186,7 @@ const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
     await UpdateHCAnstatus(UserIdHCA, "Active");
     await UpdateHCAnstatusInFullInformation(UserIdHCA);
 
-    const PlacementInformation: any = await GetTimeSheetInfo();
+    
 
     const DateOfCurrentDay = new Date();
     const LastDateOfMonth = new Date(
@@ -943,15 +959,16 @@ Search For HCP Criteria
                   Friendly Care Matches
                 </h1>
 
-  
-                <input
-  type="search"
-  placeholder="Search..."
-  onChange={(e:any)=>setSearchReasult(e.target.value)}
-  className="max-w-sm rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/30"
-/>
+{StatusMessage && (
+  <p className="mt-3 px-4 py-2 rounded-lg text-sm text-red-700 bg-yellow-100 border border-gray-200">
+    {StatusMessage}
+  </p>
+)}
 
-   <button
+  
+ 
+
+   {/* <button
   onClick={() => setShowAssignedOnly(prev => !prev)}
   className={`flex items-center justify-center gap-2 px-2 py-1.5 text-xs hover:shadow-lg w-fit font-semibold 
               rounded-full transition-all duration-200 cursor-pointer 
@@ -964,23 +981,30 @@ Search For HCP Criteria
 
         
   {showAssignedOnly ? "🟢 Show Full List" : "🟡 Show Available List"}
-</button>
+</button> */}
 
                <div className="flex flex-wrap items-center gap-2">
-  <div className="flex items-center gap-2 rounded-full bg-gray-100 px-2 py-2 text-sm text-gray-700 hover:bg-gray-200 transition">
-    📋 Total <span className="font-semibold">{hcps.length}</span>
-  </div>
-
-  <div className="flex items-center gap-2 rounded-full bg-green-100 px-2 py-2 text-sm text-green-700 hover:bg-green-200 transition">
-    ✓ Assigned <span className="font-semibold">{AssignedHcps.length}</span>
-  </div>
-
-  <div className="flex items-center gap-2 rounded-full bg-blue-100 px-2 py-2 text-sm text-blue-700 hover:bg-blue-200 transition">
+                               <input
+  type="search"
+  placeholder="Search..."
+  onChange={(e:any)=>setSearchReasult(e.target.value)}
+  className="max-w-sm rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/30"
+/>
+                 <div className="flex items-center gap-2 rounded-full bg-blue-100 px-2 py-2 text-sm text-blue-700 hover:bg-blue-200 transition">
     🟢 Available{" "}
     <span className="font-semibold">
-      {hcps.length - AssignedHcps.length}
+      {filteredHcps.length}
     </span>
   </div>
+  {/* <div className="flex items-center gap-2 rounded-full bg-gray-100 px-2 py-2 text-sm text-gray-700 hover:bg-gray-200 transition">
+    📋 Total <span className="font-semibold">{hcps.length}</span>
+  </div> */}
+
+  {/* <div className="flex items-center gap-2 rounded-full bg-green-100 px-2 py-2 text-sm text-green-700 hover:bg-green-200 transition">
+    ✓ Assigned <span className="font-semibold">{AssignedHcps.length}</span>
+  </div> */}
+
+ 
 
 
 </div>
@@ -1115,11 +1139,7 @@ const UpdateResults=await UpdateHCAnstatus(hcp.UserId,"Available for Work")
 >Update</button>
 </div>
 :
-
-
-                            <div className="mt-2 flex justify-center gap-2 flex-wrap">
-                              {activeClient?.SuitableHCP === hcp?.UserId ? (
-                                <button
+ <button
                                   className="bg-green-600 text-white cursor-pointer px-3 py-1 rounded-full text-[10px] font-medium shadow-sm hover:bg-green-700 transition-colors"
                                   onClick={() =>
                                     UpdateAssignHca(
@@ -1142,38 +1162,66 @@ const UpdateResults=await UpdateHCAnstatus(hcp.UserId,"Available for Work")
                                 >
                                   Assign
                                 </button>
-                              ) : (
-                                <div className="flex justify-between gap-3 sm:gap-6">
-                                  <button
-                                    onClick={() => handleShare(hcp, activeClient.userId)}
-                                    disabled={alreadyInformed}
-                                    className={`px-3 py-1 text-[9px] cursor-pointer font-medium rounded-full transition-all duration-200 ${alreadyInformed
-                                        ? "bg-red-500/90 text-white cursor-not-allowed"
-                                        : "bg-teal-600 text-white hover:bg-teal-700"
-                                      }`}
-                                  >
-                                    {alreadyInformed ? "Informed✓" : "Confirm"}
-                                  </button>
 
-                                  {alreadyInformed &&
-                                    clients.some(
-                                      (client) => client.SuitableHCP !== hcp.UserId
-                                    ) && (
-                                      <p
-                                        className="px-3 py-1 text-[9px] font-medium rounded-full bg-[#40c9a2] text-white hover:bg-teal-700 cursor-pointer"
-                                        onClick={() =>
-                                          UpdateHCPIntrest(activeClient.userId, hcp.UserId)
-                                        }
-                                      >
-                                        Interested
-                                      </p>
-                                    )}
-                                </div>
-                              )}
-                            </div>}
-                            {alreadyInformed && <p className="px-3 py-1 text-[9px] mt-2 font-medium rounded-full bg-pink-500 text-white hover:bg-teal-700 cursor-pointer" onClick={() => SendBVR(hcp)}>
+                            // <div className="mt-2 flex justify-center gap-2 flex-wrap">
+                            //   {activeClient?.SuitableHCP === hcp?.UserId ? (
+                            //     <button
+                            //       className="bg-green-600 text-white cursor-pointer px-3 py-1 rounded-full text-[10px] font-medium shadow-sm hover:bg-green-700 transition-colors"
+                            //       onClick={() =>
+                            //         UpdateAssignHca(
+                            //           activeClient.userId,
+                            //           hcp?.UserId,
+                            //          activeClient.FirstName,
+                            //           activeClient.Email,
+                            //           activeClient.ContactNumber,
+                            //           activeClient.serviceLocation,
+                            //           hcp.HCPFirstName,
+                            //           hcp.HCPContactNumber,
+                            //           activeClient.patientName,
+                            //          activeClient.patientPhone,
+                            //           activeClient.Source,
+                            //           activeClient.hcpType
+
+
+                            //         )
+                            //       }
+                            //     >
+                            //       Assign
+                            //     </button>
+                            //   ) : (
+                            //     <div className="flex justify-between gap-3 sm:gap-6">
+                            //       <button
+                            //         onClick={() => handleShare(hcp, activeClient.userId)}
+                            //         disabled={alreadyInformed}
+                            //         className={`px-3 py-1 text-[9px] cursor-pointer font-medium rounded-full transition-all duration-200 ${alreadyInformed
+                            //             ? "bg-red-500/90 text-white cursor-not-allowed"
+                            //             : "bg-teal-600 text-white hover:bg-teal-700"
+                            //           }`}
+                            //       >
+                            //         {alreadyInformed ? "Informed✓" : "Confirm"}
+                            //       </button>
+
+                            //       {alreadyInformed &&
+                            //         clients.some(
+                            //           (client) => client.SuitableHCP !== hcp.UserId
+                            //         ) && (
+                            //           <p
+                            //             className="px-3 py-1 text-[9px] font-medium rounded-full bg-[#40c9a2] text-white hover:bg-teal-700 cursor-pointer"
+                            //             onClick={() =>
+                            //               UpdateHCPIntrest(activeClient.userId, hcp.UserId)
+                            //             }
+                            //           >
+                            //             Interested
+                            //           </p>
+                            //         )}
+                            //     </div>
+                            //   )}
+                            // </div>
+                            
+                            }
+                            {/* {alreadyInformed && <p className="px-3 py-1 text-[9px] mt-2 font-medium rounded-full bg-pink-500 text-white hover:bg-teal-700 cursor-pointer" onClick={() => SendBVR(hcp)}>
                               Send BVR
-                            </p>}
+                            </p>} */}
 
                             <div className="absolute top-2 right-2">
                               <button
@@ -1300,9 +1348,29 @@ const UpdateResults=await UpdateHCAnstatus(hcp.UserId,"Available for Work")
                  
   
 
+    <button className="bg-green-600 text-white cursor-pointer px-3 py-1 rounded-full text-[10px] font-medium shadow-sm hover:bg-green-700 transition-colors" 
+                           onClick={() =>
+                      UpdateAssignHca(
+                        activeClient.userId,
+                        hcp.UserId,
+                       activeClient.FirstName,
+                        activeClient.Email,
+                        activeClient.ContactNumber,
+                        activeClient.serviceLocation,
+                        hcp.HCPFirstName,
+                        hcp.HCPContactNumber,
+                        activeClient.patientName,
+                        activeClient.patientPhone,
+                      activeClient.Source,
+                        activeClient.hcpType
 
 
-                      <div className="mt-2 flex justify-center gap-2 flex-wrap">
+                      )
+                    }>
+                            Assign
+                          </button>
+
+                      {/* <div className="mt-2 flex justify-center gap-2 flex-wrap">
                         {activeClient?.SuitableHCP === hcp.UserId ? (
                           <button className="bg-green-600 text-white cursor-pointer px-3 py-1 rounded-full text-[10px] font-medium shadow-sm hover:bg-green-700 transition-colors" 
                            onClick={() =>
@@ -1344,10 +1412,11 @@ const UpdateResults=await UpdateHCAnstatus(hcp.UserId,"Available for Work")
                             </div>
                            
                         )}
-                      </div>
-              {alreadyInformed&&   <p className=" px-1 rounded-lg border text-gray-800 font-[7px] mt-2 shadow hover:bg-gray-700 hover:text-white active:scale-95 transition-transform cursor-pointer" onClick={()=>SendBVR(hcp)}>
+                      </div> */}
+
+              {/* {alreadyInformed&&   <p className=" px-1 rounded-lg border text-gray-800 font-[7px] mt-2 shadow hover:bg-gray-700 hover:text-white active:scale-95 transition-transform cursor-pointer" onClick={()=>SendBVR(hcp)}>
   Send BVR
-</p>}
+</p>} */}
                       <div className="absolute top-2 right-2">
                         <button
                           onClick={() =>

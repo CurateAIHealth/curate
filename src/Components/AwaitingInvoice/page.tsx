@@ -41,6 +41,7 @@ const    AwaitingInvoice=({
           const [updateServiceCharge, setUpdateServiceCharge] = useState(false);
           const [TerminationInfo,SetTerminationInfo]=useState<any>()
           const [serviceCharge, setServiceCharge] = useState("");
+          const [WorkingHCPId,setWorkingHCPId]=useState("")
            const [ReplacementInformation,setReplacementInformation]=useState<any[]>([])
            const [terminationInfo,SetterminationInfo]=useState<any[]>([])
        const [isChecking, setIsChecking] = useState(false);
@@ -154,6 +155,20 @@ const    AwaitingInvoice=({
       ?.['Gender']||"Not Provided";
 
     return address ?? "Not Entered";
+  };
+
+
+  
+   const GetHCPPayment = (A: any) => {
+    if (!users?.length || !A) return "Not Entered";
+
+    const address =
+      users
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.["PaymentforStaff"]||0;
+
+    return Number(address) 
   };
 
 const GetPatientName = (A:any) => {
@@ -283,7 +298,7 @@ const matchesSearchAndMonth = (
 
      const WorkingDays=getDaysBetween(item.EndDate, new Date().toISOString().split("T")[0])
 
-  return matchesSearch && matchesMonth && matchesYear&&WorkingDays<=3;
+  return matchesSearch && matchesMonth && matchesYear
 };
 const FilterFinelTimeSheet = FinelTimeSheet.filter((item:any) =>
   matchesSearchAndMonth(
@@ -850,7 +865,9 @@ setSelectedEndDate(e.target.value)
       )}
 
   {serviceCharge&& <div className="flex items-center">
-    <p className="text-gray-700 text-sm">
+
+
+    {/* <p className="text-gray-700 text-sm">
   <span className="font-medium">Current Charges:</span>
 
 
@@ -864,7 +881,122 @@ setSelectedEndDate(e.target.value)
              rupeeToNumber(serviceCharge)
            ).toFixed(2) }/M
   </span>}
+  </div> */}
+
+
+   {(() => {
+  const toNumber = (val: any) => {
+  const num = parseFloat(val);
+  return isNaN(num) ? 0 : num;
+};
+
+const dayPrice =  Number( rupeeToNumber(serviceCharge).toFixed(2));
+const hcaPrice = Number(Math.round(Number(GetHCPPayment(WorkingHCPId)) / 30))
+ const serviceDays = getDaysBetween(selectedDate, selectedEndDate);
+
+ const startDate = selectedDate;
+  const endDate = selectedEndDate;
+
+if (!serviceDays) return null;
+
+
+const dayProfit = dayPrice - hcaPrice;
+const invoiceProfit = dayProfit * serviceDays;
+
+const dayProfitPercent =
+  dayPrice > 0 ? (dayProfit / dayPrice) * 100 : 0;
+
+const invoiceTotal = dayPrice * serviceDays;
+
+const invoiceProfitPercent =
+  invoiceTotal > 0 ? (invoiceProfit / invoiceTotal) * 100 : 0;
+
+const isProfit = invoiceProfit >= 0;
+
+    return (
+<div
+  className={`mt-6 sm:mt-8 rounded-2xl border shadow-sm p-4 sm:p-2 transition-all duration-300
+  ${
+    isProfit
+      ? "bg-gradient-to-br from-green-50 to-white border-green-100"
+      : "bg-gradient-to-br from-red-50 to-white border-red-100"
+  }`}
+>
+  {/* Header */}
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+    
+    {/* Left */}
+    <div>
+      <p className="text-[10px] sm:text-[8px] text-gray-800 uppercase tracking-wide">
+        Service Summary
+      </p>
+      <p className="text-xs sm:text-[10px] font-medium text-gray-700">
+        {startDate} → {endDate}
+      </p>
+      <p className="text-[10px] text-gray-500">
+        {serviceDays} days
+      </p>
+     <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
+  
+  <div className="bg-white border text-[10px] sm:text-[9px] text-center  border-gray-100 rounded-lg px-2 py-2">
+    <p className="text-gray-800">Client Charge</p>
+    <p className="font-semibold text-gray-800">
+      ₹ {dayPrice.toLocaleString()}
+    </p>
   </div>
+
+  <div className="bg-white border border-gray-100 text-[10px] text-center sm:text-[9px]  rounded-lg px-2 py-2">
+    <p className="text-gray-800">HCP Payment</p>
+    <p className="font-semibold text-gray-800">
+      ₹ {hcaPrice.toLocaleString()}
+    </p>
+  </div>
+
+</div>
+    </div>
+
+    {/* Status Badge */}
+    <div
+      className={`w-full sm:w-auto flex items-center justify-center rounded-xl text-sm sm:[9px] font-semibold px-2 py-2
+      ${
+        isProfit
+          ? "bg-green-100 text-green-600"
+          : "bg-red-100 text-red-500"
+      }`}
+    >
+      {isProfit ? "↑ Profit" : "↓ Loss"}
+    </div>
+  </div>
+
+  {/* Grid */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    
+    {/* Day Profit */}
+    <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col gap-1">
+      <p className="text-xs text-gray-400">Day Profit</p>
+      <p className="text-base sm:text-lg font-semibold text-gray-800">
+        ₹ {dayProfit.toLocaleString()}
+      </p>
+      <p className="text-xs text-gray-400">
+        {dayProfitPercent.toFixed(1)}%
+      </p>
+    </div>
+
+    {/* Invoice Profit */}
+    <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col gap-1">
+      <p className="text-xs text-gray-400">Invoice Profit</p>
+      <p className="text-base sm:text-lg font-semibold text-gray-800">
+        ₹ {invoiceProfit.toLocaleString()}
+      </p>
+      <p className="text-xs text-gray-400">
+        {invoiceProfitPercent.toFixed(1)}%
+      </p>
+    </div>
+
+  </div>
+</div>
+    );
+  })()}
     </div>}
       <div className="flex items-center gap-2 mb-3">
         <input
@@ -1342,6 +1474,8 @@ setSelectedEndDate(e.target.value)
         UpdatePopup(c);
         setServiceCharge(rupeeToNumber(c.ServiceCharge).toFixed(2));
         setSelectedDate("");
+        setWorkingHCPId(c.HCA_Id)
+        setUpdateServiceCharge(false)
         setSelectedEndDate("");
         setShowWarning(false);
         SetActionStatusMessage("");

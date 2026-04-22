@@ -78,81 +78,81 @@ const DOCUMENT_KEYS = [
 
 
 export default function Dashboard() {
-  const router =useRouter()
+  const router = useRouter()
   const dispatch = useDispatch();
-  
+
   const updatedRefreshCount = useSelector((afterEach: any) => afterEach.updatedCount);
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
-  const [OtherArea,setOtherArea]=useState<any>("")
-  const [showReferalPopup,setshowReferalPopup]=useState(false)
-  const [NotificationStatus,setNotificationStatus]=useState('')
-  const [DailyChargeType,setDailyChargeType]=useState(true)
-  const [MonthlyChargeType,setMonthlyChargeType]=useState(false)
-  const [ShowNotification,setShowNotification]=useState(false)
-    const [DiscountStatus, SetDiscountStatus] = useState(true)
+  const [OtherArea, setOtherArea] = useState<any>("")
+  const [showReferalPopup, setshowReferalPopup] = useState(false)
+  const [NotificationStatus, setNotificationStatus] = useState('')
+  const [DailyChargeType, setDailyChargeType] = useState(true)
+  const [MonthlyChargeType, setMonthlyChargeType] = useState(false)
+  const [ShowNotification, setShowNotification] = useState(false)
+  const [DiscountStatus, SetDiscountStatus] = useState(true)
   const [showAccessDenied, setShowAccessDenied] = useState(false);
   const [showCallEnquiry, setShowCallEnquiry] = useState(false);
   const [EnquiryMessage, setEnquiryMessage] = useState<any>(null)
   const [showPermissionPopup, setShowPermissionPopup] = useState(false);
-  const [ProfileName,SetProfileName]=useState<any>("")
+  const [ProfileName, SetProfileName] = useState<any>("")
   const [openProfile, setOpenProfile] = useState(false);
-  const [AttendeceView,setAttendeceView]=useState(false)
-  const [openExpense,setOpenExpense]=useState<any>(false)
-  const [compliteInfo,setcompliteInfo]=useState<any>()
-  const [showProfileOptions,setShowProfileOptions]=useState(false)
-const [BechListInfo,setBechListInfo]=useState<any>()
+  const [AttendeceView, setAttendeceView] = useState(false)
+  const [openExpense, setOpenExpense] = useState<any>(false)
+  const [compliteInfo, setcompliteInfo] = useState<any>()
+  const [showProfileOptions, setShowProfileOptions] = useState(false)
+  const [BechListInfo, setBechListInfo] = useState<any>()
   const [loading, setLoading] = useState<boolean>(true);
-      const [benchSource, setBenchSource] = useState<any>(null);
-   const [value, setValue] = useState("");
+  const [benchSource, setBenchSource] = useState<any>(null);
+  const [value, setValue] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
-const [languageInput, setLanguageInput] = useState("");
-const [languageOptions, setLanguageOptions] = useState<string[]>([]);
-const [showLeadSuggestions, setShowLeadSuggestions] = useState(false);
+  const [languageInput, setLanguageInput] = useState("");
+  const [languageOptions, setLanguageOptions] = useState<string[]>([]);
+  const [showLeadSuggestions, setShowLeadSuggestions] = useState(false);
 
   const [showExtra, setShowExtra] = useState(false);
 
 
   const options = ["Stay In", "Long Day", "Long Night"];
-const [filteredLeads, setFilteredLeads] = useState<string[]>([])
-const ImportedInformationOfCallEnquiry=useSelector((state:any)=>state.NotificationCallEnquiryInformation)
-const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
+  const [filteredLeads, setFilteredLeads] = useState<string[]>([])
+  const ImportedInformationOfCallEnquiry = useSelector((state: any) => state.NotificationCallEnquiryInformation)
+  const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
   const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
- 
- 
- 
+
+
+
   const [EnquiryForm, setEnquiryForm] = useState<any>({
     title: "",
-    Patienttitle:"",
+    Patienttitle: "",
     ClientName: "",
-    patientName:"",
+    patientName: "",
     ClientContact: '',
     ClientEmail: '',
-    patientAge:"",
-    patientGender:'',
-    clientGender:"",
-    HCPPreferGender:"",
-    NewLead:"",
-    CurateNewLead:'',
-    PreferredLanguage:"",
+    patientAge: "",
+    patientGender: '',
+    clientGender: "",
+    HCPPreferGender: "",
+    NewLead: "",
+    CurateNewLead: '',
+    PreferredLanguage: "",
     ClientArea: '',
     ClientNote: "",
-    serviceCharges:"",
-    MonthlyServiceCharge:"",
-    ServiceType:"",
-    patientHealthCard:"",
-    ExpectedService:"",
-    Reasonforservice:"",
-    ClientStatus:"",
-    patientWeight:'',
+    serviceCharges: "",
+    MonthlyServiceCharge: "",
+    ServiceType: "",
+    patientHealthCard: "",
+    ExpectedService: "",
+    Reasonforservice: "",
+    ClientStatus: "",
+    patientWeight: '',
     WorkingHours: "",
     WorkType: "",
     ExtraWorkingHours: "",
     ExtraWorkType: ""
   })
-    const [showHealthCardSuggestions, setShowHealthCardSuggestions] =
+  const [showHealthCardSuggestions, setShowHealthCardSuggestions] =
     useState(false);
- const [DiscountPrice, setDiscountPrice] = useState<any>(1500)
- const [UserPasswordValues,SetPasswordValues]=useState()
+  const [DiscountPrice, setDiscountPrice] = useState<any>(1500)
+  const [UserPasswordValues, SetPasswordValues] = useState()
   const [ClientDiscount, SetClientDiscount] = useState<any>(0)
   const [stats, setStats] = useState<any>({
     registeredUsers: "Loading...",
@@ -171,182 +171,182 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
     Employs: "Loading..."
   });
 
-const DASHBOARD_CACHE_KEY = "dashboardStats";
-const CACHE_TTL = 20 * 60 * 1000;
+  const DASHBOARD_CACHE_KEY = "dashboardStats";
+  const CACHE_TTL = 20 * 60 * 1000;
 
-const BENCH_CACHE_KEY = "benchListInfo";
-const BENCH_CACHE_TTL = 20* 60 * 1000;
+  const BENCH_CACHE_KEY = "benchListInfo";
+  const BENCH_CACHE_TTL = 20 * 60 * 1000;
 
-// useEffect(() => {
-//   let mounted = true;
+  // useEffect(() => {
+  //   let mounted = true;
 
-//   const run = async () => {
-//     const userId = localStorage.getItem("UserId");
+  //   const run = async () => {
+  //     const userId = localStorage.getItem("UserId");
 
-//     if (userId) {
-//       const user = await GetUserInformation(userId);
-//       console.log("Check for First Name-----",user)
-//       if (mounted && user?.Email) {
-//         dispatch(CurrentLoginUser(user.Email));
-//         SetProfileName(user.FirstName)
-//         SetPasswordValues(user?.PasswordValue)
-//       }
-//     }
+  //     if (userId) {
+  //       const user = await GetUserInformation(userId);
+  //       console.log("Check for First Name-----",user)
+  //       if (mounted && user?.Email) {
+  //         dispatch(CurrentLoginUser(user.Email));
+  //         SetProfileName(user.FirstName)
+  //         SetPasswordValues(user?.PasswordValue)
+  //       }
+  //     }
 
-//     const cachedStats = localStorage.getItem(DASHBOARD_CACHE_KEY);
-//     const cachedBench = localStorage.getItem(BENCH_CACHE_KEY);
+  //     const cachedStats = localStorage.getItem(DASHBOARD_CACHE_KEY);
+  //     const cachedBench = localStorage.getItem(BENCH_CACHE_KEY);
 
-//     let statsValid = false;
-//     let benchValid = false;
+  //     let statsValid = false;
+  //     let benchValid = false;
 
-//     // Dashboard Cache
-//     if (cachedStats) {
-//       const { data, timestamp } = JSON.parse(cachedStats);
+  //     // Dashboard Cache
+  //     if (cachedStats) {
+  //       const { data, timestamp } = JSON.parse(cachedStats);
 
-//       if (Date.now() - timestamp < CACHE_TTL) {
-//         setStats(data);
-//         statsValid = true;
-//       }
-//     }
+  //       if (Date.now() - timestamp < CACHE_TTL) {
+  //         setStats(data);
+  //         statsValid = true;
+  //       }
+  //     }
 
-//     // Bench Cache
-//     if (cachedBench) {
-//       const { data, timestamp } = JSON.parse(cachedBench);
+  //     // Bench Cache
+  //     if (cachedBench) {
+  //       const { data, timestamp } = JSON.parse(cachedBench);
 
-//       if (Date.now() - timestamp < BENCH_CACHE_TTL) {
-//         setBenchSource(data);
-//         benchValid = true;
-//       }
-//     }
+  //       if (Date.now() - timestamp < BENCH_CACHE_TTL) {
+  //         setBenchSource(data);
+  //         benchValid = true;
+  //       }
+  //     }
 
-//     // If both cached stop API calls
-//     if (statsValid && benchValid) {
-//       setLoading(false);
-//       return;
-//     }
+  //     // If both cached stop API calls
+  //     if (statsValid && benchValid) {
+  //       setLoading(false);
+  //       return;
+  //     }
 
-//     try {
-//       const [statsRes, benchRes] = await Promise.all([
-//         GetDashboardStats(),
-//         GetUsersFullInfo(),
-//       ]);
+  //     try {
+  //       const [statsRes, benchRes] = await Promise.all([
+  //         GetDashboardStats(),
+  //         GetUsersFullInfo(),
+  //       ]);
 
-//       if (!mounted) return;
+  //       if (!mounted) return;
 
-//       if (statsRes?.success) {
-//         setStats(statsRes.data);
+  //       if (statsRes?.success) {
+  //         setStats(statsRes.data);
 
-//         localStorage.setItem(
-//           DASHBOARD_CACHE_KEY,
-//           JSON.stringify({
-//             data: statsRes.data,
-//             timestamp: Date.now(),
-//           })
-//         );
-//       }
+  //         localStorage.setItem(
+  //           DASHBOARD_CACHE_KEY,
+  //           JSON.stringify({
+  //             data: statsRes.data,
+  //             timestamp: Date.now(),
+  //           })
+  //         );
+  //       }
 
-//       // Bench Users
-//       const benchUsers =
-//         Array.isArray(benchRes) ? benchRes : benchRes?.data ?? [];
+  //       // Bench Users
+  //       const benchUsers =
+  //         Array.isArray(benchRes) ? benchRes : benchRes?.data ?? [];
 
-//       if (benchUsers.length > 0) {
-//         setBenchSource(benchUsers);
+  //       if (benchUsers.length > 0) {
+  //         setBenchSource(benchUsers);
 
-//         localStorage.setItem(
-//           BENCH_CACHE_KEY,
-//           JSON.stringify({
-//             data: benchUsers,
-//             timestamp: Date.now(),
-//           })
-//         );
-//       }
+  //         localStorage.setItem(
+  //           BENCH_CACHE_KEY,
+  //           JSON.stringify({
+  //             data: benchUsers,
+  //             timestamp: Date.now(),
+  //           })
+  //         );
+  //       }
 
-//       setLoading(false);
-//     } catch (error) {
-//       console.error("Dashboard Load Error:", error);
-//       setLoading(false);
-//     }
-//   };
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error("Dashboard Load Error:", error);
+  //       setLoading(false);
+  //     }
+  //   };
 
-//   run();
+  //   run();
 
-//   return () => {
-//     mounted = false;
-//   };
-// }, []);
+  //   return () => {
+  //     mounted = false;
+  //   };
+  // }, []);
 
-useEffect(() => {
-  if (ImportedInformationOfCallEnquiry) {
+  useEffect(() => {
+    if (ImportedInformationOfCallEnquiry) {
 
-    console.log("Imported Information-----",ImportedInformationOfCallEnquiry)
-    
-  const mapped = mapEnquiryToForm(ImportedInformationOfCallEnquiry);
+      console.log("Imported Information-----", ImportedInformationOfCallEnquiry)
 
-  setEnquiryForm((prev: any) => ({
-    ...prev,
-    ...mapped
-  }));
+      const mapped = mapEnquiryToForm(ImportedInformationOfCallEnquiry);
 
-    setShowCallEnquiry(true);
-    console.log(
-      "Check Imported Information of Call Enquiry-----",
-      ImportedInformationOfCallEnquiry
-    );
-  }
-}, [ImportedInformationOfCallEnquiry]);
-const run = useCallback(async () => {
-  const userId = localStorage.getItem("UserId");
+      setEnquiryForm((prev: any) => ({
+        ...prev,
+        ...mapped
+      }));
 
-  if (userId) {
-    const user = await GetUserInformation(userId);
-
-    if (user?.Email) {
-      dispatch(CurrentLoginUser(user.Email));
-      SetProfileName(user.FirstName);
-      SetPasswordValues(user?.PasswordValue);
+      setShowCallEnquiry(true);
+      console.log(
+        "Check Imported Information of Call Enquiry-----",
+        ImportedInformationOfCallEnquiry
+      );
     }
-  }
+  }, [ImportedInformationOfCallEnquiry]);
+  const run = useCallback(async () => {
+    const userId = localStorage.getItem("UserId");
 
-  try {
-    const [statsRes, benchRes] = await Promise.all([
-      GetDashboardStats(),
-      GetUsersFullInfo(),
-    ]);
+    if (userId) {
+      const user = await GetUserInformation(userId);
 
-    if (statsRes?.success) {
-      setStats(statsRes.data);
+      if (user?.Email) {
+        dispatch(CurrentLoginUser(user.Email));
+        SetProfileName(user.FirstName);
+        SetPasswordValues(user?.PasswordValue);
+      }
+    }
+
+    try {
+      const [statsRes, benchRes] = await Promise.all([
+        GetDashboardStats(),
+        GetUsersFullInfo(),
+      ]);
+
+      if (statsRes?.success) {
+        setStats(statsRes.data);
+
+        localStorage.setItem(
+          DASHBOARD_CACHE_KEY,
+          JSON.stringify({
+            data: statsRes.data,
+            timestamp: Date.now(),
+          })
+        );
+      }
+
+      const benchUsers =
+        Array.isArray(benchRes) ? benchRes : benchRes?.data ?? [];
+
+      setBenchSource(benchUsers);
 
       localStorage.setItem(
-        DASHBOARD_CACHE_KEY,
+        BENCH_CACHE_KEY,
         JSON.stringify({
-          data: statsRes.data,
+          data: benchUsers,
           timestamp: Date.now(),
         })
       );
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Dashboard Load Error:", error);
+      setLoading(false);
     }
-
-    const benchUsers =
-      Array.isArray(benchRes) ? benchRes : benchRes?.data ?? [];
-
-    setBenchSource(benchUsers);
-
-    localStorage.setItem(
-      BENCH_CACHE_KEY,
-      JSON.stringify({
-        data: benchUsers,
-        timestamp: Date.now(),
-      })
-    );
-
-    setLoading(false);
-  } catch (error) {
-    console.error("Dashboard Load Error:", error);
-    setLoading(false);
-  }
-}, [dispatch]);
-useEffect(() => {
-  run();
-}, [run,updatedRefreshCount]);
+  }, [dispatch]);
+  useEffect(() => {
+    run();
+  }, [run, updatedRefreshCount]);
 
   const BenchList = useMemo(() => {
     if (!benchSource) return [];
@@ -372,7 +372,7 @@ useEffect(() => {
 
 
   const handleChange = (e: any) => {
-    
+
     try {
       const name = e.target.name
       const value = e.target.value
@@ -480,19 +480,20 @@ useEffect(() => {
 
   const UpdateCallEnquiry = async () => {
     setEnquiryMessage("Please Wait.....")
-     if(EnquiryForm.ClientName===""&&EnquiryForm.patientName===""&&EnquiryForm.ClientContact===""){
+    if (EnquiryForm.ClientName === "" && EnquiryForm.patientName === "" && EnquiryForm.ClientContact === "") {
       alert("Please Enter Client & Patient Name")
+      setEnquiryMessage("")
       return
     }
     try {
-      if(!EnquiryForm.ClientStatus){
+      if (!EnquiryForm.ClientStatus) {
         setEnquiryMessage("Pleae Update Call Enquiry Status")
         return
       }
 
       const isPatient =
-      EnquiryForm.ClientStatus === "Waiting List" ||
-      EnquiryForm.ClientStatus === "Lost";
+        EnquiryForm.ClientStatus === "Waiting List" ||
+        EnquiryForm.ClientStatus === "Lost";
 
 
 
@@ -534,16 +535,16 @@ useEffect(() => {
       if (registrationResult.success === true) {
         setEnquiryMessage("Client Enquiry Registered Successfully, Please Wait Navigating to Call Enquiry DashBoard !");
 
-//         if((EnquiryForm.ClientStatus!="Waiting List")||(EnquiryForm.ClientStatus!="Lost")){
-// setShowNotification(true)
-//         }
+        //         if((EnquiryForm.ClientStatus!="Waiting List")||(EnquiryForm.ClientStatus!="Lost")){
+        // setShowNotification(true)
+        //         }
 
         setTimeout(() => {
           setShowCallEnquiry(false);
-           dispatch(Update_Main_Filter_Status('Call Enquiry'));
-      dispatch(UpdateUserType("patient"));
-      router.push("/AdminPage");
-         dispatch(Refresh("New Call Enquiry Added  Successfully"));
+          dispatch(Update_Main_Filter_Status('Call Enquiry'));
+          dispatch(UpdateUserType("patient"));
+          router.push("/AdminPage");
+          dispatch(Refresh("New Call Enquiry Added  Successfully"));
         }, 1500);
       }
 
@@ -553,112 +554,112 @@ useEffect(() => {
   }
 
 
-//   const loadUsers =  () => {
-//   const users = BechListInfo
-//   const filterProfilePic = users.map(
-//     (each: any) => each?.HCAComplitInformation ?? {}
-//   );
+  //   const loadUsers =  () => {
+  //   const users = BechListInfo
+  //   const filterProfilePic = users.map(
+  //     (each: any) => each?.HCAComplitInformation ?? {}
+  //   );
 
-//   const Finel = filterProfilePic.map((each: any) => ({
-//     id: each.UserId,
-//     FirstName: each.HCPFirstName,
-//     AadharNumber: each.HCPAdharNumber,
-//     Age: each.Age,
-//     userType: each.userType,
-//     Location: each["Permanent Address"] || "",
-//     Email: each.HCPEmail,
-//     Contact: each.HCPContactNumber,
-//     CurrentStatus: each.CurrentStatus,
-//     userId: each.UserId,
-//     VerificationStatus: each.VerificationStatus,
-//     DetailedVerification: each.FinelVerification,
-//     EmailVerification: each.EmailVerification,
-//     ClientStatus: each.ClientStatus,
-//     Status: each.Status,
-//     provider: each.provider,
-//     payTerms: each.payTerms,
-//   }));
+  //   const Finel = filterProfilePic.map((each: any) => ({
+  //     id: each.UserId,
+  //     FirstName: each.HCPFirstName,
+  //     AadharNumber: each.HCPAdharNumber,
+  //     Age: each.Age,
+  //     userType: each.userType,
+  //     Location: each["Permanent Address"] || "",
+  //     Email: each.HCPEmail,
+  //     Contact: each.HCPContactNumber,
+  //     CurrentStatus: each.CurrentStatus,
+  //     userId: each.UserId,
+  //     VerificationStatus: each.VerificationStatus,
+  //     DetailedVerification: each.FinelVerification,
+  //     EmailVerification: each.EmailVerification,
+  //     ClientStatus: each.ClientStatus,
+  //     Status: each.Status,
+  //     provider: each.provider,
+  //     payTerms: each.payTerms,
+  //   }));
 
-//   const HCA_List = Finel.filter((each: any) => {
-//     const typeMatch = ["healthcare-assistant", "HCA", "HCP", "HCPT"].includes(
-//       each.userType
-//     );
+  //   const HCA_List = Finel.filter((each: any) => {
+  //     const typeMatch = ["healthcare-assistant", "HCA", "HCP", "HCPT"].includes(
+  //       each.userType
+  //     );
 
-//     const isNotAssigned =
-//       !each.Status?.some((s: string) => s === "Assigned");
+  //     const isNotAssigned =
+  //       !each.Status?.some((s: string) => s === "Assigned");
 
-//     const isValidCurrentStatus =
-//       !["Sick", "Leave", "Terminated"].includes(each.CurrentStatus);
+  //     const isValidCurrentStatus =
+  //       !["Sick", "Leave", "Terminated"].includes(each.CurrentStatus);
 
-//     return typeMatch && isNotAssigned && isValidCurrentStatus;
-//   });
+  //     return typeMatch && isNotAssigned && isValidCurrentStatus;
+  //   });
 
-//   return HCA_List;
-// };
-//   const { data: BenchList = [], isLoading } = useSWR(
-//   BechListInfo ? "bench-list" : null,
-//   loadUsers,
-//   { revalidateOnFocus: false }
-// );
+  //   return HCA_List;
+  // };
+  //   const { data: BenchList = [], isLoading } = useSWR(
+  //   BechListInfo ? "bench-list" : null,
+  //   loadUsers,
+  //   { revalidateOnFocus: false }
+  // );
 
-const handleAreaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const text = e.target.value;
+  const handleAreaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const text = e.target.value;
 
- 
-  setValue(text);
-  setEnquiryForm((prev:any) => ({
-    ...prev,
-    ClientArea: text,
-  }));
 
-  if (!text.trim()) {
+    setValue(text);
+    setEnquiryForm((prev: any) => ({
+      ...prev,
+      ClientArea: text,
+    }));
+
+    if (!text.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    const filtered = hyderabadAreasforcallEnquiry.filter(area =>
+      area.toLowerCase().includes(text.toLowerCase())
+    );
+
+    setSuggestions(filtered);
+  };
+
+  const selectArea = (area: string) => {
+    setValue(area);
+    setEnquiryForm((prev: any) => ({
+      ...prev,
+      ClientArea: area,
+    }));
     setSuggestions([]);
-    return;
-  }
-
-  const filtered = hyderabadAreasforcallEnquiry.filter(area =>
-    area.toLowerCase().includes(text.toLowerCase())
-  );
-
-  setSuggestions(filtered);
-};
-
-const selectArea = (area: string) => {
-  setValue(area);
-  setEnquiryForm((prev:any) => ({
-    ...prev,
-    ClientArea: area,
-  }));
-  setSuggestions([]);
-};
+  };
 
 
-const handleLanguageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const text = e.target.value;
-  setLanguageInput(text);
-   setEnquiryForm((prev:any) => ({
-    ...prev,
-    PreferredLanguage: text,
-  }));
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const text = e.target.value;
+    setLanguageInput(text);
+    setEnquiryForm((prev: any) => ({
+      ...prev,
+      PreferredLanguage: text,
+    }));
 
-  if (!text.trim()) {
-    setLanguageOptions([]);
-    return;
-  }
+    if (!text.trim()) {
+      setLanguageOptions([]);
+      return;
+    }
 
-  setLanguageOptions(
-    IndianLanguages.filter(lang =>
-      lang.toLowerCase().includes(text.toLowerCase())
-    )
-  );
-};
+    setLanguageOptions(
+      IndianLanguages.filter(lang =>
+        lang.toLowerCase().includes(text.toLowerCase())
+      )
+    );
+  };
 
   const selectLanguage = (lang: string) => {
     setLanguageInput(lang);
-     setEnquiryForm((prev:any) => ({
-    ...prev,
-    PreferredLanguage: lang,
-  }));
+    setEnquiryForm((prev: any) => ({
+      ...prev,
+      PreferredLanguage: lang,
+    }));
     setLanguageOptions([]);
   };
 
@@ -756,219 +757,220 @@ const handleLanguageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   //       return;
   //   }
   // };
-const TAB_ACCESS_CONTROL: Record<string, string[]> = {
-  "Call Enquiry": [
-    "tsiddu805@gmail.com",
-    "info@curatehealth.in",
-  ],
+  const TAB_ACCESS_CONTROL: Record<string, string[]> = {
+    "Call Enquiry": [
+      "tsiddu805@gmail.com",
+      "info@curatehealth.in",
+    ],
 
-  "Deployment": [
-    "tsiddu805@gmail.com",
-    "panducurate@gmail.com",
-    "srivanikasham@curatehealth.in",
-  ],
+    "Deployment": [
+      "tsiddu805@gmail.com",
+      "panducurate@gmail.com",
+      "srivanikasham@curatehealth.in",
+    ],
 
-  "Timesheet": [
-    "panducurate@gmail.com",
-    "srivanikasham@curatehealth.in",
-  ],
+    "Timesheet": [
+      "panducurate@gmail.com",
+      "srivanikasham@curatehealth.in",
+    ],
 
-  "Referral Pay": [
-    "info@curatehealth.in",
-  ],
+    "Referral Pay": [
+      "info@curatehealth.in",
+    ],
 
-  "Payments": [
-    "info@curatehealth.in",
-     "tsiddu805@gmail.com",
-    "panducurate@gmail.com",
-    "srivanikasham@curatehealth.in",
-  ],
+    "Payments": [
+      "info@curatehealth.in",
+      "tsiddu805@gmail.com",
+      "panducurate@gmail.com",
+      "srivanikasham@curatehealth.in",
+    ],
 
-  "HCP List": [
-    "sravanthicurate@gmail.com",
-  ],
+    "HCP List": [
+      "sravanthicurate@gmail.com",
+    ],
 
-  "Pending PDR": [
-    "gouricurate@gmail.com",
-    
-  ],
+    "Pending PDR": [
+      "gouricurate@gmail.com",
 
-  "Vendors": [
-    "kirancuratehealth@gmail.com",
-  ],
+    ],
 
-  "Training": [
-    "info@curatehealth.in",
-  ],
+    "Vendors": [
+      "kirancuratehealth@gmail.com",
+    ],
 
-  "Document Compliance": [
-    "info@curatehealth.in",
-  ],
+    "Training": [
+      "info@curatehealth.in",
+    ],
 
-  "Registration": [
-    "tsiddu805@gmail.com",
-  ],
+    "Document Compliance": [
+      "info@curatehealth.in",
+    ],
 
-  "Invoices": [
-    "rpandu823@gmail.com",
-  ],
+    "Registration": [
+      "tsiddu805@gmail.com",
+    ],
 
-  "Notifications": [
-    "info@curatehealth.in",
-     "kirancuratehealth@gmail.com"
-  ],
+    "Invoices": [
+      "rpandu823@gmail.com",
+    ],
 
-  "Hostel Attendance": [
-    "srinivasnew0803@gmail.com",
-  ],
+    "Notifications": [
+      "info@curatehealth.in",
+      "kirancuratehealth@gmail.com"
+    ],
 
-  "Employees": [
-    "info@curatehealth.in",
-  ],
+    "Hostel Attendance": [
+      "srinivasnew0803@gmail.com",
+    ],
 
-  ALL: [
-    "tsiddu805@gmail.com",
-    "admin@curatehealth.in",
-    "sravanthicurate@gmail.com",
-    "srinivasnew0803@gmail.com",
-    "srivanikasham@curatehealth.in",
-    "info@curatehealth.in",
-    "gouricurate@gmail.com",
-    "shreeshmacurate@gmail.com"
-  ],
-};
+    "Employees": [
+      "info@curatehealth.in",
+    ],
 
-const canAccessTab = useCallback(
-  (tab: string, email: string | null) => {
-    if (!email) return false;
-    if (TAB_ACCESS_CONTROL.ALL?.includes(email)) return true;
-    return TAB_ACCESS_CONTROL[tab]?.includes(email);
-  },
-  []
-);
+    ALL: [
+      "tsiddu805@gmail.com",
+      "admin@curatehealth.in",
+      "sravanthicurate@gmail.com",
+      "srinivasnew0803@gmail.com",
+      "srivanikasham@curatehealth.in",
+      "info@curatehealth.in",
+      "gouricurate@gmail.com",
+      "shreeshmacurate@gmail.com"
+    ],
+  };
 
-
-
-const Switching = (name: string) => {
- 
-  if (!loggedInEmail) return;
- 
-  if (!canAccessTab(name, loggedInEmail)) {
-    setShowPermissionPopup(true);
-    return;
-  }
-
-  
-  switch (name) {
-    case "Call Enquiry":
-    case "Deployment":
-    case "Timesheet":
-      dispatch(Update_Main_Filter_Status(name));
-      dispatch(UpdateUserType("patient"));
-      router.push("/AdminPage");
-      break;
-
-    case "HCP List":
-      dispatch(Update_Main_Filter_Status(name));
-      dispatch(UpdateUserType("healthcare-assistant"));
-      router.push("/AdminPage");
-      break;
-
-    case "Pending PDR":
-      router.push("/PDRView");
-      break;
-    case "Vendors":
-      router.push("/VendorsPanel");
-      break;
-
-    case "Document Compliance":
-      router.push("/Documents");
-      break;
-
-    case "Invoices":
-      router.push("/Invoices");
-      break;
-        case "Payments":
-      router.push("/PaymentsInfo");
-      break;
-
-    case "Registration":
-      router.push("/UserTypeRegistration");
-      break;
-
-    case "Hostel Attendance":
-      router.push("/HostelAttendence");
-      break;
-
-    case "Notifications":
-      router.push("/Notifications");
-      break;
-  }
-};
-
-const PostNotificationInfo=async(Emails: string[])=>{
-try{
-  setNotificationStatus("Please Wait.....")
-   const RegistrationFee= DiscountPrice - ClientDiscount
-const PostinNotification:any=await PostCallEnquiryNotification(EnquiryForm,Emails,RegistrationFee)
-console.log('Chec Retuen Info-----',PostinNotification)
+  const canAccessTab = useCallback(
+    (tab: string, email: string | null) => {
+      if (!email) return false;
+      if (TAB_ACCESS_CONTROL.ALL?.includes(email)) return true;
+      return TAB_ACCESS_CONTROL[tab]?.includes(email);
+    },
+    []
+  );
 
 
-if(PostinNotification.success){
-setNotificationStatus("Notification Send Succesfully")
- setTimeout(() => {
-  setNotificationStatus("")
- setShowCallEnquiry(false)
+
+  const Switching = (name: string) => {
+
+    if (!loggedInEmail) return;
+
+    if (!canAccessTab(name, loggedInEmail)) {
+      setShowPermissionPopup(true);
+      return;
+    }
+
+
+    switch (name) {
+      case "Call Enquiry":
+      case "Deployment":
+      case "Timesheet":
+        dispatch(Update_Main_Filter_Status(name));
+        dispatch(UpdateUserType("patient"));
+        router.push("/AdminPage");
+        break;
+
+      case "HCP List":
+        dispatch(Update_Main_Filter_Status(name));
+        dispatch(UpdateUserType("healthcare-assistant"));
+        router.push("/AdminPage");
+        break;
+
+      case "Pending PDR":
+        router.push("/PDRView");
+        break;
+      case "Vendors":
+        router.push("/VendorsPanel");
+        break;
+
+      case "Document Compliance":
+        router.push("/Documents");
+        break;
+
+      case "Invoices":
+        router.push("/Invoices");
+        break;
+      case "Payments":
+        router.push("/PaymentsInfo");
+        break;
+
+      case "Registration":
+        router.push("/UserTypeRegistration");
+        break;
+
+      case "Hostel Attendance":
+        router.push("/HostelAttendence");
+        break;
+
+      case "Notifications":
+        router.push("/Notifications");
+        break;
+    }
+  };
+
+  const PostNotificationInfo = async (Emails: string[]) => {
+    try {
+      setNotificationStatus("Please Wait.....")
+      const RegistrationFee = DiscountPrice - ClientDiscount
+      const PostinNotification: any = await PostCallEnquiryNotification(EnquiryForm, Emails, RegistrationFee)
+      console.log('Chec Retuen Info-----', PostinNotification)
+
+
+      if (PostinNotification.success) {
+        setNotificationStatus("Notification Send Succesfully")
+        setTimeout(() => {
+          setNotificationStatus("")
+          setShowCallEnquiry(false)
           setShowNotification(false);
         }, 2000);
 
-}
-}catch(err:any){
+      }
+    } catch (err: any) {
 
-}
-}
-
-
-const UpdateIrralaventInfo=async()=>{ 
-
-  try{
-   setEnquiryMessage("Please Wait....")
-                                 if(EnquiryForm.ClientName===""&&EnquiryForm.patientName===""&&EnquiryForm.ClientContact===""){
-      alert("Please Enter Client & Patient Name")
-      return
     }
-const result: any = await UpdateNotIntrestInformation(EnquiryForm);
-                                    setEnquiryMessage(result.message);
-                                    dispatch(Refresh(result.message))
-                                    setEnquiryForm({
-                                      ClientName: "",
-                                      patientName: "",
-                                      ClientContact: '',
-                                      ClientEmail: '',
-                                      patientAge: "",
-                                      patientGender: '',
-                                      HCPPreferGender: "",
-                                      NewLead: "",
-                                      CurateNewLead: '',
-                                      PreferredLanguage: "",
-                                      ClientArea: '',
-                                      ClientNote: "",
-                                      serviceCharges: "",
-                                      MonthlyServiceCharge: "",
-                                      ServiceType: "",
-                                      patientHealthCard: "",
-                                      ExpectedService: "",
-                                      Reasonforservice: "",
-                                      ClientStatus: "",
-                                      patientWeight: '',
-                                    })
-                                    setTimeout(() => { setEnquiryMessage(""); setShowCallEnquiry(false) }, 2000)
-                                    return;
-  }catch(err:any){
-
   }
-}
- 
+
+
+  const UpdateIrralaventInfo = async () => {
+
+    try {
+      setEnquiryMessage("Please Wait....")
+      if (EnquiryForm.ClientName === "" && EnquiryForm.patientName === "" && EnquiryForm.ClientContact === "") {
+        alert("Please Enter Client & Patient Name")
+        setEnquiryMessage("")
+        return
+      }
+      const result: any = await UpdateNotIntrestInformation(EnquiryForm);
+      setEnquiryMessage(result.message);
+      dispatch(Refresh(result.message))
+      setEnquiryForm({
+        ClientName: "",
+        patientName: "",
+        ClientContact: '',
+        ClientEmail: '',
+        patientAge: "",
+        patientGender: '',
+        HCPPreferGender: "",
+        NewLead: "",
+        CurateNewLead: '',
+        PreferredLanguage: "",
+        ClientArea: '',
+        ClientNote: "",
+        serviceCharges: "",
+        MonthlyServiceCharge: "",
+        ServiceType: "",
+        patientHealthCard: "",
+        ExpectedService: "",
+        Reasonforservice: "",
+        ClientStatus: "",
+        patientWeight: '',
+      })
+      setTimeout(() => { setEnquiryMessage(""); setShowCallEnquiry(false) }, 2000)
+      return;
+    } catch (err: any) {
+
+    }
+  }
+
 
   const UpdateNewLead = async () => {
     router.prefetch("/NewLead");
@@ -1004,43 +1006,43 @@ const result: any = await UpdateNotIntrestInformation(EnquiryForm);
     <div className="flex h-screen bg-gray-100 relative">
       <div className="flex-1 flex flex-col">
 
-       <header className="flex flex-wrap justify-between items-center bg-gray-400 text-white px-4 sm:px-6 py-3 shadow-md gap-3">
-    <div className="flex items-center gap-2 min-w-0">
-    <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
-    <span className="text-[15px] uppercase truncate">
-      Hi Admin – Welcome to Admin Dashboard
-    </span>
-  </div>
-
-  
-  <div className="flex items-center gap-3 sm:gap-5 w-full sm:w-auto justify-between sm:justify-end">
-
-    <div className="flex items-center bg-gray-800 px-2 sm:px-3 py-1 rounded-lg flex-1 sm:flex-none">
-      <Search size={18} className="text-gray-400" />
-      <input
-        type="text"
-        placeholder="Search..."
-        className="bg-transparent outline-none text-sm px-2 text-white w-full"
-      />
-    </div>
-
-    
-    <button type="button" className="relative">
-      <Bell size={22} />
-      <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-    </button>
-
- 
-<div className="relative inline-block">
+        <header className="flex flex-wrap justify-between items-center bg-gray-400 text-white px-4 sm:px-6 py-3 shadow-md gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
+            <span className="text-[15px] uppercase truncate">
+              Hi Admin – Welcome to Admin Dashboard.
+            </span>
+          </div>
 
 
-<div className="relative inline-block group">
+          <div className="flex items-center gap-3 sm:gap-5 w-full sm:w-auto justify-between sm:justify-end">
 
-  {/* Profile Button */}
-  <button
-    type="button"
-    onClick={() => setShowProfileOptions(prev => !prev)}
-    className="
+            <div className="flex items-center bg-gray-800 px-2 sm:px-3 py-1 rounded-lg flex-1 sm:flex-none">
+              <Search size={18} className="text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="bg-transparent outline-none text-sm px-2 text-white w-full"
+              />
+            </div>
+
+
+            <button type="button" className="relative">
+              <Bell size={22} />
+              <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+            </button>
+
+
+            <div className="relative inline-block">
+
+
+              <div className="relative inline-block group">
+
+                {/* Profile Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowProfileOptions(prev => !prev)}
+                  className="
       flex items-center gap-2
       px-2 py-1
       rounded-xl
@@ -1049,19 +1051,19 @@ const result: any = await UpdateNotIntrestInformation(EnquiryForm);
       focus:outline-none
       cursor-pointer
     "
-  >
-    <CircleUser size={18} className="text-gray-200" />
+                >
+                  <CircleUser size={18} className="text-gray-200" />
 
-    <div className="hidden sm:flex flex-col items-start leading-tight">
-      <span className="text-sm font-semibold text-white">
-        {ProfileName || "Admin"}
-      </span>
-    </div>
-  </button>
+                  <div className="hidden sm:flex flex-col items-start leading-tight">
+                    <span className="text-sm font-semibold text-white">
+                      {ProfileName || "Admin"}
+                    </span>
+                  </div>
+                </button>
 
-  {/* Bottom Tooltip */}
-  <div
-    className="
+                {/* Bottom Tooltip */}
+                <div
+                  className="
       absolute left-1/2 -translate-x-1/2 top-full mt-2
       whitespace-nowrap
       rounded-md
@@ -1078,82 +1080,82 @@ const result: any = await UpdateNotIntrestInformation(EnquiryForm);
       transition-all duration-200
       z-50
     "
-  >
-    Click to get options
+                >
+                  Click to get options
 
-    {/* Arrow (Top pointing) */}
-    <div
-      className="
+                  {/* Arrow (Top pointing) */}
+                  <div
+                    className="
         absolute left-1/2 -translate-x-1/2 -top-1
         w-2 h-2
         bg-gray-900
         rotate-45
       "
-    />
-  </div>
-</div>
+                  />
+                </div>
+              </div>
 
 
-  {showProfileOptions && (
-    <div
-      className="
+              {showProfileOptions && (
+                <div
+                  className="
         absolute right-0 mt-3 w-56
         bg-white text-gray-800
         rounded-2xl shadow-xl
         border border-gray-200
         z-50 overflow-hidden
       "
-    >
- 
-      <div className="px-4 py-3 bg-gray-50 border-b">
-        <p className="text-sm font-semibold text-gray-900">
-          {ProfileName || "Admin User"}
-        </p>
-        <p className="text-xs text-gray-500 truncate">
-          {loggedInEmail}
-        </p>
-      </div>
+                >
 
-     
-      <div className="py-1">
-        <button
-        type="button"
-          onClick={() => {
-            setOpenProfile(true);
-            setShowProfileOptions(false);
-             setshowReferalPopup(false)
-          }}
-          className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
-        >
-          <User size={16} className="text-slate-500" />
-          My Profile
-        </button>
+                  <div className="px-4 py-3 bg-gray-50 border-b">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {ProfileName || "Admin User"}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {loggedInEmail}
+                    </p>
+                  </div>
 
-        <button
-        type="button"
-          onClick={() => {
-            setAttendeceView(true);
-            setShowProfileOptions(false);
-             setshowReferalPopup(false)
-          }}
-          className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
-        >
-          <ClipboardCheck size={16} className="text-slate-500" />
-          Attendance
-        </button>
 
-        <button
-        type="button"
-          onClick={() => {
-            setOpenExpense(true);
-            setShowProfileOptions(false);
-            setshowReferalPopup(false)
-          }}
-          className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
-        >
-          <IndianRupee size={16} className="text-slate-500" />
-          Post Expense
-        </button>
+                  <div className="py-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpenProfile(true);
+                        setShowProfileOptions(false);
+                        setshowReferalPopup(false)
+                      }}
+                      className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+                    >
+                      <User size={16} className="text-slate-500" />
+                      My Profile
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAttendeceView(true);
+                        setShowProfileOptions(false);
+                        setshowReferalPopup(false)
+                      }}
+                      className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+                    >
+                      <ClipboardCheck size={16} className="text-slate-500" />
+                      Attendance
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpenExpense(true);
+                        setShowProfileOptions(false);
+                        setshowReferalPopup(false)
+                      }}
+                      className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+                    >
+                      <IndianRupee size={16} className="text-slate-500" />
+                      Post Expense
+                    </button>
 
 
                     <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100" onClick={
@@ -1162,184 +1164,184 @@ const result: any = await UpdateNotIntrestInformation(EnquiryForm);
                         setShowProfileOptions(false);
                       }
                     }>
-          <Share2  size={16} className="text-slate-500" />
-          referral
-        </button>
-        <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
-          <Shield size={16} className="text-slate-500" />
-          Security
-        </button>
+                      <Share2 size={16} className="text-slate-500" />
+                      referral
+                    </button>
+                    <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
+                      <Shield size={16} className="text-slate-500" />
+                      Security
+                    </button>
 
-        <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
-          <Settings size={16} className="text-slate-500" />
-          Settings
-        </button>
+                    <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
+                      <Settings size={16} className="text-slate-500" />
+                      Settings
+                    </button>
 
-        <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
-          <HelpCircle size={16} className="text-slate-500" />
-          Help & Support
-        </button>
-      </div>
+                    <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
+                      <HelpCircle size={16} className="text-slate-500" />
+                      Help & Support
+                    </button>
+                  </div>
 
-      <div className="h-px bg-gray-200" />
+                  <div className="h-px bg-gray-200" />
 
-    
-      <button
-      type="button"
-        onClick={() => {
-          localStorage.removeItem("UserId");
-    router.prefetch("/");
-    router.push("/");
-          setShowProfileOptions(false);
-        }}
-        className="
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      localStorage.removeItem("UserId");
+                      router.prefetch("/");
+                      router.push("/");
+                      setShowProfileOptions(false);
+                    }}
+                    className="
           w-full px-4 py-2.5
           flex items-center gap-3
           text-sm font-medium
           text-red-600
           hover:bg-red-50
         "
-      >
-        <LogOut size={16} />
-        Logout
-      </button>
-    </div>
-  )}
-</div>
+                  >
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
 
 
 
 
-    {/* Logout Button (optional – can be removed if dropdown logout is used) */}
-    {/* <button
+            {/* Logout Button (optional – can be removed if dropdown logout is used) */}
+            {/* <button
       onClick={handleLogout}
       className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150 text-sm"
     >
       <LogOut size={18} />
       Logout
     </button> */}
-  </div>
-</header>
+          </div>
+        </header>
 
-  <ProfileDrawer
-  open={openProfile}
-  onClose={() => {
-  setOpenProfile(false);
-  localStorage.removeItem(DASHBOARD_CACHE_KEY);
-  localStorage.removeItem(BENCH_CACHE_KEY);
-
-
-  dispatch(UpdateRefresh(1));
-}}
-  Password={UserPasswordValues}
-  profileName={ProfileName}
-  ProfileEmail={loggedInEmail}
-  Designation="Developer"
-/>
+        <ProfileDrawer
+          open={openProfile}
+          onClose={() => {
+            setOpenProfile(false);
+            localStorage.removeItem(DASHBOARD_CACHE_KEY);
+            localStorage.removeItem(BENCH_CACHE_KEY);
 
 
-{AttendeceView && (
-<div
-  className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-  onClick={() => setAttendeceView(false)}
->
-    
-      <div
-    className="relative w-full max-w-xl mx-4"
-    onClick={(e) => e.stopPropagation()}
-  >
-      <MarkAttendance
-        userId={compliteInfo?.userId}
-        userName={ProfileName}
-        SickLeaves={compliteInfo?.Sick}
-        CasualLeaves={compliteInfo?.Casual}
-        usedLeaves={compliteInfo?.UsedLeaves}
-        onSubmit={async (data) => {
-          console.log("Attendance Data:", data);
-          await axios.post("/api/attendance", data);
-        }}
-        onClose={() => setAttendeceView(false)}
-      />
-    </div>
+            dispatch(UpdateRefresh(1));
+          }}
+          Password={UserPasswordValues}
+          profileName={ProfileName}
+          ProfileEmail={loggedInEmail}
+          Designation="Developer"
+        />
 
-  </div>
-)}
 
-    {openExpense && (
-  <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
-    <PostExpense
-      employeeId="EMP123"
-      employeeName={ProfileName}
-      expenseTypes={[
-        "Travel",
-        "Food",
-        "Accommodation",
-        "Medical",
-        "Other",
-      ]}
-      onSubmit={(data) => console.log(data)}
-      onClose={() => setOpenExpense(false)}
-    />
-  </div>
-)}
+        {AttendeceView && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            onClick={() => setAttendeceView(false)}
+          >
 
-{showReferalPopup && <ReferralPopup onClose={() => setshowReferalPopup(false)} />}
- <PermissionDeniedPopup
-                    open={showPermissionPopup}
-                    onClose={() => setShowPermissionPopup(false)}
-                  />
-{/* <main className="flex-1 overflow-y-auto p-4 sm:p-3 lg:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6"> */}
-<main className="p-4">
+            <div
+              className="relative w-full max-w-xl mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MarkAttendance
+                userId={compliteInfo?.userId}
+                userName={ProfileName}
+                SickLeaves={compliteInfo?.Sick}
+                CasualLeaves={compliteInfo?.Casual}
+                usedLeaves={compliteInfo?.UsedLeaves}
+                onSubmit={async (data) => {
+                  console.log("Attendance Data:", data);
+                  await axios.post("/api/attendance", data);
+                }}
+                onClose={() => setAttendeceView(false)}
+              />
+            </div>
+
+          </div>
+        )}
+
+        {openExpense && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+            <PostExpense
+              employeeId="EMP123"
+              employeeName={ProfileName}
+              expenseTypes={[
+                "Travel",
+                "Food",
+                "Accommodation",
+                "Medical",
+                "Other",
+              ]}
+              onSubmit={(data) => console.log(data)}
+              onClose={() => setOpenExpense(false)}
+            />
+          </div>
+        )}
+
+        {showReferalPopup && <ReferralPopup onClose={() => setshowReferalPopup(false)} />}
+        <PermissionDeniedPopup
+          open={showPermissionPopup}
+          onClose={() => setShowPermissionPopup(false)}
+        />
+        {/* <main className="flex-1 overflow-y-auto p-4 sm:p-3 lg:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6"> */}
+        <main className="p-4">
           <div className="lg:col-span-8 space-y-6">
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
               {tabs.map((tab: any, index) => (
-             <div
-  className="cursor-pointer"
-  key={tab.name}
-   onClick={
-                      () => {if(tab.name!=="Call Enquiry"){Switching(tab.name)}}
-                    }
->
-
                 <div
-  key={tab.name}
-  className="flex flex-col items-center cursor-pointer hover:shadow-lg justify-center bg-white rounded-xl shadow-md border border-gray-100 p-3 sm:p-1 transition-transform hover:scale-[1.05]"
->
+                  className="cursor-pointer"
+                  key={tab.name}
+                  onClick={
+                    () => { if (tab.name !== "Call Enquiry") { Switching(tab.name) } }
+                  }
+                >
 
                   <div
-                    className={`w-10 h-10 flex items-center justify-center rounded-full shadow-md ${tab.bg}`}
+                    key={tab.name}
+                    className="flex flex-col items-center cursor-pointer hover:shadow-lg justify-center bg-white rounded-xl shadow-md border border-gray-100 p-3 sm:p-1 transition-transform hover:scale-[1.05]"
                   >
-                    <tab.icon size={20} className="text-white" />
-                  </div>
 
-
-<p
-  className="mt-2 sm:mt-3 text-xs sm:text-sm hover:underline font-semibold cursor-pointer text-gray-900 text-center"
-    onClick={
-                      () => {if(tab.name==="Call Enquiry"){Switching(tab.name)}}
-                    }
->
-  {tab.name}
-</p>
-
-
-
-                  <div className="relative group inline-block">
-                    <h2 className="text-base sm:text-lg font-bold text-gray-700 mt-1 cursor-pointer">
-                      {tab.count||0}
-                    </h2>
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-max max-w-xs rounded-md bg-gray-800 text-white text-[10px] px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap text-center">
-                      {tab.count > 0
-                        ? `${tab.count.toLocaleString()} ${tab.name} processed this month 📊`
-                        : "No payments processed this month ❌"}
+                    <div
+                      className={`w-10 h-10 flex items-center justify-center rounded-full shadow-md ${tab.bg}`}
+                    >
+                      <tab.icon size={20} className="text-white" />
                     </div>
-                  </div>
-                 
 
 
-                  <div className="mt-2 flex flex-wrap justify-center gap-2">
-                    {/* <div className="relative group inline-block">
+                    <p
+                      className="mt-2 sm:mt-3 text-xs sm:text-sm hover:underline font-semibold cursor-pointer text-gray-900 text-center"
+                      onClick={
+                        () => { if (tab.name === "Call Enquiry") { Switching(tab.name) } }
+                      }
+                    >
+                      {tab.name}
+                    </p>
+
+
+
+                    <div className="relative group inline-block">
+                      <h2 className="text-base sm:text-lg font-bold text-gray-700 mt-1 cursor-pointer">
+                        {tab.count || 0}
+                      </h2>
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-max max-w-xs rounded-md bg-gray-800 text-white text-[10px] px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap text-center">
+                        {tab.count > 0
+                          ? `${tab.count.toLocaleString()} ${tab.name} processed this month 📊`
+                          : "No payments processed this month ❌"}
+                      </div>
+                    </div>
+
+
+
+                    <div className="mt-2 flex flex-wrap justify-center gap-2">
+                      {/* <div className="relative group inline-block">
                       <span
                         className={`text-xs px-2 py-0.5 rounded-full font-medium cursor-pointer ${tab.growth.startsWith("+")
                             ? "bg-green-100 text-green-700"
@@ -1355,9 +1357,9 @@ const result: any = await UpdateNotIntrestInformation(EnquiryForm);
                       </div>
                     </div> */}
 
-                    {tab.name === "Call Enquiry" && (
-                      <div className="flex items-center gap-2">
-                        {/* <button
+                      {tab.name === "Call Enquiry" && (
+                        <div className="flex items-center gap-2">
+                          {/* <button
                         type="button"
                           onClick={UpdateNewLead}
                           className="rounded-md cursor-pointer text-xs px-2 py-1
@@ -1368,21 +1370,21 @@ const result: any = await UpdateNotIntrestInformation(EnquiryForm);
                           + New Lead
                         </button> */}
 
-                        <button
-                        type="button"
-                          onClick={() => setShowCallEnquiry(true)}
-                          className="rounded-md cursor-pointer text-xs px-2 py-1
+                          <button
+                            type="button"
+                            onClick={() => setShowCallEnquiry(true)}
+                            className="rounded-md cursor-pointer text-xs px-2 py-1
       bg-gradient-to-r from-green-400 to-green-500
       text-white font-medium
       hover:from-emerald-400 transition"
-                        >
-                          📞 Call Enquiry
-                        </button>
-                      </div>
-                    )}
+                          >
+                            📞 Call Enquiry
+                          </button>
+                        </div>
+                      )}
 
+                    </div>
                   </div>
-                </div>
                 </div>
 
               ))}
@@ -1415,7 +1417,7 @@ const result: any = await UpdateNotIntrestInformation(EnquiryForm);
 
                 <div className="flex justify-end border-t border-gray-200 px-6 py-4">
                   <button
-                  type="button"
+                    type="button"
                     onClick={() => setShowAccessDenied(false)}
                     className="rounded-lg bg-red-600 px-5 py-2 text-sm cursor-pointer font-semibold text-white
                    shadow transition hover:bg-red-700 active:scale-95"
@@ -1429,592 +1431,592 @@ const result: any = await UpdateNotIntrestInformation(EnquiryForm);
           )}
 
           {showCallEnquiry && (
-  <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-2 sm:p-4">
-    <div className="w-full max-w-6xl h-[100dvh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-2 sm:p-4">
+              <div className="w-full max-w-6xl h-[100dvh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden">
 
-      <div className="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
-        <div className="flex items-center gap-2">
-          <img src="Icons/Curate-logoq.png" className="h-9" alt="CompanyLogo" />
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800">Call Enquiry</h3>
-            <p className="text-xs text-gray-500">Log a quick enquiry from a phone call</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setShowCallEnquiry(false)}
-          className="h-4 w-4 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-red-500 transition"
-        >
-          ✕
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          <div className="w-full">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Client Name <span className="text-red-500">*</span></label> 
-         <div className="flex gap-2">
-  <select
-    name="title"
-    onChange={handleChange}
-    required
-    className="rounded-lg border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-gray-800"
-  >
-    <option value="">Title</option>
-    <option value="Mr">Mr</option>
-    <option value="Mrs">Mrs</option>
-    <option value="Miss">Miss</option>
-   
-  </select>
-
-  <input
-    type="text"
-    name="ClientName"
-      onKeyDown={(e) => {
-    if (/[0-9]/.test(e.key)) {
-      e.preventDefault();
-    }
-  }}
-    onChange={handleChange}
-     value={EnquiryForm.ClientName}
-    placeholder="Full name"
-    required
-    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
-  />
-</div>
-          </div>
-             <div className="w-full">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Patient Name </label> 
-             <div className="flex gap-2">
-              <select
-    name="Patienttitle"
-    onChange={handleChange}
-    required
-    className="rounded-lg border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-gray-800"
-  >
-    <option value="">Title</option>
-    <option value="Mr">Mr</option>
-    <option value="Mrs">Mrs</option>
-    <option value="Miss">Miss</option>
-   
-  </select>
-            <input
-              type="text"
-              name="patientName"
-             
-              value={EnquiryForm.patientName}
-                onKeyDown={(e) => {
-    if (/[0-9]/.test(e.key)) {
-      e.preventDefault();
-    }
-  }}
-              onChange={handleChange}
-              placeholder="Patient Full name"
-              
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
-            />
-            </div>
-          </div>
-
-          <div className="w-full">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Mobile Number <span className="text-red-500">*</span></label>
-            
-            <input
-              type="tel"
-              name="ClientContact"
-              autoComplete="off"
-              required
-              value={EnquiryForm.ClientContact || ""}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "");
-                if (value.length <= 10) {
-                  handleChange({
-                    target: { name: "ClientContact", value },
-                  });
-                }
-              }}
-              placeholder="10-digit Indian mobile number"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm tracking-widest focus:ring-2 focus:ring-gray-800 focus:border-transparent"
-            />
-            {EnquiryForm.ClientContact &&
-              !/^[6-9]\d{9}$/.test(EnquiryForm.ClientContact) && (
-                <p className="mt-1 text-xs text-red-500">Enter a valid Indian mobile number</p>
-              )}
-             <div className="flex items-center gap-2 mt-2">
-      <button className="text-[10px] font-medium rounded-md cursor-pointer bg-blue-500 hover:bg-blue-600 text-white px-1 py-1 transition" onClick={UpdateIrralaventInfo}>
-        Irrelevant
-      </button>
-
-      <div className="relative group">
-        <Info className="w-3 h-3 text-gray-500 cursor-pointer" />
-
-     
-        <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-2 py-1 whitespace-nowrap shadow-md">
-          Call Irrelevant to Our Service and Just Collecting Information
-        </div>
-      </div>
-    </div>
-{EnquiryMessage&&
-     <p className={EnquiryMessage?.includes("Successfully")?'text-green-800 text-center mb-4':'text-red-500 text-center mb-4'}>{EnquiryMessage}</p>}
-          </div>
-
-          <div className="w-full">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Email Address</label>
-              
-            <input
-              type="email"
-              name="ClientEmail"
-              onChange={handleChange}
-               value={EnquiryForm.ClientEmail}
-              placeholder="example@email.com"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            />
-          </div>
-
-          <div className="w-full">
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Patient Age <span className="text-red-500">*</span>
-             
-            </label>
-            <input
-              type="number"
-              name="patientAge"
-              onChange={handleChange}
-              value={EnquiryForm.patientAge}
-              min={0}
-              max={120}
-              placeholder="Enter age"
-              required
-              className="w-full rounded-md border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="w-full">
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Patient Weight <span className="text-red-500">*</span>
-             
-            </label>
-        
-            <input
-              type="number"
-              name="patientWeight"
-              value={EnquiryForm.patientWeight}
-              onChange={handleChange}
-              min={0}
-              max={120}
-              placeholder="Enter Weight KG's"
-              className="w-full rounded-md border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="w-full">
-            <label className="block text-xs font-medium text-gray-500 mb-2">
-              Patient Gender <span className="text-red-500">*</span>
-             
-            </label>
-            <div className="flex gap-6">
-              {["Male", "Female"].map((gender) => (
-                <label key={gender} className="flex items-center gap-2">
-                  <input type="radio" name="patientGender" value={gender} className="h-5 w-5 accent-indigo-500" onChange={handleChange}/>
-                  <span className="text-sm text-gray-700">{gender}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-
-            <div className="w-full">
-            <label className="block text-xs font-medium text-gray-500 mb-2">
-              Client Gender <span className="text-red-500">*</span>
-             
-            </label>
-            <div className="flex gap-6">
-              {["Male", "Female"].map((gender) => (
-                <label key={gender} className="flex items-center gap-2">
-                  <input type="radio" name="clientGender" value={gender} className="h-5 w-5 accent-indigo-500" onChange={handleChange}/>
-                  <span className="text-sm text-gray-700">{gender}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-
-         
-
-          
-
-        <div className="w-[90%] space-y-4">
-
-      <div>
-        <label className="block text-xs font-medium text-gray-500 mb-2">
-          Working Hours <span className="text-red-500">*</span>
-        </label>
-
-        <select
-          name="WorkingHours"
-          onChange={handleChange}
-          value={EnquiryForm.WorkingHours}
-          className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        >
-          <option value="">Select hours</option>
-          {Array.from({ length: 24 }, (_, i) => i + 1).map((hour) => (
-            <option key={hour} value={hour}>
-              {hour} {hour === 1 ? "hour" : "hours"}
-            </option>
-          ))}
-        </select>
-      </div>
-
-     
-      <div className="flex gap-6">
-        {options.map((opt) => (
-          <label key={opt} className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              checked={EnquiryForm.WorkType === opt}
-onChange={() => {
-  setEnquiryForm((prev: any) => ({
-    ...prev,
-    WorkType: opt,
-    ...(opt === "Stay In" && { WorkingHours: 24 }),
-    ...(opt === "Long Day" && { WorkingHours: 12 }),
-     ...(opt === "Long Night" && { WorkingHours: 12 }),
-  }));
-}}
-              className="h-4 w-4 accent-indigo-500"
-            />
-            <span className="text-sm text-gray-700">{opt}</span>
-          </label>
-        ))}
-      </div>
-
-      {/* Button */}
-      {!showExtra && (
-        <button
-          type="button"
-          onClick={() => setShowExtra(true)}
-          className="text-sm bg-indigo-500 text-white px-3 py-1 rounded-md hover:bg-indigo-600"
-        >
-          Required Additional Hcp?
-        </button>
-      )}
-
-      {/* Extra Section */}
-      {showExtra && (
-        <div className="relative border-t pt-4 space-y-3">
-          {/* Close Icon */}
-          <button
-            type="button"
-            onClick={() => {
-              setShowExtra(false);
-              setEnquiryForm({ ...EnquiryForm, ExtraWorkingHours: "", ExtraWorkType: "" });
-            }}
-            className="absolute top-0 right-0 text-gray-400 hover:text-gray-600 text-lg"
-          >
-            ✕
-          </button>
-
-          {/* Dropdown */}
-          <select
-            name="ExtraWorkingHours"
-            onChange={handleChange}
-            value={EnquiryForm.ExtraWorkingHours}
-            className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="">Select hours</option>
-            {Array.from({ length: 24 }, (_, i) => i + 1).map((hour) => (
-              <option key={hour} value={hour}>
-                {hour} {hour === 1 ? "hour" : "hours"}
-              </option>
-            ))}
-          </select>
-
-    
-          <div className="flex gap-6">
-            {options.map((opt) => (
-              <label key={opt} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  checked={EnquiryForm.ExtraWorkType === opt}
-                
-                  onChange={() => {
-  setEnquiryForm((prev: any) => ({
-    ...prev,
-    ExtraWorkType: opt,
-    ...(opt === "Stay In" && { ExtraWorkingHours: 24 }),
-    ...(opt === "Long Day" && { ExtraWorkingHours: 12 }),
-     ...(opt === "Long Night" && { ExtraWorkingHours: 12 }),
-  }));
-}}
-                  className="h-4 w-4 accent-indigo-500"
-                />
-                <span className="text-sm text-gray-700">{opt}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-
-        <div className="relative">
-  <label className="block text-xs font-medium text-gray-500 mb-2">
-    Lead Source <span className="text-red-500">*</span>
-  </label>
-
-  <input
-    type="text"
-    value={EnquiryForm.NewLead}
-    required
-    placeholder="Type Lead Source"
-    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
-    onChange={(e) => {
-      const value = e.target.value;
-
-      setEnquiryForm({ ...EnquiryForm, NewLead: value });
-
-      if (!value.trim()) {
-        setShowLeadSuggestions(false);
-        return;
-      }
-
-      const results = LeadSources.filter((item) =>
-        item.toLowerCase().includes(value.toLowerCase())
-      );
-
-      setFilteredLeads(results);
-      setShowLeadSuggestions(results.length > 0); 
-    }}
-  />
-
-  {showLeadSuggestions && (
-    <div className="absolute z-20 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto">
-      {filteredLeads.map((lead, index) => (
-        <p
-          key={index}
-          className="px-4 py-2 text-sm cursor-pointer hover:bg-gray-100"
-          onClick={() => {
-            setEnquiryForm({ ...EnquiryForm, NewLead: lead });
-            setShowLeadSuggestions(false);
-          }}
-        >
-          {lead}
-        </p>
-      ))}
-    </div>
-  )}
-</div>
-<div className="w-full mt-100px">
-            <label className="block text-xs font-medium text-gray-500 mb-2">HCP Preferred</label>
-          
-            <div className="flex gap-6">
-              {["Male", "Female"].map((opt) => (
-                <label key={opt} className="flex items-center gap-2">
-                  <input type="radio" name="HCPPreferGender" value={opt} className="h-5 w-5 accent-indigo-500" onChange={handleChange}/>
-                  <span className="text-sm text-gray-700">{opt}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-  <div className="relative">
-  <label className="block text-xs font-medium text-gray-500 mb-2">
-    Curate Lead Source <span className="text-red-500">*</span>
-  </label>
-
-  <input
-    type="text"
-    value={EnquiryForm.CurateNewLead}
-    required
-    placeholder="Type Curate Lead Source"
-    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
-    onChange={(e) => {
-      const value = e.target.value;
-
-      setEnquiryForm({ ...EnquiryForm, CurateNewLead: value });
-
-      if (!value.trim()) {
-        setShowLeadSuggestions(false);
-        return;
-      }
-
-      const results = LeadSources.filter((item) =>
-        item.toLowerCase().includes(value.toLowerCase())
-      );
-
-      setFilteredLeads(results);
-      setShowLeadSuggestions(results.length > 0); 
-    }}
-  />
-
-  {showLeadSuggestions && (
-    <div className="absolute z-20 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto">
-      {filteredLeads.map((lead, index) => (
-        <p
-          key={index}
-          className="px-4 py-2 text-sm cursor-pointer hover:bg-gray-100"
-          onClick={() => {
-            setEnquiryForm({ ...EnquiryForm, CurateNewLead: lead });
-            setShowLeadSuggestions(false);
-          }}
-        >
-          {lead}
-        </p>
-      ))}
-    </div>
-  )}
-</div>
-
-          <div className="w-full relative">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Language Preferred</label>
-         
-            <input
-              type="text"
-              value={languageInput||EnquiryForm.PreferredLanguage}
-              onChange={handleLanguageChange}
-              placeholder="Type preferred language"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
-            />
-            {languageOptions.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full max-h-40 overflow-y-auto rounded-xl border bg-white shadow">
-                {languageOptions.map((lang) => (
-                  <div
-                    key={lang}
-                    onClick={() => selectLanguage(lang)}
-                    className="cursor-pointer px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    {lang}
+                <div className="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
+                  <div className="flex items-center gap-2">
+                    <img src="Icons/Curate-logoq.png" className="h-9" alt="CompanyLogo" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800">Call Enquiry</h3>
+                      <p className="text-xs text-gray-500">Log a quick enquiry from a phone call</p>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="w-full relative">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Service Area</label>
-  
-            <input
-              type="text"
-              value={value}
-              onChange={handleAreaChange}
-              placeholder="Enter area in Hyderabad"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
-            />
-            {suggestions.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full max-h-44 overflow-y-auto rounded-md border bg-white shadow-sm">
-                {suggestions.map((area) => (
-                  <div
-                    key={area}
-                    onClick={() => selectArea(area)}
-                    className="cursor-pointer px-3 py-2 text-sm hover:bg-gray-100"
+                  <button
+                    type="button"
+                    onClick={() => setShowCallEnquiry(false)}
+                    className="h-4 w-4 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-red-500 transition"
                   >
-                    {area}
+                    ✕
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div className="w-full">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Client Name <span className="text-red-500">*</span></label>
+                      <div className="flex gap-2">
+                        <select
+                          name="title"
+                          onChange={handleChange}
+                          required
+                          className="rounded-lg border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-gray-800"
+                        >
+                          <option value="">Title</option>
+                          <option value="Mr">Mr</option>
+                          <option value="Mrs">Mrs</option>
+                          <option value="Miss">Miss</option>
+
+                        </select>
+
+                        <input
+                          type="text"
+                          name="ClientName"
+                          onKeyDown={(e) => {
+                            if (/[0-9]/.test(e.key)) {
+                              e.preventDefault();
+                            }
+                          }}
+                          onChange={handleChange}
+                          value={EnquiryForm.ClientName}
+                          placeholder="Full name"
+                          required
+                          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                    <div className="w-full">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Patient Name </label>
+                      <div className="flex gap-2">
+                        <select
+                          name="Patienttitle"
+                          onChange={handleChange}
+                          required
+                          className="rounded-lg border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-gray-800"
+                        >
+                          <option value="">Title</option>
+                          <option value="Mr">Mr</option>
+                          <option value="Mrs">Mrs</option>
+                          <option value="Miss">Miss</option>
+
+                        </select>
+                        <input
+                          type="text"
+                          name="patientName"
+
+                          value={EnquiryForm.patientName}
+                          onKeyDown={(e) => {
+                            if (/[0-9]/.test(e.key)) {
+                              e.preventDefault();
+                            }
+                          }}
+                          onChange={handleChange}
+                          placeholder="Patient Full name"
+
+                          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="w-full">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Mobile Number <span className="text-red-500">*</span></label>
+
+                      <input
+                        type="tel"
+                        name="ClientContact"
+                        autoComplete="off"
+                        required
+                        value={EnquiryForm.ClientContact || ""}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, "");
+                          if (value.length <= 10) {
+                            handleChange({
+                              target: { name: "ClientContact", value },
+                            });
+                          }
+                        }}
+                        placeholder="10-digit Indian mobile number"
+                        className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm tracking-widest focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+                      />
+                      {EnquiryForm.ClientContact &&
+                        !/^[6-9]\d{9}$/.test(EnquiryForm.ClientContact) && (
+                          <p className="mt-1 text-xs text-red-500">Enter a valid Indian mobile number</p>
+                        )}
+                      <div className="flex items-center gap-2 mt-2">
+                        <button className="text-[10px] font-medium rounded-md cursor-pointer bg-blue-500 hover:bg-blue-600 text-white px-1 py-1 transition" onClick={UpdateIrralaventInfo}>
+                          Irrelevant
+                        </button>
+
+                        <div className="relative group">
+                          <Info className="w-3 h-3 text-gray-500 cursor-pointer" />
+
+
+                          <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-2 py-1 whitespace-nowrap shadow-md">
+                            Call Irrelevant to Our Service and Just Collecting Information
+                          </div>
+                        </div>
+                      </div>
+                      {EnquiryMessage &&
+                        <p className={EnquiryMessage?.includes("Successfully") ? 'text-green-800 text-center mb-4' : 'text-red-500 text-center mb-4'}>{EnquiryMessage}</p>}
+                    </div>
+
+                    <div className="w-full">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Email Address</label>
+
+                      <input
+                        type="email"
+                        name="ClientEmail"
+                        onChange={handleChange}
+                        value={EnquiryForm.ClientEmail}
+                        placeholder="example@email.com"
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div className="w-full">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">
+                        Patient Age <span className="text-red-500">*</span>
+
+                      </label>
+                      <input
+                        type="number"
+                        name="patientAge"
+                        onChange={handleChange}
+                        value={EnquiryForm.patientAge}
+                        min={0}
+                        max={120}
+                        placeholder="Enter age"
+                        required
+                        className="w-full rounded-md border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div className="w-full">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">
+                        Patient Weight <span className="text-red-500">*</span>
+
+                      </label>
+
+                      <input
+                        type="number"
+                        name="patientWeight"
+                        value={EnquiryForm.patientWeight}
+                        onChange={handleChange}
+                        min={0}
+                        max={120}
+                        placeholder="Enter Weight KG's"
+                        className="w-full rounded-md border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div className="w-full">
+                      <label className="block text-xs font-medium text-gray-500 mb-2">
+                        Patient Gender <span className="text-red-500">*</span>
+
+                      </label>
+                      <div className="flex gap-6">
+                        {["Male", "Female"].map((gender) => (
+                          <label key={gender} className="flex items-center gap-2">
+                            <input type="radio" name="patientGender" value={gender} className="h-5 w-5 accent-indigo-500" onChange={handleChange} />
+                            <span className="text-sm text-gray-700">{gender}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+
+                    <div className="w-full">
+                      <label className="block text-xs font-medium text-gray-500 mb-2">
+                        Client Gender <span className="text-red-500">*</span>
+
+                      </label>
+                      <div className="flex gap-6">
+                        {["Male", "Female"].map((gender) => (
+                          <label key={gender} className="flex items-center gap-2">
+                            <input type="radio" name="clientGender" value={gender} className="h-5 w-5 accent-indigo-500" onChange={handleChange} />
+                            <span className="text-sm text-gray-700">{gender}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+
+
+
+
+
+                    <div className="w-[90%] space-y-4">
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-2">
+                          Working Hours <span className="text-red-500">*</span>
+                        </label>
+
+                        <select
+                          name="WorkingHours"
+                          onChange={handleChange}
+                          value={EnquiryForm.WorkingHours}
+                          className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                          <option value="">Select hours</option>
+                          {Array.from({ length: 24 }, (_, i) => i + 1).map((hour) => (
+                            <option key={hour} value={hour}>
+                              {hour} {hour === 1 ? "hour" : "hours"}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+
+                      <div className="flex gap-6">
+                        {options.map((opt) => (
+                          <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              checked={EnquiryForm.WorkType === opt}
+                              onChange={() => {
+                                setEnquiryForm((prev: any) => ({
+                                  ...prev,
+                                  WorkType: opt,
+                                  ...(opt === "Stay In" && { WorkingHours: 24 }),
+                                  ...(opt === "Long Day" && { WorkingHours: 12 }),
+                                  ...(opt === "Long Night" && { WorkingHours: 12 }),
+                                }));
+                              }}
+                              className="h-4 w-4 accent-indigo-500"
+                            />
+                            <span className="text-sm text-gray-700">{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+
+                      {/* Button */}
+                      {!showExtra && (
+                        <button
+                          type="button"
+                          onClick={() => setShowExtra(true)}
+                          className="text-sm bg-indigo-500 text-white px-3 py-1 rounded-md hover:bg-indigo-600"
+                        >
+                          Required Additional Hcp?
+                        </button>
+                      )}
+
+                      {/* Extra Section */}
+                      {showExtra && (
+                        <div className="relative border-t pt-4 space-y-3">
+                          {/* Close Icon */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowExtra(false);
+                              setEnquiryForm({ ...EnquiryForm, ExtraWorkingHours: "", ExtraWorkType: "" });
+                            }}
+                            className="absolute top-0 right-0 text-gray-400 hover:text-gray-600 text-lg"
+                          >
+                            ✕
+                          </button>
+
+                          {/* Dropdown */}
+                          <select
+                            name="ExtraWorkingHours"
+                            onChange={handleChange}
+                            value={EnquiryForm.ExtraWorkingHours}
+                            className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          >
+                            <option value="">Select hours</option>
+                            {Array.from({ length: 24 }, (_, i) => i + 1).map((hour) => (
+                              <option key={hour} value={hour}>
+                                {hour} {hour === 1 ? "hour" : "hours"}
+                              </option>
+                            ))}
+                          </select>
+
+
+                          <div className="flex gap-6">
+                            {options.map((opt) => (
+                              <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  checked={EnquiryForm.ExtraWorkType === opt}
+
+                                  onChange={() => {
+                                    setEnquiryForm((prev: any) => ({
+                                      ...prev,
+                                      ExtraWorkType: opt,
+                                      ...(opt === "Stay In" && { ExtraWorkingHours: 24 }),
+                                      ...(opt === "Long Day" && { ExtraWorkingHours: 12 }),
+                                      ...(opt === "Long Night" && { ExtraWorkingHours: 12 }),
+                                    }));
+                                  }}
+                                  className="h-4 w-4 accent-indigo-500"
+                                />
+                                <span className="text-sm text-gray-700">{opt}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <label className="block text-xs font-medium text-gray-500 mb-2">
+                        Lead Source <span className="text-red-500">*</span>
+                      </label>
+
+                      <input
+                        type="text"
+                        value={EnquiryForm.NewLead}
+                        required
+                        placeholder="Type Lead Source"
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
+                        onChange={(e) => {
+                          const value = e.target.value;
+
+                          setEnquiryForm({ ...EnquiryForm, NewLead: value });
+
+                          if (!value.trim()) {
+                            setShowLeadSuggestions(false);
+                            return;
+                          }
+
+                          const results = LeadSources.filter((item) =>
+                            item.toLowerCase().includes(value.toLowerCase())
+                          );
+
+                          setFilteredLeads(results);
+                          setShowLeadSuggestions(results.length > 0);
+                        }}
+                      />
+
+                      {showLeadSuggestions && (
+                        <div className="absolute z-20 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto">
+                          {filteredLeads.map((lead, index) => (
+                            <p
+                              key={index}
+                              className="px-4 py-2 text-sm cursor-pointer hover:bg-gray-100"
+                              onClick={() => {
+                                setEnquiryForm({ ...EnquiryForm, NewLead: lead });
+                                setShowLeadSuggestions(false);
+                              }}
+                            >
+                              {lead}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="w-full mt-100px">
+                      <label className="block text-xs font-medium text-gray-500 mb-2">HCP Preferred</label>
+
+                      <div className="flex gap-6">
+                        {["Male", "Female"].map((opt) => (
+                          <label key={opt} className="flex items-center gap-2">
+                            <input type="radio" name="HCPPreferGender" value={opt} className="h-5 w-5 accent-indigo-500" onChange={handleChange} />
+                            <span className="text-sm text-gray-700">{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <label className="block text-xs font-medium text-gray-500 mb-2">
+                        Curate Lead Source <span className="text-red-500">*</span>
+                      </label>
+
+                      <input
+                        type="text"
+                        value={EnquiryForm.CurateNewLead}
+                        required
+                        placeholder="Type Curate Lead Source"
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
+                        onChange={(e) => {
+                          const value = e.target.value;
+
+                          setEnquiryForm({ ...EnquiryForm, CurateNewLead: value });
+
+                          if (!value.trim()) {
+                            setShowLeadSuggestions(false);
+                            return;
+                          }
+
+                          const results = LeadSources.filter((item) =>
+                            item.toLowerCase().includes(value.toLowerCase())
+                          );
+
+                          setFilteredLeads(results);
+                          setShowLeadSuggestions(results.length > 0);
+                        }}
+                      />
+
+                      {showLeadSuggestions && (
+                        <div className="absolute z-20 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto">
+                          {filteredLeads.map((lead, index) => (
+                            <p
+                              key={index}
+                              className="px-4 py-2 text-sm cursor-pointer hover:bg-gray-100"
+                              onClick={() => {
+                                setEnquiryForm({ ...EnquiryForm, CurateNewLead: lead });
+                                setShowLeadSuggestions(false);
+                              }}
+                            >
+                              {lead}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="w-full relative">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Language Preferred</label>
+
+                      <input
+                        type="text"
+                        value={languageInput || EnquiryForm.PreferredLanguage}
+                        onChange={handleLanguageChange}
+                        placeholder="Type preferred language"
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
+                      />
+                      {languageOptions.length > 0 && (
+                        <div className="absolute z-10 mt-1 w-full max-h-40 overflow-y-auto rounded-xl border bg-white shadow">
+                          {languageOptions.map((lang) => (
+                            <div
+                              key={lang}
+                              onClick={() => selectLanguage(lang)}
+                              className="cursor-pointer px-4 py-2 text-sm hover:bg-gray-100"
+                            >
+                              {lang}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="w-full relative">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Service Area</label>
+
+                      <input
+                        type="text"
+                        value={value}
+                        onChange={handleAreaChange}
+                        placeholder="Enter area in Hyderabad"
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
+                      />
+                      {suggestions.length > 0 && (
+                        <div className="absolute z-10 mt-1 w-full max-h-44 overflow-y-auto rounded-md border bg-white shadow-sm">
+                          {suggestions.map((area) => (
+                            <div
+                              key={area}
+                              onClick={() => selectArea(area)}
+                              className="cursor-pointer px-3 py-2 text-sm hover:bg-gray-100"
+                            >
+                              {area}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <label className="block text-xs font-medium text-gray-500 mb-2">Service Type</label>
+
+                      <input
+                        type="text"
+                        value={EnquiryForm.ServiceType}
+                        placeholder="Enter service type"
+                        onChange={(e) => {
+                          setEnquiryForm((prev: any) => ({
+                            ...prev,
+                            ServiceType: e.target.value,
+                          }));
+                          setShowServiceSuggestions(true);
+                        }}
+                        onFocus={() => setShowServiceSuggestions(true)}
+                        onBlur={() =>
+                          setTimeout(() => setShowServiceSuggestions(false), 150)
+                        }
+                        className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                      />
+
+                      {showServiceSuggestions && EnquiryForm.ServiceType && (
+                        <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border bg-white shadow">
+                          {healthcareServicesforCallEnquiry
+                            .filter((service) =>
+                              service
+                                .toLowerCase()
+                                .includes(EnquiryForm.ServiceType.toLowerCase())
+                            )
+                            .map((service, index) => (
+                              <li
+                                key={index}
+                                onClick={() => {
+                                  setEnquiryForm((prev: any) => ({
+                                    ...prev,
+                                    ServiceType: service,
+                                  }));
+                                  setShowServiceSuggestions(false);
+                                }}
+                                className="cursor-pointer px-3 py-2 text-sm hover:bg-blue-50"
+                              >
+                                {service}
+                              </li>
+                            ))}
+                        </ul>
+                      )}
+                    </div>
+                    <div className="w-full max-w-md">
+                      <label className="block text-xs font-medium text-gray-500 mb-2">Health Condition</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={EnquiryForm.patientHealthCard}
+                          placeholder="Enter health condition"
+                          onChange={(e) => {
+                            setEnquiryForm((prev: any) => ({
+                              ...prev,
+                              patientHealthCard: e.target.value,
+                            }));
+                            setShowHealthCardSuggestions(true);
+                          }}
+                          onFocus={() => setShowHealthCardSuggestions(true)}
+                          onBlur={() =>
+                            setTimeout(() => setShowHealthCardSuggestions(false), 150)
+                          }
+                          className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                        />
+
+                        {showHealthCardSuggestions && EnquiryForm.patientHealthCard && (
+                          <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border bg-white shadow">
+                            {Health_Card.filter((item) =>
+                              item
+                                .toLowerCase()
+                                .includes(EnquiryForm.patientHealthCard.toLowerCase())
+                            ).map((item, index) => (
+                              <li
+                                key={index}
+                                onClick={() => {
+                                  setEnquiryForm((prev: any) => ({
+                                    ...prev,
+                                    patientHealthCard: item,
+                                  }));
+                                  setShowHealthCardSuggestions(false);
+                                }}
+                                className="cursor-pointer px-3 py-2 text-sm hover:bg-blue-50"
+                              >
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
 
-      <div className="relative">
-        <label className="block text-xs font-medium text-gray-500 mb-2">Service Type</label>
-     
-        <input
-          type="text"
-          value={EnquiryForm.ServiceType}
-          placeholder="Enter service type"
-          onChange={(e) => {
-            setEnquiryForm((prev: any) => ({
-              ...prev,
-              ServiceType: e.target.value,
-            }));
-            setShowServiceSuggestions(true);
-          }}
-          onFocus={() => setShowServiceSuggestions(true)}
-          onBlur={() =>
-            setTimeout(() => setShowServiceSuggestions(false), 150)
-          }
-          className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
-        />
-
-        {showServiceSuggestions && EnquiryForm.ServiceType && (
-          <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border bg-white shadow">
-            {healthcareServicesforCallEnquiry
-              .filter((service) =>
-                service
-                  .toLowerCase()
-                  .includes(EnquiryForm.ServiceType.toLowerCase())
-              )
-              .map((service, index) => (
-                <li
-                  key={index}
-                  onClick={() => {
-                    setEnquiryForm((prev: any) => ({
-                      ...prev,
-                      ServiceType: service,
-                    }));
-                    setShowServiceSuggestions(false);
-                  }}
-                  className="cursor-pointer px-3 py-2 text-sm hover:bg-blue-50"
-                >
-                  {service}
-                </li>
-              ))}
-          </ul>
-        )}
-      </div>
-     <div className="w-full max-w-md">
-        <label className="block text-xs font-medium text-gray-500 mb-2">Health Condition</label>
-      <div className="relative">
-        <input
-          type="text"
-          value={EnquiryForm.patientHealthCard}
-          placeholder="Enter health condition"
-          onChange={(e) => {
-            setEnquiryForm((prev: any) => ({
-              ...prev,
-              patientHealthCard: e.target.value,
-            }));
-            setShowHealthCardSuggestions(true);
-          }}
-          onFocus={() => setShowHealthCardSuggestions(true)}
-          onBlur={() =>
-            setTimeout(() => setShowHealthCardSuggestions(false), 150)
-          }
-          className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
-        />
-
-        {showHealthCardSuggestions && EnquiryForm.patientHealthCard && (
-          <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border bg-white shadow">
-            {Health_Card.filter((item) =>
-              item
-                .toLowerCase()
-                .includes(EnquiryForm.patientHealthCard.toLowerCase())
-            ).map((item, index) => (
-              <li
-                key={index}
-                onClick={() => {
-                  setEnquiryForm((prev: any) => ({
-                    ...prev,
-                    patientHealthCard: item,
-                  }));
-                  setShowHealthCardSuggestions(false);
-                }}
-                className="cursor-pointer px-3 py-2 text-sm hover:bg-blue-50"
-              >
-                {item}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
-        </div>
-
-       <div id="Charges" className="bg-white rounded-lg shadow p-4 space-y-2">
-         <h2 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
-   Day Charges:
-  </h2>
-{/* <div className="flex items-center gap-4">
+                  <div id="Charges" className="bg-white rounded-lg shadow p-4 space-y-2">
+                    <h2 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
+                      Day Charges:
+                    </h2>
+                    {/* <div className="flex items-center gap-4">
   <h2 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
     Charges:
   </h2>
@@ -2029,275 +2031,273 @@ onChange={() => {
     <span className="text-sm text-gray-700">Monthly</span>
   </label>
 </div> */}
-{DailyChargeType ?
-         <div>
-             {["₹1200", "₹1000", "₹900", "Other"].map((charge) => (
-              <div key={charge} className="flex flex-col">
-                <label className="flex items-center text-sm">
-                  <input
-                    type="radio"
-                    name="serviceCharges"
-                    value={charge}
-                    checked={
-                      EnquiryForm.serviceCharges === charge ||
-                      (charge === "Other" &&
-                        !["₹1200", "₹1000", "₹900", "₹800"].includes(EnquiryForm.serviceCharges))
-                    }
-                    onChange={() =>
-                    
-                      {
-                        setEnquiryForm({...EnquiryForm,serviceCharges:charge === "Other" ? "" : charge}),setEnquiryMessage("")
-                      }
-                    }
-                    className="mr-2 accent-purple-600"
-                  />
-                  {charge}
-                </label>
-                {charge === "Other" &&
-                  !["₹1200", "₹1000", "₹900", "₹800"].includes(EnquiryForm.serviceCharges) && (
-                    <input
-                      type="text"
-                      placeholder="Enter Other Amount"
-                      className="mt-1 w-full border rounded-lg p-2 text-sm"
-                      value={EnquiryForm.serviceCharges}
-                onChange={(e) => {
-  const value = e.target.value;
+                    {DailyChargeType ?
+                      <div>
+                        {["₹1200", "₹1000", "₹900", "Other"].map((charge) => (
+                          <div key={charge} className="flex flex-col">
+                            <label className="flex items-center text-sm">
+                              <input
+                                type="radio"
+                                name="serviceCharges"
+                                value={charge}
+                                checked={
+                                  EnquiryForm.serviceCharges === charge ||
+                                  (charge === "Other" &&
+                                    !["₹1200", "₹1000", "₹900", "₹800"].includes(EnquiryForm.serviceCharges))
+                                }
+                                onChange={() => {
+                                  setEnquiryForm({ ...EnquiryForm, serviceCharges: charge === "Other" ? "" : charge }), setEnquiryMessage("")
+                                }
+                                }
+                                className="mr-2 accent-purple-600"
+                              />
+                              {charge}
+                            </label>
+                            {charge === "Other" &&
+                              !["₹1200", "₹1000", "₹900", "₹800"].includes(EnquiryForm.serviceCharges) && (
+                                <input
+                                  type="text"
+                                  placeholder="Enter Other Amount"
+                                  className="mt-1 w-full border rounded-lg p-2 text-sm"
+                                  value={EnquiryForm.serviceCharges}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
 
-  setEnquiryForm({
-    ...EnquiryForm,
-    serviceCharges: value,
-  });
+                                    setEnquiryForm({
+                                      ...EnquiryForm,
+                                      serviceCharges: value,
+                                    });
 
-  const numericValue = Number(value.replace(/[^0-9]/g, ""));
+                                    const numericValue = Number(value.replace(/[^0-9]/g, ""));
 
-  if (!numericValue) {
-    setEnquiryMessage("");
-    return;
-  }
+                                    if (!numericValue) {
+                                      setEnquiryMessage("");
+                                      return;
+                                    }
 
-  if (numericValue < 800) {
-    setEnquiryMessage("Price Not Offerable");
-  } else {
-    setEnquiryMessage("");
-  }
-}}
+                                    if (numericValue < 800) {
+                                      setEnquiryMessage("Price Not Offerable");
+                                    } else {
+                                      setEnquiryMessage("");
+                                    }
+                                  }}
 
-                    />
-                  )}
-              </div>
-            ))}
-         </div>:<input
-  type="text"
-  placeholder="Enter Monthly Amount"
-  onChange={(e:any)=>setEnquiryForm({...EnquiryForm,MonthlyServiceCharge:e.target.value})}
-  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md 
+                                />
+                              )}
+                          </div>
+                        ))}
+                      </div> : <input
+                        type="text"
+                        placeholder="Enter Monthly Amount"
+                        onChange={(e: any) => setEnquiryForm({ ...EnquiryForm, MonthlyServiceCharge: e.target.value })}
+                        className="px-3 py-1.5 text-sm border border-gray-300 rounded-md 
              focus:outline-none focus:ring-2 focus:ring-teal-500 
              focus:border-teal-500 placeholder-gray-400"
-/>}
+                      />}
 
-            <div>
-                
-              <p>Registration Charger: 1500</p>
-              {DiscountStatus ? (
-                <button
-                  onClick={() => SetDiscountStatus(false)}
-                  className="px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg
+                    <div>
+
+                      <p>Registration Charger: 1500</p>
+                      {DiscountStatus ? (
+                        <button
+                          onClick={() => SetDiscountStatus(false)}
+                          className="px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg
                hover:bg-teal-700 transition shadow-sm"
-                >
-                  Add Discount
-                </button>
-              ) : (
-                <input
-                  type="number"
-                  placeholder="Enter Registration discount"
-                  onChange={(e) => SetClientDiscount(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm
+                        >
+                          Add Discount
+                        </button>
+                      ) : (
+                        <input
+                          type="number"
+                          placeholder="Enter Registration discount"
+                          onChange={(e) => SetClientDiscount(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm
                focus:outline-none focus:ring-2 focus:ring-teal-500 
                text-gray-700"
-                />
-              )}
+                        />
+                      )}
 
 
-            </div>
-            {EnquiryForm.MonthlyServiceCharge}
-            <div className="flex flex-col gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+                    </div>
+                    {EnquiryForm.MonthlyServiceCharge}
+                    <div className="flex flex-col gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-200">
 
-              <p className="text-gray-700 text-sm font-medium">
-               Charge Per Day:{" "}
-                <span className="font-semibold text-teal-700">
-                  {EnquiryForm.serviceCharges}
-                </span>
-              </p>
+                      <p className="text-gray-700 text-sm font-medium">
+                        Charge Per Day:{" "}
+                        <span className="font-semibold text-teal-700">
+                          {EnquiryForm.serviceCharges}
+                        </span>
+                      </p>
 
-              <p className="text-gray-700 text-sm font-medium">
-                Registration Fee:{" "}
-                <span className="font-semibold text-teal-700">
-                  ₹{DiscountPrice - ClientDiscount}
-                </span>
-              </p>
+                      <p className="text-gray-700 text-sm font-medium">
+                        Registration Fee:{" "}
+                        <span className="font-semibold text-teal-700">
+                          ₹{DiscountPrice - ClientDiscount}
+                        </span>
+                      </p>
 
-              <p
-                className="border border-teal-400 bg-teal-50 text-teal-800 
+                      <p
+                        className="border border-teal-400 bg-teal-50 text-teal-800 
                font-semibold rounded-lg px-4 py-3 shadow-sm 
                flex items-center justify-between"
-              >
-                <span>Total Amount</span>
-                <span>
-                  ₹{EnquiryForm.serviceCharges === "Other"
-                    ? 1500
-                    : (parseFloat(EnquiryForm.serviceCharges.replace(/[^0-9.]/g, "")) || 0) +
-                    DiscountPrice -
-                    ClientDiscount}
-                </span>
-              </p>
+                      >
+                        <span>Total Amount</span>
+                        <span>
+                          ₹{EnquiryForm.serviceCharges === "Other"
+                            ? 1500
+                            : (parseFloat(EnquiryForm.serviceCharges.replace(/[^0-9.]/g, "")) || 0) +
+                            DiscountPrice -
+                            ClientDiscount}
+                        </span>
+                      </p>
 
+                    </div>
+
+
+                  </div>
+                  <div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Reason for service</label>
+
+                      <textarea
+                        name="Reasonforservice"
+                        onChange={handleChange}
+                        placeholder="Short call summary"
+                        className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
+                      />
+                    </div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Expected Service</label>
+
+                    <textarea
+                      name="ExpectedService"
+                      onChange={handleChange}
+                      placeholder="Short call summary"
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Note</label>
+
+                    <textarea
+                      name="ClientNote"
+                      onChange={handleChange}
+                      placeholder="Short call summary"
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
+                    />
+                  </div>
+
+
+                  <p className="text-lg  font-semibold text-gray-800 m-2 flex">Update Call Enquiry Status</p>
+                  <div className="flex  gap-4 m-2">
+
+                    {["Save", "Send", "Lost", "Waiting List", "Irrelevant"].map((each: string, i: number) => (
+                      <button
+                        key={i}
+                        type="button"
+                        name="ClientStatus"
+                        className={` md:px-1 px-1 text-[15px] md:text-[15px]  sm:py-2 text-center ${each === EnquiryForm.ClientStatus && "border-2"
+                          } h-7 md:h-10 rounded-md shadow cursor-pointer ${filterColors[each] || "bg-gray-200 text-gray-800"
+                          }`}
+
+                        onClick={async () => {
+                          setEnquiryMessage("")
+                          setEnquiryForm({
+                            ...EnquiryForm,
+                            ClientStatus: each,
+                          });
+                          if (each === "Irrelevant ") {
+                            if (EnquiryForm.ClientName === "" && EnquiryForm.patientName === "" && EnquiryForm.ClientContact === "") {
+                              alert("Please Enter Client & Patient Name")
+                              return
+                            }
+                            const result: any = await UpdateNotIntrestInformation(EnquiryForm);
+                            setEnquiryMessage(result.message);
+                            dispatch(Refresh(result.message))
+                            setEnquiryForm({
+                              ClientName: "",
+                              patientName: "",
+                              ClientContact: '',
+                              ClientEmail: '',
+                              patientAge: "",
+                              patientGender: '',
+                              HCPPreferGender: "",
+                              NewLead: "",
+                              CurateNewLead: '',
+                              PreferredLanguage: "",
+                              ClientArea: '',
+                              ClientNote: "",
+                              serviceCharges: "",
+                              MonthlyServiceCharge: "",
+                              ServiceType: "",
+                              patientHealthCard: "",
+                              ExpectedService: "",
+                              Reasonforservice: "",
+                              ClientStatus: "",
+                              patientWeight: '',
+                            })
+                            setTimeout(() => { setEnquiryMessage(""); setShowCallEnquiry(false) }, 2000)
+                            return;
+                          }
+
+
+                          if (each === "Send") {
+                            if (EnquiryForm.ClientName === "" && EnquiryForm.patientName === "" && EnquiryForm.ClientContact === "") {
+                              alert("Please Enter Client & Patient Name")
+                              return
+                            }
+                            setShowNotification(true);
+                          }
+                        }}
+
+
+                      >
+                        {each}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <StaffNotificationModal
+                  open={ShowNotification}
+                  subMessage={NotificationStatus}
+                  onClose={() => setShowNotification(false)}
+                  onSend={(emails) => {
+                    PostNotificationInfo(emails)
+                  }}
+                />
+                <p className={EnquiryMessage?.includes("Successfully") ? 'text-green-800 text-center mb-4' : 'text-red-500 text-center mb-4'}>{EnquiryMessage}</p>
+
+                {EnquiryForm.ClientStatus !== "Not Interested" &&
+
+                  <div className=" flex items-center justify-between w-full px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 sticky bottom-0">
+
+                    <div className="flex gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setShowCallEnquiry(false)}
+                        className="px-4 py-2 text-sm rounded-lg border text-gray-600 hover:bg-gray-100"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={UpdateCallEnquiry}
+                        className="px-5 py-2 text-sm rounded-lg font-medium text-white bg-gray-900 hover:bg-gray-800"
+                      >
+                        Save Enquiry
+                      </button>
+                    </div>
+                  </div>}
+
+              </div>
             </div>
-
-         
-          </div>
-             <div>
-            
-            <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">Reason for service</label>
-        
-          <textarea
-            name="Reasonforservice"
-            onChange={handleChange}
-            placeholder="Short call summary"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
-          />
-        </div> 
-          <label className="block text-xs font-medium text-gray-500 mb-1">Expected Service</label>
-         
-          <textarea
-            name="ExpectedService"
-            onChange={handleChange}
-            placeholder="Short call summary"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
-          />
-        </div>
-          
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">Note</label>
-         
-          <textarea
-            name="ClientNote"
-            onChange={handleChange}
-            placeholder="Short call summary"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
-          />
-        </div>
-
-      
-   <p className="text-lg  font-semibold text-gray-800 m-2 flex">Update Call Enquiry Status</p>
-                          <div className="flex  gap-4 m-2">
-              
-                            {["Save","Send","Lost", "Waiting List","Irrelevant"].map((each: string, i: number) => (
-                              <button
-                                key={i}
-                                type="button"
-                                name="ClientStatus"
-                                className={` md:px-1 px-1 text-[15px] md:text-[15px]  sm:py-2 text-center ${each === EnquiryForm.ClientStatus && "border-2"
-                                  } h-7 md:h-10 rounded-md shadow cursor-pointer ${filterColors[each] || "bg-gray-200 text-gray-800"
-                                  }`}
-                              
-                                onClick={async() => {
-                                  setEnquiryMessage("")
-                                  setEnquiryForm({
-                                    ...EnquiryForm,
-                                    ClientStatus: each,
-                                  });
-                                  if (each === "Irrelevant ") {
-                                                                  if(EnquiryForm.ClientName===""&&EnquiryForm.patientName===""&&EnquiryForm.ClientContact===""){
-      alert("Please Enter Client & Patient Name")
-      return
-    }
-                                    const result: any = await UpdateNotIntrestInformation(EnquiryForm);
-                                    setEnquiryMessage(result.message);
-                                    dispatch(Refresh(result.message))
-                                    setEnquiryForm({
-                                      ClientName: "",
-                                      patientName: "",
-                                      ClientContact: '',
-                                      ClientEmail: '',
-                                      patientAge: "",
-                                      patientGender: '',
-                                      HCPPreferGender: "",
-                                      NewLead: "",
-                                      CurateNewLead: '',
-                                      PreferredLanguage: "",
-                                      ClientArea: '',
-                                      ClientNote: "",
-                                      serviceCharges: "",
-                                      MonthlyServiceCharge: "",
-                                      ServiceType: "",
-                                      patientHealthCard: "",
-                                      ExpectedService: "",
-                                      Reasonforservice: "",
-                                      ClientStatus: "",
-                                      patientWeight: '',
-                                    })
-                                    setTimeout(() => { setEnquiryMessage(""); setShowCallEnquiry(false) }, 2000)
-                                    return;
-                                  }
-
-
-                                  if (each === "Send") {
-                                      if(EnquiryForm.ClientName===""&&EnquiryForm.patientName===""&&EnquiryForm.ClientContact===""){
-      alert("Please Enter Client & Patient Name")
-      return
-    }
-                                    setShowNotification(true);
-                                  }
-                                }}
-
-
-                              >
-                                {each}
-                              </button>
-                            ))}
-                          </div>
-      </div>
-     
-<StaffNotificationModal
-  open={ShowNotification}
-  subMessage={NotificationStatus}
-  onClose={() => setShowNotification(false)}
-  onSend={(emails) => {
-   PostNotificationInfo(emails)
-  }}
-/>
-       <p className={EnquiryMessage?.includes("Successfully")?'text-green-800 text-center mb-4':'text-red-500 text-center mb-4'}>{EnquiryMessage}</p>
-
-     {EnquiryForm.ClientStatus!== "Not Interested" && 
-
-      <div className=" flex items-center justify-between w-full px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 sticky bottom-0">
-
-       <div className="flex gap-4">
-        <button
-          type="button"
-          onClick={() => setShowCallEnquiry(false)}
-          className="px-4 py-2 text-sm rounded-lg border text-gray-600 hover:bg-gray-100"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={UpdateCallEnquiry}
-          className="px-5 py-2 text-sm rounded-lg font-medium text-white bg-gray-900 hover:bg-gray-800"
-        >
-          Save Enquiry
-        </button>
-        </div>
-      </div>}
-
-    </div>
-  </div>
-)}
+          )}
 
 
 
-         {/* <div className="lg:col-span-4 space-y-4">
+          {/* <div className="lg:col-span-4 space-y-4">
   <div className="bg-white flex flex-col p-2 sm:p-4 rounded-xl shadow-md">
     <h2 className="text-base sm:text-lg font-semibold mb-3 text-gray-700">
       Active Bench List
