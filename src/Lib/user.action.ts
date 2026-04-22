@@ -7,6 +7,7 @@ import { TimeStamp } from "@/Redux/reducer";
 import { data, symbol } from "framer-motion/client";
 import { Departments, VendorFieldMap } from "./Content";
 import { title } from "process";
+import { getMonthYear } from "@/Redux/action";
 
 export const UpdateDocterInformation = async (doctorInfo: {
   userType: any,
@@ -920,6 +921,7 @@ export const UpdateInvoiceData = async (
       ...updatedProps.billTo,
       ...updatedProps.totals,
       items: updatedProps.items,
+  Invoice: updatedProps.invoice?.number,
       updatedAt: new Date().toISOString()
     };
 
@@ -989,6 +991,67 @@ export const GetSentInvoiceData = async () => {
 
   } catch (err: any) {
     return { success: false, message: err.message };
+  }
+};
+
+
+export const UpdateInvoisefromDb = async (data: any) => {
+  try {
+    if (!data.clientId) {
+      throw new Error("ClientId is required");
+    }
+console.log("Check Imported Data---",data
+)
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Invoices");
+
+    const filter = {
+      ClienId: data.clientId,
+      DeployDate: data.deployDate,
+      SeriviceStartDate: data.startDate,
+     
+    };
+
+    const updateDoc: any = {
+      $set: {
+      Invoice: data.invoiceNumber
+  ? data.invoiceNumber.trim().startsWith("INV")
+    ? data.invoiceNumber.trim()
+    : `INV${data.invoiceNumber.trim()}`
+  : "",
+        ClientName: data.clientName,
+        Patient: data.patientName,
+        contact: data.contact,
+        Email: data.email,
+        Adress: data.address,
+        SeriviceStartDate: data.startDate,
+        ServiceEndDate: data.serviceEndDate,
+        UpdatedAt: new Date(),
+      },
+    };
+
+   
+
+    const result = await collection.updateOne(filter, updateDoc);
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Invoice not found",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Invoice updated successfully",
+    };
+  } catch (err: any) {
+    console.error("Update Error:", err);
+    return {
+      success: false,
+      message: err.message || "Database error",
+    };
   }
 };
 
@@ -2534,6 +2597,34 @@ const safeUsers = TimeSheetInfoData.map((user: any) => ({
       _id: user._id.toString(),
     }));
 return safeUsers
+  }catch(e){
+
+  }
+}
+
+export const ClearClientTimeSheetInfo=async(ImpClientId:any,ImpHCAId:any)=>{
+  try{
+const cluster=await clientPromise
+const db=cluster.db("CurateInformation")
+const collection=db.collection("TimeSheet")
+const TimeSheetInfoData=await collection.deleteOne({
+  
+ClientId:ImpClientId,
+
+HCAId:ImpHCAId
+})
+   if (TimeSheetInfoData.deletedCount === 0) {
+      return {
+        success: false,
+        message: "Client not found for this month",
+      }
+    }
+
+    return {
+      success: true,
+      message: "Client Prviouse Information deleted Successfully",
+    }
+
   }catch(e){
 
   }

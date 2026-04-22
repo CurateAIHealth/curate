@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List } from "lucide-react";
+import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List, PencilOff } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { GetInvoiceInfo, GetSentInvoiceData, UpdateStatusPayment } from "@/Lib/user.action";
@@ -169,13 +169,15 @@ useEffect(() => {
 
     return {
       id: each.Invoice||each.number,
+      ClienId:each.ClienId,
       ClientName: each.ClientName||each.patientName,
       Adress: each.Adress,
       name: each.Patient||each.patientName,
       contact: each.contact||each.contact,
       Email: each.Email||each.email,
       status: each.status,
-      StartDate: each.DeployDate,
+      DeployDate:each.DeployDate,
+      StartDate: each.SeriviceStartDate,
       ServiceEndDate: each.ServiceEndDate,
       RegistrationFee: each.RegistrationFee,
       CareTakeCharge: each.CareTakeChare,
@@ -841,13 +843,24 @@ CheckPaymentStatus:CurrentPaymentStatus
         </div>
 
         {/* Edit */}
-        <div className="hidden lg:flex items-center cursor-pointer">
+        {inv.status === "Draft" ?<div className="hidden lg:flex items-center cursor-pointer">
+         <div className="relative inline-block group cursor-pointer">
+  <p className="flex items-center gap-2 text-gray-800">
+   <PencilOff size={15}/>
+  </p>
+
+  <span className="absolute bottom-2 mb-2 hidden group-hover:block 
+               bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+    Make sure the invoice is sent before Editing
+  </span>
+</div>
+        </div>:<div className="hidden lg:flex items-center cursor-pointer">
           <Pencil
             className="w-4 h-4"
             // onClick={() => EditInvoice(inv.id)}
                onClick={() => UpdateInvoiceMailTemplate(inv)}
           />
-        </div>
+        </div>}
 
         {/* Payment Status */}
         <div

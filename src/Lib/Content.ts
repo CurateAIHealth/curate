@@ -2632,3 +2632,13 @@ export const HCPFilters = [
   { label: "🟣 Bench", value: "Bench" },
   { label: "🔴 Terminated", value: "Terminated" },
 ]
+
+
+export const fields= [
+  { key: "enrollmentFee", label: "Enrollment Fee", placeholder: "Enter enrollment fee" },
+  { key: "dayPrice", label: "Day Price", placeholder: "Enter day price" },
+  { key: "startDate", label: "Start Date", type: "date" },
+  { key: "endDate", label: "End Date", type: "date" },
+  { key: "hcaPrice", label: "HCA Price (Per Day)", placeholder: "Enter HCA price" },
+  { key: "serviceDays", label: "Service Days", placeholder: "Enter service days" },
+]

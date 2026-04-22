@@ -305,8 +305,10 @@ const UpdatePDRInfo = async () => {
       ).replace(/,/g, "");
 
       const deploymentRes = await InsertDeployment(
-        today.toLocaleDateString("en-IN"),
-        lastDateOfMonth,
+        new Date(data.InvoiseInformation
+          .startDate).toLocaleDateString("en-IN"),
+        new Date(data.InvoiseInformation
+          .endDate).toLocaleDateString("en-IN"),
         "Active",
         DeploaymentInformation.location,
         DeploaymentInformation.contact,
@@ -332,7 +334,7 @@ const UpdatePDRInfo = async () => {
         DeploaymentInformation.Type,
         data.serviceCharges,
         ClientAttendece,
-        
+
       );
 
       if (!deploymentRes?.success) {
@@ -663,14 +665,34 @@ html: `
               <div className="text-gray-500">No Medications Provided</div>
             )}
           </Section>
-<div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
-  <p className="text-sm font-medium text-emerald-800">
-    Care Taker Price
-  </p>
+<div className="bg-white border border-emerald-200 rounded-xl p-4 shadow-sm space-y-3">
+  
+  {/* Top Row */}
+  <div className="flex items-center justify-between">
+    <p className="text-sm font-medium text-gray-600">
+      Care Taker Price
+    </p>
+    <p className="text-lg font-bold text-emerald-600">
+      ₹{data?.serviceCharges}
+    </p>
+  </div>
 
-  <p className="text-lg font-bold text-emerald-700">
-    ₹{data?.serviceCharges}
-  </p>
+  {/* Divider */}
+  <div className="border-t border-gray-200" />
+
+  {/* Dates Section */}
+  <div className="flex flex-col sm:flex-row sm:justify-between gap-2 text-sm text-gray-700">
+    <p>
+      <span className="font-medium text-gray-500">Start Date:</span>{" "}
+      {new Date(data?.InvoiseInformation?.startDate).toLocaleDateString("en-IN")}
+    </p>
+
+    <p>
+      <span className="font-medium text-gray-500">End Date:</span>{" "}
+      {new Date(data?.InvoiseInformation?.endDate).toLocaleDateString("en-IN")}
+    </p>
+  </div>
+
 </div>
 
           <Section title="Remarks">

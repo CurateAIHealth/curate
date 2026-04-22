@@ -317,3 +317,97 @@ export const mapEnquiryToForm = (data: any): Partial<EnquiryFormType> => ({
   ExtraWorkingHours: data?.ExtraWorkingHours ?? "",
   ExtraWorkType: data?.ExtraWorkType ?? ""
 });
+
+
+export const formatToDDMMYYYY = (dateStr: string) => {
+  if (!dateStr) return "";
+
+  let date: Date;
+
+  // If already ISO (yyyy-mm-dd)
+  if (dateStr.includes("-")) {
+    date = new Date(dateStr);
+  } else if (dateStr.includes("/")) {
+    // Handle dd/mm/yyyy
+    const [day, month, year] = dateStr.split("/");
+    date = new Date(Number(year), Number(month) - 1, Number(day));
+  } else {
+    return "";
+  }
+
+  if (isNaN(date.getTime())) return "";
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${day}/${month}/${year}`;
+};
+
+
+export const toInputDateFormat = (dateStr: string) => {
+  if (!dateStr) return "";
+
+  if (dateStr.includes("-")) return dateStr; // already correct
+
+  const [day, month, year] = dateStr.split("/");
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+};
+
+
+
+
+export const addDays = (dateStr: string, days: number) => {
+  if (!dateStr) return "";
+
+  let date: Date;
+
+  // Handle YYYY-MM-DD (from input)
+  if (dateStr.includes("-")) {
+    date = new Date(dateStr);
+  } 
+  // Handle DD/MM/YYYY
+  else if (dateStr.includes("/")) {
+    const [day, month, year] = dateStr.split("/");
+    date = new Date(Number(year), Number(month) - 1, Number(day));
+  } 
+  else {
+    return "";
+  }
+
+  if (isNaN(date.getTime())) return "";
+
+  date.setDate(date.getDate() + days);
+
+  const d = String(date.getDate()).padStart(2, "0");
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const y = date.getFullYear();
+
+  return `${d}/${m}/${y}`;
+};
+
+export const getMonthYear = (dateStr: string) => {
+  if (!dateStr) return { month: "", year: "" };
+
+  let date: Date;
+
+  // Handle YYYY-MM-DD
+  if (dateStr.includes("-")) {
+    date = new Date(dateStr);
+  } 
+  // Handle DD/MM/YYYY
+  else if (dateStr.includes("/")) {
+    const [day, month, year] = dateStr.split("/");
+    date = new Date(Number(year), Number(month) - 1, Number(day));
+  } 
+  else {
+    return { month: "", year: "" };
+  }
+
+  if (isNaN(date.getTime())) return { month: "", year: "" };
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear());
+
+  return { month, year };
+};

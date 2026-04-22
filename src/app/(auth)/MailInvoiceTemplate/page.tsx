@@ -6,11 +6,12 @@ import {  getBase64Image, getDaysBetween } from "@/Lib/Actions";
 import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { SaveInvoiceData, UpdateInvoice, UpdateInvoiceData } from "@/Lib/user.action";
+import { SaveInvoiceData, UpdateInvoice, UpdateInvoiceData, UpdateInvoisefromDb } from "@/Lib/user.action";
 import { Plus,CircleX } from "lucide-react";
 import { paymentData, serviceOptions } from "@/Lib/Content";
 import RefundReceipt from "@/Components/RefundReceipt/page";
 import EditRefund from "@/Components/EditRefundComponent/page";
+import { addDays, formatToDDMMYYYY, getMonthYear, toInputDateFormat } from "@/Redux/action";
 
 {/* <RefundReceipt
         receiptId="REF#2026_1"
@@ -50,7 +51,7 @@ export default function InvoiceForm() {
   const InvoiceData = useSelector((state: any) => state.InvoiceInfo);
   const [isEditing, setIsEditing] = useState(false);
 
-
+console.log("Check Invoise Information------",InvoiceData)
   const [ShowServices,setShowServices]=useState(false)
   const [otherExpenses, setOtherExpenses] = useState<any>();
   const [discountType, setDiscountType] = useState<"flat" | "percent">("flat");
@@ -59,6 +60,7 @@ export default function InvoiceForm() {
   const [Mailstatus,setMailstatus]=useState(true)
   const [ShowRefundReceipt,setShowRefundReceipt]=useState(false)
   const [selectedService, setSelectedService] = useState<any>(null);
+  const [StatusMessage,setStatusMessage]=useState<any>("")
 const [otherService, setOtherService] = useState({
   name: "",
   code:"Other",
@@ -85,10 +87,12 @@ const [selected, setSelected] = useState<any>({
   section: "",
   tdsRate: ""
 });
+const { month, year } = getMonthYear(InvoiceData?.StartDate);
   const invoice = {
-    number: InvoiceData?.id||InvoiceData?.Invoice,
+    number:`INV_${month}_${year}`,
+    ServiceCharge:InvoiceData.CareTakeCharge,
     date: InvoiceData?.StartDate,
-    dueDate: InvoiceData?.ServiceEndDate,
+    dueDate: addDays(InvoiceData?.StartDate, 7),
     serviceFrom: InvoiceData?.StartDate,
     serviceTo: InvoiceData?.ServiceEndDate,
     status: InvoiceData?.status,
@@ -109,7 +113,7 @@ const [selected, setSelected] = useState<any>({
 const [formData, setFormData] = useState<any>({
       billTo: billTo || {},
     invoice: invoice || {},
-    days: days || "",
+    days: getDaysBetween(start, end) || "",
 });
 
 
@@ -479,6 +483,47 @@ const addOtherService = () => {
     }));
   };
 
+ const updateInvoice = async () => {
+  try {
+    setStatusMessage("Updating invoice...");
+  
+    
+    const payload = {
+      invoiceNumber: formData.invoice?.number || "",
+      clientId: InvoiceData?.ClienId || "",
+      deployDate: InvoiceData?.DeployDate || "",
+      startDate: InvoiceData?.StartDate || "",
+      endDate: InvoiceData?.ServiceEndDate || "",
+
+      clientName: formData.billTo?.name || "",
+      patientName: formData.billTo?.patientName || "",
+      contact: formData.billTo?.contact || "",
+      email: formData.billTo?.email || "",
+      address: formData.billTo?.addressLines || "",
+
+     invoiceDate: formatToDDMMYYYY(invoice?.date),
+  serviceStartDate: formatToDDMMYYYY(formData.invoice?.serviceFrom),
+  serviceEndDate: formatToDDMMYYYY(formData.invoice?.serviceTo),
+    };
+
+
+    const res = await UpdateInvoisefromDb(payload);
+
+    if (!res.success) {
+      throw new Error(res.message);
+    }
+
+    setStatusMessage("Invoice updated successfully");
+    setTimeout(()=>{
+      Router.push("/Invoices")
+    },2500)
+    setIsEditing(false);
+  } catch (err: any) {
+    console.error(err);
+    setStatusMessage(err.message || "Something went wrong");
+  }
+};
+
   const getStatusStyles = (status: string | undefined) => {
     if (!status) return "bg-gray-100 text-gray-700 border-gray-200";
     if (status.toLowerCase() === "draft")
@@ -551,7 +596,7 @@ const addOtherService = () => {
 
     <button 
       className="flex items-center gap-1 hover:text-blue-600 transition"
-      onClick={() => setIsEditing(true)}
+      onClick={() => {setIsEditing(true),setStatusMessage("")}}
     >
       ✏️ <span>Edit</span>
     </button>
@@ -607,7 +652,12 @@ const addOtherService = () => {
               {isEditing? <input
               className="w-fit text-center  text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
               value={formData.invoice.number  || ""}
-              onChange={(e) => handleChange("name", e.target.value)}
+             onChange={(e) =>
+          setFormData((prev:any) => ({
+            ...prev,
+            invoice: { ...prev.invoice, number: e.target.value },
+          }))
+        }
               placeholder="invoice number"
             />:<span className="px-3 py-1 rounded-full bg-slate-900 text-white text-sm font-mono">
                 {invoice.number || "--"}
@@ -644,6 +694,7 @@ const addOtherService = () => {
               <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-slate-800">
                   Customer & Patient Information
+                  
                 </h2>
                 <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
                   Profile
@@ -666,6 +717,56 @@ const addOtherService = () => {
                  <StatItem label="Days" value={days|| "--"} />
               </div>
             </div> */}
+
+   {StatusMessage && (
+  <div
+    className={`mt-3 flex items-start gap-2 rounded-lg px-3 py-2 text-sm shadow-sm
+    ${
+      StatusMessage.toLowerCase().includes("successful")
+        ? "border border-green-200 bg-green-50 text-green-700"
+        : "border border-indigo-200 bg-indigo-50 text-indigo-700"
+    }`}
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={`w-4 h-4 mt-0.5 
+        ${
+          StatusMessage.toLowerCase().includes("successful")
+            ? "text-green-600"
+            : "text-indigo-600"
+        }`}
+    >
+      {StatusMessage.toLowerCase().includes("successful") ? (
+        // ✅ Success Icon
+        <path
+          fillRule="evenodd"
+          d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 
+             9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 
+             2.25 12zm13.28-2.03a.75.75 0 10-1.06-1.06l-3.97 
+             3.97-1.47-1.47a.75.75 0 00-1.06 1.06l2 
+             2a.75.75 0 001.06 0l4.5-4.5z"
+          clipRule="evenodd"
+        />
+      ) : (
+        // ℹ️ Default Info Icon
+        <path
+          fillRule="evenodd"
+          d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 
+             4.365 9.75 9.75-4.365 9.75-9.75 
+             9.75S2.25 17.385 2.25 12zm9.75-4.5a.75.75 
+             0 00-.75.75v3.75a.75.75 0 001.5 
+             0V8.25a.75.75 0 00-.75-.75zm0 
+             9a.75.75 0 100-1.5.75.75 0 000 1.5z"
+          clipRule="evenodd"
+        />
+      )}
+    </svg>
+
+    <span>{StatusMessage}</span>
+  </div>
+)}
  <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
       <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-slate-800">
@@ -690,9 +791,7 @@ const addOtherService = () => {
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  setIsEditing(false);
-                }}
+                onClick={updateInvoice}
                 className="text-xs px-3 py-1 rounded-lg bg-indigo-600 text-white cursor-pointer"
               >
                 Save
@@ -714,7 +813,7 @@ const addOtherService = () => {
             billTo: { ...prev.billTo, name: e.target.value },
           }))
         }
-        placeholder="Customer Name"
+        placeholder="Client Name"
       />
 
       <input
@@ -767,33 +866,39 @@ const addOtherService = () => {
     </>
   ) : (
     <>
-      <InfoField label="Customer Name" value={formData.billTo?.name} />
+      <InfoField label="Client Name" value={formData.billTo?.name} />
       <InfoField label="Patient Name" value={formData.billTo?.patientName} />
       <InfoField label="Phone Number" value={formData.billTo?.contact} />
       <InfoField label="Email" value={formData.billTo?.email} />
       <InfoField label="Address" value={formData.billTo?.addressLines} />
+      <InfoField label="Client Charges" value={formData.invoice?.ServiceCharge} />
     </>
   )}
 </div>
 
 
-     <div className="border-t border-slate-100 px-6 py-3 grid grid-cols-2 md:grid-cols-5 gap-3 bg-slate-50/70">
+     <div className="border-t border-slate-100 px-6 py-3 grid grid-cols-2 md:flex items-center justify-between w-full gap-3 bg-slate-50/70">
   {isEditing ? (
     <>
-      
+         {/* <div>
+      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Invoice Date</p>
       <input
-        type="text"
+        type="date"
         className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         placeholder="Invoice Date"
-        value={formData.invoice?.date || ""}
+        value={toInputDateFormat(formData.invoice?.date )|| ""}
         onChange={(e) =>
+       {
+           alert(e.target.value)
           setFormData((prev:any) => ({
             ...prev,
             invoice: { ...prev.invoice, date: e.target.value },
           }))
+       }
         }
       />
-
+      </div> */}
+{/* 
       <input
         type="text"
         className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
@@ -805,13 +910,14 @@ const addOtherService = () => {
             invoice: { ...prev.invoice, dueDate: e.target.value },
           }))
         }
-      />
-
+      /> */}
+   <div>
+      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Service From</p>
       <input
-        type="text"
+        type="date"
         className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         placeholder="Service From"
-        value={formData.invoice?.serviceFrom || ""}
+        value={toInputDateFormat(formData.invoice?.serviceFrom) || ""}
         onChange={(e) =>
           setFormData((prev:any) => ({
             ...prev,
@@ -819,12 +925,14 @@ const addOtherService = () => {
           }))
         }
       />
-
+      </div>
+   <div>
+      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Service To</p>
       <input
-        type="text"
+        type="date"
         className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         placeholder="Service To"
-        value={formData.invoice?.serviceTo || ""}
+         value={toInputDateFormat(formData.invoice?.serviceTo)}
         onChange={(e) =>
           setFormData((prev:any) => ({
             ...prev,
@@ -832,29 +940,23 @@ const addOtherService = () => {
           }))
         }
       />
-
-      <input
-        type="text"
-        className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-        placeholder="Days"
-        value={formData.days || ""}
-        onChange={(e) =>
-          setFormData((prev:any) => ({
-            ...prev,
-            days: e.target.value,
-          }))
-        }
-      />
-   <p className="text-red-600 text-[9px] text-center">
+</div>
+   <div>
+      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Days</p>
+    <p>{getDaysBetween(formData.invoice?.serviceFrom,formData.invoice?.serviceTo) || ""}</p>
+      </div>
+   {/* <p className="text-red-600 text-[9px] text-center">
          ⚠️ Enter All Dates  in India Date Formate DD/MM/YYYY
-        </p> </>
+        </p>  */}
+        
+        </>
   ) : (
     <>
-      <StatItem label="Invoice Date" value={invoice.date || "--"} />
-      <StatItem label="Due Date" value={invoice.dueDate || "--"} />
-      <StatItem label="Service From" value={invoice.serviceFrom || "--"} />
-      <StatItem label="Service To" value={invoice.serviceTo || "--"} />
-      <StatItem label="Days" value={days || "--"} />
+      {/* <StatItem label="Invoice Date" value={formData.invoice?.date || "--"} /> */}
+      <StatItem label="Due Date" value={formData.invoice.dueDate || "--"} />
+      <StatItem label="Service From" value={formData.invoice.serviceFrom || "--"} />
+      <StatItem label="Service To" value={formData.invoice.serviceTo || "--"} />
+      <StatItem label="Days" value={getDaysBetween(formData.invoice?.serviceFrom,formData.invoice?.serviceTo)  || "--"} />
     </>
   )}
 </div>

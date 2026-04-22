@@ -15,14 +15,16 @@
   import Preview from '@/Components/Preview/page'
   import PreviewComponent from '@/Components/Preview/page'
   import { useDispatch, useSelector } from 'react-redux'
-  import { Refresh, UpdateFetchedInformation, UpdatePreviewStatus, } from '@/Redux/action'
-  import { indianFamilyRelations, LeadSources, medicalSpecializations, physioSpecializations, ClientEnquiry_Filters, PDRspecialityOptions, treatmentOptions, mobilityAids, breathingEquipments, nutritionFeeds, Allergiesoptions, mealTimings, DiabeticSpecifications, FootItems, HygineOptions, floorTypes, washroomAccessories, Vitals_Options, Mobility_excercise_Options, sampleData } from '@/Lib/Content'
+  import { Refresh, UpdateClientSuggetion, UpdateFetchedInformation, UpdatePreviewStatus, } from '@/Redux/action'
+  import { indianFamilyRelations, LeadSources, medicalSpecializations, physioSpecializations, ClientEnquiry_Filters, PDRspecialityOptions, treatmentOptions, mobilityAids, breathingEquipments, nutritionFeeds, Allergiesoptions, mealTimings, DiabeticSpecifications, FootItems, HygineOptions, floorTypes, washroomAccessories, Vitals_Options, Mobility_excercise_Options, sampleData, fields } from '@/Lib/Content'
   import MobileMedicationSchedule from '@/Components/MedicationMobileView/page'
   import MedicationSchedule from '@/Components/Medications/page'
   import { CheckboxGroup } from '@/Components/CheckboxGroup'
   import axios from 'axios'
 import { GetUsersFullInfo, SuitableHCPUpdate, UpdateHCAnstatus } from '@/Lib/user.action'
 import { useRouter } from 'next/navigation'
+import { getDaysBetween } from '@/Lib/Actions'
+import DatePopup from '@/Components/MissingDateRange/page'
   type EditingKeys = 'PatientCardEditing' | 'ClientCardEditing' | 'PatientDetails' | 'AdditionalInformation' | 'OtherInformation' | 'EquipmentDetails' | 'Hygiene' | 'Medication';
 
 
@@ -66,6 +68,7 @@ import { useRouter } from 'next/navigation'
     const [UploadStatusMessage,setUploadStatusMessage]=useState("")
     const [StatusMessage,setStatusMessage]=useState("")
     const [form, setForm] = useState<StringMap>({});
+    const [isInvoiseEditing, setisInvoiseEditing] = React.useState(false);
     const [otherInputs, setOtherInputs] = useState<StringMap>({});
     const [AdvanceAmount,setAdvanceAmount]=useState<any>("")
       const [selectedHCP,setselectedHCP]=useState<any>()
@@ -74,10 +77,20 @@ import { useRouter } from 'next/navigation'
     const ShowPreviewData = useSelector((state: any) => state.CurrentPreview)
 const [service, setService] = useState("");
   const [otherService, setOtherService] = useState("");
+  const [ShowDateRangePopUp,setShowDateRangePopUp]=useState(false)
+  const [InvoiseInformation, setInvoiseInformation] = useState<any>({
+  enrollmentFee: "",
+  dayPrice: "",
+  startDate: "",
+  endDate: "",
+  hcaPrice: "",
+  serviceDays: "",
+});
   const DeploaymentInformation = useSelector(
     (state: any) => state.DeploaymentData
   );
- 
+ console.log("Check DEPLOYMENTINFORMATION-----",DeploaymentInformation
+ )
   const options = [
     "Business Vendor",
     "Baby Care",
@@ -96,16 +109,53 @@ useEffect(() => {
     if (!reduxFormData) return;
 
     setFormData(reduxFormData);
+console.log("Check for Client Id-----",reduxFormData
+)
+    const fullInformation = await GetUsersFullInfo();
+  setUsers(fullInformation)
 
-    const fetchedData = await GetUsersFullInfo();
-    setUsers(fetchedData);
+    const cleanNumber = (val: any) => {
+      if (!val) return "";
+      const cleaned = String(val).replace(/[^\d.]/g, "");
+      return cleaned ? Number(cleaned) : "";
+    };
+
+    const hcaData = fullInformation
+      ?.map((each: any) => each?.HCAComplitInformation)
+      ?.find((info: any) => info?.UserId === reduxFormData.SuitableHCP);
+
+    setInvoiseInformation((prev: any) => ({
+      ...prev,
+      enrollmentFee: cleanNumber(reduxFormData.RegistrationFee) || 0,
+      dayPrice: cleanNumber(reduxFormData.serviceCharges),
+      hcaPrice:  Math.round(Number(cleanNumber(hcaData?.PaymentforStaff)) / 30) || 0,
+
+     
+    }));
   };
 
   fetchData();
 }, [reduxFormData]);
 
 
-console.log("Check for Selected HCP Infromation-----",formData)
+const handleInvoiseChange = (key: any, value: any) => {
+  setInvoiseInformation((prev: any) => {
+    const updated = {
+      ...prev,
+      [key]: value,
+    };
+
+    
+    if (key === "startDate" || key === "endDate") {
+      updated.serviceDays = getDaysBetween(
+        updated.startDate,
+        updated.endDate
+      );
+    }
+
+    return updated;
+  });
+};
 
     const handleChange = (key: string, value: any) => {
       setFormData((prev: any) => ({ ...prev, [key]: value }));
@@ -250,7 +300,7 @@ if (url) {
 const GetHCPName=Finel.filter((each:any)=>each.userId=== DeploaymentInformation.HCA_Id)
 console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
 )
-
+console.log("Check finel Informatio------",Finel)
 
   const HCA_List = Finel.filter((each: any) => {
   const typeMatch =
@@ -273,9 +323,16 @@ console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
   );
 }
 
+
     return (
       <div>{ShowPreviewData ?
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+             <DatePopup
+        isOpen={ShowDateRangePopUp}
+        title="Missing Date Range"
+        message="Kindly provide both the start date and end date to proceed."
+        onClose={() => setShowDateRangePopUp(false)}
+      />
           <h1 className="relative text-sm sm:text-base md:text-xl font-medium text-center text-[#ff1493] tracking-wide leading-snug flex flex-wrap items-center justify-center gap-2 m-2">
             <img src="/Icons/Curate-logo.png" alt="Logo" className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-white text-rose-500 rounded-full p-2 shadow-sm" />
             {formData?.FirstName}'s Patient Daily Routine (PDR) Assessment
@@ -414,7 +471,8 @@ console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
   )}
 
   <button
-  onClick={()=>setEditHealthcareProfessional(!EditHealthcareProfessional)}
+  onClick={()=>{ router.push("/Clientsuggetions")
+      dispatch(UpdateClientSuggetion(formData.userId))}}
     className="inline-flex items-center justify-center rounded-lg border border-teal-600
                px-4 py-2 text-sm font-medium text-teal-600 cursor-pointer
                hover:bg-teal-50 transition"
@@ -750,7 +808,6 @@ console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
                   onChange={(val) => handleChange("EquipmentRemark", val)}
 
                 />
-
 
 
 
@@ -1224,13 +1281,12 @@ console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
 
 
 
-  <div className="w-full mb-6">
+  {/* <div className="w-full mb-6">
 
         <label className="text-sm font-medium text-gray-700 mb-1">
           Advance Amount Paid
         </label>
 
-        {/* Input with ₹ icon */}
         <div className="relative mb-2">
           <span className="absolute left-3 top-2.5 text-gray-500">₹</span>
 
@@ -1270,7 +1326,185 @@ console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
             </div>
           </div>
         )}
+      </div> */}
+<div className="w-full mb-6">
+<div className="bg-white/90 backdrop-blur-xl border border-gray-100 rounded-3xl shadow-xl p-6 sm:p-10">
+
+  {/* Header */}
+  <div className="flex justify-between items-center mb-8">
+    <div className="flex items-center gap-4">
+      <img
+        src="Icons/InvoiceWithRuppenIcon.png"
+        alt="Invoice Icon"
+        className="w-8 h-8 object-contain"
+      />
+
+      <div>
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-gray-800">
+          Invoice Information
+        </h2>
+        <p className="text-sm text-gray-400">
+          Fill in billing and service details
+        </p>
       </div>
+    </div>
+  </div>
+
+  {/* Fields */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+   {fields.map((field: any, index: number) => {
+  const value = InvoiseInformation[field.key];
+
+  const isDateField =
+    field.key === "startDate" || field.key === "endDate";
+
+  const isDisabled = !isDateField && !isInvoiseEditing;
+
+  return (
+    <div key={index} className="flex flex-col">
+      <label
+        htmlFor={field.key}
+        className="text-sm font-medium text-gray-600 mb-1"
+      >
+        {field.label}
+      </label>
+
+      <input
+        id={field.key}
+        type={field.type || "number"}
+        placeholder={field.placeholder}
+        value={value ?? ""}
+        onChange={(e) =>
+          handleInvoiseChange(field.key, e.target.value)
+        }
+        disabled={field.key==="serviceDays"?true:isDisabled}
+        className={`w-full rounded-xl border px-4 py-2.5 text-gray-700 
+          placeholder-gray-400 transition-all duration-200 outline-none shadow-sm
+          ${
+            isDisabled
+              ? "bg-gray-100 border-gray-200 cursor-not-allowed"
+              : "bg-gray-50 border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          }`}
+      />
+    </div>
+  );
+})}
+  </div>
+
+  {/* Profit Calculation */}
+  {(() => {
+  const toNumber = (val: any) => {
+  const num = parseFloat(val);
+  return isNaN(num) ? 0 : num;
+};
+
+const dayPrice = toNumber(InvoiseInformation.dayPrice);
+const hcaPrice = toNumber(InvoiseInformation.hcaPrice);
+const serviceDays = toNumber(InvoiseInformation.serviceDays);
+
+const startDate = InvoiseInformation.startDate;
+const endDate = InvoiseInformation.endDate;
+
+if (!serviceDays) return null;
+
+// Calculations
+const dayProfit = dayPrice - hcaPrice;
+const invoiceProfit = dayProfit * serviceDays;
+
+const dayProfitPercent =
+  dayPrice > 0 ? (dayProfit / dayPrice) * 100 : 0;
+
+const invoiceTotal = dayPrice * serviceDays;
+
+const invoiceProfitPercent =
+  invoiceTotal > 0 ? (invoiceProfit / invoiceTotal) * 100 : 0;
+
+const isProfit = invoiceProfit >= 0;
+
+    return (
+ <div
+  className={`mt-8 rounded-2xl border shadow-sm p-6 transition-all duration-300
+  ${
+    isProfit
+      ? "bg-gradient-to-br from-green-50 to-white border-green-100"
+      : "bg-gradient-to-br from-red-50 to-white border-red-100"
+  }`}
+>
+  {/* Header */}
+  <div className="flex justify-between items-center mb-4">
+    <div>
+      <p className="text-xs text-gray-400 uppercase tracking-wide">
+        Service Summary
+      </p>
+      <p className="text-sm font-medium text-gray-700">
+        {startDate} → {endDate} • {serviceDays} days
+      </p>
+    </div>
+   <div
+      className={`w-22 h-12 flex items-center justify-center rounded-xl text-lg  font-bold
+      ${
+        isProfit
+          ? "bg-green-100 text-green-600 p-2"
+          : "bg-red-100 text-red-500 p-2"
+      }`}
+    >
+      {isProfit ? "↑ Profit" : "↓ Loss"}
+    </div>
+  </div>
+
+  {/* Grid */}
+  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    
+    {/* Day Profit */}
+    <div className="bg-white rounded-xl p-4 border border-gray-100">
+      <p className="text-xs text-gray-400 mb-1">Day Profit</p>
+      <p className="text-sm font-semibold text-gray-800">
+        ₹ {dayProfit.toLocaleString()}
+      </p>
+      <p className="text-xs text-gray-400 mt-1">
+        {dayProfitPercent.toFixed(1)}%
+      </p>
+    </div>
+
+    {/* Invoice Profit */}
+    <div className="bg-white rounded-xl p-4 border border-gray-100">
+      <p className="text-xs text-gray-400 mb-1">Invoice Profit</p>
+      <p className="text-sm font-semibold text-gray-800">
+        ₹ {invoiceProfit.toLocaleString()}
+      </p>
+      <p className="text-xs text-gray-400 mt-1">
+        {invoiceProfitPercent.toFixed(1)}%
+      </p>
+    </div>
+
+  </div>
+</div>
+    );
+  })()}
+
+  {/* <div className="mt-6 flex justify-end">
+  {!isInvoiseEditing ? (
+    <button
+      type="button"
+      onClick={() =>setisInvoiseEditing(true)}
+      className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 cursor-pointer transition"
+    >
+      Edit
+    </button>
+  ) : (
+    <button
+      type="button"
+      onClick={() => setisInvoiseEditing(false)}
+      className="px-4 py-2 rounded-xl bg-teal-800 text-white text-sm font-medium hover:shadow-lg cursor-pointer transition"
+    >
+    Save
+    </button>
+  )}
+</div> */}
+</div>
+</div>
+
+      
 <div className="max-w-md bg-white rounded-2xl shadow-md p-6 space-y-4">
 
   <h3 className="text-lg font-semibold text-slate-800">
@@ -1389,7 +1623,14 @@ console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
 
               <button
                 type="button"
-                onClick={() => {dispatch(UpdatePreviewStatus(false));const payload = {
+                onClick={() => {
+                  
+                  if(InvoiseInformation.startDate===""||InvoiseInformation.endDate===''){
+                    setShowDateRangePopUp(true)
+                    return
+                  }
+                  
+                  dispatch(UpdatePreviewStatus(false));const payload = {
   ...formData,
   UpdatedAt: formData?.UpdatedAt
     ? new Date(formData.UpdatedAt).toISOString()
@@ -1405,14 +1646,14 @@ dispatch(UpdateFetchedInformation(payload));
 
 
 
-                <span>Preview &amp; Submit</span>
+                <span>Preview </span>
               </button>
             </div>
           </main>
         </div> :(
   formData && Object.keys(formData).length > 0 ? (
     <PreviewComponent
-      data={formData}
+        data={{ ...formData, InvoiseInformation }}
       Advance={Number(AdvanceAmount) || 0}
     />
   ) : (
