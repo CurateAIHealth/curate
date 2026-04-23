@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List, PencilOff } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { GetInvoiceInfo, GetSentInvoiceData, UpdateStatusPayment } from "@/Lib/user.action";
+import { GetInvoiceInfo, GetRegidterdUsers, GetSentInvoiceData, UpdateStatusPayment } from "@/Lib/user.action";
 import { GeneratePDF, getDaysBetween } from "@/Lib/Actions";
 import { LoadingData } from "@/Components/Loading/page";
 
@@ -39,6 +39,7 @@ export default function InvoicesPage() {
   const [page, setPage] = useState(1);
  const [CurrentPaymentStatus,SetCurrentPaymentStatus]=useState<any>(null)
   const [InvoiceData, setInvoiceData] = useState<any>()
+  const [RegUserInfo,setRegUserInfo]=useState<any>()
   const [status, setStatus] = useState<any>(null);
   const Router = useRouter()
   const dispatch = useDispatch()
@@ -49,6 +50,9 @@ const refreshInvoices = async () => {
   try {
     setisChecking(true)
     const data = await GetInvoiceInfo()
+    const CompliteInfo=await GetRegidterdUsers()
+    console.log("Check RegisterdUser----",CompliteInfo)
+    setRegUserInfo(CompliteInfo)
     setFetchedInfo(data)
   } catch (err) {
     console.error("Error fetching invoices:", err)
@@ -365,9 +369,27 @@ const handleLogout = () => {
   return { label: `${daysLeft} days left`, days: daysLeft, status: "upcoming" };
 }
 
+const GetTitiles=(ImpId:any)=>{
+
+   if (!RegUserInfo?.length || !ImpId) return "Not Entered";
+
+    const TitleValue =RegUserInfo?.filter((info: any) => info?.userId === ImpId)
+
+    return TitleValue||"Not Profided"
+
+}
+
   const UpdateInvoiceMailTemplate = (MainTemplateInfo: any) => {
     console.log("Check Registratio Fee----", MainTemplateInfo)
-    dispatch(UpdateInvoiceInfo(MainTemplateInfo))
+    const Values=GetTitiles(MainTemplateInfo.ClienId)
+    console.log("Check Task VALUE-----",Values[0].Patienttitle)
+     dispatch(
+    UpdateInvoiceInfo({
+      ...MainTemplateInfo,
+      title: Values[0].title||"",
+      Patienttitle: Values[0].Patienttitle||""
+    })
+  )
     Router.push("/MailInvoiceTemplate")
   }
 
@@ -518,7 +540,7 @@ CheckPaymentStatus:CurrentPaymentStatus
     <button
       onClick={handleLogout}
       className="
-        flex items-center justify-center gap-2
+        flex items-center justify-center gap-2 cursor-pointer
         px-5 py-2.5
         bg-gradient-to-br from-[#00A9A5] to-[#005f61]
         hover:from-[#01cfc7] hover:to-[#00403e]
@@ -530,7 +552,7 @@ CheckPaymentStatus:CurrentPaymentStatus
       Dashboard
     </button>
 
-    <button
+    {/* <button
       onClick={handleMainLogout}
       className="
         flex items-center justify-center gap-2
@@ -545,7 +567,7 @@ CheckPaymentStatus:CurrentPaymentStatus
     >
       <LogOut size={16} />
       Logout
-    </button>
+    </button> */}
   </div>
 </div>
 
@@ -701,7 +723,7 @@ CheckPaymentStatus:CurrentPaymentStatus
 
 
       <button
-        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1392d3] text-white text-xs font-semibold shadow-sm hover:bg-[#117bb1] transition"
+        className="flex items-center gap-2 px-4 py-2 cursor-pointer rounded-lg bg-[#1392d3] text-white text-xs font-semibold shadow-sm hover:bg-[#117bb1] transition"
         onClick={downloadExcel}
       >
         <Download className="w-4 h-4" />
@@ -874,7 +896,7 @@ CheckPaymentStatus:CurrentPaymentStatus
 
           {!inv.PaymentStatus && (
             <button
-              className="px-3 py-[3px] bg-teal-800 text-white text-[10px] rounded-full hover:bg-teal-900"
+              className="px-3 py-[3px] bg-teal-800 text-white text-[10px] cursor-pointer rounded-full hover:bg-teal-900"
               onClick={() => UpdatePaymentStatus(inv.id)}
             >
               Update

@@ -12,6 +12,7 @@ import { paymentData, serviceOptions } from "@/Lib/Content";
 import RefundReceipt from "@/Components/RefundReceipt/page";
 import EditRefund from "@/Components/EditRefundComponent/page";
 import { addDays, formatToDDMMYYYY, getMonthYear, toInputDateFormat } from "@/Redux/action";
+import DatePopup from "@/Components/MissingDateRange/page";
 
 {/* <RefundReceipt
         receiptId="REF#2026_1"
@@ -60,6 +61,7 @@ console.log("Check Invoise Information------",InvoiceData)
   const [Mailstatus,setMailstatus]=useState(true)
   const [ShowRefundReceipt,setShowRefundReceipt]=useState(false)
   const [selectedService, setSelectedService] = useState<any>(null);
+   const [ShowDateRangePopUp,setShowDateRangePopUp]=useState(false)
   const [StatusMessage,setStatusMessage]=useState<any>("")
 const [otherService, setOtherService] = useState({
   name: "",
@@ -99,6 +101,8 @@ const { month, year } = getMonthYear(InvoiceData?.StartDate);
   };
 
   const billTo = {
+    title: InvoiceData?.title,
+    Patienttitle: InvoiceData?.Patienttitle,
     name: InvoiceData?.ClientName,
     patientName: InvoiceData?.name,
     contact: InvoiceData?.contact,
@@ -236,6 +240,12 @@ const serviceAmount = services.reduce(
 );
 
 const handleSubmit = async () => {
+
+  if(!formData.billTo?.email){
+setShowDateRangePopUp(true)
+return
+
+  }
   setIsSending(true);   
   setShowMailTemplate(false);
 
@@ -294,7 +304,7 @@ const pdfBlob = await html2pdf()
 //     const pdfBase64 = pdfResponse.data.pdf;
 
     await axios.post("/api/MailSend", {
-      to: "tsiddu805@gmail.com",
+      to:formData.billTo?.email|| "tsiddu805@gmail.com",
       subject:
         "Request for Payment – Attached Invoice from Curate Health Services",
    html: `<div style="
@@ -587,6 +597,7 @@ const addOtherService = () => {
 
 </div>}
   </div>
+  
 )}
 {ShowMailTemplate?    <div className="min-h-screen bg-slate-50 py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -595,26 +606,26 @@ const addOtherService = () => {
   <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
 
     <button 
-      className="flex items-center gap-1 hover:text-blue-600 transition"
+      className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition"
       onClick={() => {setIsEditing(true),setStatusMessage("")}}
     >
       ✏️ <span>Edit</span>
     </button>
 
-    <button className="flex items-center gap-1 hover:text-blue-600 transition">
+    <button className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition">
       📧 <span>Send Email</span>
     </button>
 
-    <button className="flex items-center gap-1 hover:text-blue-600 transition">
+    <button className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition">
       🔗 <span>Share</span>
     </button>
 
-    <button className="flex items-center gap-1 hover:text-blue-600 transition">
+    <button className="flex items-center gap-1 cursor-pointer hover:text-blue-600 transition">
       🖨️ <span>PDF/Print</span>
     </button>
 
     <button 
-      className="flex items-center gap-1 hover:text-red-600 transition"
+      className="flex items-center gap-1 hover:text-red-600 cursor-pointer transition"
       onClick={() => setShowRefundReceipt(!ShowRefundReceipt)}
     >
       💸 <span>Refund</span>
@@ -622,7 +633,7 @@ const addOtherService = () => {
 
     <div className="w-full sm:w-auto sm:ml-auto">
       <button 
-        className="w-full sm:w-auto bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white px-3 py-1 rounded"
+        className="w-full cursor-pointer sm:w-auto bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white px-3 py-1 rounded"
         onClick={() => Router.push("/Invoices")}
       >
         Invoice
@@ -632,6 +643,12 @@ const addOtherService = () => {
   </div>
 </div>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                 <DatePopup
+                  isOpen={ShowDateRangePopUp}
+                title="Client Email Required"
+message="Please provide the client’s email address to send the invoice."
+                  onClose={() => setShowDateRangePopUp(false)}
+                />
           <div className="flex items-center gap-2 ">
          <img src="Icons/Curate-logoq.png" onClick={()=>Router.push("/DashBoard")}  className="h-20 w-auto"/>
           <div>
@@ -866,8 +883,8 @@ const addOtherService = () => {
     </>
   ) : (
     <>
-      <InfoField label="Client Name" value={formData.billTo?.name} />
-      <InfoField label="Patient Name" value={formData.billTo?.patientName} />
+      <InfoField label="Client Name" value={`${formData.billTo?.title} ${formData.billTo?.name}`} />
+      <InfoField label="Patient Name" value={`${formData.billTo?.Patienttitle} ${formData.billTo?.patientName}`} />
       <InfoField label="Phone Number" value={formData.billTo?.contact} />
       <InfoField label="Email" value={formData.billTo?.email} />
       <InfoField label="Address" value={formData.billTo?.addressLines} />
