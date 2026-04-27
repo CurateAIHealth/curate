@@ -84,6 +84,7 @@ const [service, setService] = useState("");
   startDate: "",
   endDate: "",
   hcaPrice: "",
+  hcaName:"",
   serviceDays: "",
 });
   const DeploaymentInformation = useSelector(
@@ -102,7 +103,8 @@ const reduxFormData = useSelector(
 
 const [formData, setFormData] = useState<any>({});
 const router=useRouter()
-
+console.log("Check DeploaymentInformation",DeploaymentInformation)
+console.log("reduxFormData",reduxFormData)
 useEffect(() => {
   const fetchData = async () => {
     if (!reduxFormData) return;
@@ -111,7 +113,10 @@ useEffect(() => {
 
     const fullInformation = await GetUsersFullInfo();
   setUsers(fullInformation)
-
+ setFormData((prev: any) => ({
+    ...prev,
+    ClientAgreement: "",
+  }));
     const cleanNumber = (val: any) => {
       if (!val) return "";
       const cleaned = String(val).replace(/[^\d.]/g, "");
@@ -120,13 +125,14 @@ useEffect(() => {
 
     const hcaData = fullInformation
       ?.map((each: any) => each?.HCAComplitInformation)
-      ?.find((info: any) => info?.UserId === reduxFormData.SuitableHCP);
+      ?.find((info: any) => info?.UserId === DeploaymentInformation.HCA_Id);
 
     setInvoiseInformation((prev: any) => ({
       ...prev,
       enrollmentFee: cleanNumber(reduxFormData.RegistrationFee) || 0,
       dayPrice: cleanNumber(reduxFormData.serviceCharges),
       hcaPrice:  Math.round(Number(cleanNumber(hcaData?.PaymentforStaff)) / 30) || 0,
+      hcaName:hcaData.HCPFirstName||""
 
      
     }));
@@ -356,6 +362,7 @@ const GetHCPName=Finel.filter((each:any)=>each.userId=== DeploaymentInformation.
                 <div className="flex flex-wrap items-center gap-3 mb-2">
                   <img src='Icons/telecommuting.gif' className="w-10 h-10 " />
                   <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Personal & Family Details</h2>
+               
                 </div>
 
                 <button
@@ -1358,18 +1365,21 @@ const GetHCPName=Finel.filter((each:any)=>each.userId=== DeploaymentInformation.
 
   return (
     <div key={index} className="flex flex-col">
+  
       <label
         htmlFor={field.key}
         className="text-sm font-medium text-gray-600 mb-1"
       >
         {field.label}
       </label>
-
+{field.key==="hcaName"?<p className="border shadow-lg bg-gray-200 rounded-md w-fit p-1 font-bold  leading-snug tracking-wide drop-shadow-[0_2px_8px_rgba(255,255,255,0.25)]">
+  {value}
+</p>:
       <input
         id={field.key}
         type={field.type || "number"}
         placeholder={field.placeholder}
-        value={value ?? ""}
+       value={Number.isNaN(value) ? "" : value ?? ""}
         onChange={(e) =>
           handleInvoiseChange(field.key, e.target.value)
         }
@@ -1381,7 +1391,7 @@ const GetHCPName=Finel.filter((each:any)=>each.userId=== DeploaymentInformation.
               ? "bg-gray-100 border-gray-200 cursor-not-allowed"
               : "bg-gray-50 border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
           }`}
-      />
+      />}
     </div>
   );
 })}
@@ -1623,6 +1633,11 @@ const isProfit = invoiceProfit >= 0;
                   
                   if(InvoiseInformation.startDate===""||InvoiseInformation.endDate===''){
                     setShowDateRangePopUp(true)
+                    return
+                  }
+
+                  if(!formData?.ClientAgreement){
+                    alert('Please Upload Client Agreement')
                     return
                   }
                   

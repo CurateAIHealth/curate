@@ -304,7 +304,7 @@ const pdfBlob = await html2pdf()
 //     const pdfBase64 = pdfResponse.data.pdf;
 
     await axios.post("/api/MailSend", {
-      to:formData.billTo?.email|| "tsiddu805@gmail.com",
+      to:"tsiddu805@gmail.com",
       subject:
         "Request for Payment – Attached Invoice from Curate Health Services",
    html: `<div style="
