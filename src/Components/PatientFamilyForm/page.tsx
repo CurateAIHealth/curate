@@ -127,7 +127,7 @@ export default function PatientFamilyForm() {
         subject: 'Curate Digital AI Health Registration',
         html: htmlComponent,
       });
-         console.log('Submitting family members:', Result);
+        
          if(Result.success)
           {  setStatusMessage('All members submitted successfully!')
            

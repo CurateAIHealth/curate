@@ -17,7 +17,7 @@ const UserDetailInfo = () => {
   // ✅ Memoized Redux selectors to prevent unnecessary re-renders
   const userId = useSelector((state: any) => state?.UserDetails);
   const clientName = useSelector((state: any) => state?.ClientName);
-console.log("Check for info-----",userId)
+
   useEffect(() => {
     if (!userId) {
       console.warn('User ID not available');
@@ -65,7 +65,6 @@ console.log("Check for info-----",userId)
     fetchUserInfo();
   }, [userId, router]);
 
-console.log("Checking for Today Task------",userType)
 
 
   const renderUserComponent = useMemo(() => {

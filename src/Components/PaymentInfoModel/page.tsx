@@ -278,7 +278,7 @@ setHideForDownload(true)
                     number: record?.invoice || "Payment_Info",
                     ...editableRecord,
                   });
-                       console.log('Fine Ites Working........%%$',Check)
+                       
                 } finally {
                   setLoading(false);
                 }

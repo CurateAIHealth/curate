@@ -80,7 +80,7 @@ const Router=useRouter()
   }, [selectedMonth, selectedYear]);
 
   const generateInvoice = (payment: any) => {
-    console.log("Generate invoice for:", payment);
+
   };
 
   return (

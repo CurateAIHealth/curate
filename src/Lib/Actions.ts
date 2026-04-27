@@ -251,7 +251,7 @@ export const GeneratePDF = async (invoiceData:any) => {
 
     return { status: true, message: "Invoice downloaded successfully!" };
   } catch (err) {
-    console.log("PDF Error ----", err);
+    
   }
 };
 

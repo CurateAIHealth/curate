@@ -116,7 +116,7 @@ const TerminationTable: React.FC = () => {
 
     return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
   };
-  console.log("Checking Count------", ReplacementReasons)
+
   const handleDelete = (id: string) => {
     setPlacements((prev) => prev.filter((placement) => placement.id !== id));
   };
@@ -258,7 +258,7 @@ const TerminationTable: React.FC = () => {
 
 
 const ExtendTimeSheet = async () => {
-console.log("Check for Tha Datata-----", ExtendInfo);
+
 
 try {
 SetActionStatusMessage("Please Wait Working On Service Extention");
@@ -313,7 +313,7 @@ const ClientAttendece = [
   },
 ];
 
-console.log("Check for Tha Datata-----", ExtendInfo);
+
 
 const deploymentRes = await InsertDeployment(
   StarteDate,
@@ -418,7 +418,7 @@ error?.message || "Something went wrong while extending timesheet"
 
       return matchesSearch && matchesMonth && matchesYear;
     }) || [];
-  console.log("Check Placement Datta-----", placements)
+  
   const GetReplacementMessage = (A: any) => {
 
     const results = ReplacementReasons?.filter((each: any) => each?.HCA_id === A) ?? [];

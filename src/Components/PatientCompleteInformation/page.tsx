@@ -169,7 +169,7 @@ const Router=useRouter()
         const FilterValue = Result?.HCAComplitInformation || {};
   const localValue = localStorage.getItem("UserId");
         const ProfileInformation = await GetUserInformation(localValue);
-    console.log("Test Adhar----",FilterValue)
+    
         setLoginEmail(ProfileInformation.Email);
         const formatDate = (dateString: string | undefined): string => {
           if (!dateString) return '';
@@ -250,7 +250,7 @@ const Router=useRouter()
       const FinelData = { ...formData, UserId: ImportedUserId, };
       const Result= await UpdateClientComplitInformation(ImportedUserId, FinelData);
       const RgistrationUpdate=await UpdatePatientRegisterCollection(ImportedUserId, FinelData)
-      console.log('Updated Patient Data:', FinelData);
+
       setStatusMessage({ message: 'Changes submitted successfully!', type: 'success' });
     } catch (err: any) {
       setStatusMessage({ message: 'Error submitting changes. Please try again.', type: 'error' });

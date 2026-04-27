@@ -137,7 +137,7 @@ useEffect(()=>{
       const BasicInfo:any=await GetUserInformation(ImportedUserId)
     setShowPassword(BasicInfo.PreviewPassword)
       const FilterValue=Result.HCAComplitInformation
-      console.log("Test Complite HCA Information---",FilterValue)
+    
       setUser(prev=>({...prev,
     firstName: FilterValue["First Name"] || "",
   surname: FilterValue["Surname"] || "",
@@ -212,7 +212,7 @@ useEffect(()=>{
   const handleSave =async () => {
     setSubmitstatusMessage("Please Wait....")
 const UpdateSalary:any=await HCASalaryUpdate(ImportedUserId,user.HCPSalary,loggedInEmail)
-console.log("Check For Salary Update----",UpdateSalary)
+
 if(UpdateSalary.success){
   setSubmitstatusMessage("Salary Updated Successfully.")
   setIsEditing(false);
@@ -254,7 +254,7 @@ if(UpdateSalary.success){
       const res = await axios.post('/api/Upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-  console.log("NeW iMAGE----", res.data.url)
+ 
       setUser(prevUser => ({
         ...prevUser,
         Documents: {
@@ -282,7 +282,7 @@ const UpdatewithNewData=async()=>{
 try{
     const FinelData={...user,UserId:ImportedUserId,userType:"HCA"}
 const UpdatedResult= await UpdateHCAComplitInformation(ImportedUserId,FinelData)
-console.log("Result---",UpdatedResult)
+
 setSubmitstatusMessage("Profile Updated Succesfully")
 }catch(err:any){
 
@@ -301,7 +301,7 @@ setSubmitstatusMessage("Profile Updated Succesfully")
         : { ...prev, ProfetionSkill: [...skills, skill] };
     });
   };
-console.log("Checkkkkk------", user.Documents)
+
   const renderTabContent = () => {
   switch (activeTab) {
     case 'Personal Info':
@@ -467,7 +467,7 @@ console.log("Checkkkkk------", user.Documents)
   }
 };
 
-console.log("Data of Birth---",user.dateOfBirth)
+
   return (
     <div className="min-h-screen p-4 md:p-4 bg-gray-100">
          <div className='flex justify-end items-end  cursor-pointer   rounded-full  ' >

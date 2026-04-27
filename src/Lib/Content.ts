@@ -2642,3 +2642,33 @@ export const fields= [
   { key: "hcaPrice", label: "HCA Price (Per Day)", placeholder: "Enter HCA price" },
   { key: "serviceDays", label: "Service Days", placeholder: "Enter service days" },
 ]
+
+
+export  const invoiceData = {
+    Invoice: "#INV255_92",
+    ClientName: "M. Shayam Sundher",
+    Patient: "M. Balakistamma",
+    contact: "9440413074",
+    Adress: "Karmanghat",
+    ServiceStartDate: "1/3/2026",
+    ServiceEndDate: "31/3/2026",
+    RoundedTotal: 30500,
+    balanceDue: 27500,
+
+    Trasaction: [
+      {
+        paymentType: "split",
+        amount: 1500,
+        paymentMethod: "upi",
+        transactionId: "123",
+        PaymentDate: "24/4/2026 5:48 PM",
+      },
+      {
+        paymentType: "split",
+        amount: 1500,
+        paymentMethod: "upi",
+        transactionId: "654654654",
+        PaymentDate: "24/4/2026 5:49 PM",
+      },
+    ],
+  };

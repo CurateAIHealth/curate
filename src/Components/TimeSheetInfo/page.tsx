@@ -252,7 +252,7 @@ cachedRegisterdUsers=RegisterdUsers??[]
 
     currentRecords.forEach((rec: any) => {
       const pending = (rec.days || []).filter((a: any) => {
-        console.log ("Check for Replasment Date------",a)
+   
         if (!(a.HCPAttendence === true && a.AdminAttendece === false))
           return false;
     
@@ -443,7 +443,7 @@ const hasUnmarked = processedData.some(
       router.push("/UserInformation");
     }
   };
-console.log("Check Days----",processedData)
+
 
     const UpdateCurrentAttendence = async () => {
       try {
@@ -726,7 +726,7 @@ const PresentScreen=()=>{
     onClose={() => { setShowPaymentModal(false); setBillingRecord(null); }}
     onConfirm={(billingResult:any) => {
  
-      console.log("Saving billing:", billingResult);
+   
      
     
     }}
@@ -749,9 +749,7 @@ const PresentScreen=()=>{
     }
 
     SetStatusMessage("Processing...")
- console.log("Check to Issue",item.
-hcpId
-)
+
     const updateResult = await UpdateHCAnstatus(
       item?.hcpId,
       "Active"
@@ -794,7 +792,7 @@ hcpId
   }
   onSave={async(data:any) => {
     SetStatusMessage("Please Wait.....")
-    console.log("Check Data-----",data.hcpId)
+
 const PostInfo=await UpdateClientTimeSheet(data.ClientId,data.hcpId,data.Month,data)
 if(PostInfo?.success){
   SetStatusMessage(PostInfo.message)

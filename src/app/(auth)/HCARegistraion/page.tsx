@@ -927,7 +927,7 @@ if (CurrentUserType === null) {
 
 
 
-console.log("check Update----",form.BankName)
+
 
   const FilterdImportedVendorName = ImportedVendors.map((each: any) => each.VendorName)
 
@@ -1431,10 +1431,12 @@ form.HusbendContact!=="Not Available"&&
               <div className="space-y-2 p-1 w-full">
                 <input
                   type="email"
+               
                   name="emailId"
                   value={form.emailId || ''}
                   onChange={handleChange}
                   placeholder="Email ID"
+                    autoComplete="off"
                   className="
       input-field 
       border border-gray-300

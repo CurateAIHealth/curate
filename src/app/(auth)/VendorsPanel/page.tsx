@@ -22,7 +22,7 @@ export default function VendorTable() {
     Fetch()
   }, [])
 
-  console.log("Check Vendor Information---",ImportedVendors)
+ 
   const maskAadhar = (value?: string) =>
   value ? value.replace(/\d(?=\d{4})/g, "•") : "";
 

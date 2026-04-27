@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List, PencilOff } from "lucide-react";
+import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List, PencilOff, Info, PrinterCheck } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { GetInvoiceInfo, GetRegidterdUsers, GetSentInvoiceData, UpdateStatusPayment } from "@/Lib/user.action";
@@ -12,6 +12,9 @@ import { Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilte
 import { useDispatch, useSelector } from "react-redux";
 import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import { useRouter } from "next/navigation";
+import PaymentPopup from "@/Components/PaymentMethod/page";
+import PassbookPopup from "@/Components/Trasactions/page";
+import { invoiceData } from "@/Lib/Content";
 
 
 type InvoiceStatus = "Draft" | "Sent" | "Overdue";
@@ -30,8 +33,12 @@ export default function InvoicesPage() {
   const now = new Date();
   const [monthFilter, setMonthFilter] =useState<any>(now.getMonth() + 1);
   const [yearFilter, setYearFilter] =useState(String(now.getFullYear()));
+    const [openTransactions, setOpenTransactions] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [FetchedInfo, setFetchedInfo] = useState<any>([])
+  const [loading, setLoading] = useState(false);
+  const [openPaymentMethods, setOpenPaymentMethods] = useState(false);
+  const [PaymentInformation,SetPaymentInformation]=useState<any>()
   const [isChecking, setisChecking] = useState(true)
   const [isSending, setIsSending] = useState(false);
   const [search, setSearch] = useState("");
@@ -51,7 +58,7 @@ const refreshInvoices = async () => {
     setisChecking(true)
     const data = await GetInvoiceInfo()
     const CompliteInfo=await GetRegidterdUsers()
-    console.log("Check RegisterdUser----",CompliteInfo)
+  
     setRegUserInfo(CompliteInfo)
     setFetchedInfo(data)
   } catch (err) {
@@ -112,7 +119,7 @@ useEffect(() => {
 
   const DownloadInvoice = async (id: any) => {
     try {
-      console.log("Test Invoice is ----", id);
+   
       setIsSending(true)
       dispatch(UpdateInvoiceIntialStatus(false))
       const SentInvoices: any = await GetSentInvoiceData();
@@ -310,10 +317,16 @@ const RefundAmount = filteredInvoices
 
 const UpdatePaymentStatus=async(A:any)=>{
   setStatus("Updating Payment Status...")
+
+  
+
+
 try{
-const UpdatePayment:any= await UpdateStatusPayment(A)
+const UpdatePayment:any= await UpdateStatusPayment(PaymentInformation,A)
 if(UpdatePayment.success===true){
+  
 setStatus("Payment Status Updated Successfully")
+setOpenPaymentMethods(false)
 }
 }catch(err:any){
 
@@ -380,9 +393,9 @@ const GetTitiles=(ImpId:any)=>{
 }
 
   const UpdateInvoiceMailTemplate = (MainTemplateInfo: any) => {
-    console.log("Check Registratio Fee----", MainTemplateInfo)
+
     const Values=GetTitiles(MainTemplateInfo.ClienId)
-    console.log("Check Task VALUE-----",Values[0].Patienttitle)
+   
      dispatch(
     UpdateInvoiceInfo({
       ...MainTemplateInfo,
@@ -435,7 +448,7 @@ CheckPaymentStatus:CurrentPaymentStatus
 
     }
   };
-  console.log("Check Regisratio Fee--", invoiceProps)
+
   if (isChecking) {
     return (
       <LoadingData />
@@ -720,7 +733,11 @@ CheckPaymentStatus:CurrentPaymentStatus
       </div>
     )}
   </>
-
+ <PassbookPopup
+        open={openTransactions}
+        onClose={() => setOpenTransactions(false)}
+        data={invoiceData}
+      />
 
       <button
         className="flex items-center gap-2 px-4 py-2 cursor-pointer rounded-lg bg-[#1392d3] text-white text-xs font-semibold shadow-sm hover:bg-[#117bb1] transition"
@@ -730,18 +747,24 @@ CheckPaymentStatus:CurrentPaymentStatus
         Download Invoices
       </button>
     </div>
-
+   <PaymentPopup
+        open={openPaymentMethods}
+        loading={loading}
+      ImportedAmount={PaymentInformation?.balanceDue}
+        onClose={() => setOpenPaymentMethods(false)}
+        onSubmit={(Data:any)=>UpdatePaymentStatus(Data)}
+      />
   <div className="w-full border rounded-md overflow-hidden">
 <div
   className="
   grid items-center whitespace-nowrap
   text-xs font-semibold text-white
-  bg-teal-800 border-b px-4 py-3 gap-3
+  bg-teal-800 border-b px-2 py-3 gap-3
 
   grid-cols-3
   sm:grid-cols-5
   md:grid-cols-9
-  lg:grid-cols-13
+  lg:grid-cols-14
 "
 >
 
@@ -760,8 +783,12 @@ CheckPaymentStatus:CurrentPaymentStatus
 
   <div className="col-span-1">Actions</div>
 
-  <div className="hidden lg:block lg:col-span-1">Edit</div>
+  <div className="hidden lg:block lg:col-span-1 ml-8">Edit</div>
   <div className="hidden lg:block lg:col-span-1">Payment</div>
+   <div className="hidden lg:flex lg:col-span-1 flex-col   gap-1 text-[9px] font-semibold text-white">
+  <span>Payment</span>
+  <span className="ml-1">History</span>
+</div>
   <div className="hidden lg:block lg:col-span-1">Download</div>
 </div>
 
@@ -774,7 +801,7 @@ CheckPaymentStatus:CurrentPaymentStatus
         Number(String(inv.CareTakeCharge || "0").replace("₹", "")) +
       Number(inv.RegistrationFee)
 
-    const balance = Number(total) - Number(inv.AdvanceReceived || 0)
+    const balance =inv.balanceDue?inv.balanceDue: Number(total) - Number(inv.AdvanceReceived || 0)
 
     return (
       <div
@@ -786,7 +813,7 @@ CheckPaymentStatus:CurrentPaymentStatus
   grid-cols-3
   sm:grid-cols-5
   md:grid-cols-9
-  lg:grid-cols-[100px_180px_100px_100px_100px_100px_100px_100px_100px_80px_100px_100px]
+  lg:grid-cols-[100px_140px_100px_100px_100px_100px_70px_90px_100px_80px_70px_100px_90px]
 "
       >
         {/* Patient */}
@@ -820,7 +847,7 @@ CheckPaymentStatus:CurrentPaymentStatus
 
  
         {inv.PaymentStatus ? (
-          <span className="hidden sm:block px-3 py-1 rounded-full text-[10px] text-center font-medium text-green-600 border border-green-300">
+          <span className="hidden sm:block px-1 py-1 rounded-full text-[10px] w-[80px] text-center font-medium text-green-600 border border-green-300">
             Paid
           </span>
         ) : (
@@ -835,7 +862,7 @@ CheckPaymentStatus:CurrentPaymentStatus
           </div>
         )}
 
-        <div className="hidden md:block">{total}/-</div>
+        <div className="hidden md:block">{Number(total).toFixed(2)}/-</div>
 
 
         <div className="hidden md:block">
@@ -865,7 +892,7 @@ CheckPaymentStatus:CurrentPaymentStatus
         </div>
 
         {/* Edit */}
-        {inv.status === "Draft" ?<div className="hidden lg:flex items-center cursor-pointer">
+        {inv.status === "Draft" ?<div className="hidden lg:flex items-center ml-8 cursor-pointer">
          <div className="relative inline-block group cursor-pointer">
   <p className="flex items-center gap-2 text-gray-800">
    <PencilOff size={15}/>
@@ -876,7 +903,7 @@ CheckPaymentStatus:CurrentPaymentStatus
     Make sure the invoice is sent before Editing
   </span>
 </div>
-        </div>:<div className="hidden lg:flex items-center cursor-pointer">
+        </div>:<div className="hidden lg:flex items-center ml-8 cursor-pointer">
           <Pencil
             className="w-4 h-4"
             // onClick={() => EditInvoice(inv.id)}
@@ -885,7 +912,7 @@ CheckPaymentStatus:CurrentPaymentStatus
         </div>}
 
         {/* Payment Status */}
-        <div
+      {inv.status !== "Draft"?  <div
           className={`hidden lg:flex px-1 py-1 text-[10px] font-medium border rounded-md w-fit h-fit items-center gap-2 ${
             inv.PaymentStatus
               ? "border-green-400 text-green-600 bg-green-50"
@@ -896,15 +923,30 @@ CheckPaymentStatus:CurrentPaymentStatus
 
           {!inv.PaymentStatus && (
             <button
-              className="px-3 py-[3px] bg-teal-800 text-white text-[10px] cursor-pointer rounded-full hover:bg-teal-900"
-              onClick={() => UpdatePaymentStatus(inv.id)}
-            >
-              Update
-            </button>
+  className="px-2 py-2 bg-teal-800 text-white h-6 w-17 text-[9px] leading-tight cursor-pointer rounded-full hover:bg-teal-900 flex flex-col items-center justify-center"
+ onClick={() =>{SetPaymentInformation(inv );setOpenPaymentMethods(true)}}
+>
+  <span>Record</span>
+  <span>Payment</span>
+</button>
           )}
-        </div>
+        </div>:<div className="hidden lg:flex items-center ml-8 cursor-pointer">
+         <div className="relative inline-block group cursor-pointer">
+  <p className="flex items-center gap-2 text-gray-800">
+   <Info   size={20} className="text-gray-600"/>
+  </p>
 
-    
+  <span className="absolute bottom-2 right-4 mb-2 hidden group-hover:block 
+               bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+Complete invoice sending to update status
+
+  </span>
+</div>
+        </div>}
+
+     <div className="flex flex-col ml-9">
+         <PrinterCheck  size={18} className="text-teal-700" onClick={()=>setOpenTransactions(true)}/>
+        </div>
         <div className="hidden lg:flex justify-center cursor-pointer relative group">
   {inv.status !== "Draft" ? (
     <Download onClick={() => DownloadInvoice(inv.id)} />

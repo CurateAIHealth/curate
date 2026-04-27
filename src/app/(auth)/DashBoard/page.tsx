@@ -185,7 +185,7 @@ export default function Dashboard() {
 
   //     if (userId) {
   //       const user = await GetUserInformation(userId);
-  //       console.log("Check for First Name-----",user)
+  //      
   //       if (mounted && user?.Email) {
   //         dispatch(CurrentLoginUser(user.Email));
   //         SetProfileName(user.FirstName)
@@ -278,7 +278,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (ImportedInformationOfCallEnquiry) {
 
-      console.log("Imported Information-----", ImportedInformationOfCallEnquiry)
+
 
       const mapped = mapEnquiryToForm(ImportedInformationOfCallEnquiry);
 
@@ -288,10 +288,7 @@ export default function Dashboard() {
       }));
 
       setShowCallEnquiry(true);
-      console.log(
-        "Check Imported Information of Call Enquiry-----",
-        ImportedInformationOfCallEnquiry
-      );
+     
     }
   }, [ImportedInformationOfCallEnquiry]);
   const run = useCallback(async () => {
@@ -701,7 +698,7 @@ export default function Dashboard() {
   }
 
   const navigateToEmployes = () => {
-    console.log('Check Email Status-----', isManagement)
+   
 
 
 
@@ -912,7 +909,7 @@ export default function Dashboard() {
       setNotificationStatus("Please Wait.....")
       const RegistrationFee = DiscountPrice - ClientDiscount
       const PostinNotification: any = await PostCallEnquiryNotification(EnquiryForm, Emails, RegistrationFee)
-      console.log('Chec Retuen Info-----', PostinNotification)
+
 
 
       if (PostinNotification.success) {
@@ -1010,7 +1007,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi Admin – Welcome to Admin Dashboard
+              Hi Admin – Welcome to Admin Dashboard.
             </span>
           </div>
 
@@ -1257,7 +1254,7 @@ export default function Dashboard() {
                 CasualLeaves={compliteInfo?.Casual}
                 usedLeaves={compliteInfo?.UsedLeaves}
                 onSubmit={async (data) => {
-                  console.log("Attendance Data:", data);
+               
                   await axios.post("/api/attendance", data);
                 }}
                 onClose={() => setAttendeceView(false)}

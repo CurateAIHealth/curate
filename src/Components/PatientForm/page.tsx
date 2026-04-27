@@ -199,7 +199,7 @@ export default function PatientForm() {
         ReferdVendorId:VendorId
 
       };
-      console.log("Form Data---", payload)
+     
       const result = await UpdatePatientInformation(payload);
       if (!result.success) {
         setSubmissionRequest(true);
@@ -292,7 +292,7 @@ export default function PatientForm() {
       router.push('/SuccessfulRegistration');
     } catch(errr:any) {
       setStatusMessage('Unexpected error. Please try again.');
-      console.log("Registration Error----",errr)
+   
     } finally {
       setIsSubmitting(false);
     }
@@ -308,7 +308,7 @@ export default function PatientForm() {
     'text-blue-500',
     'text-green-600',
   ];
-  console.log("Test---", familyMembers)
+  
   return (
     <form
       onSubmit={handleSubmit}

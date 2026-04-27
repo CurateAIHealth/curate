@@ -130,7 +130,7 @@ const payload = {
 };
  
 const Argu = mainTitle=== "Business Vendor Form" ?  "Healthcare Assistant":"patient" ;
- console.log('Posted Data----',payload);
+
    const result = await UpdateVendorInformation(payload);
       if (result.success===true) {
  
@@ -180,7 +180,7 @@ const Argu = mainTitle=== "Business Vendor Form" ?  "Healthcare Assistant":"pati
   const termsSection = sections.find((s) =>
     (s.title || "").toLowerCase().includes("terms")
   );
-  console.log('First Posted Data----',InputFormData);
+
   return (
     <div
       className="

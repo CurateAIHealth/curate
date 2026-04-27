@@ -96,7 +96,7 @@ CareTakerPrice:record.CareTakerPrice,
 
         days: record.Attendance || [],
       }));
-      console.log('Check for Ids-------',formatted)
+    
 ReplacementCach=formatted?? [],
 compliteHCPFullInfo=HCPFullInfo??[],
 ReplacementReasonsCache=ReplacementReasons?? []
@@ -202,7 +202,7 @@ return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||nul
 
   }
 }
-console.log("Check For Salary Info--------",)
+
 
 
  if (isChecking) {
@@ -444,7 +444,7 @@ console.log("Check For Salary Info--------",)
             
               <button
                 onClick={() => {
-                    console.log("Check Attendence-----",item)
+                  
                   setAttendanceData(item?.days || []);
                   setShowAttendancePopup(true);
                 }}

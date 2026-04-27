@@ -131,7 +131,7 @@ useEffect(() => {
 
     return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
   };
-console.log("Checking Count------",ReplacementReasons)
+
   const handleDelete = (id: string) => {
     setPlacements((prev) => prev.filter((placement) => placement.id !== id));
   };
@@ -167,7 +167,7 @@ const FilterValues =
 
     return matchesSearch && matchesMonth && matchesYear;
   }) || [];
-console.log("Check Placement Datta-----",placements)
+
 const GetReplacementMessage = (A: any) => {
 
   const results =ReplacementReasons?.filter((each: any) => each?.HCA_id=== A ) ?? [];

@@ -136,8 +136,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
 
   const UpdateRemainderTime = async (id: any, each: number) => {
-    console.log("Test Userid---", id)
-    console.log("Test Each Timeing---", each)
+   
     const currentTime = new Date();
     const updatedTime = new Date(currentTime.getTime() + each * 60000);
     const hours = updatedTime.getHours().toString().padStart(2, "0");
@@ -147,7 +146,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     const month = (updatedTime.getMonth() + 1).toString().padStart(2, "0");
     const day = updatedTime.getDate().toString().padStart(2, "0");
     const formattedDate = `${year}-${month}-${day}`;
-    console.log("Updated Time (+15 mins):", formattedTime);
+   
     const UpdateReminderTimeing:any = await UpdateRemainderTimer(id, formattedTime,formattedDate)
     if(UpdateReminderTimeing.success){
         handleClose()

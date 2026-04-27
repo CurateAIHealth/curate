@@ -100,7 +100,7 @@ const handleBankChange = async(e: any) => {
 
 
 
-console.log("Complete Info in Popup:", bankDetails);
+
 
    const GetHCPPayment = (A: any) => {
     if (!CompliteInfo?.length || !A) return "Not Entered";
