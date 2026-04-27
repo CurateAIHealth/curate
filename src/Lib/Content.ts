@@ -2640,7 +2640,9 @@ export const fields= [
   { key: "startDate", label: "Start Date", type: "date" },
   { key: "endDate", label: "End Date", type: "date" },
   { key: "hcaPrice", label: "HCA Price (Per Day)", placeholder: "Enter HCA price" },
-  { key: "serviceDays", label: "Service Days", placeholder: "Enter service days" },
+    { key: "serviceDays", label: "Service Days", placeholder: "Enter service days" },
+   { key: "hcaName", label: "HCA Name", placeholder: "Enter Name" },
+
 ]
 
 
