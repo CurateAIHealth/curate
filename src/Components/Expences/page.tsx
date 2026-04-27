@@ -123,7 +123,7 @@ const SentTestEmail=async()=> {
     body: "We have initiated notifications through the Slack application. This message is being used to inform all staff members about this new initiative and keep everyone updated accordingly.",
   },
 });
-    console.log("Slack Results",res.data);
+    
   
 }
 

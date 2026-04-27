@@ -548,8 +548,7 @@ const ExtendTimeSheet = async () => {
       },
     ];
 
-    console.log("Check for Tha Datata-----", ExtendInfo);
-
+   
     const deploymentRes = await InsertDeployment(
       StarteDate,
       LastDate,

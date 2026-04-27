@@ -451,7 +451,7 @@ const handleImageChange = useCallback(
             SetUpdatingStatus(true);
             const PostResult = await PostFullRegistration(FinelForm);
                 const Result=await UpdateFinelVerification(localValue)
-            console.log('Result---', { ...form, Documents: Docs,DocumentSkipReason:Reason });
+          
 
             const Timer=setInterval(()=>{
                 router.push("/HomePage")

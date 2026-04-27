@@ -550,7 +550,7 @@ export const UpdatePatientInformation = async (Patient: {
 };
 export const UpdateNewLeadInformation = async (FinelPostingData: any) => {
   try {
-    console.log("Test User-id---", FinelPostingData.userId);
+
 
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
@@ -1000,8 +1000,7 @@ export const UpdateInvoisefromDb = async (data: any) => {
     if (!data.clientId) {
       throw new Error("ClientId is required");
     }
-console.log("Check Imported Data---",data
-)
+
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Invoices");
@@ -1055,28 +1054,55 @@ console.log("Check Imported Data---",data
   }
 };
 
-export const UpdateStatusPayment=async(InvoiceId:any)=>{
-  try{
-     const cluster = await clientPromise;
+export const UpdateStatusPayment = async (
+  FilterInfor: any,
+  UpdatedInformation: any
+) => {
+  try {
+    const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Invoices");
- const UpdateVerificationStatus = await collection.updateOne(
-      { Invoice: InvoiceId },
+
+    const amount = Number(UpdatedInformation.amount);
+
+    const updateVerificationStatus = await collection.updateOne(
       {
-        $set: {
-          PaymentStatus: true,
+        ClienId: FilterInfor.ClienId,
+        SeriviceStartDate: FilterInfor.StartDate,
+      },
+      {
+        $inc: {
+          balanceDue: -amount,
         },
+        $set: {
+          PaymentStatus:
+            UpdatedInformation.paymentType === "full",
+        },
+
+
+        $push: {
+          Trasaction: {
+            ...UpdatedInformation,
+          },
+        },
+      },
+      {
+        upsert: false,
       }
     );
 
     return {
       success: true,
-      message: "PDR Status updated Successfully.",
+      message: "Payment status updated successfully.",
+      data: updateVerificationStatus,
     };
-  }catch(err:any){
-    
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err.message || "Something went wrong.",
+    };
   }
-}
+};
 
 export interface HCAInfo {
   userType: any;
@@ -1912,7 +1938,7 @@ export const PostHCAFullRegistration = async (Info: any) => {
 
 export const InserTimeSheet=async(ClientUserId:any,HCAUserId:any,Name:any,Email:any,Contact:any,ClientAdress:any,NameHCA:any,Contacthca:any,TimeSheetArray:any)=>{
   try{
-        console.log("Checking With Fucntion Adress----", ClientAdress)
+       
 const cluster=await clientPromise
 const db=cluster.db("CurateInformation")
 const collection=db.collection("TimeSheet")
@@ -2660,7 +2686,7 @@ export const UpdateClientTimeSheet = async (
 
     const date = new Date(ImpDate)
     const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`
-console.log("Check Month Key-----",ImpDate)
+
     const result = await collection.updateOne(
       {
         ClientId: ImpClientId,
@@ -2735,7 +2761,7 @@ export const DeleteClientFromDeolyment = async (
       message: "Client deleted Successfully",
     }
   } catch (e) {
-    console.log("DeleteClientFromDeolyment Error:", e)
+   
     return {
       success: false,
       message: "Something went wrong while deleting",
@@ -3456,7 +3482,7 @@ export const updateServicePrice = async (
       },
       { upsert: true }
     );
-console.log("Check For Price---",careTakerPrice)
+
     return {
       success: result.acknowledged && result.matchedCount > 0
     };
@@ -4700,7 +4726,7 @@ export const UpdateDocumentFollowUpStatus = async (
   data: Record<string, any>
 ) => {
   try {
-    console.log("Check----", UserId);
+  
 
     const Cluster = await clientPromise;
     const Db = Cluster.db("CurateInformation");
@@ -4769,7 +4795,7 @@ export const UpdateDocumentFollowUpStatusInFullInfo = async (
   data: Record<string, any>
 ) => {
   try {
-    console.log("Check----",UserId)
+   
     const Cluster = await clientPromise;
     const Db = Cluster.db("CurateInformation");
     const Collection = Db.collection("CompliteRegistrationInformation");
@@ -4988,7 +5014,7 @@ export const UpdatedUserJoingDate = async (
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
-console.log("Check Date Type----",UpdatedStatus)
+
     const result = await collection.updateOne(
       { userId: UserId }, 
       {

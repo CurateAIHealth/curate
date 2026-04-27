@@ -91,7 +91,7 @@ const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const cardRefs = useRef<{ [key: string]: HTMLElement | null }>({});
 const updatedRefresh=useSelector((afterEach:any)=>afterEach.updatedCount)
 const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
-console.log("Test Informed Information-----",ExsitingInformedUsers)
+
 
  useEffect(() => {
   let mounted = true;
@@ -118,7 +118,7 @@ useEffect(() => {
   const availability = TimeSheetData.filter(
     (each: any) => each.ClientId === activeClient.userId
   );
-console.log("Check file-----",TimeSheetData)
+
   setShowAssignConfirm(availability.length > 0);
 }, [TimeSheetData, activeClient]);
 
@@ -302,7 +302,7 @@ const filteredHcps = hcps.filter((each: any) => {
 });
 
 
-console.log ("Check Languages------",)
+
 
 
 const handleShare = async (hcp: any, clientUserId: any) => {

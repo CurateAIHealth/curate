@@ -205,7 +205,7 @@ useEffect(() => {
               setIsChecking(false);
             }
 
-            console.log("Loaded from cache");
+        
             return;
           }
         }
@@ -273,7 +273,7 @@ const GetHCPTypeCount = (HCPType: string) => {
     return 0;
   }
 };
-console.log("Check Current Task Information------",DeploymentInfo)
+
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
    
       dispatch(Refresh(`Updating Client Status....`))
@@ -360,7 +360,7 @@ console.log("Check Current Task Information------",DeploymentInfo)
     PDRStatus:each.PDRStatus||"No Available",
     Type:each.Type
   }));
-console.log("Check----",users)
+
   const UpdatedFilterUserType = Finel
   .filter((each) => {
 
@@ -446,7 +446,7 @@ console.log("Check----",users)
   .reverse();
 
  
-console.log("Check for the Issue------",UpdatedFilterUserType)
+
 
   const filterByMonthAndYear = (
     each: any,
@@ -1733,7 +1733,7 @@ Awaiting Conversion
 
 
   const UpdateNavigattosuggetions = (D: any) => {
-    console.log("Testing------")
+  
     router.push("/Clientsuggetions")
     dispatch(UpdateClientSuggetion(D))
   }
@@ -1769,7 +1769,7 @@ const handleSave = async (data: any) => {
     body: "Hi Sir, Kindly requesting HCP salary update. Please check notification in the application. Thank you.",
   },
 });
-    console.log("Slack Results",res.data);
+    
       dispatch(
         Refresh(
           "Salary update request submitted to management. You will be notified once the status is updated."
@@ -1816,7 +1816,7 @@ const handleSave = async (data: any) => {
         ?.map((each: any) => each?.HCAComplitInformation)
         ?.find((info: any) => info?.UserId === A)
       ?.["ApprovedBy"]||"Salary Not Updated Yet";
-console.log("Check for Current Task-------",address)
+
     return address==="Salary Not Updated Yet"?address:`Salary Updated By ${address}`
   };
 

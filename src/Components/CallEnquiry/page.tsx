@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from "react-redux";
 import StaffNotificationModal from "../CallEnquiryNotification/page";
 
 interface CallEnquiryUser {
+  CurateNewLead: string;
   ClientStatus: string | number | readonly string[] | undefined;
   NewLead: string | undefined;
   LeadDate: any;
@@ -111,7 +112,7 @@ if(ComeetsResults.success){
     ExtraWorkType: ""
      }
   const PostinNotification:any=await PostCallEnquiryNotification(EnquiryForm,Emails,RegistrationFee)
-  console.log('Chec Retuen Info-----',PostinNotification)
+
   
   
   if(PostinNotification.success){
@@ -211,7 +212,7 @@ setShowNotification(true)
 const UpdateCurrentClientStatus=await   UpdateClientStatusinCallEnquiry(UserId,Value)
 if(UpdateCurrentClientStatus.success){
 
-  dispatch(Refresh(`Lead went to ${Value} page`))
+  dispatch(Refresh(`Lead went to ${Value} page Successfully`))
 }
 }catch(err:any){
 
@@ -373,7 +374,7 @@ text-left
       </div>
 
       <div className="text-xs text-gray-500">
-         {toProperCaseLive(user.NewLead) || "Not Provided"}
+         {toProperCaseLive(user.NewLead) ||toProperCaseLive(user.CurateNewLead)|| "Not Provided"}
       </div>
 
       <div className="text-xs text-gray-600">

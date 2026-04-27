@@ -195,7 +195,7 @@ const FinelPreviewData = useMemo(() => {
     setPreviwData(cleaned);
   }, [FinelPreviewData]);
 
-  console.log("Saved Row Data:", FinelPreviewData);
+
   if (isChecking) {
     return (
       <LoadingData />

@@ -111,7 +111,7 @@ export default function NotificationsCenter() {
 
 
         if (action === "Approved" && info?.Type === "Attendance Edit Request") {
-          console.log("Info for Attendance Edit Request Approval----", info);
+      
           const response = await EditAttendanceByClientId(
             info?.ClientId,
             info?.HCPId,
@@ -475,7 +475,7 @@ export default function NotificationsCenter() {
                       className="px-4 py-2 rounded-full border cursor-pointer border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 transition-all duration-200 text-sm font-medium"
                       onClick={() => {
                         setSelectedItem(item);
-                        console.log("Selected Item for Modal:", item);
+                     
                         setShowModal(true);
                       }}
                     >

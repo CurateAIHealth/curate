@@ -89,8 +89,7 @@ const [service, setService] = useState("");
   const DeploaymentInformation = useSelector(
     (state: any) => state.DeploaymentData
   );
- console.log("Check DEPLOYMENTINFORMATION-----",DeploaymentInformation
- )
+
   const options = [
     "Business Vendor",
     "Baby Care",
@@ -109,8 +108,7 @@ useEffect(() => {
     if (!reduxFormData) return;
 
     setFormData(reduxFormData);
-console.log("Check for Client Id-----",reduxFormData
-)
+
     const fullInformation = await GetUsersFullInfo();
   setUsers(fullInformation)
 
@@ -220,7 +218,7 @@ if (url) {
     );
 
     const handleSave = async (Item: EditingKeys) => {
-      console.log("Saving Updated Data:", formData);
+     
 
       setIsEditing((prev) => ({ ...prev, [Item]: !prev[Item] }));
     };
@@ -298,9 +296,7 @@ if (url) {
     payTerms:each.payTerms
   }));
 const GetHCPName=Finel.filter((each:any)=>each.userId=== DeploaymentInformation.HCA_Id)
-console.log("Check For PDR HCA--------",GetHCPName[0]?.FirstName
-)
-console.log("Check finel Informatio------",Finel)
+
 
   const HCA_List = Finel.filter((each: any) => {
   const typeMatch =

@@ -194,7 +194,6 @@ useEffect(() => {
 
 
 
-console.log("Check for Current Test Case------",RegisterdUsers)
 
 useEffect(() => {
   if (!selectedDate) {
@@ -289,7 +288,7 @@ const matchesSearchAndMonth = (
 const PostRefunRequest = async (data: any) => {
 
   try {
- console.log("Check for Refund Request Data----",data)
+
     SetActionStatusMessage("Please Wait....");
 
     const updateSalary = await PostRefundRequest(
@@ -339,7 +338,7 @@ const getUserInvoiceInfo = GetInvoiceList?.filter(
     selectedInvoice?.StartDate
       ? selectedInvoice
       : ArgumentInfo;
-      console.log('CaretTakerCharge-----',Info)
+   
   const FinelInfo = {
     ...payloadToDispatch,
     CareTakeCharge:Info?.CareTakeChare||Info?.ServiceCharge,
@@ -426,7 +425,7 @@ const normalizedAttendance =
     
   };
 });
-console.log("Check for Amount----",users)
+
  const filterProfilePic = (users || []).map(
         (each: any) => each?.HCAComplitInformation ?? {}
       );
@@ -724,7 +723,7 @@ serviceCharge
           AttendeceStatus: "Present"
         }
       ]
-      console.log('Check for Tha Datata-----',ExtendInfo)
+    
  const deploymentRes = await InsertDeployment(
         StarteDate,
         LastDate,

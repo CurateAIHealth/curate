@@ -43,7 +43,7 @@ const ClientTable = () => {
   const [HCPName,setHCPName]=useState("")
  const [updatedAttendance, setUpdatedAttendance] = useState<AttendanceState>({});
  const [SaveButton,setSaveButton]=useState(false)
-  console.log("Test Attendence Status----",Fineldate)
+ 
 
   const [TimeSheet_UserId, setTimeSheet_UserId] = useState("");
   const [selectedReason, setSelectedReason] = useState("");
@@ -227,7 +227,7 @@ SetActionStatusMessage("Please Wait Working On Time Sheet Extention")
       .toLocaleDateString('en-IN');
     const PostTimeSheet: any = await TestInserTimeSheet(DateofToday, LastDateOfMonth, ExtendInfo.Status, ExtendInfo.Address, ExtendInfo.contact, ExtendInfo.name, ExtendInfo.PatientName, ExtendInfo.Patient_PhoneNumber, ExtendInfo.RreferralName, ExtendInfo.HCA_Id, ExtendInfo.Client_Id, ExtendInfo.HCA_Name, ExtendInfo.HCAContact, ExtendInfo.
       hcpSource, ExtendInfo.provider, ExtendInfo.payTerms, ExtendInfo.cTotal, ExtendInfo.cPay, ExtendInfo.hcpTotal, ExtendInfo.hcpPay, CurrentMonth, ["P"], TimeStamp, ExtendInfo.invoice, ExtendInfo.Type)
-    console.log("Test Updated Result----", PostTimeSheet)
+  
 
     if(PostTimeSheet.success===true){
      
@@ -362,7 +362,6 @@ const handleLogout = () => {
     new Date(0, i).toLocaleString("default", { month: "long" })
   );
 
-  console.log("Check=======1",FilterFinelTimeSheet)
 
   const filteredClients = FilterFinelTimeSheet.filter(client =>
  client.PDRStatus === activeTab

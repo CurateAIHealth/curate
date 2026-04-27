@@ -5,16 +5,16 @@ export default async function handler(req: any, res: any) {
   let browser;
 
   try {
-    console.log("🚀 PDF API called");
+   
 
     const { html } = req.body;
 
     if (!html) {
-      console.log("❌ No HTML received");
+     
       return res.status(400).json({ error: "HTML content is required" });
     }
 
-    console.log("ENV:", process.env.NODE_ENV);
+   
 
     // ==============================
     // 🚀 PRODUCTION (VERCEL)
@@ -22,7 +22,6 @@ export default async function handler(req: any, res: any) {
     if (process.env.NODE_ENV === "production") {
       const executablePath = await chromium.executablePath();
 
-      console.log("Executable Path:", executablePath);
 
       if (!executablePath) {
         throw new Error("Chromium executable path is null");
@@ -46,12 +45,10 @@ export default async function handler(req: any, res: any) {
   headless: chromium.headless,
 });
 
-      console.log("✅ Browser launched (production)");
+    
     }
 
-    // ==============================
-    // 💻 LOCAL DEVELOPMENT
-    // ==============================
+   
     else {
       const puppeteerFull = await import("puppeteer");
 
@@ -59,28 +56,28 @@ export default async function handler(req: any, res: any) {
         headless: true,
       });
 
-      console.log("✅ Browser launched (local)");
+    
     }
 
     const page = await browser.newPage();
 
-    console.log("📄 Setting HTML content...");
+  
 
    await page.setContent(html, {
   waitUntil: "networkidle0",
   timeout: 0, // remove timeout crash
 });
-    console.log("🖨 Generating PDF...");
+    
 
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
     });
 
-    console.log("✅ PDF generated");
+  
 
     await browser.close();
-    console.log("🛑 Browser closed");
+   
 
     return res.status(200).json({
       pdf: Buffer.from(pdfBuffer).toString("base64"),

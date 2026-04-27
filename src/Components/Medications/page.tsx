@@ -160,7 +160,7 @@ const dispatch=useDispatch()
 
   const handleSave = () => {
     dispatch(UpdateMedication(weeks))
-    console.log('Medication Data to Post in DB:', weeks);
+
   };
 
   return (

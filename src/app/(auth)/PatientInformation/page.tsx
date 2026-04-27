@@ -126,7 +126,7 @@ const handleLogout = () => {
     router.push("/AdminPage");
   };
   const handleSave = async (Item:EditingKeys) => {
-    console.log("Saving Updated Data:", formData);
+   
 
     setIsEditing((prev)=>({...prev, [Item]:!prev[Item]}));
   };
@@ -144,7 +144,7 @@ const UpdateSavedData=async()=>{
   setStatusMessage("Please Wait Updating Profile");
   try{
     const UpdateProfile=await UpdateClientInformation(formData.userId,formData)
-    console.log("Check For Issues----",UpdateProfile)
+  
     if(UpdateProfile.success===true){
 setStatusMessage("Profile Updated Successfully");
     }
@@ -155,7 +155,7 @@ setStatusMessage("Profile Updated Successfully");
   }
 }
 
-console.log("Check of Chnages,,,",formData)
+
   return (
    
 

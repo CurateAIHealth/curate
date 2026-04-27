@@ -31,7 +31,7 @@ SetAttendenceInfo(PlacementInformation)
   return !hasToday;  
 });
 
-console.log("Test----",result)
+
  return (
     <div className="p-6 max-w-5xl mx-auto">
       <h2 className="text-2xl font-bold text-center text-[#ff1493] mb-6">

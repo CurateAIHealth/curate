@@ -276,8 +276,7 @@ const toProperCaseLive = (value: string) => {
       ]);
       setImportedVendors(RegisterdUsers.filter((each: any) => each.userType === "Vendor"))
       setTimeStameDetails(`${Sign_in_UserInfo?.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`)
-     console.log('Check for Post Datat-----', GetUserInfo
-)
+ 
 setFetchedInfo(GetUserInfo)
 setFormData({...formData,clientPhone:GetUserInfo?.ContactNumber,
 clientEmail:GetUserInfo?.Email,
@@ -384,7 +383,7 @@ const handleCmChange = (value: string) => {
     const generatedUserId = uuidv4();
 
     const FinelPostingData = { ...formData, serviceCharges: formData.serviceCharges?formData.serviceCharges:FetchedInfo.serviceCharges, RegistrationFee: DiscountPrice - ClientDiscount?DiscountPrice - ClientDiscount:FetchedInfo.RegistrationFee, Medications: MedicationData, userId: FetchedInfo.userId, SuitableHCP: "" }
-console.log("Check Response-----",FinelPostingData)
+
     const PostResult = await UpdateNewLeadInformation(FinelPostingData);
     if (PostResult.success) {
           setStatusMessage(`${PostResult.message},Riderecting to HCP Suggetion....`);

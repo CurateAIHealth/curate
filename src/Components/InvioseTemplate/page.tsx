@@ -135,10 +135,7 @@ const recalcTotals = () => {
   const handleSendEmail = async() => {
   setIsSending(!isSending)  
     const InvoiceInformation={...editInvoice,terms:getDaysBetween(editInvoice.date,editInvoice.dueDate)||0}
-    console.log("Updated Invoice Info:",InvoiceInformation );
-    console.log("Updated Bill To Info:", editBillTo);
-    console.log("Updated Items:", editItems);
-    console.log("Updated Totals:", editTotals);
+  
     const PostData= {
     invoice:InvoiceInformation ,
     billTo:editBillTo ,

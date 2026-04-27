@@ -52,7 +52,7 @@ export default function InvoiceForm() {
   const InvoiceData = useSelector((state: any) => state.InvoiceInfo);
   const [isEditing, setIsEditing] = useState(false);
 
-console.log("Check Invoise Information------",InvoiceData)
+
   const [ShowServices,setShowServices]=useState(false)
   const [otherExpenses, setOtherExpenses] = useState<any>();
   const [discountType, setDiscountType] = useState<"flat" | "percent">("flat");
@@ -266,7 +266,7 @@ invoice.number,
     totals: invoiceProps.totals,
   });
 
-  console.log("PostedSent Invoces Data----",save);
+
  
   const { default: html2pdf } = await import("html2pdf.js");
 
@@ -299,7 +299,7 @@ const pdfBlob = await html2pdf()
 
     // const pdfResponse = await axios.post("/api/generate-pdf", { html });
 
-//     console.log("PDF Response:", pdfResponse);
+
 // const Imagb64:any= await getBase64Image("https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png")
 //     const pdfBase64 = pdfResponse.data.pdf;
 
@@ -425,16 +425,15 @@ if(UpdateInvoiceStatus?.success===true){
 //       totals: invoiceProps.totals,
 //     });
 
-//     console.log("PostedSent Invoces Data----", save);
 
 //     const html = element.outerHTML;
 
 //     // 👉 ADD DEBUG HERE
-//     console.log("HTML length:", html.length);
+//     
 
 //     const pdfResponse = await axios.post("/api/generate-pdf", { html });
 
-//     console.log("PDF Response:", pdfResponse);
+
 
 //     const pdfBase64 = pdfResponse.data.pdf;
 

@@ -152,8 +152,7 @@ const UpdateCurrentAttendence = async () => {
     const flexDate = `${selectedYear}-${selectedMonth}-${String(
        new Date(selectedDate).getDate()
     ).padStart(2, "0")}`;
-    console.log("First Check-----",`${selectedYear}-${selectedMonth}`)
-    console.log("Second Check----",flexDate)
+  
     const AttendenceUpdateResult: any = await EditAttendanceByClientId(
       A,
       B,
@@ -176,7 +175,7 @@ const UpdateCurrentAttendence = async () => {
   const UpdateMultipleAttendence=async()=>{
     try{
       setStatusMessage("Please Wait.....")
-console.log("Check for Ids----",selectedHCPIds)
+
 const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
         selectedHCPIds,
         `${currentYear}-${currentMonth}`,

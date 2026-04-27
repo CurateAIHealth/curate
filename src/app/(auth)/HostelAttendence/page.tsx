@@ -137,7 +137,7 @@ const UpdateAttendence = async (name: any, Id: any, AttendanceVaue: any) => {
   setstausMessage("❌ Failed to mark attendance");
 };
 
-console.log("Checkk0-------",Infodata)
+
 const handleLogout = () => {
 
   Router.push('/DashBoard'); 
