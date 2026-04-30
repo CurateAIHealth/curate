@@ -1844,11 +1844,11 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "Professional Education Year Start": Info.professionalEducationYearStart,
       "Professional Education Year End": Info.professionalEducationYearEnd,
 
-      "HomeAssistance":Info.HomeAssistance,
+      "HomeAssistance":Info.HomeAssistance.filter((s: any) => s !== "Select All"),
       "Registration Council": Info.registrationCouncil,
       "Registration No": Info.registrationNo,
-      "ProfessionalSkills": Info.professionalSkill,
-      "HandledSkills":Info.HandledSkills,
+      "ProfessionalSkills": Info.professionalSkill.filter((s: any) => s !== "Select All"),
+      "HandledSkills":Info.HandledSkills.filter((s: any) => s !== "Select All"),
       "Certified By": Info.certifiedBy,
       "Professional Work 1": Info.professionalWork1,
       "Professional Work 2": Info.professionalWork2,
@@ -4105,6 +4105,79 @@ export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: an
   } catch (err: any) {
     console.error("Error replacing HCAComplitInformation:", err);
     return null;
+  }
+};
+
+export const updateHCARegistration = async (
+  userId: string,
+  HCA: Partial<HCAInfo>
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const updateData: any = {
+      updatedAt: new Date(),
+    };
+
+    if (HCA.FirstName)
+      updateData.FirstName = encrypt(HCA.FirstName);
+
+    if (HCA.LastName)
+      updateData.LastName = encrypt(HCA.LastName);
+
+    if (HCA.Gender)
+      updateData.Gender = encrypt(HCA.Gender);
+
+    if (HCA.DateOfBirth)
+      updateData.DateOfBirth = encrypt(HCA.DateOfBirth);
+
+    if (HCA.ContactNumber) {
+      updateData.ContactNumber = encrypt(HCA.ContactNumber);
+      updateData.phoneHash = hashValue(HCA.ContactNumber);
+    }
+
+    if (HCA.Email) {
+      updateData.Email = encrypt(HCA.Email);
+      updateData.emailHash = hashValue(HCA.Email.toLowerCase());
+    }
+
+    if (HCA.AadharNumber) {
+      updateData.AadharNumber = encrypt(HCA.AadharNumber);
+      updateData.aadharHash = hashValue(HCA.AadharNumber);
+    }
+
+    if (HCA.Password) {
+      updateData.Password = hashValue(HCA.Password);
+      updateData.PreviewPassword = encrypt(HCA.Password);
+    }
+
+    if (HCA.Location) updateData.Location = HCA.Location;
+    if (HCA.CurrentStatus) updateData.CurrentStatus = HCA.CurrentStatus;
+    if (HCA.StaffType) updateData.StaffType = HCA.StaffType;
+    if (HCA.ClientNote) updateData.ClientNote = HCA.ClientNote;
+
+  
+    const result = await collection.updateOne(
+      { userId: userId },
+      { $set: updateData }
+    );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "User not found.",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Profile updated successfully.",
+    };
+  } catch (err: any) {
+    console.error("Error in updateHCARegistration:", err);
+    throw err;
   }
 };
 

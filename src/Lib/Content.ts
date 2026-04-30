@@ -489,6 +489,7 @@ export const filterColors: Record<string, string> = {
 
 
 export const PROFESSIONAL_SKILL_OPTIONS: string[] = [
+  "Select All",
   "Diaper Care",
   "Emergency Care",
   "CPR",
@@ -503,6 +504,7 @@ export const PROFESSIONAL_SKILL_OPTIONS: string[] = [
 ];
 
 export const Home_Assistance_Needs = [
+  "Select All",
   "Emotional Support",
   "Basic Medical Knowledge",
   "Personal Care",
@@ -2047,7 +2049,7 @@ export const SERVICE_SUBTYPE_MAP:any = {
 
 
 
-export const PatientTypes=[ "Independent Patients",
+export const PatientTypes=["Select All", "Independent Patients",
   "Support Care Patients",
   "Wheel Chair - self propel",
   "Wheel Chair - Dependent",
@@ -2645,6 +2647,13 @@ export const fields= [
 
 ]
 
+
+export   const sectionItems = [
+    { title: "Invoice", value: "01" },
+    { title: "Transaction History", value: "02" },
+    { title: "Client Payment", value: "03" },
+    { title: "Refund History", value: "04" },
+  ];
 
 export  const invoiceData = {
     Invoice: "#INV255_92",

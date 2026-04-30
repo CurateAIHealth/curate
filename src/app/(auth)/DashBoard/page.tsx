@@ -52,7 +52,7 @@ import { CallEnquiryRegistration, GetDashboardStats, GetDeploymentInfo, GetInvoi
 
 
 import { UserCheck } from "lucide-react";
-import { filterColors, Health_Card, healthcareServices, healthcareServicesforCallEnquiry, hyderabadAreas, hyderabadAreasforcallEnquiry, IndianLanguages, LeadSources, StaffEmails } from "@/Lib/Content";
+import { filterColors, Health_Card, healthcareServices, healthcareServicesforCallEnquiry, hyderabadAreas, hyderabadAreasforcallEnquiry, IndianLanguages, LeadSources, sectionItems, StaffEmails } from "@/Lib/Content";
 
 import PermissionDeniedPopup from "@/Components/Permission/page";
 import ProfileDrawer from "@/Components/ProfileView/page";
@@ -63,6 +63,7 @@ import StaffNotificationModal from "@/Components/CallEnquiryNotification/page";
 import { tr } from "framer-motion/client";
 import ReferralPopup from "@/Components/ReferalPopup/page";
 import { title } from "process";
+import SubheadingPop from "@/Components/Sunheading/page";
 
 const DOCUMENT_KEYS = [
   "AadharAttachmentURL",
@@ -84,6 +85,7 @@ export default function Dashboard() {
   const updatedRefreshCount = useSelector((afterEach: any) => afterEach.updatedCount);
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
   const [OtherArea, setOtherArea] = useState<any>("")
+  const [ShowSideHeadingsPopuo,setShowSideHeadingsPopuo]=useState(false)
   const [showReferalPopup, setshowReferalPopup] = useState(false)
   const [NotificationStatus, setNotificationStatus] = useState('')
   const [DailyChargeType, setDailyChargeType] = useState(true)
@@ -529,14 +531,14 @@ export default function Dashboard() {
       };
       const registrationResult = await CallEnquiryRegistration(payload);
 
-      if (registrationResult.success === true) {
+      if (registrationResult.success === true&&EnquiryForm.ClientStatus!=="Send") {
         setEnquiryMessage("Client Enquiry Registered Successfully, Please Wait Navigating to Call Enquiry DashBoard !");
 
         //         if((EnquiryForm.ClientStatus!="Waiting List")||(EnquiryForm.ClientStatus!="Lost")){
         // setShowNotification(true)
         //         }
-
-        setTimeout(() => {
+if(EnquiryForm.ClientStatus!=="Send"){
+ setTimeout(() => {
           setShowCallEnquiry(false);
           dispatch(Update_Main_Filter_Status('Call Enquiry'));
           dispatch(UpdateUserType("patient"));
@@ -544,6 +546,12 @@ export default function Dashboard() {
           dispatch(Refresh("New Call Enquiry Added  Successfully"));
         }, 1500);
       }
+
+}
+
+if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
+  setEnquiryMessage("Call Enquiry Saved  Successfully!, Please Sent Notification To Respective Staff !");
+}
 
     } catch (err: any) {
 
@@ -855,7 +863,7 @@ export default function Dashboard() {
       setShowPermissionPopup(true);
       return;
     }
-
+// setShowSideHeadingsPopuo(true)
 
     switch (name) {
       case "Call Enquiry":
@@ -908,7 +916,7 @@ export default function Dashboard() {
     try {
       setNotificationStatus("Please Wait.....")
       const RegistrationFee = DiscountPrice - ClientDiscount
-      const PostinNotification: any = await PostCallEnquiryNotification(EnquiryForm, Emails, RegistrationFee)
+      const PostinNotification: any = await PostCallEnquiryNotification(EnquiryForm, [...Emails,"admin@curatehealth.in"], RegistrationFee)
 
 
 
@@ -1007,7 +1015,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi Admin – Welcome to Admin Dashboard
+              Hi Admin – Welcome to Admin Dashboard.
             </span>
           </div>
 
@@ -1387,7 +1395,15 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
-
+ 
+        <SubheadingPop
+        show={ShowSideHeadingsPopuo}
+        onClose={() => setShowSideHeadingsPopuo(false)}
+        MainHeading={"Accounts"}
+  Description={"Manage accounts with elegance and precision"}
+        logo="/Icons/Curate-logoq.png"
+        items={sectionItems}
+      />
           {showAccessDenied && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
               <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl">
@@ -2133,7 +2149,7 @@ export default function Dashboard() {
                         </span>
                       </p>
 
-                      <p
+                      {/* <p
                         className="border border-teal-400 bg-teal-50 text-teal-800 
                font-semibold rounded-lg px-4 py-3 shadow-sm 
                flex items-center justify-between"
@@ -2146,7 +2162,7 @@ export default function Dashboard() {
                             DiscountPrice -
                             ClientDiscount}
                         </span>
-                      </p>
+                      </p> */}
 
                     </div>
 
@@ -2244,6 +2260,7 @@ export default function Dashboard() {
                               alert("Please Enter Client & Patient Name")
                               return
                             }
+                            UpdateCallEnquiry();
                             setShowNotification(true);
                           }
                         }}
