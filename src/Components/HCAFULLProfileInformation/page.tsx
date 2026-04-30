@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Pencil, User, X } from 'lucide-react';
 import { PROFESSIONAL_SKILL_OPTIONS } from '@/Lib/Content';
 import { LoadingData } from '../Loading/page';
-import { Update_Main_Filter_Status, UpdateUserType } from '@/Redux/action';
+import { Refresh, Update_Main_Filter_Status, UpdateUserType } from '@/Redux/action';
 
 
 const TABS = ['Personal Info', 'Bank Details', 'Documents', 'Work Experience', 'Identifiers'];
@@ -311,6 +311,7 @@ console.log("FinalData:", normalizedData);
     console.log("ResultsData:", PrimeUpdate);
     await UpdateHCAComplitInformation(ImportedUserId, finalData);
 
+  dispatch(Refresh(`Profile updated Successfully`))
     setSubmitstatusMessage("Profile updated successfully");
   } catch (err: any) {
     console.error("Update failed:", err);

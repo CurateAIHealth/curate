@@ -123,10 +123,10 @@ const ViewContactInfo=()=>{
                 <div className="flex items-center gap-3">
                     <a href='/'>
                       <img
-                                  src="/Icons/HomeIcon.png"
+                                  src="/Icons/Curate-logoq.png"
                                   alt="Curate AI Health Logo"
-                                  width={180}
-                                  height={45}
+                                  width={90}
+                                  height={35}
                                   
                                   className="object-contain"
                                 />
