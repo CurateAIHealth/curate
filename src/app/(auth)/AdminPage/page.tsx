@@ -169,7 +169,7 @@ const RESTRICTED_EMAILS = new Set([
 //   };
 // }, [updatedStatusMsg]);
 const DASHBOARD_CACHE_KEY = "dashboard_cache";
-const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_TTL = 2 * 60 * 1000;
 
 useEffect(() => {
   let mounted = true;

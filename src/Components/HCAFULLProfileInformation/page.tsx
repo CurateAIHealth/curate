@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, } from 'react';
 import Image from 'next/image';
 import axios from 'axios';
-import { GetHCACompliteInformation, GetUserCompliteInformation, GetUserInformation, HCASalaryUpdate, UpdateClientComplitInformation, UpdateHCAComplitInformation } from '@/Lib/user.action';
+import { GetHCACompliteInformation, GetUserCompliteInformation, GetUserInformation, HCASalaryUpdate, UpdateClientComplitInformation, UpdateHCAComplitInformation, updateHCARegistration } from '@/Lib/user.action';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { Pencil, User, X } from 'lucide-react';
@@ -277,17 +277,55 @@ if(UpdateSalary.success){
         dispatch(UpdateUserType("healthcare-assistant"));
         Router.push("/AdminPage")
     }
-const UpdatewithNewData=async()=>{
-    setSubmitstatusMessage("Please Wait Updating Profile....")
-try{
-    const FinelData={...user,UserId:ImportedUserId,userType:"HCA"}
-const UpdatedResult= await UpdateHCAComplitInformation(ImportedUserId,FinelData)
+const updateWithNewData = async () => {
+  setSubmitstatusMessage("Please wait, updating profile...");
 
-setSubmitstatusMessage("Profile Updated Succesfully")
-}catch(err:any){
+  try {
+    if (!ImportedUserId) {
+      throw new Error("User ID is missing");
+    }
 
-}
-}
+    const finalData = {
+      ...user,
+      UserId: ImportedUserId,
+      userType: "HCA",
+    };
+
+    
+
+    const normalizeHCA = (data: any) => ({
+      FirstName: data?.firstName || "",
+      LastName: data?.surname || "",
+      Gender: data?.gender || "",
+      DateOfBirth: data?.dateOfBirth || null,
+      ContactNumber: data?.mobileNumber || "",
+      Email: data?.emailId || "",
+      AadharNumber: data?.aadharCardNo || "",
+      Location: data?.currentAddress || "",
+    });
+
+    const normalizedData = normalizeHCA(finalData);
+console.log("FinalData:", normalizedData);
+   
+    const PrimeUpdate=await updateHCARegistration(ImportedUserId, normalizedData);
+    console.log("ResultsData:", PrimeUpdate);
+    await UpdateHCAComplitInformation(ImportedUserId, finalData);
+
+    setSubmitstatusMessage("Profile updated successfully");
+  } catch (err: any) {
+    console.error("Update failed:", err);
+
+    const message =
+      err?.response?.data?.message ||
+      err?.message ||
+      "Something went wrong while updating profile";
+
+    setSubmitstatusMessage(message);
+  } finally {
+    // Optional: reset loading state if you have one
+    // setLoading(false);
+  }
+};
   if (isChecking) {
     return (
         <LoadingData/>
@@ -503,7 +541,7 @@ setSubmitstatusMessage("Profile Updated Succesfully")
   </div>
 
  
-  <button className="bg-teal-600 p-2 text-white rounded-md cursor-pointer" onClick={UpdatewithNewData}>
+  <button className="bg-teal-600 p-2 text-white rounded-md cursor-pointer" onClick={updateWithNewData}>
     Update Profile
   </button>
       

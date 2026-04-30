@@ -387,8 +387,11 @@ const handleCmChange = (value: string) => {
     const PostResult = await UpdateNewLeadInformation(FinelPostingData);
     if (PostResult.success) {
           setStatusMessage(`${PostResult.message},Riderecting to HCP Suggetion....`);
-       router.push("/Clientsuggetions")
+          const Timer = setInterval(() => {
+          router.push("/Clientsuggetions")
          dispatch(UpdateClientSuggetion(PDRFilledUser))
+      }, 1200)
+    
       //   const data = await GetUserInformation(FetchedInfo.userId);
 
   

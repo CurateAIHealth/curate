@@ -468,6 +468,14 @@ const handleHomeAssistanceChange = (skill: string) => {
         (s: string) => !s.startsWith("Other:")
       );
     }
+        if (skill === "Select All") {
+    
+
+      return {
+        ...prev,
+        HomeAssistance: exists ? [] : Home_Assistance_Needs,
+      };
+    }
 
     return {
       ...prev,
@@ -493,6 +501,18 @@ const UpdateHandledSkills = (skill: string) => {
         (s: string) => !s.startsWith("Other:")
       );
     }
+        if (skill === "Select All") {
+      const isAllSelected = PatientTypes.every((s) =>
+        prev.HandledSkills.includes(s)
+      );
+
+      updated = isAllSelected ? [] : PatientTypes;
+
+      return {
+        ...prev,
+        HandledSkills: updated,
+      };
+    }
 
     return {
       ...prev,
@@ -508,6 +528,19 @@ const UpdateHandledSkills = (skill: string) => {
     let updatedSkills = exists
       ? prev.professionalSkill.filter((s: string) => s !== skill)
       : [...prev.professionalSkill, skill];
+
+          if (skill === "Select All") {
+      const isAllSelected = PROFESSIONAL_SKILL_OPTIONS.every((s:any) =>
+        prev.professionalSkill.includes(s)
+      );
+
+      updatedSkills = isAllSelected ? [] : PROFESSIONAL_SKILL_OPTIONS;
+
+      return {
+        ...prev,
+        professionalSkill: updatedSkills,
+      };
+    }
 
     // If "Other" is unchecked → remove any custom other value
     if (skill === "Other" && exists) {
@@ -599,6 +632,11 @@ const HEIGHT_OPTIONS = Array.from(
 
       if(form.emailId==="admin@curatehealth.in"){
         alert("Your Useing AdminEmail.")
+        return
+      }
+
+      if(form.PaymentforStaff===''){
+        alert("Payment for staff cannot be empty.")
         return
       }
 
@@ -1265,7 +1303,8 @@ className="
 >
   Not Available
 </button>
-              <input
+
+{form.maritalStatus === "Married" && <div>             <input
                 type="text"
                 name="Husbend"
                 value={form.Husbend || ''}
@@ -1338,6 +1377,9 @@ form.HusbendContact!=="Not Available"&&
 >
   Not Available
 </button>
+</div>
+ 
+}
 
               <input
                 type="text"
@@ -1657,7 +1699,7 @@ form.HusbendContact!=="Not Available"&&
                         className="flex items-center space-x-2 bg-white border hover:bg-indigo-100 p-2 rounded-lg transition-all duration-200 cursor-pointer"
                       >
                         <input
-                          type="radio"
+                         type="checkbox"
                           name="earningSource"
                           value={each}
                           checked={form.earningSource === each}
@@ -1962,7 +2004,7 @@ form.HusbendContact!=="Not Available"&&
             />
             <label className="flex items-center gap-2 mb-4 text-sm text-gray-700">
               <input
-                type="radio"
+               type="checkbox"
                 checked={sameAddress}
                 onChange={(e) => {
                   const checked = e.target.checked;
@@ -2123,7 +2165,7 @@ form.HusbendContact!=="Not Available"&&
                   className="flex items-start gap-2 text-sm text-gray-700"
                 >
                   <input
-                    type="radio"
+                   type="checkbox"
                     className="mt-0.5 accent-purple-600 shrink-0"
                     checked={form.professionalSkill.includes(skill)}
                     onChange={() => handleprofessionalSkillChange(skill)}
@@ -2200,7 +2242,7 @@ form.HusbendContact!=="Not Available"&&
                   className="flex items-start gap-2 text-sm text-gray-700"
                 >
                   <input
-                    type="radio"
+                  type="checkbox"
                     className="mt-0.5 accent-purple-600 shrink-0"
                     checked={form.HomeAssistance.includes(skill)}
                     onChange={() => handleHomeAssistanceChange(skill)}
@@ -2272,7 +2314,7 @@ form.HusbendContact!=="Not Available"&&
                   className="flex items-start gap-2 text-sm text-gray-700"
                 >
                   <input
-                    type="radio"
+                   type="checkbox"
                     className="mt-0.5 accent-purple-600 shrink-0"
                     checked={form.HandledSkills.includes(skill)}
                     onChange={() => UpdateHandledSkills(skill)}
@@ -2664,7 +2706,7 @@ form.HusbendContact!=="Not Available"&&
                   {["4.0", "5.0", "6.0"].map((h) => (
                     <label key={h} className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
                       <input
-                        type="radio"
+                       type="checkbox"
                         name="patientHeight"
                         value={h}
                         checked={
@@ -2753,7 +2795,7 @@ form.HusbendContact!=="Not Available"&&
                   {["30", "40", "50", "60", "70", "80", "90", "100", "110", "120", "120+"].map((w) => (
                     <label key={w} className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
                       <input
-                        type="radio"
+                       type="checkbox"
                         name="patientWeight"
                         value={w}
                         checked={
@@ -3686,7 +3728,8 @@ form.HusbendContact!=="Not Available"&&
                       bg-white cursor-pointer hover:border-blue-400
                       transition-all">
       <input
-        type="radio"
+    
+    type="checkbox"
         name="serviceHours12hrs"
         checked={form.serviceHours12hrs || false}
         onChange={handleChange}
@@ -3702,7 +3745,7 @@ form.HusbendContact!=="Not Available"&&
                       bg-white cursor-pointer hover:border-blue-400
                       transition-all">
       <input
-        type="radio"
+        type="checkbox"
         name="serviceHours24hrs"
         checked={form.serviceHours24hrs || false}
         onChange={handleChange}
@@ -3737,6 +3780,7 @@ form.HusbendContact!=="Not Available"&&
 
   <input
     type="number"
+    required
     name="PaymentforStaff"
     value={form.PaymentforStaff || ''}
     onChange={handleChange}
@@ -4236,7 +4280,7 @@ form.HusbendContact!=="Not Available"&&
                 ${UpdateingStatus ? 'bg-[#50c896] hover:bg-teal-700 focus:ring-4 focus:ring-indigo-300' : 'bg-gray-400 cursor-not-allowed'}
               `}
           >
-            {UpdateingStatus ? 'Update Profile' : 'Updating...'}
+            {UpdateingStatus ? 'Register Profile' : 'Registering...'}
           </button>
         </div>
 
