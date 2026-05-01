@@ -112,8 +112,7 @@ const { month, year } = getMonthYear(InvoiceData?.StartDate);
 
   const start = InvoiceData?.StartDate;
   const end = InvoiceData?.ServiceEndDate;
-
-  const days = getDaysBetween(start, end);
+;
 const [formData, setFormData] = useState<any>({
       billTo: billTo || {},
     invoice: invoice || {},
@@ -121,6 +120,7 @@ const [formData, setFormData] = useState<any>({
 });
 
 
+  const days = getDaysBetween(formData.invoice?.serviceFrom, formData.invoice?.serviceTo)
   const handleSelect = (e:any) => {
     const item:any = paymentData.find(
       (p) => p.typeOfPayment === e.target.value
@@ -151,7 +151,7 @@ const [formData, setFormData] = useState<any>({
   // if (roundType === "down") finalTotal = Math.floor(rawTotal);
   // if (roundType === "nearest") finalTotal = Math.round(rawTotal);
 const [services, setServices] = useState([
-    { name: "Healthcare Assistant Service", code: "HCAS",amount:Number(days) * Number(perDay)},
+    { name: "Healthcare Assistant Service", code: "HCAS",amount:Number(getDaysBetween(formData.invoice?.serviceFrom, formData.invoice?.serviceTo)) * Number(perDay)},
   ]);
   const roundingDifference = finalTotal - rawTotal;
   const balanceDue:any = finalTotal - advance;
@@ -934,12 +934,25 @@ message="Please provide the client’s email address to send the invoice."
         className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         placeholder="Service From"
         value={toInputDateFormat(formData.invoice?.serviceFrom) || ""}
-        onChange={(e) =>
-          setFormData((prev:any) => ({
-            ...prev,
-            invoice: { ...prev.invoice, serviceFrom: e.target.value },
-          }))
-        }
+      onChange={(e) => {
+  const value = e.target.value;
+
+  setFormData((prev: any) => ({
+    ...prev,
+    invoice: { ...prev.invoice, serviceFrom: value },
+  }));
+
+  setServices((prev: any[]) => {
+    const updated = [...prev];
+    updated[0] = {
+      ...updated[0],
+      amount:
+        Number(getDaysBetween(value, formData.invoice?.serviceTo)) *
+        Number(perDay),
+    };
+    return updated;
+  });
+}}
       />
       </div>
    <div>
@@ -949,12 +962,30 @@ message="Please provide the client’s email address to send the invoice."
         className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         placeholder="Service To"
          value={toInputDateFormat(formData.invoice?.serviceTo)}
-        onChange={(e) =>
-          setFormData((prev:any) => ({
-            ...prev,
-            invoice: { ...prev.invoice, serviceTo: e.target.value },
-          }))
-        }
+    onChange={(e) => {
+  const newServiceTo = e.target.value;
+
+  setFormData((prev: any) => ({
+    ...prev,
+    invoice: { ...prev.invoice, serviceTo: newServiceTo },
+  }));
+
+  setServices((prev: any[]) => {
+    const updated = [...prev];
+
+    const days = getDaysBetween(
+      formData.invoice?.serviceFrom,
+      newServiceTo
+    );
+
+    updated[0] = {
+      ...updated[0],
+      amount: Number(days) * Number(perDay),
+    };
+
+    return updated;
+  });
+}}
       />
 </div>
    <div>

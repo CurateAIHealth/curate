@@ -20,6 +20,7 @@ type UserData = {
   HCPSalary: any;
   firstName: string;
   surname: string;
+  LastName: string;
   title: string;
   gender: string;
   dateOfBirth: string;
@@ -78,6 +79,7 @@ const NameoftheClient=useSelector((state:any)=>state.ClientName)
   const [user, setUser] = useState<UserData>({
     firstName: "Sunil",
     surname: "Nayak",
+    LastName: "Nayak",
     title: "Mr.",
     gender: "Male",
     dateOfBirth: "1996-11-19",
@@ -140,6 +142,7 @@ useEffect(()=>{
     
       setUser(prev=>({...prev,
     firstName: FilterValue["First Name"] || "",
+    LastName: FilterValue["LastName"] || "", 
   surname: FilterValue["Surname"] || "",
   gender: FilterValue["Gender"] || "",
   motherName:FilterValue["Mother Name"]||'',
@@ -295,7 +298,8 @@ const updateWithNewData = async () => {
 
     const normalizeHCA = (data: any) => ({
       FirstName: data?.firstName || "",
-      LastName: data?.surname || "",
+      SurName: data?.surname || "",
+      LastName: data?.LastName || "",
       Gender: data?.gender || "",
       DateOfBirth: data?.dateOfBirth || null,
       ContactNumber: data?.mobileNumber || "",
@@ -389,9 +393,9 @@ console.log("FinalData:", normalizedData);
           </div>
    
         <div className="grid md:grid-cols-2 gap-4">
-     
+       <TextInput label="SurName" name="surname" value={user.surname} onChange={handleChange} />
           <TextInput label="First Name" name="firstName" value={user.firstName} onChange={handleChange} />
-          <TextInput label="SurName" name="surname" value={user.surname} onChange={handleChange} />
+         <TextInput label="LastName" name="LastName" value={user.LastName} onChange={handleChange} />
           <TextInput label="Gender" name="gender" value={user.gender} onChange={handleChange} />
           <TextInput label="FatherName" name="fatherName" value={user.fatherName} onChange={handleChange} />
           <TextInput label="MotherName" name="motherName" value={user.motherName} onChange={handleChange} />

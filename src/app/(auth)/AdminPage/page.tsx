@@ -334,6 +334,7 @@ const GetHCPTypeCount = (HCPType: string) => {
 
   const Finel = users.map((each: any) => ({
     id: each.userId,
+    Surname: each.Surname,
     FirstName: each.FirstName,
     PatientName: each.patientName || "Not Mentioned",
     AadharNumber: each.AadharNumber,
@@ -2252,6 +2253,3 @@ onClick={()=>UpdateNavigattosuggetions()}
 function each(value: { id: any; FirstName: any; AadharNumber: any; Age: any; userType: any; Location: any; Email: any; Contact: any; userId: any; VerificationStatus: any; DetailedVerification: any; EmailVerification: any; ClientStatus: any; }, index: number, array: { id: any; FirstName: any; AadharNumber: any; Age: any; userType: any; Location: any; Email: any; Contact: any; userId: any; VerificationStatus: any; DetailedVerification: any; EmailVerification: any; ClientStatus: any; }[]): value is { id: any; FirstName: any; AadharNumber: any; Age: any; userType: any; Location: any; Email: any; Contact: any; userId: any; VerificationStatus: any; DetailedVerification: any; EmailVerification: any; ClientStatus: any; } {
   throw new Error('Function not implemented.');
 }
-
-
-
