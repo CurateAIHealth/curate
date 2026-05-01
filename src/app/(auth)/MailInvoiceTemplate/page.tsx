@@ -2,7 +2,7 @@
 
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import {  getBase64Image, getDaysBetween } from "@/Lib/Actions";
+import {  getBase64Image, getDaysBetween, getHCATypeDescription } from "@/Lib/Actions";
 import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -151,7 +151,7 @@ const [formData, setFormData] = useState<any>({
   // if (roundType === "down") finalTotal = Math.floor(rawTotal);
   // if (roundType === "nearest") finalTotal = Math.round(rawTotal);
 const [services, setServices] = useState([
-    { name: "Healthcare Assistant Service", code: "HCAS",amount:Number(getDaysBetween(formData.invoice?.serviceFrom, formData.invoice?.serviceTo)) * Number(perDay)},
+    { name: getHCATypeDescription(InvoiceData.HCAType), code: InvoiceData.HCAType,amount:Number(getDaysBetween(formData.invoice?.serviceFrom, formData.invoice?.serviceTo)) * Number(perDay)},
   ]);
   const roundingDifference = finalTotal - rawTotal;
   const balanceDue:any = finalTotal - advance;

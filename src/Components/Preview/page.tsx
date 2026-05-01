@@ -122,6 +122,8 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
     }
   }, [UpdatingStatus, router]);
 
+  console.log("PreviewData", data.HCAId)
+
   if (!data) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center text-gray-500">
@@ -347,6 +349,7 @@ const UpdatedDataWithInvoice = {
           .startDate).toLocaleDateString("en-IN"),
         ServiceEndDate: new Date(data.InvoiseInformation
           .endDate).toLocaleDateString("en-IN"),
+          HCAId:data.HCAId,
 }
       const [invoiceRes, statusRes] = await Promise.all([
         PostInvoice(UpdatedDataWithInvoice, Advance, invoiceNo),
@@ -676,7 +679,7 @@ const ClientName=data.FirstName
   {/* Top Row */}
   <div className="flex items-center justify-between">
     <p className="text-sm font-medium text-gray-600">
-      Care Taker Price
+    Client Price
     </p>
     <p className="text-lg font-bold text-emerald-600">
       ₹{data?.serviceCharges}

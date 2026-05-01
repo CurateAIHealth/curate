@@ -200,7 +200,7 @@ const phoneNumber='919347877159'
 const UpdatePopup = async (a: any) => {
   SetActionStatusMessage("Please Wait.....");
   dispatch(GetCurrentDeploymentData(a));
-
+console.log("Client_Id", a)
   const data = await GetUserInformation(a.Client_Id);
 
   const { UpdatedAt, CreatedAt, updatedAt, createdAt, ...rest } = data;
