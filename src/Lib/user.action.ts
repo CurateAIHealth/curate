@@ -1106,6 +1106,7 @@ export const UpdateStatusPayment = async (
 
 export interface HCAInfo {
   userType: any;
+  SurName:any;
   FirstName: any;
   LastName: any;
   Gender: any;
@@ -1156,6 +1157,7 @@ export const HCARegistration = async (HCA: HCAInfo) => {
     const encryptedData = {
    
       userType: HCA.userType,
+      Surname: HCA.SurName ? encrypt(HCA.SurName) : "",
       FirstName:HCA.FirstName? encrypt(HCA.FirstName):'',
       LastName:HCA.LastName? encrypt(HCA.LastName):"",
       Gender: encrypt(HCA.Gender),
@@ -3990,6 +3992,7 @@ export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: an
   
   "Title": Info.title || null,
   "First Name": Info.firstName ? encrypt(Info.firstName) : null,
+  "LastName": Info.LastName || null,
   "Surname": Info.surname ? encrypt(Info.surname) : null,
   "Gender": Info.gender || null,
   "Date of Birth": Info.dateOfBirth || null,
@@ -4123,8 +4126,11 @@ export const updateHCARegistration = async (
 
     if (HCA.FirstName)
       updateData.FirstName = encrypt(HCA.FirstName);
+console.log("Test Sir Name",HCA.SurName)
+    if (HCA.SurName)
+      updateData.Surname = encrypt(HCA.SurName);
 
-    if (HCA.LastName)
+      if (HCA.LastName)
       updateData.LastName = encrypt(HCA.LastName);
 
     if (HCA.Gender)
