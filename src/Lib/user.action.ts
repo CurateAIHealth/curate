@@ -737,15 +737,14 @@ export const PostInvoice = async (InvoiseInfo:any,AdvanceAmount:any,InvoiceNumbe
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Invoices");
    const now = new Date();
-const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-const endOfMonthFormatted = endOfMonth.toLocaleDateString("en-IN");
+
 
     const Invoice =await  collection.insertOne({
       Invoice:InvoiceNumber,
-      DeployDate: new Date().toLocaleDateString("en-IN"),
+      DeployDate: InvoiseInfo.ServiceStartDate,
       ClienId:InvoiseInfo.userId,
-      SeriviceStartDate:  new Date().toLocaleDateString("en-IN"),
-      ServiceEndDate: endOfMonthFormatted,
+      SeriviceStartDate:  InvoiseInfo.ServiceStartDate,
+      ServiceEndDate: InvoiseInfo.ServiceEndDate,
       Adress: InvoiseInfo.serviceLocation,
       ClientName:InvoiseInfo.FirstName,
       Patient: InvoiseInfo.patientName,

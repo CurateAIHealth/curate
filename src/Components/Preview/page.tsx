@@ -341,9 +341,15 @@ const UpdatePDRInfo = async () => {
         setUpdatingStatus("Deployment creation failed");
         return;
       }
-
+const UpdatedDataWithInvoice = {
+  ...UpdatedData,
+   ServiceStartDate:new Date(data.InvoiseInformation
+          .startDate).toLocaleDateString("en-IN"),
+        ServiceEndDate: new Date(data.InvoiseInformation
+          .endDate).toLocaleDateString("en-IN"),
+}
       const [invoiceRes, statusRes] = await Promise.all([
-        PostInvoice(UpdatedData, Advance, invoiceNo),
+        PostInvoice(UpdatedDataWithInvoice, Advance, invoiceNo),
         UpdatePdrStatus( DeploaymentInformation.Client_Id,
                               DeploaymentInformation.HCA_Id,),
       ]);
