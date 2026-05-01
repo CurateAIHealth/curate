@@ -1664,7 +1664,7 @@ dispatch(UpdateFetchedInformation(payload));
         </div> :(
   formData && Object.keys(formData).length > 0 ? (
     <PreviewComponent
-        data={{ ...formData, InvoiseInformation }}
+        data={{ ...formData, InvoiseInformation,HCAId:DeploaymentInformation.HCA_Id}}
       Advance={Number(AdvanceAmount) || 0}
     />
   ) : (

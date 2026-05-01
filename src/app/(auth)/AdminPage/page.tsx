@@ -336,6 +336,7 @@ const GetHCPTypeCount = (HCPType: string) => {
     id: each.userId,
     Surname: each.Surname,
     FirstName: each.FirstName,
+    LastName: each.LastName,
     PatientName: each.patientName || "Not Mentioned",
     AadharNumber: each.AadharNumber,
     Age: each.Age,
@@ -1199,12 +1200,12 @@ const UpdatePopup = async (a: any) => {
 
 
 <img className='h-4' src={AssignSuitableIcon(GetHCPGender(user.id),user.PreviewUserType).image}/>
-}
-                                <span className="font-semibold  ">
-                                  {toProperCaseLive(user.FirstName)}
-
-
-                                </span>
+}<span className="text-xs font-semibold flex flex-col">
+  <span>{toProperCaseLive(user.Surname)}</span>
+  <span>
+    {toProperCaseLive(user.FirstName)} {toProperCaseLive(user.LastName)}
+  </span>
+</span>
 
                               </div>
                             </td>

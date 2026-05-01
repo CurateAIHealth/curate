@@ -743,6 +743,7 @@ export const PostInvoice = async (InvoiseInfo:any,AdvanceAmount:any,InvoiceNumbe
       Invoice:InvoiceNumber,
       DeployDate: InvoiseInfo.ServiceStartDate,
       ClienId:InvoiseInfo.userId,
+      HCAId:InvoiseInfo.HCAId,
       SeriviceStartDate:  InvoiseInfo.ServiceStartDate,
       ServiceEndDate: InvoiseInfo.ServiceEndDate,
       Adress: InvoiseInfo.serviceLocation,

@@ -429,3 +429,19 @@ export const getBase64Image = async (url: any) => {
   const base64 = Buffer.from(arrayBuffer).toString("base64");
   return `data:image/png;base64,${base64}`;
 };
+
+
+export const getHCATypeDescription = (Type: any) => {
+  switch(Type){
+case "HCA":
+  return "Healthcare Assistants";
+  case "HCN":
+    return "Healthcare Nurses";
+    case "HCP":
+      return "Healthcare Professionals";
+      case "HCC":
+        return "Healthcare Companions";
+        default:      
+        null
+  }
+}

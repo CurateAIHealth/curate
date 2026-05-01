@@ -173,7 +173,7 @@ useEffect(() => {
       console.log("Error", err)
     }
   }
-  
+  console.log("FetchedInfo", FetchedInfo)
   const PreviewInfo = FetchedInfo.map((each: any) => {
 
 
@@ -181,7 +181,9 @@ useEffect(() => {
     return {
       id: each.Invoice||each.number,
       ClienId:each.ClienId,
-      ClientName: each.ClientName||each.patientName,
+      HCAId:each.HCAId,
+      ClientName: each.ClientName,
+    
       Adress: each.Adress,
       name: each.Patient||each.patientName,
       contact: each.contact||each.contact,
@@ -391,16 +393,27 @@ const GetTitiles=(ImpId:any)=>{
     return TitleValue||"Not Profided"
 
 }
+const GetHCAType=(ImpId:any)=>{
 
+   if (!RegUserInfo?.length || !ImpId) return "Not Entered";
+
+    const TitleValue =RegUserInfo?.filter((info: any) => info?.userId === ImpId)
+
+    return TitleValue||"Not Profided"
+
+}
   const UpdateInvoiceMailTemplate = (MainTemplateInfo: any) => {
-
+console.log("MainTemplateInfo", MainTemplateInfo)
     const Values=GetTitiles(MainTemplateInfo.ClienId)
-   
+   const HCAType=GetHCAType(MainTemplateInfo.HCAId)
+   console.log("HCAType", HCAType[0].PreviewUserType)
      dispatch(
     UpdateInvoiceInfo({
       ...MainTemplateInfo,
       title: Values[0].title||"",
-      Patienttitle: Values[0].Patienttitle||""
+      Patienttitle: Values[0].Patienttitle||"",
+      HCAType:HCAType[0].PreviewUserType||""
+
     })
   )
     Router.push("/MailInvoiceTemplate")
@@ -768,11 +781,14 @@ CheckPaymentStatus:CurrentPaymentStatus
 "
 >
 
-  <div className="col-span-1">S No.</div>
-  <div className="col-span-2 sm:col-span-2 md:col-span-2 lg:col-span-2">
-    Patient / Client
+  <div className="hidden sm:block sm:col-span-1">S No.</div>
+  <div className="hidden sm:block sm:col-span-1">
+      Client
   </div>
-
+  
+  <div className="hidden sm:block sm:col-span-1">
+      Patient
+  </div>
   <div className="hidden sm:block sm:col-span-1">Contact</div>
   <div className="hidden sm:block sm:col-span-1">Status</div>
   <div className="hidden sm:block sm:col-span-1">Due Date</div>
@@ -813,16 +829,27 @@ CheckPaymentStatus:CurrentPaymentStatus
   grid-cols-3
   sm:grid-cols-5
   md:grid-cols-9
-  lg:grid-cols-[100px_140px_100px_100px_100px_100px_70px_90px_100px_80px_70px_100px_90px]
+  lg:grid-cols-14
 "
       >
         {/* Patient */}
             <div>{index+1}</div>
         <div className="flex flex-col">
-          <span className="font-medium">{inv.name}</span>
-          <span className="text-[9px] text-gray-500">
+        <span className="text-[10px] font-semibold flex flex-col">
+  {inv.ClientName?.split(' ')[0]}
+  <span>{inv.ClientName?.split(' ').slice(1).join(' ')}</span>
+</span>
+          <span className="text-[8px] text-gray-500">
             Invoice ID: {inv.id}
           </span>
+        </div>
+
+         <div className="flex flex-col">
+        <span className="text-[10px] font-semibold flex flex-col">
+  {inv.name?.split(' ')[0]}
+  <span>{inv.name?.split(' ').slice(1).join(' ')}</span>
+</span>
+          
         </div>
 
         <div className="text-left text-xs">+91{inv.contact}</div>
@@ -892,7 +919,7 @@ CheckPaymentStatus:CurrentPaymentStatus
         </div>
 
         {/* Edit */}
-        {inv.status === "Draft" ?<div className="hidden lg:flex items-center ml-8 cursor-pointer">
+        {inv.status === "Draft" ?<div className="hidden lg:flex items-center ml-10 cursor-pointer">
          <div className="relative inline-block group cursor-pointer">
   <p className="flex items-center gap-2 text-gray-800">
    <PencilOff size={15}/>
@@ -930,7 +957,7 @@ CheckPaymentStatus:CurrentPaymentStatus
   <span>Payment</span>
 </button>
           )}
-        </div>:<div className="hidden lg:flex items-center ml-8 cursor-pointer">
+        </div>:<div className="hidden lg:flex items-center ml-6 cursor-pointer">
          <div className="relative inline-block group cursor-pointer">
   <p className="flex items-center gap-2 text-gray-800">
    <Info   size={20} className="text-gray-600"/>
@@ -944,7 +971,7 @@ Complete invoice sending to update status
 </div>
         </div>}
 
-     <div className="flex flex-col ml-9">
+     <div className="flex flex-col ml-4">
          <PrinterCheck  size={18} className="text-teal-700" onClick={()=>setOpenTransactions(true)}/>
         </div>
         <div className="hidden lg:flex justify-center cursor-pointer relative group">
