@@ -581,6 +581,8 @@ const ExtendTimeSheet = async () => {
 
     const UpdatedData = {
       userId: ExtendInfo.Client_Id,
+      HCA_Id: ExtendInfo.HCA_Id,
+      HCA_Name: ExtendInfo.HCA_Name,
       serviceLocation: ExtendInfo.Address,
       FirstName: ExtendInfo.name,
       patientName: ExtendInfo.PatientName,
@@ -598,13 +600,27 @@ const ExtendTimeSheet = async () => {
       StarteDate,
       LastDate
     );
-
+   if (!CompliteInvoiceInfo?.success) {
+ 
+         SetActionStatusMessage( CompliteInvoiceInfo?.message || "Invoice generation failed")
+      
+    }
     if (CompliteInvoiceInfo?.success) {
       SetActionStatusMessage(CompliteInvoiceInfo.message);
     }
 
+
+    
+
+
+      if (!deploymentRes?.success) {
+ 
+         SetActionStatusMessage( deploymentRes?.message || "Service Extention failed")
+      
+    }
+
     if (deploymentRes?.success) {
-      SetActionStatusMessage("TimeSheet Successfully Extended");
+      SetActionStatusMessage("Service Successfully Extended");
 
       setTimeout(() => {
         setshowExtendPopup(false);
@@ -849,7 +865,7 @@ setSelectedEndDate(e.target.value)
   </p>
 )}
     
-      {lastDateOfMonth && (
+      {/* {lastDateOfMonth && (
         <div className="mb-4">
           <label className="text-sm text-gray-600 mb-1 block">
             Last Date of Service
@@ -861,7 +877,7 @@ setSelectedEndDate(e.target.value)
             className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-100"
           />
         </div>
-      )}
+      )} */}
 
   {serviceCharge&& <div className="flex items-center">
 

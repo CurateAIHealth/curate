@@ -1060,7 +1060,9 @@ return
         )
 
       const ExistingInfo: any = await getCreatedInvoiceInfo(InvoiceData.
-        Client_Id, InvoiceData.StartDate
+        Client_Id, 
+        InvoiceData.StartDate,
+        InvoiceData.HCA_Id
       );
       if (ExistingInfo) {
         SetActionStatusMessage("Invoice already exists");
@@ -1068,6 +1070,8 @@ return
       }
       const UpdatedData = {
         userId: InvoiceData.Client_Id,
+        HCA_Name: InvoiceData.HCA_Name,
+        HCA_Id: InvoiceData.HCA_Id,
         serviceLocation: InvoiceData.Address,
         FirstName: InvoiceData.name,
         patientName: InvoiceData.PatientName,
@@ -1400,9 +1404,9 @@ setShowCareTakerPriceUpdate(false)
         Invoice
       </th>
     )} */}
- {/* <th className="w-[50px] px-2 py-2 text-center">
+ <th className="w-[50px] px-2 py-2 text-center">
         Invoice
-      </th> */}
+      </th>
     {/* <th className="w-[100px] px-2 py-2 text-center">
       Service Continue
     </th> */}
@@ -1922,7 +1926,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
 
 
 
-  {/* <td className="px-3 py-3 text-center">
+  <td className="px-3 py-3 text-center">
 <button  className="
     px-1 py-1
     text-[9px] font-semibold
@@ -1941,9 +1945,9 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
   >
   Create
 </button>
-
-<img src="Icons/CreateInovoice.png" onClick={()=>CreateInvoice(c)} className="h-7 ml-3"/>
-</td> */}
+{/* 
+<img src="Icons/CreateInovoice.png" onClick={()=>CreateInvoice(c)} className="h-7 ml-3"/> */}
+</td>
 
 
 
@@ -2162,7 +2166,7 @@ setSelectedDate(e.target.value)
   </p>
 )}
     
-      {lastDateOfMonth && (
+      {/* {lastDateOfMonth && (
         <div className="mb-4">
           <label className="text-sm text-gray-600 mb-1 block">
             Last Date of Service
@@ -2174,7 +2178,7 @@ setSelectedDate(e.target.value)
             className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-100"
           />
         </div>
-      )}
+      )} */}
 
    
       <div className="flex items-center gap-2 mb-3">
