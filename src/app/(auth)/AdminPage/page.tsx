@@ -1329,6 +1329,7 @@ const UpdatePopup = async (a: any) => {
 </div>
   )}
                             </td>
+                            
                             {user.userType === "patient" && (
                             
                               <td className="px-2 py-2">
@@ -1589,16 +1590,24 @@ Awaiting Conversion
                             </td>}
                             {UpdateduserType === 'patient' &&
                               <td className="md:px-8 md:py-2">
-{user?.PDRStatus==="Filled" ? <button
+{user?.PDRStatus==="Filled"&&user.ClientStatus==="Converted" ?<div className="relative group inline-block"> <button
                                   onClick={() => UpdateNavigattosuggetions(user.userId)}
-                                  className="flex   cursor-pointer items-center gap-2 w-full sm:w-auto justify-center  py-2
- text-white    h-10 text-[9px] transition-all duration-150"
+                                  disabled={GetUserCurrentStatus(user.userId)}
+                                  className={`flex  ${GetUserCurrentStatus(user.userId) ? "cursor-not-allowed" : "cursor-pointer"} items-center gap-2 w-full sm:w-auto justify-center  py-2
+ text-white    h-10 text-[9px] transition-all duration-150`}
                                 >
                                   {/* <img src="Icons/HCP.png" className='h-10 w-10 rounded-full'/> */}
                                   <img src="Icons/FemaleHCA.png" className='h-10 w-15 rounded-full' />
 
-                                </button>: <p className="text-gray-700 text-center text-[10px]  w-[40px] opacity-50 cursor-not-allowed">
-  PDR Not Filled
+                                </button>
+                                 {GetUserCurrentStatus(user.userId) && (
+    <div className="absolute right-full top-1/2 -translate-y-1/2 ml-2 
+      hidden group-hover:block bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+      Client Already in PLACEMENT
+    </div>
+  )}
+                                </div>: <p className="text-gray-700 text-center text-[10px]  w-[40px] opacity-50 cnot-allowedursor-">
+{user?.PDRStatus!=="Filled"? "Fill PDR to view": user.ClientStatus!=="Converted"?"Convert to view":"Not Available"}
 </p>}
                                
                               </td>}
