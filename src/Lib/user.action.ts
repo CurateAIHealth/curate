@@ -783,6 +783,8 @@ export const PostInvoiceFromDeployment = async (InvoiseInfo:any,AdvanceAmount:an
       Invoice:InvoiceNumber,
       DeployDate: ImpDate,
       ClienId:InvoiseInfo.userId,
+      HCA_Id:InvoiseInfo.HCA_Id,
+      HCA_Name:InvoiseInfo.HCA_Name,
       SeriviceStartDate:  ImpDate,
       ServiceEndDate: ImpLastDate,
       Adress: InvoiseInfo.serviceLocation,
@@ -3362,7 +3364,8 @@ export const EditAttendanceByDateRange = async (
 
 export const getCreatedInvoiceInfo = async (
   clientId: string,
-  startDate: string
+  startDate: string,
+HCA_Id:any
 ) => {
   try {
     const db = (await clientPromise).db("CurateInformation");
@@ -3370,6 +3373,7 @@ export const getCreatedInvoiceInfo = async (
     return await db.collection("Invoices").findOne(
       {
         ClienId: clientId,
+    HCA_Id:HCA_Id,
         SeriviceStartDate: startDate,
       },
       {
