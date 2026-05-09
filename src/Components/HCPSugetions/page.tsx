@@ -7,14 +7,18 @@ import { Update_Main_Filter_Status, UpdateClient, UpdateClientSuggetion, UpdateR
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import * as htmlToImage from 'html-to-image';
-import { ClearClientTimeSheetInfo, GetInformedUsers,  GetTimeSheetInfo, IntrestedHCP, PostConfirmationInfo, TestInsertTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateUserContactVerificationstatus } from '@/Lib/user.action';
+import { ClearClientTimeSheetInfo, GetInformedUsers,  GetTimeSheetInfo, IntrestedHCP, PostConfirmationInfo, TestInsertTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateUserContactVerificationstatus, UpdateUserCurrentstatusInHCPView } from '@/Lib/user.action';
 import axios from 'axios';
 import { calculateAgeIndianFormat } from '@/Lib/Actions';
 import { HyderabadAreas, PROFESSIONAL_SKILL_OPTIONS, TestData } from '@/Lib/Content';
 import PhysioList from '../Physio/page';
+import { pre } from 'framer-motion/client';
 const allProfessionalSkills = ["Diaper", "Bathing", "Bedding", "Brushing"];
 
 type ClientType = {
+  patientWeight: any;
+  patientAge: any;
+  patientHeight: any;
   hcpType: any;
   Source: any;
   patientPhone: any;
@@ -25,6 +29,7 @@ type ClientType = {
   ContactNumber: any;
   userId: any;
   SuitableHCP: any;
+  ServiceType:any;
   Email: any;
   FirstName: string;
   patientName: string;
@@ -48,17 +53,18 @@ type HcpType = {
 type Props = {
   clients: ClientType[];
   hcps: HcpType[];
+  usersInfo:any[]
 };
 
-const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
-
+const SuitableHcpList: React.FC<Props> = ({ clients, hcps ,usersInfo}) => {
+console.log("Check Client Information------",clients)
   const [selectedClientIndex, setSelectedClientIndex] = useState<number>(0);
   const [ExsitingInformedUsers, setExsitingInformedUsers] = useState<any[]>([]);
   const [StatusMessage, setStatusMessage] = useState<any>();
   const [CurrentUserId, setCurrentUserId] = useState<any>('');
   const [SearchFilter,setSearchFilter]=useState("")
   const [SearchReasult,setSearchReasult]=useState("")
-  const [SearchOptions,setSearchOptions]=useState(false)
+  const [SearchOptions,setSearchOptions]=useState(true)
   const [loading, setLoading] = useState(true);
   const [showAssignedOnly, setShowAssignedOnly] = useState(true);
   const [showAssignConfirm,setShowAssignConfirm]=useState(false)
@@ -68,24 +74,11 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps }) => {
   const router = useRouter();
 const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [form, setForm] = useState({
-    hcpType: [] as string[],
-    qualification: [] as string[],
-    experience: "",
-    location: "",
-    healthConditions: [] as string[],
+    hcpType:"" as any,
+    Gender: "" as any,
   });
 
-  const handleCheckboxChange = (type: string, value: string) => {
-    setForm((prev) => {
-      const list = prev[type as keyof typeof form] as string[];
-      return {
-        ...prev,
-        [type]: list.includes(value)
-          ? list.filter((item) => item !== value)
-          : [...list, value],
-      };
-    });
-  };
+  
 
 
   const cardRefs = useRef<{ [key: string]: HTMLElement | null }>({});
@@ -155,7 +148,8 @@ const PlacementInformation: any = await GetTimeSheetInfo();
 if(availability.length > 0){
   setStatusMessage("Please Wait Clearing Previous PDR Information...");
   
-  const UpdateInfo= await ClearClientTimeSheetInfo(UserIDClient,UserIdHCA)
+  const UpdateInfo= await ClearClientTimeSheetInfo(availability[0].ClientId,availability[0]. HCAId)
+  const res = await UpdateUserCurrentstatusInHCPView(availability[0]. HCAId, "Bench");
   if(UpdateInfo?.success){
 setStatusMessage("Client Prviouse Information deleted Successfully, Assigneing New HCP.....")
   }
@@ -163,15 +157,15 @@ setStatusMessage("Client Prviouse Information deleted Successfully, Assigneing N
 }
 
 
-  setCurrentUserId(UserIdHCA);
+   setCurrentUserId(UserIdHCA);
 
-  const CurrentMonth = `${new Date().getFullYear()}-${new Date().getMonth() + 1}`;
+   const CurrentMonth = `${new Date().getFullYear()}-${new Date().getMonth() + 1}`;
   const DateofToday = new Date().toLocaleDateString('en-IN');
-  const TimeStamp = new Date().toISOString();
+   const TimeStamp = new Date().toISOString();
 
   setStatusMessage("Please Wait Assigning HCA...");
 
-  try {
+ try {
 
     const today = new Date();
     const attendanceRecord = {
@@ -209,7 +203,7 @@ setStatusMessage("Client Prviouse Information deleted Successfully, Assigneing N
     if (PostTimeSheet.success === true) {
 
       setStatusMessage(PostTimeSheet.message);
-
+const res = await UpdateUserCurrentstatusInHCPView(UserIdHCA, "Active");
       setTimeout(() => {
         dispatch(UpdateRefresh(1));
         router.push("/PDRView");
@@ -291,14 +285,40 @@ const query = SearchReasult.trim().toLowerCase();
 
 const filteredHcps = hcps.filter((each: any) => {
   const matchesSearch =
-    each?.HCPFirstName?.toLowerCase().includes(query) ||
-    each?.HCPSurName?.toLowerCase().includes(query);
+    each?.HCPFirstName?.toLowerCase().includes(query.toLowerCase()) ||
+    each?.HCPSurName?.toLowerCase().includes(query.toLowerCase());
+
+  // Find matching user
+  const matchedUser = usersInfo.find(
+    (user: any) => user.userId === each.UserId
+  );
+
+  const userType = matchedUser?.PreviewUserType;
+  const CurrentStatus = matchedUser?.CurrentStatus === "Bench";
+
+  console.log("User Type for HCP", userType);
+
+  // HCP Type filter
+  const HCPTYPE = form.hcpType
+    ? userType === form.hcpType
+    : true;
+
+  // Gender filter
+  const GenderMatch = form.Gender
+    ? each?.Gender === form.Gender
+    : true;
 
   const isAssigned = each?.Status?.includes("Assigned");
 
   return showAssignedOnly
-    ? matchesSearch && !isAssigned   
-    : matchesSearch;               
+    ? matchesSearch &&
+        HCPTYPE &&
+        GenderMatch &&
+        !isAssigned &&
+        CurrentStatus
+    : matchesSearch &&
+        HCPTYPE &&
+        GenderMatch;
 });
 
 
@@ -644,43 +664,43 @@ const isAvailable = (hcp: any) =>
   !hcp.Status?.some((value: string) => value === "Assigned");
 
 
-const ShowAdditionHCPs = hcps.filter((each: HcpType) => {
-  if (!isAvailable(each)) return false;
+// const ShowAdditionHCPs = hcps.filter((each: HcpType) => {
+//   if (!isAvailable(each)) return false;
 
-  const hcpTypeMatch =
-    form.hcpType.length === 0 ||
-    form.hcpType.includes(each.Type);
+//   const hcpTypeMatch =
+//     form.hcpType.length === 0 ||
+//     form.hcpType.includes(each.Type);
 
-  const qualificationMatch =
-    form.qualification.length === 0 ||
-    form.qualification.includes(each["Professional Education"]);
+//   const qualificationMatch =
+//     form.qualification.length === 0 ||
+//     form.qualification.includes(each["Professional Education"]);
 
-  const experienceMatch =
-    !form.experience ||
-    Number(each.Experience) >= Number(form.experience);
+//   const experienceMatch =
+//     !form.experience ||
+//     Number(each.Experience) >= Number(form.experience);
 
-  const healthMatch =
-    form.healthConditions.length === 0 ||
-    form.healthConditions.some(condition =>
-      each?.HandledSkills?.some((skill: string) =>
-        skill.toLowerCase().includes(condition.toLowerCase())
-      )
-    );
+//   const healthMatch =
+//     form.healthConditions.length === 0 ||
+//     form.healthConditions.some(condition =>
+//       each?.HandledSkills?.some((skill: string) =>
+//         skill.toLowerCase().includes(condition.toLowerCase())
+//       )
+//     );
 
-  const locationMatch =
-    !form.location ||
-    each?.["Current Address"]
-      ?.toLowerCase()
-      .includes(form.location.toLowerCase());
+//   const locationMatch =
+//     !form.location ||
+//     each?.["Current Address"]
+//       ?.toLowerCase()
+//       .includes(form.location.toLowerCase());
 
-  return (
-    hcpTypeMatch &&
-    qualificationMatch &&
-    experienceMatch &&
-    healthMatch &&
-    locationMatch
-  );
-});
+//   return (
+//     hcpTypeMatch &&
+//     qualificationMatch &&
+//     experienceMatch &&
+//     healthMatch &&
+//     locationMatch
+//   );
+// });
 
 
    const AssignedHcps = hcps.filter((hcp: any) => !Array.isArray(hcp?.Status) || !hcp.Status.includes("Assigned") );
@@ -786,173 +806,204 @@ if (!activeClient) {
   
 
 
-  <div className="overflow-y-auto  space-y-3 pr-1 scrollbar-thin scrollbar-thumb-[#b7e4c7] scrollbar-track-transparent">
-    {clients.map((client, index) => (
-      <div
-        key={index}
-        onClick={() => setSelectedClientIndex(clients.indexOf(client))}
-        className={`transition-all duration-300 ease-in-out p-2 rounded-2xl shadow-sm border border-transparent cursor-pointer hover:shadow-md ] ${
-          selectedClientIndex === clients.indexOf(client)
-            ? 'bg-[#d9f9f3] border-[#40c9a2]'
-            : 'bg-white'
-        }`}
-      >
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="font-semibold text-lg text-[#00796b]">
-            👤 {client.FirstName}
-          </h2>
+  <div className="h-[100vh] overflow-y-auto max-w-[420px] mx-auto px-2 py-3 space-y-3 scrollbar-thin scrollbar-thumb-[#cbd5e1] scrollbar-track-transparent">
+  {clients.map((client, index) => (
+    <div
+      key={index}
+      onClick={() => setSelectedClientIndex(index)}
+      className={`rounded-[22px] border overflow-hidden transition-all duration-300
+      ${
+        selectedClientIndex === index
+          ? "border-[#38bdf8] bg-[#f8fcff] shadow-sm"
+          : "border-[#e2e8f0] bg-white"
+      }`}
+    >
+      <div className="p-3">
+        
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          
+          <div className="flex items-center gap-2.5">
+            
+            <div className="h-10 w-10 rounded-xl bg-[#e0f2fe] flex items-center justify-center text-[#0284c7] font-bold text-sm">
+              {client.FirstName?.charAt(0)}
+            </div>
+
+            <div>
+              <h2 className="text-sm font-semibold text-[#0f172a] leading-none">
+                {client.FirstName}
+              </h2>
+
+              <p className="text-[11px] text-[#64748b] mt-1">
+                {client.Email}
+              </p>
+            </div>
+          </div>
+
           <span
-            className={`px-3 py-1 rounded-full text-xs font-medium ${
-              selectedClientIndex === clients.indexOf(client)
-                ? 'bg-[#40c9a2] text-white'
-                : 'bg-[#e0f2f1] text-[#00796b]'
+            className={`px-2 py-1 rounded-full text-[9px] font-medium
+            ${
+              selectedClientIndex === index
+                ? "bg-[#0ea5e9] text-white"
+                : "bg-[#f1f5f9] text-[#475569]"
             }`}
           >
             Selected
           </span>
         </div>
 
-        <p className="text-sm text-gray-600">
-          📧 <span className="font-medium">{client.Email}</span>
-        </p>
+        {/* Info */}
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          
+          <div className="rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-2">
+            <p className="text-[9px] uppercase text-[#64748b]">
+              Patient
+            </p>
 
-     <div className="mt-3 max-w-md rounded-lg bg-[#f1faf8] px-4 py-3">
-  <p className="text-xs font-semibold uppercase tracking-wide text-[#00796b] mb-1">
-    Home Assistance
-  </p>
+            <p className="text-xs font-semibold text-[#0f172a] mt-1">
+              {client.patientName}
+            </p>
+          </div>
 
-  <p className="text-sm leading-relaxed text-[#004d40]">
-    {client.patientHomeAssistance.join(", ")}
-  </p>
-</div>
+          <div className="rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-2">
+            <p className="text-[9px] uppercase text-[#64748b]">
+              Age
+            </p>
 
+            <p className="text-xs font-semibold text-[#0f172a] mt-1">
+              {client.patientAge}
+            </p>
+          </div>
 
+          <div className="rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-2">
+            <p className="text-[9px] uppercase text-[#64748b]">
+              Height
+            </p>
 
-         <p className="mt-2 text-sm leading-relaxed text-[#00695c] bg-[#f1faf8] px-3 py-2 rounded-xl">
-           Patient Type:{" "}
-          <span className="font-medium">
-            {client.patientType}
-          </span>
-        </p>
-       <p className="text-sm font-medium mt-2 text-grey-600 border border-grey-600 px-3 py-1 rounded-lg inline-block cursor-pointer hover:bg-green-900 hover:text-white transition-all duration-200">
-  Assign HCP&Nurse
-</p>
-<button className={`flex items-center gap-2 px-2 ${SearchOptions&&"bg-green-800 text-white"} py-2 mt-2 border border-grey-600 text-pink font-semibold rounded-xl shadow-md hover:cursor-pointer active:scale-95 transition-all duration-200`} onClick={()=>{setSearchOptions(!SearchOptions);setSearchFilter("")}}>
-  <Search className="w-4 h-4" />
-Search For HCP Criteria
-</button>
-{SearchOptions&&
- <div className="w-[235px] mx-auto mt-2 text-[10px] p-2 bg-white rounded-2xl shadow-lg space-y-4 border border-gray-100">
- 
+            <p className="text-xs font-semibold text-[#0f172a] mt-1">
+              {client.patientHeight||"Not Provided"}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-2">
+            <p className="text-[9px] uppercase text-[#64748b]">
+              Weight
+            </p>
+
+            <p className="text-xs font-semibold text-[#0f172a] mt-1">
+              {client.patientWeight}
+            </p>
+          </div>
+        </div>
+
+        {/* Assistance */}
+        <div className="mt-3 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] p-2.5">
+          
+          <p className="text-[9px] uppercase font-semibold text-[#15803d] mb-1">
+            Home Assistance
+          </p>
+
+          <p className="text-[11px] text-[#166534] leading-relaxed">
+            {client.patientHomeAssistance.join(", ")}
+          </p>
+        </div>
 
     
-      <div>
-        <label className="font-semibold text-gray-700 block mb-2">HCP Type</label>
-        <div className="flex flex-wrap gap-3">
-          {["HCA", "HCN", "HCPT"].map((type) => (
-            <label key={type} className="flex items-center space-x-2">
-              <input
-                type="radio"
-                checked={form.hcpType.includes(type)}
-                onChange={() => handleCheckboxChange("hcpType", type)}
-                className="accent-indigo-600"
-              />
-              <span>{type}</span>
-            </label>
-          ))}
+
+        {/* Buttons */}
+        <div className="flex gap-2 mt-3">
+          
+  
+
+          <button
+         
+            className={`flex items-center justify-center gap-1 rounded-xl border px-3 py-2 text-[11px] font-semibold
+            ${
+              SearchOptions
+                ? "bg-[#0ea5e9] border-[#0ea5e9] text-white"
+                : "bg-white border-[#cbd5e1] text-[#334155]"
+            }`}
+          >
+            <Search className="w-3 h-3" />
+            Filters
+          </button>
         </div>
+
+        {/* Compact Filters */}
+        {SearchOptions && (
+          <div className="mt-4 border-t border-[#e2e8f0] pt-3 space-y-3">
+            
+            {/* HCP */}
+            <div>
+              <p className="text-[10px] font-semibold text-[#334155] mb-2">
+                HCP Type
+              </p>
+
+              <div className="flex flex-wrap gap-1.5">
+  {["HCA", "HCN", "HCPT"].map((type) => (
+    <button
+      key={type}
+      type="button"
+      onClick={() =>
+        setForm((prev) => ({
+          ...prev,
+          hcpType: type,
+        }))
+      }
+      className={`px-3 py-1.5 rounded-lg text-[10px] font-medium border transition-all
+      ${
+        form.hcpType === type
+          ? "bg-[#0ea5e9] border-[#0ea5e9] text-white"
+          : "bg-[#f8fafc] border-[#cbd5e1] text-[#334155]"
+      }`}
+    >
+      {type}
+    </button>
+  ))}
+</div>
+            </div>
+
+            {/* Gender */}
+            <div>
+              <p className="text-[10px] font-semibold text-[#334155] mb-2">
+                Prefer {client.ServiceType||"HCP"} Gender
+              </p>
+
+              <div className="flex gap-1.5">
+                {["Male", "Female"].map((gender) => (
+                  <button
+                    key={gender}
+                       onClick={() =>
+        setForm((prev) => ({
+          ...prev,
+          Gender: gender,
+        }))
+      }
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-medium border transition-all
+      ${
+        form.Gender === gender
+          ? "bg-[#0ea5e9] border-[#0ea5e9] text-white"
+          : "bg-[#f8fafc] border-[#cbd5e1] text-[#334155]"
+      }`}
+                  >
+                    {gender}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+        
+          </div>
+        )}
       </div>
-
-
-      <div>
-        <label className="font-semibold text-gray-700 block mb-2">Qualification</label>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            "GDA",
-            "ANM pursuing",
-            "ANM",
-            "BSc",
-            "GNM",
-            "Neuro PT",
-            "Musculoskeletal PT",
-            "Respiratory PT",
-          ].map((qual) => (
-            <label key={qual} className="flex items-center space-x-2">
-              <input
-                type="radio"
-                checked={form.qualification.includes(qual)}
-                onChange={() => handleCheckboxChange("qualification", qual)}
-                className="accent-indigo-600"
-              />
-              <span>{qual}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <label className="font-semibold text-gray-700 block mb-2">Experience (Years)</label>
-        <input
-          type="number"
-          value={form.experience}
-          onChange={(e) => setForm({ ...form, experience: e.target.value })}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none"
-          placeholder="Enter experience in years"
-          min="0"
-        />
-      </div>
-
-   
-      <div>
-        <label className="font-semibold text-gray-700 block mb-2">Location</label>
-        <select
-          value={form.location}
-          onChange={(e) => setForm({ ...form, location: e.target.value })}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none"
-        >
-          <option value="">Select Hyderabad Area</option>
-          {HyderabadAreas.map((area:any) => (
-            <option key={area} value={area}>
-              {area}
-            </option>
-          ))}
-        </select>
-      </div>
-
-
-      <div>
-        <label className="font-semibold text-gray-700 block mb-2">Health Condition</label>
-        <div className="flex flex-wrap gap-3">
-          {[
-            "Dementia",
-            "Parkinson’s",
-            "Wheelchair",
-            "Spinal Surgery",
-            "Lung Transplant",
-            "Heart Transplant",
-          ].map((condition) => (
-            <label key={condition} className="flex items-center space-x-2">
-              <input
-                type="radio"
-                checked={form.healthConditions.includes(condition)}
-                onChange={() => handleCheckboxChange("healthConditions", condition)}
-                className="accent-indigo-600"
-              />
-              <span>{condition}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-    </div>}
-
-      </div>
-    ))}
-  </div>
+    </div>
+  ))}
+</div>
 </div>
 
 
         <div className="w-full lg:w-4/5 mx-auto py-0">
-         {SearchOptions===false&& 
+         {SearchOptions===true&& 
             <div>
               <div className="mb-2 flex flex-col sm:flex-row items-center justify-between">
                 <h1 className="text-[26px]  font-extrabold text-teal-700 dark:text-teal-400 tracking-tight drop-shadow-sm">
@@ -1012,13 +1063,51 @@ Search For HCP Criteria
               </div>
 
               <div className="flex flex-col md:flex-row w-full justify-between items-center md:items-start gap-4 md:gap-6 px-2 sm:px-4">
-                {hcps.length === 0 ? (
-                  <p className="text-gray-400 text-center py-12 w-full">
-                    No suitable HCPs found for this client.
-                  </p>
+                {filteredHcps.length === 0 ? (
+                  <div className="w-full flex items-center justify-center py-16 px-4">
+  <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white px-10 py-14 shadow-xl">
+
+   
+    <div className="absolute top-6 left-6 rounded-full bg-blue-100 px-4 py-1 text-xs font-semibold text-blue-700">
+      HCP Search
+    </div>
+
+    <div className="absolute top-6 right-6 rounded-full bg-amber-100 px-4 py-1 text-xs font-semibold text-amber-700">
+      No Match
+    </div>
+
+    <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-blue-50 blur-2xl" />
+    <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-slate-100 blur-2xl" />
+
+
+    <div className="relative z-10 flex flex-col items-center text-center">
+
+  
+      <div className="flex h-40 w-40 items-center justify-center rounded-2xl bg-slate-100 shadow-inner">
+     <img src="Icons/NoInformation.gif" alt="No Information" className='h-00'/>
+      </div>
+
+
+      <h2 className="mt-7 text-3xl font-bold tracking-tight text-slate-900">
+        No Suitable HCPs Found
+      </h2>
+
+      <p className="mt-4 max-w-lg text-sm leading-7 text-slate-500">
+        We were unable to find healthcare professionals matching the current
+        client requirements. You can refine your filters, broaden the search
+        criteria, or try again later.
+      </p>
+
+     
+
+    
+    </div>
+  </div>
+</div>
                 ) : (
                   <div className="md:h-[550px] overflow-y-auto flex flex-wrap justify-center md:justify-start gap-3 md:gap-2 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 p-2">
                     {filteredHcps.map((hcp: any, idx: number) => {
+                      console.log("HCP Status:", hcp);
                       const alreadyInformed = ExsitingInformedUsers.some(
                         (each) =>
                           each.InformedHCPID === hcp.UserId &&
@@ -1051,7 +1140,7 @@ const isAssigned =
                           <div className="pt-6 pb-3 px-2 sm:px-3 text-center w-full">
     
                             <h3 className="text-[12px] sm:text-[13px] font-semibold text-gray-800 truncate">
-                              {hcp.HCPFirstName} {hcp.HCPSurName}
+                           {hcp.HCPSurName} {hcp.HCPFirstName}  {hcp.HCPLastName}
                             </h3>
                             <p className="text-[10px] text-gray-500 truncate mt-0.5">
                               +91{hcp.HCPContactNumber}
@@ -1264,186 +1353,6 @@ const UpdateResults=await UpdateHCAnstatus(hcp.UserId,"Available for Work")
             </div>
 }
 
-{SearchOptions&&<div>
-
-          {ShowAdditionHCPs.length!==0&& <h1 className="text-2xl sm:text-3xl mt-1 font-extrabold text-teal-700 dark:text-teal-400 tracking-tight drop-shadow-sm">
-              Search Results
-            </h1>}
-
-          {(SearchOptions===true&&ShowAdditionHCPs.length===0)&&<div className="flex  flex-col items-center justify-center py-10 text-center text-gray-600">
-    <div className="bg-gray-100 px-6 py-4 rounded-2xl shadow-sm border border-gray-200">
-      <p className="text-lg font-medium text-gray-800">
-        No Search Results Found
-      </p>
-      <p className="text-sm text-gray-500 mt-1">
-        Please adjust your HCP criteria and try again.
-      </p>
-    </div>
-  </div>}
-          <div className=" overflow-y-auto  mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
-              {ShowAdditionHCPs.map((hcp: any, idx: number) => {
-                const alreadyInformed = ExsitingInformedUsers.some(
-                  (each) => each.InformedHCPID === hcp.UserId&&each.InformedClientID===activeClient.userId
-                );
-                const isCurrent = CurrentUserId === hcp.UserId;
-
-                return (
-                  <article
-                    key={idx}
-                 
-                    ref={el => { cardRefs.current[hcp.UserId] = el; }}
-                    className="relative flex flex-col md:w-[190px] items-center bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 w-[170px] min-h-[220px]"
-                  >
-
-                    <div className="bg-teal-600  w-full h-[55px] flex items-center justify-center relative rounded-t-2xl">
-                      <div className="w-14 h-14 rounded-full border-2 border-white overflow-hidden shadow-md absolute bottom-[-20px]">
-                        <img
-                          src={hcp.ProfilePic || "/Icons/DefaultProfileIcon.png"}
-                          alt={hcp.HCPFirstName}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="pt-6 bg-gray-000 pb-3 px-3 text-center w-full">
-                      <h3 className="text-[12px] font-semibold text-gray-800 truncate">
-                        {hcp.HCPFirstName} {hcp.HCPSurName}
-                      </h3>
-                      <p className="text-[10px] text-gray-500 truncate mt-0.5">+91{hcp.HCPContactNumber}</p>
-                      <p className="text-[10px] text-gray-500 truncate">{hcp['Current Address'] || '-'}</p>
-
-                      <div className="flex justify-center gap-1 mt-1 flex-wrap">
-                        <span className="text-[9px] px-2 py-1 bg-green-50 border border-green-200 text-green-700 rounded-full">
-                          Age: {hcp["Date of Birth"] ? calculateAgeIndianFormat(new Date(hcp["Date of Birth"]).toLocaleDateString("en-IN")) : "-"}
-                        </span>
-                        <span className="text-[9px] px-2 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full">
-                          Exp: {hcp.Experience || 0} yrs
-                        </span>
-                      </div>
-
-                      <h4 className="text-[9px] font-semibold text-gray-700 uppercase mt-1">Skills</h4>
-       
-
-                        <div className="flex flex-wrap justify-center gap-[1px] mt-1">
-                       {PROFESSIONAL_SKILL_OPTIONS.map((skill: string, sidx: number) => {
-  const hasSkill =
-    Array.isArray(hcp?.ProfessionalSkills) &&
-    hcp.ProfessionalSkills.includes(skill);
-
-  return (
-    <span
-      key={sidx}
-      className={`text-[8px] px-1 py-1 rounded-full border ${
-        hasSkill
-          ? "bg-green-50 border-green-200 text-green-700"
-          : "bg-red-50 border-red-200 text-red-600"
-      }`}
-    >
-      {skill} {hasSkill ? "✓" : "✖"}
-    </span>
-  );
-})}
-
-                      </div>
-                 
-  
-
-    <button className="bg-green-600 text-white cursor-pointer px-3 py-1 rounded-full text-[10px] font-medium shadow-sm hover:bg-green-700 transition-colors" 
-                           onClick={() =>
-                      UpdateAssignHca(
-                        activeClient.userId,
-                        hcp.UserId,
-                       activeClient.FirstName,
-                        activeClient.Email,
-                        activeClient.ContactNumber,
-                        activeClient.serviceLocation,
-                        hcp.HCPFirstName,
-                        hcp.HCPContactNumber,
-                        activeClient.patientName,
-                        activeClient.patientPhone,
-                      activeClient.Source,
-                        activeClient.hcpType
-
-
-                      )
-                    }>
-                            Assign
-                          </button>
-
-                      {/* <div className="mt-2 flex justify-center gap-2 flex-wrap">
-                        {activeClient?.SuitableHCP === hcp.UserId ? (
-                          <button className="bg-green-600 text-white cursor-pointer px-3 py-1 rounded-full text-[10px] font-medium shadow-sm hover:bg-green-700 transition-colors" 
-                           onClick={() =>
-                      UpdateAssignHca(
-                        activeClient.userId,
-                        hcp.UserId,
-                       activeClient.FirstName,
-                        activeClient.Email,
-                        activeClient.ContactNumber,
-                        activeClient.serviceLocation,
-                        hcp.HCPFirstName,
-                        hcp.HCPContactNumber,
-                        activeClient.patientName,
-                        activeClient.patientPhone,
-                      activeClient.Source,
-                        activeClient.hcpType
-
-
-                      )
-                    }>
-                            Assign
-                          </button>
-                        ) : (
-
-                      <div className="flex justify-between gap-6">
-                          <button
-                            onClick={() => handleShare(hcp,activeClient.userId)}
-                            disabled={alreadyInformed}
-                            className={`px-3 py-1 text-[8px]  font-medium rounded-full cursor Pointer transition-all duration-200 ${alreadyInformed
-                              ? "bg-red-500/90 text-white cursor-not-allowed"
-                              : "bg-teal-600 text-white hover:bg-teal-700 cursor-pointer"
-                              }`}
-                          >
-                            {alreadyInformed ? "Informed ✓" : "Confirm"}
-                          </button>
-                          
-                          {alreadyInformed && clients.some(client => client.SuitableHCP !== hcp.UserId) && <p  className={`px-3 py-1 text-[10px] cursor-pointer font-medium rounded-full cursor Pointer transition-all duration-200  bg-[#40c9a2]  text-white hover:bg-teal-700`} onClick={()=>UpdateHCPIntrest(activeClient.userId,hcp.UserId)}> Intrested</p>}
-
-                            </div>
-                           
-                        )}
-                      </div> */}
-
-              {/* {alreadyInformed&&   <p className=" px-1 rounded-lg border text-gray-800 font-[7px] mt-2 shadow hover:bg-gray-700 hover:text-white active:scale-95 transition-transform cursor-pointer" onClick={()=>SendBVR(hcp)}>
-  Send BVR
-</p>} */}
-                      <div className="absolute top-2 right-2">
-                        <button
-                          onClick={() =>
-                            ShowDompleteInformation(hcp.UserId, hcp.HCPFirstName)
-                          }
-                          className="p-1 bg-white rounded-full shadow border hover:scale-105 transition-transform"
-                        >
-                          <Eye size={12} className="text-teal-600" />
-                        </button>
-                      </div>
-
-                      {isCurrent && (
-                        <p
-                          className={`text-[9px] text-center mt-1 font-semibold ${StatusMessage === "Confirmation Send" || StatusMessage==="Now You Can Assign" || StatusMessage === "HCA Assigned Successfully, For More Information Check in Deployments"
-                            ? "text-green-700"
-                            : "text-gray-500"
-                            }`}
-                        >
-                          {StatusMessage}
-                        </p>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-            </div>}
         </div>
        
       </div>

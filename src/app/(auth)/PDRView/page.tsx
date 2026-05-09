@@ -3,7 +3,7 @@ let cachedRegisteredUsers: any[] = [];
 let cachedTimeSheetInfo: any[] = [];
 
 import React, { useEffect, useState } from "react";
-import { CircleCheckBig, Eye, LogOut, Trash } from "lucide-react";
+import { CircleCheckBig, Eye, LogOut, SquarePen, Trash } from "lucide-react";
 import { DeleteDeployMent, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, InserTerminationData, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { GetCurrentDeploymentData, Update_Main_Filter_Status, UpdateFetchedInformation, UpdateMonthFilter, UpdateSubHeading, UpdateYearFilter } from "@/Redux/action";
@@ -197,25 +197,43 @@ const phoneNumber='919347877159'
   setShowTimeSheet(false);
 }
 
-const UpdatePopup = async (a: any) => {
-  SetActionStatusMessage("Please Wait.....");
-  dispatch(GetCurrentDeploymentData(a));
-console.log("Client_Id", a)
-  const data = await GetUserInformation(a.Client_Id);
+const updatePopup = async (payload: any) => {
+  try {
+    SetActionStatusMessage("Please wait...");
 
-  const { UpdatedAt, CreatedAt, updatedAt, createdAt, ...rest } = data;
+    // Run independent operations in parallel
+    const [_, userInfo] = await Promise.all([
+      dispatch(GetCurrentDeploymentData(payload)),
+      GetUserInformation(payload.Client_Id),
+    ]);
 
-  dispatch(
-    UpdateFetchedInformation({
-      ...rest,
-      UpdatedAt: normalizeDate(UpdatedAt),
-      CreatedAt: normalizeDate(CreatedAt),
-    })
-  );
+    if (!userInfo) {
+      throw new Error("User information not found");
+    }
 
-  Router.push("/PDR");
+    const {
+      UpdatedAt,
+      CreatedAt,
+      updatedAt,
+      createdAt,
+      ...rest
+    } = userInfo;
+
+    dispatch(
+      UpdateFetchedInformation({
+        ...rest,
+        UpdatedAt: UpdatedAt ? normalizeDate(UpdatedAt) : null,
+        CreatedAt: CreatedAt ? normalizeDate(CreatedAt) : null,
+      })
+    );
+
+    Router.push("/PDR");
+  } catch (error) {
+    console.error("UpdatePopup Error:", error);
+
+    SetActionStatusMessage("Something went wrong. Please try again.");
+  }
 };
-
 
 
   const ExtendTimeSheet = async (a: any) => {
@@ -549,6 +567,7 @@ const handleLogout = () => {
             <tr>
                 <th className="px-6 py-4">S.No</th>
               <th className="px-6 py-4">Client Name</th>
+                <th className="px-6 py-4">Patient Name</th>
                     <th className="px-6 py-4">HCP Name</th>
               <th className="px-6 py-4">Contact</th>
               <th className="px-6 py-4">Location</th>
@@ -564,6 +583,7 @@ const handleLogout = () => {
               >
                      <td className="px-6 py-4 font-semibold text-gray-900">{i+1}</td>
                 <td className="px-6 py-4 font-semibold text-gray-900">{c.name}</td>
+                 <td className="px-6 py-4 font-semibold text-gray-900">{c.PatientName}</td>
                 <td className="px-6 py-4 font-semibold text-gray-900">{c.HCA_Name}</td>
                 <td className="px-6 py-4">{c.contact}</td>
                 <td className="px-6 py-4 text-gray-600 truncate max-w-[200px]">{c.location}</td>
@@ -574,12 +594,20 @@ const handleLogout = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <button
-                    onClick={() => UpdatePopup(c)}
-                    className="px-6 py-2 text-xs cursor-pointer font-semibold bg-gradient-to-r from-emerald-600 to-teal-500 text-white rounded-full shadow-md hover:shadow-lg hover:scale-[1.05] transition-all duration-300"
-                  >
-                  <Eye/>
-                  </button>
+                 <button
+  onClick={() => updatePopup(c)}
+  className="px-6 py-2 cursor-pointer rounded-full shadow-md hover:shadow-lg hover:scale-[1.05] transition-all duration-300 flex items-center justify-center"
+>
+  {c.PDRStatus ? (
+    <div  className="p-2 rounded-full bg-emerald-100 text-emerald-600">
+      <Eye size={18} />
+    </div>
+  ) : (
+    <div className="p-2 rounded-full bg-red-100 text-red-600">
+      <SquarePen size={18} />
+    </div>
+  )}
+</button>
                 </td>
               </tr>
             ))}

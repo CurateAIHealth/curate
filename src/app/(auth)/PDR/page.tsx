@@ -21,10 +21,11 @@
   import MedicationSchedule from '@/Components/Medications/page'
   import { CheckboxGroup } from '@/Components/CheckboxGroup'
   import axios from 'axios'
-import { GetUsersFullInfo, SuitableHCPUpdate, UpdateHCAnstatus } from '@/Lib/user.action'
+import { GetUsersFullInfo, SuitableHCPUpdate, UpdateHCAnstatus, UpdateInvoice, UpdateNewserviceCharges, UpdatePaymentForStaff } from '@/Lib/user.action'
 import { useRouter } from 'next/navigation'
 import { getDaysBetween } from '@/Lib/Actions'
 import DatePopup from '@/Components/MissingDateRange/page'
+import { UpdateInvoicePageStatus } from '@/Redux/reducer'
   type EditingKeys = 'PatientCardEditing' | 'ClientCardEditing' | 'PatientDetails' | 'AdditionalInformation' | 'OtherInformation' | 'EquipmentDetails' | 'Hygiene' | 'Medication';
 
 
@@ -71,6 +72,8 @@ import DatePopup from '@/Components/MissingDateRange/page'
     const [isInvoiseEditing, setisInvoiseEditing] = React.useState(false);
     const [otherInputs, setOtherInputs] = useState<StringMap>({});
     const [AdvanceAmount,setAdvanceAmount]=useState<any>("")
+    const [ShowBillEdit,setShowBillEdit]=useState(false)
+    const [EditMessage,setEditMessage]=useState("")
       const [selectedHCP,setselectedHCP]=useState<any>()
     const [isEditing, setIsEditing] = useState({ PatientCardEditing: false, ClientCardEditing: false, PatientDetails: false, AdditionalInformation: false, OtherInformation: false, EquipmentDetails: false, Hygiene: false, Medication: false });
     const dispatch = useDispatch()
@@ -103,8 +106,7 @@ const reduxFormData = useSelector(
 
 const [formData, setFormData] = useState<any>({});
 const router=useRouter()
-console.log("Check DeploaymentInformation",DeploaymentInformation)
-console.log("reduxFormData",reduxFormData)
+
 useEffect(() => {
   const fetchData = async () => {
     if (!reduxFormData) return;
@@ -115,7 +117,8 @@ useEffect(() => {
   setUsers(fullInformation)
  setFormData((prev: any) => ({
     ...prev,
-    ClientAgreement: "",
+    ClientAgreementFront: "",
+    ClientAgreementBack: "",
   }));
     const cleanNumber = (val: any) => {
       if (!val) return "";
@@ -165,63 +168,63 @@ const handleInvoiseChange = (key: any, value: any) => {
       setFormData((prev: any) => ({ ...prev, [key]: value }));
     };
 
-  const handleImageChange = useCallback(
-      async (e: React.ChangeEvent<HTMLInputElement>) => {
-      setUploadStatusMessage("Please Wait Uploading Document");
+const handleImageChange = useCallback(
+  async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUploadStatusMessage("Please Wait Uploading Document");
 
+    const file = e.target.files?.[0];
+    const inputName = e.target.name;
 
-        const file = e.target.files?.[0];
-        const inputName = e.target.name;
-        if (!file) return;
+    if (!file) return;
 
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File too large. Max allowed is 10MB.");
+      return;
+    }
 
-        if (file.size > 10 * 1024 * 1024) {
-          alert('File too large. Max allowed is 10MB.');
-          return;
-        }
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "video/mp4",
+      "video/webm",
+      "video/ogg",
+      "application/pdf",
+    ];
 
+    if (!allowedTypes.includes(file.type)) {
+      alert("Only image, video, or PDF files are allowed.");
+      return;
+    }
 
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg','application/pdf',];
-        if (!allowedTypes.includes(file.type)) {
-          alert('Only image or video files are allowed.');
-          return;
-        }
+    const formDataData = new FormData();
+    formDataData.append("file", file);
 
-        const formData = new FormData();
-        formData.append('file', file);
+    try {
+      const res = await axios.post("/api/Upload", formDataData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-        try {
-
-        
-
-          const res = await axios.post('/api/Upload', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
-
-  
       const url = res?.data?.url;
 
-if (url) {
-  setFormData((prev: any) => ({
-    ...prev,
-    ClientAgreement: url,
-  }));
-}
+      if (url) {
+        setFormData((prev: any) => ({
+          ...prev,
+          [inputName]: url,
+        }));
+      }
 
-    
-  setUploadStatusMessage("Document Uploaded Successfully");
-      
-        } catch (error: any) {
-          console.error('Upload failed:', error.message);
-        
-        } finally {
-        
-        }
-      },
-      []
-    );
+      setUploadStatusMessage("Document Uploaded Successfully");
+    } catch (error: any) {
+      console.error("Upload failed:", error.message);
+      setUploadStatusMessage("Upload Failed");
+    }
+  },
+  []
+);
 
     const handleSave = async (Item: EditingKeys) => {
      
@@ -316,6 +319,58 @@ const GetHCPName=Finel.filter((each:any)=>each.userId=== DeploaymentInformation.
 
   return typeMatch && isNotAssigned && isValidCurrentStatus;
 });
+
+const updateInvoiceEditedInformation = async () => {
+  
+  setShowBillEdit((prev) => !prev);
+
+
+  if (!ShowBillEdit) return;
+
+  try {
+    setEditMessage("Updating invoice and payment details, please wait...");
+
+
+    const payment = Math.round(
+      Number(InvoiseInformation?.hcaPrice || 0) * 30
+    ).toString();
+
+  
+    const [updateDayPrice, hcpPaymentUpdated] = await Promise.all([
+      UpdateNewserviceCharges(
+        reduxFormData?.userId,
+        InvoiseInformation?.dayPrice
+      ),
+      UpdatePaymentForStaff(
+        DeploaymentInformation?.HCA_Id,
+        payment
+      ),
+    ]);
+
+    
+    const messages = [];
+
+    if (updateDayPrice?.success) {
+      messages.push("Day price updated successfully");
+    }
+
+    if (hcpPaymentUpdated?.success) {
+      messages.push("HCP payment updated successfully");
+    }
+
+    setEditMessage(
+      messages.length
+        ? messages.join(" & ")
+        : "Update completed"
+    );
+  } catch (error:any) {
+    console.error("Update invoice error:", error);
+
+    setEditMessage(
+      error?.message || "Failed to update invoice details"
+    );
+  }
+};
 
  if (!formData || Object.keys(formData).length === 0) {
   return (
@@ -1344,13 +1399,61 @@ const GetHCPName=Finel.filter((each:any)=>each.userId=== DeploaymentInformation.
 
       <div>
         <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-gray-800">
-          Invoice Information
+          Invoice Information 
         </h2>
         <p className="text-sm text-gray-400">
           Fill in billing and service details
         </p>
       </div>
     </div>
+   {EditMessage && (
+    <p className="text-sm md:text-base text-teal-700 dark:text-teal-300 bg-teal-100 dark:bg-zinc-800 px-4 py-3 rounded-xl shadow-sm leading-relaxed tracking-wide border border-gray-200 dark:border-zinc-700">
+      {EditMessage}
+    </p>
+   )}
+<button
+  onClick={updateInvoiceEditedInformation}
+               className={`flex items-center gap-2 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer
+                              ${ShowBillEdit? 'bg-teal-600 text-white hover:bg-[#1392d3]' : 'bg-teal-600  text-white hover:bg-blue-600'}`}
+>
+  {ShowBillEdit ? (
+    <>
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M5 13l4 4L19 7"
+        />
+      </svg>
+
+      Save 
+    </>
+  ) : (
+    <>
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M11 5h2m-1-1v2m-7 9v4h4l10-10-4-4L5 15z"
+        />
+      </svg>
+
+      Edit 
+    </>
+  )}
+</button>
   </div>
 
   {/* Fields */}
@@ -1361,7 +1464,7 @@ const GetHCPName=Finel.filter((each:any)=>each.userId=== DeploaymentInformation.
   const isDateField =
     field.key === "startDate" || field.key === "endDate";
 
-  const isDisabled = !isDateField && !isInvoiseEditing;
+  const isDisabled = !isDateField && !ShowBillEdit;
 
   return (
     <div key={index} className="flex flex-col">
@@ -1511,66 +1614,31 @@ const isProfit = invoiceProfit >= 0;
 </div>
 
       
-<div className="max-w-md bg-white rounded-2xl shadow-md p-6 space-y-4">
-
+<div className="max-w-md bg-white rounded-2xl shadow-md p-6 space-y-5">
   <h3 className="text-lg font-semibold text-slate-800">
     Upload Client Agreement
   </h3>
 
   <p className="text-sm text-slate-500">
-    Upload the signed agreement document (PDF or Image).
+    Upload Front Side and Back Side documents.
   </p>
 
-  {/* BEFORE UPLOAD */}
-  {!formData?.ClientAgreement && (
-    <label
-      htmlFor="agreement"
-      className="flex flex-col items-center justify-center gap-2
-                 border-2 border-dashed border-emerald-300 rounded-xl p-6
-                 cursor-pointer hover:bg-emerald-50 transition"
-    >
-      <svg
-        className="w-8 h-8 text-emerald-600"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M7 16V12M7 12V8M7 12H3M21 12h-4m-2 4l-3 3m0 0l-3-3m3 3V10"
-        />
-      </svg>
+  <div className=" flex gap-6 space-y-4">
+    <div>
+      <p className="text-sm font-medium text-slate-700 mb-2">
+        Front Side
+      </p>
 
-      <span className="text-sm font-medium text-slate-700">
-        Click to upload or drag & drop
-      </span>
-
-      <span className="text-xs text-slate-500">
-        PDF, JPG, PNG (Max 5MB)
-      </span>
-
-      <input
-        id="agreement"
-        type="file"
-        accept=".pdf,.jpg,.png"
-        className="hidden"
-        onChange={handleImageChange}
-      />
-    </label>
-  )}
-
-  {/* AFTER UPLOAD */}
-  {formData?.ClientAgreement && (
-    <div className="flex items-center justify-between
-                    border border-green-200 bg-green-50
-                    rounded-xl p-4">
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-full bg-green-100
-                        flex items-center justify-center">
+      {!formData?.ClientAgreementFront ? (
+        <label
+          htmlFor="agreementFront"
+          className="flex flex-col items-center justify-center gap-2
+                     border-2 border-dashed border-emerald-300
+                     rounded-xl p-5 cursor-pointer
+                     hover:bg-emerald-50 transition"
+        >
           <svg
-            className="w-5 h-5 text-green-600"
+            className="w-8 h-8 text-emerald-600"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -1579,32 +1647,124 @@ const isProfit = invoiceProfit >= 0;
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              d="M5 13l4 4L19 7"
+              d="M7 16V12M7 12V8M7 12H3M21 12h-4m-2 4l-3 3m0 0l-3-3m3 3V10"
             />
           </svg>
+
+          <span className="text-sm font-medium text-slate-700">
+            Upload Front Side
+          </span>
+
+          <input
+            id="agreementFront"
+            name="ClientAgreementFront"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="hidden"
+            onChange={handleImageChange}
+          />
+        </label>
+      ) : (
+        <div
+          className="flex items-center justify-between
+                     border border-green-200 bg-green-50
+                     rounded-xl p-4"
+        >
+          <p className="text-sm font-medium text-slate-800">
+            Front Side Uploaded
+          </p>
+
+          <label
+            htmlFor="agreementFront"
+            className="text-sm font-medium text-emerald-600
+                       cursor-pointer hover:underline"
+          >
+            Replace
+
+            <input
+              id="agreementFront"
+              name="ClientAgreementFront"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              className="hidden"
+              onChange={handleImageChange}
+            />
+          </label>
         </div>
-
-        <p className="text-sm font-medium text-slate-800">
-          Client agreement uploaded
-        </p>
-      </div>
-
-      <label
-        htmlFor="agreement"
-        className="text-sm font-medium text-emerald-600
-                   cursor-pointer hover:underline"
-      >
-        Replace
-        <input
-          id="agreement"
-          type="file"
-          accept=".pdf,.jpg,.png"
-          className="hidden"
-          onChange={handleImageChange}
-        />
-      </label>
+      )}
     </div>
-  )}
+
+    <div>
+      <p className="text-sm font-medium text-slate-700 mb-2">
+        Back Side
+      </p>
+
+      {!formData?.ClientAgreementBack ? (
+        <label
+          htmlFor="agreementBack"
+          className="flex flex-col items-center justify-center gap-2
+                     border-2 border-dashed border-emerald-300
+                     rounded-xl p-5 cursor-pointer
+                     hover:bg-emerald-50 transition"
+        >
+          <svg
+            className="w-8 h-8 text-emerald-600"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M7 16V12M7 12V8M7 12H3M21 12h-4m-2 4l-3 3m0 0l-3-3m3 3V10"
+            />
+          </svg>
+
+          <span className="text-sm font-medium text-slate-700">
+            Upload Back Side
+          </span>
+
+          <input
+            id="agreementBack"
+            name="ClientAgreementBack"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="hidden"
+            onChange={handleImageChange}
+          />
+        </label>
+      ) : (
+        <div
+          className="flex items-center justify-between
+                     border border-green-200 bg-green-50
+                     rounded-xl p-4"
+        >
+          <p className="text-sm font-medium text-slate-800">
+            Back Side Uploaded
+          </p>
+
+          <label
+            htmlFor="agreementBack"
+            className="text-sm font-medium text-emerald-600
+                       cursor-pointer hover:underline"
+          >
+            Replace
+
+            <input
+              id="agreementBack"
+              name="ClientAgreementBack"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              className="hidden"
+              onChange={handleImageChange}
+            />
+          </label>
+        </div>
+      )}
+    </div>
+  </div>
+
   {UploadStatusMessage && (
     <p
       className={`
@@ -1636,8 +1796,9 @@ const isProfit = invoiceProfit >= 0;
                     return
                   }
 
-                  if(!formData?.ClientAgreement){
-                    alert('Please Upload Client Agreement')
+                  if( !formData.ClientAgreementFront||
+    !formData.ClientAgreementBack){
+                    alert('Please Upload Both Sides of Client Agreement')
                     return
                   }
                   

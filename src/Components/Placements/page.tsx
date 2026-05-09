@@ -17,7 +17,7 @@ import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
 import { filterColors, months, Placements_Filters, years } from "@/Lib/Content";
 import ReplacementsTable from "../ReplacementsTable/page";
-import { AssignSuitableIcon, getDaysBetween, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
+import { AssignSuitableIcon, getDaysBetween, getDueDaysStatus, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
 import { useRouter } from "next/navigation";
 import { div } from "framer-motion/client";
 import SalaryPopup from "../HCPSalary/page";
@@ -267,14 +267,7 @@ const matchesSearchAndMonth = (
 
     }
   }
-  const ShowDompleteInformation = async (userId: any, ClientName: any) => {
-    if (userId) {
-      dispatch(UpdateClient(ClientName));
-      dispatch(UpdateUserInformation(userId));
-      dispatch(UpdateUserType("patient"));
-      router.push("/UserInformation");
-    }
-  };
+
 
 
   const GetPatientName = (A:any) => {
@@ -284,6 +277,18 @@ const matchesSearchAndMonth = (
 
   return filtered
 };
+
+
+
+  const ShowProfileInformation = async (userId: any, ClientName: any) => {
+    SetActionStatusMessage("Please Wait.....")
+    if (userId) {
+      dispatch(UpdateClient(ClientName));
+      dispatch(UpdateUserInformation(userId));
+      dispatch(UpdateUserType("patient"));
+      router.push("/UserInformation");
+    }
+  };
 
 const PostRefunRequest = async (data: any) => {
 
@@ -628,6 +633,15 @@ const SelectedCareTakerCharges=GetInfo.serviceCharges
     );
   }
 };
+
+  const ShowDompleteInformation = (userId: any, ClientName: any) => {
+
+    if (userId) {
+      dispatch(UpdateClient(ClientName));
+      dispatch(UpdateUserInformation(userId));
+      router.push("/UserInformation");
+    }
+  };
 
    const GetHCPGender = (A: any) => {
     if (!users?.length || !A) return "Not Entered";
@@ -1125,17 +1139,7 @@ const OmServiceView = () => {
            
         <div className="flex flex-wrap items-center gap-3 justify-between">
     
-{ActionStatusMessage && (
-  <p
-    className={`mt-3 text-center text-sm font-medium ${
-      ActionStatusMessage .includes("Sucessfull") 
-        ? "text-green-700"
-        : "text-gray-700"
-    }`}
-  >
-    {ActionStatusMessage}
-  </p>
-)}
+
      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3">
 
   {/* Search */}
@@ -1171,7 +1175,19 @@ const OmServiceView = () => {
       className="w-full bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
     />
   </div>
-
+{ActionStatusMessage && (
+  <div className="mt-4 flex justify-center">
+    <p
+      className={`rounded-xl px-4 py-2 text-sm font-semibold shadow-sm transition-all duration-300 ${
+        ActionStatusMessage.includes("Sucessfull")
+          ? "border border-green-200 bg-green-50 text-green-700"
+          : "border border-red-200 bg-red-50 text-red-700"
+      }`}
+    >
+      {ActionStatusMessage}
+    </p>
+  </div>
+)}
   {/* Filters */}
   <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
 
@@ -1405,7 +1421,7 @@ setShowCareTakerPriceUpdate(false)
       </th>
     )} */}
  <th className="w-[50px] px-2 py-2 text-center">
-        Invoice
+         Profile
       </th>
     {/* <th className="w-[100px] px-2 py-2 text-center">
       Service Continue
@@ -1832,11 +1848,11 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
             Manage {CareTakerName} Status
                 </option>
                 <option value="Active">🟢 Active</option>
-                <option value="Available">🟢 Available for Work</option>
+               
                 <option value="Sick">🟡 Sick</option>
                 <option value="Leave">🔵 Leave</option>
                 <option value="Bench">🟣 Bench</option>
-                <option value="None">⚪ None</option>
+            
                 <option value="Terminated">🔴 Terminated</option>
               </select>
             </div>
@@ -1927,7 +1943,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
 
 
   <td className="px-3 py-3 text-center">
-<button  className="
+{/* <button  className="
     px-1 py-1
     text-[9px] font-semibold
    text-emerald-600
@@ -1944,6 +1960,24 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
   onClick={()=>CreateInvoice(c)}
   >
   Create
+</button> */}
+<button  className="
+    px-1 py-1
+    text-[9px] font-semibold
+   text-emerald-600
+border border-emerald-500
+    rounded-lg
+text-white
+    transition-all duration-300
+  shadow-[0_0_0_0_rgba(16,185,129,0.5)]
+hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
+   bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e]
+    active:scale-95 
+    cursor-pointer
+  "
+  onClick={()=>ShowProfileInformation(c.Client_Id,c.name)}
+  >
+  Preview
 </button>
 {/* 
 <img src="Icons/CreateInovoice.png" onClick={()=>CreateInvoice(c)} className="h-7 ml-3"/> */}
@@ -2694,6 +2728,22 @@ const onServiceCount = FinelTimeSheet.filter((item) =>
   )
 ).length;
 
+const AwaitingInvoiceCount = FinelTimeSheet
+  .filter((item) =>
+    matchesSearchAndMonth(item, SearchResult, SearchMonth, SearchYear)
+  )
+  .filter((item: any) => {
+    const [, month, year] = item.StartDate.split("/").map(Number);
+    const isMatch =
+      month === SearchMonth && year === SearchYear;
+    const WorkingDays: any = getDueDaysStatus(item.EndDate);
+
+  return isMatch 
+    
+  }).length;
+
+  console.log("AwaitingInvoiceCount", AwaitingInvoiceCount);
+
 const GetFilterCount = (type: string) => {
   switch (type) {
     case "On Service":
@@ -2751,7 +2801,7 @@ const GetFilterCount = (type: string) => {
                 }`}
               >
               
-        {`${each} (${GetFilterCount(each) || 0})`}
+        {`${each}   ${each !== "Awaiting Invoice"?(GetFilterCount(each) || 0):''}`}
 
                 
               </button>)}

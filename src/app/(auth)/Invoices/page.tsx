@@ -73,7 +73,7 @@ useEffect(() => {
 }, [status])
 
   const downloadExcel = () => {
-    const exportData = paginatedData.map((inv) => {
+    const exportData = filteredInvoices.map((inv) => {
       const totalAmount =
         getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
         Number(inv.CareTakeCharge) +
@@ -429,6 +429,7 @@ console.log("MainTemplateInfo", MainTemplateInfo)
       terms: InvoiceData?.terms ?? "7 Days",
       patientName: InvoiceData?.patientName,
       invoiceName: InvoiceData?.name,
+      Adress  : InvoiceData?.Adress
     },
 
     billTo: {
@@ -809,7 +810,7 @@ CheckPaymentStatus:CurrentPaymentStatus
 </div>
 
 <div className="max-h-[600px] overflow-y-auto">
-  {filteredInvoices?.map((inv: any, index: any) => {
+  {filteredInvoices?.reverse().map((inv: any, index: any) => {
     const dueInfo = getDueStatus(inv.StartDate)
 
     const total =
