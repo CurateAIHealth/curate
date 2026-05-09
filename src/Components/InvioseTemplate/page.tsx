@@ -8,7 +8,7 @@ import axios from "axios";
 import { UpdateInvoiceIntialStatus, UpdateInvoiceStatus } from "@/Redux/action";
 import { useRouter } from "next/navigation";
 
-interface InvoiceInfo { number?: string; date?: string; dueDate?: string; terms?: string; serviceFrom?: string; serviceTo?: string; }
+interface InvoiceInfo { number?: string; date?: string; dueDate?: string; terms?: string; serviceFrom?: string; serviceTo?: string; Adress?:string }
 interface BillToInfo { name?: string; addressLines?: string; patientName?: string; otherDetails?: string; }
 interface ItemRow { description: string; days: number | string; rate: number | string; amount: number | string; }
 interface Totals {
@@ -393,7 +393,7 @@ const recalcTotals = () => {
         <h4 style={{ marginBottom: 6, color: "#374151" }}>Invoice To:</h4>
         <b style={{ fontSize: 16 }}>{billTo.patientName || "-"}</b><br />
         <span style={{ fontSize: 13, color: "#6b7280" }}>
-          {company.addressLines?.map((x, i) => <div key={i}>{x}</div>)}
+          {invoice.Adress || "-"}
         </span>
       </td>
 

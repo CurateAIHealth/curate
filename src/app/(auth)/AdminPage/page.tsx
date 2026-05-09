@@ -328,7 +328,25 @@ const GetHCPTypeCount = (HCPType: string) => {
   const callEnquiryArray = users.filter((each) => each.userType === 'CallEnquiry')
   const NotIntrestedArray= users.filter((each) => each.Type === 'Irrelevant')
 
+ const GetUserCurrentStatus:any=(UserId:any)=>{
+    try{
+ if (!DeploymentInfo?.length || !UserId) return "Not Entered";
  
+
+const monthNames = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
+
+  const  SelectedMonth=`${SearchYear}-${monthNames.indexOf(SearchMonth)+1}`
+    const address =
+      DeploymentInfo?.find((info: any) => info?.ClientId ===UserId &&info?.Month===SelectedMonth)
+
+    return address;
+    }catch(err:any){
+
+    }
+  }
 
   const clientsData= users.filter((each) => each.userType === 'patient')
 
@@ -434,13 +452,16 @@ const GetHCPTypeCount = (HCPType: string) => {
   (!SearchMonth && !SearchYear) ||
   checkDate(each.LeadDate);
 
+
+  
+
     return (
       HCPUserType&&
       matchesType &&
       matchesStatus &&
       matchesSearchResult &&
       matchesCurrentStatus &&
-      matchesDate 
+      matchesDate &&!GetUserCurrentStatus(each.userId)
       // &&notAdmin
     );
   })
@@ -476,7 +497,7 @@ const GetHCPTypeCount = (HCPType: string) => {
 
 
   const MonthlyCount = Finel.filter((each) =>
-    filterByMonthAndYear(each, SearchMonth, SearchYear)
+    filterByMonthAndYear(each, SearchMonth, SearchYear)&&!GetUserCurrentStatus(each.userId)
   );
 
  
@@ -977,6 +998,7 @@ const UpdatePopup = async (a: any) => {
                           >
                           
                             <td className='pl-4'>{index + 1}</td>
+                          
                        <td>
                        {/* <input className="
     h-8 w-[70px] px-1
@@ -1221,7 +1243,7 @@ const UpdatePopup = async (a: any) => {
                             className="rounded-full h-7 w-7 sm:h-10 sm:w-10 object-cover"
                           /> */}
 
-                                <span className="font-semibold ">
+                                <span className="font-semibold text-xs">
                                   {toProperCaseLive(user.PatientName)}
 
 
@@ -1540,12 +1562,12 @@ const UpdatePopup = async (a: any) => {
                                 >
 
                                  <option value="Active">🟢 Active</option>
-<option value="Available for Work">🟢 Available for Work</option>
+
 <option value="Training">🟠 Training</option>
 <option value="Sick">🟡 Sick</option>
 <option value="Leave">🔵 Leave</option>
 <option value="Bench">🟣 Bench</option>
-<option value="None">⚪ None</option>
+
 <option value="Terminated">🔴 Terminated</option>
                                 </select>
                               </td>
@@ -1867,25 +1889,7 @@ const handleSave = async (data: any) => {
     }
   }
 
-  const GetUserCurrentStatus:any=(UserId:any)=>{
-    try{
- if (!DeploymentInfo?.length || !UserId) return "Not Entered";
- 
-
-const monthNames = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December"
-  ];
-
-  const  SelectedMonth=`${SearchYear}-${monthNames.indexOf(SearchMonth)+1}`
-    const address =
-      DeploymentInfo?.find((info: any) => info?.ClientId ===UserId &&info?.Month===SelectedMonth)
-
-    return address;
-    }catch(err:any){
-
-    }
-  }
+  
 
 
 

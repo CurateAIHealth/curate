@@ -181,7 +181,7 @@ export default function CallEnquiryForm() {
   const [addingWeight, setaddingWeight] = useState<any>("");
   const [ShowOtherOnGoinCall,setShowOtherOnGoinCall]=useState(false)
   const [ShowOtherServiceArea,setShowOtherServiceArea]=useState(false)
-  const [statusMessage, setStatusMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState("PDR Data Detected!");
   const [addedheight, setaddedheight] = useState<any>();
   const [FetchedInfo,setFetchedInfo]=useState<any>()
   const [TimeStameDetails, setTimeStameDetails] = useState("setTimeStameDetails")
@@ -276,7 +276,7 @@ const toProperCaseLive = (value: string) => {
       ]);
       setImportedVendors(RegisterdUsers.filter((each: any) => each.userType === "Vendor"))
       setTimeStameDetails(`${Sign_in_UserInfo?.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`)
- 
+ GetUserInfo&&setStatusMessage("Pre-Filling the Form....")
 setFetchedInfo(GetUserInfo)
 setFormData({...formData,clientPhone:GetUserInfo?.ContactNumber,
 clientEmail:GetUserInfo?.Email,
@@ -309,7 +309,7 @@ hcpType: Array.isArray(GetUserInfo?.ServiceType)
 
 
 })
-
+setStatusMessage("Form Pre-Filled with Previous Data, Please Update the Necessary Fields and Submit")
     }
     Fetch()
     setIsChecking(false)
@@ -375,7 +375,9 @@ const handleCmChange = (value: string) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.ClientStatus || formData.ClientStatus.trim() === "") {
+
+    try{
+      if (!formData.ClientStatus || formData.ClientStatus.trim() === "") {
       setStatusMessage("Please Select Client Status");
       return;
     }
@@ -384,13 +386,38 @@ const handleCmChange = (value: string) => {
 
     const FinelPostingData = { ...formData, serviceCharges: formData.serviceCharges?formData.serviceCharges:FetchedInfo.serviceCharges, RegistrationFee: DiscountPrice - ClientDiscount?DiscountPrice - ClientDiscount:FetchedInfo.RegistrationFee, Medications: MedicationData, userId: FetchedInfo.userId, SuitableHCP: "" }
 
-    const PostResult = await UpdateNewLeadInformation(FinelPostingData);
-    if (PostResult.success) {
-          setStatusMessage(`${PostResult.message},Riderecting to HCP Suggetion....`);
-          const Timer = setInterval(() => {
-          router.push("/Clientsuggetions")
-         dispatch(UpdateClientSuggetion(PDRFilledUser))
-      }, 1200)
+    const postResult = await UpdateNewLeadInformation(FinelPostingData);
+   if (!postResult?.success) {
+      setStatusMessage(
+        postResult?.message || "Failed to update lead information"
+      );
+      return;
+    }
+
+    setStatusMessage(
+      `${postResult.message}, Redirecting to AdminPage....`
+    );
+
+ 
+    if (PDRFilledUser) {
+      dispatch(UpdateClientSuggetion(PDRFilledUser));
+    }
+
+  
+    setTimeout(() => {
+      router.push("/AdminPage");
+    }, 1200);
+    }
+     catch (error) {
+    console.error("handleSubmit error:", error);
+
+    setStatusMessage(
+      error instanceof Error
+        ? error.message
+        : "Something went wrong. Please try again."
+    );
+  }
+    
     
       //   const data = await GetUserInformation(FetchedInfo.userId);
 
@@ -413,7 +440,7 @@ const handleCmChange = (value: string) => {
       // }, 1200)
 
       // return () => clearInterval(Timer)
-    }
+    
   };
 const requiresSubType = (hcpTypes = []) => {
   const servicesWithSubTypes = [
@@ -456,23 +483,29 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
           <h1 className="text-base sm:text-lg md:text-xl font-medium text-[#ff1493] tracking-wide leading-snug flex items-center justify-center gap-2">
             Call Enquiry & Firsthand Info  
             
-            {/* <p
-            className={`${statusMessage === "Your Lead Registration Completed,Riderecting to Admin Page..."
-                ? "text-green-800"
-                : statusMessage === "Please Select Client Status"
-                  ? "text-red-600"
-                  : "text-gray-600"
-              }`}
-
-          >
-            {statusMessage}
-          </p> */}
+         
             <span className="bg-white text-teal-500 rounded-full p-2 shadow-sm text-lg flex items-center justify-center">
               <PhoneCall />
             </span>
           </h1>
-        </div>
 
+            
+        </div>
+<p
+  className={`
+    mt-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-300
+    ${
+      statusMessage ===
+      "Your Lead Registration Completed,Riderecting to Admin Page..."
+        ? "border border-green-200 bg-green-50 text-green-700 shadow-sm"
+        : statusMessage === "Please Select Client Status"
+        ? "border border-red-200 bg-red-50 text-red-600 shadow-sm"
+        : "border border-gray-200 bg-gray-200 text-gray-900"
+    }
+  `}
+>
+  {statusMessage}
+</p>
 
         <div className="flex-grow" />
 
@@ -1072,8 +1105,8 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
           </div>
 
 
-          <div id="Patient Details" className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-3">
-            <h2 className="text-lg font-semibold text-teal-600">Weight</h2>
+          {/* <div id="Patient Details" className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-3"> */}
+            {/* <h2 className="text-lg font-semibold text-teal-600">Weight</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
               {["<40", "40", "50", "60", "70", "80", "90", "100", "110", "120", "120+"].map((w) => (
                 <label key={w} className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
@@ -1134,9 +1167,9 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
                   {formData.patientWeight}kg Patient Weight
                 </p>
               </div>
-            )}
+            )} */}
 
-               <div className="flex items-center justify-center gap-6">
+               {/* <div className="flex items-center justify-center gap-6">
                 <p className="text-sm  text-gray-700 font-bold">Weight Report:</p>
         {options.map((opt) => (
           <label key={opt} className="flex items-center gap-2 cursor-pointer">
@@ -1149,7 +1182,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
             <span className="text-sm text-gray-700">{opt}</span>
           </label>
         ))}
-      </div>
+      </div> */}
             {/* <button type="button" className="bg-white/30 backdrop-blur-md  border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, Weight: !RemarkStatus.Weight }))} > {RemarkStatus.Weight ? "SAVE Remark" : "Add Remarks"} </button>
             {RemarkStatus.Weight && <textarea
               rows={4}
@@ -1159,11 +1192,11 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
               onChange={(e) => handleChange("WeightRemarks", toProperCaseLive(e.target.value))}
             />
             } */}
-          </div>
+          {/* </div> */}
 
-          <div id="Height" className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-2">
-            <h2 className="text-lg font-semibold text-teal-600">Height</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+          {/* <div id="Height" className="bg-white rounded-lg shadow p-4 space-y-3 md:col-span-2"> */}
+            {/* <h2 className="text-lg font-semibold text-teal-600">Height</h2> */}
+            {/* <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
               {["4.0", "5.0", "6.0"].map((h) => (
                 <label key={h} className="flex items-center text-sm bg-purple-50 px-2 py-1 rounded">
                   <input
@@ -1180,8 +1213,8 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
                   {h} ft
                 </label>
               ))}
-            </div>
-            <div className="flex flex-wrap gap-2 items-center justify-center">
+            </div> */}
+            {/* <div className="flex flex-wrap gap-2 items-center justify-center">
              <div className="flex flex-wrap gap-2 items-center justify-center">
   {[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9].map((each: number) => {
     const isActive = addedheight === each;
@@ -1222,8 +1255,8 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
                   {formData.patientHeight}ft Patient Height
                 </p>
               )}
-            </div>
-            <div className="mt-4 flex flex-col items-center gap-1">
+            </div> */}
+            {/* <div className="mt-4 flex flex-col items-center gap-1">
   <label className="text-xs font-semibold text-gray-600">
     Enter Height (CM)
   </label>
@@ -1249,7 +1282,7 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
           </label>
         ))}
       </div>
-</div>
+</div> */}
 
             {/* <button type="button" className="bg-white/30 backdrop-blur-md  border border-teal-500 w-[160px] text-blue-500 cursor-pointer font-semibold px-1 py-2 rounded-xl shadow-lg hover:bg-white/50 hover:scale-105 transition-all duration-200" onClick={() => setRemarkStatus((prev) => ({ ...prev, Height: !RemarkStatus.Height }))} > {RemarkStatus.Height ? "SAVE Remark" : "Add Remarks"} </button>
             {RemarkStatus.Height && <textarea
@@ -1260,7 +1293,9 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
               onChange={(e) => handleChange("HeightRemarks", toProperCaseLive(e.target.value))}
             />
             } */}
-          </div>
+          {/* </div> */}
+
+          
 
          <div id="Comfortable Languages" className="bg-white rounded-lg shadow p-4 space-y-3">
   <h2 className="text-lg font-semibold text-teal-600">Comfortable Languages</h2>
@@ -1805,7 +1840,8 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
         </div>
 
         <div className="text-center">
-          <p
+
+          {statusMessage!=="Form Pre-Filled with Previous Data, Please Update the Necessary Fields and Submit"&&      <p
             className={`${statusMessage === "Your Lead Registration Completed,Riderecting to Admin Page..."
                 ? "text-green-800"
                 : statusMessage === "Please Select Client Status"
@@ -1815,7 +1851,8 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
 
           >
             {statusMessage}
-          </p>
+          </p>}
+    
 
           <button
             type="submit"

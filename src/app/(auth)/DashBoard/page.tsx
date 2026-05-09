@@ -115,6 +115,7 @@ export default function Dashboard() {
 
 
   const options = ["Stay In", "Long Day", "Long Night"];
+    const Weightoptions = ["Actual", "Reported", "Estimated"];
   const [filteredLeads, setFilteredLeads] = useState<string[]>([])
   const ImportedInformationOfCallEnquiry = useSelector((state: any) => state.NotificationCallEnquiryInformation)
   const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
@@ -146,10 +147,16 @@ export default function Dashboard() {
     Reasonforservice: "",
     ClientStatus: "",
     patientWeight: '',
+    WeightReport: '',
+    HeightReport :"",
+    patientHeight : '',
     WorkingHours: "",
     WorkType: "",
     ExtraWorkingHours: "",
-    ExtraWorkType: ""
+    ExtraWorkType: "",
+     houseNumber: "",
+  addressLine1: "",
+  addressLine2: "",
   })
   const [showHealthCardSuggestions, setShowHealthCardSuggestions] =
     useState(false);
@@ -479,13 +486,13 @@ export default function Dashboard() {
 
   const UpdateCallEnquiry = async () => {
     setEnquiryMessage("Please Wait.....")
-    if (EnquiryForm.ClientName === "" && EnquiryForm.patientName === "" && EnquiryForm.ClientContact === "") {
-      alert("Please Enter Client & Patient Name")
-      setEnquiryMessage("")
-      return
-    }
+   if (!EnquiryForm.ClientName || !EnquiryForm.patientName || !EnquiryForm.ClientContact) {
+  alert("Please Enter Client Name, Patient Name & Contact")
+  setEnquiryMessage("")
+  return
+}
 
-    if(  EnquiryForm.serviceCharges===""){
+    if(EnquiryForm.serviceCharges===""){
       alert("Please Enter Service Charges")
       return
     }
@@ -507,12 +514,16 @@ export default function Dashboard() {
         userId: generatedUserId,
         title: EnquiryForm.title || "",
         Patienttitle: EnquiryForm.Patienttitle || "",
-        FirstName: EnquiryForm.ClientName || "",
+        FirstName: `${ EnquiryForm.title} ${EnquiryForm.ClientName}` || "",
         ContactNumber: EnquiryForm.ClientContact || "",
         Email: EnquiryForm.ClientEmail || "",
-        patientName: EnquiryForm.patientName || "",
+        patientName: `${EnquiryForm.Patienttitle} ${EnquiryForm.patientName}` || "",
         patientAge: EnquiryForm.patientAge || "",
         patientWeight: EnquiryForm.patientWeight || '',
+        WeightReport: EnquiryForm.WeightReport || '',
+        patientHeight : EnquiryForm.patientHeight || '',
+        HeightReport  : EnquiryForm.HeightReport || '',
+        
         patientGender: EnquiryForm.patientGender || "",
         clientGender: EnquiryForm.clientGender || "",
         HCPPreferGender: EnquiryForm.HCPPreferGender || "",
@@ -556,6 +567,7 @@ if(EnquiryForm.ClientStatus!=="Send"){
 
 if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
   setEnquiryMessage("Call Enquiry Saved  Successfully!, Please Sent Notification To Respective Staff !");
+   setShowNotification(true);
 }
 
     } catch (err: any) {
@@ -1020,7 +1032,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi Admin – Welcome to Admin Dashboard
+              Hi Admin – Welcome to Admin Dashboard.
             </span>
           </div>
 
@@ -1474,7 +1486,8 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     <div className="w-full">
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Client Name <span className="text-red-500">*</span></label>
+                      <label className="block text-xs font-medium text-teal-600
+                       mb-1">Client Name <span className="text-red-500">*</span></label>
                       <div className="flex gap-2">
                         <select
                           name="title"
@@ -1506,7 +1519,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                       </div>
                     </div>
                     <div className="w-full">
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Patient Name </label>
+                      <label className="block text-xs font-medium text-teal-600 mb-1">Patient Name </label>
                       <div className="flex gap-2">
                         <select
                           name="Patienttitle"
@@ -1539,7 +1552,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                     </div>
 
                     <div className="w-full">
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Mobile Number <span className="text-red-500">*</span></label>
+                      <label className="block text-xs font-medium text-teal-600 mb-1">Mobile Number <span className="text-red-500">*</span></label>
 
                       <input
                         type="tel"
@@ -1581,7 +1594,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                     </div>
 
                     <div className="w-full">
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Email Address</label>
+                      <label className="block text-xs font-medium text-teal-600 mb-1">Email Address</label>
 
                       <input
                         type="email"
@@ -1593,8 +1606,37 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                       />
                     </div>
 
+
+                     <div className="w-full">
+                      <label className="block text-xs font-medium text-teal-600 mb-2">
+                        Patient Gender <span className="text-red-500">*</span>
+
+                      </label>
+                      <div className="flex gap-6">
+                        {["Male", "Female"].map((gender) => (
+                          <label key={gender} className="flex items-center gap-2">
+                            <input type="radio" name="patientGender" value={gender} className="h-5 w-5 accent-indigo-500" onChange={handleChange} />
+                            <span className="text-sm text-gray-700">{gender}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+<div className="w-full">
+                      <label className="block text-xs font-medium text-teal-600 mb-2">
+                        Client Gender <span className="text-red-500">*</span>
+
+                      </label>
+                      <div className="flex gap-6">
+                        {["Male", "Female"].map((gender) => (
+                          <label key={gender} className="flex items-center gap-2">
+                            <input type="radio" name="clientGender" value={gender} className="h-5 w-5 accent-indigo-500" onChange={handleChange} />
+                            <span className="text-sm text-gray-700">{gender}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                     <div className="w-full">
-                      <label className="block text-xs font-medium text-gray-500 mb-1">
+                      <label className="block text-xs font-medium text-teal-600 mb-1">
                         Patient Age <span className="text-red-500">*</span>
 
                       </label>
@@ -1612,7 +1654,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                     </div>
 
                     <div className="w-full">
-                      <label className="block text-xs font-medium text-gray-500 mb-1">
+                      <label className="block text-xs font-medium text-teal-600 mb-1">
                         Patient Weight <span className="text-red-500">*</span>
 
                       </label>
@@ -1627,38 +1669,67 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                         placeholder="Enter Weight KG's"
                         className="w-full rounded-md border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500"
                       />
+                          <div className="flex items-center justify-start mt-2 gap-6">
+                <p className="text-sm  text-gray-600 font-bold">Weight Report:</p>
+        {Weightoptions.map((opt) => (
+          <label key={opt} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              checked={EnquiryForm.WeightReport === opt}
+              onChange={()=>{
+                setEnquiryForm((prev:any)=>({
+                  ...prev,
+                  WeightReport:opt
+                }))
+              }}
+              className="h-4 w-4 accent-indigo-500"
+            />
+            <span className="text-sm text-gray-700">{opt}</span>
+          </label>
+        ))}
+      </div>
                     </div>
-
                     <div className="w-full">
-                      <label className="block text-xs font-medium text-gray-500 mb-2">
-                        Patient Gender <span className="text-red-500">*</span>
+                      <label className="block text-xs font-medium text-teal-600 mb-1">
+                        Patient Height <span className="text-red-500">*</span>
 
                       </label>
-                      <div className="flex gap-6">
-                        {["Male", "Female"].map((gender) => (
-                          <label key={gender} className="flex items-center gap-2">
-                            <input type="radio" name="patientGender" value={gender} className="h-5 w-5 accent-indigo-500" onChange={handleChange} />
-                            <span className="text-sm text-gray-700">{gender}</span>
-                          </label>
-                        ))}
-                      </div>
+
+                      <input
+                        type="number"
+                        name="patientHeight"
+                        value={EnquiryForm.patientHeight}
+                        onChange={handleChange}
+                        min={0}
+                        max={120}
+                        placeholder="Enter Height CM's"
+                        className="w-full rounded-md border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500"
+                      />
+                          <div className="flex items-center justify-start mt-2 gap-6">
+                <p className="text-sm  text-gray-700 font-bold">Height Report:</p>
+        {Weightoptions.map((opt) => (
+          <label key={opt} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              checked={EnquiryForm.HeightReport === opt}
+              onChange={()=>{
+                setEnquiryForm((prev:any)=>({
+                  ...prev,
+                  HeightReport:opt
+                }))
+              }}
+              className="h-4 w-4 accent-indigo-500"
+            />
+            <span className="text-sm text-gray-700">{opt}</span>
+          </label>
+        ))}
+      </div>
                     </div>
 
+                   
 
-                    <div className="w-full">
-                      <label className="block text-xs font-medium text-gray-500 mb-2">
-                        Client Gender <span className="text-red-500">*</span>
 
-                      </label>
-                      <div className="flex gap-6">
-                        {["Male", "Female"].map((gender) => (
-                          <label key={gender} className="flex items-center gap-2">
-                            <input type="radio" name="clientGender" value={gender} className="h-5 w-5 accent-indigo-500" onChange={handleChange} />
-                            <span className="text-sm text-gray-700">{gender}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
+                    
 
 
 
@@ -1666,9 +1737,55 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
 
 
                     <div className="w-[90%] space-y-4">
+  <div className="relative">
+                      <label className="block text-xs font-medium text-teal-600 mb-2">Service Type</label>
 
+                      <input
+                        type="text"
+                        value={EnquiryForm.ServiceType}
+                        placeholder="Enter service type"
+                        onChange={(e) => {
+                          setEnquiryForm((prev: any) => ({
+                            ...prev,
+                            ServiceType: e.target.value,
+                          }));
+                          setShowServiceSuggestions(true);
+                        }}
+                        onFocus={() => setShowServiceSuggestions(true)}
+                        onBlur={() =>
+                          setTimeout(() => setShowServiceSuggestions(false), 150)
+                        }
+                        className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                      />
+
+                      {showServiceSuggestions && EnquiryForm.ServiceType && (
+                        <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border bg-white shadow">
+                          {healthcareServicesforCallEnquiry
+                            .filter((service) =>
+                              service
+                                .toLowerCase()
+                                .includes(EnquiryForm.ServiceType.toLowerCase())
+                            )
+                            .map((service, index) => (
+                              <li
+                                key={index}
+                                onClick={() => {
+                                  setEnquiryForm((prev: any) => ({
+                                    ...prev,
+                                    ServiceType: service,
+                                  }));
+                                  setShowServiceSuggestions(false);
+                                }}
+                                className="cursor-pointer px-3 py-2 text-sm hover:bg-blue-50"
+                              >
+                                {service}
+                              </li>
+                            ))}
+                        </ul>
+                      )}
+                    </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-2">
+                        <label className="block text-xs font-medium text-teal-600 mb-2">
                           Working Hours <span className="text-red-500">*</span>
                         </label>
 
@@ -1717,7 +1834,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                           onClick={() => setShowExtra(true)}
                           className="text-sm bg-indigo-500 text-white px-3 py-1 rounded-md hover:bg-indigo-600"
                         >
-                          Required Additional Hcp?
+                          Required Additional {EnquiryForm.ServiceType ? EnquiryForm.ServiceType : "HCP"}?
                         </button>
                       )}
 
@@ -1779,7 +1896,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                     </div>
 
                     <div className="relative">
-                      <label className="block text-xs font-medium text-gray-500 mb-2">
+                      <label className="block text-xs font-medium text-teal-600 mb-2">
                         Lead Source <span className="text-red-500">*</span>
                       </label>
 
@@ -1826,7 +1943,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                       )}
                     </div>
                     <div className="w-full mt-100px">
-                      <label className="block text-xs font-medium text-gray-500 mb-2">HCP Preferred</label>
+                      <label className="block text-xs font-medium text-teal-600 mb-2">{EnquiryForm.ServiceType ? EnquiryForm.ServiceType : "HCP"} Preferred</label>
 
                       <div className="flex gap-6">
                         {["Male", "Female"].map((opt) => (
@@ -1838,7 +1955,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                       </div>
                     </div>
                     <div className="relative">
-                      <label className="block text-xs font-medium text-gray-500 mb-2">
+                      <label className="block text-xs font-medium text-teal-600 mb-2">
                         Curate Lead Source <span className="text-red-500">*</span>
                       </label>
 
@@ -1886,7 +2003,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                     </div>
 
                     <div className="w-full relative">
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Language Preferred</label>
+                      <label className="block text-xs font-medium text-teal-600 mb-1">Language Preferred</label>
 
                       <input
                         type="text"
@@ -1910,80 +2027,231 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                       )}
                     </div>
 
-                    <div className="w-full relative">
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Service Area</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+  {/* House Number */}
+  <div>
+    <label className="block text-xs font-medium text-teal-600 mb-1">
+      House Number
+    </label>
+    <input
+      type="text"
+      name="houseNumber"
+      value={EnquiryForm.houseNumber}
+      onChange={(e:any)=>{
+         setEnquiryForm((prev: any) => ({
+      ...prev,
+      houseNumber: e.target.value,
+    }));
+      }}
+      placeholder="Enter house number"
+      className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
+    />
+  </div>
 
-                      <input
+  {/* Address Line 1 */}
+  <div>
+    <label className="block text-xs font-medium text-teal-600 mb-1">
+      Address Line 1
+    </label>
+    <input
+      type="text"
+      name="addressLine1"
+       value={EnquiryForm.addressLine1}
+      onChange={(e:any)=>{
+         setEnquiryForm((prev: any) => ({
+      ...prev,
+      addressLine1: e.target.value,
+    }));
+      }}
+      placeholder="Street / Colony"
+      className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
+    />
+  </div>
+
+  {/* Address Line 2 */}
+  <div className="md:col-span-2">
+    <label className="block text-xs font-medium text-teal-600 mb-1">
+      Address Line 2
+    </label>
+    <input
+      type="text"
+      name="addressLine2"
+      value={EnquiryForm.addressLine2}
+      onChange={(e:any)=>{
+         setEnquiryForm((prev: any) => ({
+      ...prev,
+      addressLine2: e.target.value,
+    }));
+      }}
+      placeholder="Landmark / Apartment / Optional"
+      className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
+    />
+  </div>
+
+  {/* Service Area */}
+  <div className="w-full relative md:col-span-2">
+    <label className="block text-xs font-medium text-teal-600 mb-1">
+      Service Area
+    </label>
+
+    <input
+      type="text"
+      value={value}
+      onChange={handleAreaChange}
+      placeholder="Enter area in Hyderabad"
+      className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
+    />
+
+    {suggestions.length > 0 && (
+      <div className="absolute z-10 mt-1 w-full max-h-44 overflow-y-auto rounded-md border bg-white shadow-sm">
+        {suggestions.map((area) => (
+          <div
+            key={area}
+            onClick={() => selectArea(area)}
+            className="cursor-pointer px-3 py-2 text-sm hover:bg-gray-100"
+          >
+            {area}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+ <div id="Charges" className="bg-white rounded-lg shadow p-4 space-y-2">
+                    <h2 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
+                      Day Charges:
+                    </h2>
+                    {/* <div className="flex items-center gap-4">
+  <h2 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
+    Charges:
+  </h2>
+
+  <label className="flex items-center gap-1 cursor-pointer">
+    <input type="checkbox" className="accent-teal-600" checked={DailyChargeType} onChange={()=>{setMonthlyChargeType(!MonthlyChargeType),setDailyChargeType(!DailyChargeType)}}/>
+    <span className="text-sm text-gray-700">Daily</span>
+  </label>
+
+  <label className="flex items-center gap-1 cursor-pointer">
+    <input type="checkbox" className="accent-teal-600" checked={MonthlyChargeType} onChange={()=>{setMonthlyChargeType(!MonthlyChargeType),setDailyChargeType(!DailyChargeType)}}/>
+    <span className="text-sm text-gray-700">Monthly</span>
+  </label>
+</div> */}
+                    {DailyChargeType ?
+                      <div>
+                    
+                              <div className="w-full space-y-2">
+ 
+
+  {/* Input */}
+  <input
+    type="text"
+    placeholder="Enter Day Charges"
+    value={EnquiryForm.serviceCharges}
+    onChange={(e) => {
+      const value = e.target.value;
+
+      setEnquiryForm({
+        ...EnquiryForm,
+        serviceCharges: value,
+      });
+
+      const numericValue = Number(value.replace(/[^0-9]/g, ""));
+
+      if (!numericValue) {
+        setEnquiryMessage("");
+        return;
+      }
+
+      if (numericValue < 800) {
+        setEnquiryMessage("Price Not Offerable");
+      } else {
+        setEnquiryMessage("");
+      }
+    }}
+    className={`w-[87%] rounded-xl border bg-gray-50 px-4 py-3 text-sm 
+    shadow-sm transition-all duration-200 placeholder:text-gray-400
+    focus:outline-none focus:ring-4
+    ${
+      EnquiryMessage
+        ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+        : "border-gray-300 focus:border-teal-500 focus:ring-teal-100"
+    }`}
+  />
+
+  {/* Helper Text */}
+  {!EnquiryMessage && (
+    <p className="text-xs text-gray-500">
+      Minimum offerable price is ₹800
+    </p>
+  )}
+</div>
+                      
+                      </div> : <input
                         type="text"
-                        value={value}
-                        onChange={handleAreaChange}
-                        placeholder="Enter area in Hyderabad"
-                        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500"
-                      />
-                      {suggestions.length > 0 && (
-                        <div className="absolute z-10 mt-1 w-full max-h-44 overflow-y-auto rounded-md border bg-white shadow-sm">
-                          {suggestions.map((area) => (
-                            <div
-                              key={area}
-                              onClick={() => selectArea(area)}
-                              className="cursor-pointer px-3 py-2 text-sm hover:bg-gray-100"
-                            >
-                              {area}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                        placeholder="Enter Monthly Amount"
+                        onChange={(e: any) => setEnquiryForm({ ...EnquiryForm, MonthlyServiceCharge: e.target.value })}
+                        className="px-3 py-1.5 text-sm border border-gray-300 rounded-md 
+             focus:outline-none focus:ring-2 focus:ring-teal-500 
+             focus:border-teal-500 placeholder-gray-400"
+                      />}
 
-                    <div className="relative">
-                      <label className="block text-xs font-medium text-gray-500 mb-2">Service Type</label>
+                  <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-md space-y-4">
+  {/* Header */}
+  <div className="flex items-center justify-between">
+    <div>
+      <h3 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
+        Registration Fee
+      </h3>
+      <p className="text-xs text-gray-500">
+        Apply a discount if available
+      </p>
+    </div>
 
-                      <input
-                        type="text"
-                        value={EnquiryForm.ServiceType}
-                        placeholder="Enter service type"
-                        onChange={(e) => {
-                          setEnquiryForm((prev: any) => ({
-                            ...prev,
-                            ServiceType: e.target.value,
-                          }));
-                          setShowServiceSuggestions(true);
-                        }}
-                        onFocus={() => setShowServiceSuggestions(true)}
-                        onBlur={() =>
-                          setTimeout(() => setShowServiceSuggestions(false), 150)
-                        }
-                        className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
-                      />
+    <span className="rounded-full bg-teal-100 px-3 py-1 text-sm font-semibold text-teal-700">
+      ₹1500
+    </span>
+  </div>
 
-                      {showServiceSuggestions && EnquiryForm.ServiceType && (
-                        <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border bg-white shadow">
-                          {healthcareServicesforCallEnquiry
-                            .filter((service) =>
-                              service
-                                .toLowerCase()
-                                .includes(EnquiryForm.ServiceType.toLowerCase())
-                            )
-                            .map((service, index) => (
-                              <li
-                                key={index}
-                                onClick={() => {
-                                  setEnquiryForm((prev: any) => ({
-                                    ...prev,
-                                    ServiceType: service,
-                                  }));
-                                  setShowServiceSuggestions(false);
-                                }}
-                                className="cursor-pointer px-3 py-2 text-sm hover:bg-blue-50"
-                              >
-                                {service}
-                              </li>
-                            ))}
-                        </ul>
-                      )}
-                    </div>
+  {/* Discount Section */}
+  {DiscountStatus ? (
+    <button
+      onClick={() => SetDiscountStatus(false)}
+      className="w-full rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 
+      px-4 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 
+      hover:scale-[1.02] hover:shadow-xl active:scale-95"
+    >
+      + Add Discount
+    </button>
+  ) : (
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-gray-700">
+        Registration Discount
+      </label>
+
+      <input
+        type="number"
+        placeholder="Enter discount amount"
+        onChange={(e) => SetClientDiscount(e.target.value)}
+        className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 
+        text-gray-700 shadow-sm transition-all duration-200 
+        placeholder:text-gray-400
+        focus:border-teal-500 focus:bg-white focus:outline-none 
+        focus:ring-4 focus:ring-teal-100"
+      />
+    </div>
+  )}
+</div>
+
+
+                   
+                  
+
+
+                  </div>
+
+                  
                     <div className="w-full max-w-md">
-                      <label className="block text-xs font-medium text-gray-500 mb-2">Health Condition</label>
+                      <label className="block text-xs font-medium text-teal-600 mb-2">Health Condition</label>
                       <div className="relative">
                         <input
                           type="text"
@@ -2030,153 +2298,11 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                     </div>
                   </div>
 
-                  <div id="Charges" className="bg-white rounded-lg shadow p-4 space-y-2">
-                    <h2 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
-                      Day Charges:
-                    </h2>
-                    {/* <div className="flex items-center gap-4">
-  <h2 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
-    Charges:
-  </h2>
-
-  <label className="flex items-center gap-1 cursor-pointer">
-    <input type="checkbox" className="accent-teal-600" checked={DailyChargeType} onChange={()=>{setMonthlyChargeType(!MonthlyChargeType),setDailyChargeType(!DailyChargeType)}}/>
-    <span className="text-sm text-gray-700">Daily</span>
-  </label>
-
-  <label className="flex items-center gap-1 cursor-pointer">
-    <input type="checkbox" className="accent-teal-600" checked={MonthlyChargeType} onChange={()=>{setMonthlyChargeType(!MonthlyChargeType),setDailyChargeType(!DailyChargeType)}}/>
-    <span className="text-sm text-gray-700">Monthly</span>
-  </label>
-</div> */}
-                    {DailyChargeType ?
-                      <div>
-                        {["₹1200", "₹1000", "₹900", "Other"].map((charge) => (
-                          <div key={charge} className="flex flex-col">
-                            <label className="flex items-center text-sm">
-                              <input
-                                type="radio"
-                                name="serviceCharges"
-                                value={charge}
-                                checked={
-                                  EnquiryForm.serviceCharges === charge ||
-                                  (charge === "Other" &&
-                                    !["₹1200", "₹1000", "₹900", "₹800"].includes(EnquiryForm.serviceCharges))
-                                }
-                                onChange={() => {
-                                  setEnquiryForm({ ...EnquiryForm, serviceCharges: charge === "Other" ? "" : charge }), setEnquiryMessage("")
-                                }
-                                }
-                                className="mr-2 accent-purple-600"
-                              />
-                              {charge}
-                            </label>
-                            {charge === "Other" &&
-                              !["₹1200", "₹1000", "₹900", "₹800"].includes(EnquiryForm.serviceCharges) && (
-                                <input
-                                  type="text"
-                                  placeholder="Enter Other Amount"
-                                  className="mt-1 w-full border rounded-lg p-2 text-sm"
-                                  value={EnquiryForm.serviceCharges}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
-
-                                    setEnquiryForm({
-                                      ...EnquiryForm,
-                                      serviceCharges: value,
-                                    });
-
-                                    const numericValue = Number(value.replace(/[^0-9]/g, ""));
-
-                                    if (!numericValue) {
-                                      setEnquiryMessage("");
-                                      return;
-                                    }
-
-                                    if (numericValue < 800) {
-                                      setEnquiryMessage("Price Not Offerable");
-                                    } else {
-                                      setEnquiryMessage("");
-                                    }
-                                  }}
-
-                                />
-                              )}
-                          </div>
-                        ))}
-                      </div> : <input
-                        type="text"
-                        placeholder="Enter Monthly Amount"
-                        onChange={(e: any) => setEnquiryForm({ ...EnquiryForm, MonthlyServiceCharge: e.target.value })}
-                        className="px-3 py-1.5 text-sm border border-gray-300 rounded-md 
-             focus:outline-none focus:ring-2 focus:ring-teal-500 
-             focus:border-teal-500 placeholder-gray-400"
-                      />}
-
-                    <div>
-
-                      <p>Registration Charger: 1500</p>
-                      {DiscountStatus ? (
-                        <button
-                          onClick={() => SetDiscountStatus(false)}
-                          className="px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg
-               hover:bg-teal-700 transition shadow-sm"
-                        >
-                          Add Discount
-                        </button>
-                      ) : (
-                        <input
-                          type="number"
-                          placeholder="Enter Registration discount"
-                          onChange={(e) => SetClientDiscount(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm
-               focus:outline-none focus:ring-2 focus:ring-teal-500 
-               text-gray-700"
-                        />
-                      )}
-
-
-                    </div>
-                    {EnquiryForm.MonthlyServiceCharge}
-                    <div className="flex flex-col gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-200">
-
-                      <p className="text-gray-700 text-sm font-medium">
-                        Charge Per Day:{" "}
-                        <span className="font-semibold text-teal-700">
-                          {EnquiryForm.serviceCharges}
-                        </span>
-                      </p>
-
-                      <p className="text-gray-700 text-sm font-medium">
-                        Registration Fee:{" "}
-                        <span className="font-semibold text-teal-700">
-                          ₹{DiscountPrice - ClientDiscount}
-                        </span>
-                      </p>
-
-                      {/* <p
-                        className="border border-teal-400 bg-teal-50 text-teal-800 
-               font-semibold rounded-lg px-4 py-3 shadow-sm 
-               flex items-center justify-between"
-                      >
-                        <span>Total Amount</span>
-                        <span>
-                          ₹{EnquiryForm.serviceCharges === "Other"
-                            ? 1500
-                            : (parseFloat(EnquiryForm.serviceCharges.replace(/[^0-9.]/g, "")) || 0) +
-                            DiscountPrice -
-                            ClientDiscount}
-                        </span>
-                      </p> */}
-
-                    </div>
-
-
-                  </div>
+                 
                   <div>
 
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Reason for service</label>
+                      <label className="block text-xs font-medium text-teal-600 mb-1">Reason for service</label>
 
                       <textarea
                         name="Reasonforservice"
@@ -2185,7 +2311,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                         className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm resize-none h-24 focus:ring-2 focus:ring-gray-800"
                       />
                     </div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Expected Service</label>
+                    <label className="block text-xs font-medium text-teal-600 mb-1">Expected Service</label>
 
                     <textarea
                       name="ExpectedService"
@@ -2196,7 +2322,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Note</label>
+                    <label className="block text-xs font-medium text-teal-600 mb-1">Note</label>
 
                     <textarea
                       name="ClientNote"
@@ -2261,12 +2387,12 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
 
 
                           if (each === "Send") {
-                            if (EnquiryForm.ClientName === "" && EnquiryForm.patientName === "" && EnquiryForm.ClientContact === "") {
-                              alert("Please Enter Client & Patient Name")
+                            if (EnquiryForm.ClientName === "" && EnquiryForm.patientName === "" && EnquiryForm.ClientContact === ""&& !EnquiryForm.ClientStatus) {
+                              alert(`${!EnquiryForm.ClientStatus ? "Please Update Call Enquiry Status" : "Please Enter Client & Patient Name and Contact"}`)
                               return
                             }
-                            UpdateCallEnquiry();
-                            setShowNotification(true);
+                         UpdateCallEnquiry()
+                           
                           }
                         }}
 
@@ -2276,6 +2402,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                       </button>
                     ))}
                   </div>
+                 
                 </div>
 
                 <StaffNotificationModal
@@ -2288,9 +2415,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                 />
                 <p className={EnquiryMessage?.includes("Successfully") ? 'text-green-800 text-center mb-4' : 'text-red-500 text-center mb-4'}>{EnquiryMessage}</p>
 
-                {EnquiryForm.ClientStatus !== "Not Interested" &&
-
-                  <div className=" flex items-center justify-between w-full px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 sticky bottom-0">
+          <div className=" flex items-center justify-between w-full px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 sticky bottom-0">
 
                     <div className="flex gap-4">
                       <button
@@ -2308,7 +2433,8 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                         Save Enquiry
                       </button>
                     </div>
-                  </div>}
+                  </div>
+                  
 
               </div>
             </div>

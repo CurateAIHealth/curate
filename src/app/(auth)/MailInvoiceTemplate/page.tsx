@@ -7,7 +7,7 @@ import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { SaveInvoiceData, UpdateInvoice, UpdateInvoiceData, UpdateInvoisefromDb } from "@/Lib/user.action";
-import { Plus,CircleX } from "lucide-react";
+import { Plus,CircleX, Cross } from "lucide-react";
 import { paymentData, serviceOptions } from "@/Lib/Content";
 import RefundReceipt from "@/Components/RefundReceipt/page";
 import EditRefund from "@/Components/EditRefundComponent/page";
@@ -51,7 +51,7 @@ type RoundType = "none" | "nearest" | "up" | "down";
 export default function InvoiceForm() {
   const InvoiceData = useSelector((state: any) => state.InvoiceInfo);
   const [isEditing, setIsEditing] = useState(false);
-
+console.log("InvoiceData", InvoiceData)
 
   const [ShowServices,setShowServices]=useState(false)
   const [otherExpenses, setOtherExpenses] = useState<any>();
@@ -206,6 +206,8 @@ const TaxAmount:any=balanceDue.toFixed(2)*Number(selected?.tdsRate?.replace("%",
       serviceFrom: InvoiceData?.StartDate,
       serviceTo: InvoiceData?.ServiceEndDate,
       terms: "7 Days",
+      Adress: InvoiceData?.Adress,
+
     },
 
     billTo: billTo,
@@ -246,164 +248,9 @@ setShowDateRangePopUp(true)
 return
 
   }
-  setIsSending(true);   
+   
   setShowMailTemplate(false);
 
-  setTimeout(async () => {
-    const element = document.getElementById("invoice-pdf-area");
-
-    if (!element) {
-      alert("Invoice HTML not found!");
-      setIsSending(false); 
-      return;
-    }
-const save = await UpdateInvoiceData(
-invoice.number,
-  {
-    invoice: invoiceProps.invoice,
-    billTo: invoiceProps.billTo,
-    items: invoiceProps.items,
-    totals: invoiceProps.totals,
-  });
-
-
- 
-  const { default: html2pdf } = await import("html2pdf.js");
-
-const pdfBlob = await html2pdf()
-  .from(element)
-  .set({
-    margin: 10,
-    filename: "invoice.pdf",
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-    },
-    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-  })
-  .outputPdf("blob");
-
-    // ✅ Convert blob → base64
-    const base64 = await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(pdfBlob);
-      reader.onloadend = () => {
-        resolve(reader.result as string);
-      };
-    });
-
-
-  
-
-
-    // const pdfResponse = await axios.post("/api/generate-pdf", { html });
-
-
-// const Imagb64:any= await getBase64Image("https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png")
-//     const pdfBase64 = pdfResponse.data.pdf;
-
-    await axios.post("/api/MailSend", {
-      to:"tsiddu805@gmail.com",
-      subject:
-        "Request for Payment – Attached Invoice from Curate Health Services",
-   html: `<div style="
-  width: 100%;
-  max-width: 680px;
-  margin: auto;
-  background: #f7f5ef;
-  border-radius: 14px;
-  border: 2px solid #c6c2b8;
-  font-family: 'Segoe UI', sans-serif;
-  overflow: hidden;
-">
-
-
-  <div style="text-align:center; padding: 25px 20px;">
-    <img
-          src="https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png""
-          alt="Curate Health Services Logo"
-          style="height: 90px; width: auto;"
-
-        />
-    <p style="margin:6px 0 0 0; font-size:14px; color:#1392d3;">
-    Invoice Receipt
-    </p>
-  </div>
-
-  <div style="border-top: 2px solid #c6c2b8;"></div>
-
-
-  <div style="padding: 30px 25px;">
-
-   
-    <div style="
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 20px;
-      align-items: start;
-    ">
-
-      
-      <div>
-        <p style="margin:0; font-size:14px; color:#444;">AMOUNT DUE</p>
-        <h1 style="margin-top:8px; font-size:42px; font-weight:700; color:#000;">
-   ₹${(Number(balanceDue) + Number(TaxAmount)).toFixed(2)}
-
-        </h1>
-      </div>
-
-     
-      <div style="font-size:15px; color:#444; line-height:24px;">
-        <strong>Invoice No:</strong> ${invoice.number} <br>
-        <strong>Issued:</strong> ${invoice.date} <br>
-   
-
-        <strong style="color:#000;">Dear Customer,</strong><br>
-        Please find your invoice attached.<br>
-        Kindly complete the payment at the earliest.
-      </div>
-
-     
-      <div style="text-align:center;">
-        <div style="margin-bottom:20px;">
-          <a href="https://curate-pearl.vercel.app/upi-pay?amount=${(Number(balanceDue) + Number(TaxAmount)).toFixed(2)}"
-            style="
-              background:#50c896;
-              color:white;
-              padding:18px 30px;
-              text-decoration:none;
-              border-radius:50px;
-              font-size:18px;
-              font-weight:700;
-              display:inline-block;
-              width:150px;
-            ">
-            PAY NOW
-          </a>
-        </div>
-
-        <p style="font-size:15px; color:#333; margin-top:20px;">
-          Regards,<br>
-          <strong>Curate Health Services</strong>
-        </p>
-      </div>
-
-    </div> 
-
-  </div>
-</div>
-`,
-
-     pdfBase64: base64.split(",")[1],
-    });
-
-const UpdateInvoiceStatus=await UpdateInvoice(invoice.number)
-if(UpdateInvoiceStatus?.success===true){
-  setMailstatus(false)
-}
-    
-  }, 100);
 };
 
 // const handleSubmit = async () => {
@@ -460,6 +307,378 @@ if(UpdateInvoiceStatus?.success===true){
 //     setIsSending(false);
 //   }
 // };
+
+// const SendInvoice=()=>{
+//   try{
+//   setIsSending(true);
+//     setTimeout(async () => {
+//     const element = document.getElementById("invoice-pdf-area");
+
+//     if (!element) {
+//       alert("Invoice HTML not found!");
+//       setIsSending(false); 
+//       return;
+//     }
+// const save = await UpdateInvoiceData(
+// InvoiceData,
+//   {
+//     invoice: invoiceProps.invoice,
+//     billTo: invoiceProps.billTo,
+//     items: invoiceProps.items,
+//     totals: invoiceProps.totals,
+//   });
+// console.log("Save Response:", save);
+
+ 
+//   const { default: html2pdf } = await import("html2pdf.js");
+
+// const pdfBlob = await html2pdf()
+//   .from(element)
+//   .set({
+//     margin: 10,
+//     filename: "invoice.pdf",
+//     html2canvas: {
+//       scale: 2,
+//       useCORS: true,
+//       allowTaint: true,
+//     },
+//     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+//   })
+//   .outputPdf("blob");
+
+//     // ✅ Convert blob → base64
+//     const base64 = await new Promise<string>((resolve) => {
+//       const reader = new FileReader();
+//       reader.readAsDataURL(pdfBlob);
+//       reader.onloadend = () => {
+//         resolve(reader.result as string);
+//       };
+//     });
+
+
+  
+
+
+//     // const pdfResponse = await axios.post("/api/generate-pdf", { html });
+
+
+// // const Imagb64:any= await getBase64Image("https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png")
+// //     const pdfBase64 = pdfResponse.data.pdf;
+
+//     await axios.post("/api/MailSend", {
+//       to:"tsiddu805@gmail.com",
+//       subject:
+//         "Request for Payment – Attached Invoice from Curate Health Services",
+//    html: `<div style="
+//   width: 100%;
+//   max-width: 680px;
+//   margin: auto;
+//   background: #f7f5ef;
+//   border-radius: 14px;
+//   border: 2px solid #c6c2b8;
+//   font-family: 'Segoe UI', sans-serif;
+//   overflow: hidden;
+// ">
+
+
+//   <div style="text-align:center; padding: 25px 20px;">
+//     <img
+//           src="https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png""
+//           alt="Curate Health Services Logo"
+//           style="height: 90px; width: auto;"
+
+//         />
+//     <p style="margin:6px 0 0 0; font-size:14px; color:#1392d3;">
+//     Invoice Receipt
+//     </p>
+//   </div>
+
+//   <div style="border-top: 2px solid #c6c2b8;"></div>
+
+
+//   <div style="padding: 30px 25px;">
+
+   
+//     <div style="
+//       display: grid;
+//       grid-template-columns: 1fr 1fr 1fr;
+//       gap: 20px;
+//       align-items: start;
+//     ">
+
+      
+//       <div>
+//         <p style="margin:0; font-size:14px; color:#444;">AMOUNT DUE</p>
+//         <h1 style="margin-top:8px; font-size:42px; font-weight:700; color:#000;">
+//    ₹${(Number(balanceDue) + Number(TaxAmount)).toFixed(2)}
+
+//         </h1>
+//       </div>
+
+     
+//       <div style="font-size:15px; color:#444; line-height:24px;">
+//         <strong>Invoice No:</strong> ${invoice.number} <br>
+//         <strong>Issued:</strong> ${invoice.date} <br>
+   
+
+//         <strong style="color:#000;">Dear Customer,</strong><br>
+//         Please find your invoice attached.<br>
+//         Kindly complete the payment at the earliest.
+//       </div>
+
+     
+//       <div style="text-align:center;">
+//         <div style="margin-bottom:20px;">
+//           <a href="https://curate-pearl.vercel.app/upi-pay?amount=${(Number(balanceDue) + Number(TaxAmount)).toFixed(2)}"
+//             style="
+//               background:#50c896;
+//               color:white;
+//               padding:18px 30px;
+//               text-decoration:none;
+//               border-radius:50px;
+//               font-size:18px;
+//               font-weight:700;
+//               display:inline-block;
+//               width:150px;
+//             ">
+//             PAY NOW
+//           </a>
+//         </div>
+
+//         <p style="font-size:15px; color:#333; margin-top:20px;">
+//           Regards,<br>
+//           <strong>Curate Health Services</strong>
+//         </p>
+//       </div>
+
+//     </div> 
+
+//   </div>
+// </div>
+// `,
+
+//      pdfBase64: base64.split(",")[1],
+//     });
+
+// const UpdateInvoiceStatus=await UpdateInvoice(InvoiceData)
+// console.log("Update Invoice Status:", UpdateInvoiceStatus);
+// if(UpdateInvoiceStatus?.success===true){
+//   setMailstatus(false)
+// }
+    
+//   }, 100);
+
+//   }catch(err){
+
+//   }
+// }
+const SendInvoice = async () => {
+  setIsSending(true);
+
+  try {
+    const element = document.getElementById("invoice-pdf-area");
+
+    if (!element) {
+      throw new Error("Invoice HTML not found");
+    }
+
+    // ✅ Validate required data
+    if (!invoiceProps || !invoice || !InvoiceData) {
+      throw new Error("Missing invoice data");
+    }
+
+    // ✅ Save invoice before generating PDF
+    const saveResponse = await UpdateInvoiceData(InvoiceData, {
+      invoice: invoiceProps.invoice,
+      billTo: invoiceProps.billTo,
+      items: invoiceProps.items,
+      totals: invoiceProps.totals,
+    });
+
+    console.log("Save Response:", saveResponse);
+
+    // ✅ Dynamic import
+    const { default: html2pdf } = await import("html2pdf.js");
+
+    // ✅ Generate PDF Blob
+    const pdfBlob: Blob = await html2pdf()
+      .from(element)
+      .set({
+        margin: 10,
+        filename: `invoice-${invoice.number || "document"}.pdf`,
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
+        },
+      })
+      .outputPdf("blob");
+
+    // ✅ Convert Blob → Base64
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.readAsDataURL(pdfBlob);
+
+      reader.onloadend = () => {
+        if (reader.result) {
+          resolve(reader.result as string);
+        } else {
+          reject(new Error("Failed to convert PDF to Base64"));
+        }
+      };
+
+      reader.onerror = () => {
+        reject(new Error("FileReader error"));
+      };
+    });
+
+    // ✅ Calculate amount safely
+    const totalAmount = (
+      Number(balanceDue || 0) + Number(TaxAmount || 0)
+    ).toFixed(2);
+
+    // ✅ Send email
+    const mailResponse = await axios.post("/api/MailSend", {
+      to: "tsiddu805@gmail.com",
+      subject:
+        "Request for Payment – Attached Invoice from Curate Health Services",
+
+      html: `
+      <div style="
+        width:100%;
+        max-width:680px;
+        margin:auto;
+        background:#f7f5ef;
+        border-radius:14px;
+        border:2px solid #c6c2b8;
+        font-family:'Segoe UI',sans-serif;
+        overflow:hidden;
+      ">
+
+        <div style="text-align:center; padding:25px 20px;">
+          <img
+            src="https://www.curatehealthservices.com/Icons/UpdateCurateLogo.png"
+            alt="Curate Health Services Logo"
+            style="height:90px; width:auto;"
+          />
+
+          <p style="margin:6px 0 0; font-size:14px; color:#1392d3;">
+            Invoice Receipt
+          </p>
+        </div>
+
+        <div style="border-top:2px solid #c6c2b8;"></div>
+
+        <div style="padding:30px 25px;">
+
+          <div style="
+            display:grid;
+            grid-template-columns:1fr 1fr 1fr;
+            gap:20px;
+            align-items:start;
+          ">
+
+            <div>
+              <p style="margin:0; font-size:14px; color:#444;">
+                AMOUNT DUE
+              </p>
+
+              <h1 style="
+                margin-top:8px;
+                font-size:42px;
+                font-weight:700;
+                color:#000;
+              ">
+                ₹${totalAmount}
+              </h1>
+            </div>
+
+            <div style="
+              font-size:15px;
+              color:#444;
+              line-height:24px;
+            ">
+              <strong>Invoice No:</strong> ${invoice.number || "-"} <br />
+              <strong>Issued:</strong> ${invoice.date || "-"} <br /><br />
+
+              <strong style="color:#000;">
+                Dear Customer,
+              </strong><br />
+
+              Please find your invoice attached.<br />
+              Kindly complete the payment at the earliest.
+            </div>
+
+            <div style="text-align:center;">
+              <div style="margin-bottom:20px;">
+                <a
+                  href="https://curate-pearl.vercel.app/upi-pay?amount=${totalAmount}"
+                  style="
+                    background:#50c896;
+                    color:white;
+                    padding:18px 30px;
+                    text-decoration:none;
+                    border-radius:50px;
+                    font-size:18px;
+                    font-weight:700;
+                    display:inline-block;
+                    width:150px;
+                  "
+                >
+                  PAY NOW
+                </a>
+              </div>
+
+              <p style="
+                font-size:15px;
+                color:#333;
+                margin-top:20px;
+              ">
+                Regards,<br />
+                <strong>Curate Health Services</strong>
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+      `,
+
+      pdfBase64: base64.split(",")[1],
+    });
+
+    console.log("Mail Response:", mailResponse?.data);
+
+    // ✅ Update invoice status
+    const updateInvoiceStatus = await UpdateInvoice(InvoiceData);
+
+    console.log(
+      "Update Invoice Status:",
+      updateInvoiceStatus
+    );
+
+    if (updateInvoiceStatus?.success) {
+      setMailstatus(false);
+    }
+  } catch (error: any) {
+    console.error("SendInvoice Error:", error);
+
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Something went wrong while sending invoice.";
+
+    alert(errorMessage);
+  } 
+};
 const NavigatetoInvoices=()=>{
   Router.push("/Invoices")
 }
@@ -598,7 +817,8 @@ const addOtherService = () => {
   </div>
   
 )}
-{ShowMailTemplate?    <div className="min-h-screen bg-slate-50 py-8 px-4">
+{ShowMailTemplate?  
+  <div className="min-h-screen bg-slate-50 py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-6">
 
     <div className="w-full border rounded-md bg-white shadow-sm px-3 py-2">
@@ -1025,7 +1245,7 @@ message="Please provide the client’s email address to send the invoice."
                       <Th>#</Th>
                       <Th>Service Name</Th>
                       <Th>Service Code</Th>
-                      <Th>Change Service</Th>
+                      {/* <Th>Change Service</Th> */}
                       <Th>Amount</Th>
                       <Th>Remove</Th>
                     </tr>
@@ -1036,7 +1256,7 @@ message="Please provide the client’s email address to send the invoice."
                         <Td>{i + 1}</Td>
                         <Td className="font-medium text-slate-800">{srv.name}</Td>
                         <Td className="font-mono text-xs text-slate-600">{srv.code}</Td>
-                        <Td>
+                        {/* <Td>
                           <select
                             className="border border-slate-200 text-sm px-2 py-1 rounded-lg bg-white"
                             value={srv.code}
@@ -1048,7 +1268,7 @@ message="Please provide the client’s email address to send the invoice."
                               </option>
                             ))}
                           </select>
-                        </Td>
+                        </Td> */}
                         <Td className="font-mono text-xs text-slate-600">{srv.name==="Healthcare Assistant Service"?Number(days) * Number(perDay):srv.amount}</Td>
 <Td className="font-mono text-xs text-slate-600 cursor-pointer">
   <CircleX
@@ -1286,12 +1506,19 @@ message="Please provide the client’s email address to send the invoice."
               onClick={handleSubmit}
               className="w-full bg-slate-900 hover:bg-slate-800 cursor-pointer text-white text-sm font-semibold py-3 rounded-xl shadow-sm transition"
             >
-              Send E-Mail
+            Preview Invoice
             </button>
           </div>
         </div>
       </div>
     </div>:
+    <div>
+     <div className="w-full flex justify-end">
+  <CircleX
+    className="h-8 w-8 text-gray-600 hover:text-red-500  p-1 cursor-pointer transition-all duration-200"
+    onClick={() => setShowMailTemplate(true)}
+  />
+</div>
    <div id="invoice-pdf-area">
       <ReusableInvoice
         invoice={invoiceProps.invoice}
@@ -1300,6 +1527,10 @@ message="Please provide the client’s email address to send the invoice."
         totals={invoiceProps.totals}
         
       />
+    </div>
+   <button className="w-full px-6 py-2.5 bg-teal-800 text-white font-medium rounded-xl shadow-md hover:cursor-pointer hover:bg-teal-700 hover:shadow-lg transition-all duration-300 active:scale-95" onClick={SendInvoice}>
+  Send E-Mail
+</button>
     </div>
 }
     </>}

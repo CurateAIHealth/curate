@@ -754,6 +754,8 @@ export const PostInvoice = async (InvoiseInfo:any,AdvanceAmount:any,InvoiceNumbe
       AdvanceReceived: AdvanceAmount || "",
       CareTakeChare: InvoiseInfo.serviceCharges,
       RegistrationFee:InvoiseInfo.RegistrationFee,
+      ClientAgreementFront: InvoiseInfo.ClientAgreementFront,
+        ClientAgreementBack: InvoiseInfo.ClientAgreementBack,
       status: "Draft",
       PaymentStatus:false
     });
@@ -904,7 +906,7 @@ export const SaveInvoiceData = async (invoiceProps: {
 
 
 export const UpdateInvoiceData = async (
-  invoiceNumber: any,   
+  invoiceInfo: any,   
   updatedProps: {
     invoice: Record<string, any>,
     billTo: Record<string, any>,
@@ -928,10 +930,19 @@ export const UpdateInvoiceData = async (
     };
 
 
+ const filter: any = {
+      ClienId: invoiceInfo.ClienId,
+      SeriviceStartDate: invoiceInfo.StartDate,
+      ServiceEndDate: invoiceInfo.ServiceEndDate,
+    };
 
-  
+    // Add HCAId only if available
+    if (invoiceInfo.HCAId) {
+      filter.HCAId = invoiceInfo.HCAId;
+    }
+  console.log("Filter for update:", filter);
     const result = await collection.updateOne(
-      { Invoice: invoiceNumber },   
+     filter,   
       { $set: dynamicUpdates }
     );
 
@@ -1171,7 +1182,7 @@ export const HCARegistration = async (HCA: HCAInfo) => {
       ContactNumber: encrypt(HCA.ContactNumber),
       Email: encrypt(HCA.Email),
       Location:HCA.Location,
-CurrentStatus:HCA.CurrentStatus||"Training",
+CurrentStatus:"Training",
 StaffType:HCA.StaffType,
 
       emailHash: hashValue(HCA.Email.toLowerCase()),
@@ -1339,6 +1350,9 @@ Patienttitle:HCA.Patienttitle||"",
       ContactNumber: HCA.ContactNumber,
       Email: encryptedEmail,
       patientWeight: HCA.patientWeight || "",
+      WeightReport: HCA.WeightReport || "",
+      HeightReport: HCA.HeightReport || "",
+      patientHeight: HCA.patientHeight || "",
       patientAge: HCA.patientAge || "",
       patientGender: HCA.patientGender || "",
       clientGender: HCA.clientGender || "",
@@ -2264,15 +2278,24 @@ export const UpdatePdrStatus = async (UserId: any,hcpId:any) => {
   }
 };
 
-export const UpdateInvoice=async(InvoiceNumber:any)=>{
+export const UpdateInvoice=async(invoiceInfo:any)=>{
   try{
 const Cluster=await clientPromise
 const Db=Cluster.db("CurateInformation")
 const Collection=Db.collection("Invoices")
+ const filter: any = {
+      ClienId: invoiceInfo.ClienId,
+      SeriviceStartDate: invoiceInfo.StartDate,
+      ServiceEndDate: invoiceInfo.ServiceEndDate,
+    };
+
+    // Add HCAId only if available
+    if (invoiceInfo.HCAId) {
+      filter.HCAId = invoiceInfo.HCAId;
+    }
+  
 const UpdateStatus=await Collection.updateOne(
-  {
-  Invoice:InvoiceNumber
-},{
+ filter,{
   $set:{status:"Sent"}
 }
 
@@ -3599,6 +3622,37 @@ const client = await clientPromise;
   }
 };
 
+export const UpdateNewserviceCharges= async (ImpuserId: string,ImpserviceCharges:any) => {
+  try {
+
+
+const client = await clientPromise;
+
+
+    const db = client.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const result = await collection.updateOne({ userId: ImpuserId }, {
+      $set: {
+        serviceCharges: ImpserviceCharges
+      }
+    });
+
+   
+
+    return {
+      success: true,
+      message: "Day Price Updated Successfully",
+    };
+  } catch (error) {
+    console.error("Error deleting enquiry:", error);
+    return {
+      success: false,
+      message: "Failed to delete enquiry",
+    };
+  }
+};
+
 export const ClearHCPEnquiry = async (userId: string) => {
   try {
 
@@ -4462,6 +4516,7 @@ export const GetUsersFullInfo = async () => {
       "HCPContactNumber":safeDecrypt(info["Mobile Number"]),
       "HCPEmail":safeDecrypt(info["EmailId"]),
       "HCPSurName":safeDecrypt(info["Surname"]),
+      "HCPLastName":info["LastName"] ,
       "HCPAdharNumber": safeDecrypt(info["Aadhar Card No"]),
       "Phone No 1": safeDecrypt(info["Phone No 1"]),
       "Phone No 2": safeDecrypt(info["Phone No 2"]),
@@ -5210,6 +5265,42 @@ export const UpdateUserCurrentstatus = async (
   }
 };
 
+export const UpdatePaymentForStaff = async (
+  UserId: string,
+  ImpPrice: string
+) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+
+    const CompliteCollection = Db.collection("CompliteRegistrationInformation");
+
+  
+
+    const updateComplite = await CompliteCollection.updateOne(
+      { "HCAComplitInformation.UserId": UserId },
+      {
+        $set: {
+          "HCAComplitInformation.PaymentforStaff": ImpPrice,
+         
+        }
+      }
+    );
+
+
+    return {
+      success: true,
+      message:"HCP Payment updated successfully",
+    };
+  } catch (err: any) {
+    console.error("UpdateUserCurrentstatus Error:", err);
+    return {
+      success: false,
+      message: "Failed to update user current status",
+    };
+  }
+};
+
 export const UpdateUserCurrentstatusInHCPView = async (
   UserId: string,
   UpdatedStatus: string
@@ -5575,6 +5666,7 @@ export const GetDashboardStats = async () => {
     const Deployment = db.collection("Deployment");
     const Invoices = db.collection("Invoices");
     const Timesheet = db.collection("Timesheet");
+    const Notifications = db.collection("Notifications");
 
     const now = new Date();
 

@@ -15,6 +15,7 @@ const ClientSuggetions = () => {
   const [clientList, setClients] = useState<any[]>([]);
   const [HCP, setHCP] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usersInfo, setUsersInfo] = useState<any[]>([]);
 
   const cacheRef = useRef<{ users: any[] | null; fullInfo: any[] | null }>({
     users: null,
@@ -107,6 +108,7 @@ const ClientSuggetions = () => {
 
         setClients(patient);
         setHCP(hcpList);
+        setUsersInfo(users);
       } catch (err) {
         console.error('Fetch error', err);
       } finally {
@@ -140,7 +142,7 @@ const ClientSuggetions = () => {
     {Array.isArray(clientList) &&
  Array.isArray(HCP) &&
  clientList.length > 0 ? (
-  <SuitableHcpList clients={clientList} hcps={HCP} />
+  <SuitableHcpList clients={clientList} hcps={HCP} usersInfo={usersInfo}/>
 ) : (
   <div className="w-full py-10 text-center text-gray-500">
     No client data available

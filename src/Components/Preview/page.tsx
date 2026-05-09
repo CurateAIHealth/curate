@@ -122,7 +122,8 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
     }
   }, [UpdatingStatus, router]);
 
-  console.log("PreviewData", data.HCAId)
+ 
+  
 
   if (!data) {
     return (
@@ -248,7 +249,7 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
 //     }
 //   };
 
-
+console.log("PreviewComponentData", data)
 const UpdatePDRInfo = async () => {
   try {
     setSelectedRecord(true);
@@ -343,14 +344,17 @@ const UpdatePDRInfo = async () => {
         setUpdatingStatus("Deployment creation failed");
         return;
       }
-const UpdatedDataWithInvoice = {
-  ...UpdatedData,
-   ServiceStartDate:new Date(data.InvoiseInformation
+      console.log("FormData", data.ClientAgreementFront, data.ClientAgreementBack)
+      const UpdatedDataWithInvoice = {
+        ...UpdatedData,
+        ServiceStartDate: new Date(data.InvoiseInformation
           .startDate).toLocaleDateString("en-IN"),
         ServiceEndDate: new Date(data.InvoiseInformation
           .endDate).toLocaleDateString("en-IN"),
-          HCAId:data.HCAId,
-}
+        HCAId: data.HCAId,
+        ClientAgreementFront: data.ClientAgreementFront,
+        ClientAgreementBack: data.ClientAgreementBack,
+      }
       const [invoiceRes, statusRes] = await Promise.all([
         PostInvoice(UpdatedDataWithInvoice, Advance, invoiceNo),
         UpdatePdrStatus( DeploaymentInformation.Client_Id,
@@ -674,34 +678,99 @@ const ClientName=data.FirstName
               <div className="text-gray-500">No Medications Provided</div>
             )}
           </Section>
-<div className="bg-white border border-emerald-200 rounded-xl p-4 shadow-sm space-y-3">
+<div className="rounded-3xl border border-gray-200 bg-white shadow-[0_6px_24px_rgba(15,23,42,0.06)] overflow-hidden">
   
-  {/* Top Row */}
-  <div className="flex items-center justify-between">
-    <p className="text-sm font-medium text-gray-600">
-    Client Price
-    </p>
-    <p className="text-lg font-bold text-emerald-600">
-      ₹{data?.serviceCharges}
-    </p>
+  <div className="px-5 py-4">
+    
+    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+      <div>
+        <p className="text-[10px] uppercase tracking-[0.28em] text-gray-400 font-semibold">
+          Invoice Overview
+        </p>
+
+        <h2 className="mt-1 text-xl font-bold text-gray-900">
+          {data?.FirstName}
+        </h2>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+
+        <div className="group relative overflow-hidden rounded-2xl border border-cyan-100 bg-cyan-50/70 px-4 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+          
+          <div className="absolute top-0 right-0 h-16 w-16 rounded-full bg-cyan-100 opacity-40 -mr-6 -mt-6" />
+
+          <p className="relative text-[10px] font-semibold uppercase tracking-[0.15em] text-cyan-700">
+            HCA Name
+          </p>
+
+          <h3 className="relative mt-1 text-sm font-bold text-gray-900 truncate">
+            {data?.InvoiseInformation?.hcaName}
+          </h3>
+        </div>
+
+        <div className="group relative overflow-hidden rounded-2xl border border-orange-100 bg-orange-50/70 px-4 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+          
+          <div className="absolute top-0 right-0 h-16 w-16 rounded-full bg-orange-100 opacity-40 -mr-6 -mt-6" />
+
+          <p className="relative text-[10px] font-semibold uppercase tracking-[0.15em] text-orange-700">
+            HCA Price
+          </p>
+
+          <h3 className="relative mt-1 text-sm font-bold text-orange-600">
+            ₹{data?.InvoiseInformation?.hcaPrice}
+          </h3>
+        </div>
+
+        <div className="group relative overflow-hidden rounded-2xl border border-purple-100 bg-purple-50/70 px-4 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+          
+          <div className="absolute top-0 right-0 h-16 w-16 rounded-full bg-purple-100 opacity-40 -mr-6 -mt-6" />
+
+          <p className="relative text-[10px] font-semibold uppercase tracking-[0.15em] text-purple-700">
+            Client Charges
+          </p>
+
+          <h3 className="relative mt-1 text-sm font-bold text-purple-700">
+            ₹{data?.serviceCharges}
+          </h3>
+        </div>
+
+      </div>
+    </div>
   </div>
 
-  {/* Divider */}
-  <div className="border-t border-gray-200" />
+  <div className="border-t border-gray-100 bg-gray-50/70 px-5 py-3">
+    
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
 
-  {/* Dates Section */}
-  <div className="flex flex-col sm:flex-row sm:justify-between gap-2 text-sm text-gray-700">
-    <p>
-      <span className="font-medium text-gray-500">Start Date:</span>{" "}
-      {new Date(data?.InvoiseInformation?.startDate).toLocaleDateString("en-IN")}
-    </p>
+      <div className="flex items-center gap-2">
+        <div className="h-2 w-2 rounded-full bg-emerald-500" />
 
-    <p>
-      <span className="font-medium text-gray-500">End Date:</span>{" "}
-      {new Date(data?.InvoiseInformation?.endDate).toLocaleDateString("en-IN")}
-    </p>
+        <p className="text-xs text-gray-600">
+          <span className="font-semibold text-gray-800">
+            Start Date:
+          </span>{" "}
+          {new Date(
+            data?.InvoiseInformation?.startDate
+          ).toLocaleDateString("en-IN")}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className="h-2 w-2 rounded-full bg-rose-500" />
+
+        <p className="text-xs text-gray-600">
+          <span className="font-semibold text-gray-800">
+            End Date:
+          </span>{" "}
+          {new Date(
+            data?.InvoiseInformation?.endDate
+          ).toLocaleDateString("en-IN")}
+        </p>
+      </div>
+
+    </div>
   </div>
-
 </div>
 
           <Section title="Remarks">
