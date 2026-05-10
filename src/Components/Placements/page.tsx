@@ -24,6 +24,7 @@ import SalaryPopup from "../HCPSalary/page";
 import RefundPopup from "../RefundRequestPopup/page";
 import AwaitingInvoice from "../AwaitingInvoice/page";
 import axios from "axios";
+import RelasementHCPPopup from "../RelasementHCPPopup/page";
 
 
 
@@ -57,6 +58,7 @@ const ClientTable = () => {
   const [selectedClient,setselectedClient]=useState<any>()
   const [isChecking, setIsChecking] = useState(true);
   const [selectedHCP,setselectedHCP]=useState<any>()
+  const [showHCAList, setShowHCAList] = useState(false);
   const [ShowFreezPopUp,setShowFreezPopUp]=useState(false)
   const [selectedCase, setSelectedCase] = useState<any>(null);
 const [searchHCA, setSearchHCA] = useState("");
@@ -1318,7 +1320,13 @@ setShowCareTakerPriceUpdate(false)
 
   </div>
 </div>}
-
+<RelasementHCPPopup
+  open={showHCAList}
+  onClose={() => setShowHCAList(false)}
+  filteredHcps={filterProfilePic}
+  onAssign={(hcp) => console.log(hcp)}
+  onUpdate={(hcp) => console.log(hcp)}
+/>
   {ClientsInformation.length > 0 && (
   <div className="w-full overflow-x-auto rounded-2xl shadow-xl">
       {ShowFreezPopUp && (
@@ -1800,7 +1808,9 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
     className="w-full p-2 text-sm text-center border rounded-lg"
   />
 
-
+<button onClick={() => setShowHCAList(!showHCAList)}>
+    {showHCAList ? "Hide List" : "Show List"}
+  </button>
   <select
     className="w-full p-2 text-sm border rounded-lg cursor-pointer text-center"
     value={selectedHCP?.userId || ""}
@@ -1824,6 +1834,7 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
   </select>
 
 </div>
+
 
 
               <select
