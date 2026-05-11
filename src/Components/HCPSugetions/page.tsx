@@ -16,6 +16,7 @@ import { pre } from 'framer-motion/client';
 const allProfessionalSkills = ["Diaper", "Bathing", "Bedding", "Brushing"];
 
 type ClientType = {
+  ServiceArea: any;
   patientWeight: any;
   patientAge: any;
   patientHeight: any;
@@ -858,10 +859,11 @@ if (!activeClient) {
           <div className="rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-2">
             <p className="text-[9px] uppercase text-[#64748b]">
               Patient
+
             </p>
 
             <p className="text-xs font-semibold text-[#0f172a] mt-1">
-              {client.patientName}
+              {client.patientName} 
             </p>
           </div>
 
@@ -881,7 +883,7 @@ if (!activeClient) {
             </p>
 
             <p className="text-xs font-semibold text-[#0f172a] mt-1">
-              {client.patientHeight||"Not Provided"}
+              { `${client.patientHeight} CM`||"Not Provided"}
             </p>
           </div>
 
@@ -904,7 +906,7 @@ if (!activeClient) {
           </p>
 
           <p className="text-[11px] text-[#166534] leading-relaxed">
-            {client.patientHomeAssistance.join(", ")}
+            {client.ServiceType}
           </p>
         </div>
 
@@ -1237,7 +1239,7 @@ const UpdateResults=await UpdateHCAnstatus(hcp.UserId,"Available for Work")
                                      activeClient.FirstName,
                                       activeClient.Email,
                                       activeClient.ContactNumber,
-                                      activeClient.serviceLocation,
+                                      activeClient.ServiceArea,
                                       hcp.HCPFirstName,
                                       hcp.HCPContactNumber,
                                       activeClient.patientName,

@@ -163,12 +163,12 @@ useEffect(()=>{
   languages: FilterValue["Languages"] || "",
   moleBodyMark1: FilterValue["Mole/Body Mark 1"] || "",
   moleBodyMark2: FilterValue["Mole/Body Mark 2"] || "",
-  Bankbranchname: FilterValue["Bank Branch Name"] || "",
+  Bankbranchname: FilterValue["BankName"] || "",
   BankAccountHolderName:FilterValue['BankAccountHolderName']||"",
   Branchcity: FilterValue["Branch City"] || "",
   Branchpincode: FilterValue["Branch Pincode"] || "",
   Branchstate: FilterValue["Branch State"] || "",
-  paymentBankName: FilterValue["Payment Bank Name"] || "",
+  paymentBankName: FilterValue["BankName"] || "",
   paymentBankAccountNumber: FilterValue["Payment Bank Account Number"] || "",
   ifscCode: FilterValue["IFSC Code"] || "",
   experience: FilterValue["Experience"] || "",
@@ -178,7 +178,7 @@ useEffect(()=>{
   aadharCardNo: FilterValue["Aadhar Card No"] || "",
   panNumber: FilterValue["PAN Number"] || "",
   rationCardNo: FilterValue["Ration Card No"] || "",
-  paymentService: FilterValue["Payment Service"] || "",
+  paymentService: FilterValue["PaymentService"] || "",
   preferredService: FilterValue["Preferred Service"] || "",
   DocumentSkipReason: FilterValue["DocumentSkipReason"] || "",
   HCPSalary:FilterValue['PaymentforStaff']||'',
@@ -428,13 +428,12 @@ console.log("FinalData:", normalizedData);
           <TextInput label="Bank Name" name="paymentBankName" value={user.paymentBankName} onChange={handleChange} />
                     <TextInput label="Account Holder Name" name="BankAccountHolderName" value={user.BankAccountHolderName} onChange={handleChange} />
           <TextInput label="Account Number" name="paymentBankAccountNumber" value={user.paymentBankAccountNumber} onChange={handleChange} />
-          <TextInput label="IFSC Code" name="ifscCode" value={user.ifscCode} onChange={handleChange} />
-          <TextInput label="Branch Name" name="Bankbranchname" value={user.Bankbranchname} onChange={handleChange} />
+    
           <TextInput label="Branch City" name="Branchcity" value={user.Branchcity} onChange={handleChange} />
           <TextInput label="Branch State" name="Branchstate" value={user.Branchstate} onChange={handleChange} />
           <TextInput label="Branch Pincode" name="Branchpincode" value={user.Branchpincode} onChange={handleChange} />
-          <TextInput label="paymentService" name="paymentService" value={user.paymentService} onChange={handleChange} />
-          
+          <TextInput label="PaymentService" name="paymentService" value={user.paymentService} onChange={handleChange} />
+      
         </div>
       );
     case 'Documents':
@@ -492,9 +491,10 @@ console.log("FinalData:", normalizedData);
       return (
         <div className="grid md:grid-cols-2 gap-4">
           <TextInput label="Experience (Years)" name="experience" value={user.experience} onChange={handleChange} />
-          <TextInput label="Recent Job" name="professionalWork1" value={user.professionalWork1} onChange={handleChange} />
-          <TextInput label="Previous Job" name="professionalWork2" value={user.professionalWork2} onChange={handleChange} />
-          <TextInput label="Education" name="professionalEducation" value={user.professionalEducation} onChange={handleChange} />
+          {/* <TextInput label="Recent Job" name="professionalWork1" value={user.professionalWork1} onChange={handleChange} /> */}
+          <TextInput label="Higher Education" name="professionalWork2" value={user.professionalWork2} onChange={handleChange} />
+          <TextInput label="Professional Education" name="professionalEducation" value={user.professionalEducation} onChange={handleChange} />
+         
         </div>
       );
     case 'Identifiers':

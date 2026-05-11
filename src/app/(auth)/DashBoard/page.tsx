@@ -494,6 +494,7 @@ export default function Dashboard() {
 
     if(EnquiryForm.serviceCharges===""){
       alert("Please Enter Service Charges")
+      setEnquiryMessage("")
       return
     }
     try {
@@ -507,7 +508,7 @@ export default function Dashboard() {
         EnquiryForm.ClientStatus === "Lost";
 
 
-
+console.log(" EnquiryForm.patientHeight:", EnquiryForm.patientHeight);
       const generatedUserId = uuidv4()
       const payload: any = {
         userType: isPatient ? "patient" : "CallEnquiry",
@@ -530,6 +531,9 @@ export default function Dashboard() {
         PreferredLanguage: EnquiryForm.PreferredLanguage || "",
         NewLead: EnquiryForm.NewLead || '',
         CurateNewLead: EnquiryForm.CurateNewLead || '',
+         HouseNumber:EnquiryForm.houseNumber|| "",
+  AddressLine1:EnquiryForm.addressLine1|| "",
+  AddressLine2:EnquiryForm.addressLine2|| "",
         Location: EnquiryForm.ClientArea || "",
         ServiceType: EnquiryForm.ServiceType || "",
         HealthCard: EnquiryForm.patientHealthCard || "",
@@ -1032,7 +1036,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi Admin – Welcome to Admin Dashboard.
+              Hi Admin – Welcome to Admin Dashboard
             </span>
           </div>
 

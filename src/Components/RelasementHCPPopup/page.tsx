@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Eye } from "lucide-react";
+import { X, Eye, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 
@@ -22,7 +22,7 @@ interface HCP {
   ["Current Address"]?: string;
 }
 
-interface RelasementHCPPopupProps {
+interface RepleasementHCPPopup {
   open: boolean;
   onClose: () => void;
   filteredHcps: HCP[];
@@ -32,7 +32,7 @@ interface RelasementHCPPopupProps {
   onUpdate?: (hcp: HCP) => void;
 }
 
-const RelasementHCPPopup = ({
+const RepleasementHCPPopup = ({
   open,
   onClose,
   filteredHcps,
@@ -40,11 +40,11 @@ const RelasementHCPPopup = ({
   statusMessage,
   onAssign,
   onUpdate,
-}: RelasementHCPPopupProps) => {
+}: RepleasementHCPPopup) => {
   const [searchResult, setSearchResult] = useState("");
  const [form, setForm] = useState({
-    hcpType:"" as any,
-    Gender: "" as any,
+   
+    Gender: "Male" as any,
   });
   const router = useRouter();
   const dispatch = useDispatch();
@@ -60,8 +60,18 @@ const RelasementHCPPopup = ({
 
     router.push("/UserInformation");
   };
+  const HCA_List = filteredHcps.filter((each: any) => {
+  const typeMatch =
+    ["healthcare-assistant", "HCA", "HCP", "HCPT"].includes(each.userType);
 
-  const searchedHcps = filteredHcps.filter((hcp) =>
+  const isNotAssigned =
+    !each.Status?.some((s: string) => s === "Assigned");
+
+  const isValidCurrentStatus =each.CurrentStatus==="Bench"
+
+  return typeMatch && isNotAssigned && isValidCurrentStatus&&each.Gender?.toLowerCase() === form.Gender?.toLowerCase();
+});
+  const searchedHcps = HCA_List.filter((hcp) =>
     `${hcp.HCPFirstName} ${hcp.HCPLastName || ""}`
       .toLowerCase()
       .includes(searchResult.toLowerCase())
@@ -72,90 +82,92 @@ const RelasementHCPPopup = ({
       <div className="relative w-full max-w-7xl rounded-3xl bg-white shadow-2xl overflow-hidden">
 
         {/* Search + Status */}
-        <div className="px-5 py-4 border-b bg-gray-50 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-          <input
-            type="search"
-            placeholder="Search HCP..."
-            value={searchResult}
-            onChange={(e) => setSearchResult(e.target.value)}
-            className="w-full md:max-w-sm rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-300"
+     <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur-md shadow-sm">
+  <div className="flex flex-col gap-4 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex items-center gap-2">
+      <img
+            src="/Icons/Curate-logoq.png"
+            className="h-8"
+            alt="Company Logo"
           />
-
-          {statusMessage && (
-            <p className="px-4 py-2 rounded-xl text-sm text-red-700 bg-yellow-100 border border-yellow-200">
-              {statusMessage}
-            </p>
-          )}
-          <div className="flex  items-center justify-center  gap-8  border-t border-[#e2e8f0] pt-3 space-y-3">
-            
-            {/* HCP */}
-            <div>
-              <p className="text-[10px] font-semibold text-[#334155] mb-2">
-                HCP Type
-              </p>
-
-              <div className="flex flex-wrap gap-1.5">
-  {["HCA", "HCN", "HCPT"].map((type) => (
-    <button
-      key={type}
-      type="button"
-      onClick={() =>
-        setForm((prev) => ({
-          ...prev,
-          hcpType: type,
-        }))
-      }
-      className={`px-3 py-1.5 rounded-lg text-[10px] font-medium border transition-all
-      ${
-        form.hcpType === type
-          ? "bg-[#0ea5e9] border-[#0ea5e9] text-white"
-          : "bg-[#f8fafc] border-[#cbd5e1] text-[#334155]"
-      }`}
-    >
-      {type}
-    </button>
-  ))}
-</div>
-            </div>
-
-            {/* Gender */}
-            <div>
-              <p className="text-[10px] font-semibold text-[#334155] mb-2">
-                Prefer Gender
-              </p>
-
-              <div className="flex gap-1.5">
-                {["Male", "Female"].map((gender) => (
-                  <button
-                    key={gender}
-                       onClick={() =>
-        setForm((prev) => ({
-          ...prev,
-          Gender: gender,
-        }))
-      }
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-medium border transition-all
-      ${
-        form.Gender === gender
-          ? "bg-[#0ea5e9] border-[#0ea5e9] text-white"
-          : "bg-[#f8fafc] border-[#cbd5e1] text-[#334155]"
-      }`}
-                  >
-                    {gender}
-                  </button>
-                ))}
-              </div>
-            </div>
-
+   
+    <div className="relative w-full lg:max-w-sm">
         
-          </div>
-           <button
-            onClick={onClose}
-            className="h-10 w-10 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center transition"
-          >
-            <X size={18} className="text-red-600" />
-          </button>
+      <input
+        type="search"
+        placeholder="Search HCP..."
+        value={searchResult}
+        onChange={(e) => setSearchResult(e.target.value)}
+        className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 pl-11 text-sm text-slate-700 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-100"
+      />
+
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"
+        />
+      </svg>
+    </div>
+     </div>
+<div className="flex items-center gap-3">
+  
+
+  <div>
+    <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#ff1493]">
+      Choose Replacement HCP
+    </h1>
+
+    <p className="mt-1 text-sm font-medium text-[#50c896]">
+      Select the best healthcare professional for replacement
+    </p>
+  </div>
+</div>
+    <div className="flex flex-wrap items-center justify-between gap-4 lg:justify-end">
+      <div className="flex flex-col items-start sm:items-center">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#1392d3]">
+          Preferred Gender
+        </p>
+
+        <div className="flex rounded-2xl bg-slate-100 p-1 shadow-inner">
+          {["Male", "Female"].map((gender) => (
+            <button
+              key={gender}
+              onClick={() =>
+                setForm((prev) => ({
+                  ...prev,
+                  Gender: gender,
+                }))
+              }
+              className={`min-w-[90px] rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200
+                ${
+                  form.Gender === gender
+                    ? "bg-sky-500 text-white shadow-md"
+                    : "text-slate-600 hover:bg-white hover:text-sky-600"
+                }`}
+            >
+              {gender}
+            </button>
+          ))}
         </div>
+      </div>
+
+      <button
+        onClick={onClose}
+        className="flex h-6 w-6 items-center justify-center cursor-pointer rounded-2xl border border-red-200 bg-red-50 transition-all duration-200 hover:scale-105 hover:bg-red-100 active:scale-95"
+      >
+        <X size={12} className="text-red-500" />
+      </button>
+    </div>
+  </div>
+</div>
   
         {/* Body */}
         <div className="max-h-[75vh] overflow-y-auto p-5">
@@ -251,27 +263,14 @@ const RelasementHCPPopup = ({
 
                       {/* Buttons */}
                       <div className="mt-3 flex items-center justify-center gap-2">
-                        {isAssigned ? (
-                          <>
-                            <button className="px-3 py-1 rounded-full text-[10px] bg-red-500 text-white">
-                              Assigned
-                            </button>
-
-                            <button
-                              onClick={() => onUpdate?.(hcp)}
-                              className="px-3 py-1 rounded-full text-[10px] bg-blue-600 text-white hover:bg-blue-700"
-                            >
-                              Update
-                            </button>
-                          </>
-                        ) : (
+                        
                           <button
                             onClick={() => onAssign?.(hcp)}
                             className="px-4 py-1 rounded-full text-[10px] bg-green-600 text-white hover:bg-green-700"
                           >
                             Assign
                           </button>
-                        )}
+                        
                       </div>
                     </div>
 
@@ -301,4 +300,4 @@ const RelasementHCPPopup = ({
   );
 };
 
-export default RelasementHCPPopup;
+export default RepleasementHCPPopup;

@@ -18,6 +18,8 @@ import {
 import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import StaffNotificationModal from "../CallEnquiryNotification/page";
+import { isArray } from "util";
+import CommentsPopup from "../CommentsPopup/page";
 
 interface CallEnquiryUser {
   CurateNewLead: string;
@@ -50,6 +52,8 @@ export default function CallEnquiryList({
  
   const SearchMonth=useSelector((state:any)=>state.MonthFilterAdmin)
   const SearchYear=useSelector((state:any)=>state.YearFilterAdmin)
+  const [ShowComments,setShowComments]=useState(false)
+  const [selectedComments, setSelectedComments] = useState<any[]>([]);
   const [EditComments,setEditComments]=useState(false)
   const [SelectedUserId,setSelectedUserId]=useState("")
     const [ShowNotification,setShowNotification]=useState(false)
@@ -206,7 +210,14 @@ try{
   dispatch(Refresh("Please Wait....."))
 
   if(Value==="Send"){
+    const UpdateCurrentClientStatus=await   UpdateClientStatusinCallEnquiry(UserId,Value)
+    if(UpdateCurrentClientStatus.success){
+      
+  dispatch(Refresh(`Please Wait...`))
 setShowNotification(true)
+    }
+
+return
   }
  
 const UpdateCurrentClientStatus=await   UpdateClientStatusinCallEnquiry(UserId,Value)
@@ -433,20 +444,39 @@ text-left
     <div className="flex flex-col gap-2">
       <textarea
         className="border rounded-md p-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-        placeholder="Enter your updated comments"
-        defaultValue={user.comments}
+        placeholder="Enter your New comments"
+      
         onChange={(e:any)=>setEditedComments(e.target.value)}
       />
 {StatusMessage==="Please Wait Updateing Comments...."?<div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>:
       <button className="self-start bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs transition" onClick={()=>UpdateComments(user.userId)}>
-        Save Comments
+        Add Comments
         </button>}
     </div>
   ) : (
     <div className="flex items-center justify-between gap-2">
-      <p className="truncate">
-        {toProperCaseLive(user.comments) || "No comments"}
-      </p>
+     
+     {Array.isArray(user.comments) ? <button
+  onClick={() => {setShowComments(true),  setSelectedComments(Array.isArray(user.comments) ? user.comments: [])}}
+  className="
+    rounded-lg border border-gray-300
+    hover:bg-white px-4 py-2
+    text-sm font-medium text-gray-700
+    transition bg-gray-100 cursor-pointer shadow-sm hover:shadow-md
+  "
+>
+  View
+</button> : (
+  <p className="truncate">
+    {toProperCaseLive(user.comments) || "No comments"}
+  </p>
+)}
+<CommentsPopup
+  open={ShowComments}
+  onClose={() => setShowComments(false)}
+  comments={selectedComments}
+/>
+      
 
       <button
         className="text-blue-500 hover:underline cursor-pointer text-xs"
@@ -485,6 +515,7 @@ text-left
   </div>
 
   {UpdatedFilterUserType.map((user, index) => (
+    console.log("User Comments:", user.comments),
     <div
       key={index}
       className={`grid ${GRID_COLS} gap-4 items-center px-4 py-3 text-sm border-b min-w-[900px]`}
@@ -575,21 +606,37 @@ text-left
       <textarea
         className="border rounded-md p-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
         placeholder="Enter your updated comments"
-        defaultValue={user.comments}
+        defaultValue={EditedComments}
           onChange={(e:any)=>setEditedComments(e.target.value)}
       />
 
      {StatusMessage==="Please Wait Updateing Comments...."?<div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>:
       <button className="self-start bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs transition" onClick={()=>UpdateComments(user.userId)}>
-        Save Comments
+        Add Comments
         </button>}
     </div>
   ) : (
     <div className="flex items-center justify-between gap-2">
-      <p className="truncate">
-        {toProperCaseLive(user.comments) || "No comments"}
-      </p>
-
+     {Array.isArray(user.comments) ? <button
+  onClick={() => {setShowComments(true),  setSelectedComments(Array.isArray(user.comments) ? user.comments: [])}}
+  className="
+    rounded-lg border border-gray-300
+    hover:bg-white px-4 py-2
+    text-sm font-medium text-gray-700
+    transition bg-gray-100 cursor-pointer shadow-sm hover:shadow-md
+  "
+>
+  View
+</button> : (
+  <p className="truncate">
+    {toProperCaseLive(user.comments) || "No comments"}
+  </p>
+)}
+<CommentsPopup
+  open={ShowComments}
+  onClose={() => setShowComments(false)}
+  comments={selectedComments}
+/>
       <button
         className="text-blue-500 hover:underline cursor-pointer text-xs"
         onClick={() => {
@@ -597,7 +644,7 @@ text-left
           setSelectedUserId(user.userId);
         }}
       >
-        Edit
+        Add
       </button>
     </div>
   )}

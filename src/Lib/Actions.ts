@@ -263,17 +263,14 @@ export   const toCamelCase = (value?: string | null) => {
       .toLowerCase()
       .replace(/\b\w/g, char => char.toUpperCase());
   };
-export const toProperCaseLive = (value?: string) => {
-  const endsWithSpace = value?.endsWith(" ");
+export const toProperCaseLive = (value?: unknown) => {
+  const str = typeof value === "string" ? value : "";
 
-  const formatted = value
-    ?.toLowerCase()
-    ?.replace(/\s+/g, " ")
-    ?.split(" ")
-    ?.map(word =>
-      word ? word.charAt(0).toUpperCase() + word.slice(1) : ""
-    )
-    ?.join(" ") ?? "";
+  const endsWithSpace = str.endsWith(" ");
+
+  const formatted = str
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 
   return endsWithSpace ? formatted + " " : formatted;
 };

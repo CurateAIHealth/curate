@@ -74,12 +74,12 @@ const [SearchResult, setSearchResult] = useState("")
   const [LoginEmail, setLoginEmail] = useState("");
   const [DeleteInformation, SetDeleteInformation] = useState<any>()
   const [SelectedHCPSalaryId,setSelectedHCPSalaryId]=useState()
-  const [showOptions, setShowOptions] = useState(false);
+  const [showOptions,setShowOptions] = useState(false);
 const [searchLead, setSearchLead] = useState("");
 const [DeploymentInfo,SetDeploymentInfo]=useState<any[]>([])
 const [showSuggestions, setShowSuggestions] = useState(true);
   const [ShowDeletePopUp, setShowDeletePopUp] = useState(false)
-  const Status = ["None","Converted", "Waiting List", "Lost",];
+  const Status = ["Converted", "Waiting List", "Lost",];
   const EmailVerificationStatus = ['Verified', 'Pending'];
   const CurrentStatusOptions = ["Active", "Sick", "Leave", "Terminated"];
 
