@@ -160,8 +160,8 @@ const [ImportedVendors, setImportedVendors] = useState<any>([])
     PermanentState:any;
     NotedDtaeForHike:any;
     Remarks:any;
-    BankName:any
-   
+    BankName:any;
+   PaymentService:any
     // website?: string; // optional if commented
   }
 
@@ -266,6 +266,7 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
     preferredService: '',
     PaymentforStaff: '',
     BankAccountHolderName: '',
+    PaymentService: '',
     BankName:'',
     paymentBankAccountNumber: '',
     ifscCode: '',
@@ -288,7 +289,7 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
     PermanentState:'',
     NotedDtaeForHike:'',
     Remarks:'',
-    
+  
   });
 
   const [isuserIdAvailable, setisuserIdAvailable] = useState<any>(null)
@@ -1914,7 +1915,10 @@ form.HusbendContact!=="Not Available"&&
               value={form.PermanentHouseNo || ''}
               placeholder="House Number"
               maxLength={10}
-              onChange={handleChange}
+                onChange={(e) => {
+    const value = e.target.value.replace(/[A-Za-z\s]/g, '');
+    setForm(prev => ({ ...prev, PermanentHouseNo: value }));
+  }}
               className="
     input-field w-full mb-4
     border border-gray-300
@@ -2779,15 +2783,8 @@ form.HusbendContact!=="Not Available"&&
                   placeholder="Professional Work 2 (Optional)"
                   className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 />
-                <input
-                  type="number"
-                  name="experience"
-                  value={form.experience || ''}
-                  onChange={handleChange}
-                  placeholder="Experience in Years"
-                  className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
-                  
-                />
+                
+              
               </div>}
               <div className="flex justify-end">
   <button
@@ -4063,6 +4060,15 @@ form.HusbendContact!=="Not Available"&&
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
               />
+              <input
+                type="text"
+                name="PaymentService"
+                value={form.PaymentService || ''}
+                onChange={handleChange}
+                placeholder="Payment Service NEFT/CACH/PHONE PAY/UPI ID"
+                className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+                
+              />
              <select
   name="BankName"
    value={OtherBankName ? "Other" : form.BankName || ""}
@@ -4109,14 +4115,14 @@ form.HusbendContact!=="Not Available"&&
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
               />
-              <textarea
+              {/* <textarea
                 name="bankBranchAddress"
                 value={form.bankBranchAddress || ''}
                 onChange={handleChange}
                 placeholder="Bank Branch Address"
                 className="input-field resize-y h-18 w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
-              />
+              /> */}
               <input
                 type="text"
                 name="Bankbranchname"

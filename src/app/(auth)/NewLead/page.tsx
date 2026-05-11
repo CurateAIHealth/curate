@@ -284,10 +284,14 @@ clientName:GetUserInfo?.FirstName,
 patientName:GetUserInfo?.patientName,
 patientAge  :GetUserInfo?.patientAge,
 patientGender:GetUserInfo?.patientGender,
-NewLead:GetUserInfo?.LeadDate,
+LeadDate:GetUserInfo?.LeadDate,
 ClientStatus:GetUserInfo?.ClientStatus,
 Source:GetUserInfo?.NewLead,
+serviceLocation:GetUserInfo?.AddressLine1,
+NewLead:GetUserInfo?.NewLead,
+
 patientWeight:GetUserInfo?.patientWeight,
+patientHeight:GetUserInfo?.patientHeight,
 serviceCharges:GetUserInfo?.serviceCharges,
   patientHealthCard: GetUserInfo?.HealthCard
     ? GetUserInfo.HealthCard.split(",").map((v: string) => v.trim())
@@ -369,46 +373,70 @@ const handleCmChange = (value: string) => {
   };
   const handleLogout = () => {
     
-    router.push('/AdminPage');
+    router.push('/DashBoard');
  dispatch(Refresh(""))
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    try{
-      if (!formData.ClientStatus || formData.ClientStatus.trim() === "") {
+  try {
+    if (statusMessage === "Please Wait...") return;
+
+    if (!formData?.ClientStatus?.trim()) {
       setStatusMessage("Please Select Client Status");
       return;
     }
+
     setStatusMessage("Please Wait...");
-    const generatedUserId = uuidv4();
 
-    const FinelPostingData = { ...formData, serviceCharges: formData.serviceCharges?formData.serviceCharges:FetchedInfo.serviceCharges, RegistrationFee: DiscountPrice - ClientDiscount?DiscountPrice - ClientDiscount:FetchedInfo.RegistrationFee, Medications: MedicationData, userId: FetchedInfo.userId, SuitableHCP: "" }
+    const registrationFee =
+      typeof DiscountPrice === "number" &&
+      typeof ClientDiscount === "number"
+        ? DiscountPrice - ClientDiscount
+        : FetchedInfo?.RegistrationFee ?? 0;
 
-    const postResult = await UpdateNewLeadInformation(FinelPostingData);
-   if (!postResult?.success) {
+    const finalPostingData = {
+      ...formData,
+      serviceCharges:
+        formData?.serviceCharges ?? FetchedInfo?.serviceCharges ?? 0,
+
+      RegistrationFee: registrationFee,
+
+      Medications: Array.isArray(MedicationData)
+        ? MedicationData
+        : [],
+
+      userId: FetchedInfo?.userId ?? "",
+
+      SuitableHCP: "",
+    };
+
+    if (!finalPostingData.userId) {
+      throw new Error("User ID is missing");
+    }
+
+    const postResult = await UpdateNewLeadInformation(finalPostingData);
+
+    if (!postResult?.success) {
       setStatusMessage(
         postResult?.message || "Failed to update lead information"
       );
       return;
     }
 
-    setStatusMessage(
-      `${postResult.message}, Redirecting to AdminPage....`
-    );
-
- 
     if (PDRFilledUser) {
       dispatch(UpdateClientSuggetion(PDRFilledUser));
     }
 
-  
+    setStatusMessage(
+      `${postResult.message || "Lead updated successfully"}, Redirecting...`
+    );
+
     setTimeout(() => {
-      router.push("/AdminPage");
+      router.push("/DashBoard");
     }, 1200);
-    }
-     catch (error) {
+  } catch (error: unknown) {
     console.error("handleSubmit error:", error);
 
     setStatusMessage(
@@ -417,31 +445,7 @@ const handleCmChange = (value: string) => {
         : "Something went wrong. Please try again."
     );
   }
-    
-    
-      //   const data = await GetUserInformation(FetchedInfo.userId);
-
-  
-
-      // dispatch(
-      //   UpdateFetchedInformation({
-      //     ...data,
-      //     updatedAt: normalizeDate(data?.updatedAt),
-      //     createdAt: normalizeDate(data?.createdAt),
-      //   })
-      // );
-
-      // router.push("/PDR");
-     
-      
-      // dispatch(Update_Current_Client_Status(formData.ClientStatus))
-      // const Timer = setInterval(() => {
-      //   router.push("/AdminPage")
-      // }, 1200)
-
-      // return () => clearInterval(Timer)
-    
-  };
+};
 const requiresSubType = (hcpTypes = []) => {
   const servicesWithSubTypes = [
     "Physiotherapy Service (PTS)",
@@ -750,13 +754,13 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
 
               <label className="flex items-center gap-2 font-medium relative">
 
-                Lead Date
+               Lead Date
               </label>
 
 
               <input
-                type="date"
-                value={ formData.NewLead||''}
+                type="text"
+                value={ formData.LeadDate||''}
                 className="
       h-11 w-full px-4
       rounded-xl

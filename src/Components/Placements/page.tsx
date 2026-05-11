@@ -25,6 +25,7 @@ import RefundPopup from "../RefundRequestPopup/page";
 import AwaitingInvoice from "../AwaitingInvoice/page";
 import axios from "axios";
 import RelasementHCPPopup from "../RelasementHCPPopup/page";
+import RepleasementHCPPopup from "../RelasementHCPPopup/page";
 
 
 
@@ -790,8 +791,7 @@ if (deploymentRes.success) {
   const isNotAssigned =
     !each.Status?.some((s: string) => s === "Assigned");
 
-  const isValidCurrentStatus =
-    !["Sick", "Leave", "Terminated"].includes(each.CurrentStatus);
+  const isValidCurrentStatus =each.CurrentStatus==="Bench"
 
   return typeMatch && isNotAssigned && isValidCurrentStatus;
 });
@@ -1320,12 +1320,21 @@ setShowCareTakerPriceUpdate(false)
 
   </div>
 </div>}
-<RelasementHCPPopup
+<RepleasementHCPPopup
   open={showHCAList}
-  onClose={() => setShowHCAList(false)}
+  onClose={() => {setShowHCAList(false);setShowReassignmentPopUp(true)}}
   filteredHcps={filterProfilePic}
-  onAssign={(hcp) => console.log(hcp)}
-  onUpdate={(hcp) => console.log(hcp)}
+  onAssign={(hcp) => {
+    console.log("Assigned HCP:", hcp.UserId)
+      const selected = HCA_List.find(
+        (hca) => hca.userId ===  hcp.UserId
+      );
+      setselectedHCP(selected);
+      setShowHCAList(false);setShowReassignmentPopUp(true)
+      console.log("Selected HCP for Replacement:", selected);
+      
+  }}
+  onUpdate={(hcp) => console.log("Updated HCP:", hcp.UserId)}
 />
   {ClientsInformation.length > 0 && (
   <div className="w-full overflow-x-auto rounded-2xl shadow-xl">
@@ -1800,18 +1809,10 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
     <div className="flex flex-col gap-2">
 
 
-  <input
-    type="text"
-    placeholder="Search HCA..."
-    value={searchHCA}
-    onChange={(e) => setSearchHCA(e.target.value)}
-    className="w-full p-2 text-sm text-center border rounded-lg"
-  />
 
-<button onClick={() => setShowHCAList(!showHCAList)}>
-    {showHCAList ? "Hide List" : "Show List"}
-  </button>
-  <select
+
+
+  {/* <select
     className="w-full p-2 text-sm border rounded-lg cursor-pointer text-center"
     value={selectedHCP?.userId || ""}
     onChange={(e) => {
@@ -1831,7 +1832,35 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
         {each.FirstName}
       </option>
     ))}
-  </select>
+  </select> */}
+<div className="flex items-center justify-between bg-white shadow-md rounded-2xl p-4 border border-gray-200">
+  
+  <div>
+    <p className="text-sm text-gray-500 mb-1">New HCA Status</p>
+
+    <p className="text-base font-semibold text-gray-800">
+      {selectedHCP
+        ? `Selected: ${selectedHCP.FirstName}`
+        : "No HCA selected"}
+    </p>
+  </div>
+
+  <button
+    onClick={() => {
+      setShowHCAList(!showHCAList);
+      setShowReassignmentPopUp(false);
+    }}
+    className={`px-2 py-2 rounded-xl text-[10px] cursor-pointer transition-all duration-300 shadow-sm
+      ${
+        showHCAList
+          ? "bg-red-500 hover:bg-red-600 text-white"
+          : "bg-teal-600 hover:bg-teal-700 text-white"
+      }`}
+  >
+    {selectedHCP ? "Replace HCP" : "Show Available List"}
+  </button>
+
+</div>
 
 </div>
 

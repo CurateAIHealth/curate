@@ -1339,7 +1339,7 @@ export const CallEnquiryRegistration = async (HCA: any) => {
         message: "This contact or email is already registered",
       };
     }
-    
+
     const encryptedData: any = {
       userType: HCA.userType,
       userId: HCA.userId,
@@ -1360,6 +1360,9 @@ Patienttitle:HCA.Patienttitle||"",
       PreferredLanguage: HCA.PreferredLanguage || "",
       NewLead: HCA.NewLead || "",
       CurateNewLead: HCA.CurateNewLead || '',
+       HouseNumber:HCA.HouseNumber|| "",
+  AddressLine1:HCA.AddressLine1|| "",
+  AddressLine2:HCA.AddressLine2|| "",
       Location: HCA.Location || "",
       ServiceType: HCA.ServiceType || "",
       HealthCard: HCA.HealthCard || "",
@@ -1369,7 +1372,11 @@ Patienttitle:HCA.Patienttitle||"",
       MonthlyServiceCharge: HCA.MonthlyServiceCharge || "",
       serviceCharges: HCA.serviceCharges || "",
       RegistrationFee: HCA.RegistrationFee || 0,
-      comments: HCA.ClientNote || "",
+      comments: [{
+        Date: new Date().toISOString().split("T")[0],
+        comment: HCA.ClientNote || "",
+        Time: new Date().toLocaleTimeString()
+      }],
       WorkingHours: HCA.WorkingHours,
       WorkType: HCA.WorkType,
       ExtraWorkingHours: HCA.ExtraWorkingHours,
@@ -1379,6 +1386,7 @@ Patienttitle:HCA.Patienttitle||"",
       // createdAt: new Date(),
       updatedAt: new Date(),
     };
+        console.log("HCA Data Height:", encryptedData);
     const result = await collection.insertOne(encryptedData);
 
     return {
@@ -1911,6 +1919,7 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "NotedDtaeForHike":Info.NotedDtaeForHike,
       "BankAccountHolderName":  encrypt(Info.BankAccountHolderName),
       "BankName":Info.BankName,
+      "PaymentService": Info.PaymentService,
       "Payment Bank Account Number": encrypt(Info.paymentBankAccountNumber),
       "IFSC Code": encrypt( Info.ifscCode),
       "Bank Branch Address": Info.bankBranchAddress,
@@ -3591,33 +3600,56 @@ const client = await clientPromise;
   }
 };
 
-export const UpdateNewComments = async (ImpuserId: string,ImpComments:any) => {
+export const UpdateNewComments = async (
+  ImpuserId: string,
+  ImpComments: any
+) => {
   try {
-
-
-const client = await clientPromise;
-
+    const client = await clientPromise;
 
     const db = client.db("CurateInformation");
     const collection = db.collection("Registration");
 
-    const result = await collection.updateOne({ userId: ImpuserId }, {
-      $set: {
-        comments: ImpComments
-      }
+    const NewComment = {
+      Date: new Date().toISOString().split("T")[0],
+      comment: ImpComments || "",
+      Time: new Date().toLocaleTimeString(),
+    };
+
+    const existingUser = await collection.findOne({
+      userId: ImpuserId,
     });
 
-   
+    if (Array.isArray(existingUser?.comments)) {
+      await collection.updateOne(
+        { userId: ImpuserId },
+        {
+          $push: {
+            comments: NewComment,
+          }as any,
+        }
+      );
+    } else {
+      await collection.updateOne(
+        { userId: ImpuserId },
+        {
+          $set: {
+            comments: [NewComment],
+          },
+        }
+      );
+    }
 
     return {
       success: true,
       message: "Comments Updated Successfully",
     };
   } catch (error) {
-    console.error("Error deleting enquiry:", error);
+    console.error("Error updating comments:", error);
+
     return {
       success: false,
-      message: "Failed to delete enquiry",
+      message: "Failed to update comments",
     };
   }
 };
@@ -3887,6 +3919,7 @@ export const GetHCACompliteInformation = async (UserIdFromLocal: any) => {
       "PAN Number": safeDecrypt(info["PAN Number"]),
       "Voter ID No": safeDecrypt(info["Voter ID No"]),
       "Ration Card No": safeDecrypt(info["Ration Card No"]),
+      "BankAccountHolderName": safeDecrypt(info["BankAccountHolderName"]),
 
     
       "Permanent Address": info["Permanent Address"],
@@ -3908,7 +3941,7 @@ export const GetHCACompliteInformation = async (UserIdFromLocal: any) => {
       "Professional Skill": info["Professional Skill"],
       "Certified By": info["Certified By"],
       "Professional Work 1": info["Professional Work 1"],
-      "Professional Work 2": info["Professional Work 2"],
+      "Professional Work 2": info["Higher Education"],
       "Experience": info["Experience"],
 
 
@@ -3947,8 +3980,8 @@ export const GetHCACompliteInformation = async (UserIdFromLocal: any) => {
       "Preferred Service": info["Preferred Service"],
 
       
-      "Payment Service": info["Payment Service"],
-      "Payment Bank Name": safeDecrypt(info["Payment Bank Name"]),
+      "PaymentService": info["PaymentService"],
+      "BankName": info["BankName"],
       "Payment Bank Account Number": safeDecrypt(info["Payment Bank Account Number"]),
       "IFSC Code": safeDecrypt(info["IFSC Code"]),
       "Bank Branch Address": info["Bank Branch Address"],
@@ -4041,7 +4074,7 @@ export const UpdateClientComplitInformation = async (UserIdFromLocal: any, Info:
 };
 
 export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: any) => {
-
+console.log("Check Issue----",Info.professionalEducation)
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
@@ -4091,7 +4124,7 @@ export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: an
   "Professional Work 1": Info.professionalWork1 || null,
   "Professional Work 2": Info.professionalWork2 || null,
   "Professional Education": Info.professionalEducation || null,
-  "Higher Education": Info.higherEducation || null,
+  "Higher Education":   Info.professionalWork2|| null,
   "Higher Education Year Start": Info.higherEducationYearStart || null,
   "Higher Education Year End": Info.higherEducationYearEnd || null,
   "Professional Education Year Start": Info.professionalEducationYearStart || null,
@@ -4123,11 +4156,12 @@ export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: an
   "Preferred Service": Info.preferredService || null,
 
   
-  "Payment Service": Info.paymentService || null,
+  "PaymentService": Info.paymentService || null,
   // "BankAccountHolderName": Info.BankAccountHolderName ? encrypt(Info.BankAccountHolderName) : null,
   "Payment Bank Account Number": Info.paymentBankAccountNumber ? encrypt(Info.paymentBankAccountNumber) : null,
   "IFSC Code": Info.ifscCode ? encrypt(Info.ifscCode) : null,
   "Bank Branch Name": Info.Bankbranchname || null,
+  "BankName": Info.paymentBankName || null,
   "Bank Branch Address": Info.bankBranchAddress || null,
   "Branch City": Info.Branchcity || null,
   "Branch State": Info.Branchstate || null,
