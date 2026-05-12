@@ -19,13 +19,14 @@ import { filterColors, months, Placements_Filters, years } from "@/Lib/Content";
 import ReplacementsTable from "../ReplacementsTable/page";
 import { AssignSuitableIcon, getDaysBetween, getDueDaysStatus, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
 import { useRouter } from "next/navigation";
-import { div } from "framer-motion/client";
+import { button, div } from "framer-motion/client";
 import SalaryPopup from "../HCPSalary/page";
 import RefundPopup from "../RefundRequestPopup/page";
 import AwaitingInvoice from "../AwaitingInvoice/page";
 import axios from "axios";
 import RelasementHCPPopup from "../RelasementHCPPopup/page";
 import RepleasementHCPPopup from "../RelasementHCPPopup/page";
+import AttendanceModal from "../ClientAttendece/page";
 
 
 
@@ -63,6 +64,7 @@ const ClientTable = () => {
   const [ShowFreezPopUp,setShowFreezPopUp]=useState(false)
   const [selectedCase, setSelectedCase] = useState<any>(null);
 const [searchHCA, setSearchHCA] = useState("");
+ const [showAttendanceModal, setShowAttendanceModal] =useState(false);
 const [ShowRefundRequrstPopUp,setShowRefundRequrstPopUp]=useState(false)
 const [FreezeInformation,setFreezeInformation]=useState<any>()
 const [ShowcreatIvocePopup,setShowcreatIvocePopup]=useState(false)
@@ -1191,8 +1193,36 @@ const OmServiceView = () => {
   </div>
 )}
   {/* Filters */}
-  <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
 
+  <div className="flex flex-col items-center sm:flex-row gap-3 w-full sm:w-auto">
+<button
+  className="group inline-flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm font-semibold text-slate-800 shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-slate-200 hover:bg-slate-200"
+onClick={() => setShowAttendanceModal(true)}
+>
+  <span className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-600 transition-all duration-300 group-hover:bg-teal-600 group-hover:text-white">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-10 w-10"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="M9 12l2 2 4-4"
+      />
+    </svg>
+  </span>
+
+  <div className="flex flex-col items-start leading-tight">
+    <span className="text-xs">Mark Attendance</span>
+    <span className="text-[10px] font-medium text-slate-500">
+      Client check-in
+    </span>
+  </div>
+</button>
     {/* Month */}
     <select
       value={SearchMonth}
@@ -1259,6 +1289,17 @@ const OmServiceView = () => {
     }}
   />
 )} */}
+
+  <AttendanceModal
+        clients={FilterFinelTimeSheet}
+        isOpen={showAttendanceModal}
+        setIsOpen={setShowAttendanceModal}
+        onSubmit={(Info: any) => {
+          console.log("Attendance Info:", Info);
+          setShowAttendanceModal(false);
+          // Handle attendance submission logic here
+        }}
+      />
   <SalaryPopup
   open={ShowCareTakerPriceUpdate}
   defaultSalary={""}
