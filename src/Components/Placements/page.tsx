@@ -7,9 +7,9 @@ let cachedRegisterdUsers: any[] = [];
 
 
 
-import React, { useEffect, useState } from "react";
-import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest,  } from "@/Lib/user.action";
+import React, { useEffect, useMemo, useState } from "react";
+import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays } from "lucide-react";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance,  } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -29,7 +29,7 @@ import RepleasementHCPPopup from "../RelasementHCPPopup/page";
 import AttendanceModal from "../ClientAttendece/page";
 
 
-
+type DayStatus = "P" | "NA" | "HP" | "A";
 
 type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday"|"Not Marked"|"Half Day";
 const statusCycle: AttendanceStatus[] = ["Present", "Absent", "Leave", "Holiday","Not Marked","Half Day"];
@@ -56,13 +56,20 @@ const ClientTable = () => {
   const [ReplacementInformation,setReplacementInformation]=useState<Replace[]>([])
   const [terminationInfo,SetterminationInfo]=useState<Termination[]>([])
     const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
+    const [EditDate,setEditDate]=useState<any>()
   const [selectedAssignHCP,setselectedAssignHCP]=useState<any>()
+   const Timenow = new Date();
+   const [ParticularDate,SetParticularDate]=useState<any>()
+ const [AttendeceEditReason,SetAttendeceEditReason]=useState("")
+  const currentYear = Timenow.getFullYear().toString();
+  const currentMonth = String(Timenow.getMonth() + 1).padStart(2, "0");
   const [selectedClient,setselectedClient]=useState<any>()
   const [isChecking, setIsChecking] = useState(true);
   const [selectedHCP,setselectedHCP]=useState<any>()
   const [showHCAList, setShowHCAList] = useState(false);
   const [ShowFreezPopUp,setShowFreezPopUp]=useState(false)
   const [selectedCase, setSelectedCase] = useState<any>(null);
+   const [ShowAttendencePopUp,setShowAttendencePopUp]=useState(false)
 const [searchHCA, setSearchHCA] = useState("");
  const [showAttendanceModal, setShowAttendanceModal] =useState(false);
 const [ShowRefundRequrstPopUp,setShowRefundRequrstPopUp]=useState(false)
@@ -103,6 +110,7 @@ const [enableStatus,setenableStatus]=useState(false)
   const [selectedReason, setSelectedReason] = useState("");
   const [otherReason, setOtherReason] = useState("");
   const [showTimeSheet, setShowTimeSheet] = useState(false)
+
   const [selectedMonth, setSelectedMonth] = useState<any>(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [showDeletePopup, setShowDeletePopup] = useState(false);
@@ -110,6 +118,8 @@ const [enableStatus,setenableStatus]=useState(false)
   const [ExtendInfo,setExtendInfo]=useState<any>({})
   const [deleteTargetId, setDeleteTargetId] =  useState<any>();
   const [ActionStatusMessage,SetActionStatusMessage]= useState<any>("");
+  const [ShowUpdateAttendece,SetShowUpdateAttendece]=useState(false)
+  const [AttenseceInformation,setAttenseceInformation]=useState<any>()
   const [SearchResult,setSearchResult]=useState("")
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
@@ -432,6 +442,7 @@ const normalizedAttendance =
     EndDate:each.EndDate,
     Month:each.Month,
     Replacement:each.Replacement,
+    ClientAttendance: each.ClientAttendance || [],
     
   };
 });
@@ -973,10 +984,22 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((item) =>
   )
 );
 
-const today:any = new Date().getDate();
-const isInvoiceDay = [ 28, 29, 30, 31].includes(today);
+const Invoiceday:any = new Date().getDate();
+const isInvoiceDay = [ 28, 29, 30, 31].includes(Invoiceday);
+console.log("Check For Attendance", FilterFinelTimeSheet);
 
+const today = new Date().toISOString().split("T")[0]; 
 
+const hasUnmarked = FilterFinelTimeSheet.some((r: any) => {
+  const markedToday = r.ClientAttendance?.some(
+    (att: any) =>
+      new Date(att.AttendanceDate).toISOString().split("T")[0] === today
+  );
+
+  return !markedToday;
+});
+
+console.log(hasUnmarked);
 
 const UpdateReplacement = async (
   Available_HCP: any,
@@ -1112,6 +1135,82 @@ return
   }
 
 
+    const UpdateCurrentAttendence = async () => {
+        try {
+          setShowAttendencePopUp(true)
+          SetActionStatusMessage("Please Wait...")
+
+      const payload:any= FilterFinelTimeSheet
+     .map((client:any) => ({
+        Client_Id: client.Client_Id,
+        Client_Name: client.name,
+        HCA_Id: client.HCA_Id,
+        HCA_Name: client.HCA_Name,
+        date: new Date().toISOString().split("T")[0],
+        status: "Present",
+      }));
+      console.log("Payload for attendance update:", payload);
+      const UpdateDailyattendece = await UpdateClientDailyAttendance(SearchYear,SearchMonth,payload);
+      console.log("UpdateDailyattendece",UpdateDailyattendece)
+  
+          if (UpdateDailyattendece.success === true) {
+            SetActionStatusMessage("Clients Today's Attendance Updated Successfully")
+            setTimeout(()=>{
+              setShowAttendencePopUp(false)
+          SetActionStatusMessage("")
+            },2000)
+          }
+  
+  
+  
+  
+          SetActionStatusMessage("Clients Today's Attendance Updated Succesfully ✅")
+    
+        } catch (err: any) {
+    
+        }
+      }
+const processedData = useMemo(() => {
+  const search = SearchResult?.toLowerCase().trim() || "";
+
+  return FilterFinelTimeSheet
+    .filter((record: any) => {
+      if (!search) return true;
+
+      const name = record.name?.toLowerCase() || "";
+      const phone = record.contact?.toString() || "";
+
+      return name.includes(search) || phone.includes(search);
+    })
+
+    .map((record: any) => {
+      const dayStatusArray = Array.from({ length: 31 }, () => "-");
+
+      (record.ClientAttendance || []).forEach((att: any) => {
+        const day = new Date(att.AttendanceDate).getDate();
+
+        if (day >= 1 && day <= 31) {
+          dayStatusArray[day - 1] =
+            att.Status === "Present" ? "P" : "A";
+        }
+      });
+
+      const counts = dayStatusArray.reduce(
+        (acc: any, v: string) => {
+          if (v === "P") acc.pd++;
+          if (v === "A") acc.ad++;
+          return acc;
+        },
+        { pd: 0, ad: 0 }
+      );
+
+      return {
+        ...record,
+        days: dayStatusArray,
+        ...counts,
+      };
+    });
+}, [FilterFinelTimeSheet, SearchResult]);
 const UpdateServiceCharge=async(A:any)=>{
   SetActionStatusMessage("Please Wait...")
   alert(A)
@@ -1216,9 +1315,9 @@ onClick={() => setShowAttendanceModal(true)}
     </svg>
   </span>
 
-  <div className="flex flex-col items-start leading-tight">
-    <span className="text-xs">Mark Attendance</span>
-    <span className="text-[10px] font-medium text-slate-500">
+  <div className="flex flex-col  leading-tight">
+    <span className="text-xs">Pending Attendance</span>
+    <span className="text-[10px] text-center font-medium text-slate-500">
       Client check-in
     </span>
   </div>
@@ -1234,6 +1333,7 @@ onClick={() => setShowAttendanceModal(true)}
         focus:outline-none focus:ring-2 focus:ring-indigo-500
       "
     >
+      
       <option value="">All Months</option>
       {[...Array(12)].map((_, i) => (
         <option key={i} value={`${i + 1}`}>
@@ -1294,9 +1394,16 @@ onClick={() => setShowAttendanceModal(true)}
         clients={FilterFinelTimeSheet}
         isOpen={showAttendanceModal}
         setIsOpen={setShowAttendanceModal}
-        onSubmit={(Info: any) => {
+        Messsage={ActionStatusMessage}
+        onSubmit={async(Info: any) => {
           console.log("Attendance Info:", Info);
+          SetActionStatusMessage("Updating attendance, please wait...");
+          const result = await UpdateClientDailyAttendance(SearchYear,SearchMonth,Info);
+          console.log("Attendance Update Result:", result);
+            SetActionStatusMessage("Updated Client attendance Successfully");
           setShowAttendanceModal(false);
+        
+        
           // Handle attendance submission logic here
         }}
       />
@@ -1422,6 +1529,52 @@ setShowCareTakerPriceUpdate(false)
         CompliteInfo={users}
         onSubmit={(A)=>(PostRefunRequest(A))}
       />}
+
+
+      {ShowAttendencePopUp && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn">
+    
+    <div className="relative w-[92%] max-w-md bg-white rounded-2xl shadow-2xl p-6 transform animate-scaleIn">
+
+ 
+      <button
+         onClick={() => setShowAttendencePopUp(false)}
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg"
+      >
+        ✕
+      </button>
+
+   
+      <div className="flex items-center justify-center w-16 h-16 mx-auto rounded-full bg-emerald-100">
+        <span className="text-3xl text-emerald-600">✔</span>
+      </div>
+
+      
+      <h2 className="mt-5 text-center text-lg font-semibold text-gray-800">
+        {ActionStatusMessage}
+      </h2>
+
+      
+      {ActionStatusMessage === "Please Wait..." && (
+        <div className="mt-4 flex justify-center">
+          <div className="w-6 h-6 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+
+    
+      {ActionStatusMessage !== "Please Wait..." && (
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => setShowAttendencePopUp(false)}
+            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-md transition"
+          >
+            Close
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+)}
   <table className="min-w-[900px] w-full border-collapse bg-white">
     
   
@@ -1468,7 +1621,40 @@ setShowCareTakerPriceUpdate(false)
     <th className="w-[80px] px-2 py-2 text-center">
       Replacement
     </th>
+        <th className="w-[80px] px-2 py-2 text-center">
+ <div className="flex flex-col items-center justify-between
+                w-16 h-12
+                bg-emerald-500
+                rounded-lg
+                text-white
+                p-1 shadow-lg border border-gray-300">
 
+  
+  <div className="flex  items-center leading-none">
+    <CalendarDays size={10} />
+    <span className="text-[9px] ml-1 font-semibold">
+      {/* {new Date().getDate()} */}
+      {new Date().toLocaleDateString("En-In")}
+    </span>
+  </div>
+
+
+
+  <button
+    className={`text-[8px] px-1 py-0.5 rounded-md transition
+      ${
+        hasUnmarked
+          ? "bg-white text-emerald-600 hover:bg-gray-100"
+          : "bg-gray-200 text-gray-600 cursor-not-allowed"
+      }`}
+    onClick={hasUnmarked ? UpdateCurrentAttendence : undefined}
+    disabled={!hasUnmarked}
+  >
+    {hasUnmarked ? "Mark All" : "Already Marked"}
+  </button>
+
+</div>
+  </th>
     <th className="w-[80px] px-2 py-2 text-center">
       Time Sheet
     </th>
@@ -1506,7 +1692,7 @@ setShowCareTakerPriceUpdate(false)
 
    
     <tbody className="bg-white divide-y divide-gray-200">
-      {[...FilterFinelTimeSheet].reverse().map((c, i) => 
+      {processedData.reverse().map((c, i) => 
         
      {
          const [, month, year] = c.StartDate.split("/").map(Number);
@@ -1517,7 +1703,9 @@ const monthIndex = [
 ].indexOf(SearchMonth) + 1;
 
 const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(year) ===Number(now.getFullYear());
-
+ const todayIndex = new Date().getDate() - 1;
+  const dayStatus = c.days?.[todayIndex] ?? "-";
+   
 
       return(
           <tr key={i} className="hover:bg-teal-50/30 transition-all">
@@ -1992,15 +2180,52 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
           
           </td>
 
-          <td className="px-3 py-3 text-center break-words">
+          {/* <td className="px-3 py-3 text-center break-words">
             <button
               className="px-4 cursor-pointer py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full  text-white "
               onClick={() => UpdateClient_UserId(c.Client_Id, c.name)}
             >
              <CalendarCheck2 size={19} className="text-teal-600"/>
             </button>
-          </td>
+          </td> */}
 
+          {Number(currentMonth) === Number(selectedMonth) + 1 && Number(currentYear) === Number(selectedYear) &&
+            <Td className="text-center align-middle">
+              {dayStatus==="-"?(
+                <span className="flex flex-col items-center leading-[10px] text-[9px] font-semibold text-gray-600">
+                  <span>Not</span>
+                  <span>Marked</span>
+                </span>
+              ):(
+               <div className="flex flex-col items-center gap-1">
+                  <DayBadge status={dayStatus as DayStatus}/>
+                  <p
+                    className="text-[10px] text-blue-600 cursor-pointer hover:underline"
+                 onClick={()=>{
+                   SetShowUpdateAttendece(true)
+                      setAttenseceInformation(c)
+                      setStatus("Choose")
+                      SetActionStatusMessage("")
+                      SetParticularDate(new Date().getDate())
+                 }}
+                  >
+                    Edit
+                  </p>
+                </div>
+              )}
+            </Td>
+      }
+<Td className="text-center align-middle">
+              {c.Status==="Freeze"?<p className="inline-flex items-center px-3 py-1 text-xs font-bold tracking-wide text-red-700 bg-purple-100 rounded-md shadow-sm">
+  ❄ On Freeze
+</p>:
+              <button
+                className="px-2 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600"
+                 onClick={() => UpdateClient_UserId(c.Client_Id, c.name)}
+              >
+                Full Month
+              </button>}
+            </Td>
           {/* {(isInvoiceDay || enableStatus) && (
            <td className="px-3 py-3 text-center">
   <button
@@ -2528,119 +2753,108 @@ setSelectedDate(e.target.value)
 {showTimeSheet && TimeSheet_Info && (
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
     <div className="bg-white rounded-3xl shadow-2xl p-6 w-[750px] max-h-[90vh] overflow-y-auto backdrop-blur-md border border-gray-200">
+      <div className="mb-4 rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200 shadow-xl p-3">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+          <div className="flex items-center gap-4">
+            <div className="h-14 w-14 rounded-2xl flex items-center justify-center shadow-lg">
+              <img
+                src="/Icons/Curate-logoq.png"
+                alt="Company Logo"
+                className="h-8 w-8 object-contain"
+              />
+            </div>
 
-    
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold">
-          📅 Attendance - {monthNames[selectedMonth]} {selectedYear}
-        </h2>
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#ff1493] font-semibold">
+                Client Management
+              </p>
+              <h2 className="text-xl font-bold text-slate-800">
+                Attendance Dashboard
+              </h2>
+              <p className="text-sm text-gray-400 mt-1">
+                {monthNames[selectedMonth]} {selectedYear}
+              </p>
+            </div>
+          </div>
 
-        <div className="flex gap-3">
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="border p-2 rounded-md"
-          >
-            {monthNames.map((m, i) => (
-              <option key={i} value={i}>{m}</option>
-            ))}
-          </select>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              className="px-4 py-3 rounded-xl bg-white border border-slate-200 shadow-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {monthNames.map((m, i) => (
+                <option key={i} value={i}>
+                  {m}
+                </option>
+              ))}
+            </select>
 
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="border p-2 rounded-md"
-          >
-            {Array.from({ length: 5 }).map((_, i) => {
-              const year = new Date().getFullYear() - 2 + i;
-              return <option key={year} value={year}>{year}</option>;
-            })}
-          </select>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="px-4 py-3 rounded-xl bg-white border border-slate-200 shadow-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {Array.from({ length: 5 }).map((_, i) => {
+                const year = new Date().getFullYear() - 2 + i;
+                return (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
         </div>
       </div>
 
-
-      
       <div className="grid grid-cols-7 gap-3 text-center">
-
         {Array.from({ length: daysInMonth }).map((_, dayIndex) => {
           const day = dayIndex + 1;
+const flexDate = `${selectedYear}-${selectedMonth}-${String(
+      ParticularDate
+    ).padStart(2, "0")}`;
+          const record = TimeSheet_Info.ClientAttendance?.find((t: any) => {
+            const parsed = new Date(t.AttendanceDate);
 
-          
-          const record = TimeSheet_Info.TimeSheet?.find((t:any) => {
-            let d = t.date;
-
-     
-            if (d instanceof Date) {
-              return (
-                d.getDate() === day &&
-                d.getMonth() === selectedMonth &&
-                d.getFullYear() === selectedYear
-              );
-            }
-
-          
-            const parsed = new Date(d);
             return (
               parsed.getDate() === day &&
               parsed.getMonth() === selectedMonth &&
               parsed.getFullYear() === selectedYear
             );
           });
-
-     
+console.log(record,"Record")
           const today = new Date();
           const currentDateObj = new Date(selectedYear, selectedMonth, day);
           const isFuture = currentDateObj > today;
 
-      
-const isHalfDay =
-  record?.HCPAttendence === true ||
-  record?.AdminAttendece === true;
+          const currentStatus =
+            updatedAttendance?.[day]?.status ??
+            (record?.Status === "Present" ? "Present" : record ? "Absent" : "Not Marked");
 
-const currentStatus:any =
-  updatedAttendance?.[day]?.status ??
-  (isHalfDay ? "Half Day" : record?.status) ??
-  "Not Marked";
+          const statusColor =
+            currentStatus === "Present"
+              ? "bg-green-100 text-green-700 border-green-300"
+              : currentStatus === "Absent"
+              ? "bg-red-100 text-red-700 border-red-300"
+              : "bg-gray-100 text-gray-500 border-gray-300";
 
-
-
-       const statusColor =
-  currentStatus === "Present"
-    ? "bg-green-100 text-green-700 border-green-300"
-    : currentStatus === "Absent"
-    ? "bg-red-100 text-red-700 border-red-300"
-    : currentStatus === "Leave"
-    ? "bg-yellow-100 text-yellow-700 border-yellow-300"
-    : currentStatus === "Half Day"
-    ? "bg-blue-100 text-blue-700 border-blue-300"
-    : "bg-gray-100 text-gray-500 border-gray-300"; 
-
-
-
-          
-          const handleStatusClick = (day:any) => {
+          const handleStatusClick = (day: number) => {
             if (isFuture) return;
 
             setSaveButton(true);
 
             setUpdatedAttendance((prev) => {
-             const current: AttendanceStatus =
-  prev?.[day]?.status ??
-  record?.status ??
-  "Not Marked";
+              const current =
+                prev?.[day]?.status ??
+                (record?.Status === "Present" ? "Present" : record ? "Absent" : "Not Marked");
 
-
-             const nextStatus: AttendanceStatus =
-  current === "Not Marked"
-    ? "Present"
-    : current === "Present"
-    ? "Leave"
-    : current === "Leave"
-    ? "Absent"
-    : "Present";
-
-
+              const nextStatus =
+                current === "Not Marked"
+                  ? "Present"
+                  : current === "Present"
+                  ? "Absent"
+                  : "Present";
 
               const currentDate = new Date(selectedYear, selectedMonth, day);
 
@@ -2687,32 +2901,122 @@ const currentStatus:any =
           return (
             <div
               key={day}
-              // onClick={() => handleStatusClick(day)}
-              className={`p-3 border rounded-lg flex flex-col items-center justify-center 
-                ${
-                  isFuture
-                    ? "opacity-40 blur-[1px] cursor-not-allowed"
-                    : "cursor-pointer hover:scale-105"
-                } 
-                ${statusColor}
-                transition-transform`}
+              className={`p-1 border rounded-lg flex flex-col items-center justify-center
+              ${
+                isFuture
+                  ? "opacity-40 blur-[1px] cursor-not-allowed"
+                  : "cursor-pointer hover:scale-105"
+              }
+              ${statusColor}
+              transition-transform`}
             >
               <span className="text-sm font-semibold">{day}</span>
-              <span className="text-xs font-medium">{currentStatus}</span>
+
+              <span className="text-[10px] font-medium">{currentStatus}</span>
+{record?.HCA_Name && <span className="text-[8px] text-gray-800 mt-1">
+               HCA: {record?.HCA_Name || "-"}
+              </span>
+}
+             
+              <span
+     
+     onClick={()=>{SetShowUpdateAttendece(!ShowUpdateAttendece),  SetParticularDate(dayIndex + 1),setEditDate(record?.dateKey)}}
+                className="mt-1 inline-flex items-center rounded-md border border-blue-200 bg-white px-1 py-1 text-[8px] font-medium text-blue-600 shadow-sm hover:bg-blue-50 cursor-pointer"
+              >
+                Edit
+              </span>
             </div>
           );
         })}
       </div>
 
-      {SaveButton && (
-        <p
-          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-green-600 text-white font-medium text-sm hover:bg-green-900 md:mt-2 transition-colors cursor-pointer select-none"
-          onClick={UpdateInformation}
-        >
-          Save Attendance
-        </p>
-      )}
+   
+{ShowUpdateAttendece&&
+<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
 
+  <div className="w-full max-w-sm rounded-xl bg-white shadow-2xl">
+
+    <div className="flex items-center justify-between border-b px-2 py-3">
+      <p className="text-base font-semibold text-gray-800">
+        Edit Attendance
+      </p>
+      <button
+  onClick={()=>SetShowUpdateAttendece(!ShowUpdateAttendece)}
+  className="flex justify-end cursor-pointer rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-black"
+>
+  <X size={14} />
+</button>
+    </div>
+
+
+
+    <div className="px-5 py-4">
+      <label className="mb-2 block text-sm font-medium text-gray-600">
+        Attendance Status
+      </label>
+
+      <select
+        value={status}
+        onChange={(e) => setStatus(e.target.value as any)}
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
+      ><option value="">Choose Attendence</option>
+        <option value="FULL">Full Day</option>
+        <option value="HALF">Half Day</option>
+        <option value="ABSENT">Absent</option>
+      </select>
+    </div>
+{EditDate!==new Date().toISOString().split('T')[0]&&
+
+<div className="flex flex-col  border-b px-2 py-3">
+  <label className="text-xs font-semibold text-gray-800">
+    Reason for Attendance Edit 
+  </label>
+
+  <input
+    type="text"
+    value={AttendeceEditReason}
+    placeholder="Enter Here....."
+    onChange={(e: any) => SetAttendeceEditReason(e.target.value)}
+    style={{
+      padding: "10px 12px",
+      borderRadius: "6px",
+      border: "1px solid #ccc",
+      fontSize: "14px",
+      outline: "none"
+    }}
+  />
+</div>}
+<div className="flex items-center-justify-between">
+   {ActionStatusMessage&&
+            <p
+  className={`mt-2 text-sm font-medium px-1 py-2 text-xs text-center rounded-lg ${
+    ActionStatusMessage?.includes("success") || ActionStatusMessage?.includes("✅")
+      ? " text-green-700  "
+      : "text-red-700  "
+  }`}
+>
+  {ActionStatusMessage}
+</p>
+      }
+    <div className="flex w-full justify-end gap-2 border-t px-5 py-3">
+      <button
+        onClick={()=>SetShowUpdateAttendece(!ShowUpdateAttendece)}
+        className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+      >
+        Cancel
+      </button>
+
+      <button
+        className="rounded-lg bg-black px-5 py-2 text-sm font-medium text-white hover:bg-gray-800"
+
+      >
+        Save
+      </button>
+    </div>
+      </div>
+  </div>
+</div>
+}
       <div className="mt-5 text-right">
         <button
           onClick={() => setShowTimeSheet(false)}
@@ -2824,7 +3128,62 @@ const AwaitingInvoiceCount = FinelTimeSheet
   }).length;
 
   console.log("AwaitingInvoiceCount", AwaitingInvoiceCount);
+function DayBadge({ status }: { status: DayStatus }) {
+  const Wrapper = ({ children }: any) => (
+    <div className="flex items-center justify-center w-full">
+      {children}
+    </div>
+  );
 
+  if (status === "P") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 text-emerald-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  if (status === "HP") {
+    return (
+      <Wrapper>
+        <div className="relative w-8 h-8 rounded-full border-2 border-emerald-500 overflow-hidden shadow-sm flex items-center justify-center text-[10px] font-semibold text-emerald-600">
+          <div className="absolute left-0 top-0 w-1/2 h-full bg-emerald-500" />
+          <span className="relative z-10">HP</span>
+        </div>
+      </Wrapper>
+    );
+  }
+
+  if (status === "A") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-rose-600 text-rose-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  if (status === "NA") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-gray-500 text-gray-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  return (
+    <Wrapper>
+      <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border border-gray-400 text-gray-500 bg-white shadow-sm">
+        {status}
+      </span>
+    </Wrapper>
+  );
+}
 const GetFilterCount = (type: string) => {
   switch (type) {
     case "On Service":
