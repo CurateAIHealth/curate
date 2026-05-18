@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import Image from "next/image";
-
-type AttendanceStatus = "Present" | "Absent" | "Half Day";
+import React, { useEffect, useMemo, useState } from "react";
 
 export interface Client {
+  ClientAttendance: any;
+  PatientName: any;
   Client_Id: string | number;
   name: string;
+  contact?: string;
   HCA_Id: string | number;
   HCA_Name: string;
 }
@@ -18,265 +18,257 @@ export interface AttendancePayload {
   HCA_Id: string | number;
   HCA_Name: string;
   date: string;
-  status: AttendanceStatus;
+  status: "Present";
 }
 
 interface AttendanceModalProps {
   clients: Client[];
   title?: string;
   isOpen: boolean;
+  Messsage?: string;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onSubmit: (payload: AttendancePayload[]) => void;
 }
 
-const ATTENDANCE_OPTIONS: AttendanceStatus[] = [
-  "Present",
-  "Absent",
-  "Half Day",
-];
-
 export default function AttendanceModal({
   clients,
-  title = "Attendance Management",
+  title = "Client Attendance",
   isOpen,
+  Messsage,
   setIsOpen,
   onSubmit,
+  
 }: AttendanceModalProps) {
-  const [selectedClients, setSelectedClients] = useState<string[]>([]);
-  const [selectedStatus, setSelectedStatus] =
-    useState<AttendanceStatus>("Present");
+  const [search, setSearch] = useState("");
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [checkedIn, setCheckedIn] = useState<string[]>([]);
 
-  const [filters, setFilters] = useState({
-    date: new Date().toISOString().split("T")[0], 
-    client: "",
-    hcp: "",
-  });
-
-  const getSelectionKey = (client: Client) =>
-    `${client.Client_Id}-${client.HCA_Id}`;
-
-  const filteredClients = useMemo(() => {
-    return clients.filter(
-      (item) =>
-        item.name
-          .toLowerCase()
-          .includes(filters.client.toLowerCase()) &&
-        item.HCA_Name.toLowerCase().includes(filters.hcp.toLowerCase())
-    );
-  }, [clients, filters]);
-
-  const isAllSelected =
-    filteredClients.length > 0 &&
-    filteredClients.every((item) =>
-      selectedClients.includes(getSelectionKey(item))
-    );
-
-  const toggleClientSelection = (client: Client) => {
-    const key = getSelectionKey(client);
-
-    setSelectedClients((prev) =>
-      prev.includes(key)
-        ? prev.filter((item) => item !== key)
-        : [...prev, key]
-    );
-  };
-
-  const toggleSelectAll = () => {
-    if (isAllSelected) {
-      setSelectedClients([]);
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
     } else {
-      setSelectedClients(
-        filteredClients.map((item) => getSelectionKey(item))
-      );
+      document.body.style.overflow = "auto";
     }
-  };
 
-  const resetModal = () => {
-    setSelectedClients([]);
-    setSelectedStatus("Present");
-    setFilters({
-      date: "",
-      client: "",
-      hcp: "",
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isOpen]);
+console.log("clients", clients);
+const filteredClients = useMemo(() => {
+  return clients.filter((item) => {
+    const matchesSearch =
+      item.HCA_Name.toLowerCase().includes(search.toLowerCase()) ||
+      item.name.toLowerCase().includes(search.toLowerCase());
+
+    const alreadyMarked = item.ClientAttendance?.some((attendance:any) => {
+      const attendanceDate =
+        attendance.dateKey ||
+        new Date(attendance.AttendanceDate).toISOString().split("T")[0];
+
+      return attendanceDate === selectedDate;
     });
-  };
 
-  const closeModal = () => {
-    resetModal();
-    setIsOpen(false);
-  };
+    return matchesSearch && !alreadyMarked;
+  });
+}, [clients, search, selectedDate]);
 
-  const handleSubmit = () => {
-    if (!selectedClients.length) return;
+  const handleCheckIn = (client: Client) => {
+    const key = `${client.Client_Id}-${client.HCA_Id}`;
 
-    const payload: AttendancePayload[] = clients
-      .filter((client) =>
-        selectedClients.includes(getSelectionKey(client))
-      )
-      .map((client) => ({
+    if (checkedIn.includes(key)) return;
+
+    setCheckedIn((prev) => [...prev, key]);
+
+    onSubmit([
+      {
         Client_Id: client.Client_Id,
         Client_Name: client.name,
         HCA_Id: client.HCA_Id,
         HCA_Name: client.HCA_Name,
-        date: filters.date,
-        status: selectedStatus,
-      }));
+        date: selectedDate,
+        status: "Present",
+      },
+    ]);
+  };
+
+  const handleCheckInAll = () => {
+    const uncheckedClients = filteredClients.filter((client) => {
+      const key = `${client.Client_Id}-${client.HCA_Id}`;
+      return !checkedIn.includes(key);
+    });
+
+    if (!uncheckedClients.length) return;
+
+    const newKeys = uncheckedClients.map(
+      (client) => `${client.Client_Id}-${client.HCA_Id}`
+    );
+
+    setCheckedIn((prev) => [...prev, ...newKeys]);
+
+    const payload = uncheckedClients.map((client) => ({
+      Client_Id: client.Client_Id,
+      Client_Name: client.name,
+      HCA_Id: client.HCA_Id,
+      HCA_Name: client.HCA_Name,
+      date: selectedDate,
+      status: "Present" as const,
+    }));
 
     onSubmit(payload);
-    closeModal();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 p-2 sm:p-4">
-      <div className="mx-auto flex h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-        <div className="flex shrink-0 items-center justify-between bg-gray-200 px-4 py-4 sm:px-6">
+    <div className="fixed inset-0 z-50 bg-black/50 p-3">
+      <div className="mx-auto flex h-[95vh] w-full max-w-7xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b p-5">
+          <div className="flex items-center gap-2">
+           <img
+            src="/Icons/Curate-logoq.png"
+            className="h-12"
+            alt="Company Logo"
+          />
+          <div>
+
+            <h2 className="text-3xl font-bold text-slate-800">{title}</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {new Date(selectedDate).toDateString()}
+            </p>
+          </div>
+          </div>
+
           <div className="flex items-center gap-4">
-            <div className="rounded-xl bg-white p-2 shadow-md">
-              <Image
-                src="/Icons/Curate-logoq.png"
-                alt="Company Logo"
-                width={42}
-                height={42}
-              />
-            </div>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="rounded-xl border px-4 py-2 outline-none"
+            />
 
-            <div>
-              <h2 className="text-lg font-semibold text-[#ff1493] sm:text-xl">
-                {title}
-              </h2>
-              <p className="text-sm text-gray-800">
-                Manage Clients attendance efficiently
-              </p>
-            </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="rounded-full border px-5 py-2 font-medium hover:bg-slate-100"
+            >
+              Close
+            </button>
           </div>
-
-          <button
-            onClick={closeModal}
-            className="cursor-pointer rounded-lg bg-white/20 p-2 text-gray-700 transition hover:bg-white/40"
-          >
-            ✕
-          </button>
         </div>
 
-        <div className="grid shrink-0 grid-cols-1 gap-3 border-b border-slate-200 bg-slate-50 p-4 md:grid-cols-3 sm:px-6">
-          <input
-            type="date"
-            value={filters.date}
-            onChange={(e) =>
-              setFilters((prev) => ({
-                ...prev,
-                date: e.target.value,
-              }))
-            }
-            className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm outline-none focus:border-[#1392d3]"
-          />
-
-          <input
-            type="text"
-            placeholder="Search client name"
-            value={filters.client}
-            onChange={(e) =>
-              setFilters((prev) => ({
-                ...prev,
-                client: e.target.value,
-              }))
-            }
-            className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm outline-none focus:border-[#1392d3]"
-          />
-
-          <input
-            type="text"
-            placeholder="Search HCP name"
-            value={filters.hcp}
-            onChange={(e) =>
-              setFilters((prev) => ({
-                ...prev,
-                hcp: e.target.value,
-              }))
-            }
-            className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm outline-none focus:border-[#1392d3]"
-          />
-        </div>
-
-        <div className="flex shrink-0 flex-col gap-4 border-b border-slate-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between sm:px-6">
+        <div className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
           <button
-            onClick={toggleSelectAll}
-            className="cursor-pointer rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:opacity-90"
-            style={{ backgroundColor: "#ff1493" }}
+            onClick={handleCheckInAll}
+            className="rounded-xl bg-teal-600 px-5 py-3 font-semibold text-white shadow-md hover:bg-teal-700"
           >
-            {isAllSelected ? "Deselect All" : "Select All"}
+            Check In All Client's
           </button>
 
-          <div className="flex flex-wrap gap-2">
-            {ATTENDANCE_OPTIONS.map((status) => (
-              <button
-                key={status}
-                onClick={() => setSelectedStatus(status)}
-                className="cursor-pointer rounded-lg px-4 py-2 text-sm font-medium transition"
-                style={{
-                  backgroundColor:
-                    selectedStatus === status ? "#50c896" : "white",
-                  color:
-                    selectedStatus === status ? "white" : "#334155",
-                  border:
-                    selectedStatus === status
-                      ? "1px solid #50c896"
-                      : "1px solid #cbd5e1",
-                }}
-              >
-                {status}
-              </button>
-            ))}
+          {Messsage && (
+            <p className="text-sm font-medium text-green-600">{Messsage}</p>
+          )}
+
+          <div className="w-full md:w-[320px]">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-12 w-full rounded-xl border border-slate-300 px-4 outline-none focus:border-sky-500"
+            />
           </div>
-
-          <p
-            className="text-sm font-semibold"
-            style={{ color: "#1392d3" }}
-          >
-            Selected Clients: {selectedClients.length}
-          </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-slate-50 p-4 sm:px-6">
-          {filteredClients.map((item) => {
-            const key = getSelectionKey(item);
+        <div className="flex-1 overflow-hidden px-5 pb-5">
+          <div className="h-full overflow-y-auto overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="w-full min-w-[1100px]">
+              <thead className="sticky top-0 z-10 bg-emerald-400 text-white">
+                <tr>
+                  <th className="px-4 py-4 text-left">#</th>
+                  <th className="px-4 py-4 text-left">CLIENT NAME</th>
+                  <th className="px-4 py-4 text-left">CONTACT</th>
+                  <th className="px-4 py-4 text-left">PATIENT NAME</th>
+                  <th className="px-4 py-4 text-left">STATUS</th>
+                  <th className="px-4 py-4 text-center">ACTION</th>
+                </tr>
+              </thead>
 
-            return (
-              <div
-                key={key}
-                className="mb-3 flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedClients.includes(key)}
-                  onChange={() => toggleClientSelection(item)}
-                  className="h-5 w-5 cursor-pointer accent-[#ff1493]"
-                />
+              <tbody>
+                {filteredClients.map((item, index) => {
+                  const key = `${item.Client_Id}-${item.HCA_Id}`;
+                  const isPresent = checkedIn.includes(key);
 
-                <div className="min-w-0">
-                  <h3 className="truncate font-semibold text-slate-800">
-                    {item.name}
-                  </h3>
-                  <p className="truncate text-xs text-slate-500">
-                    HCP:<span className="text-slate-700">{item.HCA_Name}</span> 
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                  return (
+                    <tr key={key} className="border-b bg-white hover:bg-slate-50">
+                      <td className="px-4 py-5 font-semibold">{index + 1}</td>
+                      <td className="px-4 py-5 font-semibold text-sky-600">
+                        {item.name}
+                      </td>
+                      <td className="px-4 py-5">{item.contact || "-"}</td>
+                      <td className="px-4 py-5">{item.PatientName}</td>
+                      <td className="px-4 py-5">
+                        <span
+                          className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                            isPresent
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-600"
+                          }`}
+                        >
+                          {isPresent ? "Present" : "Pending"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-5 text-center">
+                        <button
+                          onClick={() => handleCheckIn(item)}
+                          disabled={isPresent}
+                          className={`rounded-xl px-5 py-3 font-semibold text-white shadow-md transition ${
+                            isPresent
+                              ? "cursor-not-allowed bg-green-500"
+                              : "bg-teal-700 hover:bg-teal-800"
+                          }`}
+                        >
+                          {isPresent
+                            ? "✓ Attendance Updated"
+                            : `✓ ${item.name}'s Attendance Check-in`}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
 
-        <div className="shrink-0 border-t border-slate-200 bg-white p-4 sm:px-6">
-          <button
-            onClick={handleSubmit}
-            disabled={!selectedClients.length}
-            className="h-12 w-full cursor-pointer rounded-xl text-sm font-semibold text-white shadow-lg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-            style={{ backgroundColor: "#08c36cee" }}
-          >
-            Update Attendance for Selected Clients
-          </button>
+            {!filteredClients.length && (
+           <div className="flex h-40 flex-col items-center justify-center rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-100 p-6 shadow-sm">
+  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 shadow-md">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-7 w-7 text-white"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2.5}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+  </div>
+
+  <p className="text-center text-lg font-semibold text-emerald-700">
+    Attendance Completed
+  </p>
+
+  <p className="mt-1 max-w-md text-center text-sm text-slate-600">
+    All client attendance for the selected date has already been marked as present.
+  </p>
+</div>
+            )}
+          </div>
         </div>
       </div>
     </div>

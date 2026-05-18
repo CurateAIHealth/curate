@@ -3003,7 +3003,7 @@ export const PostReason = async (
 
 
 
- export const UpdateAllPendingAttendance = async (selectedYear:any, selectedMonth:any) => {
+ export const UpdateAllPendingAttendance = async (selectedYear:any, selectedMonth:any,UpdatedBy:any) => {
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
@@ -3061,7 +3061,8 @@ export const PostReason = async (
 export const UpdatehcpDailyAttendce = async (
   selectedYear: string | number,
   selectedMonth: string | number,
-  selectedDate: string
+  selectedDate: string,
+  UpdatedBy: string
 ) => {
   try {
     const cluster = await clientPromise;
@@ -3136,6 +3137,7 @@ for (const record of records) {
     ? record.Attendance.filter((a: any) => a && typeof a === "object")
     : [];
 
+console.log("Cleaned Attendance:", record);
   const alreadyMarked = cleanedAttendance.some((a: any) => {
     if (a?.dateKey) {
       return a.dateKey === selectedDateKey;
@@ -3151,16 +3153,22 @@ for (const record of records) {
 
   if (alreadyMarked) continue;
 
-  const attendanceEntry = {
-    dateKey: selectedDateKey,
-    AttendenceDate: dateObj,
-    HCPAttendence: true,
-    AdminAttendece: true,
-    CreatedAt: new Date(),
-    UpdatedAt: new Date(),
-    UpdatedBy: "Admin",
-  };
+const attendanceEntry = {
+  dateKey: selectedDateKey,
+  AttendenceDate: dateObj,
+  HCPAttendence: true,
+  AdminAttendece: true,
 
+  Client_Id: record.ClientId,
+  Client_Name: record.ClientName,
+  HCA_Id: record.HCAId,
+  HCA_Name: record.HCAName,
+
+  CreatedAt: new Date(),
+  UpdatedAt: new Date(),
+  UpdatedBy: UpdatedBy || "Admin",
+};
+console.log("Attendance Entry:", attendanceEntry);
   operations.push({
     updateOne: {
       filter: { _id: record._id },
@@ -3168,7 +3176,7 @@ for (const record of records) {
         $push: { Attendance: attendanceEntry },
         $set: {
           UpdatedAt: new Date(),
-          UpdatedBy: "Admin",
+          UpdatedBy: UpdatedBy || "Admin",
         },
       },
     },
@@ -3192,9 +3200,300 @@ for (const record of records) {
     };
   }
 };
+
+export const UpdateClientDailyAttendance = async (
+  selectedYear: string | number,
+  selectedMonth: string | number,
+  attendanceInfo: any[],
+  LogInUser: string
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const monthKey = `${selectedYear}-${Number(selectedMonth)}`;
+
+    console.log("Month Key:", monthKey);
+    console.log("Attendance Info:", attendanceInfo);
+
+    if (!attendanceInfo?.length) {
+      return {
+        success: false,
+        summary: {
+          totalRequested: 0,
+          updatedCount: 0,
+          alreadyMarkedCount: 0,
+          missingDeploymentCount: 0,
+        },
+        details: {
+          updatedClients: [],
+          alreadyMarkedClients: [],
+          missingDeploymentClients: [],
+        },
+        message: "No attendance data was received for processing.",
+      };
+    }
+
+    const records = await collection
+      .find({
+        Month: monthKey,
+        Status: { $ne: "Freeze" },
+      })
+      .toArray();
+
+    console.log("Fetched Records:", records);
+
+    if (!records.length) {
+      return {
+        success: false,
+        summary: {
+          totalRequested: attendanceInfo.length,
+          updatedCount: 0,
+          alreadyMarkedCount: 0,
+          missingDeploymentCount: attendanceInfo.length,
+        },
+        details: {
+          updatedClients: [],
+          alreadyMarkedClients: [],
+          missingDeploymentClients: attendanceInfo.map(
+            (item) => item.Client_Name
+          ),
+        },
+        message: "No active deployment records were found for the selected month.",
+      };
+    }
+
+    const operations: any[] = [];
+    const updatedClients: string[] = [];
+    const alreadyMarkedClients: string[] = [];
+    const missingDeploymentClients: string[] = [];
+
+    for (const attendance of attendanceInfo) {
+      console.log("Processing Attendance:", attendance);
+
+      const matchedRecord = records.find(
+        (record: any) =>
+          record.ClientId === attendance.Client_Id &&
+          record.HCAId === attendance.HCA_Id
+      );
+
+      console.log("Matched Record:", matchedRecord);
+
+      if (!matchedRecord) {
+        missingDeploymentClients.push(attendance.Client_Name);
+        continue;
+      }
+
+      const dateObj = new Date(attendance.date);
+      const selectedDateKey = dateObj.toISOString().slice(0, 10);
+
+      console.log("Selected Date Key:", selectedDateKey);
+
+      const cleanedAttendance = Array.isArray(matchedRecord.ClientAttendance)
+        ? matchedRecord.ClientAttendance.filter(
+            (a: any) => a && typeof a === "object"
+          )
+        : [];
+
+      console.log("Cleaned Attendance:", cleanedAttendance);
+
+      const alreadyMarked = cleanedAttendance.some((a: any) => {
+        const attendanceDate =
+          a?.AttendanceDate ||
+          a?.AttendenceDate;
+
+        const attendanceDateKey =
+          a?.dateKey ||
+          (attendanceDate
+            ? new Date(attendanceDate).toISOString().slice(0, 10)
+            : null);
+
+        if (!attendanceDateKey) return false;
+
+        return attendanceDateKey === selectedDateKey;
+      });
+
+      console.log("Already Marked:", alreadyMarked);
+
+      if (alreadyMarked) {
+        alreadyMarkedClients.push(attendance.Client_Name);
+        continue;
+      }
+
+      const attendanceEntry = {
+        dateKey: selectedDateKey,
+        AttendanceDate: dateObj,
+        Client_Id: attendance.Client_Id,
+        Client_Name: attendance.Client_Name,
+        HCA_Id: attendance.HCA_Id,
+        HCA_Name: attendance.HCA_Name,
+        Status: attendance.status,
+        AdminAttendance: true,
+        CreatedAt: new Date(),
+        UpdatedAt: new Date(),
+        UpdatedBy: LogInUser || "Admin",
+      };
+
+      console.log("Attendance Entry:", attendanceEntry);
+
+      operations.push({
+        updateOne: {
+          filter: { _id: matchedRecord._id },
+          update: {
+            $push: {
+              ClientAttendance: attendanceEntry,
+            },
+            $set: {
+              UpdatedAt: new Date(),
+              UpdatedBy: "Admin",
+            },
+          },
+        },
+      });
+
+      updatedClients.push(attendance.Client_Name);
+    }
+
+    console.log("Bulk Operations:", operations);
+
+    if (operations.length > 0) {
+      const bulkResult = await collection.bulkWrite(operations);
+      console.log("Bulk Write Result:", bulkResult);
+    }
+
+    const summary = {
+      totalRequested: attendanceInfo.length,
+      updatedCount: updatedClients.length,
+      alreadyMarkedCount: alreadyMarkedClients.length,
+      missingDeploymentCount: missingDeploymentClients.length,
+    };
+
+    const details = {
+      updatedClients,
+      alreadyMarkedClients,
+      missingDeploymentClients,
+    };
+
+    console.log("Summary:", summary);
+    console.log("Details:", details);
+
+    if (
+      updatedClients.length === 0 &&
+      alreadyMarkedClients.length === 1 &&
+      attendanceInfo.length === 1
+    ) {
+      return {
+        success: false,
+        summary,
+        details,
+        message: "Attendance has already been marked for this client.",
+      };
+    }
+
+    if (
+      updatedClients.length === 0 &&
+      missingDeploymentClients.length === 1 &&
+      attendanceInfo.length === 1
+    ) {
+      return {
+        success: false,
+        summary,
+        details,
+        message: "No deployment record found for this client.",
+      };
+    }
+
+    if (
+      updatedClients.length === 1 &&
+      attendanceInfo.length === 1
+    ) {
+      return {
+        success: true,
+        summary,
+        details,
+        message: "Attendance marked successfully for the client.",
+      };
+    }
+
+    if (
+      updatedClients.length === attendanceInfo.length
+    ) {
+      return {
+        success: true,
+        summary,
+        details,
+        message: "Attendance was marked successfully for all selected clients.",
+      };
+    }
+
+    if (
+      updatedClients.length === 0 &&
+      alreadyMarkedClients.length === attendanceInfo.length
+    ) {
+      return {
+        success: false,
+        summary,
+        details,
+        message: "Attendance was already marked for all selected clients.",
+      };
+    }
+
+    if (
+      updatedClients.length === 0 &&
+      missingDeploymentClients.length === attendanceInfo.length
+    ) {
+      return {
+        success: false,
+        summary,
+        details,
+        message: "No deployment records were found for the selected clients.",
+      };
+    }
+
+    if (updatedClients.length === 0) {
+      return {
+        success: false,
+        summary,
+        details,
+        message: "No attendance records were updated.",
+      };
+    }
+
+    return {
+      success: true,
+      summary,
+      details,
+      message: "Attendance processing completed with partial success.",
+    };
+  } catch (error: any) {
+    console.error("UpdateClientDailyAttendance Error:", error);
+
+    return {
+      success: false,
+      summary: {
+        totalRequested: attendanceInfo?.length || 0,
+        updatedCount: 0,
+        alreadyMarkedCount: 0,
+        missingDeploymentCount: 0,
+      },
+      details: {
+        updatedClients: [],
+        alreadyMarkedClients: [],
+        missingDeploymentClients: [],
+      },
+      message:
+        "An error occurred while updating client attendance. Please try again later.",
+      error: error.message,
+    };
+  }
+};
 export const EditAttendanceByClientId = async (
   clientId: string,
   hcpId:any,
+  HcaName:any,
+  ClientName:any,
+  UpdateBy:any,
   Month: any,
   attendenceDate: string,
   status: "FULL" | "HALF" | "ABSENT",
@@ -3232,26 +3531,33 @@ export const EditAttendanceByClientId = async (
     });
 
     if (existing) {
-      await collection.updateOne(
-        {
-          ClientId: clientId,
-           HCAId:hcpId,
-          Month: normalizedMonth,
-          "Attendance.AttendenceDate": start,
-        },
-        {
-          $set: {
-            "Attendance.$.HCPAttendence": flags.HCPAttendence,
-            "Attendance.$.AdminAttendece": flags.AdminAttendece,
-            "Attendance.$.UpdatedAt": new Date(),
-            "Attendance.$.UpdatedBy": UpdatedBy || "",
-          },
-        }
-      );
+     await collection.updateOne(
+  {
+    ClientId: clientId,
+    HCAId: hcpId,
+    Month: normalizedMonth,
+    "Attendance.AttendenceDate": start,
+  },
+  {
+    $set: {
+      "Attendance.$.HCPAttendence": flags.HCPAttendence,
+      "Attendance.$.AdminAttendece": flags.AdminAttendece,
+
+      
+      "Attendance.$.Client_Id": clientId,
+      "Attendance.$.Client_Name": ClientName,
+      "Attendance.$.HCA_Id": hcpId,
+      "Attendance.$.HCA_Name": HcaName,
+
+      "Attendance.$.UpdatedAt": new Date(),
+      "Attendance.$.UpdatedBy": UpdateBy || "",
+    },
+  }
+);
 
       return {
         success: true,
-        message: "Attendance updated Successfully ✅.",
+        message: "Attendance updated Successfully",
       };
     }
 
@@ -3259,9 +3565,13 @@ export const EditAttendanceByClientId = async (
       AttendenceDate: start,
       HCPAttendence: flags.HCPAttendence,
       AdminAttendece: flags.AdminAttendece,
+      Client_Id: clientId,
+      Client_Name: ClientName,
+      HCA_Id: hcpId,
+      HCA_Name: HcaName,
       CreatedAt: new Date(),
       UpdatedAt: new Date(),
-      UpdatedBy: UpdatedBy || "",
+      UpdatedBy: UpdateBy || "",
     };
 
     await collection.updateOne(
@@ -3280,7 +3590,7 @@ export const EditAttendanceByClientId = async (
 
     return {
       success: true,
-      message: "Attendance created and added Successfully ✅.",
+      message: "Attendance created and added Successfully",
     };
   } catch (error: any) {
     console.error("❌ Error editing attendance:", error);
