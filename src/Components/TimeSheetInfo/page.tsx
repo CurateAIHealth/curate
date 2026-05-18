@@ -4,7 +4,7 @@ let cachedUsersFullInfo: any[] = [];
 let cachedRegisterdUsers: any[] = [];
 import { DeleteClientFromDeolyment, EditAttendanceByClientId, EditAttendanceByDateRange, GetAllUsersData, GetDeploymentInfo, GetRegidterdUsers, GetUsersFullInfo, PostAttendeceEditRequest, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus, UpdatehcpDailyAttendce } from "@/Lib/user.action";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
-import { CalendarDays, CheckCircle, Eye, FilePenLine, LucidePencil, Pencil, PencilIcon, Trash2, X } from "lucide-react";
+import { CalendarDays, CheckCircle, Eye, FilePenLine, Info, LucidePencil, Pencil, PencilIcon, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import React, { useState, useMemo, useEffect } from "react";
@@ -65,6 +65,7 @@ const [ShowUpdateAttendece,SetShowUpdateAttendece]=useState(false)
     const [users, setUsers] = useState<any[]>([]);
       const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
   const [StatusMessage,SetStatusMessage]=useState<any>("")
+  const [refreshKey, setRefreshKey] = useState(0);
 const [SearchResult,setSearchResult]=useState("")
 const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const dispatch = useDispatch();
@@ -201,7 +202,7 @@ cachedRegisterdUsers=RegisterdUsers??[]
   };
 
   Fetch();
-}, [isSuccess, showMissingCalendar]);
+}, [isSuccess, showMissingCalendar,refreshKey]);
 
 
 
@@ -380,10 +381,17 @@ const processedData = useMemo(() => {
     .filter((record: any) => {
       if (!search) return true;
 
-      const name = record.clientName?.toLowerCase() || "";
-      const phone = record.clientPhone?.toString() || "";
+      return (record.days || []).some((att: any) => {
+        const client = att.Client_Name?.toLowerCase() || "";
+        const hca = att.HCA_Name?.toLowerCase() || "";
+        const phone = record.clientPhone?.toString() || "";
 
-      return name.includes(search) || phone.includes(search);
+        return (
+          client.includes(search) ||
+          hca.includes(search) ||
+          phone.includes(search)
+        );
+      });
     })
 
     .sort((a: any, b: any) => {
@@ -394,30 +402,35 @@ const processedData = useMemo(() => {
     })
 
     .map((record: any) => {
-      const dayStatusArray = Array.from({ length: 31 }, () => "-");
+      const dayStatusArray: ({ status: string; clientName: string; hcaName: string; UpdatedBy: string } | null)[] =
+        Array.from({ length: 31 }, () => null);
 
       (record.days || []).forEach((att: any) => {
-        const dateObj = new Date(att.AttendenceDate);
-        const day = dateObj.getDate();
+        const day = new Date(att.AttendenceDate).getDate();
 
         const hcp = att.HCPAttendence === true;
         const admin = att.AdminAttendece === true;
 
-        let status: DayStatus = "A";
+        let status = "A";
 
         if (hcp && admin) status = "P";
         else if (hcp || admin) status = "HP";
 
         if (day >= 1 && day <= 31) {
-          dayStatusArray[day - 1] = status;
+          dayStatusArray[day - 1] = {
+            status,
+            clientName: att.Client_Name || "-",
+            hcaName: att.HCA_Name || "-",
+            UpdatedBy: att.UpdatedBy || "-"
+          };
         }
       });
 
       const counts = dayStatusArray.reduce(
-        (acc: any, v: string) => {
-          if (v === "P") acc.pd++;
-          if (v === "A") acc.ad++;
-          if (v === "HP") acc.hp++;
+        (acc: any, v: any) => {
+          if (v?.status === "P") acc.pd++;
+          if (v?.status === "A") acc.ad++;
+          if (v?.status === "HP") acc.hp++;
           return acc;
         },
         { pd: 0, ad: 0, hp: 0 }
@@ -456,7 +469,8 @@ const hasUnmarked = processedData.some(
     const UpdateDailyattendece = await UpdatehcpDailyAttendce(
     selectedYear,
     selectedMonth,
-     new Date().toISOString().split("T")[0]
+     new Date().toISOString().split("T")[0],
+     loggedInEmail
   );
 
         if (UpdateDailyattendece.success === true) {
@@ -507,67 +521,113 @@ const NumberOfDaysInMonth = getDaysInMonth(
     return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
   };
 
-const EditAttendence = async () => {
+const EditAttendence = async (): Promise<void> => {
   try {
-    if (!AttenseceInformation?.ClientId) return;
-  
+    if (!AttenseceInformation?.ClientId) {
+      SetStatusMessage("Invalid attendance information");
+      return;
+    }
+
+    if (!status) {
+      SetStatusMessage("Please select attendance status");
+      return;
+    }
 
     SetStatusMessage("Please Wait...");
+    setIsChecking(true);
 
-    const flexDate = `${selectedYear}-${selectedMonth}-${String(
+    const normalizedMonth = String(selectedMonth).padStart(2, "0");
+
+    const flexDate = `${selectedYear}-${normalizedMonth}-${String(
       ParticularDate
     ).padStart(2, "0")}`;
 
-    const yearMonth = `${selectedYear}-${selectedMonth}`;
-const Info={...AttenseceInformation,flexDate,yearMonth,status}
+    const yearMonth = `${selectedYear}-${normalizedMonth}`;
 
-      if(flexDate===new Date().toISOString().split('T')[0]){
-const Dateresponse = await EditAttendanceByClientId(
-      AttenseceInformation.ClientId,
-      AttenseceInformation.hcpId,
-      yearMonth,
+    const today = new Date();
+    const localToday = `${today.getFullYear()}-${String(
+      today.getMonth() + 1
+    ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    const closeModal = () => {
+      setTimeout(() => {
+        setShowFullMonth(false);
+        SetShowUpdateAttendece(false);
+        SetAttendeceEditReason("");
+      }, 1500);
+    };
+
+    if (flexDate === localToday) {
+      const response = await EditAttendanceByClientId(
+        AttenseceInformation.ClientId,
+        AttenseceInformation.hcpId,
+        AttenseceInformation.hcpName,
+        AttenseceInformation.clientName,
+        loggedInEmail,
+        yearMonth,
+        flexDate,
+        status,
+        loggedInEmail
+      );
+
+      if (!response?.success) {
+        throw new Error(response?.message || "Attendance update failed");
+      }
+
+      SetStatusMessage(
+        response?.message || "Attendance updated successfully"
+      );
+
+      // force fresh fetch
+      setRefreshKey((prev) => prev + 1);
+
+      closeModal();
+      return;
+    }
+
+    const info = {
+      ...AttenseceInformation,
       flexDate,
+      yearMonth,
       status,
-      "Admin"
+    };
+
+    const response = await PostAttendeceEditRequest(
+      info,
+      AttendeceEditReason,
+      loggedInEmail
     );
 
-     SetStatusMessage(`✅ ${Dateresponse.message}`);
-
-      setTimeout(() => {
-        setShowFullMonth(false);
-        SetShowUpdateAttendece((prev: boolean) => !prev);
-   SetAttendeceEditReason("")
-      }, 3500);
-    return
+    if (!response?.success) {
+      throw new Error(response?.message || "Failed to submit request");
     }
-const response= await PostAttendeceEditRequest(Info,AttendeceEditReason,loggedInEmail)
-    if (response?.success) {
 
-        const phoneNumber = "U04S43V513N";
-      const Impmessage =
-        "Hi Medam, Kindly requesting AttendeceEdit  Request update. Please check notification in the application. Thank you.";
-
-    const res:any=await axios.post("/api/Slack", {
-  userIds:phoneNumber,
-  message: Impmessage,
-});
-
-     
-      SetStatusMessage(`✅ ${response.message}`);
-
-      setTimeout(() => {
-        setShowFullMonth(false);
-        SetShowUpdateAttendece((prev: boolean) => !prev);
-   SetAttendeceEditReason("")
-      }, 3500);
-    } else {
-      SetStatusMessage(response?.message || "Failed to update attendance");
+    try {
+      await axios.post("/api/Slack", {
+        userIds: "U04S43V513N",
+        message:
+          "Hi Madam, Kindly requesting attendance edit request update. Please check notification in the application. Thank you.",
+      });
+    } catch (slackError) {
+      console.error("Slack notification failed:", slackError);
     }
+
+    SetStatusMessage(response?.message || "Request submitted successfully");
+
+    // optional refresh if request list needs update
+    setRefreshKey((prev) => prev + 1);
+
+    closeModal();
   } catch (error: any) {
     console.error("EditAttendence Error:", error);
+
     SetStatusMessage(
-      error?.message || "Something went wrong while updating attendance"
+      error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong while updating attendance"
     );
+  } finally {
+    setIsChecking(false);
   }
 };
 
@@ -1109,8 +1169,12 @@ className={`
 
     <tbody>
       {processedData.map((r:any,idx:number)=>{
-        const todayIndex=new Date().getDate()-1
-        const dayStatus=r.days?.[todayIndex]??"-"
+         const todayIndex = new Date().getDate() - 1;
+  const todayData = r.days?.[todayIndex];
+
+  const dayStatus = todayData?.status ?? "-";
+  const clientName = todayData?.clientName ?? "-";
+  const hcaName = todayData?.hcaName ?? "-";
 
         return(
           <tr
@@ -1484,66 +1548,114 @@ className={`
 
 {Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
   const today = new Date().getDate();
-  const dayStatus = attendanceInfo.days?.[i] ?? "-";
+  const dayInfo = attendanceInfo.days?.[i];
+
+  const dayStatus = dayInfo?.status ?? "-";
+  const clientName = dayInfo?.clientName ?? " ";
+  const UpdatedBy=dayInfo?.UpdatedBy??"-"
+
   const isFutureDate = i + 1 > today;
 
   return (
-    <div
-      key={i}
-      className="border rounded-md py-2 flex flex-col items-center justify-center"
-    >
-      <span className="text-[10px] text-gray-500 mb-1">
-        Day {i + 1}
+   <div
+  key={i}
+  className="
+    rounded-xl border border-gray-200 bg-white
+    shadow-sm hover:shadow-md
+    transition-all duration-200
+    flex flex-col items-center justify-center
+    h-[118px] px-1 py-2
+  "
+>
+  <span className="text-[9px] font-semibold text-gray-500 mb-1 uppercase tracking-wide">
+    Day {i + 1}
+  </span>
+
+  {dayStatus === "-" ? (
+    <div className="flex flex-col items-center gap-1">
+      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+        <span className="text-gray-400 text-sm font-medium">—</span>
+      </div>
+
+      <span className="text-[8px] text-gray-400 truncate max-w-[70px]">
+       {clientName}
       </span>
 
-      {dayStatus === "-" ? (
-        <div>
-          <span className="text-gray-400 text-xs">-</span>
+      <button
+        disabled={isFutureDate}
+        onClick={() => {
+          if (isFutureDate) return;
+          SetShowUpdateAttendece(!ShowUpdateAttendece);
+          setAttenseceInformation(attendanceInfo);
+          SetParticularDate(i + 1);
+          setStatus("Choose");
+          SetStatusMessage("");
+        }}
+        className={`
+          text-[9px] font-medium px-3 py-[3px]
+          rounded-full transition
+          ${
+            isFutureDate
+              ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+              : "bg-slate-700 text-white hover:bg-slate-800"
+          }
+        `}
+      >
+        Update
+      </button>
+    </div>
+  ) : (
+    <div className="flex flex-col items-center gap-1">
+      <DayBadge status={dayStatus} />
+{clientName&&  <span className="text-[9px] text-gray-900 text-center max-w-[75px]">
+         Client Name: {clientName}
+      </span>}
+    
 
-          <p
-            className={`text-[9px] mr-4 ${
-              isFutureDate
-                ? "text-gray-300 cursor-not-allowed"
-                : "cursor-pointer text-blue-600 hover:text-blue-900 hover:underline"
-            }`}
-            onClick={() => {
-              if (isFutureDate) return;
+      {UpdatedBy && (
+        <div className="relative group">
+          <div className="p-[2px] rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer transition">
+            <Info className="w-3 h-3 text-gray-500" />
+          </div>
 
-              SetShowUpdateAttendece(!ShowUpdateAttendece);
-              setAttenseceInformation(attendanceInfo);
-              SetParticularDate(i + 1);
-              setStatus("Choose");
-              SetStatusMessage("");
-            }}
+          <div
+            className="
+              absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+              hidden group-hover:block
+              bg-gray-900 text-white text-[9px]
+              px-2 py-1 rounded-md shadow-lg whitespace-nowrap z-50
+            "
           >
-            Edit
-          </p>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center gap-1">
-          <DayBadge status={dayStatus} />
-
-          <p
-            className={`text-[9px] mr-4 ${
-              isFutureDate
-                ? "text-gray-300 cursor-not-allowed"
-                : "cursor-pointer text-blue-600 hover:text-blue-900 hover:underline"
-            }`}
-            onClick={() => {
-              if (isFutureDate) return;
-
-              SetShowUpdateAttendece(!ShowUpdateAttendece);
-              setAttenseceInformation(attendanceInfo);
-              SetParticularDate(i + 1);
-              setStatus("Choose");
-              SetStatusMessage("");
-            }}
-          >
-            Edit
-          </p>
+            Marked by: {UpdatedBy}
+          </div>
         </div>
       )}
+
+      <button
+        disabled={isFutureDate}
+        onClick={() => {
+          if (isFutureDate) return;
+          SetShowUpdateAttendece(!ShowUpdateAttendece);
+          setAttenseceInformation(attendanceInfo);
+          SetParticularDate(i + 1);
+          setStatus("Choose");
+          SetStatusMessage("");
+        }}
+        className={`
+          text-[9px] font-medium px-3 py-[3px]
+          rounded-full transition
+          ${
+            isFutureDate
+              ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+              : "bg-slate-700 text-white hover:bg-slate-800"
+          }
+        `}
+      >
+        Edit
+      </button>
     </div>
+  )}
+</div>
   );
 })}
         </div>
@@ -1912,7 +2024,7 @@ className={`
                 <button
   onClick={async () => {
     SetStatusMessage("Please Wait...")
-    const res = await UpdateAllPendingAttendance(selectedYear, selectedMonth);
+    const res = await UpdateAllPendingAttendance(selectedYear, selectedMonth,loggedInEmail);
 
     SetStatusMessage(`✅${res.message}`);
 

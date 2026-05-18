@@ -8,8 +8,8 @@ let cachedRegisterdUsers: any[] = [];
 
 
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance,  } from "@/Lib/user.action";
+import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Info, Minimize2 } from "lucide-react";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId,  } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -65,6 +65,7 @@ const ClientTable = () => {
   const currentMonth = String(Timenow.getMonth() + 1).padStart(2, "0");
   const [selectedClient,setselectedClient]=useState<any>()
   const [isChecking, setIsChecking] = useState(true);
+  
   const [selectedHCP,setselectedHCP]=useState<any>()
   const [showHCAList, setShowHCAList] = useState(false);
   const [ShowFreezPopUp,setShowFreezPopUp]=useState(false)
@@ -814,8 +815,10 @@ if (deploymentRes.success) {
 
   const TimeSheet_Info = FinelTimeSheet.find(
 
-    (each) => each.Client_Id === TimeSheet_UserId
+    (each) => each.Client_Id === TimeSheet_UserId&&each.Month===`${SearchYear}-${String(SearchMonth)}`
   );
+
+  console.log("TimeSheet_Info", `${SearchYear}-${String(SearchMonth )}`);
 
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
 
@@ -1150,21 +1153,19 @@ return
         status: "Present",
       }));
       console.log("Payload for attendance update:", payload);
-      const UpdateDailyattendece = await UpdateClientDailyAttendance(SearchYear,SearchMonth,payload);
+      const UpdateDailyattendece = await UpdateClientDailyAttendance(SearchYear,SearchMonth,payload,loggedInEmail);
       console.log("UpdateDailyattendece",UpdateDailyattendece)
   
           if (UpdateDailyattendece.success === true) {
             SetActionStatusMessage("Clients Today's Attendance Updated Successfully")
-            setTimeout(()=>{
-              setShowAttendencePopUp(false)
-          SetActionStatusMessage("")
-            },2000)
+            return
+         
           }
   
   
   
   
-          SetActionStatusMessage("Clients Today's Attendance Updated Succesfully ✅")
+     
     
         } catch (err: any) {
     
@@ -1233,6 +1234,69 @@ SetActionStatusMessage("Update failed");
 
 }
 
+const EditAttendence = async () => {
+  try {
+    if (!AttenseceInformation?.ClientId) return;
+  
+
+    SetActionStatusMessage("Please Wait...");
+
+    const flexDate = `${selectedYear}-${selectedMonth}-${String(
+      ParticularDate
+    ).padStart(2, "0")}`;
+
+    const yearMonth = `${selectedYear}-${selectedMonth}`;
+const Info={...AttenseceInformation,flexDate,yearMonth,status}
+
+      if(flexDate===new Date().toISOString().split('T')[0]){
+// const Dateresponse = await EditAttendanceByClientId(
+//       AttenseceInformation.ClientId,
+//       AttenseceInformation.hcpId,
+//       yearMonth,
+//       flexDate,
+//       status,
+//       "Admin"
+//     );
+
+    //  SetActionStatusMessage(`✅ ${Dateresponse.message}`);
+
+      setTimeout(() => {
+        setShowTimeSheet(false);
+        SetShowUpdateAttendece((prev: boolean) => !prev);
+   SetAttendeceEditReason("")
+      }, 3500);
+    return
+    }
+const response= await PostAttendeceEditRequest(Info,AttendeceEditReason,loggedInEmail)
+    if (response?.success) {
+
+        const phoneNumber = "U04S43V513N";
+      const Impmessage =
+        "Hi Medam, Kindly requesting AttendeceEdit  Request update. Please check notification in the application. Thank you.";
+
+    const res:any=await axios.post("/api/Slack", {
+  userIds:phoneNumber,
+  message: Impmessage,
+});
+
+     
+      SetActionStatusMessage(`✅ ${response.message}`);
+
+      setTimeout(() => {
+        setShowTimeSheet(false);
+        SetShowUpdateAttendece((prev: boolean) => !prev);
+   SetAttendeceEditReason("")
+      }, 3500);
+    } else {
+      SetActionStatusMessage(response?.message || "Failed to update attendance");
+    }
+  } catch (error: any) {
+    console.error("EditAttendence Error:", error);
+    SetActionStatusMessage(
+      error?.message || "Something went wrong while updating attendance"
+    );
+  }
+};
 
 const OmServiceView = () => {
     return (
@@ -1398,7 +1462,7 @@ onClick={() => setShowAttendanceModal(true)}
         onSubmit={async(Info: any) => {
           console.log("Attendance Info:", Info);
           SetActionStatusMessage("Updating attendance, please wait...");
-          const result = await UpdateClientDailyAttendance(SearchYear,SearchMonth,Info);
+          const result = await UpdateClientDailyAttendance(SearchYear,SearchMonth,Info,loggedInEmail);
           console.log("Attendance Update Result:", result);
             SetActionStatusMessage("Updated Client attendance Successfully");
           setShowAttendanceModal(false);
@@ -1705,8 +1769,17 @@ const monthIndex = [
 const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(year) ===Number(now.getFullYear());
  const todayIndex = new Date().getDate() - 1;
   const dayStatus = c.days?.[todayIndex] ?? "-";
-   
+const today = new Date();
 
+const localToday = `${today.getFullYear()}-${String(
+  today.getMonth() + 1
+).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+const EditDate =
+  c?.ClientAttendance?.find((att: any) => att?.dateKey === localToday)
+    ?.dateKey || localToday;
+   
+console.log('Test Date------',EditDate)
       return(
           <tr key={i} className="hover:bg-teal-50/30 transition-all">
            <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
@@ -1758,20 +1831,20 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
 <td className="px-3 py-3 text-gray-700 text-xs">
  {GetMonthlyCharges(c.Client_Id)=== "Not Provided" ? 
     
-    <div className="flex flex-col leading-tight">
-      <span>
-        ₹{(
-          getDaysBetween(c.StartDate, c.EndDate) *
-          rupeeToNumber(c.ServiceCharge)
-        ).toFixed(2)}{" "}
-        <span className="text-gray-500">/M</span>
-      </span>
+    <div className="flex flex-col items-end leading-none text-right min-w-[70px]">
+  <span className="text-[11px] font-medium whitespace-nowrap">
+    ₹{(
+      getDaysBetween(c.StartDate, c.EndDate) *
+      rupeeToNumber(c.ServiceCharge)
+    ).toFixed(2)}
+    <span className="text-gray-500 text-[10px] ml-1">/M</span>
+  </span>
 
-      <span>
-        ₹{rupeeToNumber(c.ServiceCharge).toFixed(2)}{" "}
-        <span className="text-gray-500">/D</span>
-      </span>
-    </div>:      <span>
+  <span className="text-[11px] font-medium whitespace-nowrap mt-1">
+    ₹{rupeeToNumber(c.ServiceCharge).toFixed(2)}
+    <span className="text-gray-500 text-[10px] ml-1">/D</span>
+  </span>
+</div>:      <span>
         <span className="text-[10px] text-green-900 underline">* Monthly Payment </span>
          ₹{ GetMonthlyCharges(c.Client_Id)}/M
        
@@ -2207,6 +2280,8 @@ const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(y
                       setStatus("Choose")
                       SetActionStatusMessage("")
                       SetParticularDate(new Date().getDate())
+                     setEditDate (EditDate)
+                   
                  }}
                   >
                     Edit
@@ -2330,8 +2405,8 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
     <CircleX className="text-red-600" />
   </button>
 
-</td> */}
- 
+</td>
+  */}
         </tr>
       )
      }
@@ -2748,7 +2823,92 @@ setSelectedDate(e.target.value)
   </div>
 )}
 
+{ShowUpdateAttendece&&
+<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
 
+  <div className="w-full max-w-sm rounded-xl bg-white shadow-2xl">
+
+    <div className="flex items-center justify-between border-b px-2 py-3">
+      <p className="text-base font-semibold text-gray-800">
+        Edit Attendance
+      </p>
+      <button
+  onClick={()=>SetShowUpdateAttendece(!ShowUpdateAttendece)}
+  className="flex justify-end cursor-pointer rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-black"
+>
+  <X size={14} />
+</button>
+    </div>
+
+
+
+    <div className="px-5 py-4">
+      <label className="mb-2 block text-sm font-medium text-gray-600">
+        Attendance Status
+      </label>
+
+      <select
+        value={status}
+        onChange={(e) => setStatus(e.target.value as any)}
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
+      ><option value="">Choose Attendence</option>
+        <option value="FULL">Full Day</option>
+        <option value="HALF">Half Day</option>
+        <option value="ABSENT">Absent</option>
+      </select>
+    </div>
+{EditDate!==new Date().toISOString().split('T')[0]&&
+
+<div className="flex flex-col  border-b px-2 py-3">
+  <label className="text-xs font-semibold text-gray-800">
+    Reason for Attendance Edit 
+  </label>
+
+  <input
+    type="text"
+    value={AttendeceEditReason}
+    placeholder="Enter Here....."
+    onChange={(e: any) => SetAttendeceEditReason(e.target.value)}
+    style={{
+      padding: "10px 12px",
+      borderRadius: "6px",
+      border: "1px solid #ccc",
+      fontSize: "14px",
+      outline: "none"
+    }}
+  />
+</div>}
+<div className="flex items-center-justify-between">
+   {ActionStatusMessage&&
+            <p
+  className={`mt-2 text-sm font-medium px-1 py-2 text-xs text-center rounded-lg ${
+    ActionStatusMessage?.includes("success") || ActionStatusMessage?.includes("✅")
+      ? " text-green-700  "
+      : "text-red-700  "
+  }`}
+>
+  {ActionStatusMessage}
+</p>
+      }
+    <div className="flex w-full justify-end gap-2 border-t px-5 py-3">
+      <button
+        onClick={()=>SetShowUpdateAttendece(!ShowUpdateAttendece)}
+        className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+      >
+        Cancel
+      </button>
+
+      <button
+        className="rounded-lg bg-black px-5 py-2 text-sm font-medium text-white hover:bg-gray-800"
+onCanPlay={EditAttendence}
+      >
+        Save
+      </button>
+    </div>
+      </div>
+  </div>
+</div>
+}
 
 {showTimeSheet && TimeSheet_Info && (
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -2775,45 +2935,44 @@ setSelectedDate(e.target.value)
                 {monthNames[selectedMonth]} {selectedYear}
               </p>
             </div>
+            
           </div>
+           <div className="flex gap-3">
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            className="border p-2 rounded-md"
+          >
+            {monthNames.map((m, i) => (
+              <option key={i} value={i}>{m}</option>
+            ))}
+          </select>
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="px-4 py-3 rounded-xl bg-white border border-slate-200 shadow-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {monthNames.map((m, i) => (
-                <option key={i} value={i}>
-                  {m}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="px-4 py-3 rounded-xl bg-white border border-slate-200 shadow-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {Array.from({ length: 5 }).map((_, i) => {
-                const year = new Date().getFullYear() - 2 + i;
-                return (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="border p-2 rounded-md"
+          >
+            {Array.from({ length: 5 }).map((_, i) => {
+              const year = new Date().getFullYear() - 2 + i;
+              return <option key={year} value={year}>{year}</option>;
+            })}
+          </select>
+        </div>
+         
+ <button
+            onClick={() => setShowTimeSheet(false)}
+            className="px-2 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer transition"
+          >
+                <Minimize2 size={14}/>
+          </button>
         </div>
       </div>
 
       <div className="grid grid-cols-7 gap-3 text-center">
         {Array.from({ length: daysInMonth }).map((_, dayIndex) => {
           const day = dayIndex + 1;
-const flexDate = `${selectedYear}-${selectedMonth}-${String(
-      ParticularDate
-    ).padStart(2, "0")}`;
+
           const record = TimeSheet_Info.ClientAttendance?.find((t: any) => {
             const parsed = new Date(t.AttendanceDate);
 
@@ -2913,11 +3072,19 @@ console.log(record,"Record")
               <span className="text-sm font-semibold">{day}</span>
 
               <span className="text-[10px] font-medium">{currentStatus}</span>
-{record?.HCA_Name && <span className="text-[8px] text-gray-800 mt-1">
-               HCA: {record?.HCA_Name || "-"}
+              {record?.HCA_Name && <span className="text-[8px] text-gray-800 mt-1">
+                HCA: {record?.HCA_Name || "-"}
               </span>
-}
-             
+              }
+              {record?.UpdatedBy && (
+                <div className="relative group inline-block">
+                  <Info className="cursor-pointer" size={12} />
+
+                  <div className="absolute bottom-full left-1/2 mb-2 hidden -translate-x-1/2 rounded bg-black px-2 py-1 text-xs text-white group-hover:block whitespace-nowrap">
+                    Attendance Marked By: {record?.UpdatedBy}
+                  </div>
+                </div>
+              )}
               <span
      
      onClick={()=>{SetShowUpdateAttendece(!ShowUpdateAttendece),  SetParticularDate(dayIndex + 1),setEditDate(record?.dateKey)}}
@@ -3008,7 +3175,7 @@ console.log(record,"Record")
 
       <button
         className="rounded-lg bg-black px-5 py-2 text-sm font-medium text-white hover:bg-gray-800"
-
+onCanPlay={EditAttendence}
       >
         Save
       </button>

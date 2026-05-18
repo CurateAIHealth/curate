@@ -4,6 +4,7 @@ import { GetDeploymentInfo, UpdatehcpDailyAttendce, UpdateAttendence, UpdateMult
 import { useEffect, useState } from "react"
 import { LoadingData } from "../Loading/page"
 import { useSelector } from "react-redux"
+import { useRouter } from "next/navigation";
 
 
 
@@ -21,11 +22,11 @@ const MissingAttendence = () => {
   const [selectedHCPIds,setselectedHCPIds]=useState<any>([])
   const [SearchResults,setSearchResults]=useState("")
 
-
+const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
 const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
 
 const selectedDateObject = new Date(selectedDate);
-
+ const router = useRouter();
 
 useEffect(() => {
   let mounted = true;
@@ -34,7 +35,9 @@ useEffect(() => {
   const isSuccessUpdate = StatusMessage?.includes("Successfully");
 
   if (!isInitialLoad && !isSuccessUpdate) return;
-
+ if(loggedInEmail===""){
+    router.push("/DashBoard")
+  }
   const fetchFreshData = async () => {
     try {
       // Use cache instantly
@@ -129,7 +132,7 @@ const hasToday = attendance.some((a: any) =>
 
   return !hasToday && matchesSearch && isCurrentMonth;
 });
-
+console.log("Filtered Result:", result);
 const UpdateCurrentAttendence = async () => {
   setStatusMessage("Please Wait...");
 
@@ -137,7 +140,8 @@ const UpdateCurrentAttendence = async () => {
       const UpdateDailyattendece = await UpdatehcpDailyAttendce(
       selectedYear,
       selectedMonth,
-      selectedDate
+      selectedDate,
+      loggedInEmail
     );
 
   if (UpdateDailyattendece.success) {
@@ -145,7 +149,7 @@ const UpdateCurrentAttendence = async () => {
   }
 };
 ;
- const handleUpdate = async (A: any,B:any) => {
+ const handleUpdate = async (A: any,B:any,C:any,D:any,E:any) => {
   setStatusMessage("Please Wait...");
 
   try {
@@ -156,6 +160,9 @@ const UpdateCurrentAttendence = async () => {
     const AttendenceUpdateResult: any = await EditAttendanceByClientId(
       A,
       B,
+      C,
+      D,
+      E,
       `${selectedYear}-${selectedMonth}`, 
       flexDate,                      
       "FULL",
@@ -338,7 +345,7 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
               <button
                 className="bg-teal-800 text-white px-6 py-2 rounded-md
                            font-medium hover:opacity-90 active:scale-95 transition"
-                onClick={() => handleUpdate(item.ClientId,item.HCAId)}
+                onClick={() => handleUpdate(item.ClientId,item.HCAId,item.HCAName,item.ClientName, loggedInEmail) }
               >
                 ✔ {item.HCAName}'s Attendance Check-in
               </button>

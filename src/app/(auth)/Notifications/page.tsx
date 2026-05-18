@@ -115,6 +115,9 @@ export default function NotificationsCenter() {
           const response = await EditAttendanceByClientId(
             info?.ClientId,
             info?.HCPId,
+            info?.HCAName,
+            info?.ClientName,
+             loggedInEmail,
             info?.yearMonth,
             info?.flexDate,
             info?.status,

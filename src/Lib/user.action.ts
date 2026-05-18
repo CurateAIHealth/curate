@@ -3003,7 +3003,7 @@ export const PostReason = async (
 
 
 
- export const UpdateAllPendingAttendance = async (selectedYear:any, selectedMonth:any) => {
+ export const UpdateAllPendingAttendance = async (selectedYear:any, selectedMonth:any,UpdatedBy:any) => {
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
@@ -3061,7 +3061,8 @@ export const PostReason = async (
 export const UpdatehcpDailyAttendce = async (
   selectedYear: string | number,
   selectedMonth: string | number,
-  selectedDate: string
+  selectedDate: string,
+  UpdatedBy: string
 ) => {
   try {
     const cluster = await clientPromise;
@@ -3136,6 +3137,7 @@ for (const record of records) {
     ? record.Attendance.filter((a: any) => a && typeof a === "object")
     : [];
 
+console.log("Cleaned Attendance:", record);
   const alreadyMarked = cleanedAttendance.some((a: any) => {
     if (a?.dateKey) {
       return a.dateKey === selectedDateKey;
@@ -3151,16 +3153,22 @@ for (const record of records) {
 
   if (alreadyMarked) continue;
 
-  const attendanceEntry = {
-    dateKey: selectedDateKey,
-    AttendenceDate: dateObj,
-    HCPAttendence: true,
-    AdminAttendece: true,
-    CreatedAt: new Date(),
-    UpdatedAt: new Date(),
-    UpdatedBy: "Admin",
-  };
+const attendanceEntry = {
+  dateKey: selectedDateKey,
+  AttendenceDate: dateObj,
+  HCPAttendence: true,
+  AdminAttendece: true,
 
+  Client_Id: record.ClientId,
+  Client_Name: record.ClientName,
+  HCA_Id: record.HCAId,
+  HCA_Name: record.HCAName,
+
+  CreatedAt: new Date(),
+  UpdatedAt: new Date(),
+  UpdatedBy: UpdatedBy || "Admin",
+};
+console.log("Attendance Entry:", attendanceEntry);
   operations.push({
     updateOne: {
       filter: { _id: record._id },
@@ -3168,7 +3176,7 @@ for (const record of records) {
         $push: { Attendance: attendanceEntry },
         $set: {
           UpdatedAt: new Date(),
-          UpdatedBy: "Admin",
+          UpdatedBy: UpdatedBy || "Admin",
         },
       },
     },
@@ -3196,7 +3204,8 @@ for (const record of records) {
 export const UpdateClientDailyAttendance = async (
   selectedYear: string | number,
   selectedMonth: string | number,
-  attendanceInfo: any[]
+  attendanceInfo: any[],
+  LogInUser: string
 ) => {
   try {
     const cluster = await clientPromise;
@@ -3323,7 +3332,7 @@ export const UpdateClientDailyAttendance = async (
         AdminAttendance: true,
         CreatedAt: new Date(),
         UpdatedAt: new Date(),
-        UpdatedBy: "Admin",
+        UpdatedBy: LogInUser || "Admin",
       };
 
       console.log("Attendance Entry:", attendanceEntry);
@@ -3482,6 +3491,9 @@ export const UpdateClientDailyAttendance = async (
 export const EditAttendanceByClientId = async (
   clientId: string,
   hcpId:any,
+  HcaName:any,
+  ClientName:any,
+  UpdateBy:any,
   Month: any,
   attendenceDate: string,
   status: "FULL" | "HALF" | "ABSENT",
@@ -3519,26 +3531,33 @@ export const EditAttendanceByClientId = async (
     });
 
     if (existing) {
-      await collection.updateOne(
-        {
-          ClientId: clientId,
-           HCAId:hcpId,
-          Month: normalizedMonth,
-          "Attendance.AttendenceDate": start,
-        },
-        {
-          $set: {
-            "Attendance.$.HCPAttendence": flags.HCPAttendence,
-            "Attendance.$.AdminAttendece": flags.AdminAttendece,
-            "Attendance.$.UpdatedAt": new Date(),
-            "Attendance.$.UpdatedBy": UpdatedBy || "",
-          },
-        }
-      );
+     await collection.updateOne(
+  {
+    ClientId: clientId,
+    HCAId: hcpId,
+    Month: normalizedMonth,
+    "Attendance.AttendenceDate": start,
+  },
+  {
+    $set: {
+      "Attendance.$.HCPAttendence": flags.HCPAttendence,
+      "Attendance.$.AdminAttendece": flags.AdminAttendece,
+
+      
+      "Attendance.$.Client_Id": clientId,
+      "Attendance.$.Client_Name": ClientName,
+      "Attendance.$.HCA_Id": hcpId,
+      "Attendance.$.HCA_Name": HcaName,
+
+      "Attendance.$.UpdatedAt": new Date(),
+      "Attendance.$.UpdatedBy": UpdateBy || "",
+    },
+  }
+);
 
       return {
         success: true,
-        message: "Attendance updated Successfully ✅.",
+        message: "Attendance updated Successfully",
       };
     }
 
@@ -3546,9 +3565,13 @@ export const EditAttendanceByClientId = async (
       AttendenceDate: start,
       HCPAttendence: flags.HCPAttendence,
       AdminAttendece: flags.AdminAttendece,
+      Client_Id: clientId,
+      Client_Name: ClientName,
+      HCA_Id: hcpId,
+      HCA_Name: HcaName,
       CreatedAt: new Date(),
       UpdatedAt: new Date(),
-      UpdatedBy: UpdatedBy || "",
+      UpdatedBy: UpdateBy || "",
     };
 
     await collection.updateOne(
@@ -3567,7 +3590,7 @@ export const EditAttendanceByClientId = async (
 
     return {
       success: true,
-      message: "Attendance created and added Successfully ✅.",
+      message: "Attendance created and added Successfully",
     };
   } catch (error: any) {
     console.error("❌ Error editing attendance:", error);
