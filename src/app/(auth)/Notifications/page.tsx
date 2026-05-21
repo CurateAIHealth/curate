@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle, XCircle, Bell, Eye } from "lucide-react";
 import axios from "axios";
-import { EditAttendanceByClientId, GetNotificationsInformation, HCASalaryUpdate, UpdateNotificationType } from "@/Lib/user.action";
+import { EditAttendanceByClientId, GetNotificationsInformation, HCASalaryUpdate, UpdateClientAttendanceStatus, UpdateNotificationType } from "@/Lib/user.action";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
 import { useDispatch, useSelector } from "react-redux";
@@ -51,7 +51,7 @@ export default function NotificationsCenter() {
     try {
       setLoading(true);
       const res: any = await GetNotificationsInformation();
-      setNotifications(res || []);
+      setNotifications(res.reverse() || []);
     } catch (err) {
       console.error("Fetch Notifications Error", err);
     } finally {
@@ -102,7 +102,7 @@ export default function NotificationsCenter() {
     };
 
     try {
-      if (!info?.HCPId) {
+      if (!info) {
         dispatch(Refresh("Invalid notification data."));
         return;
       }
@@ -111,19 +111,49 @@ export default function NotificationsCenter() {
 
 
         if (action === "Approved" && info?.Type === "Attendance Edit Request") {
+      console.log("Check Attendece Information-------",info)
+   
       
-          const response = await EditAttendanceByClientId(
+          if (info.UserAttendeceType === "ClientAttendece") {
+            const payload = {
+              Client_Id: info.ClientId,
+              HCA_Id: info.HCPId,
+              Client_Name: info.ClientName,
+              HCA_Name: info.HCPName,
+              date: info,
+              status: info,
+            };
+            const SearchYear = info.yearMonth.slice(0, 5)
+            const SearchMonth = info.yearMonth.slice(5, info.yearMonth.length)
+            const dateResponse = await UpdateClientAttendanceStatus(
+              SearchYear,
+              SearchMonth,
+              [payload],
+              loggedInEmail,
+              info.Reason
+            );
+
+            if(dateResponse.success){
+                   updateStatusSafe();
+            dispatch(Refresh("Attendance update Successfully."));
+            }
+            return
+          }
+         if(info.UserAttendeceType!=="ClientAttendece"){
+           const response = await EditAttendanceByClientId(
             info?.ClientId,
             info?.HCPId,
             info?.HCAName,
             info?.ClientName,
-             loggedInEmail,
+            loggedInEmail,
             info?.yearMonth,
             info?.flexDate,
             info?.status,
-            loggedInEmail
+            loggedInEmail,
+            ""
           );
 
+       
           if (response?.success) {
             sendWhatsApp(
               `Attendance updated successfully for ${info?.
@@ -138,6 +168,10 @@ export default function NotificationsCenter() {
             return;
           }
         }
+
+        }
+
+       
         if (action === "Rejected") {
           await updateStatusSafe();
 

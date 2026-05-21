@@ -927,6 +927,10 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
         router.push("/HostelAttendence");
         break;
 
+         case "Accounts":
+        router.push("/Accounts");
+        break;
+
       case "Notifications":
         router.push("/Notifications");
         break;
@@ -1036,7 +1040,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi Admin – Welcome to Admin Dashboard
+              Hi Admin – Welcome to Admin Dashboard.
             </span>
           </div>
 

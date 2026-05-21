@@ -4,7 +4,7 @@ let cachedUsersFullInfo: any[] = [];
 let cachedRegisterdUsers: any[] = [];
 import { DeleteClientFromDeolyment, EditAttendanceByClientId, EditAttendanceByDateRange, GetAllUsersData, GetDeploymentInfo, GetRegidterdUsers, GetUsersFullInfo, PostAttendeceEditRequest, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus, UpdatehcpDailyAttendce } from "@/Lib/user.action";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
-import { CalendarDays, CheckCircle, Eye, FilePenLine, Info, LucidePencil, Pencil, PencilIcon, Trash2, X } from "lucide-react";
+import { CalendarDays, CheckCircle, Eye, FilePenLine, Info, LucidePencil, Minimize2, Pencil, PencilIcon, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import React, { useState, useMemo, useEffect } from "react";
@@ -44,7 +44,7 @@ const [attendanceInfo,setAttendenceInfo]=useState<any>()
 const [showFullMonth,setShowFullMonth]=useState(false)
 const [ParticularDate,SetParticularDate]=useState<any>()
 const [AttenseceInformation,setAttenseceInformation]=useState<any>()
-const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+const [selectedMonth, setSelectedMonth] = useState<any>(currentMonth);
 const [showEditPopup, setShowEditPopup] = useState(false);
 const [showFull,setShowFull]=useState(false)
 const [editForm, setEditForm] = useState<any>(null);
@@ -62,10 +62,11 @@ const [ShowUpdateAttendece,SetShowUpdateAttendece]=useState(false)
    
       const [showAttendeceMissingCalendar, setshowAttendeceMissingCalendar] = useState(false);
     const [status, setStatus] =useState<any>('')
+     const [AbsentReason,setAbsentReason]=useState("")
     const [users, setUsers] = useState<any[]>([]);
       const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
   const [StatusMessage,SetStatusMessage]=useState<any>("")
-  const [refreshKey, setRefreshKey] = useState(0);
+
 const [SearchResult,setSearchResult]=useState("")
 const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const dispatch = useDispatch();
@@ -202,7 +203,7 @@ cachedRegisterdUsers=RegisterdUsers??[]
   };
 
   Fetch();
-}, [isSuccess, showMissingCalendar,refreshKey]);
+}, [isSuccess, showMissingCalendar]);
 
 
 
@@ -402,7 +403,7 @@ const processedData = useMemo(() => {
     })
 
     .map((record: any) => {
-      const dayStatusArray: ({ status: string; clientName: string; hcaName: string; UpdatedBy: string } | null)[] =
+      const dayStatusArray: ({ status: string; clientName: string; hcaName: string; UpdatedBy: string; Reason: string } | null)[] =
         Array.from({ length: 31 }, () => null);
 
       (record.days || []).forEach((att: any) => {
@@ -421,7 +422,8 @@ const processedData = useMemo(() => {
             status,
             clientName: att.Client_Name || "-",
             hcaName: att.HCA_Name || "-",
-            UpdatedBy: att.UpdatedBy || "-"
+            UpdatedBy: att.UpdatedBy || "-",
+            Reason: att.Reason || ""
           };
         }
       });
@@ -556,7 +558,7 @@ const EditAttendence = async (): Promise<void> => {
         SetAttendeceEditReason("");
       }, 1500);
     };
-
+console.log("Check for UpdatedBy---",loggedInEmail,AbsentReason)
     if (flexDate === localToday) {
       const response = await EditAttendanceByClientId(
         AttenseceInformation.ClientId,
@@ -567,22 +569,46 @@ const EditAttendence = async (): Promise<void> => {
         yearMonth,
         flexDate,
         status,
-        loggedInEmail
+        loggedInEmail,
+        AbsentReason
       );
 
-      if (!response?.success) {
-        throw new Error(response?.message || "Attendance update failed");
+   if (response?.success) {
+  setClientsInformation((prev: any) => {
+    const updated = { ...prev };
+
+    updated[yearMonth] = updated[yearMonth].map((record: any) => {
+      if (record.ClientId !== AttenseceInformation.ClientId) {
+        return record;
       }
 
-      SetStatusMessage(
-        response?.message || "Attendance updated successfully"
-      );
+      return {
+        ...record,
+        days: record.days.map((day: any) => {
+          const dayDate = new Date(day.AttendenceDate)
+            .toISOString()
+            .split("T")[0];
 
-      // force fresh fetch
-      setRefreshKey((prev) => prev + 1);
+          if (dayDate !== flexDate) return day;
 
-      closeModal();
-      return;
+          return {
+            ...day,
+            HCPAttendence:
+              status === "FULL" || status === "HALF",
+            AdminAttendece: status === "FULL",
+            UpdatedBy: loggedInEmail,
+          };
+        }),
+      };
+    });
+
+    return updated;
+  });
+
+  SetStatusMessage("Attendance updated successfully");
+  closeModal();
+  return;
+}
     }
 
     const info = {
@@ -595,7 +621,10 @@ const EditAttendence = async (): Promise<void> => {
     const response = await PostAttendeceEditRequest(
       info,
       AttendeceEditReason,
-      loggedInEmail
+      loggedInEmail,
+      AbsentReason,
+      "HCAAttendece"
+
     );
 
     if (!response?.success) {
@@ -614,8 +643,7 @@ const EditAttendence = async (): Promise<void> => {
 
     SetStatusMessage(response?.message || "Request submitted successfully");
 
-    // optional refresh if request list needs update
-    setRefreshKey((prev) => prev + 1);
+
 
     closeModal();
   } catch (error: any) {
@@ -630,6 +658,9 @@ const EditAttendence = async (): Promise<void> => {
     setIsChecking(false);
   }
 };
+ const monthNames = Array.from({ length: 12 }, (_, i) =>
+    new Date(0, i).toLocaleString("default", { month: "long" })
+  );
 
 const UpdateAttendecByDateRange = async () => {
   try {
@@ -1343,326 +1374,149 @@ className={`
 
 </div>
 {showFullMonth && (
-  <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-3">
-    <div className="bg-white w-full max-w-[900px] rounded-xl shadow-xl">
+<div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2">
+  <div className="bg-white w-[98vw] h-[96vh] rounded-xl shadow-xl overflow-hidden flex flex-col">
+    <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl flex items-center justify-center shadow">
+          <img
+            src="/Icons/Curate-logoq.png"
+            alt="Company Logo"
+            className="h-6 w-6 object-contain"
+          />
+        </div>
 
-      <div className="flex items-center justify-between px-4 py-3 border-b">
-        <div className="flex flex-col items-center">
-          <h3 className="text-sm font-semibold text-gray-800">
-          Monthly Attendance
-        </h3>
-       {/* <button
-  className="
-    flex items-center gap-2
-    px-2 py-2.5
-    bg-green-600
-    hover:bg-green-700
-    text-white
-    text-xs cursor-pointer
-    font-semibold
-    rounded-lg
-    shadow-md
-    transition-all
-    duration-200
-  "
-    onClick={() =>{ setOpen(true);setStatus(null)}}
->
-  <CheckCircle size={16} />
-  Submit Attendance for Selected Period
-</button> */}
-
- {open && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md animate-fadeIn">
-    
-    <div className="w-[95%] max-w-lg bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] overflow-hidden">
-
-    
-      <div className="relative px-4 py-5 bg-gradient-to-br from-[#00A9A5] to-[#005f61] text-white">
-        <h2 className="text-xl font-semibold tracking-wide">
-          Edit Attendance
-        </h2>
-
-        <button
-          onClick={() => setOpen(false)}
-          className="absolute top-4 right-4 p-1 rounded-full cursor-pointer hover:bg-white/20 transition"
-        >
-          <X size={18} />
-        </button>
-      </div>
-
-
-      <div className="px-6 py-6 space-y-5">
-
-      
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Attendance Status
-          </label>
-          <select
-            value={status||''}
-            onChange={(e) => setStatus(e.target.value)}
-            className="
-              w-full
-              bg-gray-50
-              border border-gray-200
-              rounded-xl
-              px-4 py-3
-              text-sm
-              focus:outline-none
-              focus:ring-2
-              focus:ring-blue-500
-              focus:border-blue-500
-              transition
-            "
-          >
-            <option value="">Select Status</option>
-            <option value="FULL">Full Day</option>
-        <option value="HALF">Half Day</option>
-        <option value="ABSENT">Absent</option>
-          </select>
-        </div>
-
-      
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              From Date
-            </label>
-            
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="
-                w-full
-                bg-gray-50
-                border border-gray-200
-                rounded-xl
-                px-4 py-3
-                text-sm
-                focus:outline-none
-                focus:ring-2
-                focus:ring-green-500
-                focus:border-green-500
-                transition
-              "
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              To Date
-            </label>
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-                max={DateRange}
-              className="
-                w-full
-                bg-gray-50
-                border border-gray-200
-                rounded-xl
-                px-4 py-3
-                text-sm
-                focus:outline-none
-                focus:ring-2
-                focus:ring-green-500
-                focus:border-green-500
-                transition
-              "
-            />
-          </div>
-
-        </div>
- {StatusMessage&&
-            <p
-  className={`mt-2 text-sm font-medium px-1 py-2 text-xs text-center rounded-lg ${
-    StatusMessage?.includes("success") || StatusMessage?.includes("✅")
-      ? " text-green-700  "
-      : "text-red-700  "
-  }`}
->
-  {StatusMessage}
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#ff1493] font-semibold">
+           {attendanceInfo.hcpName}
+          </p>
+          <h2 className="text-lg md:text-xl font-bold text-slate-800">
+            Attendance Dashboard
+          </h2>
+       <p className="text-xs text-gray-400">
+  {
+    months.find(
+      (month) => month.value === String(selectedMonth).padStart(2, "0")
+    )?.name
+  }{" "}
+  {selectedYear}
 </p>
-      }
-        <div className="border-t pt-5 flex justify-end gap-3">
-
-          <button
-            onClick={() => setOpen(false)}
-            className="
-              px-5 py-2.5
-              text-sm font-medium
-              rounded-xl
-              border border-gray-300
-              text-gray-600
-              hover:bg-gray-100
-              transition
-            "
-          >
-            Cancel
-          </button>
-
-          <button
-            onClick={UpdateAttendecByDateRange}
-            className="
-              px-6 py-2.5
-              text-sm font-semibold
-              rounded-xl
-           bg-gradient-to-br from-[#00A9A5] to-[#005f61] cursor-pointer
-              text-white
-              shadow-md
-              hover:shadow-lg
-              hover:scale-[1.02]
-              active:scale-95
-              transition-all
-            "
-          >
-            Confirm
-          </button>
-
         </div>
-
       </div>
+
+      <button
+        onClick={() => setShowFullMonth(false)}
+        className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
+      >
+        <Minimize2 size={16} />
+      </button>
+    </div>
+
+    <div className="flex-1 p-2 md:p-3">
+      <div className="grid grid-cols-7 gap-2 h-full">
+        {Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
+          const today = new Date().getDate();
+          const dayInfo = attendanceInfo.days?.[i];
+          const dayStatus = dayInfo?.status ?? "-";
+          const clientName = dayInfo?.clientName ?? "";
+          const UpdatedBy = dayInfo?.UpdatedBy ?? "-";
+          const AbsentReason=dayInfo?.Reason?? "-";
+          console.log("Check For Reason------",dayInfo)
+          const isFutureDate = i + 1 > today;
+
+          return (
+            <div
+              key={i}
+              className="rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 min-h-0"
+            >
+              <span className="text-[10px] font-semibold text-gray-500 uppercase">
+                Day {i + 1}
+              </span>
+
+              {dayStatus === "-" ? (
+                <>
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center mt-1">
+                    <span className="text-gray-400 text-sm">—</span>
+                  </div>
+
+                  <span className="text-[8px] text-gray-400 truncate max-w-[70px]">
+                    {clientName}
+                  </span>
+
+                  <button
+                    disabled={isFutureDate}
+                    onClick={() => {
+                      if (isFutureDate) return;
+                      SetShowUpdateAttendece(!ShowUpdateAttendece);
+                      setAttenseceInformation(attendanceInfo);
+                      SetParticularDate(i + 1);
+                      setStatus("Choose");
+                      SetStatusMessage("");
+                    }}
+                    className={`text-[8px] px-2 py-[2px] rounded-full mt-1 ${
+                      isFutureDate
+                        ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                        : "bg-slate-700 text-white hover:bg-slate-800"
+                    }`}
+                  >
+                    Update
+                  </button>
+                </>
+              ) : (
+                <>
+                  <DayBadge status={dayStatus} />
+
+                  {clientName && (
+                    <span className="text-[8px] text-center leading-tight px-1 line-clamp-2">
+                      {clientName}
+                    </span>
+                  )}
+
+                {UpdatedBy && UpdatedBy !== "-" && (
+  <div className="relative group mt-1">
+    <div className="p-[2px] rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer">
+      <Info className="w-3 h-3 text-gray-500" />
+    </div>
+
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-[10px] px-2 py-2 rounded whitespace-nowrap z-50">
+      <div>Marked by: {UpdatedBy}</div>
+
+      {AbsentReason && dayStatus!=="P" && (
+        <div className="mt-1 border-t border-gray-700 pt-1">
+          Reason: {AbsentReason}
+        </div>
+      )}
     </div>
   </div>
 )}
-          </div>
-        <button
-          onClick={() => setShowFullMonth(false)}
-          className="text-gray-500 hover:text-red-600"
-        >
-          ✕
-        </button>
+
+                  <button
+                    disabled={isFutureDate}
+                    onClick={() => {
+                      if (isFutureDate) return;
+                      SetShowUpdateAttendece(!ShowUpdateAttendece);
+                      setAttenseceInformation(attendanceInfo);
+                      SetParticularDate(i + 1);
+                      setStatus("Choose");
+                      SetStatusMessage("");
+                    }}
+                    className={`text-[8px] px-2 py-[2px] rounded-full mt-1 ${
+                      isFutureDate
+                        ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                        : "bg-slate-700 text-white hover:bg-slate-800"
+                    }`}
+                  >
+                    Edit
+                  </button>
+                </>
+              )}
+            </div>
+          );
+        })}
       </div>
-
-      <div className="p-4">
-        <div
-          className="grid gap-2"
-          style={{
-            gridTemplateColumns: "repeat(7, minmax(0, 1fr))"
-          }}
-        >
-     
-
-{Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
-  const today = new Date().getDate();
-  const dayInfo = attendanceInfo.days?.[i];
-
-  const dayStatus = dayInfo?.status ?? "-";
-  const clientName = dayInfo?.clientName ?? " ";
-  const UpdatedBy=dayInfo?.UpdatedBy??"-"
-
-  const isFutureDate = i + 1 > today;
-
-  return (
-   <div
-  key={i}
-  className="
-    rounded-xl border border-gray-200 bg-white
-    shadow-sm hover:shadow-md
-    transition-all duration-200
-    flex flex-col items-center justify-center
-    h-[118px] px-1 py-2
-  "
->
-  <span className="text-[9px] font-semibold text-gray-500 mb-1 uppercase tracking-wide">
-    Day {i + 1}
-  </span>
-
-  {dayStatus === "-" ? (
-    <div className="flex flex-col items-center gap-1">
-      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-        <span className="text-gray-400 text-sm font-medium">—</span>
-      </div>
-
-      <span className="text-[8px] text-gray-400 truncate max-w-[70px]">
-       {clientName}
-      </span>
-
-      <button
-        disabled={isFutureDate}
-        onClick={() => {
-          if (isFutureDate) return;
-          SetShowUpdateAttendece(!ShowUpdateAttendece);
-          setAttenseceInformation(attendanceInfo);
-          SetParticularDate(i + 1);
-          setStatus("Choose");
-          SetStatusMessage("");
-        }}
-        className={`
-          text-[9px] font-medium px-3 py-[3px]
-          rounded-full transition
-          ${
-            isFutureDate
-              ? "bg-gray-100 text-gray-300 cursor-not-allowed"
-              : "bg-slate-700 text-white hover:bg-slate-800"
-          }
-        `}
-      >
-        Update
-      </button>
-    </div>
-  ) : (
-    <div className="flex flex-col items-center gap-1">
-      <DayBadge status={dayStatus} />
-{clientName&&  <span className="text-[9px] text-gray-900 text-center max-w-[75px]">
-         Client Name: {clientName}
-      </span>}
-    
-
-      {UpdatedBy && (
-        <div className="relative group">
-          <div className="p-[2px] rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer transition">
-            <Info className="w-3 h-3 text-gray-500" />
-          </div>
-
-          <div
-            className="
-              absolute bottom-full left-1/2 -translate-x-1/2 mb-2
-              hidden group-hover:block
-              bg-gray-900 text-white text-[9px]
-              px-2 py-1 rounded-md shadow-lg whitespace-nowrap z-50
-            "
-          >
-            Marked by: {UpdatedBy}
-          </div>
-        </div>
-      )}
-
-      <button
-        disabled={isFutureDate}
-        onClick={() => {
-          if (isFutureDate) return;
-          SetShowUpdateAttendece(!ShowUpdateAttendece);
-          setAttenseceInformation(attendanceInfo);
-          SetParticularDate(i + 1);
-          setStatus("Choose");
-          SetStatusMessage("");
-        }}
-        className={`
-          text-[9px] font-medium px-3 py-[3px]
-          rounded-full transition
-          ${
-            isFutureDate
-              ? "bg-gray-100 text-gray-300 cursor-not-allowed"
-              : "bg-slate-700 text-white hover:bg-slate-800"
-          }
-        `}
-      >
-        Edit
-      </button>
-    </div>
-  )}
-</div>
-  );
-})}
-        </div>
-      </div>
-
     </div>
   </div>
+</div>
 )}
 
 
@@ -1689,7 +1543,7 @@ className={`
 
     <div className="px-5 py-4">
       <label className="mb-2 block text-sm font-medium text-gray-600">
-        Attendance Status
+        Attendance Statusc
       </label>
 
       <select
@@ -1702,6 +1556,21 @@ className={`
         <option value="ABSENT">Absent</option>
       </select>
     </div>
+
+    {(status === "ABSENT" || status === "HALF") && (
+      <div className="mt-3">
+        <label className="mb-2 block text-sm font-medium text-gray-600 p-1">
+          Enter Reasonf for {status}
+          </label>
+        <input
+          type="text"
+          placeholder="Enter reason..."
+          value={AbsentReason}
+          onChange={(e) => setAbsentReason(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
+        />
+      </div>
+    )}
 {flexDate!==new Date().toISOString().split('T')[0]&&
 
 <div className="flex flex-col  border-b px-2 py-3">

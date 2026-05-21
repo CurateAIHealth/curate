@@ -1561,7 +1561,8 @@ export const PostReferalRequest = async (data: any) => {
 export const PostRefundRequest = async (
 ClientInfo:any,
 
-From:any
+From:any,
+
 ) => {
   try {
     const cluster = await clientPromise;
@@ -1604,7 +1605,9 @@ const payload = {
 export const PostAttendeceEditRequest = async (
 ClientInfo:any,
 Reason:any,
-From:any
+From:any,
+AbsentReason:any,
+User:any
 ) => {
   try {
     const cluster = await clientPromise;
@@ -1612,20 +1615,22 @@ From:any
     const collection = db.collection("Notifications");
 
     const payload = {
-      ClientId: ClientInfo.ClientId,
-      ClientName: ClientInfo.clientName,
-      Message: `Attendece Update Request for ${ClientInfo.hcpName}. On ${ClientInfo.flexDate} to ${ ClientInfo.status}. Reason: ${Reason}. Requested by ${From}.`,
-      HCPName: ClientInfo.hcpName,
-      HCPId: ClientInfo.hcpId,    
+      ClientId: ClientInfo.Client_Id,
+      ClientName: ClientInfo.name,
+      Message: `Attendece Update Request for ${ClientInfo.name}. On ${ClientInfo.flexDate} to ${ ClientInfo.status}. Reason: ${Reason}. Requested by ${From}.`,
+      HCPName: ClientInfo.HCA_Name,
+      HCPId: ClientInfo.HCA_Id,    
       yearMonth: ClientInfo.yearMonth,
       flexDate: ClientInfo.flexDate,
       status: ClientInfo.status,
       Date: new Date().toISOString().split("T")[0],
       Type: "Attendance Edit Request",
       Status: "Pending",
-      Department: "HCP"
+      Department: "HCP",
+      Reason:AbsentReason,
+      UserAttendeceType:User
     };
-
+console.log("Check Client Info Details------",payload)
     const result = await collection.insertOne(payload);
 
     return {
@@ -3200,7 +3205,237 @@ console.log("Attendance Entry:", attendanceEntry);
     };
   }
 };
+import { ObjectId } from "mongodb";
 
+type AttendanceUpdateRequest = {
+  Client_Id: string;
+  HCA_Id: string;
+  Client_Name: string;
+  HCA_Name?: string;
+  date: string | Date;
+  status: string;
+};
+
+type UpdateResponse = {
+  success: boolean;
+  summary: {
+    totalRequested: number;
+    updatedCount: number;
+    missingDeploymentCount: number;
+    attendanceNotFoundCount: number;
+  };
+  details: {
+    updatedClients: string[];
+    missingDeploymentClients: string[];
+    attendanceNotFoundClients: string[];
+  };
+  message: string;
+  error?: string;
+};
+
+const getDateKey = (date: string | Date): string => {
+  const d = new Date(date);
+
+  if (Number.isNaN(d.getTime())) {
+    throw new Error("Invalid attendance date");
+  }
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+export const UpdateClientAttendanceStatus = async (
+  selectedYear: string | number,
+  selectedMonth: string | number,
+  attendanceInfo: AttendanceUpdateRequest[],
+  logInUser: string,
+  reason: string
+): Promise<UpdateResponse> => {
+  try {
+    if (!attendanceInfo?.length) {
+      return {
+        success: false,
+        summary: {
+          totalRequested: 0,
+          updatedCount: 0,
+          missingDeploymentCount: 0,
+          attendanceNotFoundCount: 0,
+        },
+        details: {
+          updatedClients: [],
+          missingDeploymentClients: [],
+          attendanceNotFoundClients: [],
+        },
+        message: "No attendance data received.",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const monthKey = `${selectedYear}-${Number(selectedMonth)}`;
+
+    const deploymentRecords = await collection
+      .find({
+        Month: monthKey,
+        Status: { $ne: "Freeze" },
+      })
+      .toArray();
+
+    if (!deploymentRecords.length) {
+      return {
+        success: false,
+        summary: {
+          totalRequested: attendanceInfo.length,
+          updatedCount: 0,
+          missingDeploymentCount: attendanceInfo.length,
+          attendanceNotFoundCount: 0,
+        },
+        details: {
+          updatedClients: [],
+          missingDeploymentClients: attendanceInfo.map(
+            (item) => item.Client_Name
+          ),
+          attendanceNotFoundClients: [],
+        },
+        message: "No active deployment records found.",
+      };
+    }
+
+    const deploymentMap = new Map(
+      deploymentRecords.map((record: any) => [
+        `${record.ClientId}_${record.HCAId}`,
+        record,
+      ])
+    );
+
+    const bulkOperations: any[] = [];
+    const updatedClients: string[] = [];
+    const missingDeploymentClients: string[] = [];
+    const attendanceNotFoundClients: string[] = [];
+
+    for (const attendance of attendanceInfo) {
+      const key = `${attendance.Client_Id}_${attendance.HCA_Id}`;
+      const matchedRecord = deploymentMap.get(key);
+
+      if (!matchedRecord) {
+        missingDeploymentClients.push(attendance.Client_Name);
+        continue;
+      }
+
+      const selectedDateKey = getDateKey(attendance.date);
+
+      const existingAttendance = Array.isArray(matchedRecord.ClientAttendance)
+        ? matchedRecord.ClientAttendance.find((entry: any) => {
+            const entryDateKey =
+              entry?.dateKey ||
+              (entry?.AttendanceDate
+                ? getDateKey(entry.AttendanceDate)
+                : null);
+
+            return entryDateKey === selectedDateKey;
+          })
+        : null;
+
+      if (!existingAttendance) {
+        attendanceNotFoundClients.push(attendance.Client_Name);
+        continue;
+      }
+console.log("Check Attendece Status------",attendance.status)
+      bulkOperations.push({
+        updateOne: {
+          filter: {
+            _id: new ObjectId(matchedRecord._id),
+          },
+          update: {
+            $set: {
+              "ClientAttendance.$[elem].Status": attendance.status,
+              "ClientAttendance.$[elem].UpdatedAt": new Date(),
+              "ClientAttendance.$[elem].UpdatedBy": logInUser || "Admin",
+              "ClientAttendance.$[elem].Reason":
+                attendance.status !== "Present" ? reason : "",
+              "ClientAttendance.$[elem].dateKey": selectedDateKey,
+              UpdatedAt: new Date(),
+              UpdatedBy: logInUser || "Admin",
+            },
+          },
+          arrayFilters: [
+            {
+              $or: [
+                { "elem.dateKey": selectedDateKey },
+                { "elem.AttendanceDate": attendance.date },
+              ],
+            },
+          ],
+        },
+      });
+
+      updatedClients.push(attendance.Client_Name);
+    }
+
+    if (bulkOperations.length > 0) {
+      const bulkResult = await collection.bulkWrite(bulkOperations, {
+        ordered: false,
+      });
+console.log("Bulk Result:", bulkResult);
+      return {
+        success: bulkResult.modifiedCount > 0,
+        summary: {
+          totalRequested: attendanceInfo.length,
+          updatedCount: bulkResult.modifiedCount,
+          missingDeploymentCount: missingDeploymentClients.length,
+          attendanceNotFoundCount: attendanceNotFoundClients.length,
+        },
+        details: {
+          updatedClients,
+          missingDeploymentClients,
+          attendanceNotFoundClients,
+        },
+        message:
+          bulkResult.modifiedCount > 0
+            ? "Attendance status updated Successfully."
+            : "No attendance records were updated.",
+      };
+    }
+
+    return {
+      success: false,
+      summary: {
+        totalRequested: attendanceInfo.length,
+        updatedCount: 0,
+        missingDeploymentCount: missingDeploymentClients.length,
+        attendanceNotFoundCount: attendanceNotFoundClients.length,
+      },
+      details: {
+        updatedClients: [],
+        missingDeploymentClients,
+        attendanceNotFoundClients,
+      },
+      message: "No attendance records were updated.",
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      summary: {
+        totalRequested: attendanceInfo?.length || 0,
+        updatedCount: 0,
+        missingDeploymentCount: 0,
+        attendanceNotFoundCount: 0,
+      },
+      details: {
+        updatedClients: [],
+        missingDeploymentClients: [],
+        attendanceNotFoundClients: [],
+      },
+      message: "An error occurred while updating attendance status.",
+      error: error?.message || "Unknown error",
+    };
+  }
+};
 export const UpdateClientDailyAttendance = async (
   selectedYear: string | number,
   selectedMonth: string | number,
@@ -3497,7 +3732,8 @@ export const EditAttendanceByClientId = async (
   Month: any,
   attendenceDate: string,
   status: "FULL" | "HALF" | "ABSENT",
-  UpdatedBy: string
+  UpdatedBy: string,
+  AbsentReason:any
 ) => {
   try {
     const cluster = await clientPromise;
@@ -3508,7 +3744,10 @@ export const EditAttendanceByClientId = async (
       const [year, m] = month.split("-");
       return `${year}-${Number(m)}`;
     };
-
+console.log(
+  "Check fot UpdateBy-----",UpdateBy
+)
+console.log(AbsentReason)
     const normalizedMonth = normalizeMonth(Month);
 
     const statusMap = {
@@ -3548,6 +3787,7 @@ export const EditAttendanceByClientId = async (
       "Attendance.$.Client_Name": ClientName,
       "Attendance.$.HCA_Id": hcpId,
       "Attendance.$.HCA_Name": HcaName,
+      "Attendance.$.Reason":AbsentReason,
 
       "Attendance.$.UpdatedAt": new Date(),
       "Attendance.$.UpdatedBy": UpdateBy || "",
@@ -3569,6 +3809,7 @@ export const EditAttendanceByClientId = async (
       Client_Name: ClientName,
       HCA_Id: hcpId,
       HCA_Name: HcaName,
+      Reason:AbsentReason,
       CreatedAt: new Date(),
       UpdatedAt: new Date(),
       UpdatedBy: UpdateBy || "",
