@@ -9,7 +9,7 @@ let cachedRegisterdUsers: any[] = [];
 
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Info, Minimize2 } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId,  } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId, UpdateClientAttendanceStatus,  } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -61,6 +61,7 @@ const ClientTable = () => {
    const Timenow = new Date();
    const [ParticularDate,SetParticularDate]=useState<any>()
  const [AttendeceEditReason,SetAttendeceEditReason]=useState("")
+ const [AbsentReason,setAbsentReason]=useState("")
   const currentYear = Timenow.getFullYear().toString();
   const currentMonth = String(Timenow.getMonth() + 1).padStart(2, "0");
   const [selectedClient,setselectedClient]=useState<any>()
@@ -112,8 +113,8 @@ const [enableStatus,setenableStatus]=useState(false)
   const [otherReason, setOtherReason] = useState("");
   const [showTimeSheet, setShowTimeSheet] = useState(false)
 
-  const [selectedMonth, setSelectedMonth] = useState<any>(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  // const [selectedMonth, setSelectedMonth] = useState<any>(new Date().getMonth());
+  // const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [showExtendPopup,setshowExtendPopup]=useState(false)
   const [ExtendInfo,setExtendInfo]=useState<any>({})
@@ -314,7 +315,8 @@ const PostRefunRequest = async (data: any) => {
 
     const updateSalary = await PostRefundRequest(
       data,
-      loggedInEmail
+      loggedInEmail,
+
     );
 
     if (updateSalary?.success) {
@@ -818,38 +820,38 @@ if (deploymentRes.success) {
     (each) => each.Client_Id === TimeSheet_UserId&&each.Month===`${SearchYear}-${String(SearchMonth)}`
   );
 
-  console.log("TimeSheet_Info", `${SearchYear}-${String(SearchMonth )}`);
+  console.log("TimeSheet_Info", TimeSheet_Info);
 
-  const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+  const daysInMonth = new Date(SearchYear, SearchMonth + 1, 0).getDate();
 
-  const handleStatusClick = (day: number) => {
-    if (!TimeSheet_Info) return;
-    const updatedTimeSheet = [...(TimeSheet_Info.TimeSheet || [])];
-    const clickedDate = new Date(selectedYear, selectedMonth, day);
-    const existingRecordIndex = updatedTimeSheet.findIndex((t) => {
-      const parsed = parseEnInDate(t.date);
-      return (
-        parsed.getDate() === clickedDate.getDate() &&
-        parsed.getMonth() === clickedDate.getMonth() &&
-        parsed.getFullYear() === clickedDate.getFullYear()
-      );
-    });
-    if (existingRecordIndex > -1) {
-      const currentStatus = updatedTimeSheet[existingRecordIndex].status;
-      const nextStatus =
-        statusCycle[
-          (statusCycle.indexOf(currentStatus) + 1) % statusCycle.length
-        ];
-      updatedTimeSheet[existingRecordIndex].status = nextStatus;
-    } else {
-      updatedTimeSheet.push({
-        date: clickedDate.toLocaleDateString("en-IN"),
-        status: "Present",
-      });
-    }
-    TimeSheet_Info.TimeSheet = updatedTimeSheet;
-    setClientsInformation([...ClientsInformation]);
-  };
+  // const handleStatusClick = (day: number) => {
+  //   if (!TimeSheet_Info) return;
+  //   const updatedTimeSheet = [...(TimeSheet_Info.TimeSheet || [])];
+  //   const clickedDate = new Date(selectedYear, selectedMonth, day);
+  //   const existingRecordIndex = updatedTimeSheet.findIndex((t) => {
+  //     const parsed = parseEnInDate(t.date);
+  //     return (
+  //       parsed.getDate() === clickedDate.getDate() &&
+  //       parsed.getMonth() === clickedDate.getMonth() &&
+  //       parsed.getFullYear() === clickedDate.getFullYear()
+  //     );
+  //   });
+  //   if (existingRecordIndex > -1) {
+  //     const currentStatus = updatedTimeSheet[existingRecordIndex].status;
+  //     const nextStatus =
+  //       statusCycle[
+  //         (statusCycle.indexOf(currentStatus) + 1) % statusCycle.length
+  //       ];
+  //     updatedTimeSheet[existingRecordIndex].status = nextStatus;
+  //   } else {
+  //     updatedTimeSheet.push({
+  //       date: clickedDate.toLocaleDateString("en-IN"),
+  //       status: "Present",
+  //     });
+  //   }
+  //   TimeSheet_Info.TimeSheet = updatedTimeSheet;
+  //   setClientsInformation([...ClientsInformation]);
+  // };
 const toggleStatus = () => {
   setStatus((prev) => (prev === "Active" ? "Freeze" : "Active"));
 };
@@ -1191,8 +1193,13 @@ const processedData = useMemo(() => {
         const day = new Date(att.AttendanceDate).getDate();
 
         if (day >= 1 && day <= 31) {
-          dayStatusArray[day - 1] =
-            att.Status === "Present" ? "P" : "A";
+          if (att.Status === "Present") {
+            dayStatusArray[day - 1] = "P";
+          } else if (att.Status === "Half Day") {
+            dayStatusArray[day - 1] = "HP";
+          } else {
+            dayStatusArray[day - 1] = "A";
+          }
         }
       });
 
@@ -1200,9 +1207,10 @@ const processedData = useMemo(() => {
         (acc: any, v: string) => {
           if (v === "P") acc.pd++;
           if (v === "A") acc.ad++;
+          if (v === "HP") acc.hpd++;
           return acc;
         },
-        { pd: 0, ad: 0 }
+        { pd: 0, ad: 0, hpd: 0 }
       );
 
       return {
@@ -1211,7 +1219,7 @@ const processedData = useMemo(() => {
         ...counts,
       };
     });
-}, [FilterFinelTimeSheet, SearchResult]);
+}, [FilterFinelTimeSheet, SearchResult, ActionStatusMessage]);
 const UpdateServiceCharge=async(A:any)=>{
   SetActionStatusMessage("Please Wait...")
   alert(A)
@@ -1234,67 +1242,138 @@ SetActionStatusMessage("Update failed");
 
 }
 
-const EditAttendence = async () => {
-  try {
-    if (!AttenseceInformation?.ClientId) return;
-  
+const EditAttendence = async (): Promise<void> => {
 
+  console.log("Check-----",AttenseceInformation)
+  if (!AttenseceInformation?.Client_Id) return;
+
+  try {
     SetActionStatusMessage("Please Wait...");
 
-    const flexDate = `${selectedYear}-${selectedMonth}-${String(
-      ParticularDate
-    ).padStart(2, "0")}`;
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+    }).format(new Date());
 
-    const yearMonth = `${selectedYear}-${selectedMonth}`;
-const Info={...AttenseceInformation,flexDate,yearMonth,status}
+    const flexDate = `${SearchYear}-${String(SearchMonth).padStart(2, "0")}-${String(ParticularDate).padStart(2, "0")}`;
+    const yearMonth = `${SearchYear}-${String(SearchMonth).padStart(2, "0")}`;
 
-      if(flexDate===new Date().toISOString().split('T')[0]){
-// const Dateresponse = await EditAttendanceByClientId(
-//       AttenseceInformation.ClientId,
-//       AttenseceInformation.hcpId,
-//       yearMonth,
-//       flexDate,
-//       status,
-//       "Admin"
-//     );
+    const currentStatus = status;
 
-    //  SetActionStatusMessage(`✅ ${Dateresponse.message}`);
+    if (!currentStatus) {
+      SetActionStatusMessage("Please select a valid status");
+      return;
+    }
+
+    if (EditDate === today) {
+      const payload = {
+        Client_Id: AttenseceInformation.Client_Id,
+        HCA_Id: AttenseceInformation.HCA_Id,
+        Client_Name: AttenseceInformation.name,
+        HCA_Name: AttenseceInformation.HCA_Name,
+        date: EditDate,
+        status: currentStatus,
+      };
+console.log(
+  "Check Attendece Status",currentStatus
+)
+      const dateResponse = await UpdateClientAttendanceStatus(
+        SearchYear,
+        SearchMonth,
+        [payload],
+        loggedInEmail,
+        AbsentReason
+      );
+
+     if (dateResponse?.success) {
+  setClientsInformation((prev:any) =>
+    prev.map((client:any) => {
+      if (client.ClientId !== AttenseceInformation.Client_Id) return client;
+
+      const updatedAttendance = [...(client.ClientAttendance || [])];
+
+      const existingIndex = updatedAttendance.findIndex(
+        (att:any) =>
+          new Date(att.AttendanceDate).toISOString().split("T")[0] === EditDate
+      );
+
+      if (existingIndex >= 0) {
+        updatedAttendance[existingIndex] = {
+          ...updatedAttendance[existingIndex],
+          Status: currentStatus,
+        };
+      } else {
+        updatedAttendance.push({
+          AttendanceDate: EditDate,
+          Status: currentStatus,
+        });
+      }
+
+      return {
+        ...client,
+        ClientAttendance: updatedAttendance,
+      };
+    })
+  );
+
+  SetActionStatusMessage(
+    dateResponse?.message || "Attendance updated Successfully"
+  );
+}
 
       setTimeout(() => {
         setShowTimeSheet(false);
-        SetShowUpdateAttendece((prev: boolean) => !prev);
-   SetAttendeceEditReason("")
+        SetShowUpdateAttendece(false);
+        SetAttendeceEditReason("");
       }, 3500);
-    return
+
+      return;
     }
-const response= await PostAttendeceEditRequest(Info,AttendeceEditReason,loggedInEmail)
-    if (response?.success) {
 
-        const phoneNumber = "U04S43V513N";
-      const Impmessage =
-        "Hi Medam, Kindly requesting AttendeceEdit  Request update. Please check notification in the application. Thank you.";
-
-    const res:any=await axios.post("/api/Slack", {
-  userIds:phoneNumber,
-  message: Impmessage,
-});
-
-     
-      SetActionStatusMessage(`✅ ${response.message}`);
-
-      setTimeout(() => {
-        setShowTimeSheet(false);
-        SetShowUpdateAttendece((prev: boolean) => !prev);
-   SetAttendeceEditReason("")
-      }, 3500);
-    } else {
-      SetActionStatusMessage(response?.message || "Failed to update attendance");
-    }
-  } catch (error: any) {
-    console.error("EditAttendence Error:", error);
-    SetActionStatusMessage(
-      error?.message || "Something went wrong while updating attendance"
+    const info = {
+      ...AttenseceInformation,
+      flexDate,
+      yearMonth,
+      status: currentStatus,
+    };
+console.log ("Check Client Info Details------",info)
+    const response = await PostAttendeceEditRequest(
+      info,
+      AttendeceEditReason,
+      loggedInEmail,
+      AbsentReason,
+      "ClientAttendece"
     );
+
+    if (!response?.success) {
+      SetActionStatusMessage(response?.message || "Failed to update attendance");
+      return;
+    }
+
+    try {
+      await axios.post("/api/Slack", {
+        userIds: "U04S43V513N",
+        message:
+          "Hi Madam, Kindly requesting Attendance Edit Request update. Please check notification in the application. Thank you.",
+      });
+    } catch (slackError) {
+      console.error("Slack notification failed:", slackError);
+    }
+
+    SetActionStatusMessage(`✅ ${response.message || "Attendance request submitted Successfully"}`);
+
+    setTimeout(() => {
+      setShowTimeSheet(false);
+      SetShowUpdateAttendece(false);
+      SetAttendeceEditReason("");
+    }, 3500);
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Something went wrong while updating attendance";
+
+    console.error("EditAttendence Error:", error);
+    SetActionStatusMessage(message);
   }
 };
 
@@ -1380,7 +1459,7 @@ onClick={() => setShowAttendanceModal(true)}
   </span>
 
   <div className="flex flex-col  leading-tight">
-    <span className="text-xs">Pending Attendance</span>
+    <span className="text-xs">Pending Attendance {SearchMonth} {SearchYear}</span>
     <span className="text-[10px] text-center font-medium text-slate-500">
       Client check-in
     </span>
@@ -1685,6 +1764,8 @@ setShowCareTakerPriceUpdate(false)
     <th className="w-[80px] px-2 py-2 text-center">
       Replacement
     </th>
+    
+   {Number(currentMonth) === Number(SearchMonth)  && Number(currentYear) === Number(SearchYear) &&
         <th className="w-[80px] px-2 py-2 text-center">
  <div className="flex flex-col items-center justify-between
                 w-16 h-12
@@ -1693,7 +1774,6 @@ setShowCareTakerPriceUpdate(false)
                 text-white
                 p-1 shadow-lg border border-gray-300">
 
-  
   <div className="flex  items-center leading-none">
     <CalendarDays size={10} />
     <span className="text-[9px] ml-1 font-semibold">
@@ -1718,7 +1798,7 @@ setShowCareTakerPriceUpdate(false)
   </button>
 
 </div>
-  </th>
+  </th>}
     <th className="w-[80px] px-2 py-2 text-center">
       Time Sheet
     </th>
@@ -1767,8 +1847,9 @@ const monthIndex = [
 ].indexOf(SearchMonth) + 1;
 
 const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(year) ===Number(now.getFullYear());
- const todayIndex = new Date().getDate() - 1;
-  const dayStatus = c.days?.[todayIndex] ?? "-";
+const todayIndex = Math.max(0, new Date().getDate() - 1);
+const dayStatus = c.days?.[todayIndex] || "-";
+  console.log("Check Client Attendence-------",c.days)
 const today = new Date();
 
 const localToday = `${today.getFullYear()}-${String(
@@ -2262,7 +2343,7 @@ console.log('Test Date------',EditDate)
             </button>
           </td> */}
 
-          {Number(currentMonth) === Number(selectedMonth) + 1 && Number(currentYear) === Number(selectedYear) &&
+          {Number(currentMonth) === Number(SearchMonth)  && Number(currentYear) === Number(SearchYear) &&
             <Td className="text-center align-middle">
               {dayStatus==="-"?(
                 <span className="flex flex-col items-center leading-[10px] text-[9px] font-semibold text-gray-600">
@@ -2281,6 +2362,8 @@ console.log('Test Date------',EditDate)
                       SetActionStatusMessage("")
                       SetParticularDate(new Date().getDate())
                      setEditDate (EditDate)
+                     setStatus ("")
+                      setAbsentReason("")
                    
                  }}
                   >
@@ -2296,7 +2379,7 @@ console.log('Test Date------',EditDate)
 </p>:
               <button
                 className="px-2 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600"
-                 onClick={() => UpdateClient_UserId(c.Client_Id, c.name)}
+                 onClick={() => {UpdateClient_UserId(c.Client_Id, c.name),setAttenseceInformation(c),SetActionStatusMessage("")}}
               >
                 Full Month
               </button>}
@@ -2852,11 +2935,25 @@ setSelectedDate(e.target.value)
         onChange={(e) => setStatus(e.target.value as any)}
         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
       ><option value="">Choose Attendence</option>
-        <option value="FULL">Full Day</option>
-        <option value="HALF">Half Day</option>
-        <option value="ABSENT">Absent</option>
+        <option value="Present">Present</option>
+        <option value="Half Day">Half Day</option>
+        <option value="Absent">Absent</option>
       </select>
     </div>
+{(status === "Absent" || status === "Half Day") && (
+  <div className="mt-3">
+    <label className="mb-2 block text-sm font-medium text-gray-600 p-1">
+      Enter Reasonf for {status}
+      </label>
+    <input
+      type="text"
+      placeholder="Enter reason..."
+      value={AbsentReason}
+      onChange={(e) => setAbsentReason(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
+    />
+  </div>
+)}
 {EditDate!==new Date().toISOString().split('T')[0]&&
 
 <div className="flex flex-col  border-b px-2 py-3">
@@ -2900,7 +2997,7 @@ setSelectedDate(e.target.value)
 
       <button
         className="rounded-lg bg-black px-5 py-2 text-sm font-medium text-white hover:bg-gray-800"
-onCanPlay={EditAttendence}
+onClick={EditAttendence}
       >
         Save
       </button>
@@ -2911,9 +3008,9 @@ onCanPlay={EditAttendence}
 }
 
 {showTimeSheet && TimeSheet_Info && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+  <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
     <div className="bg-white rounded-3xl shadow-2xl p-6 w-[750px] max-h-[90vh] overflow-y-auto backdrop-blur-md border border-gray-200">
-      <div className="mb-4 rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200 shadow-xl p-3">
+      <div className="mb-4 bg-white/80 backdrop-blur-xl p-1">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div className="flex items-center gap-4">
             <div className="h-14 w-14 rounded-2xl flex items-center justify-center shadow-lg">
@@ -2926,45 +3023,62 @@ onCanPlay={EditAttendence}
 
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-[#ff1493] font-semibold">
-                Client Management
+                {TimeSheet_Info?.name || ""}
               </p>
               <h2 className="text-xl font-bold text-slate-800">
-                Attendance Dashboard
+                Attendance Dashboard  
               </h2>
               <p className="text-sm text-gray-400 mt-1">
-                {monthNames[selectedMonth]} {selectedYear}
+                {monthNames[SearchMonth-1]} {SearchYear}
               </p>
             </div>
-            
           </div>
-           <div className="flex gap-3">
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="border p-2 rounded-md"
-          >
-            {monthNames.map((m, i) => (
-              <option key={i} value={i}>{m}</option>
-            ))}
-          </select>
 
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="border p-2 rounded-md"
-          >
-            {Array.from({ length: 5 }).map((_, i) => {
-              const year = new Date().getFullYear() - 2 + i;
-              return <option key={year} value={year}>{year}</option>;
-            })}
-          </select>
-        </div>
-         
- <button
+          <div className="flex gap-3">
+             <select
+      value={SearchMonth}
+      onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
+      className="
+        w-full sm:w-[140px] h-[40px]
+        rounded-xl border border-gray-300
+        px-3 text-sm bg-white text-gray-800
+        focus:outline-none focus:ring-2 focus:ring-indigo-500
+      "
+    >
+      
+      <option value="">All Months</option>
+      {[...Array(12)].map((_, i) => (
+        <option key={i} value={`${i + 1}`}>
+          {new Date(0, i).toLocaleString("default", { month: "long" })}
+        </option>
+      ))}
+    </select>
+
+    {/* Year */}
+    <select
+      value={SearchYear}
+      onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
+      className="
+        w-full sm:w-[120px] h-[40px]
+        rounded-xl border border-gray-300
+        px-3 text-sm bg-white text-gray-800
+        focus:outline-none focus:ring-2 focus:ring-indigo-500
+      "
+    >
+      <option value="">All Years</option>
+      {years.map((year) => (
+        <option key={year} value={year}>
+          {year}
+        </option>
+      ))}
+    </select>
+          </div>
+
+          <button
             onClick={() => setShowTimeSheet(false)}
             className="px-2 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer transition"
           >
-                <Minimize2 size={14}/>
+            <Minimize2 size={14} />
           </button>
         </div>
       </div>
@@ -2973,122 +3087,93 @@ onCanPlay={EditAttendence}
         {Array.from({ length: daysInMonth }).map((_, dayIndex) => {
           const day = dayIndex + 1;
 
-          const record = TimeSheet_Info.ClientAttendance?.find((t: any) => {
-            const parsed = new Date(t.AttendanceDate);
+ const record = TimeSheet_Info.ClientAttendance?.find((t: any) => {
+  if (!t?.dateKey) return false;
 
-            return (
-              parsed.getDate() === day &&
-              parsed.getMonth() === selectedMonth &&
-              parsed.getFullYear() === selectedYear
-            );
-          });
-console.log(record,"Record")
+  const [year, month, date] = t.dateKey.split("-").map(Number);
+  const parsed = new Date(year, month - 1, date);
+
+  return (
+    parsed.getDate() === day &&
+    parsed.getMonth() + 1 === Number(SearchMonth) &&
+    parsed.getFullYear() === Number(SearchYear)
+  );
+});
+console.log("Check Info-----",record)
           const today = new Date();
-          const currentDateObj = new Date(selectedYear, selectedMonth, day);
+          const currentDateObj = new Date(SearchYear, SearchMonth-1, day);
           const isFuture = currentDateObj > today;
 
-          const currentStatus =
-            updatedAttendance?.[day]?.status ??
-            (record?.Status === "Present" ? "Present" : record ? "Absent" : "Not Marked");
+          const currentStatus =updatedAttendance?.[day]?.status ??
+            (record?.Status === "Present"
+              ? "Present"
+              : record?.Status === "Half Day"
+              ? "Half Day"
+              : record?.Status === "Absent"
+              ? "Absent"
+              : "Not Marked");
 
           const statusColor =
-            currentStatus === "Present"
+            (currentStatus as string) === "Present"
               ? "bg-green-100 text-green-700 border-green-300"
-              : currentStatus === "Absent"
+              : (currentStatus as string) === "Half Day"
+              ? "bg-yellow-100 text-yellow-700 border-yellow-300"
+              : (currentStatus as string) === "Absent"
               ? "bg-red-100 text-red-700 border-red-300"
               : "bg-gray-100 text-gray-500 border-gray-300";
-
-          const handleStatusClick = (day: number) => {
-            if (isFuture) return;
-
-            setSaveButton(true);
-
-            setUpdatedAttendance((prev) => {
-              const current =
-                prev?.[day]?.status ??
-                (record?.Status === "Present" ? "Present" : record ? "Absent" : "Not Marked");
-
-              const nextStatus =
-                current === "Not Marked"
-                  ? "Present"
-                  : current === "Present"
-                  ? "Absent"
-                  : "Present";
-
-              const currentDate = new Date(selectedYear, selectedMonth, day);
-
-              const formattedDate = currentDate.toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-                timeZone: "Asia/Kolkata",
-              });
-
-              const formattedDay = currentDate.toLocaleDateString("en-IN", {
-                weekday: "long",
-                timeZone: "Asia/Kolkata",
-              });
-
-              const updateTime = new Date().toLocaleTimeString("en-IN", {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                hour12: true,
-                timeZone: "Asia/Kolkata",
-              });
-
-              setFineldate({
-                ...Fineldate,
-                date: formattedDate,
-                day: formattedDay,
-                updatedAt: updateTime,
-                status: nextStatus,
-              });
-
-              return {
-                ...prev,
-                [day]: {
-                  date: formattedDate,
-                  day: formattedDay,
-                  updatedAt: updateTime,
-                  status: nextStatus,
-                },
-              };
-            });
-          };
 
           return (
             <div
               key={day}
-              className={`p-1 border rounded-lg flex flex-col items-center justify-center
-              ${
-                isFuture
-                  ? "opacity-40 blur-[1px] cursor-not-allowed"
-                  : "cursor-pointer hover:scale-105"
-              }
-              ${statusColor}
-              transition-transform`}
+              className="rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 min-h-0"
             >
-              <span className="text-sm font-semibold">{day}</span>
-
-              <span className="text-[10px] font-medium">{currentStatus}</span>
-              {record?.HCA_Name && <span className="text-[8px] text-gray-800 mt-1">
-                HCA: {record?.HCA_Name || "-"}
+              <span className="text-[10px] font-semibold text-gray-500 uppercase">
+                Day {day}
               </span>
-              }
+
+              <span
+                className={`text-[10px] font-medium font-semibold px-2 py-1 rounded ${statusColor}`}
+              >
+                {currentStatus}
+              </span>
+
+              {record?.HCA_Name && (
+                <span className="text-[8px] text-gray-800 mt-1">
+                  HCA: {record.HCA_Name}
+                </span>
+              )}
+
               {record?.UpdatedBy && (
                 <div className="relative group inline-block">
                   <Info className="cursor-pointer" size={12} />
 
-                  <div className="absolute bottom-full left-1/2 mb-2 hidden -translate-x-1/2 rounded bg-black px-2 py-1 text-xs text-white group-hover:block whitespace-nowrap">
-                    Attendance Marked By: {record?.UpdatedBy}
+                  <div className="absolute bottom-full left-1/2 mb-2 hidden -translate-x-1/2 rounded bg-black px-3 py-2 text-xs text-white group-hover:block whitespace-nowrap z-50">
+                    <div>Attendance Marked By: {record.UpdatedBy}</div>
+
+                    {record?.Reason && (
+                      <div className="mt-1">
+                        Reason For {currentStatus}: {record.Reason}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
+
               <span
-     
-     onClick={()=>{SetShowUpdateAttendece(!ShowUpdateAttendece),  SetParticularDate(dayIndex + 1),setEditDate(record?.dateKey)}}
-                className="mt-1 inline-flex items-center rounded-md border border-blue-200 bg-white px-1 py-1 text-[8px] font-medium text-blue-600 shadow-sm hover:bg-blue-50 cursor-pointer"
+                onClick={() => {
+                  if (isFuture) return;
+                  SetShowUpdateAttendece(!ShowUpdateAttendece);
+                  SetParticularDate(day);
+                  setEditDate(record?.dateKey);
+                  setAttenseceInformation(record || AttenseceInformation);
+                  setStatus(record?.Status || "");
+                  setAbsentReason(record?.Reason || "");
+                }}
+                className={`text-[8px] px-2 py-[2px] rounded-full mt-1 cursor-pointer ${
+                  isFuture
+                    ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                    : "bg-slate-700 text-white hover:bg-slate-800"
+                }`}
               >
                 Edit
               </span>
@@ -3097,93 +3182,105 @@ console.log(record,"Record")
         })}
       </div>
 
-   
-{ShowUpdateAttendece&&
-<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      {ShowUpdateAttendece && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-sm rounded-xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b px-2 py-3">
+              <p className="text-base font-semibold text-gray-800">
+                Edit Attendance
+              </p>
 
-  <div className="w-full max-w-sm rounded-xl bg-white shadow-2xl">
+              <button
+                onClick={() => SetShowUpdateAttendece(!ShowUpdateAttendece)}
+                className="flex justify-end cursor-pointer rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-black"
+              >
+                <X size={14} />
+              </button>
+            </div>
 
-    <div className="flex items-center justify-between border-b px-2 py-3">
-      <p className="text-base font-semibold text-gray-800">
-        Edit Attendance
-      </p>
-      <button
-  onClick={()=>SetShowUpdateAttendece(!ShowUpdateAttendece)}
-  className="flex justify-end cursor-pointer rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-black"
->
-  <X size={14} />
-</button>
-    </div>
+            <div className="px-5 py-4">
+              <label className="mb-2 block text-sm font-medium text-gray-600">
+                Attendance Status
+              </label>
 
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as any)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
+              >
+                <option value="">Choose Attendance</option>
+                <option value="Present">Present</option>
+                <option value="Half Day">Half Day</option>
+                <option value="Absent">Absent</option>
+              </select>
+            </div>
 
+            {(status === "Absent" || status === "Half Day") && (
+              <div className="mt-3 px-5">
+                <label className="mb-2 block text-sm font-medium text-gray-600">
+                  Enter Reason for {status}
+                </label>
 
-    <div className="px-5 py-4">
-      <label className="mb-2 block text-sm font-medium text-gray-600">
-        Attendance Status
-      </label>
+                <input
+                  type="text"
+                  placeholder="Enter reason..."
+                  value={AbsentReason}
+                  onChange={(e) => setAbsentReason(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                />
+              </div>
+            )}
 
-      <select
-        value={status}
-        onChange={(e) => setStatus(e.target.value as any)}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
-      ><option value="">Choose Attendence</option>
-        <option value="FULL">Full Day</option>
-        <option value="HALF">Half Day</option>
-        <option value="ABSENT">Absent</option>
-      </select>
-    </div>
-{EditDate!==new Date().toISOString().split('T')[0]&&
+            {EditDate !== new Date().toISOString().split("T")[0] && (
+              <div className="flex flex-col border-b px-5 py-3">
+                <label className="text-xs font-semibold text-gray-800">
+                  Reason for Attendance Edit
+                </label>
 
-<div className="flex flex-col  border-b px-2 py-3">
-  <label className="text-xs font-semibold text-gray-800">
-    Reason for Attendance Edit 
-  </label>
+                <input
+                  type="text"
+                  value={AttendeceEditReason}
+                  placeholder="Enter Here....."
+                  onChange={(e: any) => SetAttendeceEditReason(e.target.value)}
+                  className="mt-2 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
+                />
+              </div>
+            )}
 
-  <input
-    type="text"
-    value={AttendeceEditReason}
-    placeholder="Enter Here....."
-    onChange={(e: any) => SetAttendeceEditReason(e.target.value)}
-    style={{
-      padding: "10px 12px",
-      borderRadius: "6px",
-      border: "1px solid #ccc",
-      fontSize: "14px",
-      outline: "none"
-    }}
-  />
-</div>}
-<div className="flex items-center-justify-between">
-   {ActionStatusMessage&&
-            <p
-  className={`mt-2 text-sm font-medium px-1 py-2 text-xs text-center rounded-lg ${
-    ActionStatusMessage?.includes("success") || ActionStatusMessage?.includes("✅")
-      ? " text-green-700  "
-      : "text-red-700  "
-  }`}
->
-  {ActionStatusMessage}
-</p>
-      }
-    <div className="flex w-full justify-end gap-2 border-t px-5 py-3">
-      <button
-        onClick={()=>SetShowUpdateAttendece(!ShowUpdateAttendece)}
-        className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
-      >
-        Cancel
-      </button>
+            <div>
+              {ActionStatusMessage && (
+                <p
+                  className={`mt-2 text-sm font-medium px-1 py-2 text-xs text-center rounded-lg ${
+                    ActionStatusMessage?.includes("success") ||
+                    ActionStatusMessage?.includes("✅")
+                      ? "text-green-700"
+                      : "text-red-700"
+                  }`}
+                >
+                  {ActionStatusMessage}
+                </p>
+              )}
 
-      <button
-        className="rounded-lg bg-black px-5 py-2 text-sm font-medium text-white hover:bg-gray-800"
-onCanPlay={EditAttendence}
-      >
-        Save
-      </button>
-    </div>
-      </div>
-  </div>
-</div>
-}
+              <div className="flex w-full justify-end gap-2 border-t px-5 py-3">
+                <button
+                  onClick={() => SetShowUpdateAttendece(!ShowUpdateAttendece)}
+                  className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  className="rounded-lg bg-black px-5 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                  onClick={EditAttendence}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mt-5 text-right">
         <button
           onClick={() => setShowTimeSheet(false)}
