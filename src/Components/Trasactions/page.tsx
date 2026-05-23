@@ -18,17 +18,18 @@ interface PassbookProps {
   open: boolean;
   onClose: () => void;
   data: {
-    Invoice: string;
-    ClientName: string;
-    Patient: string;
-    contact: string;
-    Adress: string;
-    ServiceStartDate: string;
-    ServiceEndDate: string;
-    RoundedTotal: number;
-    balanceDue: number;
-    Trasaction: TransactionItem[];
-  };
+  name: any;
+  Invoice: string;
+  ClientName: string;
+  Patient: string;   
+  contact: string;
+  Adress: string;
+  ServiceStartDate: string;
+  ServiceEndDate: string;
+  RoundedTotal: number;
+  balanceDue: number;
+  Trasaction: TransactionItem[];
+};
 }
 
 export default function PassbookPopup({
@@ -188,7 +189,7 @@ export default function PassbookPopup({
 
         <div className="space-y-1.5">
           <p><span className="text-slate-400">Name:</span> <span className="font-medium">{data.ClientName}</span></p>
-          <p><span className="text-slate-400">Patient:</span> <span className="font-medium">{data.Patient}</span></p>
+          <p><span className="text-slate-400">Patient:</span> <span className="font-medium">{data.Patient||data.name}</span></p>
           <p><span className="text-slate-400">Phone:</span> <span className="font-medium">{data.contact}</span></p>
         </div>
       </div>

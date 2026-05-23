@@ -14,7 +14,7 @@ import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import { useRouter } from "next/navigation";
 import PaymentPopup from "@/Components/PaymentMethod/page";
 import PassbookPopup from "@/Components/Trasactions/page";
-import { invoiceData } from "@/Lib/Content";
+import { ImportedinvoiceData, } from "@/Lib/Content";
 
 
 type InvoiceStatus = "Draft" | "Sent" | "Overdue";
@@ -45,6 +45,7 @@ export default function InvoicesPage() {
   const [filter, setFilter] = useState<"All" | InvoiceStatus>("All");
   const [page, setPage] = useState(1);
  const [CurrentPaymentStatus,SetCurrentPaymentStatus]=useState<any>(null)
+ const [invoiceTransactionData,setinvoiceTransactionData]=useState(ImportedinvoiceData)
   const [InvoiceData, setInvoiceData] = useState<any>()
   const [RegUserInfo,setRegUserInfo]=useState<any>()
   const [status, setStatus] = useState<any>(null);
@@ -196,7 +197,9 @@ useEffect(() => {
       CareTakeCharge: each.CareTakeChare,
       AdvanceReceived: each.AdvanceReceived||each.AdvancePaid,
       PaymentStatus:each.PaymentStatus,
-      balanceDue:each.balanceDue
+      balanceDue:each.balanceDue,
+      Trasaction:each.Trasaction||[],
+      RoundedTotal:each.RoundedTotal
 
 
     }
@@ -750,7 +753,7 @@ CheckPaymentStatus:CurrentPaymentStatus
  <PassbookPopup
         open={openTransactions}
         onClose={() => setOpenTransactions(false)}
-        data={invoiceData}
+        data={invoiceTransactionData}
       />
 
       <button
@@ -973,7 +976,7 @@ Complete invoice sending to update status
         </div>}
 
      <div className="flex flex-col ml-4">
-         <PrinterCheck  size={18} className="text-teal-700" onClick={()=>setOpenTransactions(true)}/>
+         <PrinterCheck  size={18} className="text-teal-700" onClick={()=>{setOpenTransactions(true),setinvoiceTransactionData(inv)}}/>
         </div>
         <div className="hidden lg:flex justify-center cursor-pointer relative group">
   {inv.status !== "Draft" ? (
