@@ -2652,11 +2652,23 @@ export   const sectionItems = [
     { title: "Client Payment", value: "03" },
     { title: "Refund History", value: "04" },
   ];
-
-export  const invoiceData = {
+export const Expences= {
+  advance: 0,
+  hostel: 0,
+  other: 0,
+  incentives: 0,
+  others: 0,
+  advanceDescription: "",
+  hostelDescription: "",
+  otherDescription: "",
+  incentivesDescription: "",
+  othersDescription: "",
+}
+export  const ImportedinvoiceData = {
     Invoice: "#INV255_92",
     ClientName: "M. Shayam Sundher",
-    Patient: "M. Balakistamma",
+    name: "M. Balakistamma",
+     Patient: "David", 
     contact: "9440413074",
     Adress: "Karmanghat",
     ServiceStartDate: "1/3/2026",

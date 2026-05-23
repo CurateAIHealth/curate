@@ -97,7 +97,11 @@ export default function NotificationsCenter() {
     };
 
     const updateStatusSafe = async () => {
+          dispatch(Refresh("Please Wait Updating Notification Status "));
       const res = await UpdateNotificationType(info?.HCPId || info?.ReferalId, action);
+      if(res){
+          dispatch(Refresh("Notification Status Updated Sucessfully"));
+      }
       if (!res?.success) throw new Error("Notification update failed");
     };
 
@@ -111,8 +115,8 @@ export default function NotificationsCenter() {
 
 
         if (action === "Approved" && info?.Type === "Attendance Edit Request") {
-      console.log("Check Attendece Information-------",info)
-   
+      
+   dispatch(Refresh("Please Wait Updating Attendece......."));
       
           if (info.UserAttendeceType === "ClientAttendece") {
             const payload = {
@@ -120,11 +124,13 @@ export default function NotificationsCenter() {
               HCA_Id: info.HCPId,
               Client_Name: info.ClientName,
               HCA_Name: info.HCPName,
-              date: info,
+              date: info.flexDate,
               status: info,
             };
-            const SearchYear = info.yearMonth.slice(0, 5)
-            const SearchMonth = info.yearMonth.slice(5, info.yearMonth.length)
+          
+            const yearMonth = info.yearMonth; 
+const [SearchYear, SearchMonth] = yearMonth.split("-");
+            console.log("Check Client Information------",info)
             const dateResponse = await UpdateClientAttendanceStatus(
               SearchYear,
               SearchMonth,
@@ -132,14 +138,19 @@ export default function NotificationsCenter() {
               loggedInEmail,
               info.Reason
             );
-
+console.log("Check Status------",dateResponse.message)
             if(dateResponse.success){
                    updateStatusSafe();
             dispatch(Refresh("Attendance update Successfully."));
             }
+            else{
+              
+                  dispatch(Refresh(dateResponse.message));
+            }
             return
           }
          if(info.UserAttendeceType!=="ClientAttendece"){
+          console.log("Check Attendece Information-------",info)
            const response = await EditAttendanceByClientId(
             info?.ClientId,
             info?.HCPId,
@@ -150,7 +161,7 @@ export default function NotificationsCenter() {
             info?.flexDate,
             info?.status,
             loggedInEmail,
-            ""
+            info.Reason
           );
 
        

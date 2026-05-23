@@ -1616,8 +1616,8 @@ User:any
 
     const payload = {
       ClientId: ClientInfo.Client_Id,
-      ClientName: ClientInfo.name,
-      Message: `Attendece Update Request for ${ClientInfo.name}. On ${ClientInfo.flexDate} to ${ ClientInfo.status}. Reason: ${Reason}. Requested by ${From}.`,
+      ClientName: ClientInfo.name||ClientInfo.Client_Name,
+      Message: `Attendece Update Request for ${ClientInfo.name||ClientInfo.Client_Name}. On ${ClientInfo.flexDate} to ${ ClientInfo.status}. Reason: ${Reason}. Requested by ${From}.`,
       HCPName: ClientInfo.HCA_Name,
       HCPId: ClientInfo.HCA_Id,    
       yearMonth: ClientInfo.yearMonth,
@@ -1663,7 +1663,7 @@ export const UpdateNotificationType = async (
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Notifications");
 
-  const result = await collection.updateOne(
+  const result = await collection.updateMany(
   {
     $or: [
       { HCPId: ImpHCPId },
@@ -3213,7 +3213,7 @@ type AttendanceUpdateRequest = {
   Client_Name: string;
   HCA_Name?: string;
   date: string | Date;
-  status: string;
+  status: any;
 };
 
 type UpdateResponse = {
@@ -3278,7 +3278,7 @@ export const UpdateClientAttendanceStatus = async (
     const collection = db.collection("Deployment");
 
     const monthKey = `${selectedYear}-${Number(selectedMonth)}`;
-
+console.log("Check Month----",monthKey)
     const deploymentRecords = await collection
       .find({
         Month: monthKey,
@@ -3326,7 +3326,7 @@ export const UpdateClientAttendanceStatus = async (
         missingDeploymentClients.push(attendance.Client_Name);
         continue;
       }
-
+console.log("Check Attendece Info------",attendance)
       const selectedDateKey = getDateKey(attendance.date);
 
       const existingAttendance = Array.isArray(matchedRecord.ClientAttendance)
@@ -3340,12 +3340,17 @@ export const UpdateClientAttendanceStatus = async (
             return entryDateKey === selectedDateKey;
           })
         : null;
-
+const normalizedStatus =
+  typeof attendance.status === "object" &&
+  attendance.status !== null &&
+  "status" in attendance.status
+    ? attendance.status.status
+    : attendance.status;
       if (!existingAttendance) {
         attendanceNotFoundClients.push(attendance.Client_Name);
         continue;
       }
-console.log("Check Attendece Status------",attendance.status)
+
       bulkOperations.push({
         updateOne: {
           filter: {
@@ -3353,11 +3358,11 @@ console.log("Check Attendece Status------",attendance.status)
           },
           update: {
             $set: {
-              "ClientAttendance.$[elem].Status": attendance.status,
+              "ClientAttendance.$[elem].Status": normalizedStatus,
               "ClientAttendance.$[elem].UpdatedAt": new Date(),
               "ClientAttendance.$[elem].UpdatedBy": logInUser || "Admin",
               "ClientAttendance.$[elem].Reason":
-                attendance.status !== "Present" ? reason : "",
+                normalizedStatus !== "Present" ? reason : "",
               "ClientAttendance.$[elem].dateKey": selectedDateKey,
               UpdatedAt: new Date(),
               UpdatedBy: logInUser || "Admin",
@@ -5846,6 +5851,100 @@ export const UpdateUserCurrentstatus = async (
     return {
       success: false,
       message: "Failed to update user current status",
+    };
+  }
+};
+export const updateExpense = async (
+  userId: string,
+  expensesInfo: string,
+  importedEmail: string,
+  Transactions: any[]
+) => {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        message: "User ID is required",
+      };
+    }
+
+    if (!expensesInfo) {
+      return {
+        success: false,
+        message: "Expenses information is required",
+      };
+    }
+
+    if (!importedEmail) {
+      return {
+        success: false,
+        message: "Imported email is required",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const completeCollection = db.collection("CompliteRegistrationInformation");
+
+    const result = await completeCollection.updateOne(
+      {
+        "HCAComplitInformation.UserId": userId,
+      },
+      {
+        $set: {
+          "HCAComplitInformation.DueAmounts": expensesInfo,
+          "HCAComplitInformation.LastDueAmountsUpdatedBy": importedEmail,
+          "HCAComplitInformation.LastDueAmountsUpdatedAt": new Date(),
+        },
+        $push: {
+          "HCAComplitInformation.Transactions": {
+            $each: Transactions,
+          }as any,
+        },
+        $setOnInsert: {
+          "HCAComplitInformation.UserId": userId,
+          createdAt: new Date(),
+        },
+      },
+      {
+        upsert: true,
+      }
+    );
+
+    if (result.upsertedCount > 0) {
+      return {
+        success: true,
+        message: "Expense record created successfully",
+      };
+    }
+
+    if (result.modifiedCount > 0) {
+      return {
+        success: true,
+        message: "Expense updated successfully",
+      };
+    }
+
+    if (result.matchedCount > 0) {
+      return {
+        success: true,
+        message: "No changes detected",
+      };
+    }
+
+    return {
+      success: false,
+      message: "Failed to update expense",
+    };
+  } catch (error) {
+    console.error("updateExpense error:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    return {
+      success: false,
+      message: "Internal server error while updating expense",
     };
   }
 };
