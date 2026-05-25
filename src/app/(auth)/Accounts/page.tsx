@@ -13,6 +13,7 @@ import { LoadingData } from "@/Components/Loading/page";
 import { GetAllUsersData, updateExpense } from "@/Lib/user.action";
 import { getDaysInMonth } from "@/Lib/Actions";
 import PopupToast from "@/Components/ExpencesPopUp/page";
+import axios from "axios";
 
 type Transaction = {
   id: string;
@@ -453,6 +454,14 @@ console.log("Check Information------",DeployInformation)
   );
 
   if(UpdatingExpenses.success){
+     const res:any=await axios.post("/api/Slack", {
+  userIds: ["U0992KS6811", "U04RYNQJJF7"],
+  isHighlight: true,
+  message: {
+    title: "New Expence/Incentive Updated",
+    body: `Expense/incentive records have been updated for ${row.HCAName} the latest changes`,
+  },
+});
  setPopup({
         isOpen: true,
         message: "Payment Record Posted successfully!",

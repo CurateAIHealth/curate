@@ -167,6 +167,7 @@ export default function Dashboard() {
     registeredUsers: "Loading...",
     timesheetcount: 'Loading....',
     ReferalCount: "0",
+    AccountsCout: "0",
     PaymentCount: "0",
     hcpListCount: "Loading...",
     vendorsCount: "Loading...",
@@ -283,7 +284,7 @@ export default function Dashboard() {
   //     mounted = false;
   //   };
   // }, []);
-
+console.log ("Check for Log in Mail--------",loggedInEmail)
   useEffect(() => {
     if (ImportedInformationOfCallEnquiry) {
 
@@ -300,56 +301,37 @@ export default function Dashboard() {
      
     }
   }, [ImportedInformationOfCallEnquiry]);
-  const run = useCallback(async () => {
-    const userId = localStorage.getItem("UserId");
+const run = useCallback(async () => {
+  const userId = localStorage.getItem("UserId");
+  let currentEmail = null;
 
-    if (userId) {
-      const user = await GetUserInformation(userId);
+  if (userId) {
+    const user = await GetUserInformation(userId);
 
-      if (user?.Email) {
-        dispatch(CurrentLoginUser(user.Email));
-        SetProfileName(user.FirstName);
-        SetPasswordValues(user?.PasswordValue);
-      }
+    if (user?.Email) {
+      currentEmail = user.Email;
+      dispatch(CurrentLoginUser(user.Email));
+      SetProfileName(user.FirstName);
+      SetPasswordValues(user?.PasswordValue);
+    }
+  }
+
+  try {
+    const [statsRes, benchRes] = await Promise.all([
+      GetDashboardStats(currentEmail),
+      GetUsersFullInfo(),
+    ]);
+
+    if (statsRes?.success) {
+      setStats(statsRes.data);
     }
 
-    try {
-      const [statsRes, benchRes] = await Promise.all([
-        GetDashboardStats(),
-        GetUsersFullInfo(),
-      ]);
-
-      if (statsRes?.success) {
-        setStats(statsRes.data);
-
-        localStorage.setItem(
-          DASHBOARD_CACHE_KEY,
-          JSON.stringify({
-            data: statsRes.data,
-            timestamp: Date.now(),
-          })
-        );
-      }
-
-      const benchUsers =
-        Array.isArray(benchRes) ? benchRes : benchRes?.data ?? [];
-
-      setBenchSource(benchUsers);
-
-      localStorage.setItem(
-        BENCH_CACHE_KEY,
-        JSON.stringify({
-          data: benchUsers,
-          timestamp: Date.now(),
-        })
-      );
-
-      setLoading(false);
-    } catch (error) {
-      console.error("Dashboard Load Error:", error);
-      setLoading(false);
-    }
-  }, [dispatch]);
+    setLoading(false);
+  } catch (error) {
+    console.error(error);
+    setLoading(false);
+  }
+}, [dispatch]);
   useEffect(() => {
     run();
   }, [run, updatedRefreshCount]);
@@ -416,7 +398,7 @@ export default function Dashboard() {
       },
       {
         name: "Accounts",
-        count: stats.PaymentCount,
+        count: stats.AccountsCout,
         icon: Wallet,
         bg: "bg-purple-500",
       },
@@ -1040,7 +1022,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi Admin – Welcome to Admin Dashboard
+              Hi Admin – Welcome to Admin Dashboard.
             </span>
           </div>
 

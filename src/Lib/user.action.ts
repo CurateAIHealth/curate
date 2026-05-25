@@ -6341,8 +6341,9 @@ export const UpdateRemainderTimer = async (UserId: any, NewTime: string, NewDate
 }
 
 
-export const GetDashboardStats = async () => {
+export const GetDashboardStats = async (loggedInEmail:any) => {
   try {
+   
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
 
@@ -6351,6 +6352,7 @@ export const GetDashboardStats = async () => {
     const Invoices = db.collection("Invoices");
     const Timesheet = db.collection("Timesheet");
     const Notifications = db.collection("Notifications");
+    
 
     const now = new Date();
 
@@ -6360,7 +6362,7 @@ export const GetDashboardStats = async () => {
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
 
-    const [users, deployments, invoices, timesheets] = await Promise.all([
+    const [users, deployments, invoices, timesheets,NotificationCount] = await Promise.all([
       Registration.find(
         {},
         { projection: { userType: 1, LeadDate: 1, createdAt: 1 } }
@@ -6379,6 +6381,11 @@ export const GetDashboardStats = async () => {
       Timesheet.find(
         {},
         { projection: { StartDate: 1, PDRStatus: 1 } }
+      ).toArray(),
+      
+   Notifications.find(
+        {},
+        { projection: {Type:1, Status: 1, Date: 1 } }
       ).toArray(),
     ]);
 
@@ -6424,6 +6431,38 @@ export const GetDashboardStats = async () => {
       }
     }
 
+   const allowedEmails = [
+  "shreeshmacurate@gmail.com",
+  "srinivasnew0803@gmail.com",
+  "srivanikasham@curatehealth.in@gmail.com",
+];
+console.log("Test Count",
+  NotificationCount.filter((item: any) => item.Type === "Refund Request")
+);
+const NotificationCountFilter = NotificationCount.filter(
+  (item: any) =>
+    item.Status?.trim() === "Pending" &&
+    (
+      item.Type === "LEAVE_REQUEST" ||
+      item.Type === "New Referral Request" ||
+      (item.Type === "HCP Salary Request" &&
+        loggedInEmail === "kirancuratehealth@gmail.com") ||
+      (item.Type === "New Call Enquiry" &&
+        item.NotifyEmploys?.includes(loggedInEmail)) ||
+      item.Type === "EXPENSE_REQUEST" ||
+      (
+        (item.Type === "Refund Request" || item.Type === "New Call Enquiry" ||
+
+          item.Type === "Attendance Edit Request") &&
+        [
+          "shreeshmacurate@gmail.com",
+          "srinivasnew0803@gmail.com",
+          "srivanikasham@curatehealth.in@gmail.com",
+        ].includes(loggedInEmail?.trim())
+      )
+    )
+).length;
+console.log("Check for Count of Dashboard----",NotificationCountFilter)
     const deployedUnique = deployments.filter((i: any) => {
       if (!i?.StartDate || !i?.ClientId) return false;
 
@@ -6471,7 +6510,8 @@ export const GetDashboardStats = async () => {
         timesheetcount: deployedUnique.length,
         pendingPdrCount: pendingPdr,
         documentComplianceCount: 0,
-        Notifications: 0,
+        Notifications:NotificationCountFilter,
+        AccountsCout:deployedUnique.length,
         Employs: 0,
       },
     };
