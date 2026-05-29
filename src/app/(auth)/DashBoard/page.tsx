@@ -39,6 +39,7 @@ import {
   Refresh,
   Update_Main_Filter_Status,
   UpdateClient,
+  UpdatedDashBoardNumbers,
   UpdateRefresh,
   UpdateTimeStamp,
   UpdateUserInformation,
@@ -52,7 +53,7 @@ import { CallEnquiryRegistration, GetDashboardStats, GetDeploymentInfo, GetInvoi
 
 
 import { UserCheck } from "lucide-react";
-import { filterColors, Health_Card, healthcareServices, healthcareServicesforCallEnquiry, hyderabadAreas, hyderabadAreasforcallEnquiry, IndianLanguages, LeadSources, sectionItems, StaffEmails } from "@/Lib/Content";
+import { filterColors, Health_Card, healthcareServices, healthcareServicesforCallEnquiry, hyderabadAreas, hyderabadAreasforcallEnquiry, IndianLanguages, LeadSources, sectionItems, StaffEmails, TAB_ACCESS_CONTROL } from "@/Lib/Content";
 
 import PermissionDeniedPopup from "@/Components/Permission/page";
 import ProfileDrawer from "@/Components/ProfileView/page";
@@ -64,6 +65,7 @@ import { tr } from "framer-motion/client";
 import ReferralPopup from "@/Components/ReferalPopup/page";
 import { title } from "process";
 import SubheadingPop from "@/Components/Sunheading/page";
+import SessionExpiredPopup from "@/Components/LoginSesion/page";
 
 const DOCUMENT_KEYS = [
   "AadharAttachmentURL",
@@ -85,6 +87,7 @@ export default function Dashboard() {
   const updatedRefreshCount = useSelector((afterEach: any) => afterEach.updatedCount);
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
   const [OtherArea, setOtherArea] = useState<any>("")
+  const [LoginEmailPop,setLoginEmailPop]=useState(false)
   const [ShowSideHeadingsPopuo,setShowSideHeadingsPopuo]=useState(false)
   const [showReferalPopup, setshowReferalPopup] = useState(false)
   const [NotificationStatus, setNotificationStatus] = useState('')
@@ -163,23 +166,8 @@ export default function Dashboard() {
   const [DiscountPrice, setDiscountPrice] = useState<any>(1500)
   const [UserPasswordValues, SetPasswordValues] = useState()
   const [ClientDiscount, SetClientDiscount] = useState<any>(0)
-  const [stats, setStats] = useState<any>({
-    registeredUsers: "Loading...",
-    timesheetcount: 'Loading....',
-    ReferalCount: "0",
-    AccountsCout: "0",
-    PaymentCount: "0",
-    hcpListCount: "Loading...",
-    vendorsCount: "Loading...",
-    hostelAttendanceCount: "Loading...",
-    registrationCount: "Loading...",
-    invoiceCount: "Loading...",
-    deployedLength: "Loading...",
-    pendingPdrCount: "Loading...",
-    documentComplianceCount: "Loading...",
-    Notifications: "Loading...",
-    Employs: "Loading..."
-  });
+
+  const stats=useSelector((state:any)=>state.DashBoardCount)
 
   const DASHBOARD_CACHE_KEY = "dashboardStats";
   const CACHE_TTL = 20 * 60 * 1000;
@@ -323,7 +311,8 @@ const run = useCallback(async () => {
     ]);
 
     if (statsRes?.success) {
-      setStats(statsRes.data);
+   
+      dispatch(UpdatedDashBoardNumbers(statsRes.data))
     }
 
     setLoading(false);
@@ -384,18 +373,8 @@ const run = useCallback(async () => {
         icon: Calendar,
         bg: "bg-pink-500",
       },
-      {
-        name: "Timesheet",
-        count: stats.timesheetcount,
-        icon: User,
-        bg: "bg-green-500",
-      },
-      {
-        name: "Payments",
-        count: stats.ReferalCount,
-        icon: IndianRupee,
-        bg: "bg-orange-500",
-      },
+      
+     
       {
         name: "Accounts",
         count: stats.AccountsCout,
@@ -438,12 +417,7 @@ const run = useCallback(async () => {
         icon: FileText,
         bg: "bg-fuchsia-500",
       },
-      {
-        name: "Invoices",
-        count: stats.invoiceCount,
-        icon: ReceiptIndianRupee,
-        bg: "bg-lime-500",
-      },
+     
       {
         name: "Notifications",
         count: stats.Notifications,
@@ -765,87 +739,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
   //       return;
   //   }
   // };
-  const TAB_ACCESS_CONTROL: Record<string, string[]> = {
-    "Call Enquiry": [
-      "tsiddu805@gmail.com",
-      "info@curatehealth.in",
-    ],
 
-    "Deployment": [
-      "tsiddu805@gmail.com",
-      "panducurate@gmail.com",
-      "srivanikasham@curatehealth.in",
-    ],
-
-    "Timesheet": [
-      "panducurate@gmail.com",
-      "srivanikasham@curatehealth.in",
-    ],
-
-    "Referral Pay": [
-      "info@curatehealth.in",
-    ],
-
-    "Payments": [
-      "info@curatehealth.in",
-      "tsiddu805@gmail.com",
-      "panducurate@gmail.com",
-      "srivanikasham@curatehealth.in",
-    ],
-
-    "HCP List": [
-      "sravanthicurate@gmail.com",
-    ],
-
-    "Pending PDR": [
-      "gouricurate@gmail.com",
-
-    ],
-
-    "Vendors": [
-      "kirancuratehealth@gmail.com",
-    ],
-
-    "Training": [
-      "info@curatehealth.in",
-    ],
-
-    "Document Compliance": [
-      "info@curatehealth.in",
-    ],
-
-    "Registration": [
-      "tsiddu805@gmail.com",
-    ],
-
-    "Invoices": [
-      "rpandu823@gmail.com",
-    ],
-
-    "Notifications": [
-      "info@curatehealth.in",
-      "kirancuratehealth@gmail.com"
-    ],
-
-    "Hostel Attendance": [
-      "srinivasnew0803@gmail.com",
-    ],
-
-    "Employees": [
-      "info@curatehealth.in",
-    ],
-
-    ALL: [
-      "tsiddu805@gmail.com",
-      "admin@curatehealth.in",
-      "sravanthicurate@gmail.com",
-      "srinivasnew0803@gmail.com",
-      "srivanikasham@curatehealth.in",
-      "info@curatehealth.in",
-      "gouricurate@gmail.com",
-      "shreeshmacurate@gmail.com"
-    ],
-  };
 
   const canAccessTab = useCallback(
     (tab: string, email: string | null) => {
@@ -860,7 +754,11 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
 
   const Switching = (name: string) => {
 
-    if (!loggedInEmail) return;
+    if (!loggedInEmail){
+      setLoginEmailPop(true)
+ return;
+    }
+      
 
     if (!canAccessTab(name, loggedInEmail)) {
       setShowPermissionPopup(true);
@@ -910,7 +808,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
         break;
 
          case "Accounts":
-        router.push("/Accounts");
+        router.push("/SubAccountings");
         break;
 
       case "Notifications":
@@ -1022,7 +920,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi Admin – Welcome to Admin Dashboard 
+              Hi Admin – Welcome to Admin Dashboard.
             </span>
           </div>
 
@@ -1250,7 +1148,17 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
           ProfileEmail={loggedInEmail}
           Designation="Developer"
         />
-
+        <SessionExpiredPopup
+          isOpen={LoginEmailPop}
+          logoSrc="/Icons/Curate-logoq.png"
+          onClose={() => setLoginEmailPop(false)}
+          onRefresh={() => window.location.reload()}
+          onLoginAgain={() => {
+            localStorage.removeItem("UserId");
+            setShowProfileOptions(false); router.push("/login")
+          }
+          }
+        />
 
         {AttendeceView && (
           <div

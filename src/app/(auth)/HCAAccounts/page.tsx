@@ -587,7 +587,7 @@ const handleChange = (
 
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-[#0f172a]">
-              ACCOUNTS
+             HCA  ACCOUNTS
             </h1>
             <p className="text-sm text-[#64748b]">
               Payroll Management Dashboard
@@ -596,17 +596,7 @@ const handleChange = (
         </div>
 
         <div className="flex flex-wrap gap-3 w-full justify-end">
-          <button
-            onClick={() => setActive("clients")}
-            className={`h-11 px-5 rounded-2xl text-white cursor-pointer font-semibold flex items-center justify-center gap-2 ${
-              active === "clients"
-                ? "bg-gradient-to-br from-[#00A9A5] to-[#005f61]"
-                : "bg-[#0f172a]"
-            }`}
-          >
-            <Users size={16} />
-            Clients
-          </button>
+         
 
           <button
             onClick={() => setActive("hca")}
@@ -680,8 +670,8 @@ const handleChange = (
 
     <div className="w-full bg-white rounded-2xl shadow-md overflow-hidden">
       {showFullMonth && (
-  <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2">
-    <div className="bg-white w-[98vw] h-[96vh] rounded-xl shadow-xl overflow-hidden flex flex-col">
+  <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-2">
+    <div className="bg-white w-[70vw] h-[96vh] rounded-xl shadow-xl overflow-hidden flex flex-col">
       {(() => {
         const attendanceSummary = attendanceInfo.attendanceInfo?.reduce(
           (acc: any, att: any) => {
