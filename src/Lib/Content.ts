@@ -2693,3 +2693,85 @@ export  const ImportedinvoiceData = {
       },
     ],
   };
+
+    export const TAB_ACCESS_CONTROL: Record<string, string[]> = {
+      "Call Enquiry": [
+        "tsiddu805@gmail.com",
+        "info@curatehealth.in",
+      ],
+  
+      "Deployment": [
+        "tsiddu805@gmail.com",
+        "panducurate@gmail.com",
+        "srivanikasham@curatehealth.in",
+      ],
+  
+      "Timesheet": [
+        "panducurate@gmail.com",
+        "srivanikasham@curatehealth.in",
+      ],
+  
+      "Referral Pay": [
+        "info@curatehealth.in",
+      ],
+  
+      "Payments": [
+        "info@curatehealth.in",
+        "tsiddu805@gmail.com",
+        "panducurate@gmail.com",
+        "srivanikasham@curatehealth.in",
+      ],
+  
+      "HCP List": [
+        "sravanthicurate@gmail.com",
+      ],
+  
+      "Pending PDR": [
+        "gouricurate@gmail.com",
+  
+      ],
+  
+      "Vendors": [
+        "kirancuratehealth@gmail.com",
+      ],
+  
+      "Training": [
+        "info@curatehealth.in",
+      ],
+  
+      "Document Compliance": [
+        "info@curatehealth.in",
+      ],
+  
+      "Registration": [
+        "tsiddu805@gmail.com",
+      ],
+  
+      "Invoices": [
+        "rpandu823@gmail.com",
+      ],
+  
+      "Notifications": [
+        "info@curatehealth.in",
+        "kirancuratehealth@gmail.com"
+      ],
+  
+      "Hostel Attendance": [
+        "srinivasnew0803@gmail.com",
+      ],
+  
+      "Employees": [
+        "info@curatehealth.in",
+      ],
+  
+      ALL: [
+        "tsiddu805@gmail.com",
+        "admin@curatehealth.in",
+        "sravanthicurate@gmail.com",
+        "srinivasnew0803@gmail.com",
+        "srivanikasham@curatehealth.in",
+        "info@curatehealth.in",
+        "gouricurate@gmail.com",
+        "shreeshmacurate@gmail.com"
+      ],
+    };

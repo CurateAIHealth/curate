@@ -334,3 +334,28 @@ export const CallEnquiryInformationfromNotification=(state:any=null,action:any)=
                 return state    
     }
 }
+
+export const Counts=(state:any={
+    registeredUsers: "Loading...",
+    timesheetcount: 'Loading....',
+    ReferalCount: "0",
+    AccountsCout: "0",
+    PaymentCount: "0",
+    hcpListCount: "Loading...",
+    vendorsCount: "Loading...",
+    hostelAttendanceCount: "Loading...",
+    registrationCount: "Loading...",
+    invoiceCount: "Loading...",
+    deployedLength: "Loading...",
+    pendingPdrCount: "Loading...",
+    documentComplianceCount: "Loading...",
+    Notifications: "Loading...",
+    Employs: "Loading..."
+  },action:any)=>{
+switch(action.type){
+case "UpdatedCount":
+return action.payload;
+default:
+    return state
+}
+}

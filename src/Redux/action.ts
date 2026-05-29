@@ -238,6 +238,13 @@ export const CurrrentPDRUserId=(FilledIserId:any)=>{
     }
 }
 
+export const UpdatedDashBoardNumbers=(UpdatedCounts:any)=>{
+    return{
+        type:"UpdatedCount",
+        payload:UpdatedCounts
+    }
+}
+
 export const UpdateCallEnquiryInformation=(CallEnquiryInformation:any)=>{
     return{
         type:"UpdateCallEnquiryInformation",
