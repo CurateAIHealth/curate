@@ -1375,8 +1375,8 @@ className={`
 </div>
 {showFullMonth && (
 <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2">
-  <div className="bg-white w-[98vw] h-[96vh] rounded-xl shadow-xl overflow-hidden flex flex-col">
-    <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+  <div className="bg-white w-[60vw] h-[76vh] rounded-xl shadow-xl overflow-hidden flex flex-col">
+    <div className="flex items-center justify-between px-4 py-3  shrink-0">
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-xl flex items-center justify-center shadow">
           <img
@@ -1427,16 +1427,20 @@ className={`
           return (
             <div
               key={i}
-              className="rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 min-h-0"
+              className=" rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 "
             >
               <span className="text-[10px] font-semibold text-gray-500 uppercase">
-                Day {i + 1}
+                Day {i + 1} 
               </span>
 
               {dayStatus === "-" ? (
                 <>
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center mt-1">
-                    <span className="text-gray-400 text-sm">—</span>
+                  <div className=" rounded-full bg-gray-100 flex items-center justify-center mt-1">
+                     <span
+                className={`text-[8px] w-fit font-medium font-semibold px-2 py-1 rounded bg-gray-300 text-gray-500 border-gray-300`}
+              >
+             Not Marked
+              </span>
                   </div>
 
                   <span className="text-[8px] text-gray-400 truncate max-w-[70px]">
@@ -1459,7 +1463,7 @@ className={`
                         : "bg-slate-700 text-white hover:bg-slate-800"
                     }`}
                   >
-                    Update
+                    Update 
                   </button>
                 </>
               ) : (

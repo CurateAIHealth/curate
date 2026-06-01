@@ -1,4 +1,5 @@
 "use client"
+import SessionExpiredPopup from "@/Components/LoginSesion/page";
 import PermissionDeniedPopup from "@/Components/Permission/page";
 import { TAB_ACCESS_CONTROL } from "@/Lib/Content";
 import { Update_Main_Filter_Status, UpdateUserType } from "@/Redux/action";
@@ -19,6 +20,7 @@ import { useDispatch, useSelector } from "react-redux";
 export default function AccountingSub(){
       const stats=useSelector((state:any)=>state.DashBoardCount)
         const [showPermissionPopup, setShowPermissionPopup] = useState(false);
+          const [LoginEmailPop,setLoginEmailPop]=useState(false)
           const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
         const router = useRouter()
         const dispatch=useDispatch()
@@ -86,7 +88,10 @@ export default function AccountingSub(){
 
        const Switching = (name: string) => {
       
-          if (!loggedInEmail) return;
+         if (!loggedInEmail){
+      setLoginEmailPop(true)
+ return;
+    }
       
           if (!canAccessTab(name, loggedInEmail)) {
             setShowPermissionPopup(true);
@@ -132,6 +137,18 @@ export default function AccountingSub(){
                case "Accounts":
               router.push("/Accounts");
               break;
+
+              case "Payment Complete Accounting":
+                router.push("/Payable");
+                break;
+                 case "Reject List":
+                router.push("/RejectPayments");
+                break;
+      
+                 case "Successful Payments":
+                router.push("/SuccessfulPayments");
+                break;
+      
       
             case "Notifications":
               router.push("/Notifications");
@@ -187,6 +204,17 @@ export default function AccountingSub(){
     </div>
   </div>
 </div>
+  <SessionExpiredPopup
+          isOpen={LoginEmailPop}
+          logoSrc="/Icons/Curate-logoq.png"
+          onClose={() => setLoginEmailPop(false)}
+          onRefresh={() => window.location.reload()}
+          onLoginAgain={() => {
+            localStorage.removeItem("UserId");
+           router.push("/login")
+          }
+          }
+        />
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
                     
                       <PermissionDeniedPopup

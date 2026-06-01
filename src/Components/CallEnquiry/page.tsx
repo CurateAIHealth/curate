@@ -506,7 +506,7 @@ text-left
     <span>S.No</span>
     <span className="text-center">Date</span>
     <span>Lead Source</span>
-    <span>Client Name</span>
+    <span>Client </span>
     <span>Phone</span>
     <span className="text-center">Status</span>
     <span>Location</span>

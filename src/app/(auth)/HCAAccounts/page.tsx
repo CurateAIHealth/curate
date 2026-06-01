@@ -697,7 +697,7 @@ const handleChange = (
 
         return (
           <>
-            <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+            <div className="flex items-center justify-between px-4 py-3  shrink-0">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl flex items-center justify-center shadow">
                   <img
@@ -734,7 +734,7 @@ const handleChange = (
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 px-4 py-3 border-b bg-gray-50 shrink-0">
+            <div className="grid grid-cols-3 gap-3 px-4 py-3 bg-gray-50 shrink-0">
               <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-center">
                 <p className="text-xs text-green-600 font-medium">
                   Present Days
@@ -802,9 +802,11 @@ const handleChange = (
 
                       {dayStatus === "-" ? (
                         <>
-                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center mt-1">
-                            <span className="text-gray-400 text-sm">—</span>
-                          </div>
+                          <span
+                            className={`text-[8px] w-fit font-medium font-semibold px-2 py-1 rounded bg-gray-300 text-gray-500 border-gray-300`}
+                          >
+                            Not Marked
+                          </span>
 
                           <span className="text-[8px] text-gray-400 truncate max-w-[70px]">
                             {clientName}
@@ -855,7 +857,7 @@ const handleChange = (
           <thead>
             <tr className="text-white text-sm">
                <th className="bg-teal-600 p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">S No</th>
-              <th className="bg-teal-600 p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">HCA Name</th>
+              <th className="bg-teal-600 p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">HCA </th>
                             <th className="bg-teal-600 p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">TimeSheet</th>
               <th className="bg-teal-600 p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">Payment</th>
               <th className="bg-red-600 p-4 text-left">Advance</th>
