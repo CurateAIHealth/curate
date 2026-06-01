@@ -1726,7 +1726,7 @@ setShowCareTakerPriceUpdate(false)
     <th className="w-10 px-2 py-2 text-left">S.No</th>
 
     <th className="min-w-[90px] max-w-[140px] px-2 py-2 text-left truncate">
-      Client Name
+      Client 
     </th>
 
     <th className="w-[90px] px-2 py-2 text-left">
@@ -1742,7 +1742,7 @@ setShowCareTakerPriceUpdate(false)
     </th>
 
     <th className="min-w-[120px] max-w-[150px] px-2 py-2 text-left truncate">
-      Patient Name
+      Patient 
     </th>
 
     <th className="w-[120px] px-2 py-2 text-left">
@@ -1754,7 +1754,7 @@ setShowCareTakerPriceUpdate(false)
     </th>
 
     <th className="min-w-[100px]  px-2 py-2 text-center truncate">
-      HCP Name
+      HCP 
     </th>
 
     <th className="w-[120px] px-2 py-2 text-center">
@@ -3125,17 +3125,14 @@ console.log("Check Info-----",record)
           return (
             <div
               key={day}
-              className="rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 min-h-0"
+              className="rounded-lg w-[95px] border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 min-h-0"
             >
               <span className="text-[10px] font-semibold text-gray-500 uppercase">
-                Day {day}
+                Day {day} 
               </span>
 
-              <span
-                className={`text-[10px] font-medium font-semibold px-2 py-1 rounded ${statusColor}`}
-              >
-                {currentStatus}
-              </span>
+           
+              <DayBadge status={currentStatus as DayStatus} />
 
               {record?.HCA_Name && (
                 <span className="text-[8px] text-gray-800 mt-1">
@@ -3392,18 +3389,18 @@ const AwaitingInvoiceCount = FinelTimeSheet
   }).length;
 
   console.log("AwaitingInvoiceCount", AwaitingInvoiceCount);
-function DayBadge({ status }: { status: DayStatus }) {
+function DayBadge({ status }: { status: any }) {
   const Wrapper = ({ children }: any) => (
     <div className="flex items-center justify-center w-full">
       {children}
     </div>
   );
 
-  if (status === "P") {
+  if (status === "Present") {
     return (
       <Wrapper>
         <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 text-emerald-600 bg-white shadow-sm">
-          {status}
+          {status==="Present"&&"P"}
         </span>
       </Wrapper>
     );
@@ -3420,23 +3417,25 @@ function DayBadge({ status }: { status: DayStatus }) {
     );
   }
 
-  if (status === "A") {
+  if (status === "Absent") {
     return (
       <Wrapper>
         <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-rose-600 text-rose-600 bg-white shadow-sm">
-          {status}
+          {status==="Absent"&&"A"}
         </span>
       </Wrapper>
     );
   }
 
-  if (status === "NA") {
+  if (status === "Not Marked") {
     return (
-      <Wrapper>
-        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-gray-500 text-gray-600 bg-white shadow-sm">
-          {status}
-        </span>
-      </Wrapper>
+    
+      <span
+        className={`text-[8px] w-fit font-medium font-semibold px-2 py-1 rounded bg-gray-300 text-gray-500 border-gray-300`}
+      >
+        Not Marked
+      </span>
+
     );
   }
 
@@ -3521,5 +3520,60 @@ function Th({ children, className = "" }: any) {
 function Td({ children, className = "" }: any) {
   return <td className={`px-3 py-2 whitespace-nowrap ${className}`}>{children}</td>;
 }
+function DayBadge({ status }: { status: DayStatus }) {
+  const Wrapper = ({ children }: any) => (
+    <div className="flex items-center justify-center w-full">
+      {children}
+    </div>
+  );
 
+  if (status === "P") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 text-emerald-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  if (status === "HP") {
+    return (
+      <Wrapper>
+        <div className="relative w-8 h-8 rounded-full border-2 border-emerald-500 overflow-hidden shadow-sm flex items-center justify-center text-[10px] font-semibold text-emerald-600">
+          <div className="absolute left-0 top-0 w-1/2 h-full bg-emerald-500" />
+          <span className="relative z-10">HP</span>
+        </div>
+      </Wrapper>
+    );
+  }
+
+  if (status === "A") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-rose-600 text-rose-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  if (status === "NA") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-gray-500 text-gray-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  return (
+    <Wrapper>
+      <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border border-gray-400 text-gray-500 bg-white shadow-sm">
+        {status}
+      </span>
+    </Wrapper>
+  );
+}
 export default ClientTable;

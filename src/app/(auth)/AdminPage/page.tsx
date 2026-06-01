@@ -953,11 +953,11 @@ const UpdatePopup = async (a: any) => {
                           {UpdateduserType === "healthcare-assistant" &&
                             <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">User type</th>}
                      {UpdateduserType === "healthcare-assistant"&&
-                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">HCP Name</th>}
+                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">HCP </th>}
  {UpdateduserType === "patient" &&
-                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client Name</th>}
+                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client </th>}
                            {UpdateduserType === "patient" &&
-                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Patient Name</th>}
+                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Patient </th>}
                           {/* <th className="px-2 py-2 sm:px-4 sm:py-3 w-[18%]">Email</th> */}
                           <th className="px-2 py-2 w-[12%]">Contact</th>
                           {/* <th className="px-2 py-2 w-[10%]">Role</th>
