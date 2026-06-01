@@ -3396,11 +3396,11 @@ function DayBadge({ status }: { status: any }) {
     </div>
   );
 
-  if (status === "Present") {
+  if (status === "Present"||status === "P") {
     return (
       <Wrapper>
         <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 text-emerald-600 bg-white shadow-sm">
-          {status==="Present"&&"P"}
+          {status === "Present"||status === "P"&&"P"}
         </span>
       </Wrapper>
     );
@@ -3417,11 +3417,11 @@ function DayBadge({ status }: { status: any }) {
     );
   }
 
-  if (status === "Absent") {
+  if (status === "Absent"||status === "A") {
     return (
       <Wrapper>
         <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-rose-600 text-rose-600 bg-white shadow-sm">
-          {status==="Absent"&&"A"}
+          {status==="Absent"||status === "A"&&"A"}
         </span>
       </Wrapper>
     );
@@ -3520,14 +3520,14 @@ function Th({ children, className = "" }: any) {
 function Td({ children, className = "" }: any) {
   return <td className={`px-3 py-2 whitespace-nowrap ${className}`}>{children}</td>;
 }
-function DayBadge({ status }: { status: DayStatus }) {
+function DayBadge({ status }: { status: any }) {
   const Wrapper = ({ children }: any) => (
     <div className="flex items-center justify-center w-full">
       {children}
     </div>
   );
 
-  if (status === "P") {
+  if (status === "P" || status === "Present") {
     return (
       <Wrapper>
         <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 text-emerald-600 bg-white shadow-sm">
@@ -3548,7 +3548,7 @@ function DayBadge({ status }: { status: DayStatus }) {
     );
   }
 
-  if (status === "A") {
+  if (status === "A" || status === "Absent") {
     return (
       <Wrapper>
         <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-rose-600 text-rose-600 bg-white shadow-sm">
