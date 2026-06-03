@@ -177,7 +177,7 @@ useEffect(() => {
         hcpPay: Number(record.hcpPay) || 0,
         days: record.Attendance || [],
         CareTakerPrice: record.CareTakerPrice
-  ? `₹${Math.round(
+  ? `${Math.round(
       parseFloat(
         String(record.CareTakerPrice).replace(/[^0-9.]/g, "")
       )
@@ -1679,10 +1679,10 @@ className={`
                 <strong>Pay Terms:</strong> {selectedRecord.payTerms}
               </p>
               <p>
-                <strong>Client Pay:</strong> ₹{selectedRecord.cPay}
+                <strong>Client Pay:</strong> {selectedRecord.cPay}
               </p>
               <p>
-                <strong>HCP Pay:</strong> ₹{selectedRecord.hcpPay}
+                <strong>HCP Pay:</strong> {selectedRecord.hcpPay}
               </p>
             </div>
           </div>

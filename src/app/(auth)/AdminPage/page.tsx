@@ -1485,7 +1485,7 @@ const UpdatePopup = async (a: any) => {
   </div>
 
   <span className="text-[10px] font-semibold text-gray-800">
-    ₹ {UpdatedHCPSalary && SelectedHCPSalaryId === user.userId
+     {UpdatedHCPSalary && SelectedHCPSalaryId === user.userId
         ? UpdatedHCPSalary
         : GetHCPPayment(user.userId)}
   </span>
@@ -1505,7 +1505,7 @@ const UpdatePopup = async (a: any) => {
       <p className="text-[9px] text-gray-500 leading-none mt-1">
         Per day:
         <span className="ml-1 font-semibold text-green-600">
-          ₹{Math.round(Number(GetHCPPayment(user.userId)) / 30)}
+          {Math.round(Number(GetHCPPayment(user.userId)) / 30.41666666666667)}
         </span>
       </p>
     </div>

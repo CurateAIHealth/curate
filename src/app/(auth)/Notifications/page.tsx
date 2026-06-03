@@ -320,7 +320,7 @@ console.log("Check Status------",dateResponse.message)
               {/* <p><b>Service Days:</b> {selectedItem.ServiceDays}</p> */}
               <p><b>Working Days:</b> {selectedItem.WorkingDays}</p>
               <p><b>Refund Days:</b> {selectedItem.RefundDays}</p>
-              <p><b>Amount:</b> ₹{selectedItem.resultAmount}</p>
+              <p><b>Amount:</b> {selectedItem.resultAmount}</p>
               <p><b>Status:</b> {selectedItem.Status}</p>
               <p><b>isProfit:</b> {selectedItem.isProfit ? "Yes" : "No"}</p>
               <div className="flex items-center gap-4 mb-2">

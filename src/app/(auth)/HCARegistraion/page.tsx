@@ -4001,7 +4001,7 @@ form.HusbendContact!=="Not Available"&&
     <p className="text-xs text-gray-600">
       Per day amount:{" "}
       <span className="font-semibold text-green-600">
-        ₹{Math.round(Number(form.PaymentforStaff) / 30)}
+        {Math.round(Number(form.PaymentforStaff) / 30.41666666666667)}
       </span>
     </p>
   )}

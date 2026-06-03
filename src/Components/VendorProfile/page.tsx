@@ -95,7 +95,7 @@ export default function VendorProfileView() {
               Price per Caretaker / Day
             </p>
             <p className="mt-1 text-lg font-bold text-[#ff1493]">
-              ₹ {vendor.pricePerDay}
+               {vendor.pricePerDay}
             </p>
           </div>
         </div>

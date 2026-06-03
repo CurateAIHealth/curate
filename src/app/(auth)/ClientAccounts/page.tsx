@@ -344,7 +344,7 @@ const handleSave = async (
                   />
                 ) : (
                   <span className="inline-flex px-4 py-2 rounded-xl bg-green-50 text-green-700 font-semibold">
-                    ₹{Number(row.payment).toLocaleString()}
+                    {Number(row.payment).toLocaleString()}
                   </span>
                 )}
               </td>
@@ -361,14 +361,14 @@ const handleSave = async (
                   />
                 ) : (
                   <span className="inline-flex px-4 py-2 rounded-xl bg-orange-50 text-orange-600 font-semibold">
-                    ₹{Number(row.refund).toLocaleString()}
+                    {Number(row.refund).toLocaleString()}
                   </span>
                 )}
               </td>
 
               <td className="px-4 py-5 text-center">
                 <span className="inline-flex px-4 py-2 rounded-xl bg-[#00A9A5]/10 text-[#00A9A5] font-bold">
-                  ₹
+                  
                   {(
                     Number(
                       isEditing
@@ -436,7 +436,7 @@ const handleSave = async (
                       <button
                         className="h-10 px-4 rounded-xl bg-green-600 text-white"
                       >
-                        Pay
+                        Send 
                       </button>
                     </>
                   )}

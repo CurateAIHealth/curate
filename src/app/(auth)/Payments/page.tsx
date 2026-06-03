@@ -186,30 +186,30 @@ const Router=useRouter()
                 <td className="text-center">{p.month}</td>
 
                 <td className="text-center">
-                  ₹{p.salary.toLocaleString()}
+                  {p.salary.toLocaleString()}
                 </td>
 
                 <td className="text-center text-red-600">
-                  ₹{p.hostelCharge.toLocaleString()}
+                  {p.hostelCharge.toLocaleString()}
                 </td>
 <td className="text-center font-semibold text-gray-700">
   {p.hostelDays}
 </td>
 
                 <td className="text-center text-amber-600">
-                  ₹{p.advancePaid.toLocaleString()}
+                  {p.advancePaid.toLocaleString()}
                 </td>
 
                 <td className="text-center font-bold text-[#50c896]">
-                  ₹{p.netPayable.toLocaleString()}
+                  {p.netPayable.toLocaleString()}
                 </td>
 
                 <td className="text-center text-[#1392d3]">
-                  ₹{p.margin.toLocaleString()}
+                  {p.margin.toLocaleString()}
                 </td>
 
                 <td className="text-center font-bold">
-                  ₹{p.totalBilling.toLocaleString()}
+                  {p.totalBilling.toLocaleString()}
                 </td>
 
                 <td className="text-center">

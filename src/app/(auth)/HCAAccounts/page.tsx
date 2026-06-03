@@ -10,8 +10,8 @@ import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
-import { GetAllUsersData, updateExpense } from "@/Lib/user.action";
-import { getDaysInMonth } from "@/Lib/Actions";
+import { GetAllUsersData, PostINPayblePage, updateExpense, UpdatePassword, UpdatePaymentVerificationStatusInDb } from "@/Lib/user.action";
+import { AssignSuitableIcon, getDaysInMonth, toProperCaseLive } from "@/Lib/Actions";
 import PopupToast from "@/Components/ExpencesPopUp/page";
 import axios from "axios";
 
@@ -175,6 +175,7 @@ const [attendanceInfo,setAttendenceInfo]=useState<any>()
   
     const fetchData = async () => {
       try {
+
         setIsChecking(true);
    
         if (!isSuccessUpdate && cachedDeploymentInfo?.length > 0) {
@@ -268,6 +269,28 @@ const [attendanceInfo,setAttendenceInfo]=useState<any>()
 
   return matchesSearch && matchesMonth && matchesYear;
 };
+
+   const GetHCPGender = (A: any) => {
+    if (!users?.length || !A) return "Not Entered";
+
+    const address =
+      users
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.['Gender']||"Not Provided";
+
+    return address ?? "Not Entered";
+  };
+
+
+     const GetHCPType = (A: any) => {
+    if (!RegisterdUsers?.length || !A) return "Not Entered";
+
+    const CurrentPreviewUserType:any =
+      RegisterdUsers.filter((each:any)=>each.userId===A)
+
+    return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
+  };
 const GetHCPPayment = (A: any) => {
   if (!users?.length || !A) return 0;
 
@@ -286,7 +309,7 @@ const getExpenseList = (userId: string) => {
   return users.find(
     (each: any) =>
       each?.HCAComplitInformation?.UserId === userId
-  )?.HCAComplitInformation.DueAmounts
+  )?.HCAComplitInformation.MonthlyExpenses
 ;
 };
 
@@ -300,7 +323,7 @@ const getTransactions = (userId: string) => {
 ;
 };
  
-console.log('Fixing the Issues-----',ClientsInformation)
+
 const DeployInformation = ClientsInformation.map((each: any) => {
      const attendanceSummary = each.Attendance.reduce(
           (acc: any, att: any) => {
@@ -325,18 +348,26 @@ const DeployInformation = ClientsInformation.map((each: any) => {
         );
         const Expenses=getExpenseList(each.HCAId)
         const Transactions=getTransactions(each.HCAId)
-       console.log("Check Expence-----",Expenses)
-  return {...each,
-    Clientid:each.ClientId,
+  const MonthlyExpensesInfo =
+  Array.isArray(Expenses)
+    ? Expenses.find(
+        (exp: any) => exp.Month === `${SearchMonth}-${SearchYear}`
+      )
+    : null;
+  return {
+    ...each,
+    Clientid: each.ClientId,
     name: each.HCAName,
-    transactions:Transactions|| [],
-    attendanceInfo:each.Attendance,
-    CompliteAttendeceSummery:attendanceSummary,
-    Expences:Expenses||{
+    transactions: MonthlyExpensesInfo?.Transactions||[],
+    attendanceInfo: each.Attendance,
+    PaymentVerficationStatus:each.PaymentVerificationStatus||"Process",
+    CompliteAttendeceSummery: attendanceSummary,
+    PreviewINPaymentPage:each.PreviewINPaymentPage||"Enabled",
+    Expences: MonthlyExpensesInfo?.DueAmounts[0]||MonthlyExpensesInfo?.DueAmounts || {
       advance: 0,
       hostel: 0,
       other: 0,
-      incentives:0,
+      incentives: 0,
       others: 0,
       advanceDescription: "",
       hostelDescription: "",
@@ -344,8 +375,8 @@ const DeployInformation = ClientsInformation.map((each: any) => {
       incentivesDescription: "",
       othersDescription: "",
     }
-    
-  
+
+
   };
 });
 
@@ -368,7 +399,75 @@ const NumberOfDaysInMonth = getDaysInMonth(
 );
 console.log("Check Information------",DeployInformation)
 
+const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any)=>{
+  setPopup({
+      isOpen: true,
+      message: "Please Wait Updating Payment Status...",
+      type: "loading",
+    });
+  const value = status
+ 
+    const MonthInfo=`${SearchYear}-${SearchMonth}`
+    const UpdatedinDB=await UpdatePaymentVerificationStatusInDb(HCAId,ClientId,value,MonthInfo)
+    console.log("Check Updated Payment Status----",UpdatedinDB)
+    if(UpdatedinDB.success){
+      
+      setData((prev) =>
+      prev.map((item) =>
+        item.HCAId === HCAId    ? { ...item, PaymentVerficationStatus: value }
+        : item
+      )
+    ); 
 
+     setPopup({
+        isOpen: true,
+        message: "Payment Status Updated successfully!",
+        type: "success",
+      });
+    }else{
+        setPopup({
+        isOpen: true,
+        message:UpdatedinDB.message || "Failed to update payment status",
+        type: "error",
+      });
+    }
+    
+  }
+
+  const UpdatePayablePage=async(row:any,totalAmount:any)=>{
+    try{
+       setPopup({
+      isOpen: true,
+      message: "Generating payable page details...",
+      type: "loading",
+    });
+     const MonthInfo=`${SearchYear}-${SearchMonth}`
+     console.log("Check Row Information for Payable Page----",row.ClientId,row.HCAId,MonthInfo)
+    const UpdatedinDB=await PostINPayblePage(row.HCAId,row.ClientId,MonthInfo,row,totalAmount)
+    console.log("Check Updated Payment Status----",UpdatedinDB)
+    if(UpdatedinDB.success){
+      
+      setData((prev) =>
+      prev.map((item) =>
+        item.HCAId ===row. HCAId    ? { ...item, PreviewINPaymentPage: "Disabled" }
+        : item
+      )
+    ); 
+
+     setPopup({
+        isOpen: true,
+        message: UpdatedinDB.message || "Moved to Payable Page successfully!",
+        type: "success",
+      });
+    }else{
+        setPopup({
+        isOpen: true,
+        message: UpdatedinDB.message || "Failed to post payment record",
+        type: "error",
+      });
+    }
+    }catch(err){}
+  }
   const getTotal = (row: PayrollRow) =>
     row.payment -
     row.advance -
@@ -380,7 +479,7 @@ console.log("Check Information------",DeployInformation)
   const formatCurrency = (amount: number,present: any, halfDay: any, absent:any) =>{
     const FullPayment=Number(present)*Number(amount)
     const HalfDayAmount=Number(halfDay)*Number(amount)/2
-    return FullPayment+HalfDayAmount
+     return Math.round(FullPayment + HalfDayAmount);
   };
 
  const handleSave = async (row: PayrollRow) => {
@@ -445,14 +544,15 @@ console.log("Check Information------",DeployInformation)
         : item
     )
   );
-
+console.log("Check loggedInEmail",loggedInEmail)
     const UpdatingExpenses = await updateExpense(
     row.HCAId,
     row.Expences,
     loggedInEmail,
-    newTransactions
+    newTransactions,
+    `${SearchMonth}-${SearchYear}`
   );
-
+console.log("Check Updated Expenses----",UpdatingExpenses)
   if(UpdatingExpenses.success){
      const res:any=await axios.post("/api/Slack", {
   userIds: ["U0992KS6811", "U04RYNQJJF7"],
@@ -467,6 +567,13 @@ console.log("Check Information------",DeployInformation)
         message: "Payment Record Posted successfully!",
         type: "success",
       });
+  }else{  
+     setPopup({
+        isOpen: true,
+        message: UpdatingExpenses.message || "Failed to post payment record",
+        type: "error",
+      });
+  
   }
   
 
@@ -578,37 +685,35 @@ const handleChange = (
   return (
     <div className="w-full min-h-screen bg-[#f4f7fb] p-3 md:p-6 overflow-x-hidden">
       <div className="flex flex-wrap items-center gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <img
+        <div  className="flex items-center gap-4 justify-between w-full">
+        
+
+          <div className="flex items-center gap-4">
+              <img
             src="/Icons/Curate-logoq.png"
             alt="Company Logo"
             className="h-12 w-12 object-contain"
           />
-
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-[#0f172a]">
-             HCA  ACCOUNTS
+         Process
             </h1>
             <p className="text-sm text-[#64748b]">
               Payroll Management Dashboard
             </p>
+            </div>
           </div>
+          <button
+onClick={() => router.push("/SubAccountings")}
+          className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+        >
+          Accounts Dashboard
+        </button>
         </div>
-
+        
         <div className="flex flex-wrap gap-3 w-full justify-end">
          
 
-          <button
-            onClick={() => setActive("hca")}
-            className={`h-11 px-5 rounded-2xl text-white font-semibold cursor-pointer flex items-center justify-center gap-2 ${
-              active === "hca"
-                ? "bg-gradient-to-br from-[#00A9A5] to-[#005f61]"
-                : "bg-[#0f172a]"
-            }`}
-          >
-            <Users size={16} />
-            HCA
-          </button>
 
           <div className="relative min-w-[250px] flex-1 max-w-[350px]">
             <Search
@@ -661,7 +766,7 @@ const handleChange = (
         type={popup.type}
         logo="/Icons/Curate-logoq.png"
         duration={4000}
-        autoClose={true}
+        autoClose={false}
         showProgress={true}
         onClose={() =>
           setPopup((prev) => ({ ...prev, isOpen: false }))
@@ -708,6 +813,7 @@ const handleChange = (
                 </div>
 
                 <div>
+                 
                   <p className="text-[10px] uppercase tracking-[0.2em] text-[#ff1493] font-semibold">
                     {attendanceInfo.HCAName}
                   </p>
@@ -855,50 +961,101 @@ const handleChange = (
 )}
   <table className="w-full table-auto">
           <thead>
-            <tr className="text-white text-sm">
-               <th className="bg-teal-600 p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">S No</th>
-              <th className="bg-teal-600 p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">HCA </th>
-                            <th className="bg-teal-600 p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">TimeSheet</th>
-              <th className="bg-teal-600 p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">Payment</th>
-              <th className="bg-red-600 p-4 text-left">Advance</th>
-              <th className="bg-red-600 p-4 text-left">Hostel</th>
-              <th className="bg-red-600 p-4 text-left">Other</th>
-              <th className="bg-blue-500 p-4 text-left">Incentives</th>
-              <th className="bg-blue-500 p-4 text-left">Others</th>
-              <th className="bg-[#0f172a] w-[250px] p-4 text-center">
+            <tr className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white">
+               <th className=" p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">S No</th>
+              <th className=" p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">HCA </th>
+                            <th className="p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">TimeSheet</th>
+              <th className=" p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">Payment</th>
+              <th className=" p-4 text-left">Advance</th>
+              <th className=" p-4 text-left">Hostel</th>
+              <th className=" p-4 text-left">Other</th>
+              <th className=" p-4 text-left">Incentives</th>
+              <th className="p-4 text-left">Others</th>
+              <th className=" w-[250px] p-4 text-center">
                 Action
               </th>
-              <th className="bg-[#0f172a] p-4 text-left">Total</th>
-              <th className="bg-[#0f172a] p-4 text-center">View</th>
+              <th className=" p-4 text-left">Total</th>
+              <th className=" p-4 text-center">View</th>
             </tr>
           </thead>
 
           <tbody>
-            {data.map((row:any,Ind:any) => {
-
+            {data.filter((row) => row.PreviewINPaymentPage !== "Disabled")
+  .map((row:any,Ind:any) => {
+     
 const PresentDays=row?.CompliteAttendeceSummery.present
 const HalfDays=row?.CompliteAttendeceSummery.halfDay
 const HCPPayment:any=GetHCPPayment(row.HCAId)||0
-              const isEditing = editingRowId === row.Clientid;
+              const isEditing = editingRowId === row.HCAId;
               const MinusItems=Number(row.Expences.advance)+Number(row.Expences.hostel)+Number(row.Expences.other)
               const Additems=Number(row.Expences.others)+Number(row.Expences.incentives)
-         
-console.log("Check for Summery-----",PresentDays,HalfDays)
+         const dailyPayment = formatCurrency(
+  HCPPayment / 30.41666666666667,
+  PresentDays,
+  HalfDays,
+  0
+);
+
+const totalExpenses =
+  Number(row.Expences?.advance || 0) +
+  Number(row.Expences?.hostel || 0) +
+  Number(row.Expences?.other || 0);
+
               return (
                 <tr key={Ind} className="border-b">
                       <td className="p-4 text-center font-semibold">{Ind+1}</td>
-                 <td className="p-2 md:p-4 text-[10px] sm:text-xs md:text-sm break-words font-semibold"> {row.name}</td>
-                  <td className="p-4"><button className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out active:scale-95"
-                  onClick={()=>{
-                    setShowFullMonth(true)
-                    setAttendenceInfo(row)
-                  }}>
-  View 
-</button></td>
+                 <td className="p-2 md:p-4 text-[10px] sm:text-xs md:text-sm break-words font-semibold">  
+
+  <div className="relative flex gap-2 items-center justify-between w-[100px]  group ">
 
  
 
-                  <td className="p-4">{formatCurrency(HCPPayment,PresentDays,HalfDays,0)}</td>
+
+    <span className="hover:underline font-semibold text-xm break-words leading-tight">
+      {toProperCaseLive(row.name)}{row.clientid}
+    </span>
+
+     <img
+      className="h-4 w-4"
+      src={
+        AssignSuitableIcon(
+          GetHCPGender(row.HCAId),
+          GetHCPType(row.HCAId)
+        ).image
+      }
+    />
+    <div
+      className="absolute -top-12 left-1/2 -translate-x-1/2
+                 opacity-0 group-hover:opacity-100
+                 translate-y-2 group-hover:translate-y-0
+                 transition-all duration-300 ease-out
+                 bg-gradient-to-br from-[#00A9A5] to-[#005f61]
+                 text-white text-xs font-medium
+                 px-3 py-2 rounded-xl shadow-xl
+                 whitespace-nowrap pointer-events-none z-50"
+    >
+      {
+        AssignSuitableIcon(
+          GetHCPGender(row.HCAId),
+          GetHCPType(row.HCAId)
+        ).caseType
+      }
+    </div>
+
+  </div>
+
+                 </td>
+                  <td className="p-4"><button className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out active:scale-95"
+                    onClick={() => {
+                      setShowFullMonth(true)
+                      setAttendenceInfo(row)
+                    }}>
+                    View
+                  </button></td>
+
+ 
+
+                  <td className="p-4">{formatCurrency(HCPPayment/30.41666666666667,PresentDays,HalfDays,0)}</td>
 
   {fields.map(([amountField, descField, label]) => (
   <td key={amountField} className="p-3">
@@ -931,6 +1088,12 @@ console.log("Check for Summery-----",PresentDays,HalfDays)
           }
           className="w-full h-10 px-3 border rounded-lg"
         />
+        {["advance", "hostel", "other"].includes(amountField) &&
+  (  Number(row.Expences?.[amountField as keyof PayrollRow["Expences"]] || 0) > dailyPayment || totalExpenses > dailyPayment) && (
+    <div className="text-red-600 text-[10px]">
+    ⚠ Expenses exceed HCA Payment
+    </div>
+)}
       </div>
     ) : (
       <div>
@@ -958,7 +1121,7 @@ console.log("Check for Summery-----",PresentDays,HalfDays)
   Expences: { ...row.Expences },
 },
                             }));
-                            setEditingRowId(row.Clientid);
+                            setEditingRowId(row.HCAId);
                           }
                         }}
                         className={`h-10 px-3 cursor-pointer flex items-center justify-center gap-2 rounded-xl border text-sm font-medium whitespace-nowrap ${
@@ -966,15 +1129,32 @@ console.log("Check for Summery-----",PresentDays,HalfDays)
                             ? "bg-slate-900 text-white border-slate-900"
                             : "bg-white text-slate-900 border-slate-300"
                         }`}
+                        
                       >
                         {isEditing ? "Save" : "Edit"}
                       </button>
-
+<select
+defaultValue={row.PaymentVerficationStatus}
+  className={`px-4 py-2 rounded-xl border border-slate-300 ${row.PaymentVerficationStatus === "Process" ? "bg-pink-300" : "bg-green-500"} text-sm font-medium shadow-sm focus:outline-none focus:ring-2  ${row.PaymentVerficationStatus === "Process" ? "focus:ring-pink-500" : "focus:ring-green-500"}`}
+  onChange={(e) => {
+    UpdatePaymentStatus(row.HCAId,row.Clientid, e.target.value);  
+  }}
+>
+  <option value="Process" >
+    Process
+  </option>
+  <option value="Save" >
+    Save
+  </option>
+</select>
                       <button
-                     
-                        className="h-10 px-3 flex items-center cursor-pointer justify-center gap-2 rounded-xl bg-emerald-600 text-white text-sm font-medium"
+                     disabled={row.PaymentVerficationStatus==="Process"}
+                        className={`h-10 px-3 flex items-center  justify-center gap-2 rounded-xl ${row.PaymentVerficationStatus === "Process" ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-600 cursor-pointer"} text-white text-sm font-medium`}
+                        onClick={() => {
+                          UpdatePayablePage(row,(formatCurrency(HCPPayment,PresentDays,HalfDays,0)+Additems-MinusItems))
+                        }}
                       >
-                        Pay
+                        Pay 
                       </button>
                     </div>
                   </td>
@@ -1062,15 +1242,15 @@ console.log("Check for Summery-----",PresentDays,HalfDays)
 
                       <div className="space-y-1 text-sm text-[#334155]">
                         <p>
-                          Previous Amount: ₹
+                          Previous Amount: 
                           {transaction.previousAmount.toLocaleString()}
                         </p>
                         <p>
-                          Changed Amount: ₹
+                          Changed Amount: 
                           {transaction.changedAmount.toLocaleString()}
                         </p>
                         <p>
-                          New Total: ₹{transaction.newAmount.toLocaleString()}
+                          New Total: {transaction.newAmount.toLocaleString()}
                         </p>
                         <p>
                           Description:{" "}
