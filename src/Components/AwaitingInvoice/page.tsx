@@ -956,14 +956,14 @@ const isProfit = invoiceProfit >= 0;
   <div className="bg-white border text-[10px] sm:text-[9px] text-center  border-gray-100 rounded-lg px-2 py-2">
     <p className="text-gray-800">Client Charge</p>
     <p className="font-semibold text-gray-800">
-      ₹ {dayPrice.toLocaleString()}
+       {dayPrice.toLocaleString()}
     </p>
   </div>
 
   <div className="bg-white border border-gray-100 text-[10px] text-center sm:text-[9px]  rounded-lg px-2 py-2">
     <p className="text-gray-800">HCP Payment</p>
     <p className="font-semibold text-gray-800">
-      ₹ {hcaPrice.toLocaleString()}
+       {hcaPrice.toLocaleString()}
     </p>
   </div>
 
@@ -990,7 +990,7 @@ const isProfit = invoiceProfit >= 0;
     <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col gap-1">
       <p className="text-xs text-gray-400">Day Profit</p>
       <p className="text-base sm:text-lg font-semibold text-gray-800">
-        ₹ {dayProfit.toLocaleString()}
+        {dayProfit.toLocaleString()}
       </p>
       <p className="text-xs text-gray-400">
         {dayProfitPercent.toFixed(1)}%
@@ -1001,7 +1001,7 @@ const isProfit = invoiceProfit >= 0;
     <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col gap-1">
       <p className="text-xs text-gray-400">Invoice Profit</p>
       <p className="text-base sm:text-lg font-semibold text-gray-800">
-        ₹ {invoiceProfit.toLocaleString()}
+         {invoiceProfit.toLocaleString()}
       </p>
       <p className="text-xs text-gray-400">
         {invoiceProfitPercent.toFixed(1)}%
@@ -1362,7 +1362,7 @@ const isProfit = invoiceProfit >= 0;
      ) : (
        <div className="flex flex-col leading-tight">
          <span>
-           ₹{(
+           {(
              getDaysBetween(c.StartDate, c.EndDate) *
              rupeeToNumber(c.ServiceCharge)
            ).toFixed(2)}{" "}
@@ -1370,7 +1370,7 @@ const isProfit = invoiceProfit >= 0;
          </span>
    
          <span>
-           ₹{rupeeToNumber(c.ServiceCharge).toFixed(2)}{" "}
+           {rupeeToNumber(c.ServiceCharge).toFixed(2)}{" "}
            <span className="text-gray-500">/D</span>
          </span>
        </div>

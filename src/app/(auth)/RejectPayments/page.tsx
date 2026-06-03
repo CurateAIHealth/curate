@@ -80,7 +80,7 @@ export default function RejectedPayments() {
 
       <div>
         <h2 className="text-2xl font-bold text-red-600">
-          Rejected Payments
+          Rejected 
         </h2>
 
         <p className="text-slate-500 text-sm">
@@ -126,7 +126,7 @@ export default function RejectedPayments() {
       <div className="overflow-x-auto">
         <table className="min-w-[1100px] w-full">
           <thead>
-            <tr className="bg-teal-800 text-white">
+            <tr className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white">
               <th className="px-5 py-4 text-left">S.No</th>
               <th className="px-5 py-4 text-left">Name</th>
               <th className="px-5 py-4 text-center">Time Sheet</th>
@@ -160,7 +160,7 @@ export default function RejectedPayments() {
                 </td>
 
                 <td className="px-5 py-5 text-center font-bold">
-                  ₹{row.total.toLocaleString()}
+                  {row.total.toLocaleString()}
                 </td>
 
                 <td className="px-5 py-5">

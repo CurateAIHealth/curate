@@ -32,12 +32,7 @@ export default function AccountingSub(){
       icon: User,
       bg: "bg-green-500",
     },
-    {
-      name: "Payments",
-      count: stats.ReferalCount,
-      icon: IndianRupee,
-      bg: "bg-orange-500",
-    },
+  
     {
       name: "HCA Payment",
       count: stats.HCAPaymentCount || 0,
@@ -51,19 +46,19 @@ export default function AccountingSub(){
       bg: "bg-cyan-500",
     },
     {
-      name: "Payment Complete Accounting",
+      name: "Payable",
       count: stats.PaymentCompleteAccountingCount || 0,
       icon: BadgeCheck,
       bg: "bg-emerald-500",
     },
     {
-      name: "Reject List",
+      name: "Reject",
       count: stats.RejectListCount || 0,
       icon: CircleX,
       bg: "bg-red-500",
     },
     {
-      name: "Successful Payments",
+      name: "Paid",
       count: stats.SuccessfulPaymentsCount || 0,
       icon: CheckCircle2,
       bg: "bg-teal-500",
@@ -77,6 +72,11 @@ export default function AccountingSub(){
   ],
   [stats]
 );
+
+const handleLogout = () => {
+  
+  router.push("/DashBoard");
+}
   const canAccessTab = useCallback(
     (tab: string, email: string | null) => {
       if (!email) return false;
@@ -138,14 +138,14 @@ export default function AccountingSub(){
               router.push("/Accounts");
               break;
 
-              case "Payment Complete Accounting":
+              case "Payable":
                 router.push("/Payable");
                 break;
-                 case "Reject List":
+                 case "Reject":
                 router.push("/RejectPayments");
                 break;
       
-                 case "Successful Payments":
+                 case "Paid":
                 router.push("/SuccessfulPayments");
                 break;
       
@@ -191,15 +191,12 @@ export default function AccountingSub(){
       <div className="hidden md:flex gap-3">
        
 
-          <div
-          className="inline-flex items-center px-4 py-2 rounded-xl"
-          style={{
-            backgroundColor: "#50c89615",
-            color: "#50c896",
-          }}
-        >
-          ● Live System
-        </div>
+            <button
+              onClick={handleLogout}
+              className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+            >
+              DashBoard
+            </button>
       </div>
     </div>
   </div>

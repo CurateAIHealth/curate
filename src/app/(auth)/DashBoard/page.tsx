@@ -920,7 +920,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
             </span>
           </div>
 
@@ -2079,7 +2079,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
   {/* Helper Text */}
   {!EnquiryMessage && (
     <p className="text-xs text-gray-500">
-      Minimum offerable price is ₹800
+      Minimum offerable price is 800
     </p>
   )}
 </div>
@@ -2106,7 +2106,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
     </div>
 
     <span className="rounded-full bg-teal-100 px-3 py-1 text-sm font-semibold text-teal-700">
-      ₹1500
+      1500
     </span>
   </div>
 

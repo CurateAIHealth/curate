@@ -642,7 +642,7 @@ CheckPaymentStatus:CurrentPaymentStatus
   
   <div className="flex items-center gap-2 bg-yellow-50 border-l-4 border-yellow-600 text-yellow-700 p-2 rounded w-full md:w-auto">
     <p className="text-xs font-semibold whitespace-nowrap">↩ Refund Issued</p>
-    <h3 className="text-sm md:text-base font-bold">₹{RefundAmount}/-</h3>
+    <h3 className="text-sm md:text-base font-bold">{RefundAmount}/-</h3>
   </div>
 
 </div>

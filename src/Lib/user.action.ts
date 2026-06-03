@@ -4086,6 +4086,401 @@ export const updateServicePrice = async (
   }
 };
 
+export const UpdatePaymentVerificationStatusInDb = async (
+  HCAId: string,
+  ClientId: string,
+  value: string,
+  MonthInfo: string
+) => {
+  try {
+    // Validation
+    if (!HCAId || !ClientId || !MonthInfo) {
+      return {
+        success: false,
+        message: "Missing required parameters",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const result = await collection.updateOne(
+      {
+        ClientId,
+        HCAId,
+        Month: MonthInfo,
+      },
+      {
+        $set: {
+          PaymentVerificationStatus: value,
+          UpdatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Deployment record not found",
+      };
+    }
+
+    return {
+      success: true,
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount,
+      message:
+        result.modifiedCount > 0
+          ? "Payment verification status updated successfully"
+          : "No changes were required",
+    };
+  } catch (error) {
+    console.error(
+      "UpdatePaymentVerificationStatusInDb Error:",
+      {
+        HCAId,
+        ClientId,
+        MonthInfo,
+        error,
+      }
+    );
+
+    return {
+      success: false,
+      message: "Failed to update payment verification status",
+    };
+  }
+};
+export const PostINPayblePage = async (
+  HCAId: string,
+  ClientId: string,
+  MonthInfo: string,
+  ImpData: any,
+  GrandTotal:any
+) => {
+  try {
+   
+    if (!HCAId || !ClientId || !MonthInfo || !ImpData) {
+      return {
+        success: false,
+        message: "Missing required parameters",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const deploymentCollection = db.collection("Deployment");
+    const payableCollection = db.collection("PayableINPaymentPage");
+
+    const existingPayable = await payableCollection.findOne({
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+    });
+
+ if (existingPayable) {
+  const { _id, ...updateData } = ImpData;
+
+  const updateResult = await payableCollection.updateOne(
+    {
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+    },
+    {
+      $set: {
+        ...updateData,
+        GrandTotalAmount: GrandTotal,
+        UpdatedAt: new Date(),
+      },
+    }
+  );
+
+  await deploymentCollection.updateOne(
+    {
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+    },
+    {
+      $set: {
+        PreviewINPaymentPage: "Disabled",
+        UpdatedAt: new Date(),
+      },
+    }
+  );
+
+  return {
+    success: true,
+    matchedCount: updateResult.matchedCount,
+    modifiedCount: updateResult.modifiedCount,
+    message: "Status Updated: Payable Information already exists for this HCA",
+  };
+}
+
+    const result = await deploymentCollection.updateOne(
+      {
+        ClientId,
+        HCAId,
+        Month: MonthInfo,
+      },
+      {
+        $set: {
+          PreviewINPaymentPage: "Disabled",
+          UpdatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Deployment record not found",
+      };
+    }
+const { _id, ...payableData } = ImpData;
+    // Insert payable record
+    const insertResult = await payableCollection.insertOne({
+      ...payableData,
+       GrandTotalAmount: GrandTotal,
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+      CreatedAt: new Date(),
+      UpdatedAt: new Date(),
+    });
+
+    return {
+      success: true,
+       insertedId: insertResult.insertedId.toString(),
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount,
+      message:existingPayable?"Status Updated: Payable Information already exists for this HCA":"Payable page created successfully",
+    };
+  } catch (error) {
+    console.error("PostINPayblePage Error:", error);
+
+    return {
+      success: false,
+      message: "Failed to create payable page",
+    };
+  }
+};
+
+export const PostINRejectionDb = async (
+  RejectionInfo: Record<string, any>,
+  Reason: string,
+  MonthInfo: string
+) => {
+  try {
+    if (!RejectionInfo || !Reason || !MonthInfo) {
+      return {
+        success: false,
+        message: "Missing required parameters",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const rejectionCollection = db.collection("PaymentRejections");
+
+    const payload = {
+      ...RejectionInfo,
+      Reason: String(Reason).trim(),
+      Month: String(MonthInfo).trim(),
+      CreatedAt: new Date(),
+      UpdatedAt: new Date(),
+    };
+
+    const result = await rejectionCollection.insertOne(payload);
+
+    return {
+      success: true,
+      insertedId: result.insertedId.toString(),
+      message: "Rejection information saved successfully",
+    };
+  } catch (error: any) {
+    console.error("PostINRejectionDb Error:", error);
+
+    return {
+      success: false,
+      message: error?.message || "Failed to save rejection information",
+    };
+  }
+};
+export const PostINSuccesfulPaymentsDb = async (
+  PaymentInfo:any,
+  NeftTransactionNumber: any,
+  MonthInfo: any,
+) => {
+  try {
+  console.log("Validation Check:", {
+  PaymentInfo,
+  NeftTransactionNumber,
+  MonthInfo,
+  ClientId: PaymentInfo?.ClientId,
+  HCAId: PaymentInfo?.HCAId,
+
+  PaymentInfoFail: !PaymentInfo,
+  NeftFail: !String(NeftTransactionNumber || "").trim(),
+  MonthFail: !String(MonthInfo || "").trim(),
+  ClientIdFail: PaymentInfo?.ClientId == null,
+  HCAIdFail: PaymentInfo?.HCAId == null,
+});
+ if (
+  !PaymentInfo ||
+  !String(NeftTransactionNumber || '').trim() ||
+  !String(MonthInfo || '').trim() ||
+  PaymentInfo.ClientId == null ||
+  PaymentInfo.HCAId == null
+) {
+      return {
+        success: false,
+        message: "Missing required parameters",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const successfulPaymentsCollection =
+      db.collection("SuccessfulPayments");
+    const payableCollection = db.collection("PayableINPaymentPage");
+
+const date = new Date();
+
+const now = `${date.toLocaleDateString("en-GB", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+})} | ${date.toLocaleTimeString("en-US", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: true,
+})}`;
+
+    const payload = {
+      ...PaymentInfo,
+      NeftTransactionNumber: String(NeftTransactionNumber).trim(),
+      Month: String(MonthInfo).trim(),
+      CreatedAt: now,
+      UpdatedAt: now,
+    };
+
+    const existingPayment = await successfulPaymentsCollection.findOne({
+      ClientId: PaymentInfo.ClientId,
+      HCAId: PaymentInfo.HCAId,
+      Month: String(MonthInfo).trim(),
+      NeftTransactionNumber: String(NeftTransactionNumber).trim(),
+    });
+
+    if (existingPayment) {
+      return {
+        success: false,
+        message: "Payment already exists",
+      };
+    }
+
+    const insertResult = await successfulPaymentsCollection.insertOne(payload);
+
+    await payableCollection.updateOne(
+      {
+        ClientId: PaymentInfo.ClientId,
+        HCAId: PaymentInfo.HCAId,
+        Month: String(MonthInfo).trim(),
+      },
+      {
+        $set: {
+          NeftNumber: String(NeftTransactionNumber).trim(),
+          UpdatedAt: now,
+        },
+      }
+    );
+
+    return {
+      success: true,
+      insertedId: insertResult.insertedId.toString(),
+      message: "Successful payment information saved successfully",
+    };
+  } catch (error: any) {
+    console.error("PostINSuccesfulPaymentsDb Error:", error);
+
+    return {
+      success: false,
+      message:
+        error?.message || "Failed to save successful payment information",
+    };
+  }
+};
+export const UpdateStatusEnable = async (
+  HCAId: string,
+  ClientId: string,
+  MonthInfo: string
+) => {
+  try {
+   
+    if (!HCAId?.trim() || !ClientId?.trim() || !MonthInfo?.trim()) {
+      return {
+        success: false,
+        message: "Missing required parameters",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const deploymentCollection = db.collection("Deployment");
+    const payableCollection = db.collection("PayableINPaymentPage");
+
+    const filter = {
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+    };
+
+    // Update deployment status
+    const updateResult = await deploymentCollection.updateOne(filter, {
+      $set: {
+        PreviewINPaymentPage: "Enable",
+        UpdatedAt: new Date(),
+      },
+    });
+
+    if (updateResult.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Deployment record not found",
+      };
+    }
+
+    // Delete payable page records
+    const deleteResult = await payableCollection.deleteMany(filter);
+
+    return {
+      success: true,
+      matchedCount: updateResult.matchedCount,
+      modifiedCount: updateResult.modifiedCount,
+      deletedCount: deleteResult.deletedCount,
+      message: "Status enabled successfully",
+    };
+  } catch (error: any) {
+    console.error("UpdateStatusEnable Error:", {
+      message: error?.message,
+      stack: error?.stack,
+      HCAId,
+      ClientId,
+      MonthInfo,
+    });
+
+    return {
+      success: false,
+      message: "Failed to enable status",
+    };
+  }
+};
 
 export const SuitableHCPUpdate = async (ClientId: any,Impid:any, HCPId: any) => {
   try {
@@ -5856,9 +6251,10 @@ export const UpdateUserCurrentstatus = async (
 };
 export const updateExpense = async (
   userId: string,
-  expensesInfo: string,
+  dueAmount: number,
   importedEmail: string,
-  Transactions: any[]
+  Transactions: any[],
+  currentMonth: string
 ) => {
   try {
     if (!userId) {
@@ -5867,49 +6263,76 @@ export const updateExpense = async (
         message: "User ID is required",
       };
     }
-
-    if (!expensesInfo) {
-      return {
-        success: false,
-        message: "Expenses information is required",
-      };
-    }
+    console.log("updateExpense called with:", importedEmail)
 
     if (!importedEmail) {
       return {
         success: false,
-        message: "Imported email is required",
-      };
+        message: "Session Expired. Please log in again.",
+      }
     }
 
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
-    const completeCollection = db.collection("CompliteRegistrationInformation");
-
-    const result = await completeCollection.updateOne(
-      {
-        "HCAComplitInformation.UserId": userId,
-      },
-      {
-        $set: {
-          "HCAComplitInformation.DueAmounts": expensesInfo,
-          "HCAComplitInformation.LastDueAmountsUpdatedBy": importedEmail,
-          "HCAComplitInformation.LastDueAmountsUpdatedAt": new Date(),
-        },
-        $push: {
-          "HCAComplitInformation.Transactions": {
-            $each: Transactions,
-          }as any,
-        },
-        $setOnInsert: {
-          "HCAComplitInformation.UserId": userId,
-          createdAt: new Date(),
-        },
-      },
-      {
-        upsert: true,
-      }
+    const completeCollection = db.collection(
+      "CompliteRegistrationInformation"
     );
+
+   
+
+    const existingMonth = await completeCollection.findOne({
+      "HCAComplitInformation.UserId": userId,
+      "HCAComplitInformation.MonthlyExpenses.Month": currentMonth,
+    });
+
+    let result;
+
+   if (existingMonth) {
+  result = await completeCollection.updateOne(
+    {
+      "HCAComplitInformation.UserId": userId,
+      "HCAComplitInformation.MonthlyExpenses.Month": currentMonth,
+    },
+    {
+      $set: {
+        "HCAComplitInformation.MonthlyExpenses.$.DueAmounts": dueAmount,
+        "HCAComplitInformation.MonthlyExpenses.$.LastDueAmountsUpdatedBy":
+          importedEmail,
+        "HCAComplitInformation.MonthlyExpenses.$.LastDueAmountsUpdatedAt":
+          new Date(),
+      },
+      $push: {
+        "HCAComplitInformation.MonthlyExpenses.$.Transactions": {
+          $each: Transactions,
+        } as any,
+      },
+    }
+  );
+} else {
+      result = await completeCollection.updateOne(
+        {
+          "HCAComplitInformation.UserId": userId,
+        },
+        {
+          $push: {
+            "HCAComplitInformation.MonthlyExpenses": {
+              Month: currentMonth,
+              DueAmounts: [dueAmount] as any,
+              Transactions,
+              LastDueAmountsUpdatedBy: importedEmail,
+              LastDueAmountsUpdatedAt: new Date(),
+            } as any,
+          },
+          $setOnInsert: {
+            "HCAComplitInformation.UserId": userId,
+            createdAt: new Date(),
+          },
+        },
+        {
+          upsert: true,
+        }
+      );
+    }
 
     if (result.upsertedCount > 0) {
       return {
@@ -5925,16 +6348,9 @@ export const updateExpense = async (
       };
     }
 
-    if (result.matchedCount > 0) {
-      return {
-        success: true,
-        message: "No changes detected",
-      };
-    }
-
     return {
-      success: false,
-      message: "Failed to update expense",
+      success: true,
+      message: "No changes detected",
     };
   } catch (error) {
     console.error("updateExpense error:", {
@@ -5948,7 +6364,6 @@ export const updateExpense = async (
     };
   }
 };
-
 export const UpdatePaymentForStaff = async (
   UserId: string,
   ImpPrice: string
@@ -6851,6 +7266,7 @@ export const GetAllUsersData = async () => {
     const deploymentCollection = db.collection("Deployment");
     const replacementCollection = db.collection("Replacement");
     const terminationCollection = db.collection("Termination");
+    const PayableCollection = db.collection("PayableINPaymentPage");
 
     // ✅ Faster decrypt helper (no Object.entries)
     const safeDecrypt = (value: any) => {
@@ -6893,12 +7309,14 @@ export const GetAllUsersData = async () => {
       deploymentResult,
       replacementResult,
       terminationResult,
+      PayableData
     ] = await Promise.all([
       registrationCollection.find().toArray(),
       fullInfoCollection.find().toArray(),
       deploymentCollection.find().toArray(),
       replacementCollection.find().toArray(),
       terminationCollection.find().toArray(),
+      PayableCollection.find().toArray(),
     ]);
 
     // ✅ Process in parallel (FASTER)
@@ -6953,12 +7371,14 @@ export const GetAllUsersData = async () => {
       placementInfo,
       replacementInfo,
       terminationInfo,
+      ExportedPayableData
     ] = await Promise.all([
       registeredUsersPromise,
       usersFullInfoPromise,
       Promise.resolve(mapIds(deploymentResult)),
       Promise.resolve(mapIds(replacementResult)),
       Promise.resolve(mapIds(terminationResult)),
+      Promise.resolve(mapIds(PayableData))
     ]);
 
     const result = {
@@ -6967,6 +7387,7 @@ export const GetAllUsersData = async () => {
       placementInfo,
       replacementInfo,
       terminationInfo,
+      ExportedPayableData
     };
 
     // ✅ Save cache

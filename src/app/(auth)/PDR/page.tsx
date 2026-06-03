@@ -1568,7 +1568,7 @@ const isProfit = invoiceProfit >= 0;
     <div className="bg-white rounded-xl p-4 border border-gray-100">
       <p className="text-xs text-gray-400 mb-1">Day Profit</p>
       <p className="text-sm font-semibold text-gray-800">
-        ₹ {dayProfit.toLocaleString()}
+         {dayProfit.toLocaleString()}
       </p>
       <p className="text-xs text-gray-400 mt-1">
         {dayProfitPercent.toFixed(1)}%
@@ -1579,7 +1579,7 @@ const isProfit = invoiceProfit >= 0;
     <div className="bg-white rounded-xl p-4 border border-gray-100">
       <p className="text-xs text-gray-400 mb-1">Invoice Profit</p>
       <p className="text-sm font-semibold text-gray-800">
-        ₹ {invoiceProfit.toLocaleString()}
+        ₹{invoiceProfit.toLocaleString()}
       </p>
       <p className="text-xs text-gray-400 mt-1">
         {invoiceProfitPercent.toFixed(1)}%

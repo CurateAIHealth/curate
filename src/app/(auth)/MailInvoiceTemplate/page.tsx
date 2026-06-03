@@ -151,7 +151,7 @@ const [formData, setFormData] = useState<any>({
   // if (roundType === "down") finalTotal = Math.floor(rawTotal);
   // if (roundType === "nearest") finalTotal = Math.round(rawTotal);
 const [services, setServices] = useState([
-    { name: getHCATypeDescription(InvoiceData.HCAType), code: InvoiceData.HCAType,amount:Number(getDaysBetween(formData.invoice?.serviceFrom, formData.invoice?.serviceTo)) * Number(perDay)},
+    { name: getHCATypeDescription(InvoiceData.HCAType)||"Healthcare Assistants", code: InvoiceData.HCAType||"HCA",amount:Number(getDaysBetween(formData.invoice?.serviceFrom, formData.invoice?.serviceTo)) * Number(perDay)},
   ]);
   const roundingDifference = finalTotal - rawTotal;
   const balanceDue:any = finalTotal - advance;
@@ -1366,7 +1366,7 @@ message="Please provide the client’s email address to send the invoice."
                   <p className="mt-4 text-right text-sm text-slate-600">
   Total:
   <span className="ml-2 font-semibold text-teal-700">
-    ₹ {serviceAmount}
+     {serviceAmount}
   </span>
 </p>
 
@@ -1393,7 +1393,7 @@ message="Please provide the client’s email address to send the invoice."
                 <div className="text-right">
                   <p className="text-[11px] text-slate-500">Total</p>
                   <p className="text-2xl font-bold text-emerald-600">
-                    ₹{baseTotal}/-
+                    {baseTotal}/-
                   </p>
                   {roundingDifference !== 0 && (
                     <p className="text-[11px] text-slate-500">
@@ -1441,7 +1441,7 @@ message="Please provide the client’s email address to send the invoice."
     </div>
               <div className="px-6 py-4 space-y-3 text-sm">
                 <KeyRow label="Base Amount">
-                  ₹{baseTotal.toFixed(2)}/-
+                  {baseTotal.toFixed(2)}/-
                 </KeyRow>
 
                 <KeyRow label="Other Expenses (₹)">
@@ -1473,30 +1473,30 @@ message="Please provide the client’s email address to send the invoice."
                       onChange={(e) => setDiscountValue(Number(e.target.value || 0))}
                     />
                     <span className="text-xs text-emerald-700 font-medium">
-                      -₹{discountAmount.toFixed(2)}
+                      -{discountAmount.toFixed(2)}
                     </span>
                   </div>
                 </div>
 
                 <KeyRow label="Raw Total">
-                  ₹{Number(rawTotal)}/-
+                  {Number(rawTotal)}/-
                 </KeyRow>
 
                <KeyRow label="Registration Fee">
-                  ₹{regFee}/-
+                  {regFee}/-
                 </KeyRow>
 
                 <KeyRow label="Advance Received">
-                  ₹{advance}/-
+                  {advance}/-
                 </KeyRow>
 
                   <KeyRow label="Tax">
-                  ₹{baseTotal*Number(selected.tdsRate.replace("%", ""))/100}/-
+                  {baseTotal*Number(selected.tdsRate.replace("%", ""))/100}/-
                   
                 </KeyRow>
 
                 <KeyRow label="Balance Due" highlight>
-                  ₹{Number(balanceDue)+Number(TaxAmount)}/-
+                  {Number(balanceDue)+Number(TaxAmount)}/-
                 </KeyRow>
               </div>
             </div>

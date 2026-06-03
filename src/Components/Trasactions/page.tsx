@@ -168,7 +168,7 @@ export default function PassbookPopup({
           Amount Due
         </p>
         <p className="text-base font-bold">
-          ₹{data.balanceDue}
+          {data.balanceDue}
         </p>
       </div>
 
@@ -239,10 +239,10 @@ export default function PassbookPopup({
                       {txn.paymentMethod}
                     </td>
                     <td className="border p-2 text-green-600 font-bold text-center">
-                      ₹{txn.amount}
+                      {txn.amount}
                     </td>
                     <td className="border p-2 font-bold text-center">
-                      ₹{runningBalance}
+                      {runningBalance}
                     </td>
                   </tr>
                 );

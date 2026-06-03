@@ -1154,9 +1154,9 @@ return
         date: new Date().toISOString().split("T")[0],
         status: "Present",
       }));
-      console.log("Payload for attendance update:", payload);
+
       const UpdateDailyattendece = await UpdateClientDailyAttendance(SearchYear,SearchMonth,payload,loggedInEmail);
-      console.log("UpdateDailyattendece",UpdateDailyattendece)
+  
   
           if (UpdateDailyattendece.success === true) {
             SetActionStatusMessage("Clients Today's Attendance Updated Successfully")
@@ -1681,7 +1681,7 @@ setShowCareTakerPriceUpdate(false)
 
  
       <button
-         onClick={() => setShowAttendencePopUp(false)}
+         onClick={() => {setShowAttendencePopUp(false),SetActionStatusMessage("Clients Today's Attendance Updated Successfully")}}
         className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-lg"
       >
         ✕
@@ -1708,7 +1708,7 @@ setShowCareTakerPriceUpdate(false)
       {ActionStatusMessage !== "Please Wait..." && (
         <div className="mt-6 flex justify-center">
           <button
-            onClick={() => setShowAttendencePopUp(false)}
+                onClick={() => {setShowAttendencePopUp(false),SetActionStatusMessage("Clients Today's Attendance Updated Successfully")}}
             className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-md transition"
           >
             Close
@@ -3128,7 +3128,7 @@ console.log("Check Info-----",record)
               className="rounded-lg w-[95px] border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 min-h-0"
             >
               <span className="text-[10px] font-semibold text-gray-500 uppercase">
-                Day {day} 
+                Day {day}  
               </span>
 
            
@@ -3400,7 +3400,7 @@ function DayBadge({ status }: { status: any }) {
     return (
       <Wrapper>
         <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 text-emerald-600 bg-white shadow-sm">
-          {status === "Present"||status === "P"&&"P"}
+          {(status === "Present"||status === "P")&&"P"}
         </span>
       </Wrapper>
     );
@@ -3520,60 +3520,5 @@ function Th({ children, className = "" }: any) {
 function Td({ children, className = "" }: any) {
   return <td className={`px-3 py-2 whitespace-nowrap ${className}`}>{children}</td>;
 }
-function DayBadge({ status }: { status: any }) {
-  const Wrapper = ({ children }: any) => (
-    <div className="flex items-center justify-center w-full">
-      {children}
-    </div>
-  );
 
-  if (status === "P" || status === "Present") {
-    return (
-      <Wrapper>
-        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 text-emerald-600 bg-white shadow-sm">
-          {status}
-        </span>
-      </Wrapper>
-    );
-  }
-
-  if (status === "HP") {
-    return (
-      <Wrapper>
-        <div className="relative w-8 h-8 rounded-full border-2 border-emerald-500 overflow-hidden shadow-sm flex items-center justify-center text-[10px] font-semibold text-emerald-600">
-          <div className="absolute left-0 top-0 w-1/2 h-full bg-emerald-500" />
-          <span className="relative z-10">HP</span>
-        </div>
-      </Wrapper>
-    );
-  }
-
-  if (status === "A" || status === "Absent") {
-    return (
-      <Wrapper>
-        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-rose-600 text-rose-600 bg-white shadow-sm">
-          {status}
-        </span>
-      </Wrapper>
-    );
-  }
-
-  if (status === "NA") {
-    return (
-      <Wrapper>
-        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-gray-500 text-gray-600 bg-white shadow-sm">
-          {status}
-        </span>
-      </Wrapper>
-    );
-  }
-
-  return (
-    <Wrapper>
-      <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border border-gray-400 text-gray-500 bg-white shadow-sm">
-        {status}
-      </span>
-    </Wrapper>
-  );
-}
 export default ClientTable;

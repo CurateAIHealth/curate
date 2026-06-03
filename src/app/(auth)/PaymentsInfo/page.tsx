@@ -531,27 +531,27 @@ const [SearchResult, setSearchResult] = useState("")
                   {columns.includes("HCP Source") && <td className="px-4 py-3">{row.hcpSource}</td>}
                   {columns.includes("Provider Name") && <td className="px-4 py-3">{row.providerName}</td>}
                   {columns.includes("Pay Terms") && <td className="px-4 py-3">{row.payTerms}</td>}
-                  {columns.includes("C Total") && <td className="px-4 py-3 text-right">₹{row.cTotal.toLocaleString()}</td>}
-                  {columns.includes("C Pay") && <td className="px-4 py-3 text-right">₹{row.cPay.toLocaleString()}</td>}
-                  {columns.includes("HCP Total") && <td className="px-4 py-3 text-right">₹{row.hcpTotal.toLocaleString()}</td>}
-                  {columns.includes("HCP Pay") && <td className="px-4 py-3 text-right">₹{row.hcpPay.toLocaleString()}</td>}
+                  {columns.includes("C Total") && <td className="px-4 py-3 text-right">{row.cTotal.toLocaleString()}</td>}
+                  {columns.includes("C Pay") && <td className="px-4 py-3 text-right">{row.cPay.toLocaleString()}</td>}
+                  {columns.includes("HCP Total") && <td className="px-4 py-3 text-right">{row.hcpTotal.toLocaleString()}</td>}
+                  {columns.includes("HCP Pay") && <td className="px-4 py-3 text-right">{row.hcpPay.toLocaleString()}</td>}
                   {columns.includes("PD") && <td className="px-4 py-3">{row.pd}</td>}
                   {columns.includes("AD") && <td className="px-4 py-3">{row.ad}</td>}
                   {columns.includes("HP") && <td className="px-4 py-3">{row.hp}</td>}
-                  {columns.includes("Margin") && <td className="px-4 py-3 text-right">₹{row.margin.toLocaleString()}</td>}
-                  {columns.includes("Actual C Pay") && <td className="px-4 py-3 text-right">₹{row.actualCPay.toLocaleString()}</td>}
-                  {columns.includes("Actual HCP Pay") && <td className="px-4 py-3 text-right">₹{row.actualHcpPay.toLocaleString()}</td>}
-                  {columns.includes("Actual Margin") && <td className="px-4 py-3 text-right">₹{row.actualMargin.toLocaleString()}</td>}
+                  {columns.includes("Margin") && <td className="px-4 py-3 text-right">{row.margin.toLocaleString()}</td>}
+                  {columns.includes("Actual C Pay") && <td className="px-4 py-3 text-right">{row.actualCPay.toLocaleString()}</td>}
+                  {columns.includes("Actual HCP Pay") && <td className="px-4 py-3 text-right">{row.actualHcpPay.toLocaleString()}</td>}
+                  {columns.includes("Actual Margin") && <td className="px-4 py-3 text-right">{row.actualMargin.toLocaleString()}</td>}
                   {columns.includes("Actual Margin %") && <td className="px-4 py-3">{row.actualMarginPercent}</td>}
-                  {columns.includes("Pay Calculation") && <td className="px-4 py-3 text-right">₹{row.payCalculation.toLocaleString()}</td>}
-                  {columns.includes("1% Tax") && <td className="px-4 py-3 text-right">₹{row.tax.toLocaleString()}</td>}
-                  {columns.includes("Pay") && <td className="px-4 py-3 text-right">₹{row.pay.toLocaleString()}</td>}
-                  {columns.includes("Advance Payment") && <td className="px-4 py-3 text-right">₹{row.advancePayment.toLocaleString()}</td>}
-                  {columns.includes("Staff Travel Exp") && <td className="px-4 py-3 text-right">₹{row.travelExpense.toLocaleString()}</td>}
+                  {columns.includes("Pay Calculation") && <td className="px-4 py-3 text-right">{row.payCalculation.toLocaleString()}</td>}
+                  {columns.includes("1% Tax") && <td className="px-4 py-3 text-right">{row.tax.toLocaleString()}</td>}
+                  {columns.includes("Pay") && <td className="px-4 py-3 text-right">{row.pay.toLocaleString()}</td>}
+                  {columns.includes("Advance Payment") && <td className="px-4 py-3 text-right">{row.advancePayment.toLocaleString()}</td>}
+                  {columns.includes("Staff Travel Exp") && <td className="px-4 py-3 text-right">{row.travelExpense.toLocaleString()}</td>}
 
                   {columns.includes("Final Pay") && (
                   <td className="px-4 py-3 text-center font-semibold text-green-700">
-  ₹{row.finalPay.toLocaleString()}
+  {row.finalPay.toLocaleString()}
 </td>
                   )}
 
