@@ -111,7 +111,7 @@ export function rupeeToNumber(value:any) {
 export const getDaysInMonth = (month: number, year: number) => {
   return new Date(year, month, 0).getDate(); 
 };
-
+export 
 const currentYear = new Date().getFullYear();
 
 export const years = Array.from(

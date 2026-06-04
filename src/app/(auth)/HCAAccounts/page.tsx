@@ -990,7 +990,7 @@ const HCPPayment:any=GetHCPPayment(row.HCAId)||0
               const MinusItems=Number(row.Expences.advance)+Number(row.Expences.hostel)+Number(row.Expences.other)
               const Additems=Number(row.Expences.others)+Number(row.Expences.incentives)
          const dailyPayment = formatCurrency(
-  HCPPayment / 30.41666666666667,
+  HCPPayment / getDaysInMonth(SearchMonth,SearchYear),
   PresentDays,
   HalfDays,
   0
@@ -1055,7 +1055,7 @@ const totalExpenses =
 
  
 
-                  <td className="p-4">{formatCurrency(HCPPayment/30.41666666666667,PresentDays,HalfDays,0)}</td>
+                  <td className="p-4">{formatCurrency(HCPPayment/getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)}</td>
 
   {fields.map(([amountField, descField, label]) => (
   <td key={amountField} className="p-3">
@@ -1151,7 +1151,7 @@ defaultValue={row.PaymentVerficationStatus}
                      disabled={row.PaymentVerficationStatus==="Process"}
                         className={`h-10 px-3 flex items-center  justify-center gap-2 rounded-xl ${row.PaymentVerficationStatus === "Process" ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-600 cursor-pointer"} text-white text-sm font-medium`}
                         onClick={() => {
-                          UpdatePayablePage(row,(formatCurrency(HCPPayment/ 30.41666666666667,PresentDays,HalfDays,0)+Additems-MinusItems))
+                          UpdatePayablePage(row,(formatCurrency(HCPPayment/ getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)+Additems-MinusItems))
                         }}
                       >
                         Pay 
@@ -1160,7 +1160,7 @@ defaultValue={row.PaymentVerficationStatus}
                   </td>
 
                   <td className="p-4 font-bold">
-                    {formatCurrency(HCPPayment/ 30.41666666666667,PresentDays,HalfDays,0)+Additems-MinusItems}
+                    {formatCurrency(HCPPayment/ getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)+Additems-MinusItems}
                   </td>
 
                   <td className="p-4 font-bold text-center">

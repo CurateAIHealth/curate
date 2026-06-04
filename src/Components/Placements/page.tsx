@@ -1158,11 +1158,38 @@ return
       const UpdateDailyattendece = await UpdateClientDailyAttendance(SearchYear,SearchMonth,payload,loggedInEmail);
   
   
-          if (UpdateDailyattendece.success === true) {
-            SetActionStatusMessage("Clients Today's Attendance Updated Successfully")
-            return
-         
-          }
+       if (UpdateDailyattendece.success === true) {
+  const today = new Date().toISOString().split("T")[0];
+
+  setClientsInformation((prev: any) =>
+    prev.map((client: any) => {
+      const exists = client.ClientAttendance?.some(
+        (att: any) =>
+          new Date(att.AttendanceDate).toISOString().split("T")[0] === today
+      );
+
+      if (exists) return client;
+
+      return {
+        ...client,
+        ClientAttendance: [
+          ...(client.ClientAttendance || []),
+          {
+            AttendanceDate: today,
+            Status: "Present",
+            dateKey: today,
+          },
+        ],
+      };
+    })
+  );
+
+  SetActionStatusMessage(
+    "Clients Today's Attendance Updated Successfully"
+  );
+
+  return;
+}
   
   
   

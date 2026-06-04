@@ -103,9 +103,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
   const router=useRouter()
   const dispatch=useDispatch()
   useEffect(() => {
-    if(loggedInEmail===""){
-      router.push("/DashBoard")
-    }
+   
     let mounted = true;
   
     const isSuccessUpdate = ActionStatusMessage?.includes("Successfully");
@@ -273,6 +271,11 @@ const PostINPayblePageResult = await UpdateStatusEnable(HCAId,ClientId,Month);
         message:"Revert Status Updated successfully!",
         type: "success",
       });
+    setPaybleData((prevData) =>
+  prevData.filter(
+    (item) => item.HcaId !== selectedUser.HcaId
+  )
+);
     }else{
         setPopup({
         isOpen: true,
@@ -308,6 +311,11 @@ setPopup({
         message: "Rejection reason recorded successfully!",
         type: "success",
       });
+         setPaybleData((prevData) =>
+  prevData.filter(
+    (item) => item.HcaId !== selectedUser.HcaId
+  )
+);
    setTimeout(()=>{
        setShowRejectPopup(false)
    },2000)
@@ -344,16 +352,13 @@ setPopup({
      console.log("PaymentInfo to be posted:", ExportNeftNumber,MonthInfo)
     const PostinDb=await PostINSuccesfulPaymentsDb(selectedUser,ExportNeftNumber,MonthInfo)
     if(PostinDb.success){
-      setPaybleData((prevData) =>
-        prevData.map((item) =>
-          item.HcaId === selectedUser.HcaId ? { ...item, neft: NeftTransactionNumber } : item
-        )
-      );
+   
       setPopup({
         isOpen: true,
         message: "Successful payment information recorded successfully!",
         type: "success",
       });
+       window.location.reload()
     }else{
       setPopup({
         isOpen: true,

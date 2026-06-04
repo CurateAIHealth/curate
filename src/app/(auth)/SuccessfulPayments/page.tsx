@@ -172,13 +172,13 @@ const PaymentInformation = useMemo(
       name: each.HCAName,
       attendanceInfo: each.Attendance,
       total: each.GrandTotalAmount,
-      neft: each.NeftNumber,
+      neft: each.NeftNumber||each.NeftTransactionNumber,
       dateTime: each.CreatedAt,
       Month:each.Month
     })) || [],
   [PreviewData]
 );
-console.log("Check Attendece----",PaymentInformation)
+console.log("Check Attendece----",PreviewData)
 const matchesSearchAndMonth = (
   item: any,
   searchText: string,

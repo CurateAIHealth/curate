@@ -42,7 +42,7 @@ import { HCAList } from '@/Redux/reducer';
 import WorkingOn from '@/Components/CurrentlyWoring/page';
 import axios from 'axios';
 
-import { AssignSuitableIcon, decrypt, encrypt, getPopularArea, normalizeDate, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
+import { AssignSuitableIcon, decrypt, encrypt, getDaysInMonth, getPopularArea, normalizeDate, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
 import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 import { LoadingData } from '@/Components/Loading/page';
 import ReplacementsTable from '@/Components/ReplacementsTable/page';
@@ -1505,7 +1505,7 @@ const UpdatePopup = async (a: any) => {
       <p className="text-[9px] text-gray-500 leading-none mt-1">
         Per day:
         <span className="ml-1 font-semibold text-green-600">
-          {Math.round(Number(GetHCPPayment(user.userId)) / 30.41666666666667)}
+          {Math.round(Number(GetHCPPayment(user.userId)) / getDaysInMonth(SearchMonth,SearchYear))}
         </span>
       </p>
     </div>
