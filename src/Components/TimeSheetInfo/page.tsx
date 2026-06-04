@@ -474,14 +474,40 @@ const hasUnmarked = processedData.some(
      new Date().toISOString().split("T")[0],
      loggedInEmail
   );
+if (UpdateDailyattendece.success === true) {
+  deploymentCache.length = 0;
 
-        if (UpdateDailyattendece.success === true) {
-          SetStatusMessage("HCPs Today's Attendance Updated Successfully")
-          setTimeout(()=>{
-            setShowAttendencePopUp(false)
-        SetStatusMessage("")
-          },2000)
-        }
+  const {
+    RegisterdUsers,
+    usersResult,
+    placementInfo,
+  } = await GetAllUsersData();
+
+  cachedRegisterdUsers = RegisterdUsers ?? [];
+  cachedUsersFullInfo = usersResult ?? [];
+
+  const formattedData: any = {};
+
+  placementInfo.forEach((record: any) => {
+    const monthKey = getMonthKey(record);
+
+    if (!formattedData[monthKey]) {
+      formattedData[monthKey] = [];
+    }
+
+    formattedData[monthKey].push(record);
+  });
+
+  setClientsInformation(formattedData);
+
+  SetStatusMessage(
+    "HCPs Today's Attendance Updated Successfully"
+  );
+
+  setTimeout(() => {
+    setShowAttendencePopUp(false);
+  }, 2000);
+}
 
 
 

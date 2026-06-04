@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { LoadingData } from '@/Components/Loading/page';
 import { EyeOff, Eye, CheckCircle, XCircle } from 'lucide-react';
+import { getDaysInMonth } from '@/Lib/Actions';
 
 
 const DEFAULT_PROFILE_PIC = '/Icons/DefaultProfileIcon.png';
@@ -4001,7 +4002,10 @@ form.HusbendContact!=="Not Available"&&
     <p className="text-xs text-gray-600">
       Per day amount:{" "}
       <span className="font-semibold text-green-600">
-        {Math.round(Number(form.PaymentforStaff) / 30.41666666666667)}
+        {Math.round(Number(form.PaymentforStaff) / getDaysInMonth(
+  new Date().getMonth() + 1,
+  new Date().getFullYear()
+))}
       </span>
     </p>
   )}

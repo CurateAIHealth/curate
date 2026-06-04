@@ -243,6 +243,7 @@ const PostINPayblePageResult = await UpdateStatusEnableinRejection(HCAId,ClientI
         message:"Revert Status Updated successfully!",
         type: "success",
       });
+window.location.reload()
     }else{
         setPopup({
         isOpen: true,

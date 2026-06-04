@@ -4281,22 +4281,33 @@ export const PostINRejectionDb = async (
         message: "Missing required parameters",
       };
     }
-
+console.log("Checkk------",RejectionInfo)
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
 
     const rejectionCollection = db.collection("PaymentRejections");
+        const payableCollection = db.collection("PayableINPaymentPage");
 
-    const payload = {
-      ...RejectionInfo,
-      Reason: String(Reason).trim(),
-      Month: String(MonthInfo).trim(),
-      CreatedAt: new Date(),
-      UpdatedAt: new Date(),
+    const filter = {
+      ClientId:RejectionInfo.ClientId,
+      HCAId:RejectionInfo.HCAId,
+      Month: MonthInfo,
     };
+ 
 
-    const result = await rejectionCollection.insertOne(payload);
+console.log("Delete Filter", filter);
+    const { _id, ...rejectionData } = RejectionInfo;
 
+const payload = {
+  ...rejectionData,
+  Reason: String(Reason).trim(),
+  Month: String(MonthInfo).trim(),
+  CreatedAt: new Date(),
+  UpdatedAt: new Date(),
+};
+
+const result = await rejectionCollection.insertOne(payload);
+const deleteResult = await payableCollection.deleteMany(filter);
     return {
       success: true,
       insertedId: result.insertedId.toString(),
@@ -4386,6 +4397,12 @@ const now = `${date.toLocaleDateString("en-GB", {
 
     const insertResult = await successfulPaymentsCollection.insertOne(payload);
 
+    const filter = {
+      ClientId: PaymentInfo.ClientId ,
+      HCAId: PaymentInfo.HCAId,
+      Month: MonthInfo,
+    };
+ const deleteResult = await payableCollection.deleteMany(filter);
     await payableCollection.updateOne(
       {
         ClientId: PaymentInfo.ClientId,
@@ -4424,7 +4441,10 @@ const successfulPaymentsCollection =db.collection("SuccessfulPayments");
   const Results=await successfulPaymentsCollection.find(
         {},
         { projection: { 
-NeftNumber: 1, GrandTotalAmount: 1, 
+NeftNumber: 1,
+
+NeftTransactionNumber:1,
+ GrandTotalAmount: 1, 
 ClientId: 1,
 Month:1,
 HCAId:1,
@@ -4507,7 +4527,6 @@ export const UpdateStatusEnable = async (
       };
     }
 
-    // Delete payable page records
     const deleteResult = await payableCollection.deleteMany(filter);
 
     return {
@@ -4550,6 +4569,10 @@ export const UpdateStatusEnableinRejection = async (
     const db = cluster.db("CurateInformation");
 
     const deploymentCollection = db.collection("Deployment");
+    const rejectionCollection = db.collection("PaymentRejections");
+  
+
+
 
 
     const filter = {
@@ -4565,7 +4588,7 @@ export const UpdateStatusEnableinRejection = async (
         UpdatedAt: new Date(),
       },
     });
-
+ const deleteResult = await rejectionCollection.deleteMany(filter);
     if (updateResult.matchedCount === 0) {
       return {
         success: false,
