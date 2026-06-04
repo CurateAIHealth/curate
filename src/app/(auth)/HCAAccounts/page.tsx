@@ -1151,7 +1151,7 @@ defaultValue={row.PaymentVerficationStatus}
                      disabled={row.PaymentVerficationStatus==="Process"}
                         className={`h-10 px-3 flex items-center  justify-center gap-2 rounded-xl ${row.PaymentVerficationStatus === "Process" ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-600 cursor-pointer"} text-white text-sm font-medium`}
                         onClick={() => {
-                          UpdatePayablePage(row,(formatCurrency(HCPPayment,PresentDays,HalfDays,0)+Additems-MinusItems))
+                          UpdatePayablePage(row,(formatCurrency(HCPPayment/ 30.41666666666667,PresentDays,HalfDays,0)+Additems-MinusItems))
                         }}
                       >
                         Pay 
@@ -1160,7 +1160,7 @@ defaultValue={row.PaymentVerficationStatus}
                   </td>
 
                   <td className="p-4 font-bold">
-                    {formatCurrency(HCPPayment,PresentDays,HalfDays,0)+Additems-MinusItems}
+                    {formatCurrency(HCPPayment/ 30.41666666666667,PresentDays,HalfDays,0)+Additems-MinusItems}
                   </td>
 
                   <td className="p-4 font-bold text-center">

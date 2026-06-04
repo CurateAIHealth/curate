@@ -4415,6 +4415,57 @@ const now = `${date.toLocaleDateString("en-GB", {
     };
   }
 };
+
+export const GetSuccesfulPaymentData=async()=>{
+  try{
+   const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+const successfulPaymentsCollection =db.collection("SuccessfulPayments");
+  const Results=await successfulPaymentsCollection.find(
+        {},
+        { projection: { 
+NeftNumber: 1, GrandTotalAmount: 1, 
+ClientId: 1,
+Month:1,
+HCAId:1,
+HCAName: 1,
+Attendance:1,
+CreatedAt:1 } }
+      ).toArray()
+
+      return Results
+   
+  }catch(err:any){
+    
+  }
+}
+
+export const GetRejectedPaymentData=async()=>{
+  try{
+   const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+const successfulPaymentsCollection =db.collection("PaymentRejections");
+  const Results=await successfulPaymentsCollection.find(
+        {},
+        { projection: { 
+NeftNumber: 1,
+ GrandTotalAmount: 1, 
+ClientId: 1,
+Month:1,
+HCAId:1,
+HCAName: 1,
+CreatedAt:1,
+Reason:1,
+Attendance:1
+ } }
+      ).toArray()
+
+      return Results
+   
+  }catch(err:any){
+    
+  }
+}
 export const UpdateStatusEnable = async (
   HCAId: string,
   ClientId: string,
@@ -4464,6 +4515,70 @@ export const UpdateStatusEnable = async (
       matchedCount: updateResult.matchedCount,
       modifiedCount: updateResult.modifiedCount,
       deletedCount: deleteResult.deletedCount,
+      message: "Status enabled successfully",
+    };
+  } catch (error: any) {
+    console.error("UpdateStatusEnable Error:", {
+      message: error?.message,
+      stack: error?.stack,
+      HCAId,
+      ClientId,
+      MonthInfo,
+    });
+
+    return {
+      success: false,
+      message: "Failed to enable status",
+    };
+  }
+};
+export const UpdateStatusEnableinRejection = async (
+  HCAId: string,
+  ClientId: string,
+  MonthInfo: string
+) => {
+  try {
+   
+    if (!HCAId?.trim() || !ClientId?.trim() || !MonthInfo?.trim()) {
+      return {
+        success: false,
+        message: "Missing required parameters",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const deploymentCollection = db.collection("Deployment");
+
+
+    const filter = {
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+    };
+
+    // Update deployment status
+    const updateResult = await deploymentCollection.updateOne(filter, {
+      $set: {
+        PreviewINPaymentPage: "Enable",
+        UpdatedAt: new Date(),
+      },
+    });
+
+    if (updateResult.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Deployment record not found",
+      };
+    }
+
+
+    return {
+      success: true,
+      matchedCount: updateResult.matchedCount,
+      modifiedCount: updateResult.modifiedCount,
+      
       message: "Status enabled successfully",
     };
   } catch (error: any) {
