@@ -9,12 +9,12 @@ type Deployment = any;
 type Replace = any;
 type Termination=any;
 import { useEffect, useState } from "react";
-import { CircleSlash2, CornerUpLeft, Eye, Info, Search } from "lucide-react";
+import { CircleSlash2, CornerUpLeft, Eye, Info, Minimize2, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { GetAllUsersData, PostINPayblePage, PostINRejectionDb, PostINSuccesfulPaymentsDb, UpdateStatusEnable } from "@/Lib/user.action";
 import { LoadingData } from "@/Components/Loading/page";
-import { years } from "@/Lib/Content";
+import { months, years } from "@/Lib/Content";
 import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import PopupToast from "@/Components/ExpencesPopUp/page";
 import { AssignSuitableIcon, toProperCaseLive } from "@/Lib/Actions";
@@ -82,6 +82,7 @@ const [data] = useState([
     message: "",
     type: "success",
   });
+  const [showFullMonth,setShowFullMonth]=useState(false)
 const [userTypeFilter, setUserTypeFilter] = useState("All");
 const [selectedUser, setSelectedUser] = useState<any>(null);
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
@@ -171,13 +172,14 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
   }, [ActionStatusMessage]);
 
 const PayableDataformation = paybleData.map((each: any) => {
-    console.log("Each Payable Record:", each); // Debug log to check the structure of each record
+    console.log("Each Payable Record:", each);
   return {
     ...each,
      UserType: "HCA",
     Clientid: each.ClientId,
     HCAid: each.HCAId,
     name: each.HCAName,
+    attendanceInfo: each.Attendance,
     total: each.GrandTotalAmount||0,
     advance: each.Expences.advance||0,
     hostelFee: each.Expences.hostel||0,
@@ -195,6 +197,13 @@ Month: each.Month
 
 
 });
+ const getDaysInMonth = (month: number, year: number) => {
+  return new Date(year, month, 0).getDate(); 
+};
+const NumberOfDaysInMonth = getDaysInMonth(
+  Number(SearchMonth),
+  Number(SearchYear)
+);
   const matchesSearchAndMonth = (
   item: any,
   searchText: string,
@@ -382,6 +391,62 @@ const filteredData =
   userTypeFilter === "All"
     ? data
     : data.filter((item) => item.UserType === userTypeFilter);
+      function DayBadge({ status }: { status: any }) {
+  const Wrapper = ({ children }: any) => (
+    <div className="flex items-center justify-center w-full">
+      {children}
+    </div>
+  );
+
+  if (status === "P") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 text-emerald-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  if (status === "HP") {
+    return (
+      <Wrapper>
+        <div className="relative w-8 h-8 rounded-full border-2 border-emerald-500 overflow-hidden shadow-sm flex items-center justify-center text-[10px] font-semibold text-emerald-600">
+          <div className="absolute left-0 top-0 w-1/2 h-full bg-emerald-500" />
+          <span className="relative z-10">HP</span>
+        </div>
+      </Wrapper>
+    );
+  }
+
+  if (status === "A") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-rose-600 text-rose-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  if (status === "NA") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-gray-500 text-gray-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  return (
+    <Wrapper>
+      <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border border-gray-400 text-gray-500 bg-white shadow-sm">
+        {status}
+      </span>
+    </Wrapper>
+  );
+}
     if (isChecking) {
       return (
     <LoadingData/>
@@ -843,8 +908,197 @@ onClick={() => router.push("/SubAccountings")}
 
   </div>
 </div>}
+
+   {showFullMonth && (
+  <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-2">
+    <div className="bg-white w-[70vw] h-[96vh] rounded-xl shadow-xl overflow-hidden flex flex-col">
+      {(() => {
+        const attendanceSummary = attendanceInfo.attendanceInfo?.reduce(
+          (acc: any, att: any) => {
+            const hcp = att.HCPAttendence === true;
+            const admin = att.AdminAttendece === true;
+
+            if (hcp && admin) {
+              acc.present += 1;
+            } else if (hcp || admin) {
+              acc.halfDay += 1;
+            } else {
+              acc.absent += 1;
+            }
+
+            return acc;
+          },
+          {
+            present: 0,
+            halfDay: 0,
+            absent: 0,
+          }
+        );
+
+        return (
+          <>
+            <div className="flex items-center justify-between px-4 py-3  shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center shadow">
+                  <img
+                    src="/Icons/Curate-logoq.png"
+                    alt="Company Logo"
+                    className="h-6 w-6 object-contain"
+                  />
+                </div>
+
+                <div>
+                 
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#ff1493] font-semibold">
+                    {attendanceInfo.HCAName}
+                  </p>
+                  <h2 className="text-lg md:text-xl font-bold text-slate-800">
+                    Attendance Dashboard
+                  </h2>
+                  <p className="text-xs text-gray-400">
+                    {
+                      months.find(
+                        (month) =>
+                          month.value === String(SearchMonth).padStart(2, "0")
+                      )?.name
+                    }{" "}
+                    {SearchYear}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowFullMonth(false)}
+                className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
+              >
+                <Minimize2 size={16} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 px-4 py-3 bg-gray-50 shrink-0">
+              <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-center">
+                <p className="text-xs text-green-600 font-medium">
+                  Present Days
+                </p>
+                <p className="text-xl font-bold text-green-700">
+                  {attendanceSummary?.present || 0}
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-center">
+                <p className="text-xs text-amber-600 font-medium">Half Days</p>
+                <p className="text-xl font-bold text-amber-700">
+                  {attendanceSummary?.halfDay || 0}
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-center">
+                <p className="text-xs text-red-600 font-medium">Absent Days</p>
+                <p className="text-xl font-bold text-red-700">
+                  {attendanceSummary?.absent || 0}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 p-2 md:p-3">
+              <div className="grid grid-cols-7 gap-2 h-full">
+                {Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
+                  const today = new Date().getDate();
+
+                  const dayInfo = attendanceInfo.attendanceInfo?.find(
+                    (att: any) => {
+                      const day = new Date(att.AttendenceDate).getDate();
+                      return day === i + 1;
+                    }
+                  );
+
+                  const hcp = dayInfo?.HCPAttendence === true;
+                  const admin = dayInfo?.AdminAttendece === true;
+
+                  let dayStatus = "-";
+
+                  if (dayInfo) {
+                    if (hcp && admin) {
+                      dayStatus = "P";
+                    } else if (hcp || admin) {
+                      dayStatus = "HP";
+                    } else {
+                      dayStatus = "A";
+                    }
+                  }
+
+                  const clientName = dayInfo?.Client_Name ?? "";
+                  const UpdatedBy = dayInfo?.UpdatedBy ?? "-";
+                  const AbsentReason = dayInfo?.Reason ?? "-";
+                  const isFutureDate = i + 1 > today;
+
+                  return (
+                    <div
+                      key={i}
+                      className="rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 min-h-0"
+                    >
+                      <span className="text-[10px] font-semibold text-gray-500 uppercase">
+                        Day {i + 1}
+                      </span>
+
+                      {dayStatus === "-" ? (
+                        <>
+                          <span
+                            className={`text-[8px] w-fit font-medium font-semibold px-2 py-1 rounded bg-gray-300 text-gray-500 border-gray-300`}
+                          >
+                            Not Marked
+                          </span>
+
+                          <span className="text-[8px] text-gray-400 truncate max-w-[70px]">
+                            {clientName}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <DayBadge status={dayStatus} />
+
+                          {clientName && (
+                            <span className="text-[8px] text-center leading-tight px-1 line-clamp-2">
+                              {clientName}
+                            </span>
+                          )}
+
+                          {UpdatedBy && UpdatedBy !== "-" && (
+                            <div className="relative group mt-1">
+                              <div className="p-[2px] rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer">
+                                <Info className="w-3 h-3 text-gray-500" />
+                              </div>
+
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-[10px] px-2 py-2 rounded whitespace-nowrap z-50">
+                                <div>Marked by: {UpdatedBy}</div>
+
+                                {AbsentReason &&
+                                  dayStatus !== "P" && (
+                                    <div className="mt-1 border-t border-gray-700 pt-1">
+                                      Reason: {AbsentReason}
+                                    </div>
+                                  )}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        );
+      })()}
+    </div>
+  </div>
+)}
         <div className="overflow-auto max-h-[650px]">
-          {paybleData.length===0?<div className="h-[100vh] flex flex-col items-center justify-center py-12 px-6 rounded-2xl border border-pink-100 bg-gradient-to-br from-pink-50 via-white to-cyan-50 shadow-md">
+          {paybleData.length===0?
+          
+          
+          <div className="h-[100vh] flex flex-col items-center justify-center py-12 px-6 rounded-2xl border border-pink-100 bg-gradient-to-br from-pink-50 via-white to-cyan-50 shadow-md">
  
   <img
      src="/Icons/Curate-logoq.png"
@@ -881,9 +1135,9 @@ onClick={() => router.push("/SubAccountings")}
  <th className="px-5 py-4 text-center whitespace-nowrap">
                   Info
                 </th>
-                {/* <th className="px-5 py-4 text-center whitespace-nowrap">
+                <th className="px-5 py-4 text-center whitespace-nowrap">
                   Time Sheet
-                </th> */}
+                </th>
 
                 <th className=" px-5 py-4 text-center whitespace-nowrap">
                   Total
@@ -974,12 +1228,16 @@ onClick={() => router.push("/SubAccountings")}
     <Info size={18} />
   </button>
 </td>
-                  {/* <td className="px-5 py-5 text-center">
+                  <td className="px-5 py-5 text-center">
                   <button className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out active:scale-95"
+                   onClick={() => {
+                      setShowFullMonth(true)
+                      setAttendenceInfo(row)
+                    }}
                   >
   View 
 </button>
-                  </td> */}
+                  </td>
 
                   <td className="px-5 py-5 text-center font-bold text-slate-800">
                     {row.total}
