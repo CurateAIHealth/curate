@@ -1223,7 +1223,7 @@ const UpdatePopup = async (a: any) => {
 
 <img className='h-4' src={AssignSuitableIcon(GetHCPGender(user.id),user.PreviewUserType).image}/>
 }<span className="text-xs font-semibold flex flex-col">
-  <span>{toProperCaseLive(user.Surname)}{user.PreviewUserType}{GetHCPGender(user.id)},</span>
+  <span>{toProperCaseLive(user.Surname)}</span>
   <span>
     {toProperCaseLive(user.FirstName)} {toProperCaseLive(user.LastName)}
   </span>
