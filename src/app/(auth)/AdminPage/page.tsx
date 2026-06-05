@@ -42,7 +42,7 @@ import { HCAList } from '@/Redux/reducer';
 import WorkingOn from '@/Components/CurrentlyWoring/page';
 import axios from 'axios';
 
-import { AssignSuitableIcon, decrypt, encrypt, getDaysInMonth, getPopularArea, normalizeDate, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
+import { AssignSuitableIcon, decrypt, encrypt, getDaysInMonth, getDaysInMonthForMonthName, getPopularArea, normalizeDate, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
 import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 import { LoadingData } from '@/Components/Loading/page';
 import ReplacementsTable from '@/Components/ReplacementsTable/page';
@@ -1223,7 +1223,7 @@ const UpdatePopup = async (a: any) => {
 
 <img className='h-4' src={AssignSuitableIcon(GetHCPGender(user.id),user.PreviewUserType).image}/>
 }<span className="text-xs font-semibold flex flex-col">
-  <span>{toProperCaseLive(user.Surname)}</span>
+  <span>{toProperCaseLive(user.Surname)}{user.PreviewUserType}{GetHCPGender(user.id)},</span>
   <span>
     {toProperCaseLive(user.FirstName)} {toProperCaseLive(user.LastName)}
   </span>
@@ -1501,11 +1501,10 @@ const UpdatePopup = async (a: any) => {
     <Pencil size={9} />
   </button>
 </div>
-
       <p className="text-[9px] text-gray-500 leading-none mt-1">
         Per day:
         <span className="ml-1 font-semibold text-green-600">
-          {Math.round(Number(GetHCPPayment(user.userId)) / getDaysInMonth(SearchMonth,SearchYear))}
+          {Math.round(Number(GetHCPPayment(user.userId)) / getDaysInMonthForMonthName(SearchMonth,SearchYear))}
         </span>
       </p>
     </div>

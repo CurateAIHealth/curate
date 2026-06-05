@@ -111,7 +111,15 @@ export function rupeeToNumber(value:any) {
 export const getDaysInMonth = (month: number, year: number) => {
   return new Date(year, month, 0).getDate(); 
 };
-export 
+export  const getDaysInMonthForMonthName = (monthName: string, year: number): number => {
+  const monthIndex = new Date(`${monthName} 1, ${year}`).getMonth();
+
+  if (isNaN(monthIndex)) {
+    throw new Error("Invalid month name");
+  }
+
+  return new Date(year, monthIndex + 1, 0).getDate();
+};
 const currentYear = new Date().getFullYear();
 
 export const years = Array.from(

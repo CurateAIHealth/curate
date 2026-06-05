@@ -283,7 +283,7 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
     specialties: '',
     Password: '',
     ConfirmPassword: '',
-    PreviewUserType:CurrentUserType,
+    PreviewUserType:CurrentUserType||"HCA",
     referralSourceType:'',
     Guardian:'',
     GuardianContact:'',
@@ -647,6 +647,13 @@ const HEIGHT_OPTIONS = Array.from(
         return;
       }
 
+
+
+           if (form.gender  === "") {
+        alert("Gender Not Selected");
+        return;
+      }
+
       setTimeout(async () => {
         try {
 
@@ -758,7 +765,16 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
               
           };
 
-          await PostHCAFullRegistration(FinelForm);
+      try {
+  console.log("FinelForm Before Save:", FinelForm);
+
+  const result = await PostHCAFullRegistration(FinelForm);
+
+  console.log("PostHCAFullRegistration Result:", result);
+} catch (err) {
+  console.error("PostHCAFullRegistration Error:", err);
+  return;
+}
 
           await UpdateFinelVerification(localValue);
 
@@ -1431,6 +1447,7 @@ form.HusbendContact!=="Not Available"&&
               <select
                 name="gender"
                 value={form.gender || ''}
+                
                 onChange={handleChange}
         className="
     input-field md:w-[200px] w-full
@@ -1774,30 +1791,29 @@ form.HusbendContact!=="Not Available"&&
               </div>
             )}
 
-<div className="flex justify-end">
+{/* <div className="flex justify-end">
   <button
     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 
     text-white font-medium shadow-md hover:bg-teal-700 cursor-pointer mt-2
     transition-all duration-300 active:scale-95"
   >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      stroke-width="2"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="M5 13l4 4L19 7"
-      />
-    </svg>
+   <svg
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+  stroke="currentColor"
+  strokeWidth={2}
+>
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M5 13l4 4L19 7"
+  />
+</svg>
 
     Save
   </button>
-</div>
+</div> */}
           </section>
 
           <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
@@ -2163,7 +2179,7 @@ form.HusbendContact!=="Not Available"&&
               className="input-field border border-gray-300 p-3 h-8 mb-1 w-full rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
               required
             />
-            <div className="flex justify-end">
+            {/* <div className="flex justify-end">
   <button
     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 
     text-white font-medium shadow-md hover:bg-teal-700 cursor-pointer mt-2
@@ -2186,7 +2202,7 @@ form.HusbendContact!=="Not Available"&&
 
     Save
   </button>
-</div>
+</div> */}
           </section>
           <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
 
@@ -2259,7 +2275,7 @@ form.HusbendContact!=="Not Available"&&
 
 
 
-<div className="flex justify-end">
+{/* <div className="flex justify-end">
   <button
     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 
     text-white font-medium shadow-md hover:bg-teal-700 cursor-pointer mt-2
@@ -2282,7 +2298,7 @@ form.HusbendContact!=="Not Available"&&
 
     Save
   </button>
-</div>
+</div> */}
 
 
 
@@ -2358,7 +2374,7 @@ form.HusbendContact!=="Not Available"&&
               />
             )}
 
-<div className="flex justify-end">
+{/* <div className="flex justify-end">
   <button
     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 
     text-white font-medium shadow-md hover:bg-teal-700 cursor-pointer mt-2
@@ -2381,7 +2397,7 @@ form.HusbendContact!=="Not Available"&&
 
     Save
   </button>
-</div>
+</div> */}
           </section>
 
           <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
@@ -2451,7 +2467,7 @@ form.HusbendContact!=="Not Available"&&
                 }}
               />
             )}
-<div className="flex justify-end">
+{/* <div className="flex justify-end">
   <button
     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 
     text-white font-medium shadow-md hover:bg-teal-700 cursor-pointer mt-2
@@ -2474,7 +2490,7 @@ form.HusbendContact!=="Not Available"&&
 
     Save
   </button>
-</div>
+</div> */}
           </section>
 
 
@@ -2787,7 +2803,7 @@ form.HusbendContact!=="Not Available"&&
                 
               
               </div>}
-              <div className="flex justify-end">
+              {/* <div className="flex justify-end">
   <button
     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 
     text-white font-medium shadow-md hover:bg-teal-700 cursor-pointer mt-2
@@ -2810,7 +2826,7 @@ form.HusbendContact!=="Not Available"&&
 
     Save
   </button>
-</div>
+</div> */}
           </section>
 
        <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
@@ -3424,7 +3440,7 @@ form.HusbendContact!=="Not Available"&&
                 />}
             </div>
 
-<div className="flex justify-end">
+{/* <div className="flex justify-end">
   <button
     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 
     text-white font-medium shadow-md hover:bg-teal-700 cursor-pointer mt-2
@@ -3447,7 +3463,7 @@ form.HusbendContact!=="Not Available"&&
 
     Save
   </button>
-</div>
+</div> */}
 
           </section>
 
@@ -3624,7 +3640,7 @@ form.HusbendContact!=="Not Available"&&
 </div>
 
             </div>
-            <div className="flex justify-end">
+            {/* <div className="flex justify-end">
   <button
     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 
     text-white font-medium shadow-md hover:bg-teal-700 cursor-pointer mt-2
@@ -3647,7 +3663,7 @@ form.HusbendContact!=="Not Available"&&
 
     Save
   </button>
-</div>
+</div> */}
           </section>
 
              <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
@@ -3878,7 +3894,7 @@ form.HusbendContact!=="Not Available"&&
                 
               />
             </div>
-            <div className="flex justify-end">
+            {/* <div className="flex justify-end">
   <button
     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 
     text-white font-medium shadow-md hover:bg-teal-700 cursor-pointer mt-2
@@ -3901,7 +3917,7 @@ form.HusbendContact!=="Not Available"&&
 
     Save
   </button>
-</div>
+</div> */}
           </section>
 
   <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
@@ -4171,7 +4187,7 @@ form.HusbendContact!=="Not Available"&&
                 
               />
             </div>
-            <div className="flex justify-end">
+            {/* <div className="flex justify-end">
   <button
     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 
     text-white font-medium shadow-md hover:bg-teal-700 cursor-pointer mt-2
@@ -4194,7 +4210,7 @@ form.HusbendContact!=="Not Available"&&
 
     Save
   </button>
-</div>
+</div> */}
           </section>
 
        
