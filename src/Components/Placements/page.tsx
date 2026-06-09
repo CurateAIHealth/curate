@@ -109,6 +109,7 @@ const [status, setStatus] = useState("Active");
 
 const [enableStatus,setenableStatus]=useState(false)
   const [TimeSheet_UserId, setTimeSheet_UserId] = useState("");
+  const [TimeSheet_HCAId,setTimeSheet_HCAId]=useState("")
   const [selectedReason, setSelectedReason] = useState("");
   const [otherReason, setOtherReason] = useState("");
   const [showTimeSheet, setShowTimeSheet] = useState(false)
@@ -685,9 +686,10 @@ const SelectedCareTakerCharges=GetInfo.serviceCharges
   };
   const isDeleteDisabled =
     !selectedReason || (selectedReason === "Other" && !otherReason.trim());
-  const UpdateClient_UserId = (id: any,Name:any) => {
+  const UpdateClient_UserId = (id: any,Name:any,HCAId:any) => {
     setHCPName(Name)
     setTimeSheet_UserId(id);
+    setTimeSheet_HCAId(HCAId)
     setShowTimeSheet(true);
   };
 const UpdateInformation=()=>{
@@ -817,7 +819,7 @@ if (deploymentRes.success) {
 
   const TimeSheet_Info = FinelTimeSheet.find(
 
-    (each) => each.Client_Id === TimeSheet_UserId&&each.Month===`${SearchYear}-${String(SearchMonth)}`
+    (each) => each.Client_Id === TimeSheet_UserId&&each.HCA_Id===TimeSheet_HCAId&&each.Month===`${SearchYear}-${String(SearchMonth)}`
   );
 
   console.log("TimeSheet_Info", TimeSheet_Info);
@@ -1290,9 +1292,7 @@ const EditAttendence = async (): Promise<void> => {
       SetActionStatusMessage("Please select a valid status");
       return;
     }
-
-    if (EditDate === today) {
-      const payload = {
+const payload = {
         Client_Id: AttenseceInformation.Client_Id,
         HCA_Id: AttenseceInformation.HCA_Id,
         Client_Name: AttenseceInformation.name,
@@ -1301,7 +1301,7 @@ const EditAttendence = async (): Promise<void> => {
         status: currentStatus,
       };
 console.log(
-  "Check Attendece Status",currentStatus
+  "Check Payload",payload
 )
       const dateResponse = await UpdateClientAttendanceStatus(
         SearchYear,
@@ -1311,40 +1311,15 @@ console.log(
         AbsentReason
       );
 
+      console.log("Check Attendece Status-------",dateResponse)
+
      if (dateResponse?.success) {
-  setClientsInformation((prev:any) =>
-    prev.map((client:any) => {
-      if (client.ClientId !== AttenseceInformation.Client_Id) return client;
-
-      const updatedAttendance = [...(client.ClientAttendance || [])];
-
-      const existingIndex = updatedAttendance.findIndex(
-        (att:any) =>
-          new Date(att.AttendanceDate).toISOString().split("T")[0] === EditDate
-      );
-
-      if (existingIndex >= 0) {
-        updatedAttendance[existingIndex] = {
-          ...updatedAttendance[existingIndex],
-          Status: currentStatus,
-        };
-      } else {
-        updatedAttendance.push({
-          AttendanceDate: EditDate,
-          Status: currentStatus,
-        });
-      }
-
-      return {
-        ...client,
-        ClientAttendance: updatedAttendance,
-      };
-    })
-  );
+ 
 
   SetActionStatusMessage(
     dateResponse?.message || "Attendance updated Successfully"
   );
+   window.location.reload()
 }
 
       setTimeout(() => {
@@ -1354,45 +1329,108 @@ console.log(
       }, 3500);
 
       return;
-    }
+//     if (EditDate === today) {
+//       const payload = {
+//         Client_Id: AttenseceInformation.Client_Id,
+//         HCA_Id: AttenseceInformation.HCA_Id,
+//         Client_Name: AttenseceInformation.name,
+//         HCA_Name: AttenseceInformation.HCA_Name,
+//         date: EditDate,
+//         status: currentStatus,
+//       };
+// console.log(
+//   "Check Attendece Status",currentStatus
+// )
+//       const dateResponse = await UpdateClientAttendanceStatus(
+//         SearchYear,
+//         SearchMonth,
+//         [payload],
+//         loggedInEmail,
+//         AbsentReason
+//       );
 
-    const info = {
-      ...AttenseceInformation,
-      flexDate,
-      yearMonth,
-      status: currentStatus,
-    };
-console.log ("Check Client Info Details------",info)
-    const response = await PostAttendeceEditRequest(
-      info,
-      AttendeceEditReason,
-      loggedInEmail,
-      AbsentReason,
-      "ClientAttendece"
-    );
+//      if (dateResponse?.success) {
+//   setClientsInformation((prev:any) =>
+//     prev.map((client:any) => {
+//       if (client.ClientId !== AttenseceInformation.Client_Id) return client;
 
-    if (!response?.success) {
-      SetActionStatusMessage(response?.message || "Failed to update attendance");
-      return;
-    }
+//       const updatedAttendance = [...(client.ClientAttendance || [])];
 
-    try {
-      await axios.post("/api/Slack", {
-        userIds: "U04S43V513N",
-        message:
-          "Hi Madam, Kindly requesting Attendance Edit Request update. Please check notification in the application. Thank you.",
-      });
-    } catch (slackError) {
-      console.error("Slack notification failed:", slackError);
-    }
+//       const existingIndex = updatedAttendance.findIndex(
+//         (att:any) =>
+//           new Date(att.AttendanceDate).toISOString().split("T")[0] === EditDate
+//       );
 
-    SetActionStatusMessage(`✅ ${response.message || "Attendance request submitted Successfully"}`);
+//       if (existingIndex >= 0) {
+//         updatedAttendance[existingIndex] = {
+//           ...updatedAttendance[existingIndex],
+//           Status: currentStatus,
+//         };
+//       } else {
+//         updatedAttendance.push({
+//           AttendanceDate: EditDate,
+//           Status: currentStatus,
+//         });
+//       }
 
-    setTimeout(() => {
-      setShowTimeSheet(false);
-      SetShowUpdateAttendece(false);
-      SetAttendeceEditReason("");
-    }, 3500);
+//       return {
+//         ...client,
+//         ClientAttendance: updatedAttendance,
+//       };
+//     })
+//   );
+
+//   SetActionStatusMessage(
+//     dateResponse?.message || "Attendance updated Successfully"
+//   );
+// }
+
+//       setTimeout(() => {
+//         setShowTimeSheet(false);
+//         SetShowUpdateAttendece(false);
+//         SetAttendeceEditReason("");
+//       }, 3500);
+
+//       return;
+//     }
+
+//     const info = {
+//       ...AttenseceInformation,
+//       flexDate,
+//       yearMonth,
+//       status: currentStatus,
+//     };
+// console.log ("Check Client Info Details------",info)
+//     const response = await PostAttendeceEditRequest(
+//       info,
+//       AttendeceEditReason,
+//       loggedInEmail,
+//       AbsentReason,
+//       "ClientAttendece"
+//     );
+
+//     if (!response?.success) {
+//       SetActionStatusMessage(response?.message || "Failed to update attendance");
+//       return;
+//     }
+
+//     try {
+//       await axios.post("/api/Slack", {
+//         userIds: "U04S43V513N",
+//         message:
+//           "Hi Madam, Kindly requesting Attendance Edit Request update. Please check notification in the application. Thank you.",
+//       });
+//     } catch (slackError) {
+//       console.error("Slack notification failed:", slackError);
+//     }
+
+//     SetActionStatusMessage(`✅ ${response.message || "Attendance request submitted Successfully"}`);
+
+//     setTimeout(() => {
+//       setShowTimeSheet(false);
+//       SetShowUpdateAttendece(false);
+//       SetAttendeceEditReason("");
+//     }, 3500);
   } catch (error: unknown) {
     const message =
       error instanceof Error
@@ -2406,7 +2444,7 @@ console.log('Test Date------',EditDate)
 </p>:
               <button
                 className="px-2 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600"
-                 onClick={() => {UpdateClient_UserId(c.Client_Id, c.name),setAttenseceInformation(c),SetActionStatusMessage("")}}
+                 onClick={() => {UpdateClient_UserId(c.Client_Id, c.name,c.HCA_Id),setAttenseceInformation(c),SetActionStatusMessage("")}}
               >
                 Full Month
               </button>}
@@ -2940,7 +2978,7 @@ setSelectedDate(e.target.value)
 
     <div className="flex items-center justify-between border-b px-2 py-3">
       <p className="text-base font-semibold text-gray-800">
-        Edit Attendance
+        Edit Attendance{EditDate}
       </p>
       <button
   onClick={()=>SetShowUpdateAttendece(!ShowUpdateAttendece)}
@@ -3154,12 +3192,15 @@ console.log("Check Info-----",record)
               key={day}
               className="rounded-lg w-[95px] border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 min-h-0"
             >
+              {/* {`${SearchYear}-0${SearchMonth}-${day<=9?
+                `0${day}`:day}`} */}
               <span className="text-[10px] font-semibold text-gray-500 uppercase">
                 Day {day}  
               </span>
 
            
               <DayBadge status={currentStatus as DayStatus} />
+
 
               {record?.HCA_Name && (
                 <span className="text-[8px] text-gray-800 mt-1">
@@ -3188,7 +3229,8 @@ console.log("Check Info-----",record)
                   if (isFuture) return;
                   SetShowUpdateAttendece(!ShowUpdateAttendece);
                   SetParticularDate(day);
-                  setEditDate(record?.dateKey);
+                  setEditDate(record?.dateKey?record?.dateKey:`${SearchYear}-0${SearchMonth}-${day<=9?
+                `0${day}`:day}`);
                   setAttenseceInformation(record || AttenseceInformation);
                   setStatus(record?.Status || "");
                   setAbsentReason(record?.Reason || "");
@@ -3211,7 +3253,7 @@ console.log("Check Info-----",record)
           <div className="w-full max-w-sm rounded-xl bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b px-2 py-3">
               <p className="text-base font-semibold text-gray-800">
-                Edit Attendance
+                Edit Attendance{EditDate}
               </p>
 
               <button
@@ -3224,7 +3266,7 @@ console.log("Check Info-----",record)
 
             <div className="px-5 py-4">
               <label className="mb-2 block text-sm font-medium text-gray-600">
-                Attendance Status
+                Attendance Status{EditDate}
               </label>
 
               <select
@@ -3255,7 +3297,7 @@ console.log("Check Info-----",record)
               </div>
             )}
 
-            {EditDate !== new Date().toISOString().split("T")[0] && (
+            {/* {EditDate !== new Date().toISOString().split("T")[0] && (
               <div className="flex flex-col border-b px-5 py-3">
                 <label className="text-xs font-semibold text-gray-800">
                   Reason for Attendance Edit
@@ -3269,7 +3311,7 @@ console.log("Check Info-----",record)
                   className="mt-2 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-black focus:outline-none"
                 />
               </div>
-            )}
+            )} */}
 
             <div>
               {ActionStatusMessage && (
@@ -3448,7 +3490,7 @@ function DayBadge({ status }: { status: any }) {
     return (
       <Wrapper>
         <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-rose-600 text-rose-600 bg-white shadow-sm">
-          {status==="Absent"||status === "A"&&"A"}
+         A
         </span>
       </Wrapper>
     );

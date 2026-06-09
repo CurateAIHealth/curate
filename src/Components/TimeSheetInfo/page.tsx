@@ -1306,8 +1306,8 @@ className={`
   {r.CareTakerPrice
     ? String(r.CareTakerPrice).includes("₹")
       ? r.CareTakerPrice
-      : `₹${r.CareTakerPrice}`
-    : "₹0"}
+      : `${r.CareTakerPrice}`
+    : "0"}
 </Td>
 
 

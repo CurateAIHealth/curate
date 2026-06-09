@@ -10,9 +10,10 @@ import { UpdateMonthFilter, UpdateSubHeading, UpdateYearFilter } from "@/Redux/a
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+
 import { LoadingData } from "../Loading/page";
 import { AssignSuitableIcon, getDaysBetween, getDueDaysStatus, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
-import { CalendarCheck2, ChevronsRight, CircleCheckBig, CirclePause, MapPin, X } from "lucide-react";
+import { CalendarCheck2, ChevronsRight, CircleCheckBig, CirclePause, FolderX, MapPin, X } from "lucide-react";
 import { years } from "@/Lib/Content";
 
 const    AwaitingInvoice=({
@@ -191,75 +192,96 @@ const handleDeleteClick = (Info: any,Name:any) => {
 SetCareTakerName(Name)
     setShowDeletePopup(true);
   };
-    const now = new Date();
+ const now = new Date();
+now.setHours(0, 0, 0, 0);
 
-    const FinelTimeSheet = ClientsInformation.map((each: any) => {
-const normalizedAttendance =
-  Array.isArray(each.Attendance) && each.Attendance.length > 0
-    ? each.Attendance.map((att: any) => {
-        const hcp =
-          att.HCPAttendence ??
-          att.HCPAttendance ??
-          att.hcpAttendence ??
-          false;
+const threeDaysLater = new Date(now);
+threeDaysLater.setDate(now.getDate() + 3);
+const parseDate = (dateString: string) => {
+  const [day, month, year] = dateString.split("/").map(Number);
 
-        const admin =
-          att.AdminAttendece ??
-          att.AdminAttendence ??
-          att.AdminAttendance ??
-          att.adminAttendence ??
-          false;
+  return new Date(year, month - 1, day);
+};
+const FinelTimeSheet = ClientsInformation
+   .filter((each: any) => {
+    if (!each.EndDate) return false;
 
-        let status: "Present" | "Half Day" | "Absent";
+    const endDate = parseDate(each.EndDate);
 
-        if (hcp === true && admin === true) {
-          status = "Present";
-        } else if (hcp === true || admin === true) {
-          status = "Half Day";
-        } else {
-          status = "Absent";
-        }
+    endDate.setHours(0, 0, 0, 0);
 
-        return {
-          date: att.AttendenceDate,
-          status,
-        };
-      })
-    : [];
+    console.log("Today:", now);
+    console.log("EndDate:", endDate);
+    console.log(
+      "Within 3 Days:",
+      endDate >= now && endDate <= threeDaysLater
+    );
 
+    return endDate >= now && endDate <= threeDaysLater;
+  })
+  .map((each: any) => {
+    const normalizedAttendance =
+      Array.isArray(each.Attendance) && each.Attendance.length > 0
+        ? each.Attendance.map((att: any) => {
+            const hcp =
+              att.HCPAttendence ??
+              att.HCPAttendance ??
+              att.hcpAttendence ??
+              false;
 
+            const admin =
+              att.AdminAttendece ??
+              att.AdminAttendence ??
+              att.AdminAttendance ??
+              att.adminAttendence ??
+              false;
 
-  return {
-    Client_Id: each.ClientId,
-    HCA_Id: each.HCAId,
-    Address: each.Address,
-    name: each.ClientName,
-    email: each.ClientEmail,
-    contact: each.ClientContact,
-    HCAContact: each.HCAContact,
-    HCA_Name: each.HCAName,
-    location: each.Address,
-    TimeSheet: normalizedAttendance,
-    PatientName: each.patientName,
-    Patient_PhoneNumber: each.patientPhone,
-    RreferralName: each.referralName,
-    Type: each.Type,
-    Status: each.Status,
-    cPay: each.cPay,
-    cTotal: each.cTotal,
-    hcpPay: each.hcpPay,
-    hcpSource: each.hcpSource,
-    hcpTotal: each.hcpTotal,
-    invoice: each.invoice,
-    ServiceCharge:each.CareTakerPrice,
-    StartDate:each.StartDate,
-    EndDate:each.EndDate,
-    Month:each.Month,
-    Replacement:each.Replacement,
-    
-  };
-});
+            let status: "Present" | "Half Day" | "Absent";
 
+            if (hcp === true && admin === true) {
+              status = "Present";
+            } else if (hcp === true || admin === true) {
+              status = "Half Day";
+            } else {
+              status = "Absent";
+            }
+
+            return {
+              date: att.AttendenceDate,
+              status,
+            };
+          })
+        : [];
+
+    return {
+      Client_Id: each.ClientId,
+      HCA_Id: each.HCAId,
+      Address: each.Address,
+      name: each.ClientName,
+      email: each.ClientEmail,
+      contact: each.ClientContact,
+      HCAContact: each.HCAContact,
+      HCA_Name: each.HCAName,
+      location: each.Address,
+      TimeSheet: normalizedAttendance,
+      PatientName: each.patientName,
+      Patient_PhoneNumber: each.patientPhone,
+      RreferralName: each.referralName,
+      Type: each.Type,
+      Status: each.Status,
+      cPay: each.cPay,
+      cTotal: each.cTotal,
+      hcpPay: each.hcpPay,
+      hcpSource: each.hcpSource,
+      hcpTotal: each.hcpTotal,
+      invoice: each.invoice,
+      ServiceCharge: each.CareTakerPrice,
+      StartDate: each.StartDate,
+      EndDate: each.EndDate,
+      Month: each.Month,
+      Replacement: each.Replacement,
+    };
+  });
 const matchesSearchAndMonth = (
   item: any,
   searchText: string,
@@ -1013,6 +1035,9 @@ const isProfit = invoiceProfit >= 0;
     );
   })()}
     </div>}
+    <p className="text-lg font-semibold text-gray-800">
+  Current Price: <span className="text-green-600 font-bold">₹{serviceCharge}</span>
+</p>
       <div className="flex items-center gap-2 mb-3">
         <input
           type="radio"
@@ -1239,6 +1264,22 @@ const isProfit = invoiceProfit >= 0;
     </div>
   </div>
 )}
+
+{FilterFinelTimeSheet.length===0? 
+
+<div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+  <div className="p-5 rounded-full bg-[#50c896]/10">
+    <FolderX  className="text-5xl text-[#50c896]" />
+  </div>
+
+  <h2 className="mt-4 text-lg font-bold text-gray-800">
+    No Extensions Found
+  </h2>
+
+  <p className="mt-2 text-sm text-gray-500">
+    Extensions will be displayed here once they become available.
+  </p>
+</div>:
      <table className="w-full table-fixed border-collapse bg-white">
        
   <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white text-xs font-semibold shadow-md">
@@ -1459,7 +1500,7 @@ const isProfit = invoiceProfit >= 0;
              )} */}
 
    <td className="px-1 py-3 text-center break-words">
-     {!isMatch &&
+     {/* {!isMatch &&
    ( (typeof WorkingDays === "number" && WorkingDays <= 3) || (typeof WorkingDays === "string" && WorkingDays.includes("Overdue")) )?  <p className="hover:underline font-semibold text-[12px] mb-4 break-words leading-tight">  {typeof WorkingDays === "number"
   ? WorkingDays === 1
     ? `${WorkingDays} Day`
@@ -1471,15 +1512,23 @@ const isProfit = invoiceProfit >= 0;
                  text-white bg-red-600 hover:bg-red-700 cursor-pointer rounded-md"      
       onClick={ () => handleDeleteClick(c,c.HCA_Name)}> Terminate</button>
   </div>} </p>:    <p className="inline-block px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-  On Service
-</p> }
+  On Service 
+</p> } */}
+
+<div>
+    <p className="text-[10px] font-semibold">{WorkingDays} Days Left For Extention</p>
+  <button
+      className="px-2 py-0.5 text-[9px] font-semibold
+                 text-white bg-red-600 hover:bg-red-700 cursor-pointer rounded-md"      
+      onClick={ () => handleDeleteClick(c,c.HCA_Name)}> Terminate</button>
+  </div>
   
 
  
    </td>
 
  <td className="px-1 py-3 text-center break-words">
-  {!isMatch &&
+  {/* {!isMatch &&
    ( (typeof WorkingDays === "number" && WorkingDays <= 3) || (typeof WorkingDays === "string" && WorkingDays.includes("Overdue")) )? (
     <button
       className="px-4 py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full"
@@ -1500,7 +1549,24 @@ const isProfit = invoiceProfit >= 0;
     </button>
   ) : (
     <img src="Icons/AlreadyOnService.png" className="h-8 ml-8" />
-  )}
+  )} */}
+      <button
+      className="px-4 py-2 text-xs font-medium hover:bg-gray-100 hover:rounded-full"
+      onClick={() => {
+        SetActionStatusMessage("");
+
+        UpdatePopup(c);
+        setServiceCharge(rupeeToNumber(c.ServiceCharge).toFixed(2));
+        setSelectedDate("");
+        setWorkingHCPId(c.HCA_Id)
+        setUpdateServiceCharge(false)
+        setSelectedEndDate("");
+        setShowWarning(false);
+        SetActionStatusMessage("");
+      }}
+    >
+      <ChevronsRight size={22} className="text-teal-600" />
+    </button>
 </td>
    
   
@@ -1527,7 +1593,7 @@ const isProfit = invoiceProfit >= 0;
          )}
        </tbody>
    
-     </table>
+     </table>}
    </div>
    
    

@@ -769,6 +769,14 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
   console.log("FinelForm Before Save:", FinelForm);
 
   const result = await PostHCAFullRegistration(FinelForm);
+  if (!result?.success) {
+  console.error("PostHCAFullRegistration Failed:", result);
+  setUpdatedStatusMessage(
+    result?.message || "Failed to save registration details."
+  );
+  alert("PostHCAFullRegistration Failed")
+  return;
+}
 
   console.log("PostHCAFullRegistration Result:", result);
 } catch (err) {
