@@ -3278,40 +3278,6 @@ export const UpdateClientAttendanceStatus = async (
     const collection = db.collection("Deployment");
 
     const monthKey = `${selectedYear}-${Number(selectedMonth)}`;
-console.log("Check Month----",monthKey)
-    const deploymentRecords = await collection
-      .find({
-        Month: monthKey,
-        Status: { $ne: "Freeze" },
-      })
-      .toArray();
-
-    if (!deploymentRecords.length) {
-      return {
-        success: false,
-        summary: {
-          totalRequested: attendanceInfo.length,
-          updatedCount: 0,
-          missingDeploymentCount: attendanceInfo.length,
-          attendanceNotFoundCount: 0,
-        },
-        details: {
-          updatedClients: [],
-          missingDeploymentClients: attendanceInfo.map(
-            (item) => item.Client_Name
-          ),
-          attendanceNotFoundClients: [],
-        },
-        message: "No active deployment records found.",
-      };
-    }
-
-    const deploymentMap = new Map(
-      deploymentRecords.map((record: any) => [
-        `${record.ClientId}_${record.HCAId}`,
-        record,
-      ])
-    );
 
     const bulkOperations: any[] = [];
     const updatedClients: string[] = [];
@@ -3319,17 +3285,30 @@ console.log("Check Month----",monthKey)
     const attendanceNotFoundClients: string[] = [];
 
     for (const attendance of attendanceInfo) {
-      const key = `${attendance.Client_Id}_${attendance.HCA_Id}`;
-      const matchedRecord = deploymentMap.get(key);
+      const matchedRecord = await collection.findOne({
+        Month: monthKey,
+        Status: { $ne: "Freeze" },
+        ClientId: attendance.Client_Id,
+        HCAId: attendance.HCA_Id,
+      });
 
       if (!matchedRecord) {
         missingDeploymentClients.push(attendance.Client_Name);
         continue;
       }
-console.log("Check Attendece Info------",attendance)
+
       const selectedDateKey = getDateKey(attendance.date);
 
-      const existingAttendance = Array.isArray(matchedRecord.ClientAttendance)
+      const normalizedStatus =
+        typeof attendance.status === "object" &&
+        attendance.status !== null &&
+        "status" in attendance.status
+          ? attendance.status.status
+          : attendance.status;
+
+      const existingAttendance = Array.isArray(
+        matchedRecord.ClientAttendance
+      )
         ? matchedRecord.ClientAttendance.find((entry: any) => {
             const entryDateKey =
               entry?.dateKey ||
@@ -3337,17 +3316,49 @@ console.log("Check Attendece Info------",attendance)
                 ? getDateKey(entry.AttendanceDate)
                 : null);
 
-            return entryDateKey === selectedDateKey;
+            return (
+              entryDateKey === selectedDateKey &&
+              String(entry.Client_Id).trim() ===
+                String(attendance.Client_Id).trim() &&
+              String(entry.HCA_Id).trim() ===
+                String(attendance.HCA_Id).trim()
+            );
           })
         : null;
-const normalizedStatus =
-  typeof attendance.status === "object" &&
-  attendance.status !== null &&
-  "status" in attendance.status
-    ? attendance.status.status
-    : attendance.status;
+
       if (!existingAttendance) {
-        attendanceNotFoundClients.push(attendance.Client_Name);
+        bulkOperations.push({
+          updateOne: {
+            filter: {
+              _id: new ObjectId(matchedRecord._id),
+            },
+            update: {
+              $push: {
+                ClientAttendance: {
+                  dateKey: selectedDateKey,
+                  AttendanceDate: new Date(attendance.date),
+                  Client_Id: attendance.Client_Id,
+                  Client_Name: attendance.Client_Name,
+                  HCA_Id: attendance.HCA_Id,
+                  HCA_Name: attendance.HCA_Name,
+                  Status: normalizedStatus,
+                  AdminAttendance: true,
+                  CreatedAt: new Date(),
+                  UpdatedAt: new Date(),
+                  UpdatedBy: logInUser || "Admin",
+                  Reason:
+                    normalizedStatus !== "Present" ? reason : "",
+                },
+              },
+              $set: {
+                UpdatedAt: new Date(),
+                UpdatedBy: logInUser || "Admin",
+              },
+            },
+          },
+        });
+
+        updatedClients.push(attendance.Client_Name);
         continue;
       }
 
@@ -3360,20 +3371,19 @@ const normalizedStatus =
             $set: {
               "ClientAttendance.$[elem].Status": normalizedStatus,
               "ClientAttendance.$[elem].UpdatedAt": new Date(),
-              "ClientAttendance.$[elem].UpdatedBy": logInUser || "Admin",
+              "ClientAttendance.$[elem].UpdatedBy":
+                logInUser || "Admin",
               "ClientAttendance.$[elem].Reason":
                 normalizedStatus !== "Present" ? reason : "",
-              "ClientAttendance.$[elem].dateKey": selectedDateKey,
               UpdatedAt: new Date(),
               UpdatedBy: logInUser || "Admin",
             },
           },
           arrayFilters: [
             {
-              $or: [
-                { "elem.dateKey": selectedDateKey },
-                { "elem.AttendanceDate": attendance.date },
-              ],
+              "elem.dateKey": selectedDateKey,
+              "elem.Client_Id": attendance.Client_Id,
+              "elem.HCA_Id": attendance.HCA_Id,
             },
           ],
         },
@@ -3383,17 +3393,22 @@ const normalizedStatus =
     }
 
     if (bulkOperations.length > 0) {
-      const bulkResult = await collection.bulkWrite(bulkOperations, {
-        ordered: false,
-      });
-console.log("Bulk Result:", bulkResult);
+      const bulkResult = await collection.bulkWrite(
+        bulkOperations,
+        {
+          ordered: false,
+        }
+      );
+
       return {
         success: bulkResult.modifiedCount > 0,
         summary: {
           totalRequested: attendanceInfo.length,
           updatedCount: bulkResult.modifiedCount,
-          missingDeploymentCount: missingDeploymentClients.length,
-          attendanceNotFoundCount: attendanceNotFoundClients.length,
+          missingDeploymentCount:
+            missingDeploymentClients.length,
+          attendanceNotFoundCount:
+            attendanceNotFoundClients.length,
         },
         details: {
           updatedClients,
@@ -3412,8 +3427,10 @@ console.log("Bulk Result:", bulkResult);
       summary: {
         totalRequested: attendanceInfo.length,
         updatedCount: 0,
-        missingDeploymentCount: missingDeploymentClients.length,
-        attendanceNotFoundCount: attendanceNotFoundClients.length,
+        missingDeploymentCount:
+          missingDeploymentClients.length,
+        attendanceNotFoundCount:
+          attendanceNotFoundClients.length,
       },
       details: {
         updatedClients: [],
@@ -3441,6 +3458,293 @@ console.log("Bulk Result:", bulkResult);
     };
   }
 };
+// export const UpdateClientDailyAttendance = async (
+//   selectedYear: string | number,
+//   selectedMonth: string | number,
+//   attendanceInfo: any[],
+//   LogInUser: string
+// ) => {
+//   try {
+//     const cluster = await clientPromise;
+//     const db = cluster.db("CurateInformation");
+//     const collection = db.collection("Deployment");
+
+//     const monthKey = `${selectedYear}-${Number(selectedMonth)}`;
+
+//     console.log("Month Key:", monthKey);
+//     console.log("Attendance Info:", attendanceInfo);
+
+//     if (!attendanceInfo?.length) {
+//       return {
+//         success: false,
+//         summary: {
+//           totalRequested: 0,
+//           updatedCount: 0,
+//           alreadyMarkedCount: 0,
+//           missingDeploymentCount: 0,
+//         },
+//         details: {
+//           updatedClients: [],
+//           alreadyMarkedClients: [],
+//           missingDeploymentClients: [],
+//         },
+//         message: "No attendance data was received for processing.",
+//       };
+//     }
+
+//     const records = await collection
+//       .find({
+//         Month: monthKey,
+//         Status: { $ne: "Freeze" },
+//       })
+//       .toArray();
+
+//     console.log("Fetched Records:", records);
+
+//     if (!records.length) {
+//       return {
+//         success: false,
+//         summary: {
+//           totalRequested: attendanceInfo.length,
+//           updatedCount: 0,
+//           alreadyMarkedCount: 0,
+//           missingDeploymentCount: attendanceInfo.length,
+//         },
+//         details: {
+//           updatedClients: [],
+//           alreadyMarkedClients: [],
+//           missingDeploymentClients: attendanceInfo.map(
+//             (item) => item.Client_Name
+//           ),
+//         },
+//         message: "No active deployment records were found for the selected month.",
+//       };
+//     }
+
+//     const operations: any[] = [];
+//     const updatedClients: string[] = [];
+//     const alreadyMarkedClients: string[] = [];
+//     const missingDeploymentClients: string[] = [];
+
+//     for (const attendance of attendanceInfo) {
+//       console.log("Processing Attendance:", attendance);
+
+//       const matchedRecord = records.find(
+//         (record: any) =>
+//           record.ClientId === attendance.Client_Id &&
+//           record.HCAId === attendance.HCA_Id
+//       );
+
+//       console.log("Matched Record:", matchedRecord);
+
+//       if (!matchedRecord) {
+//         missingDeploymentClients.push(attendance.Client_Name);
+//         continue;
+//       }
+
+//       const dateObj = new Date(attendance.date);
+//       const selectedDateKey = dateObj.toISOString().slice(0, 10);
+
+//       console.log("Selected Date Key:", selectedDateKey);
+
+//       const cleanedAttendance = Array.isArray(matchedRecord.ClientAttendance)
+//         ? matchedRecord.ClientAttendance.filter(
+//             (a: any) => a && typeof a === "object"
+//           )
+//         : [];
+
+//       console.log("Cleaned Attendance:", cleanedAttendance);
+
+//       const alreadyMarked = cleanedAttendance.some((a: any) => {
+//         const attendanceDate =
+//           a?.AttendanceDate ||
+//           a?.AttendenceDate;
+
+//         const attendanceDateKey =
+//           a?.dateKey ||
+//           (attendanceDate
+//             ? new Date(attendanceDate).toISOString().slice(0, 10)
+//             : null);
+
+//         if (!attendanceDateKey) return false;
+
+//         return attendanceDateKey === selectedDateKey;
+//       });
+
+//       console.log("Already Marked:", alreadyMarked);
+
+//       if (alreadyMarked) {
+//         alreadyMarkedClients.push(attendance.Client_Name);
+//         continue;
+//       }
+
+//       const attendanceEntry = {
+//         dateKey: selectedDateKey,
+//         AttendanceDate: dateObj,
+//         Client_Id: attendance.Client_Id,
+//         Client_Name: attendance.Client_Name,
+//         HCA_Id: attendance.HCA_Id,
+//         HCA_Name: attendance.HCA_Name,
+//         Status: attendance.status,
+//         AdminAttendance: true,
+//         CreatedAt: new Date(),
+//         UpdatedAt: new Date(),
+//         UpdatedBy: LogInUser || "Admin",
+//       };
+
+//       console.log("Attendance Entry:", attendanceEntry);
+
+//       operations.push({
+//         updateOne: {
+//           filter: { _id: matchedRecord._id },
+//           update: {
+//             $push: {
+//               ClientAttendance: attendanceEntry,
+//             },
+//             $set: {
+//               UpdatedAt: new Date(),
+//               UpdatedBy: "Admin",
+//             },
+//           },
+//         },
+//       });
+
+//       updatedClients.push(attendance.Client_Name);
+//     }
+
+//     console.log("Bulk Operations:", operations);
+
+//     if (operations.length > 0) {
+//       const bulkResult = await collection.bulkWrite(operations);
+//       console.log("Bulk Write Result:", bulkResult);
+//     }
+
+//     const summary = {
+//       totalRequested: attendanceInfo.length,
+//       updatedCount: updatedClients.length,
+//       alreadyMarkedCount: alreadyMarkedClients.length,
+//       missingDeploymentCount: missingDeploymentClients.length,
+//     };
+
+//     const details = {
+//       updatedClients,
+//       alreadyMarkedClients,
+//       missingDeploymentClients,
+//     };
+
+//     console.log("Summary:", summary);
+//     console.log("Details:", details);
+
+//     if (
+//       updatedClients.length === 0 &&
+//       alreadyMarkedClients.length === 1 &&
+//       attendanceInfo.length === 1
+//     ) {
+//       return {
+//         success: false,
+//         summary,
+//         details,
+//         message: "Attendance has already been marked for this client.",
+//       };
+//     }
+
+//     if (
+//       updatedClients.length === 0 &&
+//       missingDeploymentClients.length === 1 &&
+//       attendanceInfo.length === 1
+//     ) {
+//       return {
+//         success: false,
+//         summary,
+//         details,
+//         message: "No deployment record found for this client.",
+//       };
+//     }
+
+//     if (
+//       updatedClients.length === 1 &&
+//       attendanceInfo.length === 1
+//     ) {
+//       return {
+//         success: true,
+//         summary,
+//         details,
+//         message: "Attendance marked successfully for the client.",
+//       };
+//     }
+
+//     if (
+//       updatedClients.length === attendanceInfo.length
+//     ) {
+//       return {
+//         success: true,
+//         summary,
+//         details,
+//         message: "Attendance was marked successfully for all selected clients.",
+//       };
+//     }
+
+//     if (
+//       updatedClients.length === 0 &&
+//       alreadyMarkedClients.length === attendanceInfo.length
+//     ) {
+//       return {
+//         success: false,
+//         summary,
+//         details,
+//         message: "Attendance was already marked for all selected clients.",
+//       };
+//     }
+
+//     if (
+//       updatedClients.length === 0 &&
+//       missingDeploymentClients.length === attendanceInfo.length
+//     ) {
+//       return {
+//         success: false,
+//         summary,
+//         details,
+//         message: "No deployment records were found for the selected clients.",
+//       };
+//     }
+
+//     if (updatedClients.length === 0) {
+//       return {
+//         success: false,
+//         summary,
+//         details,
+//         message: "No attendance records were updated.",
+//       };
+//     }
+
+//     return {
+//       success: true,
+//       summary,
+//       details,
+//       message: "Attendance processing completed with partial success.",
+//     };
+//   } catch (error: any) {
+//     console.error("UpdateClientDailyAttendance Error:", error);
+
+//     return {
+//       success: false,
+//       summary: {
+//         totalRequested: attendanceInfo?.length || 0,
+//         updatedCount: 0,
+//         alreadyMarkedCount: 0,
+//         missingDeploymentCount: 0,
+//       },
+//       details: {
+//         updatedClients: [],
+//         alreadyMarkedClients: [],
+//         missingDeploymentClients: [],
+//       },
+//       message:
+//         "An error occurred while updating client attendance. Please try again later.",
+//       error: error.message,
+//     };
+//   }
+// };
 export const UpdateClientDailyAttendance = async (
   selectedYear: string | number,
   selectedMonth: string | number,
@@ -3453,9 +3757,6 @@ export const UpdateClientDailyAttendance = async (
     const collection = db.collection("Deployment");
 
     const monthKey = `${selectedYear}-${Number(selectedMonth)}`;
-
-    console.log("Month Key:", monthKey);
-    console.log("Attendance Info:", attendanceInfo);
 
     if (!attendanceInfo?.length) {
       return {
@@ -3482,8 +3783,6 @@ export const UpdateClientDailyAttendance = async (
       })
       .toArray();
 
-    console.log("Fetched Records:", records);
-
     if (!records.length) {
       return {
         success: false,
@@ -3500,7 +3799,8 @@ export const UpdateClientDailyAttendance = async (
             (item) => item.Client_Name
           ),
         },
-        message: "No active deployment records were found for the selected month.",
+        message:
+          "No active deployment records were found for the selected month.",
       };
     }
 
@@ -3510,15 +3810,13 @@ export const UpdateClientDailyAttendance = async (
     const missingDeploymentClients: string[] = [];
 
     for (const attendance of attendanceInfo) {
-      console.log("Processing Attendance:", attendance);
-
       const matchedRecord = records.find(
         (record: any) =>
-          record.ClientId === attendance.Client_Id &&
-          record.HCAId === attendance.HCA_Id
+          String(record.ClientId).trim() ===
+            String(attendance.Client_Id).trim() &&
+          String(record.HCAId).trim() ===
+            String(attendance.HCA_Id).trim()
       );
-
-      console.log("Matched Record:", matchedRecord);
 
       if (!matchedRecord) {
         missingDeploymentClients.push(attendance.Client_Name);
@@ -3528,33 +3826,36 @@ export const UpdateClientDailyAttendance = async (
       const dateObj = new Date(attendance.date);
       const selectedDateKey = dateObj.toISOString().slice(0, 10);
 
-      console.log("Selected Date Key:", selectedDateKey);
-
-      const cleanedAttendance = Array.isArray(matchedRecord.ClientAttendance)
+      const cleanedAttendance = Array.isArray(
+        matchedRecord.ClientAttendance
+      )
         ? matchedRecord.ClientAttendance.filter(
             (a: any) => a && typeof a === "object"
           )
         : [];
 
-      console.log("Cleaned Attendance:", cleanedAttendance);
-
       const alreadyMarked = cleanedAttendance.some((a: any) => {
         const attendanceDate =
-          a?.AttendanceDate ||
-          a?.AttendenceDate;
+          a?.AttendanceDate || a?.AttendenceDate;
 
         const attendanceDateKey =
           a?.dateKey ||
           (attendanceDate
-            ? new Date(attendanceDate).toISOString().slice(0, 10)
+            ? new Date(attendanceDate)
+                .toISOString()
+                .slice(0, 10)
             : null);
 
         if (!attendanceDateKey) return false;
 
-        return attendanceDateKey === selectedDateKey;
+        return (
+          attendanceDateKey === selectedDateKey &&
+          String(a.Client_Id).trim() ===
+            String(attendance.Client_Id).trim() &&
+          String(a.HCA_Id).trim() ===
+            String(attendance.HCA_Id).trim()
+        );
       });
-
-      console.log("Already Marked:", alreadyMarked);
 
       if (alreadyMarked) {
         alreadyMarkedClients.push(attendance.Client_Name);
@@ -3575,8 +3876,6 @@ export const UpdateClientDailyAttendance = async (
         UpdatedBy: LogInUser || "Admin",
       };
 
-      console.log("Attendance Entry:", attendanceEntry);
-
       operations.push({
         updateOne: {
           filter: { _id: matchedRecord._id },
@@ -3586,7 +3885,7 @@ export const UpdateClientDailyAttendance = async (
             },
             $set: {
               UpdatedAt: new Date(),
-              UpdatedBy: "Admin",
+              UpdatedBy: LogInUser || "Admin",
             },
           },
         },
@@ -3595,11 +3894,10 @@ export const UpdateClientDailyAttendance = async (
       updatedClients.push(attendance.Client_Name);
     }
 
-    console.log("Bulk Operations:", operations);
-
     if (operations.length > 0) {
-      const bulkResult = await collection.bulkWrite(operations);
-      console.log("Bulk Write Result:", bulkResult);
+      await collection.bulkWrite(operations, {
+        ordered: false,
+      });
     }
 
     const summary = {
@@ -3614,9 +3912,6 @@ export const UpdateClientDailyAttendance = async (
       alreadyMarkedClients,
       missingDeploymentClients,
     };
-
-    console.log("Summary:", summary);
-    console.log("Details:", details);
 
     if (
       updatedClients.length === 0 &&
@@ -3663,7 +3958,8 @@ export const UpdateClientDailyAttendance = async (
         success: true,
         summary,
         details,
-        message: "Attendance was marked successfully for all selected clients.",
+        message:
+          "Attendance was marked successfully for all selected clients.",
       };
     }
 
@@ -3675,7 +3971,8 @@ export const UpdateClientDailyAttendance = async (
         success: false,
         summary,
         details,
-        message: "Attendance was already marked for all selected clients.",
+        message:
+          "Attendance was already marked for all selected clients.",
       };
     }
 
@@ -3687,7 +3984,8 @@ export const UpdateClientDailyAttendance = async (
         success: false,
         summary,
         details,
-        message: "No deployment records were found for the selected clients.",
+        message:
+          "No deployment records were found for the selected clients.",
       };
     }
 
@@ -3707,8 +4005,6 @@ export const UpdateClientDailyAttendance = async (
       message: "Attendance processing completed with partial success.",
     };
   } catch (error: any) {
-    console.error("UpdateClientDailyAttendance Error:", error);
-
     return {
       success: false,
       summary: {
