@@ -1501,7 +1501,17 @@ className={`
           const UpdatedBy = dayInfo?.UpdatedBy ?? "-";
           const AbsentReason=dayInfo?.Reason?? "-";
           console.log("Check For Reason------",dayInfo)
-          const isFutureDate = i + 1 > today;
+          const currentDate = new Date();
+currentDate.setHours(0, 0, 0, 0);
+
+const cellDate = new Date(
+  Number(selectedYear),
+  Number(selectedMonth) - 1,
+  i + 1
+);
+cellDate.setHours(0, 0, 0, 0);
+
+const isFutureDate = cellDate > currentDate;
 
           return (
             <div
