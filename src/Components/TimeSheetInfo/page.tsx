@@ -584,8 +584,9 @@ const EditAttendence = async (): Promise<void> => {
         SetAttendeceEditReason("");
       }, 1500);
     };
-console.log("Check for UpdatedBy---",loggedInEmail,AbsentReason)
-    if (flexDate === localToday) {
+console.log("Check for UpdatedBy---",flexDate)
+
+  
       const response = await EditAttendanceByClientId(
         AttenseceInformation.ClientId,
         AttenseceInformation.hcpId,
@@ -598,7 +599,7 @@ console.log("Check for UpdatedBy---",loggedInEmail,AbsentReason)
         loggedInEmail,
         AbsentReason
       );
-
+console.log("Check Results-------",response)
    if (response?.success) {
   setClientsInformation((prev: any) => {
     const updated = { ...prev };
@@ -632,46 +633,98 @@ console.log("Check for UpdatedBy---",loggedInEmail,AbsentReason)
   });
 
   SetStatusMessage("Attendance updated successfully");
+  window.location.reload();
   closeModal();
   return;
 }
-    }
+    
+//     if (flexDate === localToday) {
+//       const response = await EditAttendanceByClientId(
+//         AttenseceInformation.ClientId,
+//         AttenseceInformation.hcpId,
+//         AttenseceInformation.hcpName,
+//         AttenseceInformation.clientName,
+//         loggedInEmail,
+//         yearMonth,
+//         flexDate,
+//         status,
+//         loggedInEmail,
+//         AbsentReason
+//       );
 
-    const info = {
-      ...AttenseceInformation,
-      flexDate,
-      yearMonth,
-      status,
-    };
+//    if (response?.success) {
+//   setClientsInformation((prev: any) => {
+//     const updated = { ...prev };
 
-    const response = await PostAttendeceEditRequest(
-      info,
-      AttendeceEditReason,
-      loggedInEmail,
-      AbsentReason,
-      "HCAAttendece"
+//     updated[yearMonth] = updated[yearMonth].map((record: any) => {
+//       if (record.ClientId !== AttenseceInformation.ClientId) {
+//         return record;
+//       }
 
-    );
+//       return {
+//         ...record,
+//         days: record.days.map((day: any) => {
+//           const dayDate = new Date(day.AttendenceDate)
+//             .toISOString()
+//             .split("T")[0];
 
-    if (!response?.success) {
-      throw new Error(response?.message || "Failed to submit request");
-    }
+//           if (dayDate !== flexDate) return day;
 
-    try {
-      await axios.post("/api/Slack", {
-        userIds: "U04S43V513N",
-        message:
-          "Hi Madam, Kindly requesting attendance edit request update. Please check notification in the application. Thank you.",
-      });
-    } catch (slackError) {
-      console.error("Slack notification failed:", slackError);
-    }
+//           return {
+//             ...day,
+//             HCPAttendence:
+//               status === "FULL" || status === "HALF",
+//             AdminAttendece: status === "FULL",
+//             UpdatedBy: loggedInEmail,
+//           };
+//         }),
+//       };
+//     });
 
-    SetStatusMessage(response?.message || "Request submitted successfully");
+//     return updated;
+//   });
+
+//   SetStatusMessage("Attendance updated successfully");
+//   closeModal();
+//   return;
+// }
+//     }
+
+    // const info = {
+    //   ...AttenseceInformation,
+    //   flexDate,
+    //   yearMonth,
+    //   status,
+    // };
+
+    // const response = await PostAttendeceEditRequest(
+    //   info,
+    //   AttendeceEditReason,
+    //   loggedInEmail,
+    //   AbsentReason,
+    //   "HCAAttendece"
+
+    // );
+
+    // if (!response?.success) {
+    //   throw new Error(response?.message || "Failed to submit request");
+    // }
+
+    // try {
+    //   await axios.post("/api/Slack", {
+    //     userIds: "U04S43V513N",
+    //     message:
+    //       "Hi Madam, Kindly requesting attendance edit request update. Please check notification in the application. Thank you.",
+    //   });
+    // } catch (slackError) {
+    //   console.error("Slack notification failed:", slackError);
+    // }
+
+    // SetStatusMessage(response?.message || "Request submitted successfully");
 
 
 
-    closeModal();
+    // closeModal();
   } catch (error: any) {
     console.error("EditAttendence Error:", error);
 
@@ -1601,7 +1654,7 @@ className={`
         />
       </div>
     )}
-{flexDate!==new Date().toISOString().split('T')[0]&&
+{/* {flexDate!==new Date().toISOString().split('T')[0]&&
 
 <div className="flex flex-col  border-b px-2 py-3">
   <label className="text-xs font-semibold text-gray-800">
@@ -1621,7 +1674,7 @@ className={`
       outline: "none"
     }}
   />
-</div>}
+</div>} */}
 <div className="flex items-center-justify-between">
    {StatusMessage&&
             <p

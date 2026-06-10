@@ -1469,7 +1469,7 @@ From:any
       HCPId:HCPInfo.userId,
       HCPName:HCPInfo.FirstName,
       RequestedSalary:RequestedSalary,
-      Message:`Salary Update Request for ${HCPInfo.FirstName} To ₹${RequestedSalary}/- Per Month, (₹${Math.round(Number(RequestedSalary) / 30)} per day) from ${From}`,
+      Message:`Salary Update Request for ${HCPInfo.FirstName} To ₹${RequestedSalary} Per Month, (₹${Math.round(Number(RequestedSalary) / 30)} per day) from ${From}`,
       Date:new Date().toISOString().split("T")[0],
       Type:"HCP Salary Request",
       Status :"Pending",

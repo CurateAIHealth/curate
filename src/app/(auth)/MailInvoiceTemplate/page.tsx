@@ -1393,7 +1393,7 @@ message="Please provide the client’s email address to send the invoice."
                 <div className="text-right">
                   <p className="text-[11px] text-slate-500">Total</p>
                   <p className="text-2xl font-bold text-emerald-600">
-                    {baseTotal}/-
+                    {baseTotal}
                   </p>
                   {roundingDifference !== 0 && (
                     <p className="text-[11px] text-slate-500">
@@ -1441,7 +1441,7 @@ message="Please provide the client’s email address to send the invoice."
     </div>
               <div className="px-6 py-4 space-y-3 text-sm">
                 <KeyRow label="Base Amount">
-                  {baseTotal.toFixed(2)}/-
+                  {baseTotal.toFixed(2)}
                 </KeyRow>
 
                 <KeyRow label="Other Expenses (₹)">
@@ -1479,24 +1479,24 @@ message="Please provide the client’s email address to send the invoice."
                 </div>
 
                 <KeyRow label="Raw Total">
-                  {Number(rawTotal)}/-
+                  {Number(rawTotal)}
                 </KeyRow>
 
                <KeyRow label="Registration Fee">
-                  {regFee}/-
+                  {regFee}
                 </KeyRow>
 
                 <KeyRow label="Advance Received">
-                  {advance}/-
+                  {advance}
                 </KeyRow>
 
                   <KeyRow label="Tax">
-                  {baseTotal*Number(selected.tdsRate.replace("%", ""))/100}/-
+                  {baseTotal*Number(selected.tdsRate.replace("%", ""))/100}
                   
                 </KeyRow>
 
                 <KeyRow label="Balance Due" highlight>
-                  {Number(balanceDue)+Number(TaxAmount)}/-
+                  {Number(balanceDue)+Number(TaxAmount)}
                 </KeyRow>
               </div>
             </div>
