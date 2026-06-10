@@ -125,15 +125,15 @@ const UpdateView = () => {
                 bg-gradient-to-br from-slate-50 to-slate-100">
   <div className="relative max-w-md w-full text-center p-8 rounded-2xl 
                   bg-white/80 backdrop-blur-xl
-                  border border-red-200
+                  border border-[#fecaca]
                   shadow-[0_20px_40px_-15px_rgba(220,38,38,0.35)]">
 
 
-    <div className="absolute -top-10 -right-10 w-28 h-28 bg-red-200 rounded-full blur-3xl opacity-40" />
+    <div className="absolute -top-10 -right-10 w-28 h-28 bg-[#fecaca] rounded-full blur-3xl opacity-40" />
     <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-rose-300 rounded-full blur-3xl opacity-30" />
 
     <div className="mx-auto mb-5 w-16 h-16 rounded-full 
-                    bg-red-100 text-red-600 
+                    bg-[#fee2e2] text-[#dc2626] 
                     flex items-center justify-center shadow-inner">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -158,7 +158,7 @@ const UpdateView = () => {
 
     <p className="text-sm text-gray-600 leading-relaxed">
       This section is reserved for{" "}
-      <span className="font-semibold text-red-600">Management users</span>.
+      <span className="font-semibold text-[#dc2626]">Management users</span>.
       <br />
       You do not currently have permission to view this page.
     </p>
@@ -247,7 +247,7 @@ const UpdateView = () => {
       <button
       onClick={()=>  router.push("/register")}
         className="px-6 py-2.5 cursor-pointer rounded-xl text-white font-medium shadow-lg 
-                   bg-green-600 
+                   bg-[#22c55e] 
                    hover:from-red-600 hover:to-red-700 transition-all duration-300"
       >
         Yes, Register

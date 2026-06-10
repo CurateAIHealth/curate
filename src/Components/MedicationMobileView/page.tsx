@@ -163,7 +163,7 @@ const dispatch=useDispatch()
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <button
           onClick={selectWholeMonth}
-          className="flex items-center gap-2 bg-green-500 text-white px-3 py-2 rounded-md hover:bg-green-600 transition text-sm"
+          className="flex items-center gap-2 bg-[#22c55e] text-white px-3 py-2 rounded-md hover:bg-[#16a34a] transition text-sm"
         >
           <CalendarRange className="w-4 h-4" /> Select Whole Month
         </button>

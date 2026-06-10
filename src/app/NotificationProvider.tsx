@@ -164,7 +164,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
             className="fixed top-4 right-4 z-50 bg-white border-l-4 border-blue-500 text-gray-800 p-4 rounded-xl shadow-lg flex items-start gap-3 min-w-[250px]"
           >
 
-            <Bell size={26} className="text-red-500 mt-1" />
+            <Bell size={26} className="text-[#ef4444] mt-1" />
 
 
             <div className="flex-1 space-y-2">

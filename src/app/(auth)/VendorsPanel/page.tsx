@@ -85,8 +85,8 @@ const FilterInputVlaue=ImportedVendors.filter((each:any)=>each.VendorName.includ
                           className="
                             w-full px-4 py-2.5
                             text-sm flex items-center gap-2
-                            text-red-600
-                            hover:bg-red-50
+                            text-[#dc2626]
+                            hover:bg-[#fef2f2]
                             font-medium
                           "
                         >
@@ -173,7 +173,7 @@ const FilterInputVlaue=ImportedVendors.filter((each:any)=>each.VendorName.includ
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 relative border border-gray-200 animate-[fadeIn_0.3s_ease]">
         
             <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition"
+              className="absolute top-4 right-4 text-gray-500 hover:text-[#ef4444] transition"
               onClick={() => setSelectedVendor(null)}
             >
               <X size={24} />

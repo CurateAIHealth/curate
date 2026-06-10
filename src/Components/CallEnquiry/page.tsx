@@ -595,7 +595,7 @@ text-left
   </div>
 </span>
         <span className="flex items-center gap-1 text-gray-600 truncate">
-    <MapPin size={16} className="shrink-0 text-green-600" />
+    <MapPin size={16} className="shrink-0 text-[#16a34a]" />
     <span className="truncate">
       {user.Location || "Not Provided"}
     </span>

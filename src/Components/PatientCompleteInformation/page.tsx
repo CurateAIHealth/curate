@@ -375,7 +375,7 @@ const Router=useRouter()
         
       
         {statusMessage && (
-          <div className={`p-4 mb-4 rounded-md text-sm ${statusMessage.type === 'success' && 'bg-green-100 text-green-700'}${statusMessage.message==="Only Admin Can Update the Information"&&'bg-red-600 font-semibold text-[16px] text-red-600 ' }`}>
+          <div className={`p-4 mb-4 rounded-md text-sm ${statusMessage.type === 'success' && 'bg-[#dcfce7] text-[#15803d]'}${statusMessage.message==="Only Admin Can Update the Information"&&'bg-[#b91c1c] font-semibold text-[16px] text-white ' }`}>
             {statusMessage.message}
           </div>
         )}

@@ -2,7 +2,7 @@
 let deploymentCache: any[] = [];
 let cachedUsersFullInfo: any[] = [];
 let cachedRegisterdUsers: any[] = [];
-import { DeleteClientFromDeolyment, EditAttendanceByClientId, EditAttendanceByDateRange, GetAllUsersData, GetDeploymentInfo, GetRegidterdUsers, GetUsersFullInfo, PostAttendeceEditRequest, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus, UpdatehcpDailyAttendce } from "@/Lib/user.action";
+import { DeleteClientFromDeolyment, EditAttendanceByClientId, EditAttendanceByDateRange, GetDeploymentInfo, GetRegidterdUsers, GetUsersFullInfo, PostAttendeceEditRequest, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus, UpdatehcpDailyAttendce } from "@/Lib/user.action";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
 import { CalendarDays, CheckCircle, Eye, FilePenLine, Info, LucidePencil, Minimize2, Pencil, PencilIcon, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -108,46 +108,62 @@ useEffect(() => {
  if(loggedInEmail===""){
     router.push("/DashBoard")
   }
-    const cacheKey = `${showMissingCalendar}`;
+const cacheKey = `${selectedYear}-${selectedMonth}-${showMissingCalendar}`;
 
     if (!isSuccess) {
       const cached = deploymentCache.find((c) => c.key === cacheKey);
 
       if (cached) {
         setClientsInformation(cached.data);
-          setUsers([...cachedUsersFullInfo]);
-        setRegisterdUsers([...cachedRegisterdUsers])
+        setUsers([...cachedUsersFullInfo]);
+        setRegisterdUsers([...cachedRegisterdUsers]);
         setIsChecking(false);
         return;
       }
     }
 
-   
+    const [registeredUsers, usersResult, deploymentInfo] = await Promise.all([
+      GetRegidterdUsers(),
+      GetUsersFullInfo(),
+      GetDeploymentInfo(`${selectedYear}-${selectedMonth}`, {
+        invoice: 1,
+        StartDate: 1,
+        EndDate: 1,
+        Status: 1,
+        Address: 1,
+        ClientContact: 1,
+        ClientName: 1,
+        ClientId: 1,
+        patientName: 1,
+        referralName: 1,
+        HCAId: 1,
+        HCAName: 1,
+        HCAContact: 1,
+        hcpSource: 1,
+        provider: 1,
+        payTerms: 1,
+        cTotal: 1,
+        cPay: 1,
+        hcpTotal: 1,
+        hcpPay: 1,
+        Attendance: 1,
+        CareTakerPrice: 1,
+        Month: 1,
+        Replacement: 1,
+      }),
+    ]);
 
-    // const [RegisterdUsers,
-    //   usersResult, PlacementInformation] = await Promise.all([
-    //     GetRegidterdUsers(),
-    //     GetUsersFullInfo(),
-    //     GetDeploymentInfo()
-    //   ])
-
-
-      const {
-  RegisterdUsers,
-  usersResult,
-  placementInfo,
-  replacementInfo,
-  terminationInfo,
-} = await GetAllUsersData();
-
-    if (!placementInfo?.length) {
+    if (!deploymentInfo?.length) {
+      setRegisterdUsers(registeredUsers ?? []);
+      setUsers(usersResult ?? []);
+      setClientsInformation({});
       setIsChecking(false);
       return;
     }
 
     const formattedData: any = {};
 
-    placementInfo.forEach((record: any) => {
+    deploymentInfo.forEach((record: any) => {
       const monthKey = getMonthKey(record);
       if (!formattedData[monthKey]) formattedData[monthKey] = [];
 
@@ -177,14 +193,14 @@ useEffect(() => {
         hcpPay: Number(record.hcpPay) || 0,
         days: record.Attendance || [],
         CareTakerPrice: record.CareTakerPrice
-  ? `${Math.round(
-      parseFloat(
-        String(record.CareTakerPrice).replace(/[^0-9.]/g, "")
-      )
-    )}`
-  : "",
-        Month:record.Month,
-        Replacement:record.Replacement
+          ? `${Math.round(
+              parseFloat(
+                String(record.CareTakerPrice).replace(/[^0-9.]/g, "")
+              )
+            )}`
+          : "",
+        Month: record.Month,
+        Replacement: record.Replacement,
       });
     });
 
@@ -194,16 +210,17 @@ useEffect(() => {
         data: formattedData,
       });
     }
-cachedRegisterdUsers=RegisterdUsers??[]
-    cachedUsersFullInfo=usersResult??[]
+
+    cachedRegisterdUsers = registeredUsers ?? [];
+    cachedUsersFullInfo = usersResult ?? [];
     setClientsInformation(formattedData);
-    setRegisterdUsers([...cachedRegisterdUsers])
-      setUsers([...cachedUsersFullInfo]);
+    setRegisterdUsers([...cachedRegisterdUsers]);
+    setUsers([...cachedUsersFullInfo]);
     setIsChecking(false);
   };
 
   Fetch();
-}, [isSuccess, showMissingCalendar]);
+}, [isSuccess, showMissingCalendar, selectedMonth, selectedYear]);
 
 
 
@@ -293,9 +310,9 @@ cachedRegisterdUsers=RegisterdUsers??[]
   }, [pendingSummary]);
 
   const categoryColors = [
-    "bg-red-100 text-red-700 border-red-200",
+    "bg-[#fee2e2] text-[#b91c1c] border-[#fecaca]",
     "bg-blue-100 text-blue-700 border-blue-200",
-    "bg-green-100 text-green-700 border-green-200",
+    "bg-[#dcfce7] text-[#15803d] border-[#dcfce7]",
     "bg-yellow-100 text-yellow-700 border-yellow-200",
     "bg-purple-100 text-purple-700 border-purple-200",
     "bg-pink-100 text-pink-700 border-pink-200",
@@ -464,60 +481,81 @@ const hasUnmarked = processedData.some(
       try {
         setShowAttendencePopUp(true)
         SetStatusMessage("Please Wait...")
-        const localDate = `${today.getFullYear()}-${String(
-  today.getMonth() + 1
-).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  // const UpdateDailyattendece = await UpdatehcpDailyAttendce(selectedYear, selectedMonth)
     const UpdateDailyattendece = await UpdatehcpDailyAttendce(
-    selectedYear,
-    selectedMonth,
-     new Date().toISOString().split("T")[0],
-     loggedInEmail
-  );
-if (UpdateDailyattendece.success === true) {
-  deploymentCache.length = 0;
+      selectedYear,
+      selectedMonth,
+      new Date().toISOString().split("T")[0],
+      loggedInEmail
+    );
 
-  const {
-    RegisterdUsers,
-    usersResult,
-    placementInfo,
-  } = await GetAllUsersData();
+    if (UpdateDailyattendece.success === true) {
+      const todayDateKey = new Date()
+        .toISOString()
+        .split("T")[0];
+      const yearMonth = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}`;
 
-  cachedRegisterdUsers = RegisterdUsers ?? [];
-  cachedUsersFullInfo = usersResult ?? [];
+      setClientsInformation((prev: any) => {
+        const updated = { ...prev };
+        const currentRecords = Array.isArray(updated[yearMonth])
+          ? updated[yearMonth]
+          : [];
 
-  const formattedData: any = {};
+        updated[yearMonth] = currentRecords.map((record: any) => {
+          if (record.Status === "Freeze") return record;
 
-  placementInfo.forEach((record: any) => {
-    const monthKey = getMonthKey(record);
+          const days = Array.isArray(record.days) ? [...record.days] : [];
+          const existingIndex = days.findIndex((day: any) => {
+            if (!day?.AttendenceDate) return false;
+            const key = new Date(day.AttendenceDate)
+              .toISOString()
+              .split("T")[0];
+            return key === todayDateKey;
+          });
 
-    if (!formattedData[monthKey]) {
-      formattedData[monthKey] = [];
+          const updatedDay = {
+            ...((days[existingIndex] || {}) as any),
+            dateKey: todayDateKey,
+            AttendenceDate: new Date(`${todayDateKey}T00:00:00.000Z`),
+            HCPAttendence: true,
+            AdminAttendece: true,
+            Client_Id: record.ClientId,
+            Client_Name: record.clientName,
+            HCA_Id: record.hcpId,
+            HCA_Name: record.hcpName,
+            CreatedAt: new Date(),
+            UpdatedAt: new Date(),
+            UpdatedBy: loggedInEmail || "Admin",
+          };
+
+          if (existingIndex >= 0) {
+            days[existingIndex] = updatedDay;
+          } else {
+            days.push(updatedDay);
+          }
+
+          return {
+            ...record,
+            days,
+          };
+        });
+
+        return updated;
+      });
+
+      SetStatusMessage("HCPs Today's Attendance Updated Successfully");
+      setTimeout(() => {
+        setShowAttendencePopUp(false);
+      }, 800);
     }
 
-    formattedData[monthKey].push(record);
-  });
-
-  setClientsInformation(formattedData);
-
-  SetStatusMessage(
-    "HCPs Today's Attendance Updated Successfully"
-  );
-
-  setTimeout(() => {
-    setShowAttendencePopUp(false);
-  }, 2000);
-}
 
 
 
-
-        SetStatusMessage("HCPs Today's Attendance Updated Succesfully ✅")
-  
       } catch (err: any) {
-  
-      }
-    }
+    console.error("UpdateCurrentAttendence Error:", err);
+    SetStatusMessage("Unable to update attendance right now.");
+  }
+};
 
   const selectedMonthNumber = Number(selectedMonth); 
 const selectedYearNumber= Number(selectedYear);    
@@ -605,35 +643,53 @@ console.log("Check Results-------",response)
     const updated = { ...prev };
 
     updated[yearMonth] = updated[yearMonth].map((record: any) => {
-      if (record.ClientId !== AttenseceInformation.ClientId) {
+      if (
+        record.ClientId !== AttenseceInformation.ClientId ||
+        record.hcpId !== AttenseceInformation.hcpId
+      ) {
         return record;
+      }
+
+      const existingIndex = (record.days || []).findIndex((day: any) => {
+        const dayDate = new Date(day.AttendenceDate)
+          .toISOString()
+          .split("T")[0];
+        return dayDate === flexDate;
+      });
+
+      const updatedDay = {
+        ...((record.days || [])[existingIndex] || {}),
+        AttendenceDate: new Date(`${flexDate}T00:00:00.000Z`),
+        HCPAttendence: status === "FULL" || status === "HALF",
+        AdminAttendece: status === "FULL",
+        UpdatedBy: loggedInEmail,
+        Reason: AbsentReason,
+        Client_Id: AttenseceInformation.ClientId,
+        Client_Name: AttenseceInformation.clientName,
+        HCA_Id: AttenseceInformation.hcpId,
+        HCA_Name: AttenseceInformation.hcpName,
+        UpdatedAt: new Date(),
+      };
+
+      const days = Array.isArray(record.days) ? [...record.days] : [];
+
+      if (existingIndex >= 0) {
+        days[existingIndex] = updatedDay;
+      } else {
+        days.push(updatedDay);
       }
 
       return {
         ...record,
-        days: record.days.map((day: any) => {
-          const dayDate = new Date(day.AttendenceDate)
-            .toISOString()
-            .split("T")[0];
-
-          if (dayDate !== flexDate) return day;
-
-          return {
-            ...day,
-            HCPAttendence:
-              status === "FULL" || status === "HALF",
-            AdminAttendece: status === "FULL",
-            UpdatedBy: loggedInEmail,
-          };
-        }),
+        days,
       };
     });
 
     return updated;
   });
 
-  SetStatusMessage("Attendance updated successfully");
-  window.location.reload();
+  SetStatusMessage(response.message || "Attendance updated successfully");
+  
   closeModal();
   return;
 }
@@ -804,7 +860,7 @@ const PresentScreen=()=>{
         Time Sheet {}
       </h1>
       <p className="text-gray-500 mt-1 text-xs ">
-        View invoice and attendance details by month and year.
+        View invoice and attendance details by month and year.,,,
       </p>
     </div>
 
@@ -862,7 +918,7 @@ const PresentScreen=()=>{
         value={selectedMonth}
         onChange={(e) => setSelectedMonth(e.target.value)}
         className="rounded-xl border border-gray-300 p-2 bg-white shadow-sm
-                   hover:border-green-400 focus:border-green-500 focus:ring-1 focus:ring-green-400
+                   hover:border-[#4ade80] focus:border-[#22c55e] focus:ring-1 focus:ring-[#4ade80]
                    w-full sm:w-auto"
       >
         {months.map((m) => (
@@ -877,7 +933,7 @@ const PresentScreen=()=>{
         value={selectedYear}
         onChange={(e) => setSelectedYear(e.target.value)}
         className="rounded-xl border border-gray-300 p-2 bg-white shadow-sm
-                   hover:border-green-400 focus:border-green-500 focus:ring-1 focus:ring-green-400
+                   hover:border-[#4ade80] focus:border-[#22c55e] focus:ring-1 focus:ring-[#4ade80]
                    w-full sm:w-auto"
       >
         {years.map((y) => (
@@ -994,15 +1050,15 @@ if(PostInfo?.success){
         <Th className="text-left">HCP Ref</Th>
         <Th>Vendor</Th>
         <Th className="text-left">Charge</Th>
-        <th className="bg-amber-500 text-center min-w-[40px]">PD</th>
-        <th className="bg-amber-500 text-center min-w-[40px]">AD</th>
-        <th className="bg-amber-500 text-center min-w-[40px]">HP</th>
+        <th className="bg-[#f59e0b] text-center min-w-[40px]">PD</th>
+        <th className="bg-[#f59e0b] text-center min-w-[40px]">AD</th>
+        <th className="bg-[#f59e0b] text-center min-w-[40px]">HP</th>
         <Th className="bg-cyan-600 text-center">
           {new Date().getDate()}
         </Th>
         <Th className="bg-cyan-600 text-center">Action</Th>
         <Th className="bg-cyan-600 text-center">Edit</Th>
-        <Th className="bg-red-500 text-center">Delete</Th>
+        <Th className="bg-[#ef4444] text-center">Delete</Th>
       </tr>
     </thead>
 
@@ -1015,8 +1071,8 @@ if(PostInfo?.success){
           <tr
             key={idx}
             className={`border-t ${
-              idx % 2 ? "bg-white" : "bg-green-50/40"
-            } hover:bg-green-100/40`}
+              idx % 2 ? "bg-white" : "bg-[#f0fdf4] opacity-40"
+            } hover:bg-[#dcfce7] hover:opacity-40`}
           >
             <Td className="text-center">{idx + 1}</Td>
 
@@ -1054,9 +1110,9 @@ if(PostInfo?.success){
 
             <Td className="font-bold break-words">₹{r.CareTakerPrice}</Td>
 
-            <td className="bg-amber-50 text-center font-bold">{r.pd}</td>
-            <td className="bg-amber-50 text-center font-bold">{r.ad}</td>
-            <td className="bg-amber-50 text-center font-bold">{r.hp}</td>
+            <td className="bg-[#fffbeb] text-center font-bold">{r.pd}</td>
+            <td className="bg-[#fffbeb] text-center font-bold">{r.ad}</td>
+            <td className="bg-[#fffbeb] text-center font-bold">{r.hp}</td>
 
             <Td className="text-left">
               {dayStatus === "-" ? (
@@ -1133,7 +1189,7 @@ className={`
   rounded-full
   transition-all duration-300 cursor-pointer
   ${showFull?
-     "bg-slate-200 text-slate-700 hover:bg-slate-300 bg-gray-200 border shadow-md":"bg-green-600 text-white shadow-md"}
+     "bg-slate-200 text-slate-700 hover:bg-slate-300 bg-gray-200 border shadow-md":"bg-[#16a34a] text-white shadow-md"}
 `}
 
   >
@@ -1271,7 +1327,7 @@ className={`
         {/* <Th className={`${showFull?"":"w-[6%]"}  text-center`}>
           Edit
         </Th>
-        <Th className={`${showFull?"":"w-[6%]"} bg-red-500 text-center`}>
+        <Th className={`${showFull?"":"w-[6%]"} bg-[#ef4444] text-center`}>
           Delete
         </Th> */}
       </tr>
@@ -1289,9 +1345,7 @@ className={`
         return(
           <tr
             key={idx}
-            className={`border-t border-gray-100 ${
-              idx%2?"bg-white":"bg-green-50/40"
-            } `}
+            className={`border-t border-gray-100 `}
           >
             <Td className="text-center align-middle">{idx+1}</Td>
 
@@ -1368,9 +1422,9 @@ className={`
             {showFull && <Td className="break-words">{r.referralName||"-"}</Td>}
             {showFull && <Td className="break-words">{r.hcpSource||"-"}</Td>}
             {showFull && <Td className="break-words">{r.VendorName||"-"}</Td>}
-            {showFull && <td className="bg-amber-50 text-center font-bold">{r.pd}</td>}
-            {showFull && <td className="bg-amber-50 text-center font-bold">{r.ad}</td>}
-            {showFull && <td className="bg-amber-50 text-center font-bold">{r.hp}</td>}
+            {showFull && <td className="bg-[#fffbeb] text-center font-bold">{r.pd}</td>}
+            {showFull && <td className="bg-[#fffbeb] text-center font-bold">{r.ad}</td>}
+            {showFull && <td className="bg-[#fffbeb] text-center font-bold">{r.hp}</td>}
 {currentMonth===selectedMonth&&currentYear===selectedYear&&
             <Td className="text-center align-middle">
               {dayStatus==="-"?(
@@ -1398,7 +1452,7 @@ className={`
             </Td>
       }
             <Td className="text-center align-middle">
-              {r.status==="Freeze"?<p className="inline-flex items-center px-3 py-1 text-xs font-bold tracking-wide text-red-700 bg-purple-100 rounded-md shadow-sm">
+              {r.status==="Freeze"?<p className="inline-flex items-center px-3 py-1 text-xs font-bold tracking-wide text-[#b91c1c] bg-purple-100 rounded-md shadow-sm">
   ❄ On Freeze
 </p>:
               <button
@@ -1453,8 +1507,8 @@ className={`
 
 </div>
 {showFullMonth && (
-<div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2">
-  <div className="bg-white w-[60vw] h-[76vh] rounded-xl shadow-xl overflow-hidden flex flex-col">
+<div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2 md:p-4">
+  <div className="bg-white w-full sm:w-[90vw] md:w-[80vw] lg:w-[60vw] h-[85vh] sm:h-[82vh] md:h-[80vh] lg:h-[76vh] max-w-4xl rounded-xl shadow-xl overflow-hidden flex flex-col">
     <div className="flex items-center justify-between px-4 py-3  shrink-0">
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-xl flex items-center justify-center shadow">
@@ -1690,8 +1744,8 @@ const isFutureDate = cellDate > currentDate;
             <p
   className={`mt-2 text-sm font-medium px-1 py-2 text-xs text-center rounded-lg ${
     StatusMessage?.includes("success") || StatusMessage?.includes("✅")
-      ? " text-green-700  "
-      : "text-red-700  "
+      ? " text-[#15803d]  "
+      : "text-[#b91c1c]  "
   }`}
 >
   {StatusMessage}
@@ -1729,7 +1783,7 @@ const isFutureDate = cellDate > currentDate;
           >
             <button
               onClick={() => setSelectedRecord(null)}
-              className="absolute top-3 right-3 text-gray-700 hover:text-red-600"
+              className="absolute top-3 right-3 text-gray-700 hover:text-[#dc2626]"
             >
               <X size={22} />
             </button>
@@ -1807,8 +1861,8 @@ const isFutureDate = cellDate > currentDate;
             <p
   className={`mt-2 text-sm font-medium px-4 py-2 rounded-lg ${
     StatusMessage?.includes("success") || StatusMessage?.includes("✅")
-      ? "bg-green-100 text-green-700 border border-green-300"
-      : "bg-red-100 text-red-700 border border-red-300"
+      ? "bg-[#dcfce7] text-[#15803d] border border-[#86efac]"
+      : "bg-[#fee2e2] text-[#b91c1c] border border-[#fca5a5]"
   }`}
 >
   {StatusMessage}
@@ -1839,7 +1893,7 @@ const isFutureDate = cellDate > currentDate;
                 {pendingSummary.map((p: any, i: number) => (
                   <div
                     key={i}
-                    className="p-2 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between"
+                    className="p-2 bg-[#fffbeb] border border-[#fde68a] rounded-xl flex items-center justify-between"
                   >
                     <div>
                       <p className="font-semibold text-gray-800 text-[12px]">
@@ -1917,7 +1971,7 @@ const isFutureDate = cellDate > currentDate;
                               isWeekend
                                 ? "bg-blue-50 border-blue-200 text-blue-700"
                                 : "bg-white border-slate-200 text-slate-700"
-                            } ${isPending ? "border-amber-400 ring-1 ring-amber-200" : ""}`}
+                            } ${isPending ? "border-[#fbbf24] ring-1 ring-[#fde68a]" : ""}`}
                           >
                  
                             <span className="mb-0.5">{day}</span>
@@ -1941,7 +1995,7 @@ const isFutureDate = cellDate > currentDate;
 
                         
                             {isPending && (
-                              <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                              <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#f59e0b] rounded-full" />
                             )}
                           </div>
 

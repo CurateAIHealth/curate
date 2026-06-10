@@ -3,7 +3,7 @@
 import HCAMobileView from '@/Components/HCAMobileView/page';
 import { EducationLevels, Home_Assistance_Needs, IndianCapitalCities, IndianLanguages, IndianStates, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, popularBanksInIndia, PROFESSIONAL_SKILL_OPTIONS, REFERRAL_SOURCE_TYPES, Relations } from '@/Lib/Content';
 import { v4 as uuidv4 } from 'uuid';
-import { GetRegidterdUsers, GetUserInformation, HCARegistration, PostHCAFullRegistration, UpdateFinelVerification } from '@/Lib/user.action';
+import { GetRegidterdUsers, GetUserInformation, PostHCAFullRegistration, RegisterHCAWithProfile, UpdateFinelVerification } from '@/Lib/user.action';
 import { Update_Main_Filter_Status, UpdateDocmentSkipReason, UpdateRefresh, UpdateUserType } from '@/Redux/action';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
@@ -743,48 +743,39 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
           };
 
 
-          let registrationResult:any = { success: true };
-
-          if (isNewUser) {
-            registrationResult = await HCARegistration(payload);
-      
-          }
-
-          if (registrationResult.success !== true) {
-            setUpdatedStatusMessage(registrationResult.message);
-            return;
-          }
-
-
           const FinelForm = {
             ...form,
             Documents: Docs,
             UserId: generatedUserId,
             DocumentSkipReason: ReasonValue,
-            userType:"healthcare-assistant"
-              
+            userType: "healthcare-assistant",
           };
 
-      try {
-  console.log("FinelForm Before Save:", FinelForm);
+          let registrationResult: any = { success: true };
 
-  const result = await PostHCAFullRegistration(FinelForm);
-  if (!result?.success) {
-  console.error("PostHCAFullRegistration Failed:", result);
-  setUpdatedStatusMessage(
-    result?.message || "Failed to save registration details."
-  );
-  alert("PostHCAFullRegistration Failed")
-  return;
-}
+          if (isNewUser) {
+            setUpdatedStatusMessage("Creating account and saving profile...");
+            registrationResult = await RegisterHCAWithProfile(payload, FinelForm);
+          } else {
+            setUpdatedStatusMessage("Saving full profile...");
+            registrationResult = await PostHCAFullRegistration(FinelForm);
+          }
 
-  console.log("PostHCAFullRegistration Result:", result);
-} catch (err) {
-  console.error("PostHCAFullRegistration Error:", err);
-  return;
-}
+          if (registrationResult.success !== true) {
+            console.error("Registration flow failed:", registrationResult);
+            setUpdatedStatusMessage(
+              registrationResult.message || "Failed to save registration details."
+            );
+            return;
+          }
 
-          await UpdateFinelVerification(localValue);
+          setUpdatedStatusMessage("Full registration saved successfully.");
+
+          if (isNewUser) {
+            localStorage.setItem("UserId", generatedUserId);
+          }
+
+          await UpdateFinelVerification(generatedUserId);
 
 
           await axios.post("/api/MailSend", {
@@ -973,7 +964,7 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
   const password = form.Password || "";
 
   const RuleItem = ({ ok, label }: { ok: boolean; label: string }) => (
-    <div className={`flex items-center gap-2 text-xs ${ok ? "text-green-600" : "text-gray-500"}`}>
+    <div className={`flex items-center gap-2 text-xs ${ok ? "text-[#16a34a]" : "text-gray-500"}`}>
       {ok ? <CheckCircle size={14} /> : <XCircle size={14} />}
       {label}
     </div>
@@ -1075,8 +1066,8 @@ if (CurrentUserType === null) {
               {UpdatedStatusMessage && (
                 <div
                   className={`mt-8 w-full max-w-md p-4 rounded-xl font-medium text-sm shadow-inner transition-all duration-300 ${UpdatedStatusMessage === "Successfully Updated Your Information."
-                      ? "bg-green-50 text-green-700 border border-green-200"
-                      : "bg-red-50 text-red-700 border border-red-200"
+                      ? "bg-[#f0fdf4] text-[#15803d] border border-[#dcfce7]"
+                      : "bg-[#fef2f2] text-[#b91c1c] border border-[#fecaca]"
                     }`}
                 >
                   {UpdatedStatusMessage}
@@ -1244,12 +1235,12 @@ className="
   className="
     px-4 py-2 md:ml-[20px]
     rounded-xl
-    bg-amber-50
-    text-amber-700
+    bg-[#fffbeb]
+    text-[#b45309]
     text-sm font-semibold
-    border border-amber-200
-    hover:bg-amber-100
-    hover:border-amber-300
+    border border-[#fde68a]
+    hover:bg-[#fef3c7]
+    hover:border-[#fcd34d]
     transition
     shadow-sm
     cursor-pointer
@@ -1316,12 +1307,12 @@ className="
   className="
     px-4 py-2 md:ml-[20px]
     rounded-xl
-    bg-amber-50
-    text-amber-700
+    bg-[#fffbeb]
+    text-[#b45309]
     text-sm font-semibold
-    border border-amber-200
-    hover:bg-amber-100
-    hover:border-amber-300
+    border border-[#fde68a]
+    hover:bg-[#fef3c7]
+    hover:border-[#fcd34d]
     transition
     shadow-sm
     cursor-pointer
@@ -1390,12 +1381,12 @@ form.HusbendContact!=="Not Available"&&
   className="
     px-4 py-2 md:ml-[20px]
     rounded-xl
-    bg-amber-50
-    text-amber-700
+    bg-[#fffbeb]
+    text-[#b45309]
     text-sm font-semibold
-    border border-amber-200
-    hover:bg-amber-100
-    hover:border-amber-300
+    border border-[#fde68a]
+    hover:bg-[#fef3c7]
+    hover:border-[#fcd34d]
     transition
     shadow-sm
     cursor-pointer
@@ -1563,7 +1554,7 @@ form.HusbendContact!=="Not Available"&&
       focus:outline-none focus:border-transparent
       ${form.mobileNumber &&
                       !isValidIndianMobile(form.mobileNumber)
-                      ? "border border-red-400 focus:ring-2 focus:ring-red-300"
+                      ? "border border-[#f87171] focus:ring-2 focus:ring-[#fca5a5]"
                       : "border border-gray-300 focus:ring-2 focus:ring-blue-300"
                     }
     `}
@@ -1647,14 +1638,14 @@ form.HusbendContact!=="Not Available"&&
 
    
       {age < 18 && (
-        <p className="text-xs text-red-600 text-center font-medium mt-1">
+        <p className="text-xs text-[#dc2626] text-center font-medium mt-1">
          ⚠️ Warning: Individuals below 18 years may not be eligible under child safety and labor protection regulations.
         </p>
       )}
 
   
       {/* {age >= 14 && age < 18 && (
-        <p className="text-xs text-amber-700 text-center mt-1">
+        <p className="text-xs text-[#b45309] text-center mt-1">
             ⚠️ Legal Notice: As this HCP is Minor,Make Sure Have Proper approval From Guardian.
         </p>
       )} */}
@@ -4025,7 +4016,7 @@ form.HusbendContact!=="Not Available"&&
   {form.PaymentforStaff && Number(form.PaymentforStaff) > 0 && (
     <p className="text-xs text-gray-600">
       Per day amount:{" "}
-      <span className="font-semibold text-green-600">
+      <span className="font-semibold text-[#16a34a]">
         {Math.round(Number(form.PaymentforStaff) / getDaysInMonth(
   new Date().getMonth() + 1,
   new Date().getFullYear()
@@ -4352,7 +4343,7 @@ form.HusbendContact!=="Not Available"&&
 
               {form.ConfirmPassword && (
                 <p
-                  className={`text-xs font-medium ${form.ConfirmPassword === password ? "text-green-600" : "text-red-500"
+                  className={`text-xs font-medium ${form.ConfirmPassword === password ? "text-[#16a34a]" : "text-[#ef4444]"
                     }`}
                 >
                   {form.ConfirmPassword === password

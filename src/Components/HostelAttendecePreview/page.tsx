@@ -49,7 +49,7 @@ const monthlyStats = attendance
   const statusColor = (status: string) => {
     switch (status) {
       case "Present":
-        return "bg-green-100 text-green-700";
+        return "bg-[#dcfce7] text-[#15803d]";
       case "Absent":
         return "bg-red-100 text-red-700";
       case "Pending":
@@ -71,9 +71,9 @@ const monthlyStats = attendance
         </div>
 
 <div className="flex gap-3 mb-4">
-  <div className="flex-1 bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-    <p className="text-sm text-green-700 font-semibold">Present</p>
-    <p className="text-xl font-bold text-green-800">
+  <div className="flex-1 bg-[#f0fdf4] border border-[#dcfce7] rounded-lg p-3 text-center">
+    <p className="text-sm text-[#15803d] font-semibold">Present</p>
+    <p className="text-xl font-bold text-[#15803d]">
       {monthlyStats.present}
     </p>
   </div>

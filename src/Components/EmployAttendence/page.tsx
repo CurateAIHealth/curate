@@ -320,7 +320,7 @@ await axios.post("/api/MailSend", {
       Left{" "}
       <strong
         className={
-          remainingLeaves <= 3 ? "text-red-600" : "text-green-600"
+          remainingLeaves <= 3 ? "text-[#dc2626]" : "text-[#16a34a]"
         }
       >
         {remainingLeaves}
@@ -493,7 +493,7 @@ await axios.post("/api/MailSend", {
           statusMessage.toLowerCase().includes("please wait")
             ? "bg-blue-100/60 text-blue-800 border-blue-200"
             : statusMessage.toLowerCase().includes("success")
-            ? "bg-green-100/60 text-green-800 border-green-200"
+            ? "bg-[#dcfce7] opacity-60 text-[#15803d] border-[#dcfce7]"
             : "bg-slate-100/60 text-slate-800 border-slate-200"
         }
       `}

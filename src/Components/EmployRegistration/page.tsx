@@ -262,7 +262,7 @@ const isImage = (url: string) =>
             required
           />
           {EmployeeForm.Contact && !/^[6-9]\d{9}$/.test(EmployeeForm.Contact) && (
-            <p className="mt-1 text-xs text-red-600">
+            <p className="mt-1 text-xs text-[#dc2626]">
               Enter a valid Indian mobile number
             </p>
           )}
@@ -275,7 +275,7 @@ const isImage = (url: string) =>
             Blood Group
           </label>
           <div className="relative">
-            <Droplet className="absolute left-3 top-3 w-5 h-5 text-red-400" />
+            <Droplet className="absolute left-3 top-3 w-5 h-5 text-[#f87171]" />
             <select
               name="BloodGroup"
               onChange={handleChange}
@@ -756,7 +756,7 @@ const isImage = (url: string) =>
         transition-all duration-300
 
         ${StatusMessage === "Employee registered successfully"
-                ? "border border-green-300 bg-green-50 text-green-700"
+                ? "border border-[#86efac] bg-[#f0fdf4] text-[#15803d]"
                 : "border border-indigo-200 bg-indigo-50 text-indigo-700"
               }
       `}
@@ -765,7 +765,7 @@ const isImage = (url: string) =>
               className={`
           h-2.5 w-2.5 rounded-full animate-pulse
           ${StatusMessage === "Employee registered successfully"
-                  ? "bg-green-500"
+                  ? "bg-[#22c55e]"
                   : "bg-indigo-500"
                 }
         `}

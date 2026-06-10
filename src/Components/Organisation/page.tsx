@@ -186,7 +186,7 @@ setSubmissionRequest(true)
     'text-red-500',
     'text-yellow-500',
     'text-blue-500',
-    'text-green-600',
+    'text-[#16a34a]',
   ];
 
   return (
@@ -370,7 +370,7 @@ setSubmissionRequest(true)
           className={`text-center font-bold w-full ${
             statusMessage ===
             'You registered successfully with Curate Digital AI'
-              ? 'text-green-700'
+              ? 'text-[#15803d]'
               : 'text-[#FF0000]'
           }`}
         >
