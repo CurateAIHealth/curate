@@ -357,7 +357,7 @@ console.log("FinalData:", normalizedData);
               Profession Skills:
             </label>
 
-            {ProfetionlSkillsEdit?<p onClick={()=>setProfetionlSkillsEdit(!ProfetionlSkillsEdit)} className='border p-1 text-[#15803d] cursor-pointer h-8 shadow-lg rounded-md'>Save</p>: <Pencil className='cursor-pointer h-5 w-5' onClick={()=>setProfetionlSkillsEdit(!ProfetionlSkillsEdit)}/>}}
+            {ProfetionlSkillsEdit?<p onClick={()=>setProfetionlSkillsEdit(!ProfetionlSkillsEdit)} className='border p-1 text-[#15803d] cursor-pointer h-8 shadow-lg rounded-md'>Save</p>: <Pencil className='cursor-pointer h-5 w-5' onClick={()=>setProfetionlSkillsEdit(!ProfetionlSkillsEdit)}/>}
           
               </div>
               <div>
