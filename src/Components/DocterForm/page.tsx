@@ -84,7 +84,7 @@ export default function DoctorForm() {
     'text-red-500',
     'text-yellow-500',
     'text-blue-500',
-    'text-green-600',
+    'text-[#16a34a]',
   ];
 
   const handleChange = (
@@ -644,7 +644,7 @@ const EmailComponent = memo(({ UpdatedFilterUserId }: { UpdatedFilterUserId: str
       <div className="md:col-span-2 flex justify-center">
         <p
           className={`text-center font-bold w-full ${statusMesssage === 'You registered successfully with Curate Digital AI'
-            ? 'text-green-700'
+            ? 'text-[#15803d]'
             : 'text-[#FF0000]'
             }`}
         >

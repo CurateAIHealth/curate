@@ -58,10 +58,11 @@ const algorithm = "aes-256-cbc";
 const secretKey = Buffer.from(process.env.NEXT_PUBLIC_ENCRYPTION_KEY!, "hex");
 
 export function encrypt(text: any) {
-  const iv = crypto.randomBytes(16); 
+  const value = text == null ? "" : String(text);
+  const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
 
-  let encrypted = cipher.update(text, "utf8", "hex");
+  let encrypted = cipher.update(value, "utf8", "hex");
   encrypted += cipher.final("hex");
 
   return {

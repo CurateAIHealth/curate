@@ -1218,6 +1218,63 @@ StaffType:HCA.StaffType,
     throw err;
   }
 };
+
+export const RegisterHCAWithProfile = async (HCA: HCAInfo, Info: any) => {
+  let registrationCreated = false;
+  try {
+    const registrationResult = await HCARegistration(HCA);
+
+    if (registrationResult.success !== true) {
+      return registrationResult;
+    }
+
+    registrationCreated = true;
+
+    const profileResult = await PostHCAFullRegistration(Info);
+
+    if (profileResult.success !== true) {
+      if (registrationCreated) {
+        try {
+          const cluster = await clientPromise;
+          const db = cluster.db("CurateInformation");
+          await db.collection("Registration").deleteOne({ userId: HCA.userId });
+        } catch (cleanupError) {
+          console.error("Rollback failed after profile save failure:", cleanupError);
+        }
+      }
+
+      return {
+        success: false,
+        message: profileResult.message || "Full profile save failed.",
+        error: profileResult.error,
+      };
+    }
+
+    return {
+      success: true,
+      message: "Registration and profile saved successfully.",
+      insertedId: registrationResult.insertedId,
+    };
+  } catch (err: any) {
+    if (registrationCreated) {
+      try {
+        const cluster = await clientPromise;
+        const db = cluster.db("CurateInformation");
+        await db.collection("Registration").deleteOne({ userId: HCA.userId });
+      } catch (cleanupError) {
+        console.error("Rollback failed after registration error:", cleanupError);
+      }
+    }
+
+    console.error("Error in RegisterHCAWithProfile:", err);
+    return {
+      success: false,
+      message: err?.message || "Registration failed.",
+      error: err?.message,
+    };
+  }
+};
+
 export const PostEmployInfo = async (EMP: any) => {
   try {
     const cluster = await clientPromise;
@@ -1948,14 +2005,18 @@ export const PostHCAFullRegistration = async (Info: any) => {
     };
 
     
-    const FinelResult = await collection.insertOne({
-      HCAComplitInformation: encryptedInfo,
-    });
+    const FinelResult = await collection.updateOne(
+      { UserId: Info.UserId },
+      { $set: encryptedInfo },
+      { upsert: true }
+    );
 
     return {
       success: true,
-      message: "You registered Successfully with Curate Digital AI",
-      insertedId: FinelResult.insertedId.toString(),
+      message: FinelResult.upsertedCount > 0
+        ? "You registered Successfully with Curate Digital AI"
+        : "Registration details updated successfully.",
+      insertedId: FinelResult.upsertedId?.toString() || Info.UserId,
     };
   } catch (err: any) {
     console.error("Error in PostFullRegistration:", err);
@@ -2697,22 +2758,38 @@ HCAId:ImpHCAId
   }
 }
 
-export const GetDeploymentInfo=async()=>{
-  try{
-const cluster=await clientPromise
-const db=cluster.db("CurateInformation")
-const collection=db.collection("Deployment")
-const TimeSheetInfoData=await collection.find().toArray()
+export const GetDeploymentInfo = async (
+  monthKey?: string,
+  projection?: Record<string, unknown>
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
 
-const safeUsers = TimeSheetInfoData.map((user: any) => ({
+    const query: any = {};
+    if (monthKey) {
+      const [year, month] = monthKey.split("-");
+      const normalizedMonth = String(Number(month)).padStart(2, "0");
+      const rawMonth = String(Number(month));
+      query.Month = { $in: [`${year}-${normalizedMonth}`, `${year}-${rawMonth}`] };
+    }
+
+    const cursor = projection
+      ? collection.find(query).project(projection)
+      : collection.find(query);
+
+    const TimeSheetInfoData = await cursor.toArray();
+
+    return TimeSheetInfoData.map((user: any) => ({
       ...user,
-      _id: user._id.toString(),
+      _id: user._id?.toString(),
     }));
-return safeUsers
-  }catch(e){
-
+  } catch (e) {
+    console.error("GetDeploymentInfo Error:", e);
+    return [];
   }
-}
+};
 
 export const UpdateClientTimeSheet = async (
   ImpClientId: any,
@@ -7157,11 +7234,15 @@ try{
       return { success: false, message: 'User not found or no changes made.' };
     }
 
-    return { success: true, message: 'Password updated Successfully.' };
-}catch(err:any){
-
-}
-}
+    return { success: true, message: 'Verification status updated successfully.' };
+  } catch (err: any) {
+    console.error("UpdateFinelVerification Error:", err);
+    return {
+      success: false,
+      message: err?.message || "Internal server error",
+    };
+  }
+};
 
 
 export const UpdateRemainderTimer = async (UserId: any, NewTime: string, NewDate: any) => {

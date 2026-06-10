@@ -513,7 +513,7 @@ If you or a loved one needs medical support at home, Curate Health Services is h
       >
        
         <button
-          className="absolute top-3 right-4 text-gray-500 hover:text-red-500 text-xl font-bold"
+          className="absolute top-3 right-4 text-gray-500 hover:text-[#ef4444] text-xl font-bold"
           onClick={() => setShowPopUp(false)}
         >
           &times;

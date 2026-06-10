@@ -267,7 +267,7 @@ export default function NurseForm() {
     'text-red-500',
     'text-yellow-500',
     'text-blue-500',
-    'text-green-600',
+    'text-[#16a34a]',
   ];
 
   const aadharDigits = formData.AadharNumber.replace(/\s/g, '').length;
@@ -523,7 +523,7 @@ export default function NurseForm() {
           className={`text-center font-bold w-full ${
             statusMesssage ===
             'You registered successfully with Curate Digital AI'
-              ? 'text-green-700'
+              ? 'text-[#15803d]'
               : 'text-[#FF0000]'
           }`}
         >

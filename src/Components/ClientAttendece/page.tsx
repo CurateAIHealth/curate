@@ -167,7 +167,7 @@ const filteredClients = useMemo(() => {
           </button>
 
           {Messsage && (
-            <p className="text-sm font-medium text-green-600">{Messsage}</p>
+            <p className="text-sm font-medium text-[#16a34a]">{Messsage}</p>
           )}
 
           <div className="w-full md:w-[320px]">
@@ -212,8 +212,8 @@ const filteredClients = useMemo(() => {
                         <span
                           className={`rounded-full px-4 py-2 text-sm font-semibold ${
                             isPresent
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-600"
+                              ? "bg-[#dcfce7] text-[#15803d]"
+                              : "bg-[#fee2e2] text-[#dc2626]"
                           }`}
                         >
                           {isPresent ? "Present" : "Pending"}
@@ -225,7 +225,7 @@ const filteredClients = useMemo(() => {
                           disabled={isPresent}
                           className={`rounded-xl px-5 py-3 font-semibold text-white shadow-md transition ${
                             isPresent
-                              ? "cursor-not-allowed bg-green-500"
+                              ? "cursor-not-allowed bg-[#22c55e]"
                               : "bg-teal-700 hover:bg-teal-800"
                           }`}
                         >

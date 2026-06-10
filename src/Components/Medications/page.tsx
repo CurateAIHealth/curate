@@ -169,7 +169,7 @@ const dispatch=useDispatch()
       <div className="flex justify-between items-center gap-4">
         <button
           onClick={selectWholeMonth}
-          className="flex items-center gap-2 bg-green-500 text-white px-3 py-2 rounded-md hover:bg-green-600 transition"
+          className="flex items-center gap-2 bg-[#22c55e] text-white px-3 py-2 rounded-md hover:bg-[#16a34a] transition"
         >
           <CalendarRange className="w-4 h-4" /> Select Whole Month
         </button>
@@ -378,7 +378,7 @@ const dispatch=useDispatch()
                     <td className="border p-2 flex flex-col gap-1 items-center">
                       <button
                         onClick={() => selectWholeWeekForEntry(weekIndex, entryIndex)}
-                        className="flex w-[160px] items-center gap-1 cursor-pointer bg-teal-500 text-white px-2 py-1 rounded-md text-xs hover:bg-green-600 transition"
+                        className="flex w-[160px] items-center gap-1 cursor-pointer bg-teal-500 text-white px-2 py-1 rounded-md text-xs hover:bg-[#16a34a] transition"
                       >
                         <CalendarDays /> select Whole Week
                       </button>
@@ -402,7 +402,7 @@ const dispatch=useDispatch()
           <div className='flex justify-end'>
             <button
               onClick={() => addNewRow(weekIndex)}
-              className="mt-2 gap-1 flex  items-center text-green-600 hover:text-green-700 transition"
+              className="mt-2 gap-1 flex  items-center text-[#16a34a] hover:text-[#15803d] transition"
             >
               <PlusCircle className="w-4 h-4" />
               <span className="text-sm font-semibold">Add Row</span>
@@ -414,7 +414,7 @@ const dispatch=useDispatch()
       <div className='flex items-center justify-center'>
 <button
 type='button'
-  className=" hover:bg-gray-200 cursor-pointer w-[200px] text-green-600 border border-green-600 font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-1"
+  className=" hover:bg-gray-200 cursor-pointer w-[200px] text-[#16a34a] border border-[#16a34a] font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-1"
   onClick={handleSave}
 >
   Save Medication

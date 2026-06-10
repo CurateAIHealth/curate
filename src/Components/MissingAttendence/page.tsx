@@ -1,5 +1,5 @@
 'use client'
-let cachedDeploymentInfo: any = null;
+let cachedDeploymentInfo: Record<string, any[]> = {};
 import { GetDeploymentInfo, UpdatehcpDailyAttendce, UpdateAttendence, UpdateMultipleAttendance, EditAttendanceByClientId } from "@/Lib/user.action"
 import { useEffect, useState } from "react"
 import { LoadingData } from "../Loading/page"
@@ -40,20 +40,22 @@ useEffect(() => {
   }
   const fetchFreshData = async () => {
     try {
+      const cacheKey = `${selectedYear}-${selectedMonth}`;
+
       // Use cache instantly
-      if (!isSuccessUpdate && cachedDeploymentInfo?.length) {
-        SetAttendenceInfo(cachedDeploymentInfo);
+      if (!isSuccessUpdate && cachedDeploymentInfo[cacheKey]?.length) {
+        SetAttendenceInfo(cachedDeploymentInfo[cacheKey]);
         return;
       }
 
       setisChecking(true);
 
-      const deploymentData = await GetDeploymentInfo();
+      const deploymentData = await GetDeploymentInfo(cacheKey);
 
       if (!mounted) return;
 
-      cachedDeploymentInfo = deploymentData ?? [];
-      SetAttendenceInfo(cachedDeploymentInfo);
+      cachedDeploymentInfo[cacheKey] = deploymentData ?? [];
+      SetAttendenceInfo(cachedDeploymentInfo[cacheKey]);
 
     } catch (err) {
       console.error("Fetch error:", err);
@@ -67,7 +69,7 @@ useEffect(() => {
   return () => {
     mounted = false;
   };
-}, [StatusMessage]);
+}, [StatusMessage, selectedMonth, selectedYear]);
 
 	
 const normalizeDate = (value: any) => {
@@ -284,14 +286,14 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
               </div>}
 
       {result.length === 0 ? (
-        <p className="text-green-600 font-semibold text-center">
+        <p className="text-[#16a34a] font-semibold text-center">
           🎉 All HCPs have marked attendance !
         </p>
       ) : (
         <div className=" flex flex-col overflow-x-auto shadow-xl rounded-xl  border-gray-200">
           <div className="flex justify-between">
             {StatusMessage && <p className={`mb-2 text-sm font-medium px-2 py-2 rounded-lg ${StatusMessage?.includes("success") || StatusMessage?.includes("✅")
-                ? "bg-green-100 text-green-700 border border-green-300"
+                ? "bg-[#dcfce7] text-[#15803d] border border-[#86efac]"
                 : "bg-red-100 text-red-700 border border-red-300"
               }`}>{StatusMessage}</p>}
               

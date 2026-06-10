@@ -227,7 +227,7 @@ const VendorId=useSelector((state:any)=>state.ReferdUserId)
   const phoneDigits = formData.ContactNumber.length;
   const passwordStrength = getPasswordStrength(formData.Password);
   const strengthLabel = ['Weak', 'Fair', 'Good', 'Strong'];
-  const strengthColor = ['text-red-500', 'text-yellow-500', 'text-blue-500', 'text-green-600'];
+  const strengthColor = ['text-[#ef4444]', 'text-yellow-500', 'text-blue-500', 'text-[#16a34a]'];
 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -275,7 +275,7 @@ const VendorId=useSelector((state:any)=>state.ReferdUserId)
         <input type="radio" onChange={(e) => setCheckBoxStatus(e.target.checked)} />
         <label>Accept <a href="/TermsAndConditions" className="text-blue-600 underline">Terms & Conditions</a></label>
       </div>
-      <p className={`md:col-span-2 text-center font-bold ${statusMessage.includes('successfully') ? 'text-green-700' : 'text-red-500'}`}>{statusMessage}</p>
+      <p className={`md:col-span-2 text-center font-bold ${statusMessage.includes('successfully') ? 'text-[#15803d]' : 'text-[#ef4444]'}`}>{statusMessage}</p>
       <button type="submit" disabled={!CheckBoxStatus} className={`primary-button md:col-span-2 ${!CheckBoxStatus ? 'opacity-50 cursor-not-allowed' : ''}`}>
         {SubmissionRequest ? 'Submit as Healthcare Assistant' : 'Registering as Healthcare Assistant...'}
       </button>

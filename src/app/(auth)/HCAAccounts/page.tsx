@@ -841,25 +841,25 @@ onClick={() => router.push("/SubAccountings")}
             </div>
 
             <div className="grid grid-cols-3 gap-3 px-4 py-3 bg-gray-50 shrink-0">
-              <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-center">
-                <p className="text-xs text-green-600 font-medium">
+              <div className="rounded-lg bg-[#f0fdf4] border border-[#dcfce7] p-3 text-center">
+                <p className="text-xs text-[#16a34a] font-medium">
                   Present Days
                 </p>
-                <p className="text-xl font-bold text-green-700">
+                <p className="text-xl font-bold text-[#15803d]">
                   {attendanceSummary?.present || 0}
                 </p>
               </div>
 
-              <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-center">
-                <p className="text-xs text-amber-600 font-medium">Half Days</p>
-                <p className="text-xl font-bold text-amber-700">
+              <div className="rounded-lg bg-[#fffbeb] border border-[#fde68a] p-3 text-center">
+                <p className="text-xs text-[#d97706] font-medium">Half Days</p>
+                <p className="text-xl font-bold text-[#b45309]">
                   {attendanceSummary?.halfDay || 0}
                 </p>
               </div>
 
-              <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-center">
-                <p className="text-xs text-red-600 font-medium">Absent Days</p>
-                <p className="text-xl font-bold text-red-700">
+              <div className="rounded-lg bg-[#fef2f2] border border-[#fecaca] p-3 text-center">
+                <p className="text-xs text-[#dc2626] font-medium">Absent Days</p>
+                <p className="text-xl font-bold text-[#b91c1c]">
                   {attendanceSummary?.absent || 0}
                 </p>
               </div>
@@ -1090,7 +1090,7 @@ const totalExpenses =
         />
         {["advance", "hostel", "other"].includes(amountField) &&
   (  Number(row.Expences?.[amountField as keyof PayrollRow["Expences"]] || 0) > dailyPayment || totalExpenses > dailyPayment) && (
-    <div className="text-red-600 text-[10px]">
+    <div className="text-[#dc2626] text-[10px]">
     ⚠ Expenses exceed HCA Payment
     </div>
 )}
@@ -1135,7 +1135,7 @@ const totalExpenses =
                       </button>
 <select
 defaultValue={row.PaymentVerficationStatus}
-  className={`px-4 py-2 rounded-xl border border-slate-300 ${row.PaymentVerficationStatus === "Process" ? "bg-pink-300" : "bg-green-500"} text-sm font-medium shadow-sm focus:outline-none focus:ring-2  ${row.PaymentVerficationStatus === "Process" ? "focus:ring-pink-500" : "focus:ring-green-500"}`}
+  className={`px-4 py-2 rounded-xl border border-slate-300 ${row.PaymentVerficationStatus === "Process" ? "bg-pink-300" : "bg-[#22c55e]"} text-sm font-medium shadow-sm focus:outline-none focus:ring-2  ${row.PaymentVerficationStatus === "Process" ? "focus:ring-pink-500" : "focus:ring-[#16a34a]"}`}
   onChange={(e) => {
     UpdatePaymentStatus(row.HCAId,row.Clientid, e.target.value);  
   }}
@@ -1219,8 +1219,8 @@ defaultValue={row.PaymentVerficationStatus}
     transaction.field === "advance" ||
     transaction.field === "hostel" ||
     transaction.field === "other"
-      ? "text-red-600"
-      : "text-green-600"
+      ? "text-[#dc2626]"
+      : "text-[#16a34a]"
   }`}
 >
                           {transaction.field} {
@@ -1232,8 +1232,8 @@ defaultValue={row.PaymentVerficationStatus}
                         <span
                           className={`text-sm font-semibold ${
                             transaction.action === "added"
-                              ? "text-green-600"
-                              : "text-red-600"
+                              ? "text-[#16a34a]"
+                              : "text-[#dc2626]"
                           }`}
                         >
                           {transaction.action.toUpperCase()}

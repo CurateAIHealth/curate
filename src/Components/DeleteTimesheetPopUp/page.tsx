@@ -49,7 +49,7 @@ export default function DeletePopup<T>({
           ? "bg-emerald-50 text-emerald-700 border-emerald-200"
           : StatusMessage.toLowerCase().includes("error") ||
             StatusMessage.toLowerCase().includes("failed")
-          ? "bg-red-50 text-red-700 border-red-200"
+          ? "bg-[#fef2f2] text-[#b91c1c] border-[#fecaca]"
           : "bg-blue-50 text-blue-700 border-blue-200"
       }
     `}
@@ -68,7 +68,7 @@ export default function DeletePopup<T>({
           <button
             onClick={() => onConfirm(data)}
             disabled={loading}
-            className="px-4 py-1.5 rounded-md text-xs md:text-sm bg-red-600 hover:bg-red-500 text-white disabled:opacity-60"
+            className="px-4 py-1.5 rounded-md text-xs md:text-sm bg-[#dc2626] hover:bg-[#b91c1c] text-white disabled:opacity-60"
           >
             {loading ? "Deleting..." : "Delete"}
           </button>

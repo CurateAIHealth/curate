@@ -195,7 +195,7 @@ body {
 }
 @layer components {
   .input-green {
-    @apply border border-green-500 rounded px-3 py-2 w-full ;
+    @apply border border-[#22c55e] rounded px-3 py-2 w-full ;
   }
 }
 
@@ -214,13 +214,13 @@ body {
 
 .input-modern:focus + .floating-label,
 .input-modern:not(:placeholder-shown) + .floating-label {
-  @apply -top-2.5 left-3 text-xs text-green-600;
+  @apply -top-2.5 left-3 text-xs text-[#16a34a];
 }
 
 
 
 .floating-label {
-  @apply absolute left-4 top-2 text-gray-500 bg-white px-1 text-base pointer-events-none transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:-top-3 peer-focus:text-xs peer-focus:text-green-600;
+  @apply absolute left-4 top-2 text-gray-500 bg-white px-1 text-base pointer-events-none transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:-top-3 peer-focus:text-xs peer-focus:text-[#16a34a];
 }
 
 /* Flip Card Perspective */

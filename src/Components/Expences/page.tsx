@@ -149,14 +149,14 @@ const SentTestEmail=async()=> {
 {StatusMessage&&<p
   className={`text-sm px-3 py-2 rounded-md font-medium ${
     StatusMessage.includes("Successfully")
-      ? "bg-green-100 text-green-700"
-      : "bg-red-100 text-red-700"
+      ? "bg-[#dcfce7] text-[#15803d]"
+      : "bg-[#fee2e2] text-[#b91c1c]"
   }`}
 >
   {StatusMessage}
 </p>}
           <button onClick={onClose}>
-            <X className="text-gray-500 hover:text-red-600" />
+            <X className="text-gray-500 hover:text-[#dc2626]" />
           </button>
 </div>
         </div>

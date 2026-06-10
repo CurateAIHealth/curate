@@ -357,7 +357,7 @@ console.log("FinalData:", normalizedData);
               Profession Skills:
             </label>
 
-            {ProfetionlSkillsEdit?<p onClick={()=>setProfetionlSkillsEdit(!ProfetionlSkillsEdit)} className='border p-1 text-green-800 cursor-pointer h-8 shadow-lg rounded-md'>Save</p>: <Pencil className='cursor-pointer h-5 w-5' onClick={()=>setProfetionlSkillsEdit(!ProfetionlSkillsEdit)}/>}
+            {ProfetionlSkillsEdit?<p onClick={()=>setProfetionlSkillsEdit(!ProfetionlSkillsEdit)} className='border p-1 text-[#15803d] cursor-pointer h-8 shadow-lg rounded-md'>Save</p>: <Pencil className='cursor-pointer h-5 w-5' onClick={()=>setProfetionlSkillsEdit(!ProfetionlSkillsEdit)}/>}}
           
               </div>
               <div>
@@ -542,7 +542,7 @@ console.log("FinalData:", normalizedData);
 </button> */}
 
     </div>
-    <p className={ `${SubmitstatusMessage==="Profile Updated Succesfully"?"text-green-800":"text-black"} text-center font-semibold ml-15 mt-10`}>{SubmitstatusMessage}</p>
+    <p className={ `${SubmitstatusMessage==="Profile Updated Succesfully"?"text-[#15803d]":"text-black"} text-center font-semibold ml-15 mt-10`}>{SubmitstatusMessage}</p>
   </div>
 
  
@@ -609,7 +609,7 @@ console.log("FinalData:", normalizedData);
         </span>
         <p className="text-xs text-gray-600">
       Per day amount:{" "}
-      <span className="font-semibold text-green-600">
+      <span className="font-semibold text-[#16a34a]">
         ₹{Math.round(Number(user.HCPSalary) / 30)}
       </span>
     </p>

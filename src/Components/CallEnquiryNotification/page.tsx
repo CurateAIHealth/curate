@@ -128,7 +128,7 @@ bg-teal-700/30 hover:bg-teal-700/50 border border-teal-400/20 transition-all">
 
           <button
               onClick={() => onSend(selectedEmployEmails)}
-            className="mt-3 w-full bg-white text-green-700 text-xs font-semibold py-2.5 rounded-lg hover:bg-green-100 transition"
+            className="mt-3 w-full bg-white text-[#15803d] text-xs font-semibold py-2.5 rounded-lg hover:bg-[#dcfce7] transition"
           >
             {buttonText}
           </button>

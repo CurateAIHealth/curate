@@ -29,16 +29,16 @@ export default function PopupToast({
 
   const styles:any = {
     success: {
-      bg: "bg-green-50 border-green-200",
-      icon: <CheckCircle className="text-green-600 w-5 h-5" />,
+      bg: "bg-[#f0fdf4] border-[#dcfce7]",
+      icon: <CheckCircle className="text-[#16a34a] w-5 h-5" />,
     },
     error: {
       bg: "bg-red-50 border-red-200",
       icon: <AlertCircle className="text-red-600 w-5 h-5" />,
     },
     loading: {
-      bg: "bg-amber-50 border-amber-200",
-      icon: <Loader2 className="text-amber-600 w-5 h-5 animate-spin" />,
+      bg: "bg-[#fffbeb] border-[#fde68a]",
+      icon: <Loader2 className="text-[#d97706] w-5 h-5 animate-spin" />,
     },
     info: {
       bg: "bg-blue-50 border-blue-200",

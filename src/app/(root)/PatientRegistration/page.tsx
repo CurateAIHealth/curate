@@ -403,7 +403,7 @@ setStatusMessage("Patient Details Updated Successfully");
                 </span>
               </label>
               {uploadMessage && (
-                <p className={`mt-2 text-sm font-semibold ${uploadMessage.includes('failed') ? 'text-red-500' : 'text-green-600'}`}>
+                <p className={`mt-2 text-sm font-semibold ${uploadMessage.includes('failed') ? 'text-[#ef4444]' : 'text-[#16a34a]'}`}>
                   {uploadMessage}
                 </p>
               )}
@@ -487,7 +487,7 @@ setStatusMessage("Patient Details Updated Successfully");
                   />
                   <span> (Long Night)</span>
                 </label>
-                {errors.stayDuration && <p className="text-red-500 text-xs mt-1 font-medium">{errors.stayDuration}</p>}
+                {errors.stayDuration && <p className="text-[#ef4444] text-xs mt-1 font-medium">{errors.stayDuration}</p>}
               </div>
               <CustomInput label="Registration Fee (Rs)" type="number" name="registrationRs" value={form.registrationRs} onChange={handleChange} error={errors.registrationRs} />
               <CustomInput label="Advance Paid (Rs)" type="number" name="advancePaidRs" value={form.advancePaidRs} onChange={handleChange} error={errors.advancePaidRs} />
@@ -498,7 +498,7 @@ setStatusMessage("Patient Details Updated Successfully");
           </div>
         )}
       </section>
-      <p className={`text-center font-semibold text-lg ${statusMessage.includes('Success') ? "text-green-700" : "text-red-600"}`}>{statusMessage}</p>
+      <p className={`text-center font-semibold text-lg ${statusMessage.includes('Success') ? "text-[#15803d]" : "text-[#b91c1c]"}`}>{statusMessage}</p>
 
       <div className="pt-2 border-t border-gray-200 flex justify-between items-center">
         {currentStep > 0 && (

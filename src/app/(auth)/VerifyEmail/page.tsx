@@ -84,8 +84,8 @@ export default function () {
 
 
 
-                {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-                {success && <p className="text-green-600 text-sm mb-2">{success}</p>}
+                {error && <p className="text-[#ef4444] text-sm mb-2">{error}</p>}
+                {success && <p className="text-[#16a34a] text-sm mb-2">{success}</p>}
 
                 <button
                     onClick={handleVerifyEmail}

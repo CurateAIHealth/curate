@@ -675,7 +675,7 @@ const ExtendTimeSheet = async () => {
      <p
        className={`mt-3 text-center text-sm font-medium ${
          ActionStatusMessage .includes("Sucessfull") 
-           ? "text-green-700"
+           ? "text-[#15803d]"
            : "text-gray-700"
        }`}
      >
@@ -882,7 +882,7 @@ setSelectedEndDate(e.target.value)
         />
       </div>
 {showWarning && (
-  <p className="text-xs text-center text-red-500 mt-1">
+  <p className="text-xs text-center text-[#ef4444] mt-1">
     ⚠ Selected date Sholud be belongs to the current month
   </p>
 )}
@@ -955,8 +955,8 @@ const isProfit = invoiceProfit >= 0;
   className={`mt-6 sm:mt-8 rounded-2xl border shadow-sm p-4 sm:p-2 transition-all duration-300
   ${
     isProfit
-      ? "bg-gradient-to-br from-green-50 to-white border-green-100"
-      : "bg-gradient-to-br from-red-50 to-white border-red-100"
+      ? "bg-gradient-to-br from-[#f0fdf4] to-white border-[#dcfce7]"
+      : "bg-gradient-to-br from-[#fef2f2] to-white border-[#fecaca]"
   }`}
 >
   {/* Header */}
@@ -997,8 +997,8 @@ const isProfit = invoiceProfit >= 0;
       className={`w-full sm:w-auto flex items-center justify-center rounded-xl text-sm sm:[9px] font-semibold px-2 py-2
       ${
         isProfit
-          ? "bg-green-100 text-green-600"
-          : "bg-red-100 text-red-500"
+          ? "bg-[#dcfce7] text-[#16a34a]"
+          : "bg-[#fee2e2] text-[#ef4444]"
       }`}
     >
       {isProfit ? "↑ Profit" : "↓ Loss"}
@@ -1036,7 +1036,7 @@ const isProfit = invoiceProfit >= 0;
   })()}
     </div>}
     <p className="text-lg font-semibold text-gray-800">
-  Current Price: <span className="text-green-600 font-bold">₹{serviceCharge}</span>
+  Current Price: <span className="text-[#16a34a] font-bold">₹{serviceCharge}</span>
 </p>
       <div className="flex items-center gap-2 mb-3">
         <input
@@ -1075,7 +1075,7 @@ const isProfit = invoiceProfit >= 0;
         </button>
         <button
           onClick={ExtendTimeSheet}
-          className="px-5 py-2 rounded-full bg-green-600 text-white hover:bg-green-700"
+          className="px-5 py-2 rounded-full bg-[#16a34a] text-white hover:bg-[#15803d]"
         >
           Yes
         </button>
@@ -1083,8 +1083,8 @@ const isProfit = invoiceProfit >= 0;
   <p
   className={`text-[9px] mt-1 text-center ${
     ActionStatusMessage?.includes("TimeSheet Successfully Extended")
-      ? "text-green-600"
-      : "text-red-600 font-bold"
+      ? "text-[#16a34a]"
+      : "text-[#b91c1c] font-bold"
   }`}
 >
   {ActionStatusMessage}
@@ -1358,7 +1358,7 @@ const isProfit = invoiceProfit >= 0;
    </td>
    {/* <td className="px-3 py-3 text-gray-700 text-xs">
      {!c?.ServiceCharge ? (
-       <span className="text-red-600 font-medium">
+       <span className="text-[#dc2626] font-medium">
          Care Taker Charge Missing
        </span>
      ) : (
@@ -1387,7 +1387,7 @@ const isProfit = invoiceProfit >= 0;
    <td className="px-3 py-3 text-gray-700 text-xs">
      {!c?.ServiceCharge ? (
        <div className="flex flex-col items-center gap-2">
-         <span className="text-red-600 text-[9px] whitespace-nowrap">
+         <span className="text-[#dc2626] text-[9px] whitespace-nowrap">
            Care Taker Charge Missing
          </span>
    
@@ -1428,7 +1428,7 @@ const isProfit = invoiceProfit >= 0;
              </td>
    
           <td className="px-1 py-3 text-gray-900 font-semibold text-[10px] flex items-center gap-1">
-     <MapPin size={14} className="text-green-600 shrink-0" />
+     <MapPin size={14} className="text-[#16a34a] shrink-0" />
      {getPopularArea(c.location)}
    </td>
    
@@ -1511,7 +1511,7 @@ const isProfit = invoiceProfit >= 0;
       className="px-2 py-0.5 text-[9px] font-semibold
                  text-white bg-red-600 hover:bg-red-700 cursor-pointer rounded-md"      
       onClick={ () => handleDeleteClick(c,c.HCA_Name)}> Terminate</button>
-  </div>} </p>:    <p className="inline-block px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
+  </div>} </p>:    <p className="inline-block px-3 py-1 text-sm font-medium text-[#15803d] bg-[#dcfce7] rounded-full">
   On Service 
 </p> } */}
 
@@ -1582,7 +1582,7 @@ const isProfit = invoiceProfit >= 0;
          HandleRemove(c, c.HCA_Name);
        }}
      >
-       <CircleX className="text-red-600" />
+       <CircleX className="text-[#dc2626]" />
      </button>
    
    </td> */}

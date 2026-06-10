@@ -305,18 +305,18 @@ const recalcTotals = () => {
 
       <div className="bg-white shadow-xl rounded-2xl px-8 py-6 text-center w-[90%] max-w-sm animate-fadeIn">
 
-        <div className="bg-green-500 text-white w-12 h-12 flex items-center justify-center rounded-full mx-auto mb-4 shadow-lg">
+        <div className="bg-[#22c55e] text-white w-12 h-12 flex items-center justify-center rounded-full mx-auto mb-4 shadow-lg">
           ✓
         </div>
 
-        <h2 className="text-lg font-semibold text-green-700">
+        <h2 className="text-lg font-semibold text-[#15803d]">
           Invoice Sent Successfully!
         </h2>
 
         <p className="text-sm text-slate-600 mt-1">
           The updated invoice has been delivered to the customer.
         </p>
-      <button className="bg-green-800 mt-4 p-2 text-white rounded-md cursor-pointer" onClick={()=>dispatch(UpdateInvoiceIntialStatus(true))}>Go To Invoices</button>
+      <button className="bg-[#1f2937] mt-4 p-2 text-white rounded-md cursor-pointer" onClick={()=>dispatch(UpdateInvoiceIntialStatus(true))}>Go To Invoices</button>
       </div>
 
     </div>
