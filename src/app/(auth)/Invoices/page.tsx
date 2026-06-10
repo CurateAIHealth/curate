@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List, PencilOff, Info, PrinterCheck } from "lucide-react";
+import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List, PencilOff, Info, PrinterCheck, ListFilterPlus } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { GetInvoiceInfo, GetRegidterdUsers, GetSentInvoiceData, UpdateStatusPayment } from "@/Lib/user.action";
@@ -44,6 +44,9 @@ export default function InvoicesPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"All" | InvoiceStatus>("All");
   const [page, setPage] = useState(1);
+  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
+const [fromDate, setFromDate] = useState("");
+const [toDate, setToDate] = useState("");
  const [CurrentPaymentStatus,SetCurrentPaymentStatus]=useState<any>(null)
  const [invoiceTransactionData,setinvoiceTransactionData]=useState(ImportedinvoiceData)
   const [InvoiceData, setInvoiceData] = useState<any>()
@@ -630,19 +633,19 @@ CheckPaymentStatus:CurrentPaymentStatus
 
   <div className="flex items-center gap-2 bg-green-50 border-l-4 border-green-600 text-green-700 p-2 rounded w-full md:w-auto">
     <p className="text-xs font-semibold whitespace-nowrap">✔ Total Received</p>
-    <h3 className="text-sm md:text-base font-bold">{  BalancePaid}/-</h3>
+    <h3 className="text-sm md:text-base font-bold">{  BalancePaid}</h3>
   </div>
 
 
   <div className="flex items-center gap-2 bg-red-50 border-l-4 border-red-600 text-red-700 p-2 rounded w-full md:w-auto">
     <p className="text-xs font-semibold whitespace-nowrap">⚠ Pending Amount</p>
-    <h3 className="text-sm md:text-base font-bold">{BalanceDue}/-</h3>
+    <h3 className="text-sm md:text-base font-bold">{BalanceDue}</h3>
   </div>
 
   
   <div className="flex items-center gap-2 bg-yellow-50 border-l-4 border-yellow-600 text-yellow-700 p-2 rounded w-full md:w-auto">
     <p className="text-xs font-semibold whitespace-nowrap">↩ Refund Issued</p>
-    <h3 className="text-sm md:text-base font-bold">{RefundAmount}/-</h3>
+    <h3 className="text-sm md:text-base font-bold">{RefundAmount}</h3>
   </div>
 
 </div>
@@ -652,29 +655,42 @@ CheckPaymentStatus:CurrentPaymentStatus
               <div className="flex flex-wrap gap-3 items-center">
 
 
-                <div className="flex flex-wrap gap-2 items-center">
-                  <span className="text-xs text-gray-500">Status</span>
-                  {["All", "Draft", "Sent", ].map((s) => {
-                    const active = filter === s;
-                    return (
-                      <button
-                        key={s}
-                        onClick={() => {
-                          setFilter(s as any);
-                          resetToFirstPage();
-                        }}
-                        className={
-                          "px-3 py-1.5 rounded-full text-xs font-medium border transition " +
-                          (active
-                            ? "bg-[#1392d3] text-white border-[#1392d3]"
-                            : "bg-white text-gray-600 border-gray-200")
-                        }
-                      >
-                        {s}
-                      </button>
-                    );
-                  })}
-                </div>
+                
+
+<div className="flex flex-wrap gap-2 items-center">
+  <span className="text-xs text-gray-500">Status</span>
+
+  {["All", "Draft", "Sent"].map((s) => {
+    const active = filter === s;
+
+    return (
+      <button
+        key={s}
+        onClick={() => {
+          setFilter(s as any);
+          resetToFirstPage();
+        }}
+        className={
+          "px-3 py-1.5 rounded-full text-xs font-medium border transition " +
+          (active
+            ? "bg-[#1392d3] text-white border-[#1392d3]"
+            : "bg-white text-gray-600 border-gray-200")
+        }
+      >
+        {s}
+      </button>
+    );
+  })}
+
+  {/* Advanced Filter Button */}
+  <button
+    onClick={() => setShowAdvancedFilter(true)}
+    className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 hover:border-[#1392d3] hover:text-[#1392d3] transition"
+  >
+    <ListFilterPlus  size={14} />
+    <span className="text-xs font-medium">Advanced</span>
+  </button>
+</div>
 
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-500">Month</span>
@@ -750,6 +766,82 @@ CheckPaymentStatus:CurrentPaymentStatus
       </div>
     )}
   </>
+  {
+  showAdvancedFilter && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+<img
+            src="/Icons/Curate-logoq.png"
+            className="h-10"
+            alt="Company Logo"
+          />
+
+          <h3 className="text-lg font-semibold text-[#1392d3]">
+            Advanced Filter
+          </h3>
+          </div>
+
+          <button
+            onClick={() => setShowAdvancedFilter(false)}
+            className="text-gray-500 hover:text-red-500"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">
+              From Date
+            </label>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1392d3]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">
+              To Date
+            </label>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1392d3]"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 mt-6">
+          <button
+            onClick={() => {
+              setFromDate("");
+              setToDate("");
+            }}
+            className="px-4 py-2 border rounded-lg text-gray-600"
+          >
+            Clear
+          </button>
+
+          <button
+            onClick={() => {
+              
+              setShowAdvancedFilter(false);
+            }}
+            className="px-4 py-2 bg-[#1392d3] text-white rounded-lg"
+          >
+            Apply Filter
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
  <PassbookPopup
         open={openTransactions}
         onClose={() => setOpenTransactions(false)}
@@ -771,6 +863,7 @@ CheckPaymentStatus:CurrentPaymentStatus
         onClose={() => setOpenPaymentMethods(false)}
         onSubmit={(Data:any)=>UpdatePaymentStatus(Data)}
       />
+      
   <div className="w-full border rounded-md overflow-hidden">
 <div
   className="
@@ -893,15 +986,15 @@ CheckPaymentStatus:CurrentPaymentStatus
           </div>
         )}
 
-        <div className="hidden md:block">{Number(total).toFixed(2)}/-</div>
+        <div className="hidden md:block">{Number(total).toFixed(2)}</div>
 
 
         <div className="hidden md:block">
-          {  Number(inv.AdvanceReceived)|| 0}/-
+          {  Number(inv.AdvanceReceived)|| 0}
         </div>
 
   
-        <div className="hidden md:block">{ Number(balance).toFixed(2)}/-</div>
+        <div className="hidden md:block">{ Number(balance).toFixed(2)}</div>
 
         {/* Actions */}
         <div className="flex items-center">
