@@ -4532,6 +4532,17 @@ form.HusbendContact!=="Not Available"&&
                      */}
  </div>
         <div className="flex justify-center mt-8">
+          
+              {UpdatedStatusMessage && (
+                <div
+                  className={`mt-8 w-full max-w-md p-4 rounded-xl font-medium text-sm shadow-inner transition-all duration-300 ${UpdatedStatusMessage === "Successfully Updated Your Information."
+                      ? "bg-[#f0fdf4] text-[#15803d] border border-[#dcfce7]"
+                      : "bg-[#fef2f2] text-[#b91c1c] border border-[#fecaca]"
+                    }`}
+                >
+                  {UpdatedStatusMessage}
+                </div>
+              )}
           <button
             type="submit"
             disabled={!UpdateingStatus}
