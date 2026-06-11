@@ -21,7 +21,9 @@ export default function AccountingSub(){
       const stats=useSelector((state:any)=>state.DashBoardCount)
         const [showPermissionPopup, setShowPermissionPopup] = useState(false);
           const [LoginEmailPop,setLoginEmailPop]=useState(false)
-          const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
+ 
+
+  const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
         const router = useRouter()
         const dispatch=useDispatch()
       const tabs = useMemo(
@@ -102,12 +104,14 @@ const handleLogout = () => {
           switch (name) {
   case "Call Enquiry":
       case "Deployment":
-      case "Timesheet":
+    
         dispatch(Update_Main_Filter_Status(name));
         dispatch(UpdateUserType("patient"));
         router.push("/AdminPage");
         break;
-      
+        case "Timesheet":
+           router.push("/TimeSheet");
+              break;
             case "Pending PDR":
               router.push("/PDRView");
               break;

@@ -9,7 +9,7 @@ let cachedRegisterdUsers: any[] = [];
 
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Info, Minimize2 } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId, UpdateClientAttendanceStatus,  } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId, UpdateClientAttendanceStatus, GetApplicationData,  } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -151,11 +151,11 @@ useEffect(() => {
       setIsChecking(true);
  
       if (!isSuccessUpdate && cachedDeploymentInfo?.length > 0) {
-        setUsers([...cachedUsersFullInfo]);
-        setClientsInformation([...cachedDeploymentInfo]);
-        setReplacementInformation([...cachedReplacementInfo]);
-        SetterminationInfo([...cachedTermination]);
-        setRegisterdUsers([...cachedRegisterdUsers])
+setUsers(cachedUsersFullInfo);
+setClientsInformation(cachedDeploymentInfo);
+setReplacementInformation(cachedReplacementInfo);
+SetterminationInfo(cachedTermination);
+setRegisterdUsers(cachedRegisterdUsers);
         return;
       }
 
@@ -172,21 +172,23 @@ useEffect(() => {
       //   GetReplacementInfo(),
       //   GetTerminationInfo(),
       // ]);
-      const {
-  RegisterdUsers,
-  usersResult,
-  placementInfo,
-  replacementInfo,
-  terminationInfo,
-} = await GetAllUsersData();
-
+      console.time("GetAllUsersData");
+//       const {
+//   RegisterdUsers,
+//   usersResult,
+//   placementInfo,
+//   replacementInfo,
+//   terminationInfo,
+// } = await GetAllUsersData();
+// console.timeEnd("GetAllUsersData");
+  const data = await GetApplicationData();
       if (!mounted) return;
 
-      cachedUsersFullInfo = usersResult ?? [];
-      cachedDeploymentInfo = placementInfo ?? [];
-      cachedReplacementInfo = replacementInfo ?? [];
-      cachedTermination = terminationInfo ?? [];
-    cachedRegisterdUsers=RegisterdUsers??[]
+      cachedUsersFullInfo = data.usersFullInfo || []; 
+      cachedDeploymentInfo = data.deploymentInfo || [];
+      cachedReplacementInfo = data.replacementInfo ?? [];
+      cachedTermination = data.terminationInfo ?? [];
+    cachedRegisterdUsers=data.registeredUsers || [];
       setUsers([...cachedUsersFullInfo]);
       setClientsInformation([...cachedDeploymentInfo]);
       setReplacementInformation([...cachedReplacementInfo]);
@@ -1313,13 +1315,63 @@ console.log(
 
       console.log("Check Attendece Status-------",dateResponse)
 
-     if (dateResponse?.success) {
- 
+if (dateResponse?.success) {
+  setClientsInformation((prev: any) =>
+    prev.map((client: any) => {
+      if (client.ClientId !== AttenseceInformation.Client_Id) {
+        return client;
+      }
+
+      const updatedAttendance = [
+        ...(client.ClientAttendance || []),
+      ];
+
+      const existingIndex = updatedAttendance.findIndex(
+        (att: any) => {
+          const attDate =
+            new Date(att.AttendanceDate)
+              .toISOString()
+              .split("T")[0];
+
+          return attDate === EditDate;
+        }
+      );
+
+      const updatedRecord = {
+        AttendanceDate: EditDate,
+        Status: currentStatus,
+        UpdatedBy: loggedInEmail,
+        Reason: AbsentReason,
+        UpdatedAt: new Date(),
+      };
+
+      if (existingIndex >= 0) {
+        updatedAttendance[existingIndex] = {
+          ...updatedAttendance[existingIndex],
+          ...updatedRecord,
+        };
+      } else {
+        updatedAttendance.push(updatedRecord);
+      }
+
+      return {
+        ...client,
+        ClientAttendance: updatedAttendance,
+      };
+    })
+  );
 
   SetActionStatusMessage(
-    dateResponse?.message || "Attendance updated Successfully"
+    "Attendece Updated"
   );
-   window.location.reload()
+
+  setTimeout(() => {
+    setShowTimeSheet(false);
+    SetShowUpdateAttendece(false);
+    SetAttendeceEditReason("");
+  }, 1000);
+
+  return;
 }
 
       setTimeout(() => {

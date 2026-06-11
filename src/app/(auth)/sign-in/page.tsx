@@ -45,6 +45,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     localStorage.setItem("UserId", result.userId);
 
     dispatch(CurrentLoginUser(result.email));
+  
 
     router.replace("/");
 

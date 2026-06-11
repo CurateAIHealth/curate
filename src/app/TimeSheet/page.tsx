@@ -3,25 +3,28 @@ let deploymentCache: any[] = [];
 let cachedUsersFullInfo: any[] = [];
 let cachedRegisterdUsers: any[] = [];
 import { DeleteClientFromDeolyment, EditAttendanceByClientId, EditAttendanceByDateRange, GetApplicationData, GetDeploymentInfo, GetRegidterdUsers, GetRegidterdUsersforTimeSheet, GetUsersFullInfo, GetUsersFullInfoforTimeSheet, PostAttendeceEditRequest, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus, UpdatehcpDailyAttendce } from "@/Lib/user.action";
-import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
-import { CalendarDays, CheckCircle, Eye, FilePenLine, Info, LucidePencil, Minimize2, Pencil, PencilIcon, Trash2, X } from "lucide-react";
+import { Update_Main_Filter_Status, UpdateClient, UpdateUserInformation } from "@/Redux/action";
+import { CalendarDays, CheckCircle, Eye, FilePenLine, Info, List, LogOut, LucidePencil, Minimize2, Pencil, PencilIcon, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import MissingAttendence from "../MissingAttendence/page";
-import PaymentModal from "../PaymentInfoModel/page";
+
 import { months, years } from "@/Lib/Content";
 import { AssignSuitableIcon, getDaysInMonth } from "@/Lib/Actions";
-import DeletePopup from "../DeleteTimesheetPopUp/page";
-import { EditDeploymentPopup } from "../TimeSheetEditPopUp/page";
-import { LoadingData } from "../Loading/page";
-import TimeSheetTerminationTable from "../Time Sheet Terminations/page";
-import TimeSheetReplacementTable from "../Time Sheet Terminations/page";
+
+
 
 import { CurrentRegisterUser } from "@/Redux/reducer";
-import TimeSheetTerminationTableInfo from "../TimeSheetTerminationTableInfo/page";
+
 import axios from "axios";
+import { EditDeploymentPopup } from "@/Components/TimeSheetEditPopUp/page";
+import DeletePopup from "@/Components/DeleteTimesheetPopUp/page";
+import PaymentModal from "@/Components/PaymentInfoModel/page";
+import { LoadingData } from "@/Components/Loading/page";
+import TimeSheetReplacementTable from "@/Components/Time Sheet Terminations/page";
+import TimeSheetTerminationTableInfo from "@/Components/TimeSheetTerminationTableInfo/page";
+import MissingAttendence from "@/Components/MissingAttendence/page";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -72,7 +75,7 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const dispatch = useDispatch();
   const router = useRouter();
 const getMonthKey = (record: any): string => {
-  // Prefer StartDate (always string in your data)
+
   if (typeof record?.StartDate === "string") {
     const [d, m, y] = record.StartDate.split("/");
     if (y && m) {
@@ -80,7 +83,6 @@ const getMonthKey = (record: any): string => {
     }
   }
 
-  // Fallback if StartDate is missing
   if (record?.UpdatedAt instanceof Date) {
     const date = record.UpdatedAt;
     return `${date.getFullYear()}-${String(
@@ -130,11 +132,11 @@ useEffect(() => {
         }
       }
 
-      console.log("FETCH START", Date.now());
+      console.log("Time Sheet FETCH START", Date.now());
 
       const data = await GetApplicationData();
 
-      console.log("FETCH END", Date.now());
+      console.log(" Time Sheet  FETCH END", Date.now());
 
       const deploymentInfo = data.deploymentInfo || [];
 
@@ -851,6 +853,20 @@ console.log("Check Results-------",response)
     );
   } 
 };
+
+
+  const handleLogout = () => {
+    
+    router.push('/DashBoard');
+    dispatch(Update_Main_Filter_Status(""))
+ 
+  };
+
+  const handleMainLogout = async () => {
+    localStorage.removeItem("UserId");
+    router.prefetch("/");
+    router.push("/");
+  };
  const monthNames = Array.from({ length: 12 }, (_, i) =>
     new Date(0, i).toLocaleString("default", { month: "long" })
   );
@@ -907,8 +923,60 @@ const UpdateAttendecByDateRange = async () => {
 const PresentScreen=()=>{
   return (
     <div className="relative  bg-gradient-to-br from-green-50 via-white to-blue-50 p-6">
+  <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-white/90 rounded-xl p-3 mb-3 shadow-2xl border border-gray-100">
+        <div className="flex items-center gap-3 relative">
+  
+    <button
 
+      className="rounded-lg hover:bg-gray-100 transition cursor-pointer"
+    >
+         <List size={40} className='text-teal-800  p-2'/>
+    </button>
+  <img
+    src="/Icons/Curate-logo.png"
+    onClick={() => router.push("/DashBoard")}
+    alt="Logo"
+    className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl"
+  />
+
+  <h1 className="text-lg sm:text-2xl font-extrabold text-[#007B7F] tracking-tight leading-tight flex items-center gap-2">
+    Hi
+
+    
+  
+  </h1>
+
+
+  
+</div>
+
+
+          <div className='flex gap-2 items-center'>
+      
+
+            
+            <button
+              onClick={handleLogout}
+              className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+            >
+              DashBoard
+            </button>
+            <button
+              onClick={handleMainLogout}
+              className="
+                   px-4 py-2.5
+                  text-sm flex items-center gap-2
+                  text-red-600
+                  hover:bg-red-50
+                  font-medium
+                "
+            >
+              <LogOut size={16} /> Logout
+            </button>
+          </div>
+        </div>
      <header className="mb-6">
+        
   <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
 
     <div>
@@ -1071,7 +1139,7 @@ const PresentScreen=()=>{
   data={editForm}
   StatusMessage={StatusMessage}
   onClose={() => setShowEditPopup(false)}
-  onChange={(field, value) =>
+  onChange={(field:any, value:any) =>
     setEditForm((prev:any) => ({ ...prev, [field]: value }))
   }
   onSave={async(data:any) => {

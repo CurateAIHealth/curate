@@ -121,9 +121,9 @@ export default function Dashboard() {
     const Weightoptions = ["Actual", "Reported", "Estimated"];
   const [filteredLeads, setFilteredLeads] = useState<string[]>([])
   const ImportedInformationOfCallEnquiry = useSelector((state: any) => state.NotificationCallEnquiryInformation)
-  const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
+   const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
   const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
-
+console.log("Check Email------",loggedInEmail)
 
 
   const [EnquiryForm, setEnquiryForm] = useState<any>({
@@ -1100,7 +1100,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                     type="button"
                     onClick={() => {
                       localStorage.removeItem("UserId");
-                      router.prefetch("/");
+                    
                       router.push("/");
                       setShowProfileOptions(false);
                     }}

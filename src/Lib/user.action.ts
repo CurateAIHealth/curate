@@ -1907,7 +1907,7 @@ export const PostHCAFullRegistration = async (Info: any) => {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("CompliteRegistrationInformation");
-
+console.log ('Check Imported HCA Data-------',Info)
     const encryptedInfo = {
    
       "Title": Info.title,
@@ -1958,11 +1958,19 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "Professional Education Year Start": Info.professionalEducationYearStart,
       "Professional Education Year End": Info.professionalEducationYearEnd,
 
-      "HomeAssistance":Info.HomeAssistance.filter((s: any) => s !== "Select All"),
       "Registration Council": Info.registrationCouncil,
       "Registration No": Info.registrationNo,
-      "ProfessionalSkills": Info.professionalSkill.filter((s: any) => s !== "Select All"),
-      "HandledSkills":Info.HandledSkills.filter((s: any) => s !== "Select All"),
+     "HomeAssistance": Array.isArray(Info.HomeAssistance)
+  ? Info.HomeAssistance.filter((s: any) => s !== "Select All")
+  : [],
+
+"ProfessionalSkills": Array.isArray(Info.professionalSkill)
+  ? Info.professionalSkill.filter((s: any) => s !== "Select All")
+  : [],
+
+"HandledSkills": Array.isArray(Info.HandledSkills)
+  ? Info.HandledSkills.filter((s: any) => s !== "Select All")
+  : [],
       "Certified By": Info.certifiedBy,
       "Professional Work 1": Info.professionalWork1,
       "Professional Work 2": Info.professionalWork2,
@@ -2785,23 +2793,57 @@ HCAId:ImpHCAId
 }
 
 export const GetDeploymentInfo = async (
-  projection?:any
+  projection?: Record<string, unknown>
 ) => {
   try {
+    console.time("Mongo Connection");
+
     const cluster = await clientPromise;
+
+    console.timeEnd("Mongo Connection");
+
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Deployment");
 
-    const cursor = projection
-      ? collection.find({}).project(projection)
-      : collection.find({});
+    console.time("Create Cursor");
+
+    const cursor = collection
+      .find({})
+      .project(projection || {});
+
+    console.timeEnd("Create Cursor");
+
+    console.time("Mongo Query");
 
     const TimeSheetInfoData = await cursor.toArray();
 
-    return TimeSheetInfoData.map((user: any) => ({
+    console.timeEnd("Mongo Query");
+
+    console.log("Records Count:", TimeSheetInfoData.length);
+
+    if (TimeSheetInfoData.length > 0) {
+      console.log(
+        "Sample Record Size:",
+        JSON.stringify(TimeSheetInfoData[0]).length
+      );
+    }
+
+    console.time("Map Records");
+
+    const Result = TimeSheetInfoData.map((user: any) => ({
       ...user,
       _id: user._id?.toString(),
     }));
+
+    console.timeEnd("Map Records");
+
+    console.time("JSON Serialize");
+
+    JSON.stringify(Result);
+
+    console.timeEnd("JSON Serialize");
+
+    return Result;
   } catch (e) {
     console.error("GetDeploymentInfo Error:", e);
     return [];
@@ -7995,4 +8037,80 @@ export const GetAllUsersData = async () => {
       terminationInfo: [],
     };
   }
+};
+
+
+let applicationCache: any = null;
+let applicationCacheTime = 0;
+
+export const GetApplicationData = async () => {
+  const now = Date.now();
+
+  if (
+    applicationCache &&
+    now - applicationCacheTime < 300000
+  ) {
+    console.log("APPLICATION CACHE HIT");
+    return applicationCache;
+  }
+
+  console.time("GetDeploymentInfo");
+  const deploymentPromise = GetDeploymentInfo({
+    invoice: 1,
+    StartDate: 1,
+    EndDate: 1,
+    Status: 1,
+    Address: 1,
+    ClientContact: 1,
+    ClientName: 1,
+    ClientId: 1,
+    patientName: 1,
+    referralName: 1,
+    HCAId: 1,
+    HCAName: 1,
+    HCAContact: 1,
+    hcpSource: 1,
+    provider: 1,
+    payTerms: 1,
+    cTotal: 1,
+    cPay: 1,
+    hcpTotal: 1,
+    hcpPay: 1,
+    Attendance: 1,
+    CareTakerPrice: 1,
+    Month: 1,
+    Replacement: 1,
+  }).finally(() => console.timeEnd("GetDeploymentInfo"));
+
+  console.time("GetRegidterdUsersforTimeSheet");
+  const registeredPromise =
+    GetRegidterdUsersforTimeSheet().finally(() =>
+      console.timeEnd("GetRegidterdUsersforTimeSheet")
+    );
+
+  console.time("GetUsersFullInfoforTimeSheet");
+  const usersPromise =
+    GetUsersFullInfoforTimeSheet().finally(() =>
+      console.timeEnd("GetUsersFullInfoforTimeSheet")
+    );
+
+  const [
+    deploymentInfo,
+    registeredUsers,
+    usersFullInfo,
+  ] = await Promise.all([
+    deploymentPromise,
+    registeredPromise,
+    usersPromise,
+  ]);
+
+  applicationCache = {
+    deploymentInfo,
+    registeredUsers,
+    usersFullInfo,
+  };
+
+  applicationCacheTime = now;
+
+  return applicationCache;
 };
