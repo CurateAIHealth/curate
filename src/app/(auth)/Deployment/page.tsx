@@ -12,21 +12,21 @@ import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Tra
 import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId, UpdateClientAttendanceStatus, GetApplicationData,  } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
-import TerminationTable from "../Terminations/page";
-import { LoadingData } from "../Loading/page";
-import PaymentModal from "../PaymentInfoModel/page";
+
 import { filterColors, months, Placements_Filters, years } from "@/Lib/Content";
-import ReplacementsTable from "../ReplacementsTable/page";
+
 import { AssignSuitableIcon, getDaysBetween, getDueDaysStatus, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
 import { useRouter } from "next/navigation";
 import { button, div } from "framer-motion/client";
-import SalaryPopup from "../HCPSalary/page";
-import RefundPopup from "../RefundRequestPopup/page";
-import AwaitingInvoice from "../AwaitingInvoice/page";
+
 import axios from "axios";
-import RelasementHCPPopup from "../RelasementHCPPopup/page";
-import RepleasementHCPPopup from "../RelasementHCPPopup/page";
-import AttendanceModal from "../ClientAttendece/page";
+import AttendanceModal from "@/Components/ClientAttendece/page";
+import SalaryPopup from "@/Components/HCPSalary/page";
+import RefundPopup from "@/Components/RefundRequestPopup/page";
+import RepleasementHCPPopup from "@/Components/RelasementHCPPopup/page";
+import { LoadingData } from "@/Components/Loading/page";
+import TerminationTable from "@/Components/Terminations/page";
+import AwaitingInvoice from "@/Components/AwaitingInvoice/page";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -202,7 +202,7 @@ cachedUsersFullInfo = usersFullInfo;
   return () => {
     mounted = false;
   };
-}, [ActionStatusMessage, loggedInEmail,]);
+}, [ActionStatusMessage, loggedInEmail]);
 
 
 
@@ -1200,7 +1200,7 @@ return
       }
 const processedData = useMemo(() => {
   const search = SearchResult?.toLowerCase().trim() || "";
-console.log("Task Night----",FilterFinelTimeSheet)
+
   return FilterFinelTimeSheet
     .filter((record: any) => {
       if (!search) return true;
@@ -1213,28 +1213,21 @@ console.log("Task Night----",FilterFinelTimeSheet)
 
     .map((record: any) => {
       const dayStatusArray = Array.from({ length: 31 }, () => "-");
-console.log(
-  "ClientAttendance",
-  record.ClientAttendance
-);
-     (record.ClientAttendance || []).forEach((att: any) => {
-  const day = new Date(att.AttendanceDate).getDate();
 
-  const status =
-    att.Status ||
-    att.AttendeceStatus ||
-    "Absent";
+      (record.ClientAttendance || []).forEach((att: any) => {
+        const day = new Date(att.AttendanceDate).getDate();
 
-  if (day >= 1 && day <= 31) {
-    if (status === "Present") {
-      dayStatusArray[day - 1] = "P";
-    } else if (status === "Half Day") {
-      dayStatusArray[day - 1] = "HP";
-    } else {
-      dayStatusArray[day - 1] = "A";
-    }
-  }
-});
+        if (day >= 1 && day <= 31) {
+          if (att.Status === "Present") {
+            dayStatusArray[day - 1] = "P";
+          } else if (att.Status === "Half Day") {
+            dayStatusArray[day - 1] = "HP";
+          } else {
+            dayStatusArray[day - 1] = "A";
+          }
+        }
+      });
+
       const counts = dayStatusArray.reduce(
         (acc: any, v: string) => {
           if (v === "P") acc.pd++;
@@ -1244,22 +1237,14 @@ console.log(
         },
         { pd: 0, ad: 0, hpd: 0 }
       );
-console.log(
-  "PROCESSED",
-  record.name,
-  dayStatusArray
-);
+
       return {
         ...record,
         days: dayStatusArray,
         ...counts,
       };
     });
-}, [
-  ClientsInformation,
-  SearchResult,
-  refreshKey,
-]);
+}, [FilterFinelTimeSheet, SearchResult, ActionStatusMessage]);
 const UpdateServiceCharge=async(A:any)=>{
   SetActionStatusMessage("Please Wait...")
   alert(A)
@@ -1284,7 +1269,7 @@ SetActionStatusMessage("Update failed");
 
 const EditAttendence = async (): Promise<void> => {
 
- 
+  console.log("Check-----",AttenseceInformation)
   if (!AttenseceInformation?.Client_Id) return;
 
   try {
@@ -1323,118 +1308,66 @@ console.log(
       );
 
       console.log("Check Attendece Status-------",dateResponse)
+
 if (dateResponse?.success) {
-  console.log("✅ SUCCESS BLOCK ENTERED");
-  console.log("AttenseceInformation", AttenseceInformation);
-  console.log("EditDate", EditDate);
-  console.log("ClientsInformation Length", ClientsInformation?.length);
-
-  setClientsInformation((prev: any[]) => {
-    console.log("🔥 setClientsInformation CALLED");
-    console.log("Prev Length", prev?.length);
-    console.log("Prev Data", prev);
-
-    return prev.map((client: any, index: number) => {
-      console.log(
-        `CLIENT ${index}`,
-        client.ClientId,
-        client.Client_Id,
-        client.ClientAttendance
-      );
-
-      const currentClientId =
-        client.ClientId || client.Client_Id;
-
-      console.log(
-        "COMPARE",
-        currentClientId,
-        AttenseceInformation.Client_Id
-      );
-
-      if (
-        String(currentClientId) !==
-        String(AttenseceInformation.Client_Id)
-      ) {
+  setClientsInformation((prev: any) =>
+    prev.map((client: any) => {
+      if (client.ClientId !== AttenseceInformation.Client_Id) {
         return client;
       }
 
-      console.log("🎯 MATCH FOUND");
+      const updatedAttendance = [
+        ...(client.ClientAttendance || []),
+      ];
 
-      const attendance = [...(client.ClientAttendance || [])];
+      const existingIndex = updatedAttendance.findIndex(
+        (att: any) => {
+          const attDate =
+            new Date(att.AttendanceDate)
+              .toISOString()
+              .split("T")[0];
 
-      console.log("Attendance Before", attendance);
-
-      const attendanceIndex = attendance.findIndex((att: any) => {
-        console.log("Checking Attendance Record", att);
-
-        if (!att?.AttendanceDate) {
-          console.log("❌ Missing AttendanceDate", att);
-          return false;
+          return attDate === EditDate;
         }
-
-        const dbDate = new Date(att.AttendanceDate)
-          .toISOString()
-          .split("T")[0];
-
-        console.log(
-          "DB Date",
-          dbDate,
-          "EditDate",
-          EditDate
-        );
-
-        return dbDate === EditDate;
-      });
-
-      console.log("attendanceIndex", attendanceIndex);
-
-      const updatedAttendanceRecord = {
-        dateKey: EditDate,
-        AttendanceDate: `${EditDate}T00:00:00.000Z`,
-        Client_Id: AttenseceInformation.Client_Id,
-        Client_Name: AttenseceInformation.name,
-        HCA_Id: AttenseceInformation.HCA_Id,
-        HCA_Name: AttenseceInformation.HCA_Name,
-        Status: currentStatus,
-        AttendeceStatus: currentStatus,
-        UpdatedBy: loggedInEmail,
-        Reason: AbsentReason,
-        UpdatedAt: new Date().toISOString(),
-      };
-
-      console.log(
-        "Updated Attendance Record",
-        updatedAttendanceRecord
       );
 
-      if (attendanceIndex >= 0) {
-        console.log("🔄 Updating Existing Attendance");
+      const updatedRecord = {
+        AttendanceDate: EditDate,
+        Status: currentStatus,
+        UpdatedBy: loggedInEmail,
+        Reason: AbsentReason,
+        UpdatedAt: new Date(),
+      };
 
-        attendance[attendanceIndex] = {
-          ...attendance[attendanceIndex],
-          ...updatedAttendanceRecord,
+      if (existingIndex >= 0) {
+        updatedAttendance[existingIndex] = {
+          ...updatedAttendance[existingIndex],
+          ...updatedRecord,
         };
       } else {
-        console.log("➕ Creating New Attendance");
-
-        attendance.push(updatedAttendanceRecord);
+        updatedAttendance.push(updatedRecord);
       }
-
-      console.log("Attendance After", attendance);
 
       return {
         ...client,
-        ClientAttendance: attendance,
+        ClientAttendance: updatedAttendance,
       };
-    });
-  });
+    })
+  );
 
-  console.log("✅ setClientsInformation FINISHED");
+  SetActionStatusMessage(
+    "Attendece Updated"
+  );
 
-  SetActionStatusMessage("Attendance Updated Successfully");
+  setTimeout(() => {
+    setShowTimeSheet(false);
+    SetShowUpdateAttendece(false);
+    SetAttendeceEditReason("");
+  }, 1000);
 
   return;
 }
+
       setTimeout(() => {
         setShowTimeSheet(false);
         SetShowUpdateAttendece(false);
@@ -1734,7 +1667,7 @@ onClick={() => setShowAttendanceModal(true)}
   StatusMsg={ActionStatusMessage}
   title={selectedHCP?.FirstName||selectedAssignHCP?.FirstName}
   onClose={() => setShowCareTakerPriceUpdate(false)}
-  onSubmit={async(value) => {
+  onSubmit={async(value:any) => {
    
     const UpdateSalary= await HCASalaryUpdate(selectedHCP?.id||selectedAssignHCP?.id,value,loggedInEmail)
     if(UpdateSalary.success){
@@ -1793,7 +1726,7 @@ setShowCareTakerPriceUpdate(false)
   open={showHCAList}
   onClose={() => {setShowHCAList(false);setShowReassignmentPopUp(true)}}
   filteredHcps={filterProfilePic}
-  onAssign={(hcp) => {
+  onAssign={(hcp:any) => {
     console.log("Assigned HCP:", hcp.UserId)
       const selected = HCA_List.find(
         (hca) => hca.userId ===  hcp.UserId
@@ -1803,7 +1736,7 @@ setShowCareTakerPriceUpdate(false)
       console.log("Selected HCP for Replacement:", selected);
       
   }}
-  onUpdate={(hcp) => console.log("Updated HCP:", hcp.UserId)}
+  onUpdate={(hcp:any) => console.log("Updated HCP:", hcp.UserId)}
 />
   {ClientsInformation.length > 0 && (
   <div className="w-full overflow-x-auto rounded-2xl shadow-xl">
@@ -1848,7 +1781,7 @@ setShowCareTakerPriceUpdate(false)
         onClose={() => setShowRefundRequrstPopUp(false)}
         data={selectedClient}
         CompliteInfo={users}
-        onSubmit={(A)=>(PostRefunRequest(A))}
+        onSubmit={(A:any)=>(PostRefunRequest(A))}
       />}
 
 
@@ -2014,7 +1947,7 @@ setShowCareTakerPriceUpdate(false)
 
    
     <tbody className="bg-white divide-y divide-gray-200">
-      {processedData.map((c, i) => 
+      {processedData.reverse().map((c, i) => 
         
      {
          const [, month, year] = c.StartDate.split("/").map(Number);
@@ -2023,7 +1956,7 @@ const monthIndex = [
   "January","February","March","April","May","June",
   "July","August","September","October","November","December"
 ].indexOf(SearchMonth) + 1;
-console.log("Check for Days-----", c.days)
+
 const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(year) ===Number(now.getFullYear());
 const todayIndex = Math.max(0, new Date().getDate() - 1);
 const dayStatus = c.days?.[todayIndex] || "-";
@@ -3653,7 +3586,7 @@ const GetFilterCount = (type: string) => {
       case "Termination":
         return <TerminationTable/>;
       case "Replacements":
-        return <ReplacementsTable/>;
+        return <ReplacementTime/>;
 
         case "Awaiting Invoice":
           return <AwaitingInvoice users={users} ClientsInformation={ClientsInformation} RegisterdUsers={RegisterdUsers} />;

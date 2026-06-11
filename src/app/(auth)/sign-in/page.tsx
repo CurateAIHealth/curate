@@ -8,6 +8,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { hashValue, verifySHA256 } from '@/Lib/Actions';
 import { CurrentLoginUser } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
+import axios from 'axios';
 
 export default function SignIn() {
   const router = useRouter();
@@ -26,29 +27,37 @@ const dispatch=useDispatch()
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-
+ console.log("CLIENT BEFORE CALL", Date.now());
   setError("");
   setsigninStatus(false);
 
   try {
-    const result: any = await SignInRessult({
-      Name: loginInfo.field_user.trim(),
-      Password: loginInfo.field_pass,
-    });
+    console.time("SIGNIN_API");
+   
 
-    if (!result.success) {
+console.time("API_LOGIN");
+
+const { data } =await axios.post("/api/route", {
+  Name: loginInfo.field_user.trim(),
+  Password: loginInfo.field_pass,
+});
+
+console.timeEnd("API_LOGIN");
+
+console.log(data);
+    if (!data.success) {
       setsigninStatus(true);
-      setError(result.message);
+      setError(data.message);
       return;
     }
 
-    localStorage.setItem("UserId", result.userId);
-
-    dispatch(CurrentLoginUser(result.email));
-  
-
+    localStorage.setItem("UserId", data.userId);
+console.time("REDUX");
+    dispatch(CurrentLoginUser(data.email));
+  console.timeEnd("REDUX");
+console.time("ROUTER");
     router.replace("/");
-
+console.timeEnd("ROUTER");
     setsigninStatus(true);
   } catch (error) {
     console.error(error);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from 'next/navigation';
+
 import {
   User,
   Bell,
@@ -66,6 +66,7 @@ import ReferralPopup from "@/Components/ReferalPopup/page";
 import { title } from "process";
 import SubheadingPop from "@/Components/Sunheading/page";
 import SessionExpiredPopup from "@/Components/LoginSesion/page";
+import { useRouter } from "next/navigation";
 
 const DOCUMENT_KEYS = [
   "AadharAttachmentURL",
@@ -272,8 +273,21 @@ console.log("Check Email------",loggedInEmail)
   //     mounted = false;
   //   };
   // }, []);
-console.log ("Check for Log in Mail--------",loggedInEmail)
+useEffect(() => {
+  const userId = localStorage.getItem("UserId");
+
+  console.log("UserId:", userId);
+
+  if (!userId) {
+    console.log("Redirecting...");
+     window.location.href = "/sign-in";
+    return;
+  }
+
+  console.log("User Found");
+}, [router]);
   useEffect(() => {
+  
     if (ImportedInformationOfCallEnquiry) {
 
 
@@ -768,19 +782,21 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
 
     switch (name) {
       case "Call Enquiry":
-      case "Deployment":
+     case "Deployment":
       case "Timesheet":
         dispatch(Update_Main_Filter_Status(name));
         dispatch(UpdateUserType("patient"));
         router.push("/AdminPage");
         break;
+        
 
       case "HCP List":
         dispatch(Update_Main_Filter_Status(name));
         dispatch(UpdateUserType("healthcare-assistant"));
         router.push("/AdminPage");
         break;
-
+ 
+     
       case "Pending PDR":
         router.push("/PDRView");
         break;
@@ -920,7 +936,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.,
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
             </span>
           </div>
 
@@ -1101,7 +1117,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
                     onClick={() => {
                       localStorage.removeItem("UserId");
                     
-                      router.push("/");
+                        window.location.href = "/sign-in";
                       setShowProfileOptions(false);
                     }}
                     className="

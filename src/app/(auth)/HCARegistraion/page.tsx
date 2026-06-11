@@ -3,7 +3,7 @@
 import HCAMobileView from '@/Components/HCAMobileView/page';
 import { EducationLevels, Home_Assistance_Needs, IndianCapitalCities, IndianLanguages, IndianStates, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, popularBanksInIndia, PROFESSIONAL_SKILL_OPTIONS, REFERRAL_SOURCE_TYPES, Relations } from '@/Lib/Content';
 import { v4 as uuidv4 } from 'uuid';
-import { GetRegidterdUsers, GetUserInformation, PostHCAFullRegistration, RegisterHCAWithProfile, UpdateFinelVerification } from '@/Lib/user.action';
+import { GetRegidterdUsers, GetUserInformation, HCARegistration, PostHCAFullRegistration, RegisterHCAWithProfile, UpdateFinelVerification } from '@/Lib/user.action';
 import { Update_Main_Filter_Status, UpdateDocmentSkipReason, UpdateRefresh, UpdateUserType } from '@/Redux/action';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
@@ -699,8 +699,8 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
           setUpdatedStatusMessage("Please Wait Updating.....");
 
         
-          const isNewUser = isuserIdAvailable === null;
-          const generatedUserId = isNewUser ? uuidv4() : isuserIdAvailable;
+     
+          const generatedUserId = uuidv4() 
 
           const localValue =
             userId || localStorage.getItem("UserId");
@@ -751,30 +751,39 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
             userType: "healthcare-assistant",
           };
 
-          let registrationResult: any = { success: true };
+         
 
-          if (isNewUser) {
+       
             setUpdatedStatusMessage("Creating account and saving profile...");
-            registrationResult = await RegisterHCAWithProfile(payload, FinelForm);
-          } else {
-            setUpdatedStatusMessage("Saving full profile...");
-            registrationResult = await PostHCAFullRegistration(FinelForm);
-          }
+           const PrimaryDetails = await HCARegistration(payload);
+console.log ("Check Primary Details------",PrimaryDetails)
+if (!PrimaryDetails.success===true) {
+  setUpdatedStatusMessage(
+    "Failed to save registration details."
+  );
+  return;
+}
 
-          if (registrationResult.success !== true) {
-            console.error("Registration flow failed:", registrationResult);
-            setUpdatedStatusMessage(
-              registrationResult.message || "Failed to save registration details."
-            );
-            return;
-          }
+console.log ("Check Finel Flow------",FinelForm)
 
-          setUpdatedStatusMessage("Full registration saved successfully.");
+const Complitinfo = await PostHCAFullRegistration(FinelForm);
+console.log("Check Resistration------",Complitinfo)
+if (!Complitinfo?.success) {
+  setUpdatedStatusMessage(
+    "Failed to save complete registration details."
+  );
+  return;
+}
 
-          if (isNewUser) {
-            localStorage.setItem("UserId", generatedUserId);
-          }
+setUpdatedStatusMessage(
+  "Full registration saved successfully."
+);
 
+await UpdateFinelVerification(generatedUserId);
+
+   
+
+        
           await UpdateFinelVerification(generatedUserId);
 
 

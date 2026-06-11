@@ -2728,6 +2728,8 @@ export  const ImportedinvoiceData = {
   
       "Pending PDR": [
         "gouricurate@gmail.com",
+        "rpandu823@gmail.com",
+        "panducurate@gmail.com",
   
       ],
   
