@@ -2785,7 +2785,7 @@ HCAId:ImpHCAId
 }
 
 export const GetDeploymentInfo = async (
-  projection?: Record<string, unknown>
+  projection?:any
 ) => {
   try {
     const cluster = await clientPromise;
