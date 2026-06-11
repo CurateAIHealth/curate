@@ -2,7 +2,7 @@
 let deploymentCache: any[] = [];
 let cachedUsersFullInfo: any[] = [];
 let cachedRegisterdUsers: any[] = [];
-import { DeleteClientFromDeolyment, EditAttendanceByClientId, EditAttendanceByDateRange, GetDeploymentInfo, GetRegidterdUsers, GetUsersFullInfo, PostAttendeceEditRequest, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus, UpdatehcpDailyAttendce } from "@/Lib/user.action";
+import { DeleteClientFromDeolyment, EditAttendanceByClientId, EditAttendanceByDateRange, GetDeploymentInfo, GetRegidterdUsers, GetRegidterdUsersforTimeSheet, GetUsersFullInfo, GetUsersFullInfoforTimeSheet, PostAttendeceEditRequest, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus, UpdatehcpDailyAttendce } from "@/Lib/user.action";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
 import { CalendarDays, CheckCircle, Eye, FilePenLine, Info, LucidePencil, Minimize2, Pencil, PencilIcon, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -102,30 +102,39 @@ useEffect(() => {
   const Fetch = async () => {
     setIsChecking(true);
 
-    if (isSuccess) {
-      deploymentCache.length = 0;
-    }
- if(loggedInEmail===""){
-    router.push("/DashBoard")
-  }
-const cacheKey = `${selectedYear}-${selectedMonth}-${showMissingCalendar}`;
-
-    if (!isSuccess) {
-      const cached = deploymentCache.find((c) => c.key === cacheKey);
-
-      if (cached) {
-        setClientsInformation(cached.data);
-        setUsers([...cachedUsersFullInfo]);
-        setRegisterdUsers([...cachedRegisterdUsers]);
-        setIsChecking(false);
+    try {
+      if (loggedInEmail === "") {
+        router.push("/DashBoard");
         return;
       }
-    }
 
-    const [registeredUsers, usersResult, deploymentInfo] = await Promise.all([
-      GetRegidterdUsers(),
-      GetUsersFullInfo(),
-      GetDeploymentInfo(`${selectedYear}-${selectedMonth}`, {
+      if (isSuccess) {
+        deploymentCache.length = 0;
+      }
+
+      const cacheKey = `${showMissingCalendar}`;
+
+      if (!isSuccess) {
+        const cached = deploymentCache.find(
+          (c) => c.key === cacheKey
+        );
+
+        if (cached) {
+          setClientsInformation(cached.data);
+
+          if (cachedRegisterdUsers.length) {
+            setRegisterdUsers(cachedRegisterdUsers);
+          }
+
+          if (cachedUsersFullInfo.length) {
+            setUsers(cachedUsersFullInfo);
+          }
+
+          return;
+        }
+      }
+
+      const deploymentInfo = await GetDeploymentInfo({
         invoice: 1,
         StartDate: 1,
         EndDate: 1,
@@ -150,77 +159,84 @@ const cacheKey = `${selectedYear}-${selectedMonth}-${showMissingCalendar}`;
         CareTakerPrice: 1,
         Month: 1,
         Replacement: 1,
-      }),
-    ]);
+      });
 
-    if (!deploymentInfo?.length) {
-      setRegisterdUsers(registeredUsers ?? []);
-      setUsers(usersResult ?? []);
-      setClientsInformation({});
+      if (!cachedRegisterdUsers.length) {
+        cachedRegisterdUsers =
+          await GetRegidterdUsersforTimeSheet();
+      }
+
+      if (!cachedUsersFullInfo.length) {
+        cachedUsersFullInfo =
+          await GetUsersFullInfoforTimeSheet();
+      }
+
+      const formattedData: any = {};
+
+      for (const record of deploymentInfo) {
+        const monthKey = getMonthKey(record);
+
+        if (!formattedData[monthKey]) {
+          formattedData[monthKey] = [];
+        }
+
+        formattedData[monthKey].push({
+          invoice: record.invoice || "",
+          startDate: record.StartDate || "",
+          endDate: record.EndDate || "",
+          status: record.Status || "",
+          location: record.Address || "N/A",
+          clientPhone: record.ClientContact || "",
+          clientName: record.ClientName || "",
+          ClientId: record.ClientId || "",
+          patientName: record.patientName || "",
+          referralName: record.referralName || "",
+          hcp: "Assist",
+          VendorName: record.VendorName || "Curate",
+          Type: record.Type || "HCA",
+          hcpId: record.HCAId || "",
+          hcpName: record.HCAName || "",
+          hcpPhone: record.HCAContact || "",
+          hcpSource: record.hcpSource || "",
+          provider: record.provider || "",
+          payTerms: record.payTerms || "",
+          cTotal: Number(record.cTotal) || 0,
+          cPay: Number(record.cPay) || 0,
+          hcpTotal: Number(record.hcpTotal) || 0,
+          hcpPay: Number(record.hcpPay) || 0,
+          days: record.Attendance || [],
+          CareTakerPrice: record.CareTakerPrice
+            ? `${Math.round(
+                parseFloat(
+                  String(record.CareTakerPrice).replace(
+                    /[^0-9.]/g,
+                    ""
+                  )
+                )
+              )}`
+            : "",
+          Month: record.Month,
+          Replacement: record.Replacement,
+        });
+      }
+
+      if (!isSuccess) {
+        deploymentCache.push({
+          key: cacheKey,
+          data: formattedData,
+        });
+      }
+
+      setClientsInformation(formattedData);
+      setRegisterdUsers(cachedRegisterdUsers);
+      setUsers(cachedUsersFullInfo);
+    } finally {
       setIsChecking(false);
-      return;
     }
-
-    const formattedData: any = {};
-
-    deploymentInfo.forEach((record: any) => {
-      const monthKey = getMonthKey(record);
-      if (!formattedData[monthKey]) formattedData[monthKey] = [];
-
-      formattedData[monthKey].push({
-        invoice: record.invoice || "",
-        startDate: record.StartDate || "",
-        endDate: record.EndDate || "",
-        status: record.Status || "",
-        location: record.Address || "N/A",
-        clientPhone: record.ClientContact || "",
-        clientName: record.ClientName || "",
-        ClientId: record.ClientId || "",
-        patientName: record.patientName || "",
-        referralName: record.referralName || "",
-        hcp: "Assist",
-        VendorName: record.VendorName || "Curate",
-        Type: record.Type || "HCA",
-        hcpId: record.HCAId || "",
-        hcpName: record.HCAName || "",
-        hcpPhone: record.HCAContact || "",
-        hcpSource: record.hcpSource || "",
-        provider: record.provider || "",
-        payTerms: record.payTerms || "",
-        cTotal: Number(record.cTotal) || 0,
-        cPay: Number(record.cPay) || 0,
-        hcpTotal: Number(record.hcpTotal) || 0,
-        hcpPay: Number(record.hcpPay) || 0,
-        days: record.Attendance || [],
-        CareTakerPrice: record.CareTakerPrice
-          ? `${Math.round(
-              parseFloat(
-                String(record.CareTakerPrice).replace(/[^0-9.]/g, "")
-              )
-            )}`
-          : "",
-        Month: record.Month,
-        Replacement: record.Replacement,
-      });
-    });
-
-    if (!isSuccess) {
-      deploymentCache.push({
-        key: cacheKey,
-        data: formattedData,
-      });
-    }
-
-    cachedRegisterdUsers = registeredUsers ?? [];
-    cachedUsersFullInfo = usersResult ?? [];
-    setClientsInformation(formattedData);
-    setRegisterdUsers([...cachedRegisterdUsers]);
-    setUsers([...cachedUsersFullInfo]);
-    setIsChecking(false);
   };
 
   Fetch();
-}, [isSuccess, showMissingCalendar, selectedMonth, selectedYear]);
+}, [isSuccess, showMissingCalendar]);
 
 
 
@@ -565,27 +581,38 @@ const NumberOfDaysInMonth = getDaysInMonth(
   Number(selectedYear)
 );
 
-   const GetHCPGender = (A: any) => {
-    if (!users?.length || !A) return "Not Entered";
+const hcpGenderMap = useMemo(() => {
+  const map = new Map();
 
-    const address =
-      users
-        ?.map((each: any) => each?.HCAComplitInformation)
-        ?.find((info: any) => info?.UserId === A)
-      ?.['Gender']||"Not Provided";
+  users?.forEach((user: any) => {
+    const info = user?.HCAComplitInformation;
 
-    return address ?? "Not Entered";
-  };
+    if (info?.UserId) {
+      map.set(info.UserId, info.Gender);
+    }
+  });
+
+  return map;
+}, [users]);
+
+const GetHCPGender = (id: string) => {
+  return hcpGenderMap.get(id) || "Not Provided";
+};
 
 
-     const GetHCPType = (A: any) => {
-    if (!RegisterdUsers?.length || !A) return "Not Entered";
+const hcpTypeMap = useMemo(() => {
+  const map = new Map();
 
-    const CurrentPreviewUserType:any =
-      RegisterdUsers.filter((each:any)=>each.userId===A)
+  RegisterdUsers?.forEach((user: any) => {
+    map.set(user.userId, user.PreviewUserType);
+  });
 
-    return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
-  };
+  return map;
+}, [RegisterdUsers]);
+
+const GetHCPType = (id: string) => {
+  return hcpTypeMap.get(id) || "Not Entered";
+};
 
 const EditAttendence = async (): Promise<void> => {
   try {
@@ -600,7 +627,7 @@ const EditAttendence = async (): Promise<void> => {
     }
 
     SetStatusMessage("Please Wait...");
-    setIsChecking(true);
+
 
     const normalizedMonth = String(selectedMonth).padStart(2, "0");
 
@@ -638,58 +665,95 @@ console.log("Check for UpdatedBy---",flexDate)
         AbsentReason
       );
 console.log("Check Results-------",response)
-   if (response?.success) {
+ if (response?.success) {
   setClientsInformation((prev: any) => {
     const updated = { ...prev };
 
-    updated[yearMonth] = updated[yearMonth].map((record: any) => {
-      if (
-        record.ClientId !== AttenseceInformation.ClientId ||
-        record.hcpId !== AttenseceInformation.hcpId
-      ) {
-        return record;
-      }
+    const recordIndex = updated[yearMonth].findIndex(
+      (record: any) =>
+        record.ClientId === AttenseceInformation.ClientId &&
+        record.hcpId === AttenseceInformation.hcpId
+    );
 
-      const existingIndex = (record.days || []).findIndex((day: any) => {
-        const dayDate = new Date(day.AttendenceDate)
+    if (recordIndex === -1) return updated;
+
+    const record = {
+      ...updated[yearMonth][recordIndex],
+    };
+
+    const updatedDays = [...(record.days || [])];
+
+    const existingDayIndex = updatedDays.findIndex((day: any) => {
+      if (!day?.AttendenceDate) return false;
+
+      return (
+        new Date(day.AttendenceDate)
           .toISOString()
-          .split("T")[0];
-        return dayDate === flexDate;
-      });
-
-      const updatedDay = {
-        ...((record.days || [])[existingIndex] || {}),
-        AttendenceDate: new Date(`${flexDate}T00:00:00.000Z`),
-        HCPAttendence: status === "FULL" || status === "HALF",
-        AdminAttendece: status === "FULL",
-        UpdatedBy: loggedInEmail,
-        Reason: AbsentReason,
-        Client_Id: AttenseceInformation.ClientId,
-        Client_Name: AttenseceInformation.clientName,
-        HCA_Id: AttenseceInformation.hcpId,
-        HCA_Name: AttenseceInformation.hcpName,
-        UpdatedAt: new Date(),
-      };
-
-      const days = Array.isArray(record.days) ? [...record.days] : [];
-
-      if (existingIndex >= 0) {
-        days[existingIndex] = updatedDay;
-      } else {
-        days.push(updatedDay);
-      }
-
-      return {
-        ...record,
-        days,
-      };
+          .split("T")[0] === flexDate
+      );
     });
+
+    const updatedDay = {
+      ...(existingDayIndex >= 0
+        ? updatedDays[existingDayIndex]
+        : {}),
+      AttendenceDate: new Date(`${flexDate}T00:00:00.000Z`),
+      HCPAttendence:
+        status === "FULL" || status === "HALF",
+      AdminAttendece: status === "FULL",
+      UpdatedBy: loggedInEmail,
+      Reason: AbsentReason,
+      Client_Id: AttenseceInformation.ClientId,
+      Client_Name: AttenseceInformation.clientName,
+      HCA_Id: AttenseceInformation.hcpId,
+      HCA_Name: AttenseceInformation.hcpName,
+      UpdatedAt: new Date(),
+    };
+
+    if (existingDayIndex >= 0) {
+      updatedDays[existingDayIndex] = updatedDay;
+    } else {
+      updatedDays.push(updatedDay);
+    }
+
+    record.days = updatedDays;
+
+    updated[yearMonth] = [...updated[yearMonth]];
+    updated[yearMonth][recordIndex] = record;
 
     return updated;
   });
 
-  SetStatusMessage(response.message || "Attendance updated successfully");
-  
+  setAttendenceInfo((prev: any) => {
+    if (!prev) return prev;
+
+    const updatedDays = [...(prev.days || [])];
+
+    const dayIndex = ParticularDate - 1;
+
+    updatedDays[dayIndex] = {
+      status:
+        status === "FULL"
+          ? "P"
+          : status === "HALF"
+          ? "HP"
+          : "A",
+      clientName: AttenseceInformation.clientName,
+      hcaName: AttenseceInformation.hcpName,
+      UpdatedBy: loggedInEmail,
+      Reason: AbsentReason,
+    };
+
+    return {
+      ...prev,
+      days: updatedDays,
+    };
+  });
+
+  SetStatusMessage(
+    "Attendece Updated"
+  );
+
   closeModal();
   return;
 }
@@ -789,9 +853,7 @@ console.log("Check Results-------",response)
         error?.message ||
         "Something went wrong while updating attendance"
     );
-  } finally {
-    setIsChecking(false);
-  }
+  } 
 };
  const monthNames = Array.from({ length: 12 }, (_, i) =>
     new Date(0, i).toLocaleString("default", { month: "long" })

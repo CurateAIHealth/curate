@@ -24,41 +24,38 @@ const dispatch=useDispatch()
     setLoginInfo({ field_user: '', field_pass: '' });
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setsigninStatus(false);
-    try {
-const hashed = hashValue( loginInfo.field_pass);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
- 
-      const Result: any = await SignInRessult({
-        Name: loginInfo.field_user,
-        Password: loginInfo.field_pass,
-      });
+  setError("");
+  setsigninStatus(false);
 
+  try {
+    const result: any = await SignInRessult({
+      Name: loginInfo.field_user.trim(),
+      Password: loginInfo.field_pass,
+    });
 
-      if (Result.success === false) {
-        setsigninStatus(true);
-        setError(Result.message);
-        return;
-      }
-
-      if (Result.success===true) {
-        localStorage.setItem("UserId", Result.userId);
-           const user = await GetUserInformation(Result.userId);
-           dispatch(CurrentLoginUser(user?.Email))
-        setsigninStatus(true);
-        router.push("/");
-      } else {
-        setsigninStatus(true);
-        setError("Wrong Credentials..");
-      }
-    } catch (err) {
+    if (!result.success) {
       setsigninStatus(true);
-      setError('Invalid UserName or Password');
+      setError(result.message);
+      return;
     }
-  };
+
+    localStorage.setItem("UserId", result.userId);
+
+    dispatch(CurrentLoginUser(result.email));
+
+    router.replace("/");
+
+    setsigninStatus(true);
+  } catch (error) {
+    console.error(error);
+
+    setsigninStatus(true);
+    setError("Invalid UserName or Password");
+  }
+};
 
   const handleRegisterRedirect = () => {
     router.push('/register');
