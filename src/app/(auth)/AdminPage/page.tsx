@@ -170,7 +170,26 @@ const RESTRICTED_EMAILS = new Set([
 // }, [updatedStatusMsg]);
 const DASHBOARD_CACHE_KEY = "dashboard_cache";
 const CACHE_TTL = 2 * 60 * 1000;
+const ContetUserInterface = () => {
+    switch (UpdateMainFilter) {
+      case "Call Enquiry":
+      case "HCP List":
+        return ClientEnquiryUserInterFace()
+      case "Deployment":
+        return <ClientTable />
+      case "Timesheet":
+        return <InvoiceMedicalTable />
+      case "Replacements":
+        return <ReplacementsTable />
+      case "Referral Pay":
+        return <WorkingOn ServiceName="Referral Pay" />
+      case "Payments":
+        return <WorkingOn ServiceName="Payments" />
+      default:
+        return null
 
+    }
+  }
 useEffect(() => {
   let mounted = true;
 
@@ -674,26 +693,7 @@ const monthNames = [
   if (isChecking) {
     return <LoadingData />
   }
-  const ContetUserInterface = () => {
-    switch (UpdateMainFilter) {
-      case "Call Enquiry":
-      case "HCP List":
-        return ClientEnquiryUserInterFace()
-      case "Deployment":
-        return <ClientTable />
-      case "Timesheet":
-        return <InvoiceMedicalTable />
-      case "Replacements":
-        return <ReplacementsTable />
-      case "Referral Pay":
-        return <WorkingOn ServiceName="Referral Pay" />
-      case "Payments":
-        return <WorkingOn ServiceName="Payments" />
-      default:
-        return null
-
-    }
-  }
+  
   const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
     const res = await axios.post("/api/send-whatsapp", {
       clientNumber,

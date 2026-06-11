@@ -214,34 +214,60 @@ export const GetUserIdwithEmail = async (Mail: string) => {
 };
 
 
-export const SignInRessult = async (SignInfor: { Name: any; Password: any }) => {
+export const SignInRessult = async (SignInfor: {
+  Name: string;
+  Password: string;
+}) => {
   try {
-    const Clustor = await clientPromise;
-    const Db = Clustor.db("CurateInformation");
-    const Collection = Db.collection("Registration");
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
 
-   
     const emailHash = hashValue(SignInfor.Name);
     const passwordHash = hashValue(SignInfor.Password);
 
-   
-    const SignInInformation: any = await Collection.findOne({
-      emailHash: emailHash,
-      Password: passwordHash,
-    });
+    const user: any = await collection.findOne(
+      {
+        emailHash,
+        Password: passwordHash,
+      },
+      {
+        projection: {
+          userId: 1,
+          Email: 1,
+          EmailVerification: 1,
+        },
+      }
+    );
 
-    if (!SignInInformation) {
-      return { success: false, message: "Invalid Email or Password" };
+    if (!user) {
+      return {
+        success: false,
+        message: "Invalid Email or Password",
+      };
     }
 
-    if (!SignInInformation.EmailVerification) {
-      return { success: false, message: "Verify your Email To Login" };
+    if (!user.EmailVerification) {
+      return {
+        success: false,
+        message: "Verify your Email To Login",
+      };
     }
 
-    return { success: true, userId: SignInInformation.userId?.toString?.() };
-  } catch (err: any) {
+    return {
+      success: true,
+      userId: user.userId,
+      email: user.Email
+        ? decrypt(user.Email)
+        : "",
+    };
+  } catch (err) {
     console.error("SignIn Error:", err);
-    return { success: false, message: "Something went wrong" };
+
+    return {
+      success: false,
+      message: "Something went wrong",
+    };
   }
 };
 
@@ -2759,25 +2785,16 @@ HCAId:ImpHCAId
 }
 
 export const GetDeploymentInfo = async (
-  monthKey?: string,
-  projection?: Record<string, unknown>
+  projection?:any
 ) => {
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Deployment");
 
-    const query: any = {};
-    if (monthKey) {
-      const [year, month] = monthKey.split("-");
-      const normalizedMonth = String(Number(month)).padStart(2, "0");
-      const rawMonth = String(Number(month));
-      query.Month = { $in: [`${year}-${normalizedMonth}`, `${year}-${rawMonth}`] };
-    }
-
     const cursor = projection
-      ? collection.find(query).project(projection)
-      : collection.find(query);
+      ? collection.find({}).project(projection)
+      : collection.find({});
 
     const TimeSheetInfoData = await cursor.toArray();
 
@@ -5781,7 +5798,35 @@ export const GetRegidterdUsers = async () => {
   }
 };
 
+export const GetRegidterdUsersforTimeSheet = async () => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Registration");
 
+    const RegistrationResult = await Collection
+      .find(
+        {},
+        {
+          projection: {
+            _id: 1,
+            userId: 1,
+            PreviewUserType: 1,
+          },
+        }
+      )
+      .toArray();
+
+    return RegistrationResult.map((user: any) => ({
+      _id: user._id?.toString() ?? null,
+      userId: user.userId,
+      PreviewUserType: user.PreviewUserType,
+    }));
+  } catch (err: any) {
+    console.error("Error in GetRegidterdUsers:", err);
+    return [];
+  }
+};
 export const PostConfirmationInfo=async(HCPUserid:any,ClientId:any)=>{
 try{
   const Cluster = await clientPromise;
@@ -6031,7 +6076,37 @@ export const GetUsersFullInfo = async () => {
     return [];
   }
 };
+export const GetUsersFullInfoforTimeSheet = async () => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("CompliteRegistrationInformation");
 
+    const RegistrationResult = await Collection
+      .find(
+        {},
+        {
+          projection: {
+            _id: 1,
+            "HCAComplitInformation.UserId": 1,
+            "HCAComplitInformation.Gender": 1,
+          },
+        }
+      )
+      .toArray();
+
+    return RegistrationResult.map((user: any) => ({
+      _id: user._id?.toString() ?? null,
+      HCAComplitInformation: {
+        UserId: user?.HCAComplitInformation?.UserId || "",
+        Gender: user?.HCAComplitInformation?.Gender || "",
+      },
+    }));
+  } catch (err: any) {
+    console.error("Error fetching users:", err);
+    return [];
+  }
+};
 
 
 export const PostHostelAttendence = async (
@@ -7921,4 +7996,3 @@ export const GetAllUsersData = async () => {
     };
   }
 };
-
