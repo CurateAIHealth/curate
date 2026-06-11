@@ -96,7 +96,6 @@ const getMonthKey = (record: any): string => {
 const DateRange = new Date().toISOString().split("T")[0];
 
 const isSuccess = StatusMessage?.includes("Successfully");
-
 useEffect(() => {
   const Fetch = async () => {
     setIsChecking(true);
@@ -104,7 +103,7 @@ useEffect(() => {
     try {
       console.time("TOTAL_FETCH");
 
-      if (loggedInEmail === "") {
+      if (!loggedInEmail) {
         router.push("/DashBoard");
         return;
       }
@@ -117,13 +116,13 @@ useEffect(() => {
 
       if (!isSuccess) {
         const cached = deploymentCache.find(
-          (c) => c.key === cacheKey
+          (item) => item.key === cacheKey
         );
 
         if (cached) {
           setClientsInformation(cached.data);
-          setRegisterdUsers(cachedRegisterdUsers);
-          setUsers(cachedUsersFullInfo);
+          setRegisterdUsers(cached.registeredUsers);
+          setUsers(cached.usersFullInfo);
 
           console.timeEnd("TOTAL_FETCH");
           return;
@@ -132,36 +131,19 @@ useEffect(() => {
 
       console.log("FETCH START", Date.now());
 
-      const data = await GetApplicationData();
+      const { data } = await axios.get("/api/Deployentinfo");
 
       console.log("FETCH END", Date.now());
 
-      const deploymentInfo = data.deploymentInfo || [];
-
-      cachedRegisterdUsers =
-        data.registeredUsers || [];
-
-      cachedUsersFullInfo =
-        data.usersFullInfo || [];
-
-      console.log(
-        "Deployment Count",
-        deploymentInfo.length
-      );
-
-      console.log(
-        "Registered Users Count",
-        cachedRegisterdUsers.length
-      );
-
-      console.log(
-        "Users Full Info Count",
-        cachedUsersFullInfo.length
-      );
+      const {
+        deploymentInfo = [],
+        registeredUsers = [],
+        usersFullInfo = [],
+      } = data.data || {};
 
       console.time("FORMAT_DATA");
 
-      const formattedData: any = {};
+      const formattedData: Record<string, any[]> = {};
 
       for (const record of deploymentInfo) {
         const monthKey = getMonthKey(record);
@@ -216,12 +198,14 @@ useEffect(() => {
         deploymentCache.push({
           key: cacheKey,
           data: formattedData,
+          registeredUsers,
+          usersFullInfo,
         });
       }
 
       setClientsInformation(formattedData);
-      setRegisterdUsers(cachedRegisterdUsers);
-      setUsers(cachedUsersFullInfo);
+      setRegisterdUsers(registeredUsers);
+      setUsers(usersFullInfo);
 
       console.timeEnd("TOTAL_FETCH");
     } catch (error) {
@@ -232,7 +216,7 @@ useEffect(() => {
   };
 
   Fetch();
-}, [isSuccess, showMissingCalendar]);
+}, [isSuccess, showMissingCalendar, loggedInEmail, router]);
 
 
 

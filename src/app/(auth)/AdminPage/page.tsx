@@ -102,7 +102,18 @@ const RESTRICTED_EMAILS = new Set([
   "sravanthicurate@gmail.com",
   "srinivasnew0803@gmail.com",
 ]);
+const [authChecked, setAuthChecked] = useState(false);
 
+useEffect(() => {
+  const userId = localStorage.getItem("UserId");
+
+  if (!userId) {
+         window.location.href = "/sign-in";
+    return;
+  }
+
+  setAuthChecked(true);
+}, [router]);
 // useEffect(() => {
 //   let mounted = true;
 
@@ -190,7 +201,10 @@ const ContetUserInterface = () => {
 
     }
   }
+
+  
 useEffect(() => {
+    if (!authChecked) return;
   let mounted = true;
 
   const isInitialLoad = updatedStatusMsg === "";
@@ -263,7 +277,7 @@ useEffect(() => {
   return () => {
     mounted = false;
   };
-}, [updatedStatusMsg]);
+}, [authChecked,updatedStatusMsg]);
 useEffect(() => {
   const email = cachedUserInfo?.Email?.toLowerCase();
   if (!email) return;
@@ -690,6 +704,9 @@ const monthNames = [
   const UpdateFilterHCA = (e: any) => {
     setAsignStatus(e.target.value)
   }
+  if (!authChecked) {
+  return <LoadingData />;
+}
   if (isChecking) {
     return <LoadingData />
   }
@@ -1742,7 +1759,7 @@ Awaiting Conversion
 
   const handleMainLogout = async () => {
     localStorage.removeItem("UserId");
-    router.prefetch("/");
+   
     router.push("/");
   };
 

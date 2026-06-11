@@ -219,13 +219,24 @@ export const SignInRessult = async (SignInfor: {
   Password: string;
 }) => {
   try {
+console.log("SERVER ACTION START", Date.now());
+
+    console.time("DB_CONNECTION");
     const cluster = await clientPromise;
+    console.timeEnd("DB_CONNECTION");
+
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
 
+    console.time("HASH_EMAIL");
     const emailHash = hashValue(SignInfor.Name);
-    const passwordHash = hashValue(SignInfor.Password);
+    console.timeEnd("HASH_EMAIL");
 
+    console.time("HASH_PASSWORD");
+    const passwordHash = hashValue(SignInfor.Password);
+    console.timeEnd("HASH_PASSWORD");
+
+    console.time("MONGO_FIND");
     const user: any = await collection.findOne(
       {
         emailHash,
@@ -239,37 +250,52 @@ export const SignInRessult = async (SignInfor: {
         },
       }
     );
+    console.timeEnd("MONGO_FIND");
 
     if (!user) {
+      console.timeEnd("LOGIN_TOTAL");
+
       return {
         success: false,
         message: "Invalid Email or Password",
       };
     }
 
+    console.time("EMAIL_VERIFICATION_CHECK");
+
     if (!user.EmailVerification) {
+      console.timeEnd("EMAIL_VERIFICATION_CHECK");
+      console.timeEnd("LOGIN_TOTAL");
+
       return {
         success: false,
         message: "Verify your Email To Login",
       };
     }
 
+    console.timeEnd("EMAIL_VERIFICATION_CHECK");
+
+    console.time("DECRYPT_EMAIL");
+    const email = user.Email ? decrypt(user.Email) : "";
+    console.timeEnd("DECRYPT_EMAIL");
+
+    console.timeEnd("LOGIN_TOTAL");
+
     return {
       success: true,
       userId: user.userId,
-      email: user.Email
-        ? decrypt(user.Email)
-        : "",
+      email,
     };
   } catch (err) {
     console.error("SignIn Error:", err);
+    console.timeEnd("LOGIN_TOTAL");
 
     return {
       success: false,
       message: "Something went wrong",
     };
   }
-};
+};;
 
 export const IntrestedHCP = async (inputUserId: any, HCPid: any) => {
   try {
@@ -1907,157 +1933,195 @@ export const PostHCAFullRegistration = async (Info: any) => {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("CompliteRegistrationInformation");
-console.log ('Check Imported HCA Data-------',Info)
+
+    console.log("Check Imported HCA Data-------", Info);
+
     const encryptedInfo = {
-   
-      "Title": Info.title,
-      "First Name": encrypt(Info.firstName),
-      "Surname": encrypt(Info.surname),
-      "LastName":Info.lastName,
-      "Father Name":Info.fatherName? encrypt(Info.fatherName):null,
-      'FatherContact':Info.fatherNameContact||null,
-      "MotherContact":Info.motherContact||null,
-      'Husbend':Info.Husbend||null,
-      'HusbendContact':Info.HusbendContact,
-      "Mother Name":Info.motherName? encrypt(Info.motherName):null,
-      "Husband Name": Info.husbandName ? encrypt(Info.husbandName) : null,
-      "Guardian":Info.Guardian||"",
-      "GuardianContact":Info.GuardianContact||"",
-      "Gender": Info.gender,
+      Title: Info.title,
+      "First Name": Info.firstName ? encrypt(Info.firstName) : null,
+      Surname: Info.surname ? encrypt(Info.surname) : null,
+      LastName: Info.lastName || "",
+      "Father Name": Info.fatherName ? encrypt(Info.fatherName) : null,
+      FatherContact: Info.fatherNameContact || null,
+      MotherContact: Info.motherContact || null,
+      Husbend: Info.Husbend || null,
+      HusbendContact: Info.HusbendContact || null,
+      "Mother Name": Info.motherName ? encrypt(Info.motherName) : null,
+      "Husband Name": Info.husbandName
+        ? encrypt(Info.husbandName)
+        : null,
+      Guardian: Info.Guardian || "",
+      GuardianContact: Info.GuardianContact || "",
+      Gender: Info.gender,
       "Date of Birth": Info.dateOfBirth,
       "Marital Status": Info.maritalStatus,
-      "referralSourceType":Info.referralSourceType,
-      'SiblingsInfo':Info.SiblingsInfo,
-      'earningSource':Info.earningSource,
+      referralSourceType: Info.referralSourceType,
+      SiblingsInfo: Info.SiblingsInfo || [],
+      earningSource: Info.earningSource || "",
 
-    
-      "EmailId": encrypt(Info.emailId),
-      "Mobile Number": encrypt(Info.mobileNumber),
-      "Aadhar Card No": encrypt(Info.aadharCardNo),
+      EmailId: Info.emailId ? encrypt(Info.emailId) : null,
+      "Mobile Number": Info.mobileNumber
+        ? encrypt(Info.mobileNumber)
+        : null,
+      "Aadhar Card No": Info.aadharCardNo
+        ? encrypt(Info.aadharCardNo)
+        : null,
       "PAN Number": Info.panNumber ? encrypt(Info.panNumber) : null,
-      "PermanentHouseNo":Info.PermanentHouseNo||"Not Provided",
-      "PermanentCity":Info.PermanentCity||"",
-      "PermanentState":Info.PermanentState||"",
+      PermanentHouseNo: Info.PermanentHouseNo || "Not Provided",
+      PermanentCity: Info.PermanentCity || "",
+      PermanentState: Info.PermanentState || "",
       "Voter ID No": Info.voterIdNo ? encrypt(Info.voterIdNo) : null,
-      "Ration Card No": Info.rationCardNo ? encrypt(Info.rationCardNo) : null,
+      "Ration Card No": Info.rationCardNo
+        ? encrypt(Info.rationCardNo)
+        : null,
 
-      "CurrentCity":Info.CurrentCity||'',
-      
-      "CurrentState":Info.CurrentState||'',
-      "Permanent Address": Info.permanentAddress,
-      "CurrentHouseNo":Info.CurrentHouseNo||'',
-      "Current Address": Info.currentAddress,
-      "City/Postcode Permanent": Info.cityPostcodePermanent,
-      "City/Postcode Current": Info.cityPostcodeCurrent,
+      CurrentCity: Info.CurrentCity || "",
+      CurrentState: Info.CurrentState || "",
+      "Permanent Address": Info.permanentAddress || "",
+      CurrentHouseNo: Info.CurrentHouseNo || "",
+      "Current Address": Info.currentAddress || "",
+      "City/Postcode Permanent": Info.cityPostcodePermanent || "",
+      "City/Postcode Current": Info.cityPostcodeCurrent || "",
 
-    
-      "Higher Education": Info.higherEducation,
-      "Higher Education Year Start": Info.higherEducationYearStart,
-      "Higher Education Year End": Info.higherEducationYearEnd,
-      "Professional Education": Info.professionalEducation,
-      "Professional Education Year Start": Info.professionalEducationYearStart,
-      "Professional Education Year End": Info.professionalEducationYearEnd,
+      "Higher Education": Info.higherEducation || "",
+      "Higher Education Year Start":
+        Info.higherEducationYearStart || "",
+      "Higher Education Year End":
+        Info.higherEducationYearEnd || "",
+      "Professional Education": Info.professionalEducation || "",
+      "Professional Education Year Start":
+        Info.professionalEducationYearStart || "",
+      "Professional Education Year End":
+        Info.professionalEducationYearEnd || "",
 
-      "Registration Council": Info.registrationCouncil,
-      "Registration No": Info.registrationNo,
-     "HomeAssistance": Array.isArray(Info.HomeAssistance)
-  ? Info.HomeAssistance.filter((s: any) => s !== "Select All")
-  : [],
+      "Registration Council": Info.registrationCouncil || "",
+      "Registration No": Info.registrationNo || "",
 
-"ProfessionalSkills": Array.isArray(Info.professionalSkill)
-  ? Info.professionalSkill.filter((s: any) => s !== "Select All")
-  : [],
+      HomeAssistance: Array.isArray(Info.HomeAssistance)
+        ? Info.HomeAssistance.filter(
+            (s: any) => s !== "Select All"
+          )
+        : [],
 
-"HandledSkills": Array.isArray(Info.HandledSkills)
-  ? Info.HandledSkills.filter((s: any) => s !== "Select All")
-  : [],
-      "Certified By": Info.certifiedBy,
-      "Professional Work 1": Info.professionalWork1,
-      "Professional Work 2": Info.professionalWork2,
-      "Experience": Info.experience,
+      ProfessionalSkills: Array.isArray(Info.professionalSkill)
+        ? Info.professionalSkill.filter(
+            (s: any) => s !== "Select All"
+          )
+        : [],
 
-      "Height": Info.height,
-      "Weight": Info.weight,
-      "Hair Colour": Info.hairColour,
-      "Eye Colour": Info.eyeColour,
-      "Complexion": Info.complexion,
-      "Any Deformity": Info.anyDeformity,
-      "Mole/Body Mark 1": Info.moleBodyMark1,
-      "Mole/Body Mark 2": Info.moleBodyMark2,
+      HandledSkills: Array.isArray(Info.HandledSkills)
+        ? Info.HandledSkills.filter(
+            (s: any) => s !== "Select All"
+          )
+        : [],
 
-   
-      "Report Previous Health Problems": Info.reportPreviousHealthProblems,
-      "Report Current Health Problems": Info.reportCurrentHealthProblems,
+      "Certified By": Info.certifiedBy || "",
+      "Professional Work 1": Info.professionalWork1 || "",
+      "Professional Work 2": Info.professionalWork2 || "",
+      Experience: Info.experience || "",
 
-   
-      "Source of Referral": Info.sourceOfReferral,
-      "Date of Referral": Info.dateOfReferral,
+      Height: Info.height || "",
+      Weight: Info.weight || "",
+      "Hair Colour": Info.hairColour || "",
+      "Eye Colour": Info.eyeColour || "",
+      Complexion: Info.complexion || "",
+      "Any Deformity": Info.anyDeformity || "",
+      "Mole/Body Mark 1": Info.moleBodyMark1 || "",
+      "Mole/Body Mark 2": Info.moleBodyMark2 || "",
 
-  
-      "Reference 1 Name": Info.reference1Name,
-      "Reference 1 Aadhar":Info.reference1Aadhar? encrypt(Info.reference1Aadhar):null,
-      "Reference 1 Mobile":Info.reference1Mobile? encrypt(Info.reference1Mobile):null,
-      "Reference 1 Address": Info.reference1Address,
-      "Reference 1 Relationship": Info.reference1Relationship,
+      "Report Previous Health Problems":
+        Info.reportPreviousHealthProblems || "",
+      "Report Current Health Problems":
+        Info.reportCurrentHealthProblems || "",
 
-      "Reference 2 Name": Info.reference2Name,
-      "Reference 2 Aadhar":Info.reference2Aadhar? encrypt(Info.reference2Aadhar):null,
-      "Reference 2 Mobile":Info.reference2Mobile? encrypt(Info.reference2Mobile):null,
-      "Reference 2 Address": Info.reference2Address,
+      "Source of Referral": Info.sourceOfReferral || "",
+      "Date of Referral": Info.dateOfReferral || "",
 
-  
-      "Service Hours 12hrs": Info.serviceHours12hrs || false,
-      "Service Hours 24hrs": Info.serviceHours24hrs || false,
-      "Preferred Service": Info.preferredService,
+      "Reference 1 Name": Info.reference1Name || "",
+      "Reference 1 Aadhar": Info.reference1Aadhar
+        ? encrypt(Info.reference1Aadhar)
+        : null,
+      "Reference 1 Mobile": Info.reference1Mobile
+        ? encrypt(Info.reference1Mobile)
+        : null,
+      "Reference 1 Address": Info.reference1Address || "",
+      "Reference 1 Relationship":
+        Info.reference1Relationship || "",
 
-   
-      "PaymentforStaff": Info.PaymentforStaff,
-      "NotedDtaeForHike":Info.NotedDtaeForHike,
-      "BankAccountHolderName":  encrypt(Info.BankAccountHolderName),
-      "BankName":Info.BankName,
-      "PaymentService": Info.PaymentService,
-      "Payment Bank Account Number": encrypt(Info.paymentBankAccountNumber),
-      "IFSC Code": encrypt( Info.ifscCode),
-      "Bank Branch Address": Info.bankBranchAddress,
-      "Bank Branch Name": Info.Bankbranchname,
-      "Branch City": Info.Branchcity,
-      "Branch State": Info.Branchstate,
-      "Branch Pincode": Info.Branchpincode,
+      "Reference 2 Name": Info.reference2Name || "",
+      "Reference 2 Aadhar": Info.reference2Aadhar
+        ? encrypt(Info.reference2Aadhar)
+        : null,
+      "Reference 2 Mobile": Info.reference2Mobile
+        ? encrypt(Info.reference2Mobile)
+        : null,
+      "Reference 2 Address": Info.reference2Address || "",
 
-     
-      "Languages": Info.languages,
-      "Type": Info.type,
-      "Specialties": Info.specialties,
+      "Service Hours 12hrs": Boolean(Info.serviceHours12hrs),
+      "Service Hours 24hrs": Boolean(Info.serviceHours24hrs),
+      "Preferred Service": Info.preferredService || "",
 
- 
-      "userType": Info.userType,
-      "UserId": Info.UserId,
-      "DocumentSkipReason":Info.DocumentSkipReason,
-      "ProfilePic": Info.Documents.ProfilePic || null,
-      "Documents":Info.Documents,
-      "Remarks":Info.Remarks
+      PaymentforStaff: Info.PaymentforStaff || "",
+      NotedDtaeForHike: Info.NotedDtaeForHike || "",
+
+      BankAccountHolderName: Info.BankAccountHolderName
+        ? encrypt(Info.BankAccountHolderName)
+        : null,
+
+      BankName: Info.BankName || "",
+      PaymentService: Info.PaymentService || "",
+
+      "Payment Bank Account Number":
+        Info.paymentBankAccountNumber
+          ? encrypt(Info.paymentBankAccountNumber)
+          : null,
+
+      "IFSC Code": Info.ifscCode
+        ? encrypt(Info.ifscCode)
+        : null,
+
+      "Bank Branch Address": Info.bankBranchAddress || "",
+      "Bank Branch Name": Info.Bankbranchname || "",
+      "Branch City": Info.Branchcity || "",
+      "Branch State": Info.Branchstate || "",
+      "Branch Pincode": Info.Branchpincode || "",
+
+      Languages: Info.languages || "",
+      Type: Info.type || "",
+      Specialties: Info.specialties || "",
+
+      userType: Info.userType,
+      UserId: Info.UserId,
+      DocumentSkipReason: Info.DocumentSkipReason || "",
+      ProfilePic: Info.Documents?.ProfilePic || null,
+      Documents: Info.Documents || {},
+      Remarks: Info.Remarks || "",
+      CreatedAt: new Date(),
     };
 
-    
-    const FinelResult = await collection.updateOne(
-      { UserId: Info.UserId },
-      { $set: encryptedInfo },
-      { upsert: true }
-    );
+    console.log("Before insertOne");
+const FinelResult = await collection.insertOne({
+  HCAComplitInformation: {
+    ...encryptedInfo,
+    UpdatedAt: new Date(),
+  },
+});
+
+    console.log("After insertOne", FinelResult);
 
     return {
       success: true,
-      message: FinelResult.upsertedCount > 0
-        ? "You registered Successfully with Curate Digital AI"
-        : "Registration details updated successfully.",
-      insertedId: FinelResult.upsertedId?.toString() || Info.UserId,
+      message:
+        "Your Complete Information registered Successfully with Curate Digital AI",
+      insertedId: FinelResult.insertedId.toString(),
     };
   } catch (err: any) {
     console.error("Error in PostFullRegistration:", err);
+
     return {
       success: false,
       message: "Registration failed",
-      error: err.message,
+      error: err?.message || String(err),
     };
   }
 };
@@ -3427,7 +3491,7 @@ export const UpdateClientAttendanceStatus = async (
         ClientId: attendance.Client_Id,
         HCAId: attendance.HCA_Id,
       });
-
+console.log("Check Matched Record-----",matchedRecord)
       if (!matchedRecord) {
         missingDeploymentClients.push(attendance.Client_Name);
         continue;
@@ -8054,7 +8118,7 @@ export const GetApplicationData = async () => {
     return applicationCache;
   }
 
-  console.time("GetDeploymentInfo");
+  
   const deploymentPromise = GetDeploymentInfo({
     invoice: 1,
     StartDate: 1,
@@ -8082,13 +8146,13 @@ export const GetApplicationData = async () => {
     Replacement: 1,
   }).finally(() => console.timeEnd("GetDeploymentInfo"));
 
-  console.time("GetRegidterdUsersforTimeSheet");
+ 
   const registeredPromise =
     GetRegidterdUsersforTimeSheet().finally(() =>
       console.timeEnd("GetRegidterdUsersforTimeSheet")
     );
 
-  console.time("GetUsersFullInfoforTimeSheet");
+
   const usersPromise =
     GetUsersFullInfoforTimeSheet().finally(() =>
       console.timeEnd("GetUsersFullInfoforTimeSheet")

@@ -102,16 +102,12 @@ const handleLogout = () => {
       // setShowSideHeadingsPopuo(true)
       
           switch (name) {
-  case "Call Enquiry":
-      case "Deployment":
-    
+ 
+      case "Timesheet":
         dispatch(Update_Main_Filter_Status(name));
         dispatch(UpdateUserType("patient"));
         router.push("/AdminPage");
         break;
-        case "Timesheet":
-           router.push("/TimeSheet");
-              break;
             case "Pending PDR":
               router.push("/PDRView");
               break;
