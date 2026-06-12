@@ -238,7 +238,7 @@ useEffect(() => {
 const matchesSearchAndMonth = (
   item: any,
   searchText: string,
-  searchMonth: string, 
+  searchMonth: string,
   searchYear: string
 ) => {
   const search = searchText?.toLowerCase() || "";
@@ -256,22 +256,35 @@ const matchesSearchAndMonth = (
     hca.includes(search);
 
   if (!searchMonth && !searchYear) return matchesSearch;
-  if (!item.StartDate) return false;
 
+  if (!item.StartDate || !item.EndDate) return false;
 
-  const [day, month, year] = item.StartDate.split("/");
+  const [startDay, startMonth, startYear] = item.StartDate.split("/");
+  const [endDay, endMonth, endYear] = item.EndDate.split("/");
 
-  if (!month || !year) return false;
+  const serviceStart = new Date(
+    Number(startYear),
+    Number(startMonth) - 1,
+    Number(startDay)
+  );
 
-  const monthNumber = Number(month); 
+  const serviceEnd = new Date(
+    Number(endYear),
+    Number(endMonth) - 1,
+    Number(endDay)
+  );
 
-  const matchesMonth =
-    !searchMonth || monthNumber === Number(searchMonth);
+  const month = Number(searchMonth);
+  const year = Number(searchYear);
 
-  const matchesYear =
-    !searchYear || Number(year) === Number(searchYear);
+  const searchStart = new Date(year, month - 1, 1);
+  const searchEnd = new Date(year, month, 0);
 
-  return matchesSearch && matchesMonth && matchesYear;
+  const overlaps =
+    serviceStart <= searchEnd &&
+    serviceEnd >= searchStart;
+
+  return matchesSearch && overlaps;
 };
 
   const UpdateFreezeInformation = async() => {
