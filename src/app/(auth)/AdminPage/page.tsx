@@ -215,7 +215,8 @@ const ContetUserInterface = () => {
 
   
 useEffect(() => {
-    if (!authChecked) return;
+  if (!authChecked) return;
+
   let mounted = true;
 
   const isInitialLoad = updatedStatusMsg === "";
@@ -226,11 +227,11 @@ useEffect(() => {
   const fetchFreshData = async () => {
     try {
       const userId = localStorage.getItem("UserId");
+
       if (!userId) return;
 
       setIsChecking(true);
 
-    
       if (isInitialLoad) {
         const cached = localStorage.getItem(DASHBOARD_CACHE_KEY);
 
@@ -238,7 +239,12 @@ useEffect(() => {
           const parsed = JSON.parse(cached);
 
           if (Date.now() - parsed.timestamp < CACHE_TTL) {
-            const { profile, registeredUsers, fullInfo, deployedLength } = parsed.data;
+            const {
+              profile,
+              registeredUsers,
+              fullInfo,
+              deployedLength,
+            } = parsed.data;
 
             if (mounted) {
               setUsers(registeredUsers);
@@ -249,20 +255,35 @@ useEffect(() => {
               setIsChecking(false);
             }
 
-        
             return;
           }
         }
       }
 
-      const result:any = await GetDashboardData(userId);
+      console.time("DASHBOARD_API");
 
-      console.log ("Check imported Information------",result)
+      const { data: result } = await axios.post(
+        "/api/AdminPageInfo",
+        {
+          userId,
+        }
+      );
+
+      console.timeEnd("DASHBOARD_API");
+
+      console.log(
+        "Check imported Information------",
+        result
+      );
 
       if (!mounted || !result?.success) return;
 
-      const { profile, registeredUsers, fullInfo, deployedLength } = result.data;
-
+      const {
+        profile,
+        registeredUsers,
+        fullInfo,
+        deployedLength,
+      } = result.data;
 
       localStorage.setItem(
         DASHBOARD_CACHE_KEY,
@@ -277,11 +298,12 @@ useEffect(() => {
       setLoginEmail(profile?.Email);
       setFullInfo(fullInfo);
       SetDeploymentInfo(deployedLength);
-
     } catch (e) {
       console.error("Fetch error:", e);
     } finally {
-      if (mounted) setIsChecking(false);
+      if (mounted) {
+        setIsChecking(false);
+      }
     }
   };
 
@@ -290,7 +312,7 @@ useEffect(() => {
   return () => {
     mounted = false;
   };
-}, [authChecked,updatedStatusMsg]);
+}, [authChecked, updatedStatusMsg]);
 useEffect(() => {
   const email = cachedUserInfo?.Email?.toLowerCase();
   if (!email) return;
@@ -373,7 +395,7 @@ const GetHCPTypeCount = (HCPType: string) => {
 
   const callEnquiryArray = users.filter((each) => each.userType === 'CallEnquiry')
   const NotIntrestedArray= users.filter((each) => each.Type === 'Irrelevant')
-console.log ("Chekc User Info------",users)
+
  const GetUserCurrentStatus:any=(UserId:any)=>{
     try{
  if (!DeploymentInfo?.length || !UserId) return "Not Entered";
@@ -1765,7 +1787,8 @@ Awaiting Conversion
 
   const handleLogout = () => {
     
-    router.push('/DashBoard');
+ 
+      window.location.href ='/DashBoard';
     dispatch(Update_Main_Filter_Status(""))
  
   };

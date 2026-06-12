@@ -5332,35 +5332,75 @@ HCAId:HCPId,
     };
   }
 };
-export const UpdateDeploymentStatus = async (userId: string, HCPId: any,MonthValue:any, ImpValue: any) => {
+export const UpdateDeploymentStatus = async (
+  userId: string,
+  HCPId: any,
+  MonthValue: any,
+  ImpValue: any
+) => {
+  console.time("UpdateDeploymentStatus");
+
   try {
+    console.time("MongoConnection");
+
     const client = await clientPromise;
+
+    console.timeEnd("MongoConnection");
+
     const db = client.db("CurateInformation");
     const collection = db.collection("Deployment");
 
-    const result = await collection.updateOne({
+    console.log("Query:", {
       ClientId: userId,
       HCAId: HCPId,
-      Month:MonthValue
-
-    }, {
-      $set: {
-        
-Status: ImpValue
-      }
+      Month: MonthValue,
     });
 
+    console.time("MongoUpdate");
 
+    const result = await collection.updateOne(
+      {
+        ClientId: userId,
+        HCAId: HCPId,
+        Month: MonthValue,
+      },
+      {
+        $set: {
+          Status: ImpValue,
+        },
+      }
+    );
+
+    console.timeEnd("MongoUpdate");
+
+    console.log("Matched:", result.matchedCount);
+    console.log("Modified:", result.modifiedCount);
+
+    if (result.matchedCount === 0) {
+      console.warn("No matching document found.");
+
+      console.timeEnd("UpdateDeploymentStatus");
+
+      return {
+        success: false,
+        message: "No matching document found",
+      };
+    }
+
+    console.timeEnd("UpdateDeploymentStatus");
 
     return {
       success: true,
-      message: "Client Deployment Status Updated  Successfully",
+      message: "Client Deployment Status Updated Successfully",
     };
   } catch (error) {
-    console.error("Error deleting enquiry:", error);
+    console.error("UpdateDeploymentStatus Error:", error);
+
+    console.timeEnd("UpdateDeploymentStatus");
+
     return {
       success: false,
-      message: "Failed to delete enquiry",
+      message: "Failed to update deployment status",
     };
   }
 };

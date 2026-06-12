@@ -277,15 +277,46 @@ const matchesSearchAndMonth = (
   const UpdateFreezeInformation = async() => {
 
     try {
-      SetActionStatusMessage("Please Wait.....")
+      SetActionStatusMessage(`Please Wait  Updating Status to ${status}.....`)
 
-      const UpdateFreezeStatus=await UpdateDeploymentStatus(FreezeInformation.Client_Id,FreezeInformation.HCA_Id,FreezeInformation.Month,status)
-      if(UpdateFreezeStatus.success){
-              SetActionStatusMessage(UpdateFreezeStatus.message)
-              setTimeout(()=>{
-                  setShowFreezPopUp(false);
-              },3000)
-      }
+const { data: UpdateFreezeStatus } = await axios.post(
+  "/api/DeploymentStatus",
+  {
+    ClientId: FreezeInformation.Client_Id,
+    HCAId: FreezeInformation.HCA_Id,
+    Month: FreezeInformation.Month,
+    Status: status,
+  }
+);
+
+  
+      if (UpdateFreezeStatus.success) {
+       
+      setClientsInformation((prev: any[]) =>
+        prev.map((item: any) => {
+          const clientId = item.ClientId || item.Client_Id;
+
+          if (
+            String(clientId) === String(FreezeInformation.Client_Id) &&
+            String(item.HCAId || item.HCA_Id) ===
+              String(FreezeInformation.HCA_Id)
+          ) {
+            return {
+              ...item,
+              Status: status,
+            };
+          }
+
+          return item;
+        })
+      );
+
+      SetActionStatusMessage(UpdateFreezeStatus.message);
+
+      setTimeout(() => {
+        setShowFreezPopUp(false);
+      }, 3000);
+    }
     
     } catch (err: any) {
 
@@ -828,7 +859,7 @@ if (deploymentRes.success) {
     (each) => each.Client_Id === TimeSheet_UserId&&each.HCA_Id===TimeSheet_HCAId&&each.Month===`${SearchYear}-${String(SearchMonth)}`
   );
 
-  console.log("TimeSheet_Info", TimeSheet_Info);
+
 
   const daysInMonth = new Date(SearchYear, SearchMonth + 1, 0).getDate();
 
@@ -999,7 +1030,7 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((item) =>
 
 const Invoiceday:any = new Date().getDate();
 const isInvoiceDay = [ 28, 29, 30, 31].includes(Invoiceday);
-console.log("Check For Attendance", FilterFinelTimeSheet);
+
 
 const today = new Date().toISOString().split("T")[0]; 
 
@@ -1012,7 +1043,7 @@ const hasUnmarked = FilterFinelTimeSheet.some((r: any) => {
   return !markedToday;
 });
 
-console.log(hasUnmarked);
+
 
 const UpdateReplacement = async (
   Available_HCP: any,
@@ -1154,6 +1185,7 @@ return
           SetActionStatusMessage("Please Wait...")
 
       const payload:any= FilterFinelTimeSheet
+      .filter((each:any)=>each.Status!=="Freeze")
      .map((client:any) => ({
         Client_Id: client.Client_Id,
         Client_Name: client.name,
@@ -1210,7 +1242,7 @@ return
       }
 const processedData = useMemo(() => {
   const search = SearchResult?.toLowerCase().trim() || "";
-console.log("Task Night----",FilterFinelTimeSheet)
+
   return FilterFinelTimeSheet
     .filter((record: any) => {
       if (!search) return true;
@@ -1223,10 +1255,7 @@ console.log("Task Night----",FilterFinelTimeSheet)
 
     .map((record: any) => {
       const dayStatusArray = Array.from({ length: 31 }, () => "-");
-console.log(
-  "ClientAttendance",
-  record.ClientAttendance
-);
+
      (record.ClientAttendance || []).forEach((att: any) => {
   const day = new Date(att.AttendanceDate).getDate();
 
@@ -1254,11 +1283,7 @@ console.log(
         },
         { pd: 0, ad: 0, hpd: 0 }
       );
-console.log(
-  "PROCESSED",
-  record.name,
-  dayStatusArray
-);
+
       return {
         ...record,
         days: dayStatusArray,
@@ -1269,6 +1294,8 @@ console.log(
   ClientsInformation,
   SearchResult,
   refreshKey,
+  SearchMonth,
+SearchYear
 ]);
 const UpdateServiceCharge=async(A:any)=>{
   SetActionStatusMessage("Please Wait...")
@@ -1321,9 +1348,7 @@ const payload = {
         date: EditDate,
         status: currentStatus,
       };
-console.log(
-  "Check Payload",payload
-)
+
       const dateResponse = await UpdateClientAttendanceStatus(
         SearchYear,
         SearchMonth,
@@ -1332,34 +1357,20 @@ console.log(
         AbsentReason
       );
 
-      console.log("Check Attendece Status-------",dateResponse)
+
 if (dateResponse?.success) {
-  console.log("✅ SUCCESS BLOCK ENTERED");
-  console.log("AttenseceInformation", AttenseceInformation);
-  console.log("EditDate", EditDate);
-  console.log("ClientsInformation Length", ClientsInformation?.length);
+
 
   setClientsInformation((prev: any[]) => {
-    console.log("🔥 setClientsInformation CALLED");
-    console.log("Prev Length", prev?.length);
-    console.log("Prev Data", prev);
+   
 
     return prev.map((client: any, index: number) => {
-      console.log(
-        `CLIENT ${index}`,
-        client.ClientId,
-        client.Client_Id,
-        client.ClientAttendance
-      );
+      
 
       const currentClientId =
         client.ClientId || client.Client_Id;
 
-      console.log(
-        "COMPARE",
-        currentClientId,
-        AttenseceInformation.Client_Id
-      );
+      
 
       if (
         String(currentClientId) !==
@@ -1368,17 +1379,16 @@ if (dateResponse?.success) {
         return client;
       }
 
-      console.log("🎯 MATCH FOUND");
 
       const attendance = [...(client.ClientAttendance || [])];
 
-      console.log("Attendance Before", attendance);
+ ;
 
       const attendanceIndex = attendance.findIndex((att: any) => {
-        console.log("Checking Attendance Record", att);
+       
 
         if (!att?.AttendanceDate) {
-          console.log("❌ Missing AttendanceDate", att);
+      
           return false;
         }
 
@@ -1386,17 +1396,11 @@ if (dateResponse?.success) {
           .toISOString()
           .split("T")[0];
 
-        console.log(
-          "DB Date",
-          dbDate,
-          "EditDate",
-          EditDate
-        );
-
+       
         return dbDate === EditDate;
       });
 
-      console.log("attendanceIndex", attendanceIndex);
+    
 
       const updatedAttendanceRecord = {
         dateKey: EditDate,
@@ -1412,25 +1416,22 @@ if (dateResponse?.success) {
         UpdatedAt: new Date().toISOString(),
       };
 
-      console.log(
-        "Updated Attendance Record",
-        updatedAttendanceRecord
-      );
+     
 
       if (attendanceIndex >= 0) {
-        console.log("🔄 Updating Existing Attendance");
+      
 
         attendance[attendanceIndex] = {
           ...attendance[attendanceIndex],
           ...updatedAttendanceRecord,
         };
       } else {
-        console.log("➕ Creating New Attendance");
+  
 
         attendance.push(updatedAttendanceRecord);
       }
 
-      console.log("Attendance After", attendance);
+    
 
       return {
         ...client,
@@ -1439,7 +1440,7 @@ if (dateResponse?.success) {
     });
   });
 
-  console.log("✅ setClientsInformation FINISHED");
+
 
   SetActionStatusMessage("Attendance Updated Successfully");
 
@@ -1727,10 +1728,10 @@ onClick={() => setShowAttendanceModal(true)}
         setIsOpen={setShowAttendanceModal}
         Messsage={ActionStatusMessage}
         onSubmit={async(Info: any) => {
-          console.log("Attendance Info:", Info);
+          
           SetActionStatusMessage("Updating attendance, please wait...");
           const result = await UpdateClientDailyAttendance(SearchYear,SearchMonth,Info,loggedInEmail);
-          console.log("Attendance Update Result:", result);
+         
             SetActionStatusMessage("Updated Client attendance Successfully");
           setShowAttendanceModal(false);
         
@@ -1804,20 +1805,20 @@ setShowCareTakerPriceUpdate(false)
   onClose={() => {setShowHCAList(false);setShowReassignmentPopUp(true)}}
   filteredHcps={filterProfilePic}
   onAssign={(hcp) => {
-    console.log("Assigned HCP:", hcp.UserId)
+
       const selected = HCA_List.find(
         (hca:any) => hca.userId ===  hcp.UserId
       );
       setselectedHCP(selected);
       setShowHCAList(false);setShowReassignmentPopUp(true)
-      console.log("Selected HCP for Replacement:", selected);
+    
       
   }}
   onUpdate={(hcp) => console.log("Updated HCP:", hcp.UserId)}
 />
   {ClientsInformation.length > 0 && (
   <div className="w-full overflow-x-auto rounded-2xl shadow-xl">
-      {ShowFreezPopUp && (
+      {(ShowFreezPopUp&&status==="Freeze") && (
   <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
     
     <div className="bg-white rounded-xl p-6 w-[320px] shadow-xl text-center animate-scaleIn">
@@ -1847,6 +1848,42 @@ setShowCareTakerPriceUpdate(false)
           className="px-4 py-1 text-sm rounded-md bg-red-500 text-white hover:bg-red-600"
         >
           Freeze
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
+     {(ShowFreezPopUp&&status!=="Freeze") && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
+    
+    <div className="bg-white rounded-xl p-6 w-[320px] shadow-xl text-center animate-scaleIn">
+      
+      <div className="flex justify-center mb-3">
+        <CircleAlert className="w-10 h-10 text-green-500" />
+      </div>
+
+      <h2 className="text-lg font-semibold mb-2">
+        Active Deployment?
+      </h2>
+
+      <p className="text-sm text-gray-600 mb-4">
+        This Deployment will Enable to access the system .
+      </p>
+<p>{ActionStatusMessage}</p>
+      <div className="flex justify-center gap-3">
+        <button
+          onClick={() => setShowFreezPopUp(false)}
+          className="px-4 py-1 text-sm rounded-md border hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={UpdateFreezeInformation}
+          className="px-4 py-1 text-sm rounded-md bg-green-500 text-white hover:bg-green-600"
+        >
+          Active
         </button>
       </div>
 
@@ -2033,11 +2070,11 @@ const monthIndex = [
   "January","February","March","April","May","June",
   "July","August","September","October","November","December"
 ].indexOf(SearchMonth) + 1;
-console.log("Check for Days-----", c.days)
+
 const isMatch = Number(month) === Number( new Date().getMonth() + 1) && Number(year) ===Number(now.getFullYear());
 const todayIndex = Math.max(0, new Date().getDate() - 1);
 const dayStatus = c.days?.[todayIndex] || "-";
-  console.log("Check Client Attendence-------",c.days)
+
 const today = new Date();
 
 const localToday = `${today.getFullYear()}-${String(
@@ -2048,7 +2085,7 @@ const EditDate =
   c?.ClientAttendance?.find((att: any) => att?.dateKey === localToday)
     ?.dateKey || localToday;
    
-console.log('Test Date------',EditDate)
+
       return(
           <tr key={i} className="hover:bg-teal-50/30 transition-all">
            <td className="px-3 py-3 font-semibold text-xs text-gray-900 break-words">
@@ -2201,7 +2238,15 @@ console.log('Test Date------',EditDate)
     <select
       className="bg-transparent text-xs font-medium outline-none cursor-pointer appearance-none"
       value={c.Status}
-      onChange={(e) => {setStatus(e.target.value);setShowFreezPopUp(true);setFreezeInformation(c);SetActionStatusMessage('')}}
+      onChange={(e) => {
+        const UpdatedStatus=e.target.value
+        setStatus(UpdatedStatus)
+        ;setFreezeInformation(c);
+        SetActionStatusMessage('')
+        setShowFreezPopUp(true)
+        
+      
+      }}
     >
       <option value="Active">Active</option>
       <option value="Freeze">Freeze</option>
@@ -3197,7 +3242,15 @@ onClick={EditAttendence}
 
 {showTimeSheet && TimeSheet_Info && (
   <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-    <div className="bg-white rounded-3xl shadow-2xl p-6 w-[750px] max-h-[90vh] overflow-y-auto backdrop-blur-md border border-gray-200">
+<div className="
+  bg-white rounded-3xl shadow-2xl
+  p-4 sm:p-6
+  w-[98vw] sm:w-[95vw] lg:w-[900px]
+  max-h-[90vh]
+  overflow-y-auto
+  backdrop-blur-md
+  border border-gray-200
+">
       <div className="mb-4 bg-white/80 backdrop-blur-xl p-1">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div className="flex items-center gap-4">
@@ -3222,7 +3275,7 @@ onClick={EditAttendence}
             </div>
           </div>
 
-          <div className="flex gap-3">
+       <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
              <select
       value={SearchMonth}
       onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
@@ -3271,7 +3324,15 @@ onClick={EditAttendence}
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-3 text-center">
+      <div className="
+  grid
+  grid-cols-2
+  sm:grid-cols-3
+  md:grid-cols-5
+  lg:grid-cols-7
+  gap-3
+  text-center
+">
         {Array.from({ length: daysInMonth }).map((_, dayIndex) => {
           const day = dayIndex + 1;
 
@@ -3287,7 +3348,7 @@ onClick={EditAttendence}
     parsed.getFullYear() === Number(SearchYear)
   );
 });
-console.log("Check Info-----",record)
+
           const today = new Date();
           const currentDateObj = new Date(SearchYear, SearchMonth-1, day);
           const isFuture = currentDateObj > today;
@@ -3313,7 +3374,18 @@ console.log("Check Info-----",record)
           return (
             <div
               key={day}
-              className="rounded-lg w-[95px] border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 min-h-0"
+className="
+  rounded-lg
+  w-full
+  border border-gray-200
+  bg-white
+  shadow-sm
+  flex flex-col
+  items-center
+  justify-center
+  p-2
+  min-h-[95px]
+"
             >
               {/* {`${SearchYear}-0${SearchMonth}-${day<=9?
                 `0${day}`:day}`} */}
@@ -3470,7 +3542,7 @@ console.log("Check Info-----",record)
         </div>
       )}
 
-      <div className="mt-5 text-right">
+     <div className="mt-5 flex justify-center sm:justify-end">
         <button
           onClick={() => setShowTimeSheet(false)}
           className="px-4 py-2 bg-red-500 text-white cursor-pointer rounded-xl shadow hover:bg-red-600 transition"
@@ -3580,7 +3652,7 @@ const AwaitingInvoiceCount = FinelTimeSheet
     
   }).length;
 
-  console.log("AwaitingInvoiceCount", AwaitingInvoiceCount);
+ 
 function DayBadge({ status }: { status: any }) {
   const Wrapper = ({ children }: any) => (
     <div className="flex items-center justify-center w-full">

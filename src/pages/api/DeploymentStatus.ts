@@ -1,7 +1,5 @@
-
-import { GetUserInformation } from "@/Lib/user.action";
+import { UpdateDeploymentStatus } from "@/Lib/auth";
 import { NextApiRequest, NextApiResponse } from "next";
-
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,12 +13,24 @@ export default async function handler(
   }
 
   try {
+    console.log("API START", Date.now());
 
+    const {
+      ClientId,
+      HCAId,
+      Month,
+      Status,
+    } = req.body;
 
-    const result = await GetUserInformation(req.body.localValue);
+    const result = await UpdateDeploymentStatus(
+      ClientId,
+      HCAId,
+      Month,
+      Status
+    );
 
     console.log("API END", Date.now());
-console.log ("Check Id-------",result)
+
     return res.status(200).json(result);
   } catch (error) {
     console.error(error);

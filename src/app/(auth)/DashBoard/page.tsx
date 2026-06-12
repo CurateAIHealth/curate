@@ -1395,8 +1395,8 @@ setIsNavigating(true);
           )}
 
           {showCallEnquiry && (
-            <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-2 sm:p-4">
-              <div className="w-full max-w-6xl h-[100dvh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
+              <div className="w-full max-w-6xl max-h-[95vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden">
 
                 <div className="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
                   <div className="flex items-center gap-2">
@@ -1415,19 +1415,18 @@ setIsNavigating(true);
                   </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex-1 overflow-y-auto px-4 md:px-6 py-5 space-y-6">
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
                     <div className="w-full">
                       <label className="block text-xs font-medium text-teal-600
                        mb-1">Client Name <span className="text-red-500">*</span></label>
-                      <div className="flex gap-2">
+                    <div className="flex gap-2 w-full">
                         <select
                           name="title"
                           onChange={handleChange}
                           required
-                          className="rounded-lg border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-gray-800"
+                          className="w-[110px] shrink-0 rounded-lg border border-gray-300 px-3 py-3 text-sm text-gray-800"
                         >
                           <option value="">Title</option>
                           <option value="Mr">Mr</option>
@@ -1448,18 +1447,18 @@ setIsNavigating(true);
                           value={EnquiryForm.ClientName}
                           placeholder="Full name"
                           required
-                          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+className="flex-1 min-w-0 rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-gray-800 focus:border-transparent"
                         />
                       </div>
                     </div>
                     <div className="w-full">
                       <label className="block text-xs font-medium text-teal-600 mb-1">Patient Name </label>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 w-full">
                         <select
                           name="Patienttitle"
                           onChange={handleChange}
                           required
-                          className="rounded-lg border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-gray-800"
+                          className="w-[110px] shrink-0 rounded-lg border border-gray-300 px-3 py-3 text-sm text-gray-800"
                         >
                           <option value="">Title</option>
                           <option value="Mr">Mr</option>
@@ -1480,7 +1479,7 @@ setIsNavigating(true);
                           onChange={handleChange}
                           placeholder="Patient Full name"
 
-                          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+className="flex-1 min-w-0 rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-gray-800 focus:border-transparent"
                         />
                       </div>
                     </div>
