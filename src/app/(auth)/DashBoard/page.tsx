@@ -766,40 +766,39 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
 
 
 
-  const Switching = (name: string) => {
+ const Switching = (name: string) => {
+  if (!loggedInEmail) {
+    setLoginEmailPop(true);
+    return;
+  }
 
-    if (!loggedInEmail){
-      setLoginEmailPop(true)
- return;
-    }
-      
+  if (!canAccessTab(name, loggedInEmail)) {
+    setShowPermissionPopup(true);
+    return;
+  }
 
-    if (!canAccessTab(name, loggedInEmail)) {
-      setShowPermissionPopup(true);
-      return;
-    }
-// setShowSideHeadingsPopuo(true)
-setIsNavigating(true);
+  setIsNavigating(true);
+
+  requestAnimationFrame(() => {
     switch (name) {
       case "Call Enquiry":
-     case "Deployment":
+      case "Deployment":
       case "Timesheet":
         dispatch(Update_Main_Filter_Status(name));
         dispatch(UpdateUserType("patient"));
         router.push("/AdminPage");
         break;
-        
 
       case "HCP List":
         dispatch(Update_Main_Filter_Status(name));
         dispatch(UpdateUserType("healthcare-assistant"));
         router.push("/AdminPage");
         break;
- 
-     
+
       case "Pending PDR":
         router.push("/PDRView");
         break;
+
       case "Vendors":
         router.push("/VendorsPanel");
         break;
@@ -811,6 +810,7 @@ setIsNavigating(true);
       case "Invoices":
         router.push("/Invoices");
         break;
+
       case "Payments":
         router.push("/PaymentsInfo");
         break;
@@ -823,7 +823,7 @@ setIsNavigating(true);
         router.push("/HostelAttendence");
         break;
 
-         case "Accounts":
+      case "Accounts":
         router.push("/SubAccountings");
         break;
 
@@ -831,7 +831,8 @@ setIsNavigating(true);
         router.push("/Notifications");
         break;
     }
-  };
+  });
+};
 
   const PostNotificationInfo = async (Emails: string[]) => {
     try {
@@ -936,7 +937,7 @@ setIsNavigating(true);
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
             </span>
           </div>
 
