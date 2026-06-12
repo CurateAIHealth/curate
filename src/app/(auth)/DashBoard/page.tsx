@@ -766,73 +766,84 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
 
 
 
- const Switching = (name: string) => {
-  if (!loggedInEmail) {
-    setLoginEmailPop(true);
-    return;
-  }
+  const Switching = (name: string) => {
 
-  if (!canAccessTab(name, loggedInEmail)) {
-    setShowPermissionPopup(true);
-    return;
-  }
+    if (!loggedInEmail){
+      setLoginEmailPop(true)
+ return;
+    }
+      
 
-  setIsNavigating(true);
-
-  requestAnimationFrame(() => {
+    if (!canAccessTab(name, loggedInEmail)) {
+      setShowPermissionPopup(true);
+      return;
+    }
+// setShowSideHeadingsPopuo(true)
+setIsNavigating(true);
     switch (name) {
+      
       case "Call Enquiry":
-      case "Deployment":
+     case "Deployment":
       case "Timesheet":
+        setIsNavigating(false);
         dispatch(Update_Main_Filter_Status(name));
         dispatch(UpdateUserType("patient"));
         router.push("/AdminPage");
         break;
+        
 
       case "HCP List":
+          setIsNavigating(false);
         dispatch(Update_Main_Filter_Status(name));
         dispatch(UpdateUserType("healthcare-assistant"));
         router.push("/AdminPage");
         break;
-
+ 
+     
       case "Pending PDR":
+          setIsNavigating(false);
         router.push("/PDRView");
         break;
-
       case "Vendors":
+          setIsNavigating(false);
         router.push("/VendorsPanel");
         break;
 
       case "Document Compliance":
+          setIsNavigating(false);
         router.push("/Documents");
         break;
 
       case "Invoices":
+          setIsNavigating(false);
         router.push("/Invoices");
         break;
-
       case "Payments":
+          setIsNavigating(false);
         router.push("/PaymentsInfo");
         break;
 
       case "Registration":
+          setIsNavigating(false);
         router.push("/UserTypeRegistration");
         break;
 
       case "Hostel Attendance":
+          setIsNavigating(false);
         router.push("/HostelAttendence");
         break;
 
-      case "Accounts":
+         case "Accounts":
+            setIsNavigating(false);
         router.push("/SubAccountings");
         break;
 
       case "Notifications":
+          setIsNavigating(false);
         router.push("/Notifications");
         break;
     }
-  });
-};
+  };
 
   const PostNotificationInfo = async (Emails: string[]) => {
     try {
@@ -937,7 +948,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
             </span>
           </div>
 

@@ -105,53 +105,66 @@ const handleLogout = () => {
           switch (name) {
  
       case "Timesheet":
+          setIsNavigating(false);
         dispatch(Update_Main_Filter_Status(name));
         dispatch(UpdateUserType("patient"));
         router.push("/AdminPage");
         break;
             case "Pending PDR":
+                setIsNavigating(false);
               router.push("/PDRView");
               break;
             case "Vendors":
+                setIsNavigating(false);
               router.push("/VendorsPanel");
               break;
       
             case "Document Compliance":
+                setIsNavigating(false);
               router.push("/Documents");
               break;
       
             case "Invoices":
+                setIsNavigating(false);
               router.push("/Invoices");
               break;
             case "Payments":
+                setIsNavigating(false);
               router.push("/PaymentsInfo");
               break;
       
             case "HCA Payment":
+                setIsNavigating(false);
               router.push("/HCAAccounts");
               break;
       
             case "Client Payment":
+                setIsNavigating(false);
               router.push("/ClientAccounts");
               break;
       
                case "Accounts":
+                  setIsNavigating(false);
               router.push("/Accounts");
               break;
 
               case "Payable":
+                  setIsNavigating(false);
                 router.push("/Payable");
                 break;
                  case "Reject":
+                    setIsNavigating(false);
                 router.push("/RejectPayments");
                 break;
       
                  case "Paid":
+                    setIsNavigating(false);
                 router.push("/SuccessfulPayments");
                 break;
       
       
             case "Notifications":
+                setIsNavigating(false);
               router.push("/Notifications");
               break;
           }
