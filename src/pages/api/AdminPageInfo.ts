@@ -1,7 +1,6 @@
 
-import { GetUserInformation } from "@/Lib/user.action";
+import { GetDashboardData } from "@/Lib/auth";
 import { NextApiRequest, NextApiResponse } from "next";
-
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,15 +14,15 @@ export default async function handler(
   }
 
   try {
+    console.time("API_DASHBOARD");
 
+    const result = await GetDashboardData(req.body.userId);
 
-    const result = await GetUserInformation(req.body.localValue);
+    console.timeEnd("API_DASHBOARD");
 
-    console.log("API END", Date.now());
-console.log ("Check Id-------",result)
     return res.status(200).json(result);
   } catch (error) {
-    console.error(error);
+    console.error("Dashboard API Error:", error);
 
     return res.status(500).json({
       success: false,

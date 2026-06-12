@@ -356,3 +356,15 @@ body {
   animation-timing-function: linear;
   animation-fill-mode: forwards;
 }
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important;
+  opacity: 1;
+}
+
+input,
+textarea,
+select {
+  color: #1f2937;
+}

@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 export interface Client {
+  Status: string;
   ClientAttendance: any;
   PatientName: any;
   Client_Id: string | number;
@@ -56,7 +57,7 @@ export default function AttendanceModal({
       document.body.style.overflow = "auto";
     };
   }, [isOpen]);
-console.log("clients", clients);
+
 const filteredClients = useMemo(() => {
   return clients.filter((item) => {
     const matchesSearch =
@@ -70,8 +71,8 @@ const filteredClients = useMemo(() => {
 
       return attendanceDate === selectedDate;
     });
-
-    return matchesSearch && !alreadyMarked;
+ 
+    return matchesSearch && !alreadyMarked&&item.Status!=="Freeze";
   });
 }, [clients, search, selectedDate]);
 

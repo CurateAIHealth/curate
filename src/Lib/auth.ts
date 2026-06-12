@@ -292,47 +292,252 @@ export const GetApplicationData = async () => {
 };
 
 
+export const UpdateDeploymentStatus = async (
+  userId: string,
+  HCPId: any,
+  MonthValue: any,
+  ImpValue: any
+) => {
+  console.time("UpdateDeploymentStatus");
 
-export const GetUserInformation = async (UserIdFromLocal: any) => {
   try {
-    const cluster = await clientPromise;
-    const db = cluster.db("CurateInformation");
-    const collection = db.collection("Registration");
+    console.time("MongoConnection");
 
-    const UserInformation: any = await collection.findOne({
-      userId: UserIdFromLocal,
+    const client = await clientPromise;
+
+    console.timeEnd("MongoConnection");
+
+    const db = client.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    console.log("Query:", {
+      ClientId: userId,
+      HCAId: HCPId,
+      Month: MonthValue,
     });
 
-    if (!UserInformation) return null;
+    console.time("MongoUpdate");
 
-    const decryptedInfo: any = {
-      ...UserInformation,
-      _id: UserInformation._id?.toString() ?? null,
-    };
-
-    for (const [key, value] of Object.entries(UserInformation)) {
-      if (
-        value &&
-        typeof value === "object" &&
-        "iv" in value &&
-        "content" in value
-      ) {
-        try {
-          decryptedInfo[key] = decrypt(value as { iv: string; content: string });
-        } catch (e) {
-          console.warn(`Failed to decrypt field ${key}:`, e);
-          decryptedInfo[key] = value; 
-        }
+    const result = await collection.updateOne(
+      {
+        ClientId: userId,
+        HCAId: HCPId,
+        Month: MonthValue,
+      },
+      {
+        $set: {
+          Status: ImpValue,
+        },
       }
+    );
+
+    console.timeEnd("MongoUpdate");
+
+    console.log("Matched:", result.matchedCount);
+    console.log("Modified:", result.modifiedCount);
+
+    if (result.matchedCount === 0) {
+      console.warn("No matching document found.");
+
+      console.timeEnd("UpdateDeploymentStatus");
+
+      return {
+        success: false,
+        message: "No matching document found",
+      };
     }
 
-    return decryptedInfo;
-  } catch (err) {
-    console.error("Error in GetUserInformation:", err);
-    return null;
+    console.timeEnd("UpdateDeploymentStatus");
+
+    return {
+      success: true,
+      message: "Client Deployment Status Updated Successfully",
+    };
+  } catch (error) {
+    console.error("UpdateDeploymentStatus Error:", error);
+
+    console.timeEnd("UpdateDeploymentStatus");
+
+    return {
+      success: false,
+      message: "Failed to update deployment status",
+    };
   }
 };
 
+const safeDecrypt = (value: any) => {
+  try {
+    if (
+      value &&
+      typeof value === "object" &&
+      "iv" in value &&
+      "content" in value
+    ) {
+      return decrypt(value);
+    }
+    return value;
+  } catch (err) {
+    console.warn("Decryption failed:", err);
+    return value;
+  }
+};
 
+let dashboardCache: Record<
+  string,
+  {
+    data: any;
+    timestamp: number;
+  }
+> = {};
+export const GetDashboardData = async (userId: string) => {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        message: "UserId is required",
+        data: null,
+      };
+    }
 
+    const now = Date.now();
+    const cacheKey = userId;
 
+    if (
+      dashboardCache[cacheKey] &&
+      now - dashboardCache[cacheKey].timestamp < 30 * 60 * 1000
+    ) {
+      console.log("DASHBOARD CACHE HIT");
+      return dashboardCache[cacheKey].data;
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const Users = db.collection("Registration");
+    const UsersFullInfo = db.collection("CompliteRegistrationInformation");
+    const Deployment = db.collection("Deployment");
+
+    const [profileRaw, registeredUsersRaw, fullInfoRaw, deployedLength] =
+      await Promise.all([
+        Users.findOne(
+          { userId },
+          {
+            projection: {
+              _id: 0,
+              userId: 1,
+              FirstName: 1,
+              Email: 1,
+            },
+          }
+        ),
+
+        Users.find({}).toArray(),
+
+        UsersFullInfo.find(
+          {},
+          {
+            projection: {
+              _id: 0,
+            },
+          }
+        ).toArray(),
+
+        Deployment.find(
+          {},
+          {
+            projection: { _id: 0 },
+          }
+        ).toArray(),
+      ]);
+
+    const profile =
+      profileRaw &&
+      Object.fromEntries(
+        Object.entries(profileRaw).map(([key, value]) => [
+          key,
+          safeDecrypt(value),
+        ])
+      );
+
+    const safeUsers = registeredUsersRaw.map((user: any) => {
+      const decryptedUser: any = {
+        ...user,
+        _id: user._id?.toString() ?? null,
+      };
+
+      for (const [key, value] of Object.entries(user)) {
+        if (
+          value &&
+          typeof value === "object" &&
+          "iv" in value &&
+          "content" in value
+        ) {
+          try {
+            decryptedUser[key] = decrypt(
+              value as { iv: string; content: string }
+            );
+          } catch (e) {
+            console.warn(
+              `Failed to decrypt field ${key} for user ${user._id}:`,
+              e
+            );
+            decryptedUser[key] = value;
+          }
+        }
+      }
+
+      return decryptedUser;
+    });
+
+    const fullInfo = fullInfoRaw.map((user: any) => {
+      const info = user.HCAComplitInformation || {};
+
+      return {
+        ...user,
+        HCAComplitInformation: {
+          ...info,
+          HCPFirstName: safeDecrypt(info["First Name"]),
+          HCPContactNumber: safeDecrypt(info["Mobile Number"]),
+          HCPEmail: safeDecrypt(info["EmailId"]),
+          HCPSurName: safeDecrypt(info["Surname"]),
+          HCPAdharNumber: safeDecrypt(info["Aadhar Card No"]),
+          "Phone No 1": safeDecrypt(info["Phone No 1"]),
+          "Phone No 2": safeDecrypt(info["Phone No 2"]),
+          "Email Id": safeDecrypt(info["Email Id"]),
+          "Client Aadhar No": safeDecrypt(info["Client Aadhar No"]),
+          "Patient Aadhar Number": safeDecrypt(
+            info["Patient Aadhar Number"]
+          ),
+          "Alternative Client Contact": safeDecrypt(
+            info["Alternative Client Contact"]
+          ),
+        },
+      };
+    });
+
+    const response = {
+      success: true,
+      data: {
+        profile: profile || null,
+        registeredUsers: safeUsers || [],
+        fullInfo: fullInfo || [],
+        deployedLength: deployedLength || 0,
+      },
+    };
+
+    dashboardCache[cacheKey] = {
+      data: response,
+      timestamp: now,
+    };
+
+    return response;
+  } catch (error) {
+    console.error("Dashboard Fetch Error:", error);
+
+    return {
+      success: false,
+      message: "Failed to fetch dashboard data",
+      data: null,
+    };
+  }
+};
