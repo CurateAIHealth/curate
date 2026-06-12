@@ -194,7 +194,7 @@ export const GetApplicationData = async () => {
 
   if (
     applicationCache &&
-    now - applicationCacheTime < 300000
+    now - applicationCacheTime < 30 * 60 * 1000
   ) {
     console.log(
       "APPLICATION CACHE HIT",
@@ -289,6 +289,48 @@ export const GetApplicationData = async () => {
   console.timeEnd("TOTAL_GetApplicationData");
 
   return applicationCache;
+};
+
+
+
+export const GetUserInformation = async (UserIdFromLocal: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Registration");
+
+    const UserInformation: any = await collection.findOne({
+      userId: UserIdFromLocal,
+    });
+
+    if (!UserInformation) return null;
+
+    const decryptedInfo: any = {
+      ...UserInformation,
+      _id: UserInformation._id?.toString() ?? null,
+    };
+
+    for (const [key, value] of Object.entries(UserInformation)) {
+      if (
+        value &&
+        typeof value === "object" &&
+        "iv" in value &&
+        "content" in value
+      ) {
+        try {
+          decryptedInfo[key] = decrypt(value as { iv: string; content: string });
+        } catch (e) {
+          console.warn(`Failed to decrypt field ${key}:`, e);
+          decryptedInfo[key] = value; 
+        }
+      }
+    }
+
+    return decryptedInfo;
+  } catch (err) {
+    console.error("Error in GetUserInformation:", err);
+    return null;
+  }
 };
 
 

@@ -46,16 +46,26 @@ interface AttendanceData {
   status: "Present" | "Absent" | "Leave"|"Not Marked";
 }
 
-type User = any;
+type Users = any;
 type Deployment = any;
 type Replace = any;
 type Termination=any;
 type AttendanceState = Record<number, AttendanceData>;
-const ClientTable = () => {
-  const [ClientsInformation, setClientsInformation] = useState<Deployment[]>([]);
-  const [ReplacementInformation,setReplacementInformation]=useState<Replace[]>([])
-  const [terminationInfo,SetterminationInfo]=useState<Termination[]>([])
-    const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
+interface ClientTableProps {
+  users: any;
+  ImpClientsInformation: Deployment[];
+  ReplacementInformation: Replace[];
+  terminationInfo: Termination[];
+  RegisterdUsers: any[];
+}
+const ClientTable = ({
+  users,
+  ImpClientsInformation,
+  ReplacementInformation,
+  terminationInfo,
+  RegisterdUsers,
+}: ClientTableProps) => {
+const [ClientsInformation,setClientsInformation]=useState(ImpClientsInformation||[])
     const [EditDate,setEditDate]=useState<any>()
   const [selectedAssignHCP,setselectedAssignHCP]=useState<any>()
    const Timenow = new Date();
@@ -65,7 +75,7 @@ const ClientTable = () => {
   const currentYear = Timenow.getFullYear().toString();
   const currentMonth = String(Timenow.getMonth() + 1).padStart(2, "0");
   const [selectedClient,setselectedClient]=useState<any>()
-  const [isChecking, setIsChecking] = useState(true);
+  const [isChecking, setIsChecking] = useState(false);
   
   const [selectedHCP,setselectedHCP]=useState<any>()
   const [showHCAList, setShowHCAList] = useState(false);
@@ -82,7 +92,7 @@ const [showWarning, setShowWarning] = useState(false);
 const [ReplacementTime,setReplacementTime]=useState("")
 const [ReplacementDate,setReplacementDate]=useState("")
   const [UpdatedCareTakerStatus,setUpdatedCareTakerStatus]=useState("")
-  const [users, setUsers] = useState<User[]>([]);
+  
   const [Fineldate, setFineldate] = useState({
     date: '', day: "",
     updatedAt: "",
@@ -138,71 +148,71 @@ const router=useRouter()
  const TimeStampInfo = useSelector(
     (state: any) => state.TimeStampInfo
   );
-useEffect(() => {
-  if (loggedInEmail === "") {
-    router.push("/DashBoard");
-    return;
-  }
+// useEffect(() => {
+//   if (loggedInEmail === "") {
+//     router.push("/DashBoard");
+//     return;
+//   }
 
-  let mounted = true;
+//   let mounted = true;
 
-  const isSuccessUpdate =
-    ActionStatusMessage?.includes("Successfully");
+//   const isSuccessUpdate =
+//     ActionStatusMessage?.includes("Successfully");
 
-  const fetchData = async () => {
-    try {
-      setIsChecking(true);
+//   const fetchData = async () => {
+//     try {
+//       setIsChecking(true);
 
-      if (!isSuccessUpdate && cachedDeploymentInfo?.length > 0) {
-        setUsers(cachedUsersFullInfo);
-        setClientsInformation(cachedDeploymentInfo);
-        setReplacementInformation(cachedReplacementInfo);
-        SetterminationInfo(cachedTermination);
-        setRegisterdUsers(cachedRegisterdUsers);
-        return;
-      }
+//       if (!isSuccessUpdate && cachedDeploymentInfo?.length > 0) {
+//         setUsers(cachedUsersFullInfo);
+//         setClientsInformation(cachedDeploymentInfo);
+//         setReplacementInformation(cachedReplacementInfo);
+//         SetterminationInfo(cachedTermination);
+//         setRegisterdUsers(cachedRegisterdUsers);
+//         return;
+//       }
 
-      console.time("GET_DEPLOYMENT_API");
+//       console.time("GET_DEPLOYMENT_API");
 
-      const { data } = await axios.get("/api/Deployentinfo");
-      console.log("Check Deployment Data------",data.deploymentInfo)
+//       const { data } = await axios.get("/api/Deployentinfo");
+//       console.log("Check Deployment Data------",data.deploymentInfo)
 
-      console.timeEnd("GET_DEPLOYMENT_API");
+//       console.timeEnd("GET_DEPLOYMENT_API");
 
-      if (!mounted) return;
+//       if (!mounted) return;
 
-     const {
-  deploymentInfo = [],
-  registeredUsers = [],
-  usersFullInfo = [],
-} = data.data;
+//      const {
+//   deploymentInfo = [],
+//   registeredUsers = [],
+//   usersFullInfo = [],
+// } = data.data;
 
-cachedDeploymentInfo = deploymentInfo;
-cachedRegisterdUsers = registeredUsers;
-cachedUsersFullInfo = usersFullInfo;
+// cachedDeploymentInfo = deploymentInfo;
+// cachedRegisterdUsers = registeredUsers;
+// cachedUsersFullInfo = usersFullInfo;
 
-      setUsers(cachedUsersFullInfo);
-      setClientsInformation(cachedDeploymentInfo);
-      setReplacementInformation(cachedReplacementInfo);
-      SetterminationInfo(cachedTermination);
-      setRegisterdUsers(cachedRegisterdUsers);
+//       setUsers(cachedUsersFullInfo);
+//       setClientsInformation(cachedDeploymentInfo);
+//       setReplacementInformation(cachedReplacementInfo);
+//       SetterminationInfo(cachedTermination);
+//       setRegisterdUsers(cachedRegisterdUsers);
 
-      dispatch(UpdateSubHeading("On Service"));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      if (mounted) {
-        setIsChecking(false);
-      }
-    }
-  };
+//       dispatch(UpdateSubHeading("On Service"));
+//     } catch (err) {
+//       console.error(err);
+//     } finally {
+//       if (mounted) {
+//         setIsChecking(false);
+//       }
+//     }
+//   };
 
-  fetchData();
+//   fetchData();
 
-  return () => {
-    mounted = false;
-  };
-}, [ActionStatusMessage, loggedInEmail,]);
+//   return () => {
+//     mounted = false;
+//   };
+// }, [ActionStatusMessage, loggedInEmail,]);
 
 
 
@@ -378,7 +388,7 @@ const GetMonthlyCharges = (A:any) => {
   return filtered?.MonthlyServiceCharge || "Not Provided";
 };
 
-  const FinelTimeSheet = ClientsInformation.map((each: any) => {
+  const FinelTimeSheet = ClientsInformation?.map((each: any) => {
 const normalizedAttendance =
   Array.isArray(each.Attendance) && each.Attendance.length > 0
     ? each.Attendance.map((att: any) => {
@@ -1796,7 +1806,7 @@ setShowCareTakerPriceUpdate(false)
   onAssign={(hcp) => {
     console.log("Assigned HCP:", hcp.UserId)
       const selected = HCA_List.find(
-        (hca) => hca.userId ===  hcp.UserId
+        (hca:any) => hca.userId ===  hcp.UserId
       );
       setselectedHCP(selected);
       setShowHCAList(false);setShowReassignmentPopUp(true)
@@ -2729,7 +2739,7 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
           value={selectedAssignHCP?.userId || ""}
         onChange={(e) => {
     const selected:any = HCA_List.find(
-      (hca) => hca.userId === e.target.value
+      (hca:any) => hca.userId === e.target.value
     );
   
     setselectedAssignHCP(selected);
@@ -2737,7 +2747,7 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
 >
   <option value="">Assign New HCA</option>
 
-  {HCA_List.map((each) => (
+  {HCA_List.map((each:any) => (
     <option key={each.id} value={each.userId}>
       {each.FirstName}
     </option>
@@ -3588,7 +3598,7 @@ function DayBadge({ status }: { status: any }) {
     );
   }
 
-  if (status === "HP") {
+  if (status === "Half Day"||status === "HP") {
     return (
       <Wrapper>
         <div className="relative w-8 h-8 rounded-full border-2 border-emerald-500 overflow-hidden shadow-sm flex items-center justify-center text-[10px] font-semibold text-emerald-600">

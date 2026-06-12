@@ -82,7 +82,7 @@ const [showSuggestions, setShowSuggestions] = useState(true);
   const Status = ["Converted", "Waiting List", "Lost",];
   const EmailVerificationStatus = ['Verified', 'Pending'];
   const CurrentStatusOptions = ["Active", "Sick", "Leave", "Terminated"];
-
+const ProfileInformation=useSelector((state:any)=>state.Useriinformation)
   const [UserFullInfo, setFullInfo] = useState([])
   const router = useRouter();
   const dispatch = useDispatch();
@@ -181,15 +181,26 @@ useEffect(() => {
 // }, [updatedStatusMsg]);
 const DASHBOARD_CACHE_KEY = "dashboard_cache";
 const CACHE_TTL = 2 * 60 * 1000;
+    
 const ContetUserInterface = () => {
     switch (UpdateMainFilter) {
       case "Call Enquiry":
       case "HCP List":
         return ClientEnquiryUserInterFace()
       case "Deployment":
-        return <ClientTable />
+        return <ClientTable users={UserFullInfo}
+         ImpClientsInformation={DeploymentInfo}
+  ReplacementInformation={[]}
+  terminationInfo={[]}
+  RegisterdUsers={users}/>
       case "Timesheet":
-        return <InvoiceMedicalTable />
+       return (
+  <InvoiceMedicalTable
+    users={UserFullInfo}
+    RegisterdUsers={users}
+    ImpClientsInformation={DeploymentInfo}
+  />
+);
       case "Replacements":
         return <ReplacementsTable />
       case "Referral Pay":
@@ -245,6 +256,8 @@ useEffect(() => {
       }
 
       const result:any = await GetDashboardData(userId);
+
+      console.log ("Check imported Information------",result)
 
       if (!mounted || !result?.success) return;
 
@@ -360,7 +373,7 @@ const GetHCPTypeCount = (HCPType: string) => {
 
   const callEnquiryArray = users.filter((each) => each.userType === 'CallEnquiry')
   const NotIntrestedArray= users.filter((each) => each.Type === 'Irrelevant')
-
+console.log ("Chekc User Info------",users)
  const GetUserCurrentStatus:any=(UserId:any)=>{
     try{
  if (!DeploymentInfo?.length || !UserId) return "Not Entered";

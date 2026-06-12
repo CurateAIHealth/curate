@@ -1,4 +1,4 @@
-"use client";
+	"use client";
 let deploymentCache: any[] = [];
 let cachedUsersFullInfo: any[] = [];
 let cachedRegisterdUsers: any[] = [];
@@ -27,10 +27,20 @@ import axios from "axios";
 type DayStatus = "P" | "NA" | "HP" | "A";
 
 const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-export default function InvoiceMedicalTable() {
+interface InvoiceMedicalTableProps {
+  users: any[];
+  RegisterdUsers: any[];
+  ImpClientsInformation: any[];
+}
+export default function InvoiceMedicalTable({
+  users,
+  RegisterdUsers,
+  ImpClientsInformation,
+}: InvoiceMedicalTableProps) {
+    const [ClientsInformation, setClientsInformation] = useState<any>(ImpClientsInformation);
+    console.log ("Checkimportedinfo----",ClientsInformation)
  const now = new Date();
- const [isChecking, setIsChecking] = useState(true);
+ const [isChecking, setIsChecking] = useState(false);
 const currentYear = now.getFullYear().toString();
 const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 const [CurrentTimeSheetScreen,setCurrentTimeSheetScreen]=useState("TimeSheet")
@@ -55,7 +65,7 @@ const [showPaymentModal, setShowPaymentModal] = useState(false);
 const [AttendeceEditReason,SetAttendeceEditReason]=useState("")
 const [billingRecord, setBillingRecord] = useState<any>(null);
 const [ShowUpdateAttendece,SetShowUpdateAttendece]=useState(false)
-  const [ClientsInformation, setClientsInformation] = useState<any>({});
+ 
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [showPendingCalendar, setShowPendingCalendar] = useState(false);
    const [showMissingCalendar, setShowMissingCalendar] = useState(false);
@@ -63,8 +73,7 @@ const [ShowUpdateAttendece,SetShowUpdateAttendece]=useState(false)
       const [showAttendeceMissingCalendar, setshowAttendeceMissingCalendar] = useState(false);
     const [status, setStatus] =useState<any>('')
      const [AbsentReason,setAbsentReason]=useState("")
-    const [users, setUsers] = useState<any[]>([]);
-      const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
+    
   const [StatusMessage,SetStatusMessage]=useState<any>("")
 
 const [SearchResult,setSearchResult]=useState("")
@@ -92,131 +101,190 @@ const getMonthKey = (record: any): string => {
 };
 
 
+useEffect(() => {
+  if (!ImpClientsInformation?.length) {
+    setClientsInformation({});
+    return;
+  }
+
+  console.time("FORMAT_DATA");
+
+  const formattedData: Record<string, any[]> = {};
+
+  for (const record of ImpClientsInformation) {
+    const monthKey = getMonthKey(record);
+
+    if (!formattedData[monthKey]) {
+      formattedData[monthKey] = [];
+    }
+
+    formattedData[monthKey].push({
+      invoice: record.invoice || "",
+      startDate: record.StartDate || "",
+      endDate: record.EndDate || "",
+      status: record.Status || "",
+      location: record.Address || "N/A",
+      clientPhone: record.ClientContact || "",
+      clientName: record.ClientName || "",
+      ClientId: record.ClientId || "",
+      patientName: record.patientName || "",
+      referralName: record.referralName || "",
+      hcp: "Assist",
+      VendorName: record.VendorName || "Curate",
+      Type: record.Type || "HCA",
+      hcpId: record.HCAId || "",
+      hcpName: record.HCAName || "",
+      hcpPhone: record.HCAContact || "",
+      hcpSource: record.hcpSource || "",
+      provider: record.provider || "",
+      payTerms: record.payTerms || "",
+      cTotal: Number(record.cTotal) || 0,
+      cPay: Number(record.cPay) || 0,
+      hcpTotal: Number(record.hcpTotal) || 0,
+      hcpPay: Number(record.hcpPay) || 0,
+      days: record.Attendance || [],
+      CareTakerPrice: record.CareTakerPrice
+        ? `${Math.round(
+            parseFloat(
+              String(record.CareTakerPrice).replace(/[^0-9.]/g, "")
+            )
+          )}`
+        : "",
+      Month: record.Month,
+      Replacement: record.Replacement,
+    });
+  }
+
+  console.timeEnd("FORMAT_DATA");
+
+  setClientsInformation(formattedData);
+}, [ImpClientsInformation]);
+
 
 const DateRange = new Date().toISOString().split("T")[0];
 
-const isSuccess = StatusMessage?.includes("Successfully");
-useEffect(() => {
-  const Fetch = async () => {
-    setIsChecking(true);
+// const isSuccess = StatusMessage?.includes("Successfully");
+// useEffect(() => {
+//   const Fetch = async () => {
+//     setIsChecking(true);
 
-    try {
-      console.time("TOTAL_FETCH");
+//     try {
+//       console.time("TOTAL_FETCH");
 
-      if (!loggedInEmail) {
-        router.push("/DashBoard");
-        return;
-      }
+//       if (!loggedInEmail) {
+//         router.push("/DashBoard");
+//         return;
+//       }
 
-      if (isSuccess) {
-        deploymentCache.length = 0;
-      }
+//       if (isSuccess) {
+//         deploymentCache.length = 0;
+//       }
 
-      const cacheKey = `${showMissingCalendar}`;
+//       const cacheKey = `${showMissingCalendar}`;
 
-      if (!isSuccess) {
-        const cached = deploymentCache.find(
-          (item) => item.key === cacheKey
-        );
+//       if (!isSuccess) {
+//         const cached = deploymentCache.find(
+//           (item) => item.key === cacheKey
+//         );
 
-        if (cached) {
-          setClientsInformation(cached.data);
-          setRegisterdUsers(cached.registeredUsers);
-          setUsers(cached.usersFullInfo);
+//         if (cached) {
+//           setClientsInformation(cached.data);
+//           setRegisterdUsers(cached.registeredUsers);
+//           setUsers(cached.usersFullInfo);
 
-          console.timeEnd("TOTAL_FETCH");
-          return;
-        }
-      }
+//           console.timeEnd("TOTAL_FETCH");
+//           return;
+//         }
+//       }
 
-      console.log("FETCH START", Date.now());
+//       console.log("FETCH START", Date.now());
 
-      const { data } = await axios.get("/api/Deployentinfo");
+//       const { data } = await axios.get("/api/Deployentinfo");
 
-      console.log("FETCH END", Date.now());
+//       console.log("FETCH END", Date.now());
 
-      const {
-        deploymentInfo = [],
-        registeredUsers = [],
-        usersFullInfo = [],
-      } = data.data || {};
+//       const {
+//         deploymentInfo = [],
+//         registeredUsers = [],
+//         usersFullInfo = [],
+//       } = data.data || {};
 
-      console.time("FORMAT_DATA");
+//       console.time("FORMAT_DATA");
 
-      const formattedData: Record<string, any[]> = {};
+//       const formattedData: Record<string, any[]> = {};
 
-      for (const record of deploymentInfo) {
-        const monthKey = getMonthKey(record);
+//       for (const record of deploymentInfo) {
+//         const monthKey = getMonthKey(record);
 
-        if (!formattedData[monthKey]) {
-          formattedData[monthKey] = [];
-        }
+//         if (!formattedData[monthKey]) {
+//           formattedData[monthKey] = [];
+//         }
 
-        formattedData[monthKey].push({
-          invoice: record.invoice || "",
-          startDate: record.StartDate || "",
-          endDate: record.EndDate || "",
-          status: record.Status || "",
-          location: record.Address || "N/A",
-          clientPhone: record.ClientContact || "",
-          clientName: record.ClientName || "",
-          ClientId: record.ClientId || "",
-          patientName: record.patientName || "",
-          referralName: record.referralName || "",
-          hcp: "Assist",
-          VendorName: record.VendorName || "Curate",
-          Type: record.Type || "HCA",
-          hcpId: record.HCAId || "",
-          hcpName: record.HCAName || "",
-          hcpPhone: record.HCAContact || "",
-          hcpSource: record.hcpSource || "",
-          provider: record.provider || "",
-          payTerms: record.payTerms || "",
-          cTotal: Number(record.cTotal) || 0,
-          cPay: Number(record.cPay) || 0,
-          hcpTotal: Number(record.hcpTotal) || 0,
-          hcpPay: Number(record.hcpPay) || 0,
-          days: record.Attendance || [],
-          CareTakerPrice: record.CareTakerPrice
-            ? `${Math.round(
-                parseFloat(
-                  String(record.CareTakerPrice).replace(
-                    /[^0-9.]/g,
-                    ""
-                  )
-                )
-              )}`
-            : "",
-          Month: record.Month,
-          Replacement: record.Replacement,
-        });
-      }
+//         formattedData[monthKey].push({
+//           invoice: record.invoice || "",
+//           startDate: record.StartDate || "",
+//           endDate: record.EndDate || "",
+//           status: record.Status || "",
+//           location: record.Address || "N/A",
+//           clientPhone: record.ClientContact || "",
+//           clientName: record.ClientName || "",
+//           ClientId: record.ClientId || "",
+//           patientName: record.patientName || "",
+//           referralName: record.referralName || "",
+//           hcp: "Assist",
+//           VendorName: record.VendorName || "Curate",
+//           Type: record.Type || "HCA",
+//           hcpId: record.HCAId || "",
+//           hcpName: record.HCAName || "",
+//           hcpPhone: record.HCAContact || "",
+//           hcpSource: record.hcpSource || "",
+//           provider: record.provider || "",
+//           payTerms: record.payTerms || "",
+//           cTotal: Number(record.cTotal) || 0,
+//           cPay: Number(record.cPay) || 0,
+//           hcpTotal: Number(record.hcpTotal) || 0,
+//           hcpPay: Number(record.hcpPay) || 0,
+//           days: record.Attendance || [],
+//           CareTakerPrice: record.CareTakerPrice
+//             ? `${Math.round(
+//                 parseFloat(
+//                   String(record.CareTakerPrice).replace(
+//                     /[^0-9.]/g,
+//                     ""
+//                   )
+//                 )
+//               )}`
+//             : "",
+//           Month: record.Month,
+//           Replacement: record.Replacement,
+//         });
+//       }
 
-      console.timeEnd("FORMAT_DATA");
+//       console.timeEnd("FORMAT_DATA");
 
-      if (!isSuccess) {
-        deploymentCache.push({
-          key: cacheKey,
-          data: formattedData,
-          registeredUsers,
-          usersFullInfo,
-        });
-      }
+//       if (!isSuccess) {
+//         deploymentCache.push({
+//           key: cacheKey,
+//           data: formattedData,
+//           registeredUsers,
+//           usersFullInfo,
+//         });
+//       }
 
-      setClientsInformation(formattedData);
-      setRegisterdUsers(registeredUsers);
-      setUsers(usersFullInfo);
+//       setClientsInformation(formattedData);
+//       setRegisterdUsers(registeredUsers);
+//       setUsers(usersFullInfo);
 
-      console.timeEnd("TOTAL_FETCH");
-    } catch (error) {
-      console.error("Fetch Error", error);
-    } finally {
-      setIsChecking(false);
-    }
-  };
+//       console.timeEnd("TOTAL_FETCH");
+//     } catch (error) {
+//       console.error("Fetch Error", error);
+//     } finally {
+//       setIsChecking(false);
+//     }
+//   };
 
-  Fetch();
-}, [isSuccess, showMissingCalendar, loggedInEmail, router]);
+//   Fetch();
+// }, [isSuccess, showMissingCalendar, loggedInEmail, router]);
 
 
 
@@ -227,7 +295,7 @@ useEffect(() => {
 
   const monthKey = `${selectedYear}-${selectedMonth}`;
   const data: any[] = ClientsInformation[monthKey] || [];
-
+console.log ("Check monthKey",monthKey)
 
   const daysInMonth = new Date(
     Number(selectedYear),
