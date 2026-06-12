@@ -69,6 +69,7 @@ import { UpdateInvoicePageStatus } from '@/Redux/reducer'
     const [UploadStatusMessage,setUploadStatusMessage]=useState("")
     const [StatusMessage,setStatusMessage]=useState("")
     const [form, setForm] = useState<StringMap>({});
+    const [dateWarning, setDateWarning] = useState("");
     const [isInvoiseEditing, setisInvoiseEditing] = React.useState(false);
     const [otherInputs, setOtherInputs] = useState<StringMap>({});
     const [AdvanceAmount,setAdvanceAmount]=useState<any>("")
@@ -145,6 +146,7 @@ useEffect(() => {
 }, [reduxFormData]);
 
 
+
 const handleInvoiseChange = (key: any, value: any) => {
   setInvoiseInformation((prev: any) => {
     const updated = {
@@ -152,12 +154,28 @@ const handleInvoiseChange = (key: any, value: any) => {
       [key]: value,
     };
 
-    
     if (key === "startDate" || key === "endDate") {
       updated.serviceDays = getDaysBetween(
         updated.startDate,
         updated.endDate
       );
+
+      if (updated.startDate && updated.endDate) {
+        const start = new Date(updated.startDate);
+        const end = new Date(updated.endDate);
+
+        const isSameMonth =
+          start.getMonth() === end.getMonth() &&
+          start.getFullYear() === end.getFullYear();
+
+        setDateWarning(
+          isSameMonth
+            ? ""
+            : "Start Date and End Date must be in the same month."
+        );
+      } else {
+        setDateWarning("");
+      }
     }
 
     return updated;
@@ -1411,6 +1429,12 @@ const updateInvoiceEditedInformation = async () => {
       {EditMessage}
     </p>
    )}
+
+   {dateWarning && (
+  <p className="text-red-500 text-sm mt-2">
+    {dateWarning}
+  </p>
+)}
 <button
   onClick={updateInvoiceEditedInformation}
                className={`flex items-center gap-2 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer

@@ -7678,6 +7678,14 @@ const Cluster = await clientPromise
   }
 }
 
+let dashboardCache: Record<
+  string,
+  {
+    data: any;
+    timestamp: number;
+  }
+> = {};
+
 export const GetDashboardData = async (userId: string) => {
   try {
     if (!userId) {
@@ -7686,6 +7694,17 @@ export const GetDashboardData = async (userId: string) => {
         message: "UserId is required",
         data: null,
       };
+    }
+
+    const now = Date.now();
+    const cacheKey = userId;
+
+    if (
+      dashboardCache[cacheKey] &&
+      now - dashboardCache[cacheKey].timestamp < 30 * 60 * 1000
+    ) {
+      console.log("DASHBOARD CACHE HIT");
+      return dashboardCache[cacheKey].data;
     }
 
     const cluster = await clientPromise;
@@ -7709,7 +7728,7 @@ export const GetDashboardData = async (userId: string) => {
           }
         ),
 
-       Users.find({}).toArray(),
+        Users.find({}).toArray(),
 
         UsersFullInfo.find(
           {},
@@ -7720,15 +7739,14 @@ export const GetDashboardData = async (userId: string) => {
           }
         ).toArray(),
 
-       Deployment.find(
-  {},
-  {
-    projection: { _id: 0 },
-  }
-).toArray(),
+        Deployment.find(
+          {},
+          {
+            projection: { _id: 0 },
+          }
+        ).toArray(),
       ]);
 
-    // decrypt profile
     const profile =
       profileRaw &&
       Object.fromEntries(
@@ -7738,18 +7756,6 @@ export const GetDashboardData = async (userId: string) => {
         ])
       );
 
-    // decrypt registered users
-    // const registeredUsers = registeredUsersRaw.map((user: any) => {
-    //   const decryptedUser: any = {};
-
-    //   for (const [key, value] of Object.entries(user)) {
-    //     decryptedUser[key] = safeDecrypt(value);
-    //   }
-
-    //   return decryptedUser;
-    // });
-
-    
     const safeUsers = registeredUsersRaw.map((user: any) => {
       const decryptedUser: any = {
         ...user,
@@ -7764,9 +7770,14 @@ export const GetDashboardData = async (userId: string) => {
           "content" in value
         ) {
           try {
-            decryptedUser[key] = decrypt(value as { iv: string; content: string });
+            decryptedUser[key] = decrypt(
+              value as { iv: string; content: string }
+            );
           } catch (e) {
-            console.warn(`Failed to decrypt field ${key} for user ${user._id}:`, e);
+            console.warn(
+              `Failed to decrypt field ${key} for user ${user._id}:`,
+              e
+            );
             decryptedUser[key] = value;
           }
         }
@@ -7775,7 +7786,6 @@ export const GetDashboardData = async (userId: string) => {
       return decryptedUser;
     });
 
-    // decrypt full info fields
     const fullInfo = fullInfoRaw.map((user: any) => {
       const info = user.HCAComplitInformation || {};
 
@@ -7792,7 +7802,9 @@ export const GetDashboardData = async (userId: string) => {
           "Phone No 2": safeDecrypt(info["Phone No 2"]),
           "Email Id": safeDecrypt(info["Email Id"]),
           "Client Aadhar No": safeDecrypt(info["Client Aadhar No"]),
-          "Patient Aadhar Number": safeDecrypt(info["Patient Aadhar Number"]),
+          "Patient Aadhar Number": safeDecrypt(
+            info["Patient Aadhar Number"]
+          ),
           "Alternative Client Contact": safeDecrypt(
             info["Alternative Client Contact"]
           ),
@@ -7800,7 +7812,7 @@ export const GetDashboardData = async (userId: string) => {
       };
     });
 
-    return {
+    const response = {
       success: true,
       data: {
         profile: profile || null,
@@ -7809,6 +7821,13 @@ export const GetDashboardData = async (userId: string) => {
         deployedLength: deployedLength || 0,
       },
     };
+
+    dashboardCache[cacheKey] = {
+      data: response,
+      timestamp: now,
+    };
+
+    return response;
   } catch (error) {
     console.error("Dashboard Fetch Error:", error);
 
@@ -7950,7 +7969,7 @@ export const GetAllUsersData = async () => {
     const now = Date.now();
 
     // ✅ Simple cache (30 sec)
-    if (cache && now - lastFetchTime < 30000) {
+    if (cache && now - lastFetchTime < 30 * 60 * 1000) {
       return cache;
     }
 
@@ -8112,7 +8131,7 @@ export const GetApplicationData = async () => {
 
   if (
     applicationCache &&
-    now - applicationCacheTime < 300000
+    now - applicationCacheTime < 30 * 60 * 1000
   ) {
     console.log("APPLICATION CACHE HIT");
     return applicationCache;

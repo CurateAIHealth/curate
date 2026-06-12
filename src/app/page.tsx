@@ -10,10 +10,11 @@ import { Sparkles, Star, Settings, User, LogIn, BriefcaseMedical, CircleEllipsis
 import FreeConsultationForm from '@/Components/Contactfill/page';
 import ContactSection from '@/Components/Contact/page';
 import ModernFooter from '@/Components/Footer/page';
-import { CurrentLoginUser, UpdateRegisterdType, UpdateTimeStamp } from '@/Redux/action';
+import { CurrentLoginUser, UpdateRegisterdType, UpdateTimeStamp, UpdateUserDetails } from '@/Redux/action';
 import { useDispatch } from 'react-redux';
 import { LoadingData } from '@/Components/Loading/page';
 import { StaffEmails } from '@/Lib/Content';
+import axios from 'axios';
 
 
 
@@ -58,22 +59,29 @@ const visibleReviews = showAllReviews
  
 
     try {
-      const ProfileInformation = await GetUserInformation(localValue);
-  
+      // const ProfileInformation = await GetUserInformation(localValue);
+ 
+const response = await axios.post("/api/Home", { localValue });
 
+console.log ("Check impoData----",response.
+data
+)
+
+const ProfileInformation:any = response.data;
+dispatch(UpdateUserDetails(ProfileInformation))
       const email = ProfileInformation?.Email?.toLowerCase();
       if (StaffEmails.includes(email)) {
         
                   //  const user = await GetUserInformation(localValue);
             
-                   dispatch(CurrentLoginUser(ProfileInformation?.Email))
+                   dispatch(CurrentLoginUser(ProfileInformation?.Email) as any)
         router.push("/DashBoard");
         return;
       }
 
       if (ProfileInformation?.FinelVerification === false) {
         if (ProfileInformation?.userType === "healthcare-assistant") {
-          dispatch(UpdateRegisterdType(ProfileInformation?.userType ))
+          dispatch(UpdateRegisterdType(ProfileInformation?.userType ) as any)
           router.push("/HCARegistraion");
           return;
         }else{

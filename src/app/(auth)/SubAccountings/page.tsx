@@ -21,6 +21,7 @@ export default function AccountingSub(){
       const stats=useSelector((state:any)=>state.DashBoardCount)
         const [showPermissionPopup, setShowPermissionPopup] = useState(false);
           const [LoginEmailPop,setLoginEmailPop]=useState(false)
+          const [isNavigating, setIsNavigating] = useState(false);
  
 
   const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
@@ -100,7 +101,7 @@ const handleLogout = () => {
             return;
           }
       // setShowSideHeadingsPopuo(true)
-      
+      setIsNavigating(true);
           switch (name) {
  
       case "Timesheet":
@@ -212,6 +213,14 @@ const handleLogout = () => {
           }
           }
         />
+                
+                      {isNavigating && (
+  <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+    <div className="bg-white px-6 py-4 rounded-lg">
+      Loading...
+    </div>
+  </div>
+)}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
                     
                       <PermissionDeniedPopup

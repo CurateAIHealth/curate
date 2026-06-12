@@ -359,3 +359,14 @@ default:
     return state
 }
 }
+
+export const UserDetails = (state: any = {}, action: any) => {
+    switch (action.type) {
+
+        case "UserCurrentDetails":
+            return action.payload;
+        default:
+            return state
+
+    }
+}

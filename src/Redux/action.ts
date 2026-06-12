@@ -418,3 +418,11 @@ export const getMonthYear = (dateStr: string) => {
 
   return { month, year };
 };
+
+
+export const UpdateUserDetails=(UpdatedData:any)=>{
+    return{
+        type:"UserCurrentDetails",
+        payload:UpdatedData
+    }
+}
