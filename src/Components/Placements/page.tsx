@@ -11,7 +11,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Info, Minimize2 } from "lucide-react";
 import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId, UpdateClientAttendanceStatus, GetApplicationData,  } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
-import { UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
+import { SetDeploymentInfo, setUsers, UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
 import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
@@ -361,7 +361,7 @@ const { data: UpdateFreezeStatus } = await axios.post(
 const PostRefunRequest = async (data: any) => {
 
   try {
-
+console.log ("Check Refund Data---------",data)
     SetActionStatusMessage("Please Wait....");
 
     const updateSalary = await PostRefundRequest(
@@ -497,6 +497,7 @@ const normalizedAttendance =
     Month:each.Month,
     Replacement:each.Replacement,
     ClientAttendance: each.ClientAttendance || [],
+    ReplacementDate:each.ReplacementDate
     
   };
 });
@@ -1062,92 +1063,133 @@ const UpdateReplacement = async (
   Available_HCP: any,
   Exsting_HCP: any
 ) => {
- SetActionStatusMessage("Please wait...");
-
-if(Available_HCP.HCPPrice==="Not Provided"){
-  SetActionStatusMessage("")
-  setShowReassignmentPopUp(!ShowReassignmentPopUp)
-setShowCareTakerPriceUpdate(true)
-
-
-
-return
-}
   try {
-   
+    SetActionStatusMessage("Please wait...");
 
-  
+    // Price validation
+    if (Available_HCP?.HCPPrice === "Not Provided") {
+      SetActionStatusMessage("");
+      setShowReassignmentPopUp(false);
+      setShowCareTakerPriceUpdate(true);
+      return;
+    }
+
+    // Basic validation
     if (!Available_HCP?.userId || !Exsting_HCP?.HCA_Id) {
       SetActionStatusMessage("Invalid HCP information.");
       return;
     }
 
     const localValue = localStorage.getItem("UserId");
-    if (!localValue) {
-      SetActionStatusMessage("User session expired. Please login again.");
+
+    if (!localValue?.trim()) {
+      SetActionStatusMessage(
+        "User session expired. Please login again."
+      );
       return;
     }
 
+    // Get logged-in user information
+    const Sign_in_UserInfo: any =
+      await GetUserInformation(localValue);
 
-    const Sign_in_UserInfo: any = await GetUserInformation(localValue);
     if (!Sign_in_UserInfo) {
-      SetActionStatusMessage("Unable to fetch user details.");
+      SetActionStatusMessage(
+        "Unable to fetch user details."
+      );
       return;
     }
 
-   
+    // Update replacement reason
     const postReasonRes = await UpdateReason(
       Available_HCP.userId,
       Exsting_HCP.HCA_Id,
       selectedReason,
       otherReason,
-       ReplacementDate,
-      ReplacementTime,
+      ReplacementDate,
+      ReplacementTime
     );
 
     if (!postReasonRes?.success) {
-      SetActionStatusMessage("Failed to update replacement reason.");
+      SetActionStatusMessage(
+        "Failed to update replacement reason."
+      );
       return;
     }
 
- 
-    const TimeStampData = `${Sign_in_UserInfo.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`;
+    const TimeStampData = `${Sign_in_UserInfo?.FirstName || ""} ${
+      Sign_in_UserInfo?.LastName || ""
+    }, Email: ${Sign_in_UserInfo?.Email || ""}`;
 
-    const UpdateReplacmentInfo = await UpdateReplacmentData(
-      Available_HCP,
-      Exsting_HCP,
-      TimeStampData,
-      ReplacementDate,
-      ReplacementTime,
-    );
+    // Update replacement data
+    const UpdateReplacmentInfo =
+      await UpdateReplacmentData(
+        Available_HCP,
+        Exsting_HCP,
+        TimeStampData,
+        ReplacementDate,
+        ReplacementTime
+      );
 
     if (!UpdateReplacmentInfo?.success) {
-      SetActionStatusMessage("Replacement update failed.");
+      SetActionStatusMessage(
+        "Replacement update failed."
+      );
       return;
     }
 
-  
+    // Status updates
     await Promise.all([
-      UpdateHCAnstatus(Exsting_HCP.HCA_Id, UpdatedCareTakerStatus),
-      UpdateHCAnstatusInFullInformation(Available_HCP.userId),
+      UpdateHCAnstatus(
+        Exsting_HCP.HCA_Id,
+        UpdatedCareTakerStatus
+      ),
+      UpdateHCAnstatusInFullInformation(
+        Available_HCP.userId
+      ),
+      DeleteHCAStatus(Exsting_HCP.HCA_Id),
     ]);
 
-  const reove=await DeleteHCAStatus(Exsting_HCP.HCA_Id)
+    SetActionStatusMessage(
+      "Replacement Updated, Please Wait Fetching new Data..."
+    );
 
+    const userId = localStorage.getItem("UserId");
 
-    SetActionStatusMessage("Replacement updated Successfully.");
-      setTimeout(() => {
-    setShowReassignmentPopUp(!ShowReassignmentPopUp)
-    setReplacementDate("")
-  }, 400);
+    if (userId) {
+      const { data } = await axios.post(
+        "/api/AdminPageInfo",
+        {
+          userId,
+          refreshType: "registeredUsers",
+        }
+      );
 
-   
+      console.log("Current Task------", data);
+
+      dispatch(
+        SetDeploymentInfo(
+          data?.data?.deployedLength || 0
+        )
+      );
+    }
+
+    setTimeout(() => {
+      setShowReassignmentPopUp(false);
+      setReplacementDate("");
+      router.push("/DashBoard");
+    }, 400);
   } catch (err: any) {
-    console.error("UpdateReplacement Error:", err);
-    SetActionStatusMessage("Something went wrong. Please try again.");
-  }
+    console.error(
+      "UpdateReplacement Error:",
+      err?.response?.data || err
+    );
 
-  
+    SetActionStatusMessage(
+      err?.message ||
+        "Something went wrong. Please try again."
+    );
+  }
 };
 
   const CreateInvoice = async (InvoiceData: any) => {
@@ -2627,7 +2669,7 @@ const EditDate =
                 className="px-2 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600"
                  onClick={() => {UpdateClient_UserId(c.Client_Id, c.name,c.HCA_Id),setAttenseceInformation(c),SetActionStatusMessage("")}}
               >
-                Full Month
+                Full Month 
               </button>}
             </Td>
           {/* {(isInvoiceDay || enableStatus) && (
@@ -3351,7 +3393,7 @@ onClick={EditAttendence}
 
  const record = TimeSheet_Info.ClientAttendance?.find((t: any) => {
   if (!t?.dateKey) return false;
-
+console.log("Check for Repleasment Date--------",TimeSheet_Info.ReplacementDate)
   const [year, month, date] = t.dateKey.split("-").map(Number);
   const parsed = new Date(year, month - 1, date);
 
@@ -3365,6 +3407,15 @@ onClick={EditAttendence}
           const today = new Date();
           const currentDateObj = new Date(SearchYear, SearchMonth-1, day);
           const isFuture = currentDateObj > today;
+
+      
+
+const replacementDate = TimeSheet_Info?.ReplacementDate
+  ? new Date(TimeSheet_Info.ReplacementDate)
+  : null;
+
+const isBeforeReplacementDate =
+  replacementDate && currentDateObj < replacementDate;
 
           const currentStatus =updatedAttendance?.[day]?.status ??
             (record?.Status === "Present"
@@ -3434,7 +3485,7 @@ className="
 
               <span
                 onClick={() => {
-                  if (isFuture) return;
+                  if (isFuture||isBeforeReplacementDate) return;
                   SetShowUpdateAttendece(!ShowUpdateAttendece);
                   SetParticularDate(day);
                   setEditDate(record?.dateKey?record?.dateKey:`${SearchYear}-0${SearchMonth}-${day<=9?
@@ -3444,7 +3495,7 @@ className="
                   setAbsentReason(record?.Reason || "");
                 }}
                 className={`text-[8px] px-2 py-[2px] rounded-full mt-1 cursor-pointer ${
-                  isFuture
+                  isFuture||isBeforeReplacementDate
                     ? "bg-gray-100 text-gray-300 cursor-not-allowed"
                     : "bg-slate-700 text-white hover:bg-slate-800"
                 }`}

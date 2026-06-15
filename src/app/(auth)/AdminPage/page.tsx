@@ -31,7 +31,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 ,Hourglass ,BadgeCheck, MapPin,FileCheck,FileX, Router, List, Calendar1 } from 'lucide-react';
-import { CurrrentPDRUserId, GetCurrentDeploymentData, Refresh, Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateClient, UpdateClientSuggetion, UpdateFetchedInformation, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
+import { CurrrentPDRUserId, GetCurrentDeploymentData, Refresh, SetDeploymentInfo, setFullInfo, setUsers, Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateClient, UpdateClientSuggetion, UpdateFetchedInformation, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
 import { ClientEnquiry_Filters, filterColors, HCPFilters, hyderabadAreas, LeadSources, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
 
@@ -55,10 +55,12 @@ import NotIntrestedTable from '@/Components/NotIntrested/page';
 export default function UserTableList() {
  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<any[]>([]);
+  // const [users, setUsers] = useState<any[]>([]);
   const [isChecking, setIsChecking] = useState(true);
   const [UserFirstName, setUserFirstName] = useState("");
-
+const users=useSelector((state:any)=>state.AdminUsers)
+const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
+const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
   const [HCPCurrentStatus,setHCPCurrentStatus]=useState("")
   const [SearchDate, SetSearchDate] = useState<any>(null)
   const now = new Date();
@@ -76,14 +78,14 @@ const [SearchResult, setSearchResult] = useState("")
   const [SelectedHCPSalaryId,setSelectedHCPSalaryId]=useState()
   const [showOptions,setShowOptions] = useState(false);
 const [searchLead, setSearchLead] = useState("");
-const [DeploymentInfo,SetDeploymentInfo]=useState<any[]>([])
+// const [DeploymentInfo,SetDeploymentInfo]=useState<any[]>([])
 const [showSuggestions, setShowSuggestions] = useState(true);
   const [ShowDeletePopUp, setShowDeletePopUp] = useState(false)
   const Status = ["Converted", "Waiting List", "Lost",];
   const EmailVerificationStatus = ['Verified', 'Pending'];
   const CurrentStatusOptions = ["Active", "Sick", "Leave", "Terminated"];
 const ProfileInformation=useSelector((state:any)=>state.Useriinformation)
-  const [UserFullInfo, setFullInfo] = useState([])
+  // const [UserFullInfo, setFullInfo] = useState([])
   const router = useRouter();
   const dispatch = useDispatch();
   const UpdateMainFilter = useSelector((state: any) => state.Main_Filter)
@@ -214,105 +216,97 @@ const ContetUserInterface = () => {
   }
 
   
+const FetchDashboardData = async (
+  refreshType?:
+    | "profile"
+    | "registeredUsers"
+    | "fullInfo"
+    | "deployment"
+) => {
+  try {
+    const userId = localStorage.getItem("UserId");
+
+    if (!userId) return;
+
+    setIsChecking(true);
+
+    if (!refreshType) {
+      const cached = localStorage.getItem(
+        DASHBOARD_CACHE_KEY
+      );
+
+      if (cached) {
+        const parsed = JSON.parse(cached);
+
+        if (
+          Date.now() - parsed.timestamp <
+          CACHE_TTL
+        ) {
+          const {
+            profile,
+            registeredUsers,
+            fullInfo,
+            deployedLength,
+          } = parsed.data;
+
+         
+          dispatch( setUsers(registeredUsers))
+          setUserFirstName(profile?.FirstName);
+          setLoginEmail(profile?.Email);
+         dispatch(setFullInfo(fullInfo))
+         dispatch( SetDeploymentInfo(deployedLength))
+          setIsChecking(false);
+
+          return;
+        }
+      }
+    }
+
+    console.time("DASHBOARD_API");
+
+    const { data: result } = await axios.post(
+      "/api/AdminPageInfo",
+      {
+        userId,
+        refreshType,
+      }
+    );
+
+    console.timeEnd("DASHBOARD_API");
+
+    if (!result?.success) return;
+
+    const {
+      profile,
+      registeredUsers,
+      fullInfo,
+      deployedLength,
+    } = result.data;
+
+    localStorage.setItem(
+      DASHBOARD_CACHE_KEY,
+      JSON.stringify({
+        timestamp: Date.now(),
+        data: result.data,
+      })
+    );
+
+    dispatch( setUsers(registeredUsers))
+    setUserFirstName(profile?.FirstName);
+    setLoginEmail(profile?.Email);
+         dispatch(setFullInfo(fullInfo))
+    dispatch( SetDeploymentInfo(deployedLength))
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setIsChecking(false);
+  }
+};
 useEffect(() => {
   if (!authChecked) return;
 
-  let mounted = true;
-
-  const isInitialLoad = updatedStatusMsg === "";
-  const isSuccessUpdate = updatedStatusMsg?.includes("Successfully");
-
-  if (!isInitialLoad && !isSuccessUpdate) return;
-
-  const fetchFreshData = async () => {
-    try {
-      const userId = localStorage.getItem("UserId");
-
-      if (!userId) return;
-
-      setIsChecking(true);
-
-      if (isInitialLoad) {
-        const cached = localStorage.getItem(DASHBOARD_CACHE_KEY);
-
-        if (cached) {
-          const parsed = JSON.parse(cached);
-
-          if (Date.now() - parsed.timestamp < CACHE_TTL) {
-            const {
-              profile,
-              registeredUsers,
-              fullInfo,
-              deployedLength,
-            } = parsed.data;
-
-            if (mounted) {
-              setUsers(registeredUsers);
-              setUserFirstName(profile?.FirstName);
-              setLoginEmail(profile?.Email);
-              setFullInfo(fullInfo);
-              SetDeploymentInfo(deployedLength);
-              setIsChecking(false);
-            }
-
-            return;
-          }
-        }
-      }
-
-      console.time("DASHBOARD_API");
-
-      const { data: result } = await axios.post(
-        "/api/AdminPageInfo",
-        {
-          userId,
-        }
-      );
-
-      console.timeEnd("DASHBOARD_API");
-
-      console.log(
-        "Check imported Information------",
-        result
-      );
-
-      if (!mounted || !result?.success) return;
-
-      const {
-        profile,
-        registeredUsers,
-        fullInfo,
-        deployedLength,
-      } = result.data;
-
-      localStorage.setItem(
-        DASHBOARD_CACHE_KEY,
-        JSON.stringify({
-          timestamp: Date.now(),
-          data: result.data,
-        })
-      );
-
-      setUsers(registeredUsers);
-      setUserFirstName(profile?.FirstName);
-      setLoginEmail(profile?.Email);
-      setFullInfo(fullInfo);
-      SetDeploymentInfo(deployedLength);
-    } catch (e) {
-      console.error("Fetch error:", e);
-    } finally {
-      if (mounted) {
-        setIsChecking(false);
-      }
-    }
-  };
-
-  fetchFreshData();
-
-  return () => {
-    mounted = false;
-  };
-}, [authChecked, updatedStatusMsg]);
+  FetchDashboardData();
+}, [authChecked]);
 useEffect(() => {
   const email = cachedUserInfo?.Email?.toLowerCase();
   if (!email) return;
@@ -347,10 +341,39 @@ const GetHCPTypeCount = (HCPType: string) => {
       dispatch(Refresh(`Updating Client Status....`))
     try {
       const res = await UpdateUserContactVerificationstatus(UserId, e);
-      if (res?.success === true) {
+      
+
+
+
+      if (res.success) {
+      dispatch(
+        Refresh("Status Updated,Please Wait Fetching new Data......")
+      );
+      const userId =
+        localStorage.getItem("UserId");
+
+      const { data } = await axios.post(
+        "/api/AdminPageInfo",
+        {
+          userId,
+          refreshType: 
+            "registeredUsers",
+            
+        }
+      );
+
+      console.log (
+"Current Task------",data
+      )
+
+      dispatch(setUsers(
+        data.data.registeredUsers
+      ))
+
        
-          dispatch(Refresh(`${first} Client Status Updated Successfully`))
-      }
+
+      dispatch(Refresh(`${first} Client Status Updated Successfully`))
+    }
     } catch (err: any) {
       console.error(err);
     }
@@ -379,22 +402,67 @@ const GetHCPTypeCount = (HCPType: string) => {
   const filteredLeads = LeadSources.filter((lead: string) =>
   lead.toLowerCase().includes(searchLead.toLowerCase())
 );
-  const UpdateCurrentstatus = async (first: string, e: string, UserId: any) => {
-  
-      dispatch(Refresh(`Updating ${first} Current Status....`))
-    try {
-      const res = await UpdateUserCurrentstatusInHCPView(UserId, e);
-    
-        dispatch(Refresh(res.message))
+ const UpdateCurrentstatus = async (
+  first: string,
+  e: string,
+  UserId: any
+) => {
+  dispatch(
+    Refresh(
+      `Updating ${first} Current Status....`
+    )
+  );
 
-    } catch (err: any) {
-      console.error(err);
+  try {
+    const res =
+      await UpdateUserCurrentstatusInHCPView(
+        UserId,
+        e
+      );
+console.log (
+"Current------",res
+      )
+    if (res.success) {
+      dispatch(
+        Refresh("Status Updated,Please Wait Fetching new Data......")
+      );
+      const userId =localStorage.getItem("UserId");
+
+      const { data } = await axios.post(
+        "/api/AdminPageInfo",
+        {
+          userId,
+          refreshType: [
+            "registeredUsers",
+            "fullInfo",
+          ],
+        }
+      );
+
+      console.log (
+"Current Task------",data
+      )
+
+      dispatch(setUsers(
+        data.data.registeredUsers
+      ))
+
+       dispatch(setFullInfo(
+        data.data.fullInfo
+      ))
+
+      dispatch(
+        Refresh(res.message)
+      );
     }
-  };
+  } catch (err) {
+    console.error(err);
+  }
+};
 
 
-  const callEnquiryArray = users.filter((each) => each.userType === 'CallEnquiry')
-  const NotIntrestedArray= users.filter((each) => each.Type === 'Irrelevant')
+  const callEnquiryArray = users.filter((each:any) => each.userType === 'CallEnquiry')
+  const NotIntrestedArray= users.filter((each:any) => each.Type === 'Irrelevant')
 
  const GetUserCurrentStatus:any=(UserId:any)=>{
     try{
@@ -416,7 +484,7 @@ const monthNames = [
     }
   }
 
-  const clientsData= users.filter((each) => each.userType === 'patient')
+  const clientsData= users.filter((each:any) => each.userType === 'patient')
 
   const Finel = users.map((each: any) => ({
     id: each.userId,
@@ -450,7 +518,7 @@ const monthNames = [
   }));
 
   const UpdatedFilterUserType = Finel
-  .filter((each) => {
+  .filter((each:any) => {
 
 
   
@@ -564,7 +632,7 @@ const monthNames = [
   };
 
 
-  const MonthlyCount = Finel.filter((each) =>
+  const MonthlyCount = Finel.filter((each:any) =>
     filterByMonthAndYear(each, SearchMonth, SearchYear)&&!GetUserCurrentStatus(each.userId)
   );
 
@@ -1043,7 +1111,7 @@ const UpdatePopup = async (a: any) => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {UpdatedFilterUserType.map((user, index) => (
+                        {UpdatedFilterUserType.map((user:any, index:any) => (
                           <tr
                             key={index}
                             
@@ -1648,7 +1716,16 @@ const UpdatePopup = async (a: any) => {
                         <div>{user?.PDRStatus==="Filled" ?
   <span className="inline-flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:shadow-lg
                    bg-emerald-100 text-emerald-600">
-    <FileCheck size={18} strokeWidth={2.2} onClick={() => UpdatePopup(user)}/>
+<FileX
+  size={18}
+  strokeWidth={2.2}
+  onClick={() => {
+    router.push("/NewLead");
+
+    dispatch(CurrrentPDRUserId(user.userId));
+    dispatch(Refresh("Please Wait......"));
+  }}
+/>
   </span>:  <span className="inline-flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:shadow-lg
                    bg-red-100 text-red-600">
     <FileX size={18} strokeWidth={2.2}  onClick={()=>{dispatch(CurrrentPDRUserId(user.userId)) ; dispatch(Refresh("Please Wait......"));router.push("/NewLead")}}/>
@@ -2136,7 +2213,7 @@ const handleSave = async (data: any) => {
                       {
                         UpdateMainFilter === "Call Enquiry"
                           ? `${each} (${MonthlyCount?.filter(
-                            (Try) => (Try.ClientStatus === each && Try.userType==="patient")|| Try.userType === each||Try.Type === each
+                            (Try:any) => (Try.ClientStatus === each && Try.userType==="patient")|| Try.userType === each||Try.Type === each
                           )?.length || 0
                           })`
                           : each
@@ -2186,7 +2263,7 @@ const handleSave = async (data: any) => {
         `}
       >
  {each}({MonthlyCount?.filter(
-                            (Try) => Try.PreviewUserType === each &&Try.userType==="healthcare-assistant"
+                            (Try:any) => Try.PreviewUserType === each &&Try.userType==="healthcare-assistant"
                           )?.length || 0
                           })
       </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { CircleX } from "lucide-react";
@@ -38,8 +38,17 @@ export default function PassbookPopup({
   data,
 }: PassbookProps) {
   const pdfRef = useRef<HTMLDivElement>(null);
+  const [TransactionView, setTransactionView] = useState(true);
+
+  useEffect(() => {
+    if (open) {
+      setTransactionView(true);
+    }
+  }, [open]);
 
   if (!open) return null;
+
+ 
 
   const downloadPDF = async () => {
     const input = pdfRef.current;
@@ -210,9 +219,16 @@ export default function PassbookPopup({
           <p><span className="text-slate-400">Address:</span> <span className="font-medium">{data.Adress}</span></p>
         </div>
       </div>
+      
     </div>
 
   </div>
+  <button
+  onClick={()=>setTransactionView(!TransactionView)}
+  className="m-2 px-4 py-2 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all duration-200 hover:shadow-md"
+>
+   {TransactionView?"View Transactions":"View Servie Information"}
+</button>
 </div>
 
           {/* Table */}

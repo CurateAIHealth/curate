@@ -18,6 +18,7 @@ export default function RefundPopup({ isOpen, onClose, data,CompliteInfo, onSubm
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [showBankPopup, setShowBankPopup] = useState(false);
+  const [RefundData,setRefundData]=useState(new Date().toISOString().split("T")[0])
 
 const [bankDetails, setBankDetails] = useState({
   accountNumber: "",
@@ -118,9 +119,12 @@ const handleBankChange = async(e: any) => {
     if (!reason) return;
 
     if (refundType === "partial" && (!amount || Number(amount) <= 0)) return;
-const WorkingDays=getDaysBetween(a.StartDate, new Date().toISOString().split("T")[0])
-const RefundDays=getDaysBetween(new Date().toISOString().split("T")[0], a.EndDate)-1
-
+const WorkingDays=getDaysBetween(a.StartDate, RefundData)
+const RefundDays=getDaysBetween(RefundData, a.EndDate)-1
+if (reason===""){
+  alert("Please Select Reason")
+  return
+}
     onSubmit({
       ...data,
       refundType,
@@ -132,12 +136,12 @@ const RefundDays=getDaysBetween(new Date().toISOString().split("T")[0], a.EndDat
     isProfit,
     resultAmount
     });
-
+setRefundData("")
     onClose();
   };
 
  
-const RefundDays=getDaysBetween(new Date().toISOString().split("T")[0], data.EndDate)
+const RefundDays=getDaysBetween(RefundData, data.EndDate)
 
 
 const perDayCharge = Number(rupeeToNumber(data.ServiceCharge).toFixed(2));
@@ -147,7 +151,7 @@ const perDayHCP =
 
 // Days actually served
 const workedDays = Number(
-  getDaysBetween(data.StartDate, new Date().toISOString().split("T")[0])
+  getDaysBetween(data.StartDate, RefundData)
 );
 
 // Profit per day
@@ -179,8 +183,21 @@ const isProfit = resultAmount >= 0;
           <p><span className="font-medium">Client:</span> {data.name}</p>
           <p><span className="font-medium">Patient:</span> {data.PatientName}</p>
           <p><span className="font-medium">Duration:</span> {data.StartDate} → {data.EndDate } </p>
-          <p><span className="font-medium">Service Days:</span> {getDaysBetween(data.StartDate,new Date().toISOString().split("T")[0])} Days</p>
-                   <p><span className="font-medium">Refund Days:</span> {RefundDays-1} Days</p>
+<p>
+  <span className="font-medium">Refund Date:</span>{" "}
+  <input
+    type="date"
+    value={  new Date(RefundData).toISOString().split("T")[0] || ""}
+    onChange={(e) =>
+      setRefundData(
+        new Date(e.target.value).toISOString().split("T")[0]
+      )
+    }
+    className="border rounded px-2 py-1"
+  />
+</p>
+          <p><span className="font-medium">Service Days:</span> {getDaysBetween(data.StartDate,RefundData)} Days</p>
+                   <p><span className="font-medium">Refund Days:</span> {getDaysBetween(data.EndDate,RefundData)-1} Days</p>
           <p><span className="font-medium">Charges:</span>   <span>
                   ₹{(
                     getDaysBetween(data.StartDate, data.EndDate) *
@@ -209,7 +226,7 @@ const isProfit = resultAmount >= 0;
  
     <div className="flex flex-col items-center justify-center min-w-[180px] bg-green-200 rounded-2xl shadow-md p-1 border border-gray-100">
       <p className="text-sm text-green-800 mb-1">Service Bill</p>
-      <p className="text-sm font-semibold text-gray-900">₹ {Number(getDaysBetween(data.StartDate,new Date().toISOString().split("T")[0]))*Number(rupeeToNumber(data.ServiceCharge).toFixed(2))}</p>
+      <p className="text-sm font-semibold text-gray-900">₹ {Number(getDaysBetween(data.StartDate,RefundData))*Number(rupeeToNumber(data.ServiceCharge).toFixed(2))}</p>
     </div>
 
    
