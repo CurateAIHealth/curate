@@ -31,7 +31,7 @@ export default async function handler(
     console.time("API_DASHBOARD");
 
     if (refreshType) {
-      ClearDashboardCache(userId, refreshType);
+      ClearDashboardCache(userId, [refreshType]);
 
       console.log(
         `Dashboard cache cleared for ${refreshType}`
