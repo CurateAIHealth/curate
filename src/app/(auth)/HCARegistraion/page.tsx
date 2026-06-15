@@ -654,7 +654,7 @@ const HEIGHT_OPTIONS = Array.from(
         return;
       }
 
-      setTimeout(async () => {
+      
         try {
 
           const dob = new Date(form.dateOfBirth);
@@ -756,7 +756,7 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
        
             setUpdatedStatusMessage("Creating account and saving profile...");
            const PrimaryDetails = await HCARegistration(payload);
-console.log ("Check Primary Details------",PrimaryDetails)
+
 if (!PrimaryDetails.success===true) {
   setUpdatedStatusMessage(
     "Failed to save registration details."
@@ -764,7 +764,6 @@ if (!PrimaryDetails.success===true) {
   return;
 }
 
-console.log ("Check Finel Flow------",FinelForm)
 
 const Complitinfo = await PostHCAFullRegistration(FinelForm);
 console.log("Check Resistration------",Complitinfo)
@@ -917,7 +916,7 @@ await UpdateFinelVerification(generatedUserId);
           console.error("Submission Error:", error);
           setUpdatedStatusMessage("Something went wrong. Please try again.");
         }
-      }, 0);
+  
     },
     [
       form,

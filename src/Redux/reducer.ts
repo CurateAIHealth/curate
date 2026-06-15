@@ -370,3 +370,34 @@ export const UserDetails = (state: any = {}, action: any) => {
 
     }
 }
+
+
+export const UsersForAdmin = (state: any = [], action: any) => {
+    switch (action.type) {
+        case "CurrentInformation":
+            return action.payload;
+        default:
+            return state
+    }
+}
+
+
+export const FullInfoForAdmin=(state: any = [], action: any)=>{
+    switch(action.type){
+        case "CurrentFullInformation":
+            return action.payload;
+            default:
+                return state
+    }
+}
+
+
+
+export const DeploymentAdminInfo=(state:any=[],action:any)=>{
+    switch(action.type){
+        case "CurrentDeployInfo":
+            return action.payload;
+            default:
+                return state
+    }
+}

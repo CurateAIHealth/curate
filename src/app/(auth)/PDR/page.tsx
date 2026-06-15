@@ -171,7 +171,7 @@ const handleInvoiseChange = (key: any, value: any) => {
         setDateWarning(
           isSameMonth
             ? ""
-            : "Start Date and End Date must be in the same month."
+            : "⚠ Both Service Start and End Dates in Same Month!"
         );
       } else {
         setDateWarning("");

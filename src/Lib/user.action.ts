@@ -3108,6 +3108,7 @@ export const UpdateReplacmentData = async (
           HCAId: Available_HCP.userId,
           HCAName: Available_HCP.FirstName,
           HCAContact: Available_HCP.Contact,
+          ReplacementDate: new Date(ReplacementDate).toISOString().split("T")[0],
           // CareTakerPrice:Available_HCP.CareTakerPrice,
           Replacement:true,
           Attendance: [attendanceEntry]

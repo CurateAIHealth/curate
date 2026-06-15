@@ -426,3 +426,28 @@ export const UpdateUserDetails=(UpdatedData:any)=>{
         payload:UpdatedData
     }
 }
+
+
+export const setUsers=(DataFromDb:any)=>{
+    return{
+        type:"CurrentInformation",
+        payload:DataFromDb
+    }
+}
+
+
+export const setFullInfo=(FullInfoData:any)=>{
+    return{
+        type:"CurrentFullInformation",
+        payload:FullInfoData
+    }
+}
+
+
+
+export const SetDeploymentInfo=(FullDeployData:any)=>{
+    return{
+        type:"CurrentDeployInfo",
+        payload:FullDeployData
+    }
+}

@@ -2768,6 +2768,7 @@ export  const ImportedinvoiceData = {
   
       ALL: [
         "tsiddu805@gmail.com",
+        "kirancuratehealth@gmail.com",
         "admin@curatehealth.in",
         "sravanthicurate@gmail.com",
         "srinivasnew0803@gmail.com",

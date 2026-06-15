@@ -4,12 +4,6 @@ import {
 } from "@/Lib/auth";
 import { NextApiRequest, NextApiResponse } from "next";
 
-type RefreshType =
-  | "profile"
-  | "registeredUsers"
-  | "fullInfo"
-  | "deployment";
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -27,27 +21,21 @@ export default async function handler(
       refreshType,
     }: {
       userId: string;
-      refreshType?: RefreshType | RefreshType[];
+      refreshType?:
+        | "profile"
+        | "registeredUsers"
+        | "fullInfo"
+        | "deployment";
     } = req.body;
 
     console.time("API_DASHBOARD");
 
     if (refreshType) {
-      if (Array.isArray(refreshType)) {
-        ClearDashboardCache(userId, refreshType);
+      ClearDashboardCache(userId, refreshType);
 
-        console.log(
-          `Dashboard cache cleared for ${refreshType.join(
-            ", "
-          )}`
-        );
-      } else {
-        ClearDashboardCache(userId, [refreshType]);
-
-        console.log(
-          `Dashboard cache cleared for ${refreshType}`
-        );
-      }
+      console.log(
+        `Dashboard cache cleared for ${refreshType}`
+      );
     }
 
     const result = await GetDashboardData(userId);
