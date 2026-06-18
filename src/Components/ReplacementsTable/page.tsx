@@ -1,13 +1,14 @@
 "use client";
-import { filterColors, Placements_Filters, years } from "@/Lib/Content";
-import { GetReasonsInfoInfo, GetRegidterdUsers, GetReplacementInfo, GetUsersFullInfo } from "@/Lib/user.action";
+import { filterColors, months, Placements_Filters, years } from "@/Lib/Content";
+import { GetReasonsInfoInfo, GetRegidterdUsers, GetReplacementInfo, GetUsersFullInfo, GetUsersFullInfoForRepleament } from "@/Lib/user.action";
 import { UpdateClient, UpdateMonthFilter, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import { useRouter } from "next/navigation";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { LoadingData } from "../Loading/page";
-import { AssignSuitableIcon } from "@/Lib/Actions";
+import { AssignSuitableIcon, getDaysInMonth } from "@/Lib/Actions";
+import { Info, Minimize2 } from "lucide-react";
 
 let ReplacementCach : any[] | null = null;
 let ReplacementReasonsCache: any[] | null = null;
@@ -20,43 +21,37 @@ const ReplacementTable = ({ StatusMessage }: any) => {
   const [isChecking, setIsChecking] = useState(true);
  const now = new Date();
 
-  const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
+  // const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
 const month=useSelector((state:any)=>state.FilterMonth) 
 const year=useSelector((state:any)=>state.FilterYear) 
-const [HCPSalaryData,setHCPSalaryData]=useState<any[]>([]);
+const [HCPSalaryData,setHCPSalaryData]=useState<any>([]);
 const [ReplacementReasons,setReplacementReasons]=useState<any[]>([]);
 const [showPopup, setShowPopup] = useState(false);
+const [showFullMonth,setShowFullMonth]=useState(false)
+const [attendanceInfo,setAttendenceInfo]=useState<any>()
 const [popupInfo, setPopupInfo] = useState("");
 const dispatch=useDispatch()
 const router=useRouter()
 useEffect(() => {
-  const Fetch = async () => {
+  const fetchData = async () => {
     try {
       if (ReplacementCach?.length && ReplacementReasonsCache?.length) {
         setRawData(ReplacementCach);
         setReplacementReasons(ReplacementReasonsCache);
-        setHCPSalaryData(compliteHCPFullInfo ?? []);
-        setRegisterdUsers(RegisterdCacheInfo ?? []);
-        setIsChecking(false);
+        setHCPSalaryData(compliteHCPFullInfo || []);
         return;
       }
 
-      const [
-        registeredUsersData,
+      const response = await fetch("/api/replacement-info");
+      const result = await response.json();
+
+      if (!result.success) return;
+
+      const {
         placementInformation,
         replacementReasons,
         hcpFullInfo,
-      ] = await Promise.all([
-        GetRegidterdUsers(),
-        GetReplacementInfo(),
-        GetReasonsInfoInfo(),
-        GetUsersFullInfo(),
-      ]);
-
-      if (!placementInformation || placementInformation.length === 0) {
-        setIsChecking(false);
-        return;
-      }
+      } = result;
 
       const formatted = placementInformation.map((record: any) => ({
         CurrentHCA_id: record.HCAId || "",
@@ -67,11 +62,11 @@ useEffect(() => {
         endDate: record.EndDate || "",
         status: record.Status || "Inactive",
         location: record.Address || "N/A",
-        NewHCA: record.NewHCAName,
+        NewHCA: record.NewHCAName || "",
         clientName: record.ClientName || "",
         clientPhone: record.ClientContact || "",
         ClientId: record.ClientId || "",
-        CareTakerPrice: record.CareTakerPrice,
+        CareTakerPrice: record.CareTakerPrice || 0,
         patientName: record.patientName || "",
         referralName: record.referralName || "",
         hcpName: record.HCAName || "",
@@ -84,26 +79,29 @@ useEffect(() => {
         hcpTotal: Number(record.hcpTotal) || 0,
         hcpPay: Number(record.hcpPay) || 0,
         days: record.Attendance || [],
+        ReplacementDate:record.ReplacementDate,
       }));
 
-      ReplacementCach = formatted ?? [];
-      ReplacementReasonsCache = replacementReasons ?? [];
-      RegisterdCacheInfo = registeredUsersData ?? [];
-compliteHCPFullInfo=hcpFullInfo ?? []
+      ReplacementCach = formatted;
+      ReplacementReasonsCache = replacementReasons;
+      compliteHCPFullInfo = hcpFullInfo;
+
       setRawData(formatted);
-      setReplacementReasons(replacementReasons ?? []);
-      setHCPSalaryData(hcpFullInfo ?? []);
-      setRegisterdUsers(registeredUsersData ?? []);
-      setIsChecking(false);
+      setReplacementReasons(replacementReasons);
+      setHCPSalaryData(hcpFullInfo);
     } catch (error) {
-      setIsChecking(false);
       console.error(error);
+    } finally {
+      setIsChecking(false);
     }
   };
 
-  Fetch();
+  fetchData();
 }, [StatusMessage]);
-  
+  const NumberOfDaysInMonth = getDaysInMonth(
+    Number(month),
+    Number(year)
+  );
   const ShowDompleteInformation = async (userId: any, ClientName: any) => {
     if (userId) {
       dispatch(UpdateClient(ClientName));
@@ -112,7 +110,22 @@ compliteHCPFullInfo=hcpFullInfo ?? []
       router.push("/UserInformation");
     }
   };
+const getStatus = (dayInfo: any) => {
+  const admin = dayInfo?.AdminAttendece;
+  const hcp = dayInfo?.HCPAttendence;
 
+  // Attendance not marked
+  if (admin === undefined && hcp === undefined) return "-";
+
+  // Present
+  if (admin && hcp) return "P";
+
+  // Absent
+  if (!admin && !hcp) return "A";
+
+  // Half Present
+  return "H";
+};
 const filteredData = useMemo(() => {
   return rawData.filter((item) => {
     const searchText = search.toLowerCase();
@@ -162,41 +175,44 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
 
 
 
-   const GetHCPGender = (A: any) => {
-    if (!HCPSalaryData?.length) return "Not Entered";
+  //  const GetHCPGender = (A: any) => {
+  //   if (!HCPSalaryData?.length) return "Not Entered";
 
-    const address =
-      HCPSalaryData
-        ?.map((each: any) => each?.HCAComplitInformation)
-        ?.find((info: any) => info?.UserId === A)
-      ?.['Gender']||"Not Provided";
+  //   const address =
+  //     HCPSalaryData
+  //       ?.map((each: any) => each?.HCAComplitInformation)
+  //       ?.find((info: any) => info?.UserId === A)
+  //     ?.['Gender']||"Not Provided";
 
-    return address ?? "Not Entered";
-  };
+  //   return address ?? "Not Entered";
+  // };
 
 
-     const GetHCPType = (A: any) => {
-    if (!RegisterdUsers?.length || !A) return "Not Entered";
+  //    const GetHCPType = (A: any) => {
+  //   if (!RegisterdUsers?.length || !A) return "Not Entered";
 
-    const CurrentPreviewUserType:any =
-      RegisterdUsers.filter((each:any)=>each.userId===A)
+  //   const CurrentPreviewUserType:any =
+  //     RegisterdUsers.filter((each:any)=>each.userId===A)
 
-    return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
-  };
+  //   return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
+  // };
 
-const GetHCPSalary=(A:any)=>{
-  try{
-const HCPSalaryInfo=HCPSalaryData.map((each:any)=>each.HCAComplitInformation
-)
+const GetHCPSalary = (userId: string) => {
+  try {
 
-const FinelExpectedSalaryInfo:any=HCPSalaryInfo.filter((each:any)=>each.UserId===A)
+    const Employee=HCPSalaryData.map((each:any)=>each.
+HCAComplitInformation)
+    const employee = Employee
+      ?.find((item: any) => item?.UserId === userId);
 
-return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||null
-
-  }catch(err:any){
-
+    return Math.ceil(employee?.PaymentforStaff/30)
+      
+  } catch (err) {
+    console.error(err);
+    return 0;
   }
-}
+};
+
 
 
  if (isChecking) {
@@ -257,21 +273,157 @@ return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||nul
       ))}
         </select>
       </div>
+{showFullMonth && (
+<div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2 md:p-4">
+  <div className="bg-white w-full sm:w-[90vw] md:w-[80vw] lg:w-[60vw] h-[85vh] sm:h-[82vh] md:h-[80vh] lg:h-[76vh] max-w-4xl rounded-xl shadow-xl overflow-hidden flex flex-col">
+    <div className="flex items-center justify-between px-4 py-3  shrink-0">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl flex items-center justify-center shadow">
+          <img
+            src="/Icons/Curate-logoq.png"
+            alt="Company Logo"
+            className="h-6 w-6 object-contain"
+          />
+        </div>
 
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#ff1493] font-semibold">
+           {attendanceInfo.clientName}
+          </p>
+          <h2 className="text-lg md:text-xl font-bold text-slate-800">
+            Attendance Dashboard
+          </h2>
+       <p className="text-xs text-gray-400">
+  {
+    months.find(
+      (impmonth) => impmonth.value === String(month).padStart(2, "0")
+    )?.name
+  }{" "}
+  {year}
+</p>
+        </div>
+      </div>
+
+      <button
+        onClick={() => setShowFullMonth(false)}
+        className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
+      >
+        <Minimize2 size={16} />
+      </button>
+    </div>
+
+    <div className="flex-1 p-2 md:p-3">
+      <div className="grid grid-cols-7 gap-2 h-full">
+        {Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
+          const today = new Date().getDate();
+         const dateKey = `${year}-${String(month).padStart(2, "0")}-${String(
+  i + 1
+).padStart(2, "0")}`;
+
+const dayInfo = attendanceInfo.days?.find((item: any) => {
+  const attendanceDate = item?.dateKey
+    ? item.dateKey
+    : new Date(item?.AttendenceDate).toISOString().split("T")[0];
+
+  return attendanceDate === dateKey;
+});
+          const dayStatus = dayInfo?.status ?? "-";
+          const clientName = dayInfo?.clientName ?? "";
+          const UpdatedBy = dayInfo?.UpdatedBy ?? "-";
+          const AbsentReason=dayInfo?.Reason?? "-";
+          const AttendecStatus:any=getStatus(dayInfo)
+       console.log ("Checking----",AttendecStatus)
+          const currentDate = new Date();
+currentDate.setHours(0, 0, 0, 0);
+
+const cellDate = new Date(
+  Number(year),
+  Number(month) - 1,
+  i + 1
+);
+cellDate.setHours(0, 0, 0, 0);
+
+const isFutureDate = cellDate > currentDate;
+
+          return (
+            <div
+              key={i}
+              className=" rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 "
+            >
+              <span className="text-[10px] font-semibold text-gray-500 uppercase">
+                Day {i + 1} 
+              </span>
+
+              {AttendecStatus === "-" ? (
+                <>
+                  <div className=" rounded-full bg-gray-100 flex items-center justify-center mt-1">
+                     <span
+                className={`text-[8px] w-fit font-medium font-semibold px-2 py-1 rounded bg-gray-300 text-gray-500 border-gray-300`}
+              >
+             Not Marked
+              </span>
+                  </div>
+
+                  <span className="text-[8px] text-gray-400 truncate max-w-[70px]">
+                    {clientName}
+                  </span>
+
+               
+                </>
+              ) : (
+                <>
+                  <DayBadge status={AttendecStatus} />
+
+                  {clientName && (
+                    <span className="text-[8px] text-center leading-tight px-1 line-clamp-2">
+                      {clientName}
+                    </span>
+                  )}
+
+                {UpdatedBy && UpdatedBy !== "-" && (
+  <div className="relative group mt-1">
+    <div className="p-[2px] rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer">
+      <Info className="w-3 h-3 text-gray-500" />
+    </div>
+
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-[10px] px-2 py-2 rounded whitespace-nowrap z-50">
+      <div>Marked by: {UpdatedBy}</div>
+
+      {AbsentReason && dayStatus!=="P" && (
+        <div className="mt-1 border-t border-gray-700 pt-1">
+          Reason: {AbsentReason}
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+                
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+</div>
+)}
  
       <div className="overflow-x-auto border rounded-lg">
         <table className="min-w-full text-sm">
           <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white  text-[10px] font-semibold">
             <tr>
                  <th className="px-3 py-2 text-left">S.No</th>
-              <th className="px-3 py-2 text-left">Invoice</th>
+              {/* <th className="px-3 py-2 text-left">Invoice</th> */}
               <th className="px-3 py-2 text-left">Client</th>
               <th className="px-3 py-2 text-left">Patient</th>
               <th className="px-3 py-2 text-left">Previous HCA</th>
               {/* <th className="px-3 py-2 text-left">Status</th> */}
               <th className="px-3 py-2 text-left">New Assigned HCA</th>
-              <th className="px-3 py-2 text-left">Start</th>
-              <th className="px-3 py-2 text-left">End</th>
+              <th className="px-3 py-2 text-left">ReplacementDate</th>
+              {/* <th className="px-3 py-2 text-left">End</th> */}
+                <th className="px-3 py-2 text-left">TimeSheet</th>
               <th className="px-3 py-2 text-left">Reason</th>
               <th className="px-3 py-2 text-right">Client Pay</th>
               <th className="px-3 py-2 text-right">HCP Pay</th>
@@ -289,7 +441,7 @@ return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||nul
               filteredData.map((item, idx) => (
                 <tr key={idx} className="border-t border-gray-200 bg-gray-50">
                   <td className="px-3 py-2">{idx+1}</td>
-                  <td className="px-3 py-2">{item.invoice}</td>
+                  {/* <td className="px-3 py-2">{item.invoice}</td> */}
                   <td className="px-3 py-2">{item.clientName}</td>
                   <td className="px-3 py-2">{item.patientName}</td>
                  <td
@@ -299,7 +451,7 @@ return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||nul
   <div className="relative flex items-center gap-2 group w-fit">
 
   
-    <img
+    {/* <img
       className="h-5 w-5"
       src={
         AssignSuitableIcon(
@@ -307,12 +459,12 @@ return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||nul
           GetHCPType(item.CurrentHCA_id)
         ).image
       }
-    />
+    /> */}
 
     {item.hcpName}
 
    
-    <div
+    {/* <div
       className="absolute left-0 -top-11 z-50
                  opacity-0 group-hover:opacity-100
                  translate-y-2 group-hover:translate-y-0
@@ -328,7 +480,7 @@ return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||nul
           GetHCPType(item.CurrentHCA_id)
         ).caseType
       }
-    </div>
+    </div> */}
 
   </div>
 </td>
@@ -339,7 +491,7 @@ return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||nul
   <div className="relative flex items-center gap-2 group w-fit">
 
     {/* Icon */}
-    <img
+    {/* <img
       className="h-5 w-5"
       src={
         AssignSuitableIcon(
@@ -347,12 +499,12 @@ return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||nul
           GetHCPType(item.AssignedHCA_id)
         ).image
       }
-    />
+    /> */}
 
     {item.NewHCA}
 
     {/* Premium Tooltip */}
-    <div
+    {/* <div
       className="absolute left-0 -top-11 z-50
                  opacity-0 group-hover:opacity-100
                  translate-y-2 group-hover:translate-y-0
@@ -368,7 +520,7 @@ return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||nul
           GetHCPType(item.AssignedHCA_id)
         ).caseType
       }
-    </div>
+    </div> */}
 
   </div>
 </td>
@@ -384,8 +536,22 @@ return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||nul
                       {item.status}
                     </span>
                   </td> */}
-                  <td className="px-3 py-2">{item.startDate}</td>
-                  <td className="px-3 py-2">{item.endDate}</td>
+                  <td className="px-3 py-2">
+  {item.ReplacementDate
+    ? new Date(item.ReplacementDate).toLocaleDateString("en-IN")
+    : "-"}
+</td>
+                  {/* <td className="px-3 py-2">{item.endDate}</td> */}
+                  <td className="px-3 py-2">
+                   <button
+                                  className="px-2 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600"
+                                  onClick={()=>{setAttendenceInfo(item),setShowFullMonth(true) ;console.log("dd",item.days)}}
+                                >
+                                  View
+                                </button>
+                                </td>
+             
+
        <td className="px-3 py-2">
   <button
     onClick={() => {
@@ -475,5 +641,63 @@ return  Math.round(Number(FinelExpectedSalaryInfo[0].PaymentforStaff) / 30)||nul
     </div>
   );
 };
+function DayBadge({ status }: { status: any }) {
+  console.log("Check Imp Data-----",status)
+  const Wrapper = ({ children }: any) => (
+    <div className="flex items-center justify-center w-full">
+      {children}
+    </div>
+  );
 
+  if (status === "P") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 text-emerald-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  if (status === "HP") {
+    return (
+      <Wrapper>
+        <div className="relative w-8 h-8 rounded-full border-2 border-emerald-500 overflow-hidden shadow-sm flex items-center justify-center text-[10px] font-semibold text-emerald-600">
+          <div className="absolute left-0 top-0 w-1/2 h-full bg-emerald-500" />
+          <span className="relative z-10">HP</span>
+        </div>
+      </Wrapper>
+    );
+  }
+
+  if (status === "A") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-rose-600 text-rose-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  if (status === "NA") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-gray-500 text-gray-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  return (
+    <Wrapper>
+      <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border border-gray-400 text-gray-500 bg-white shadow-sm">
+        {status}
+      </span>
+    </Wrapper>
+  );
+}
 export default ReplacementTable;
+
+

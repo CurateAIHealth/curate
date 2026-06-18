@@ -2756,14 +2756,17 @@ export const UpdateMultipleAttendance = async (
 
 
 
-export const DeleteDeployMent=async(clientId:any,HCPId:any)=>{
+export const DeleteDeployMent=async(clientId:any,HCPId:any,ImpMonth:any)=>{
 
   try{
 const Cluster= await clientPromise
 const db=Cluster.db("CurateInformation")
 const collection=db.collection("Deployment")
 const DeleteResult=await collection.deleteOne({ClientId:clientId,
-HCAId:HCPId})
+HCAId:HCPId,
+Month:ImpMonth})
+
+
    if (DeleteResult.deletedCount > 0) {
       return {
         success: true,
@@ -2784,7 +2787,7 @@ HCAId:HCPId})
   }
 
 }
-export const InserTerminationData=async(ClientUserId:any,HCAUserId:any,HCA_Name:any,Name:any,Email:any,Contact:any,ClientAdress:any,Contacthca:any,TimeSheetArray:any)=>{
+export const InserTerminationData=async(ClientUserId:any,HCAUserId:any,HCA_Name:any,Name:any,Email:any,Contact:any,ClientAdress:any,Contacthca:any,TimeSheetArray:any,ClientAttendece:any)=>{
   try{
 const cluster=await clientPromise
 const db=cluster.db("CurateInformation")
@@ -2799,6 +2802,7 @@ const TimeSheetDataInsert=await collection.insertOne({
   Adress:ClientAdress,
   HCAContact:Contacthca,
   Attendence:TimeSheetArray,
+  ClientAttendance:ClientAttendece,
   StartDate:new Date().toLocaleDateString("en-IN")
 
 })
@@ -3051,6 +3055,10 @@ export const UpdateReplacmentData = async (
   UpdatedBy: any,
    ReplacementDate:any,
       ReplacementTime:any,
+      ImpClientId:any,
+      ImpMonth:any,
+      ImpClientName:any,
+      ImpHCA_Name:any
 ) => {
   try {
     const cluster = await clientPromise;
@@ -3061,7 +3069,10 @@ export const UpdateReplacmentData = async (
 
   
     const existingInfo: any = await deploymentCollection.findOne({
+      
+      ClientId:ImpClientId,
       HCAId: Exsting_HCP.HCA_Id,
+      Month:ImpMonth
     });
 
     if (existingInfo && existingInfo._id) {
@@ -3070,14 +3081,33 @@ export const UpdateReplacmentData = async (
 }
 
 
-    const attendanceEntry = {
-      AttendenceDate: new Date(),
-      HCPAttendence: true,
-      AdminAttendece: false,
-      UpdatedAt: new Date(),
-      UpdatedBy: UpdatedBy || "",
-      Replacement:true
-    };
+   const currentHour = new Date().getHours();
+
+const attendanceEntry = {
+  AttendenceDate: new Date(),
+  HCPAttendence: currentHour >= 14,
+  AdminAttendece: true,
+  UpdatedAt: new Date(),
+  UpdatedBy: UpdatedBy || "",
+  Replacement: true,
+  dateKey: new Date().toISOString().split("T")[0],
+};
+
+
+    
+      const ClientattendanceEntry = {
+        dateKey: new Date().toISOString().split("T")[0],
+        AttendanceDate: new Date(),
+        Client_Id: ImpClientId,
+        Client_Name: ImpClientName,
+        HCA_Id: Available_HCP?.userId,
+        HCA_Name: Available_HCP?.FirstName,
+        Status: "Present",
+        AdminAttendance: true,
+        CreatedAt: new Date(),
+        UpdatedAt: new Date(),
+        UpdatedBy: UpdatedBy || "Admin",
+      };
 
    
     const updatedAttendance = Array.isArray(existingInfo.Attendance)
@@ -3101,6 +3131,7 @@ export const UpdateReplacmentData = async (
    
     const UpdateReplasementInfo = await deploymentCollection.updateOne(
       { HCAId: Exsting_HCP.HCA_Id,
+        ClientId:ImpClientId,
         Month:Exsting_HCP.Month
        },
       {
@@ -3111,7 +3142,8 @@ export const UpdateReplacmentData = async (
           ReplacementDate: new Date(ReplacementDate).toISOString().split("T")[0],
           // CareTakerPrice:Available_HCP.CareTakerPrice,
           Replacement:true,
-          Attendance: [attendanceEntry]
+          Attendance: [attendanceEntry],
+          ClientAttendance:[ClientattendanceEntry]
         // },$push: {
         // Attendance: attendanceEntry   
       } as any
@@ -6223,6 +6255,30 @@ export const GetUsersFullInfo = async () => {
     return [];
   }
 };
+export const GetUsersFullInfoForRepleament = async () => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("CompliteRegistrationInformation");
+
+    const RegistrationResult = await Collection.find(
+      {},
+      {
+        projection: {
+             "HCAComplitInformation.UserId": 1,
+            "HCAComplitInformation.PaymentforStaff": 1,
+         
+          _id: 0,
+        },
+      }
+    ).toArray();
+
+    return RegistrationResult;
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    return [];
+  }
+};
 export const GetUsersFullInfoforTimeSheet = async () => {
   try {
     const Cluster = await clientPromise;
@@ -7164,20 +7220,22 @@ export const UpdateUserCurrentstatusInHCPView = async (
 
 
     const updateComplite = await CompliteCollection.updateOne(
-      { "HCAComplitInformation.UserId": UserId },
-      {
-        $set: {
-          "HCAComplitInformation.CurrentStatus": UpdatedStatus,
-          "HCAComplitInformation.UpdatedAt": new Date(),
-        },
-       
-   
+  { "HCAComplitInformation.UserId": UserId },
+  {
+    $set: {
+      "HCAComplitInformation.CurrentStatus": UpdatedStatus,
+      "HCAComplitInformation.UpdatedAt": new Date(),
+    },
+    ...(UpdatedStatus !== "Active" && {
+      $unset: {
+        "HCAComplitInformation.Status": "",
       },
-      {
-        upsert: true,
-      }
-    );
-
+    }),
+  },
+  {
+    upsert: true,
+  }
+);
 
     return {
       success: true,
@@ -7298,6 +7356,59 @@ export const UpdateClientStatusinCallEnquiry = async (
       $unset: {
         "HCAComplitInformation.Status": "",
       },
+    }
+  );
+
+
+
+
+      if (
+        updateRegistration.modifiedCount === 0 &&
+        removeStatusFromComplite.modifiedCount === 0
+      ) {
+        return { success: false, message: "No records were updated." };
+      }
+
+      return {
+        success: true,
+        message: "Status updated and removed Successfully.",
+      };
+    } catch (err: any) {
+      console.error("UpdateHCAnstatus Error:", err);
+      return { success: false, message: "Internal server error." };
+    }
+  };
+
+    export const UpdateHCAnstatusInDeplyoment = async (
+    UserId: any,
+    AvailableStatus: string
+  ) => {
+    try {
+      const Cluster = await clientPromise;
+      const Db = Cluster.db("CurateInformation");
+
+      const RegistrationCollection = Db.collection("Registration");
+      const CompliteCollection = Db.collection("CompliteRegistrationInformation");
+
+
+      const updateRegistration = await RegistrationCollection.updateOne(
+        { userId: UserId },
+        {
+          $set: {
+            Status: AvailableStatus,
+            CurrentStatus: AvailableStatus,
+          },
+        }
+      );
+    
+    
+    const removeStatusFromComplite = await CompliteCollection.updateOne(
+    { "HCAComplitInformation.UserId": UserId },
+    {
+      $set: {
+        "HCAComplitInformation.CurrentStatus": AvailableStatus,
+      },
+    
     }
   );
 
@@ -7588,9 +7699,7 @@ export const GetDashboardStats = async (loggedInEmail:any) => {
   "srinivasnew0803@gmail.com",
   "srivanikasham@curatehealth.in@gmail.com",
 ];
-console.log("Test Count",
-  NotificationCount.filter((item: any) => item.Type === "Refund Request")
-);
+
 const NotificationCountFilter = NotificationCount.filter(
   (item: any) =>
     item.Status?.trim() === "Pending" &&
@@ -7614,7 +7723,7 @@ const NotificationCountFilter = NotificationCount.filter(
       )
     )
 ).length;
-console.log("Check for Count of Dashboard----",NotificationCountFilter)
+
     const deployedUnique = deployments.filter((i: any) => {
       if (!i?.StartDate || !i?.ClientId) return false;
 

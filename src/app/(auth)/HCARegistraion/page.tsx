@@ -4,7 +4,7 @@ import HCAMobileView from '@/Components/HCAMobileView/page';
 import { EducationLevels, Home_Assistance_Needs, IndianCapitalCities, IndianLanguages, IndianStates, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, popularBanksInIndia, PROFESSIONAL_SKILL_OPTIONS, REFERRAL_SOURCE_TYPES, Relations } from '@/Lib/Content';
 import { v4 as uuidv4 } from 'uuid';
 import { GetRegidterdUsers, GetUserInformation, HCARegistration, PostHCAFullRegistration, RegisterHCAWithProfile, UpdateFinelVerification } from '@/Lib/user.action';
-import { Update_Main_Filter_Status, UpdateDocmentSkipReason, UpdateRefresh, UpdateUserType } from '@/Redux/action';
+import { setFullInfo, setUsers, Update_Main_Filter_Status, UpdateDocmentSkipReason, UpdateRefresh, UpdateUserType } from '@/Redux/action';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { stringify } from 'querystring';
@@ -42,7 +42,7 @@ export default function DoctorProfileForm() {
           const [isOtherMoleOnBody2,setisOtherMoleOnBody2]=useState(false)
   const [sameAddress, setSameAddress] = useState(false);
 
-
+const dispatch=useDispatch()
   // const [isOther, setIsOther] = useState(false);
 const [ImportedVendors, setImportedVendors] = useState<any>([])
   const [PictureUploading, setPictureUploading] = useState(false);
@@ -181,7 +181,6 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
   const RegisterfromAdmin=useSelector((state:any)=>state.AdminRegister)
   const [heightInCm, setHeightInCm] = useState("");
 
-  const distpatch = useDispatch()
   const [Docs, setDocs] = useState({
     ProfilePic: DEFAULT_PROFILE_PIC,
     PanCard: '',
@@ -752,19 +751,8 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
           };
 
          
-
        
             setUpdatedStatusMessage("Creating account and saving profile...");
-           const PrimaryDetails = await HCARegistration(payload);
-
-if (!PrimaryDetails.success===true) {
-  setUpdatedStatusMessage(
-    "Failed to save registration details."
-  );
-  return;
-}
-
-
 const Complitinfo = await PostHCAFullRegistration(FinelForm);
 console.log("Check Resistration------",Complitinfo)
 if (!Complitinfo?.success) {
@@ -773,6 +761,44 @@ if (!Complitinfo?.success) {
   );
   return;
 }
+           const PrimaryDetails = await HCARegistration(payload);
+
+if (!PrimaryDetails.success===true) {
+  setUpdatedStatusMessage(
+    "Failed to save registration details."
+  );
+const LocaluserId = localStorage.getItem("UserId");
+
+   const { data: result } = await axios.post(
+        "/api/AdminPageInfo",
+        {
+          LocaluserId,
+            refreshType: [
+            "registeredUsers",
+            "fullInfo",
+          ],
+        }
+      );
+  
+      console.timeEnd("DASHBOARD_API");
+  
+      if (!result?.success) return;
+  
+      const {
+        profile,
+        registeredUsers,
+        fullInfo,
+        deployedLength,
+      } = result.data;
+   dispatch( setUsers(registeredUsers))
+  
+           dispatch(setFullInfo(fullInfo))
+
+  return;
+}
+
+
+
 
 setUpdatedStatusMessage(
   "Full registration saved successfully."
@@ -901,9 +927,9 @@ await UpdateFinelVerification(generatedUserId);
 });
 
 
-          distpatch(UpdateRefresh(1));
-          distpatch(Update_Main_Filter_Status("HCP List"));
-          distpatch(UpdateUserType("healthcare-assistant"));
+          dispatch(UpdateRefresh(1));
+          dispatch(Update_Main_Filter_Status("HCP List"));
+          dispatch(UpdateUserType("healthcare-assistant"));
 
           setUpdatedStatusMessage("Successfully Updated Your Information.");
           SetUpdateingStatus(true);
@@ -4472,7 +4498,7 @@ form.HusbendContact!=="Not Available"&&
                   placeholder="Don’t have documents? Please explain."
                   name="field_message"
                   value={ReasonValue || ''}
-                  onChange={(e: any) => distpatch(UpdateDocmentSkipReason(e.target.value))}
+                  onChange={(e: any) => dispatch(UpdateDocmentSkipReason(e.target.value))}
                   rows={4}
                   className="w-full text-xs p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none"
                 />

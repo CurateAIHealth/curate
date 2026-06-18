@@ -8,8 +8,8 @@ let cachedRegisterdUsers: any[] = [];
 
 
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Info, Minimize2 } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId, UpdateClientAttendanceStatus, GetApplicationData,  } from "@/Lib/user.action";
+import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Minimize2, Info } from "lucide-react";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId, UpdateClientAttendanceStatus, GetApplicationData, UpdateHCAnstatusInDeplyoment,  } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { SetDeploymentInfo, setUsers, UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -27,6 +27,7 @@ import axios from "axios";
 import RelasementHCPPopup from "../RelasementHCPPopup/page";
 import RepleasementHCPPopup from "../RelasementHCPPopup/page";
 import AttendanceModal from "../ClientAttendece/page";
+import { Console } from "console";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -220,6 +221,9 @@ const router=useRouter()
 
 
 useEffect(() => {
+  if (loggedInEmail===''){
+  router.push("/DashBoard")
+ }
   if (!selectedDate) {
     setLastDateOfMonth("");
     return;
@@ -434,6 +438,7 @@ const GetMonthlyCharges = (A:any) => {
 
   const FinelTimeSheet = ClientsInformation?.map((each: any) => {
 const normalizedAttendance =
+console.log("Check for Reason-----",each.Attendance)
   Array.isArray(each.Attendance) && each.Attendance.length > 0
     ? each.Attendance.map((att: any) => {
         const hcp =
@@ -459,10 +464,11 @@ const normalizedAttendance =
           status = "Absent";
         }
 
-        return {
-          date: att.AttendenceDate,
-          status,
-        };
+      return {
+        date: att.AttendenceDate,
+        UpdatedBy: att.UpdatedBy,
+        status,
+      };
       })
     : [];
 
@@ -909,6 +915,7 @@ const toggleStatus = () => {
   setStatus((prev) => (prev === "Active" ? "Freeze" : "Active"));
 };
   const handleDeleteClick = (Info: any,Name:any) => {
+    console.log ("Check Termination Info-------",Info)
     SetTerminationInfo(Info)
 SetCareTakerName(Name)
     setShowDeletePopup(true);
@@ -961,72 +968,107 @@ const HandleRemove = async (Info: any, Name: any) => {
 
 const confirmDelete = async (selectedReason: string) => {
   if (!TerminationInfo) {
-    SetActionStatusMessage("Unable to delete. Required information is missing.");
+    SetActionStatusMessage(
+      "Unable to delete. Required information is missing."
+    );
     return;
   }
+
+  const {
+    HCA_Id,
+    Client_Id,
+    Month,
+    HCA_Name,
+    name,
+    email,
+    contact,
+    location,
+    HCAContact,
+    TimeSheet,
+    ClientAttendance,
+  } = TerminationInfo;
 
   try {
     SetActionStatusMessage("Please wait, deleting placement...");
 
-    await UpdateHCAnstatus(
-      TerminationInfo.HCA_Id,
-      UpdatedCareTakerStatus
+    
+    await UpdateHCAnstatus(HCA_Id, UpdatedCareTakerStatus);
+
+    await UpdateUserContactVerificationstatus(Client_Id, "Lost");
+
+    const deleteDeploymentResponse = await DeleteDeployMent(
+      Client_Id,
+      HCA_Id,
+      Month
     );
 
- 
-    await UpdateUserContactVerificationstatus(
-      TerminationInfo.Client_Id,
-      "Lost"
-    );
-
-
-    const deleteTimeSheetResponse = await DeleteDeployMent(
-      TerminationInfo.Client_Id,
-      TerminationInfo.HCA_Id
-    );
-
-  
-    await PostReason(
-      TerminationInfo.HCA_Id,
-      TerminationInfo.Client_Id,
-      selectedReason,
-      otherReason,
-         ReplacementDate,
-      ReplacementTime,
-    );
-
- 
-    await InserTerminationData(
-      TerminationInfo.Client_Id,
-      TerminationInfo.HCA_Id,
-      TerminationInfo.HCA_Name,
-      TerminationInfo.name,
-      TerminationInfo.email,
-      TerminationInfo.contact,
-      TerminationInfo.location,
-      TerminationInfo.HCAContact,
-      TerminationInfo.TimeSheet
-    );
-
-   if (deleteTimeSheetResponse?.success) {
-  SetActionStatusMessage("Placement deleted Successfully.");
-
-  setTimeout(() => {
-    setShowDeletePopup(false);
-  }, 400);
-}
- else {
-      SetActionStatusMessage(
-        "Placement deleted, but some records could not be removed completely."
-      );
+    if (!deleteDeploymentResponse?.success) {
+         SetActionStatusMessage("Deployment deletion failed.");
     }
-  } catch (error) {
-    console.error("Error while deleting placement:", error);
+
+    await Promise.all([
+      PostReason(
+        HCA_Id,
+        Client_Id,
+        selectedReason,
+        otherReason,
+        ReplacementDate,
+        ReplacementTime
+      ),
+      InserTerminationData(
+        Client_Id,
+        HCA_Id,
+        HCA_Name,
+        name,
+        email,
+        contact,
+        location,
+        HCAContact,
+        TimeSheet,
+        ClientAttendance
+      ),
+    ]);
+
     SetActionStatusMessage(
-      "Something went wrong while deleting the placement. Please try again."
+      "Placement deleted successfully. Fetching updated data..."
+    );
+
+    const userId = localStorage.getItem("UserId");
+
+    if (userId) {
+      try {
+        const { data } = await axios.post("/api/AdminPageInfo", {
+          userId,
+          refreshType: "deployment",
+        });
+
+        dispatch(
+          SetDeploymentInfo(
+            Number(data?.data?.deployedLength) || 0
+          )
+        );
+        SetActionStatusMessage(
+      "updated data Imported"
+    )
+      } catch (refreshError) {
+        console.error(
+          "Failed to refresh deployment count:",
+          refreshError
+        );
+      }
+    }
+
+    setTimeout(() => {
+      setShowDeletePopup(false);
+    }, 500);
+  } catch (error: any) {
+    console.error("Placement deletion failed:", error);
+
+    SetActionStatusMessage(
+      error?.message ||
+        "Something went wrong while deleting the placement. Please try again."
     );
   } finally {
-    setShowDeletePopup(false);
     setDeleteTargetId(null);
   }
 };
@@ -1128,9 +1170,14 @@ const UpdateReplacement = async (
         Exsting_HCP,
         TimeStampData,
         ReplacementDate,
-        ReplacementTime
-      );
+        ReplacementTime,
+        selectedCase.Client_Id,
+        selectedCase.Month,
+        selectedCase.name,
+        selectedCase.HCA_Name
 
+      );
+      console.log ("Check Replasement Info----",UpdateReplacmentInfo)
     if (!UpdateReplacmentInfo?.success) {
       SetActionStatusMessage(
         "Replacement update failed."
@@ -1144,14 +1191,18 @@ const UpdateReplacement = async (
         Exsting_HCP.HCA_Id,
         UpdatedCareTakerStatus
       ),
+      UpdateHCAnstatusInDeplyoment(
+        Available_HCP.HCA_Id,
+        "Active"
+      ),
       UpdateHCAnstatusInFullInformation(
         Available_HCP.userId
       ),
-      DeleteHCAStatus(Exsting_HCP.HCA_Id),
+      // DeleteHCAStatus(Exsting_HCP.HCA_Id),
     ]);
 
     SetActionStatusMessage(
-      "Replacement Updated, Please Wait Fetching new Data..."
+      "Replacement Updated, Please Wait Fetching Updated Data..."
     );
 
     const userId = localStorage.getItem("UserId");
@@ -1161,7 +1212,7 @@ const UpdateReplacement = async (
         "/api/AdminPageInfo",
         {
           userId,
-          refreshType: "registeredUsers",
+          refreshType: "deployment",
         }
       );
 
@@ -1395,6 +1446,7 @@ const EditAttendence = async (): Promise<void> => {
       SetActionStatusMessage("Please select a valid status");
       return;
     }
+    
 const payload = {
         Client_Id: AttenseceInformation.Client_Id,
         HCA_Id: AttenseceInformation.HCA_Id,
@@ -2328,7 +2380,7 @@ const EditDate =
   Reassignment
 </button> */}
 
-<img src="Icons/Repleasement.png" alt="Repleasement Icons"  className="h-6 ml-4 cursor-pointer "   onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA("")}}/>
+<img src="Icons/Repleasement.png" alt="Repleasement Icons"  className="h-6 ml-4 cursor-pointer "   onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA(""),console.log("Check Test Data-----",)}}/>
 
 {ShowReassignmentPopUp && (
   <div

@@ -381,59 +381,61 @@ const safeDecrypt = (value: any) => {
     return value;
   }
 };
+
+export const ClearProfileCache = (
+  userId: string
+) => {
+  delete profileCache[userId];
+};
+
 export const ClearDashboardCache = (
-  userId: string,
   types: (
-    | "profile"
     | "registeredUsers"
     | "fullInfo"
     | "deployment"
   )[]
 ) => {
-  if (!dashboardCache[userId]) return;
-
   types.forEach((type) => {
     switch (type) {
-      case "profile":
-        delete dashboardCache[userId].profile;
-        delete dashboardCache[userId].profileTime;
-        break;
-
       case "registeredUsers":
-        delete dashboardCache[userId].registeredUsers;
-        delete dashboardCache[userId].registeredUsersTime;
+        delete globalDashboardCache.registeredUsers;
+        delete globalDashboardCache.registeredUsersTime;
         break;
 
       case "fullInfo":
-        delete dashboardCache[userId].fullInfo;
-        delete dashboardCache[userId].fullInfoTime;
+        delete globalDashboardCache.fullInfo;
+        delete globalDashboardCache.fullInfoTime;
         break;
 
       case "deployment":
-        delete dashboardCache[userId].deployment;
-        delete dashboardCache[userId].deploymentTime;
+        delete globalDashboardCache.deployment;
+        delete globalDashboardCache.deploymentTime;
         break;
     }
   });
 };
+export const globalDashboardCache: {
+  registeredUsers?: any[];
+  registeredUsersTime?: number;
 
-let dashboardCache: Record<
+  fullInfo?: any[];
+  fullInfoTime?: number;
+
+  deployment?: any[];
+  deploymentTime?: number;
+} = {};
+
+export const profileCache: Record<
   string,
   {
     profile?: any;
     profileTime?: number;
-
-    registeredUsers?: any[];
-    registeredUsersTime?: number;
-
-    fullInfo?: any[];
-    fullInfoTime?: number;
-
-    deployment?: any[];
-    deploymentTime?: number;
   }
 > = {};
-export const GetDashboardData = async (userId: string) => {
+
+export const GetDashboardData = async (
+  userId: string
+) => {
   try {
     if (!userId) {
       return {
@@ -446,25 +448,35 @@ export const GetDashboardData = async (userId: string) => {
     const CACHE_TIME = 30 * 60 * 1000;
     const now = Date.now();
 
-    if (!dashboardCache[userId]) {
-      dashboardCache[userId] = {};
-    }
-
-    const cache = dashboardCache[userId];
-
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
 
     const Users = db.collection("Registration");
-    const UsersFullInfo = db.collection("CompliteRegistrationInformation");
+    const UsersFullInfo = db.collection(
+      "CompliteRegistrationInformation"
+    );
     const Deployment = db.collection("Deployment");
 
-    let profile = cache.profile;
+    // ==========================
+    // PROFILE CACHE (PER USER)
+    // ==========================
 
-    if (
+    if (!profileCache[userId]) {
+      profileCache[userId] = {};
+    }
+
+    const userProfileCache =
+      profileCache[userId];
+
+    let profile = userProfileCache.profile;
+
+    const needsProfile =
       !profile ||
-      now - (cache.profileTime || 0) > CACHE_TIME
-    ) {
+      now -
+        (userProfileCache.profileTime || 0) >
+        CACHE_TIME;
+
+    if (needsProfile) {
       const profileRaw = await Users.findOne(
         { userId },
         {
@@ -480,136 +492,209 @@ export const GetDashboardData = async (userId: string) => {
       profile =
         profileRaw &&
         Object.fromEntries(
-          Object.entries(profileRaw).map(([key, value]) => [
-            key,
-            safeDecrypt(value),
-          ])
+          Object.entries(profileRaw).map(
+            ([key, value]) => [
+              key,
+              safeDecrypt(value),
+            ]
+          )
         );
 
-      cache.profile = profile;
-      cache.profileTime = now;
+      userProfileCache.profile = profile;
+      userProfileCache.profileTime = now;
     }
 
-    let safeUsers = cache.registeredUsers;
+    // ==========================
+    // GLOBAL CACHE CHECKS
+    // ==========================
 
-    if (
-      !safeUsers ||
-      now - (cache.registeredUsersTime || 0) > CACHE_TIME
-    ) {
-      const registeredUsersRaw = await Users.find({}).toArray();
+    const needsUsers =
+      !globalDashboardCache.registeredUsers ||
+      now -
+        (globalDashboardCache.registeredUsersTime ||
+          0) >
+        CACHE_TIME;
 
-      safeUsers = registeredUsersRaw.map((user: any) => {
-        const decryptedUser: any = {
-          ...user,
-          _id: user._id?.toString() ?? null,
-        };
+    const needsFullInfo =
+      !globalDashboardCache.fullInfo ||
+      now -
+        (globalDashboardCache.fullInfoTime || 0) >
+        CACHE_TIME;
 
-        for (const [key, value] of Object.entries(user)) {
-          if (
-            value &&
-            typeof value === "object" &&
-            "iv" in value &&
-            "content" in value
-          ) {
-            try {
-              decryptedUser[key] = decrypt(
-                value as {
-                  iv: string;
-                  content: string;
-                }
-              );
-            } catch {
-              decryptedUser[key] = value;
+    const needsDeployment =
+      !globalDashboardCache.deployment ||
+      now -
+        (globalDashboardCache.deploymentTime ||
+          0) >
+        CACHE_TIME;
+
+    const [
+      registeredUsersRaw,
+      fullInfoRaw,
+      deploymentRaw,
+    ] = await Promise.all([
+      needsUsers
+        ? Users.find({}).toArray()
+        : Promise.resolve(null),
+
+      needsFullInfo
+        ? UsersFullInfo.find({}).toArray()
+        : Promise.resolve(null),
+
+      needsDeployment
+        ? Deployment.find(
+            {},
+            {
+              projection: {
+                _id: 0,
+              },
+            }
+          ).toArray()
+        : Promise.resolve(null),
+    ]);
+
+  
+
+    if (needsUsers && registeredUsersRaw) {
+      globalDashboardCache.registeredUsers =
+        registeredUsersRaw.map((user: any) => {
+          const decryptedUser: any = {
+            ...user,
+            _id: user._id?.toString() ?? null,
+          };
+
+          for (const [
+            key,
+            value,
+          ] of Object.entries(user)) {
+            if (
+              value &&
+              typeof value === "object" &&
+              "iv" in value &&
+              "content" in value
+            ) {
+              try {
+                decryptedUser[key] = decrypt(
+                  value as {
+                    iv: string;
+                    content: string;
+                  }
+                );
+              } catch {
+                decryptedUser[key] = value;
+              }
             }
           }
-        }
 
-        return decryptedUser;
-      });
+          return decryptedUser;
+        });
 
-      cache.registeredUsers = safeUsers;
-      cache.registeredUsersTime = now;
+      globalDashboardCache.registeredUsersTime =
+        now;
     }
 
-    let fullInfo = cache.fullInfo;
+    // ==========================
+    // FULL INFO
+    // ==========================
 
-    if (
-      !fullInfo ||
-      now - (cache.fullInfoTime || 0) > CACHE_TIME
-    ) {
-      const fullInfoRaw = await UsersFullInfo.find(
-        {},
-        {
-          projection: {
-            _id: 0,
-          },
-        }
-      ).toArray();
+    if (needsFullInfo && fullInfoRaw) {
+      globalDashboardCache.fullInfo =
+        fullInfoRaw.map((user: any) => {
+          const info =
+            user.HCAComplitInformation || {};
 
-      fullInfo = fullInfoRaw.map((user: any) => {
-        const info = user.HCAComplitInformation || {};
+          return {
+            ...user,
+            HCAComplitInformation: {
+              ...info,
+              HCPFirstName: safeDecrypt(
+                info["First Name"]
+              ),
+              HCPContactNumber: safeDecrypt(
+                info["Mobile Number"]
+              ),
+              HCPEmail: safeDecrypt(
+                info["EmailId"]
+              ),
+              HCPSurName: safeDecrypt(
+                info["Surname"]
+              ),
+              HCPAdharNumber: safeDecrypt(
+                info["Aadhar Card No"]
+              ),
+              "Phone No 1": safeDecrypt(
+                info["Phone No 1"]
+              ),
+              "Phone No 2": safeDecrypt(
+                info["Phone No 2"]
+              ),
+              "Email Id": safeDecrypt(
+                info["Email Id"]
+              ),
+              "Client Aadhar No": safeDecrypt(
+                info["Client Aadhar No"]
+              ),
+              "Patient Aadhar Number":
+                safeDecrypt(
+                  info[
+                    "Patient Aadhar Number"
+                  ]
+                ),
+              "Alternative Client Contact":
+                safeDecrypt(
+                  info[
+                    "Alternative Client Contact"
+                  ]
+                ),
+            },
+          };
+        });
 
-        return {
-          ...user,
-          HCAComplitInformation: {
-            ...info,
-            HCPFirstName: safeDecrypt(info["First Name"]),
-            HCPContactNumber: safeDecrypt(info["Mobile Number"]),
-            HCPEmail: safeDecrypt(info["EmailId"]),
-            HCPSurName: safeDecrypt(info["Surname"]),
-            HCPAdharNumber: safeDecrypt(info["Aadhar Card No"]),
-            "Phone No 1": safeDecrypt(info["Phone No 1"]),
-            "Phone No 2": safeDecrypt(info["Phone No 2"]),
-            "Email Id": safeDecrypt(info["Email Id"]),
-            "Client Aadhar No": safeDecrypt(info["Client Aadhar No"]),
-            "Patient Aadhar Number": safeDecrypt(
-              info["Patient Aadhar Number"]
-            ),
-            "Alternative Client Contact": safeDecrypt(
-              info["Alternative Client Contact"]
-            ),
-          },
-        };
-      });
-
-      cache.fullInfo = fullInfo;
-      cache.fullInfoTime = now;
+      globalDashboardCache.fullInfoTime = now;
     }
 
-    let deploymentData = cache.deployment;
+    // ==========================
+    // DEPLOYMENT
+    // ==========================
 
     if (
-      !deploymentData ||
-      now - (cache.deploymentTime || 0) > CACHE_TIME
+      needsDeployment &&
+      deploymentRaw
     ) {
-      deploymentData = await Deployment.find(
-        {},
-        {
-          projection: {
-            _id: 0,
-          },
-        }
-      ).toArray();
+      globalDashboardCache.deployment =
+        deploymentRaw;
 
-      cache.deployment = deploymentData;
-      cache.deploymentTime = now;
+      globalDashboardCache.deploymentTime =
+        now;
     }
 
     return {
       success: true,
       data: {
         profile: profile || null,
-        registeredUsers: safeUsers || [],
-        fullInfo: fullInfo || [],
-        deployedLength: deploymentData || [],
+
+        registeredUsers:
+          globalDashboardCache
+            .registeredUsers || [],
+
+        fullInfo:
+          globalDashboardCache.fullInfo || [],
+
+        deployedLength:
+          globalDashboardCache.deployment ||
+          [],
       },
     };
   } catch (error) {
-    console.error("Dashboard Fetch Error:", error);
+    console.error(
+      "Dashboard Fetch Error:",
+      error
+    );
 
     return {
       success: false,
-      message: "Failed to fetch dashboard data",
+      message:
+        "Failed to fetch dashboard data",
       data: null,
     };
   }

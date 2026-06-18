@@ -38,13 +38,13 @@ export default function InvoiceMedicalTable({
   ImpClientsInformation,
 }: InvoiceMedicalTableProps) {
     const [ClientsInformation, setClientsInformation] = useState<any>(ImpClientsInformation);
-    console.log ("Checkimportedinfo----",ClientsInformation)
+
  const now = new Date();
  const [isChecking, setIsChecking] = useState(false);
 const currentYear = now.getFullYear().toString();
 const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 const [CurrentTimeSheetScreen,setCurrentTimeSheetScreen]=useState("TimeSheet")
-
+const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
   const [open, setOpen] = useState(false);
    const [Attendecestatus, setAttendenceStatus] = useState("");
@@ -77,7 +77,7 @@ const [ShowUpdateAttendece,SetShowUpdateAttendece]=useState(false)
   const [StatusMessage,SetStatusMessage]=useState<any>("")
 
 const [SearchResult,setSearchResult]=useState("")
-const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
+
   const dispatch = useDispatch();
   const router = useRouter();
 const getMonthKey = (record: any): string => {
@@ -102,6 +102,11 @@ const getMonthKey = (record: any): string => {
 
 
 useEffect(() => {
+ if (loggedInEmail===''){
+  router.push("/DashBoard")
+ }
+
+
   if (!ImpClientsInformation?.length) {
     setClientsInformation({});
     return;
@@ -152,6 +157,7 @@ useEffect(() => {
         : "",
       Month: record.Month,
       Replacement: record.Replacement,
+      ReplacementDate:record.ReplacementDate
     });
   }
 
@@ -295,7 +301,7 @@ const DateRange = new Date().toISOString().split("T")[0];
 
   const monthKey = `${selectedYear}-${selectedMonth}`;
   const data: any[] = ClientsInformation[monthKey] || [];
-console.log ("Check monthKey",monthKey)
+
 
   const daysInMonth = new Date(
     Number(selectedYear),
@@ -462,12 +468,13 @@ const processedData = useMemo(() => {
   return data
     .filter((record: any) => {
       if (!search) return true;
-
+console.log(record.days?.[0]);
       return (record.days || []).some((att: any) => {
+        
         const client = att.Client_Name?.toLowerCase() || "";
         const hca = att.HCA_Name?.toLowerCase() || "";
         const phone = record.clientPhone?.toString() || "";
-
+console.log ("Check for Client-----",client)
         return (
           client.includes(search) ||
           hca.includes(search) ||
@@ -1634,7 +1641,7 @@ className={`
            {attendanceInfo.hcpName}
           </p>
           <h2 className="text-lg md:text-xl font-bold text-slate-800">
-            Attendance Dashboard
+            Attendance Dashboard 
           </h2>
        <p className="text-xs text-gray-400">
   {
@@ -1664,7 +1671,7 @@ className={`
           const clientName = dayInfo?.clientName ?? "";
           const UpdatedBy = dayInfo?.UpdatedBy ?? "-";
           const AbsentReason=dayInfo?.Reason?? "-";
-          console.log("Check For Reason------",dayInfo)
+          console.log("Check For ReplaesMent Date------",attendanceInfo.ReplacementDate)
           const currentDate = new Date();
 currentDate.setHours(0, 0, 0, 0);
 
@@ -1677,13 +1684,26 @@ cellDate.setHours(0, 0, 0, 0);
 
 const isFutureDate = cellDate > currentDate;
 
+
+const replacementDate = attendanceInfo?.ReplacementDate
+  ? new Date(attendanceInfo.ReplacementDate)
+  : null;
+
+replacementDate?.setHours(0, 0, 0, 0);
+
+const isBeforeReplacementDate =
+  replacementDate && cellDate <= replacementDate;
+
+
+const isDisabled:any = isFutureDate || isBeforeReplacementDate;
+
           return (
             <div
               key={i}
               className=" rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 "
             >
               <span className="text-[10px] font-semibold text-gray-500 uppercase">
-                Day {i + 1} 
+                Day {i + 1} {isBeforeReplacementDate&&"s"}
               </span>
 
               {dayStatus === "-" ? (
@@ -1701,9 +1721,9 @@ const isFutureDate = cellDate > currentDate;
                   </span>
 
                   <button
-                    disabled={isFutureDate}
+                    disabled={isDisabled}
                     onClick={() => {
-                      if (isFutureDate) return;
+                      if (isDisabled) return;
                       SetShowUpdateAttendece(!ShowUpdateAttendece);
                       setAttenseceInformation(attendanceInfo);
                       SetParticularDate(i + 1);
@@ -1711,7 +1731,7 @@ const isFutureDate = cellDate > currentDate;
                       SetStatusMessage("");
                     }}
                     className={`text-[8px] px-2 py-[2px] rounded-full mt-1 ${
-                      isFutureDate
+                      isDisabled
                         ? "bg-gray-100 text-gray-300 cursor-not-allowed"
                         : "bg-slate-700 text-white hover:bg-slate-800"
                     }`}
@@ -1748,9 +1768,9 @@ const isFutureDate = cellDate > currentDate;
 )}
 
                   <button
-                    disabled={isFutureDate}
+                    disabled={isDisabled}
                     onClick={() => {
-                      if (isFutureDate) return;
+                      if (isDisabled) return;
                       SetShowUpdateAttendece(!ShowUpdateAttendece);
                       setAttenseceInformation(attendanceInfo);
                       SetParticularDate(i + 1);
@@ -1758,7 +1778,7 @@ const isFutureDate = cellDate > currentDate;
                       SetStatusMessage("");
                     }}
                     className={`text-[8px] px-2 py-[2px] rounded-full mt-1 ${
-                      isFutureDate
+                      isDisabled
                         ? "bg-gray-100 text-gray-300 cursor-not-allowed"
                         : "bg-slate-700 text-white hover:bg-slate-800"
                     }`}
