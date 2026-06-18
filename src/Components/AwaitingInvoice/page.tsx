@@ -481,7 +481,9 @@ const confirmDelete = async (selectedReason: string) => {
 
     const deleteTimeSheetResponse = await DeleteDeployMent(
       TerminationInfo.Client_Id,
-      TerminationInfo.HCA_Id
+      TerminationInfo.HCA_Id,
+      TerminationInfo.Month
+
     );
 
   
@@ -504,7 +506,8 @@ const confirmDelete = async (selectedReason: string) => {
       TerminationInfo.contact,
       TerminationInfo.location,
       TerminationInfo.HCAContact,
-      TerminationInfo.TimeSheet
+      TerminationInfo.TimeSheet,
+      TerminationInfo.ClientAttendance
     );
 
    if (deleteTimeSheetResponse?.success) {
