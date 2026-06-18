@@ -19,8 +19,7 @@ export default async function handler(
 
     const result = await GetUserInformation(req.body.localValue);
 
-    console.log("API END", Date.now());
-console.log ("Check Id-------",result)
+
     return res.status(200).json(result);
   } catch (error) {
     console.error(error);

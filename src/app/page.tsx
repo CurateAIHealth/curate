@@ -74,7 +74,8 @@ dispatch(UpdateUserDetails(ProfileInformation))
         
                   //  const user = await GetUserInformation(localValue);
             
-                   dispatch(CurrentLoginUser(ProfileInformation?.Email) as any)
+                   dispatch(CurrentLoginUser(ProfileInformation?.Email))
+                   console.log("Check Email------",ProfileInformation?.Email)
         router.push("/DashBoard");
         return;
       }

@@ -37,6 +37,7 @@ import {
   CurrentLoginUser,
   mapEnquiryToForm,
   Refresh,
+  setUsers,
   Update_Main_Filter_Status,
   UpdateClient,
   UpdatedDashBoardNumbers,
@@ -542,6 +543,21 @@ if(EnquiryForm.ClientStatus!=="Send"){
 if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
   setEnquiryMessage("Call Enquiry Saved  Successfully!, Please Sent Notification To Respective Staff !");
    setShowNotification(true);
+    const userId = localStorage.getItem("UserId");
+    const { data: result } = await axios.post(
+           "/api/AdminPageInfo",
+           {
+             userId,
+             refreshType: "registeredUsers",
+           }
+         );
+         const {
+      profile,
+      registeredUsers,
+      fullInfo,
+      deployedLength,
+    } = result.data;
+     dispatch( setUsers(registeredUsers))
 }
 
     } catch (err: any) {
@@ -948,7 +964,7 @@ setIsNavigating(true);
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
             </span>
           </div>
 

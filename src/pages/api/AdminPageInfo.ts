@@ -1,6 +1,7 @@
 import {
   GetDashboardData,
   ClearDashboardCache,
+  ClearProfileCache,
 } from "@/Lib/auth";
 import { NextApiRequest, NextApiResponse } from "next";
 
@@ -33,19 +34,35 @@ export default async function handler(
     console.time("API_DASHBOARD");
 
     if (refreshType) {
-      if (Array.isArray(refreshType)) {
-        ClearDashboardCache(userId, refreshType);
+      const refreshArray = Array.isArray(refreshType)
+        ? refreshType
+        : [refreshType];
+
+      // Clear profile cache (user-specific)
+      if (refreshArray.includes("profile")) {
+        ClearProfileCache(userId);
 
         console.log(
-          `Dashboard cache cleared for ${refreshType.join(
+          `Profile cache cleared for user ${userId}`
+        );
+      }
+
+      // Clear global dashboard cache
+      const dashboardTypes = refreshArray.filter(
+        (type): type is
+          | "registeredUsers"
+          | "fullInfo"
+          | "deployment" =>
+          type !== "profile"
+      );
+
+      if (dashboardTypes.length > 0) {
+        ClearDashboardCache(dashboardTypes);
+
+        console.log(
+          `Dashboard cache cleared for ${dashboardTypes.join(
             ", "
           )}`
-        );
-      } else {
-        ClearDashboardCache(userId, [refreshType]);
-
-        console.log(
-          `Dashboard cache cleared for ${refreshType}`
         );
       }
     }

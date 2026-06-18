@@ -1,10 +1,10 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import { Stethoscope, Shirt, CircleX, Search, X, ChevronsRight } from "lucide-react";
+import { Stethoscope, Shirt, CircleX, Search, X, ChevronsRight, Info, Minimize2 } from "lucide-react";
 import { GetReasonsInfoInfo, GetRegidterdUsers, GetTerminationInfo, GetUserInformation, GetUsersFullInfo, InsertDeployment, PostInvoiceFromDeployment, updateServicePrice } from "@/Lib/user.action";
 import { LoadingData } from "../Loading/page";
-import { Placements_Filters, filterColors, years } from "@/Lib/Content";
-import { AssignSuitableIcon, getDaysBetween, rupeeToNumber } from "@/Lib/Actions";
+import { Placements_Filters, filterColors, months, years } from "@/Lib/Content";
+import { AssignSuitableIcon, getDaysBetween, getDaysInMonth, rupeeToNumber } from "@/Lib/Actions";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 let terminationCache: any[] | null = null;
@@ -36,7 +36,10 @@ const TerminationTable: React.FC = () => {
   const [lastDateOfMonth, setLastDateOfMonth] = useState("");
   const [selectedEndDate, setSelectedEndDate] = useState("");
   const [serviceCharge, setServiceCharge] = useState("");
+   const [showTimeSheet, setShowTimeSheet] = useState(false)
+   const [attendanceInfo,setAttendenceInfo]=useState<any>()
   const [showExtendPopup, setshowExtendPopup] = useState(false)
+  const [showFullMonth,setShowFullMonth]=useState(false)
   const [isChecking, setIsChecking] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [popupInfo, setPopupInfo] = useState("");
@@ -94,7 +97,10 @@ const TerminationTable: React.FC = () => {
 
     Fetch();
   }, []);
-
+  const NumberOfDaysInMonth = getDaysInMonth(
+    Number(month),
+    Number(year)
+  );
   const GetHCPGender = (A: any) => {
     if (!users?.length || !A) return "Not Entered";
 
@@ -555,8 +561,170 @@ error?.message || "Something went wrong while extending timesheet"
           )}
         </select> */}
       </div>
+{showFullMonth && (
+<div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2 md:p-4">
+  <div className="bg-white w-full sm:w-[90vw] md:w-[80vw] lg:w-[60vw] h-[85vh] sm:h-[82vh] md:h-[80vh] lg:h-[76vh] max-w-4xl rounded-xl shadow-xl overflow-hidden flex flex-col">
+    <div className="flex items-center justify-between px-4 py-3  shrink-0">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl flex items-center justify-center shadow">
+          <img
+            src="/Icons/Curate-logoq.png"
+            alt="Company Logo"
+            className="h-6 w-6 object-contain"
+          />
+        </div>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#ff1493] font-semibold">
+           {attendanceInfo.hcaName}
+          </p>
+          <h2 className="text-lg md:text-xl font-bold text-slate-800">
+            Attendance Dashboard
+          </h2>
+       <p className="text-xs text-gray-400">
+  {
+    months.find(
+      (impmonth) => impmonth.value === String(month).padStart(2, "0")
+    )?.name
+  }{" "}
+  {year}
+</p>
+        </div>
+      </div>
+
+      <button
+        onClick={() => setShowFullMonth(false)}
+        className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
+      >
+        <Minimize2 size={16} />
+      </button>
+    </div>
+
+    <div className="flex-1 p-2 md:p-3">
+      <div className="grid grid-cols-7 gap-2 h-full">
+        {Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
+          const today = new Date().getDate();
+         const dateKey = `${year}-${String(month).padStart(2, "0")}-${String(
+  i + 1
+).padStart(2, "0")}`;
+
+const dayInfo = attendanceInfo.days?.find((item: any) => {
+  const attendanceDate = item?.dateKey
+    ? item.dateKey
+    : new Date(item?.AttendenceDate).toISOString().split("T")[0];
+
+  return attendanceDate === dateKey;
+});
+          const dayStatus = dayInfo?.status ?? "-";
+          const clientName = dayInfo?.clientName ?? "";
+          const UpdatedBy = dayInfo?.UpdatedBy ?? "-";
+          const AbsentReason=dayInfo?.Reason?? "-";
+  const attendanceRecord = attendanceInfo?.TimeSheetAttendence?.find(
+  (item:any) => {
+    let normalizedDate = "";
+
+    if (typeof item.date === "string") {
+      // YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}$/.test(item.date)) {
+        normalizedDate = item.date;
+      } else {
+        // ISO String
+        normalizedDate = item.date.split("T")[0];
+      }
+    } else {
+      // Date Object
+      const d = new Date(item.date);
+
+      normalizedDate = `${d.getFullYear()}-${String(
+        d.getMonth() + 1
+      ).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+
+    return normalizedDate === dateKey;
+  }
+);
+
+const AttendecStatus = attendanceRecord?.status ?? "-";
+console.log ("Check Updated By------",attendanceRecord)
+const UpdatedUser:any=attendanceRecord?.UpdatedBy
 
 
+          const currentDate = new Date();
+currentDate.setHours(0, 0, 0, 0);
+
+const cellDate = new Date(
+  Number(year),
+  Number(month) - 1,
+  i + 1
+);
+cellDate.setHours(0, 0, 0, 0);
+
+const isFutureDate = cellDate > currentDate;
+
+          return (
+            <div
+              key={i}
+              className=" rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 "
+            >
+              <span className="text-[10px] font-semibold text-gray-500 uppercase">
+                Day {i + 1} 
+              </span>
+
+              {AttendecStatus === "-" ? (
+                <>
+                  <div className=" rounded-full bg-gray-100 flex items-center justify-center mt-1">
+                     <span
+                className={`text-[8px] w-fit font-medium font-semibold px-2 py-1 rounded bg-gray-300 text-gray-500 border-gray-300`}
+              >
+             Not Marked
+              </span>
+                  </div>
+
+                  <span className="text-[8px] text-gray-400 truncate max-w-[70px]">
+                    {clientName}
+                  </span>
+
+               
+                </>
+              ) : (
+                <>
+                  <DayBadge status={AttendecStatus} />
+
+                  {clientName && (
+                    <span className="text-[8px] text-center leading-tight px-1 line-clamp-2">
+                      {clientName}
+                    </span>
+                  )}
+
+                {UpdatedUser && (
+  <div className="relative group mt-1">
+    <div className="p-[2px] rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer">
+      <Info className="w-3 h-3 text-gray-500" />
+    </div>
+
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-[10px] px-2 py-2 rounded whitespace-nowrap z-50">
+      <div>Marked by: {UpdatedUser}</div>
+
+      {AbsentReason && dayStatus!=="P" && (
+        <div className="mt-1 border-t border-gray-700 pt-1">
+          Reason: {AbsentReason}
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+                
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+</div>
+)}
       <div className="overflow-hidden rounded-2xl border border-gray-300 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] h-[65vh] flex flex-col">
         {showExtendPopup && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -729,7 +897,7 @@ error?.message || "Something went wrong while extending timesheet"
 
 
               <tr className="border-b border-gray-300">
-                {["S.No", "Client","Patient","HCA", "Contact", "Location",  "Status", "Reason", "Service Continue", "Action"].map(
+                {["S.No", "Client","Patient","HCA", "Contact", "Location",  "Status","TimeSheet", "Reason", "Service Continue", ].map(
                   (head) => (
                     <th
                       key={head}
@@ -822,6 +990,27 @@ error?.message || "Something went wrong while extending timesheet"
                       {placement.status}
                     </span>
                   </td>
+                  <td className="px-6 py-4 text-center">
+                    <button
+                        onClick={()=>{setAttendenceInfo(placement),setShowFullMonth(true) ;console.log("dd",placement)}}
+                 className="
+      px-3 py-1.5
+      text-sm font-medium
+      text-white
+      border border-blue-600/60
+      rounded-md
+      cursor-pointer
+      bg-teal-800
+      hover:bg-blue-600/10
+      hover:border-blue-600
+      hover:text-gray-800
+      transition
+      duration-200
+    "
+                    >
+                      View
+                    </button>
+                  </td>
                   <td className="px-3 py-2">
                     <button
                       onClick={() => {
@@ -876,17 +1065,8 @@ error?.message || "Something went wrong while extending timesheet"
                       <ChevronsRight size={22} className="text-teal-600" />
                     </button>
                   </td>
-                  {/* ACTION */}
-                  <td className="px-6 py-4 text-center">
-                    <button
-                      onClick={() =>
-                        console.log("Console TimeSheet---", placement.TimeSheetAttendence)
-                      }
-                      className="rounded-lg border border-emerald-600 px-5 py-1.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-300"
-                    >
-                      View
-                    </button>
-                  </td>
+                 
+                  
                 </tr>
               ))}
 
@@ -963,5 +1143,61 @@ error?.message || "Something went wrong while extending timesheet"
     </div>
   );
 };
+function DayBadge({ status }: { status: any }) {
+  console.log("Check Imp Data-----",status)
+  const Wrapper = ({ children }: any) => (
+    <div className="flex items-center justify-center w-full">
+      {children}
+    </div>
+  );
 
+  if (status === "P"||status === "Present") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 text-emerald-600 bg-white shadow-sm">
+       P
+        </span>
+      </Wrapper>
+    );
+  }
+
+  if (status === "HP"||status === "Half Day") {
+    return (
+      <Wrapper>
+        <div className="relative w-8 h-8 rounded-full border-2 border-emerald-500 overflow-hidden shadow-sm flex items-center justify-center text-[10px] font-semibold text-emerald-600">
+          <div className="absolute left-0 top-0 w-1/2 h-full bg-emerald-500" />
+          <span className="relative z-10">HP</span>
+        </div>
+      </Wrapper>
+    );
+  }
+
+  if (status === "A"||status === "Absent") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-rose-600 text-rose-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  if (status === "NA") {
+    return (
+      <Wrapper>
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border-2 border-gray-500 text-gray-600 bg-white shadow-sm">
+          {status}
+        </span>
+      </Wrapper>
+    );
+  }
+
+  return (
+    <Wrapper>
+      <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-semibold rounded-full border border-gray-400 text-gray-500 bg-white shadow-sm">
+        {status}
+      </span>
+    </Wrapper>
+  );
+}
 export default TerminationTable;

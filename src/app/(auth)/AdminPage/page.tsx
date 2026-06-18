@@ -751,8 +751,19 @@ const monthNames = [
     response = await ClearEnquiry(DeleteInformation.userId);
 
     if (response?.success) {
-      dispatch(Refresh("Profile deleted Successfully"));
+      dispatch(Refresh("Profile deleted Successfully, Please Wait Refreshing the Data"));
+const userId =
+        localStorage.getItem("UserId");
 
+      const { data } = await axios.post(
+        "/api/AdminPageInfo",
+        {
+          userId,
+          refreshType: [ "fullInfo", "registeredUsers"]
+            ,
+            
+        }
+      );
       setTimeout(() => {
         setShowDeletePopUp(false);
         dispatch(Refresh(null))
@@ -1345,7 +1356,7 @@ const UpdatePopup = async (a: any) => {
 }<span className="text-xs font-semibold flex flex-col">
   <span>{toProperCaseLive(user.Surname)}</span>
   <span>
-    {toProperCaseLive(user.FirstName)} {toProperCaseLive(user.LastName)}
+    {toProperCaseLive(user.FirstName)} {toProperCaseLive(user.LastName)} 
   </span>
 </span>
 
@@ -1504,9 +1515,24 @@ const UpdatePopup = async (a: any) => {
 
   const handleUpdate = async () => {
  dispatch(Refresh("Please Wait....."))
-    const res = await UpdateHCAnstatus(user.userId, "Available for Work");
+    const res = await UpdateHCAnstatus(user.userId, "Bench");
+    if(res.success){
+      dispatch(Refresh("Please Wait Fetching Updated Data...."))
+        const userId =
+        localStorage.getItem("UserId");
+
+      const { data } = await axios.post(
+        "/api/AdminPageInfo",
+        {
+          userId,
+          refreshType: [ "fullInfo", "registeredUsers"]
+            ,
+            
+        }
+      );
+ dispatch(Refresh(res.message))
+    }
     
-     dispatch(Refresh(res.message))
   };
 
   return (

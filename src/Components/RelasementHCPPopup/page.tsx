@@ -50,7 +50,8 @@ const RepleasementHCPPopup = ({
   const dispatch = useDispatch();
 
   if (!open) return null;
-
+console.log ("Check information of Hcps-----",filteredHcps.filter((each:any)=>each.UserId
+==="391a2c83-3ef3-4029-a215-7539cbc66707"))
   const showCompleteInformation = (
     userId: string,
     clientName: string
@@ -60,17 +61,29 @@ const RepleasementHCPPopup = ({
 
     router.push("/UserInformation");
   };
+
+
   const HCA_List = filteredHcps.filter((each: any) => {
-  const typeMatch =
-    ["healthcare-assistant", "HCA", "HCP", "HCPT"].includes(each.userType);
+const typeMatch = [
+  "healthcare-assistant",
+  "HCA",
+  "HCP",
+  "HCPT",
+].includes(each.userType?.trim());
 
-  const isNotAssigned =
-    !each.Status?.some((s: string) => s === "Assigned");
+ const isNotAssigned =
+  !Array.isArray(each.Status) ||
+  !each.Status.includes("Assigned");
+ const isValidCurrentStatus =
+  each.CurrentStatus?.trim() === "Bench";
 
-  const isValidCurrentStatus =each.CurrentStatus==="Bench"
+    const genderMatch =
+    each.Gender?.trim().toLowerCase() ===
+    form.Gender?.trim().toLowerCase();
 
-  return typeMatch && isNotAssigned && isValidCurrentStatus&&each.Gender?.toLowerCase() === form.Gender?.toLowerCase();
+  return typeMatch && isNotAssigned && isValidCurrentStatus&&genderMatch;
 });
+
   const searchedHcps = HCA_List.filter((hcp) =>
     `${hcp.HCPFirstName} ${hcp.HCPLastName || ""}`
       .toLowerCase()
