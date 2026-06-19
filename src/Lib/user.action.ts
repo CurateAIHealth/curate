@@ -1203,20 +1203,17 @@ export const HCARegistration = async (HCA: HCAInfo) => {
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Registration");
 
-    const existingHCA = await collection.findOne({
-      $or: [
-        { emailHash: hashValue(HCA.Email.toLowerCase()) },
-        { phoneHash: hashValue(HCA.ContactNumber) },
-        { aadharHash: hashValue(HCA.AadharNumber) },
-      ],
-    });
 
-    if (existingHCA) {
-      return {
-        success: false,
-        message: "An account with these details already exists.",
-      };
-    }
+   const existingHCA = await collection.findOne({
+  aadharHash: hashValue(HCA.AadharNumber),
+});
+
+if (existingHCA) {
+  return {
+    success: false,
+    message: `${decrypt(existingHCA.Surname)} ${decrypt(existingHCA.FirstName)} ${decrypt(existingHCA.LastName)} already has an account with this Aadhaar number.`,
+  };
+}
 
     
     const encryptedData = {
