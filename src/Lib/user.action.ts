@@ -2918,6 +2918,64 @@ export const GetDeploymentInfo = async (
   }
 };
 
+export const GetDeploymentInfoforMissingAttendece = async (
+  monthKey?: string
+) => {
+  try {
+    console.time("Mongo Connection");
+
+    const cluster = await clientPromise;
+
+    console.timeEnd("Mongo Connection");
+
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    console.log("Month Key:", monthKey);
+
+    console.time("Mongo Query");
+
+    const TimeSheetInfoData = await collection
+      .find(
+       
+           { Month: monthKey } 
+        
+      )
+      .toArray();
+
+    console.timeEnd("Mongo Query");
+
+    console.log("Records Count:", TimeSheetInfoData.length);
+
+    if (TimeSheetInfoData.length > 0) {
+      console.log(
+        "Sample Record Size:",
+        JSON.stringify(TimeSheetInfoData[0]).length
+      );
+    }
+
+    console.time("Map Records");
+
+    const Result = TimeSheetInfoData.map((user: any) => ({
+      ...user,
+      _id: user._id?.toString(),
+    }));
+
+    console.timeEnd("Map Records");
+
+    console.time("JSON Serialize");
+
+    JSON.stringify(Result);
+
+    console.timeEnd("JSON Serialize");
+
+    return Result;
+  } catch (e) {
+    console.error("GetDeploymentInfo Error:", e);
+    return [];
+  }
+};
+
 export const UpdateClientTimeSheet = async (
   ImpClientId: any,
   ImpHCPId:any,

@@ -3,7 +3,7 @@ let deploymentCache: any[] = [];
 let cachedUsersFullInfo: any[] = [];
 let cachedRegisterdUsers: any[] = [];
 import { DeleteClientFromDeolyment, EditAttendanceByClientId, EditAttendanceByDateRange, GetApplicationData, GetDeploymentInfo, GetRegidterdUsers, GetRegidterdUsersforTimeSheet, GetUsersFullInfo, GetUsersFullInfoforTimeSheet, PostAttendeceEditRequest, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus, UpdatehcpDailyAttendce } from "@/Lib/user.action";
-import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
+import { SetDeploymentInfo, UpdateClient, UpdateUserInformation } from "@/Redux/action";
 import { CalendarDays, CheckCircle, Eye, FilePenLine, Info, LucidePencil, Minimize2, Pencil, PencilIcon, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -613,10 +613,35 @@ const hasUnmarked = processedData.some(
         return updated;
       });
 
-      SetStatusMessage("HCPs Today's Attendance Updated Successfully");
+      SetStatusMessage("HCPs Today's Attendance Updated Successfully, Fetching Updated Data........");
+       const userId = localStorage.getItem("UserId");
+      
+          if (userId) {
+            try {
+              const { data } = await axios.post("/api/AdminPageInfo", {
+                userId,
+                refreshType: "deployment",
+              });
+      
+              dispatch(
+                SetDeploymentInfo(
+                  (data?.data?.deployedLength) || 0
+                )
+              );
+              SetStatusMessage(
+            "updated data Imported"
+          )
+            } catch (refreshError) {
+              console.error(
+                "Failed to refresh deployment count:",
+                refreshError
+              );
+            }
+          }
       setTimeout(() => {
         setShowAttendencePopUp(false);
       }, 800);
+      return
     }
 
 
@@ -1667,11 +1692,11 @@ className={`
         {Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
           const today = new Date().getDate();
           const dayInfo = attendanceInfo.days?.[i];
-          const dayStatus = dayInfo?.status ?? "-";
+          
           const clientName = dayInfo?.clientName ?? "";
           const UpdatedBy = dayInfo?.UpdatedBy ?? "-";
           const AbsentReason=dayInfo?.Reason?? "-";
-          console.log("Check For ReplaesMent Date------",attendanceInfo.ReplacementDate)
+          console.log("Check For ReplaesMent Date------",attendanceInfo)
           const currentDate = new Date();
 currentDate.setHours(0, 0, 0, 0);
 
@@ -1684,7 +1709,23 @@ cellDate.setHours(0, 0, 0, 0);
 
 const isFutureDate = cellDate > currentDate;
 
+const startDate = attendanceInfo?.startDate
+  ? (() => {
+      const [day, month, year] = attendanceInfo.startDate
+        .split("/")
+        .map(Number);
 
+      const date = new Date(year, month - 1, day);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    })()
+  : null;
+
+const isBeforeStartDate =
+  startDate && cellDate < startDate;
+const dayStatus = isBeforeStartDate
+  ? "-"
+  : dayInfo?.status ?? "-";
 const replacementDate = attendanceInfo?.ReplacementDate
   ? new Date(attendanceInfo.ReplacementDate)
   : null;
@@ -1695,7 +1736,7 @@ const isBeforeReplacementDate =
   replacementDate && cellDate <= replacementDate;
 
 
-const isDisabled:any = isFutureDate || isBeforeReplacementDate;
+const isDisabled:any = isFutureDate || isBeforeReplacementDate||isBeforeStartDate;
 
           return (
             <div
@@ -1703,7 +1744,7 @@ const isDisabled:any = isFutureDate || isBeforeReplacementDate;
               className=" rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col items-center justify-center p-1 "
             >
               <span className="text-[10px] font-semibold text-gray-500 uppercase">
-                Day {i + 1} {isBeforeReplacementDate&&"s"}
+                Day {i + 1} 
               </span>
 
               {dayStatus === "-" ? (
@@ -1712,7 +1753,7 @@ const isDisabled:any = isFutureDate || isBeforeReplacementDate;
                      <span
                 className={`text-[8px] w-fit font-medium font-semibold px-2 py-1 rounded bg-gray-300 text-gray-500 border-gray-300`}
               >
-             Not Marked
+             Not Marked 
               </span>
                   </div>
 

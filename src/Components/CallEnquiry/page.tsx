@@ -4,7 +4,7 @@
 
 import { toProperCaseLive } from "@/Lib/Actions";
 import { ClearEnquiry, GetUserInformation, PostCallEnquiryNotification, UpdateClientStatusinCallEnquiry, UpdateClientStatusToProcessing, UpdatedUserJoingDate, UpdateNewComments } from "@/Lib/user.action";
-import { Refresh } from "@/Redux/action";
+import { Refresh, setFullInfo, setUsers } from "@/Redux/action";
 import {
   Phone,
   MapPin,
@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from "react-redux";
 import StaffNotificationModal from "../CallEnquiryNotification/page";
 import { isArray } from "util";
 import CommentsPopup from "../CommentsPopup/page";
+import axios from "axios";
 
 interface CallEnquiryUser {
   CurateNewLead: string;
@@ -223,7 +224,32 @@ return
 const UpdateCurrentClientStatus=await   UpdateClientStatusinCallEnquiry(UserId,Value)
 if(UpdateCurrentClientStatus.success){
 
-  dispatch(Refresh(`Lead went to ${Value} page Successfully`))
+  dispatch(Refresh(`Lead went to ${Value} Successfully,Please Wait Fetching Updated Data.....`))
+   const userId =localStorage.getItem("UserId");
+  
+        const { data } = await axios.post(
+          "/api/AdminPageInfo",
+          {
+            userId,
+            refreshType: [
+              "registeredUsers",
+              "fullInfo",
+            ],
+          }
+        );
+  
+        console.log (
+  "Current Task------",data
+        )
+  
+        dispatch(setUsers(
+          data.data.registeredUsers
+        ))
+  
+         dispatch(setFullInfo(
+          data.data.fullInfo
+        ))
+  dispatch(Refresh(`Data Fetched Successfully`))
 }
 }catch(err:any){
 

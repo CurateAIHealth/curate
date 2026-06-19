@@ -2775,6 +2775,7 @@ export  const ImportedinvoiceData = {
         "srivanikasham@curatehealth.in",
         "info@curatehealth.in",
         "gouricurate@gmail.com",
-        "shreeshmacurate@gmail.com"
+        "shreeshmacurate@gmail.com",
+        "panducurate@gmail.com"
       ],
     };

@@ -1333,7 +1333,30 @@ const UpdateReplacement = async (
   SetActionStatusMessage(
     "Clients Today's Attendance Updated Successfully"
   );
+ const userId = localStorage.getItem("UserId");
 
+    if (userId) {
+      try {
+        const { data } = await axios.post("/api/AdminPageInfo", {
+          userId,
+          refreshType: "deployment",
+        });
+
+        dispatch(
+          SetDeploymentInfo(
+            Number(data?.data?.deployedLength) || 0
+          )
+        );
+        SetActionStatusMessage(
+      "updated data Imported"
+    )
+      } catch (refreshError) {
+        console.error(
+          "Failed to refresh deployment count:",
+          refreshError
+        );
+      }
+    }
   return;
 }
   
@@ -1553,13 +1576,13 @@ if (dateResponse?.success) {
 
   return;
 }
-      setTimeout(() => {
-        setShowTimeSheet(false);
-        SetShowUpdateAttendece(false);
-        SetAttendeceEditReason("");
-      }, 3500);
+      // setTimeout(() => {
+      //   setShowTimeSheet(false);
+      //   SetShowUpdateAttendece(false);
+      //   SetAttendeceEditReason("");
+      // }, 3500);
 
-      return;
+      // return;
 //     if (EditDate === today) {
 //       const payload = {
 //         Client_Id: AttenseceInformation.Client_Id,
@@ -3445,7 +3468,7 @@ onClick={EditAttendence}
 
  const record = TimeSheet_Info.ClientAttendance?.find((t: any) => {
   if (!t?.dateKey) return false;
-console.log("Check for Repleasment Date--------",TimeSheet_Info.ReplacementDate)
+console.log("Check for Repleasment Date--------",TimeSheet_Info)
   const [year, month, date] = t.dateKey.split("-").map(Number);
   const parsed = new Date(year, month - 1, date);
 
@@ -3460,7 +3483,18 @@ console.log("Check for Repleasment Date--------",TimeSheet_Info.ReplacementDate)
           const currentDateObj = new Date(SearchYear, SearchMonth-1, day);
           const isFuture = currentDateObj > today;
 
-      
+    const startDate = TimeSheet_Info?.StartDate
+  ? (() => {
+      const [day, month, year] = TimeSheet_Info.StartDate
+        .split("/")
+        .map(Number);
+
+      return new Date(year, month - 1, day);
+    })()
+  : null;
+
+const isBeforeStartDate =
+  startDate && currentDateObj < startDate;  
 
 const replacementDate = TimeSheet_Info?.ReplacementDate
   ? new Date(TimeSheet_Info.ReplacementDate)
@@ -3469,14 +3503,17 @@ const replacementDate = TimeSheet_Info?.ReplacementDate
 const isBeforeReplacementDate =
   replacementDate && currentDateObj < replacementDate;
 
-          const currentStatus =updatedAttendance?.[day]?.status ??
-            (record?.Status === "Present"
-              ? "Present"
-              : record?.Status === "Half Day"
-              ? "Half Day"
-              : record?.Status === "Absent"
-              ? "Absent"
-              : "Not Marked");
+          const currentStatus =
+  isBeforeStartDate
+    ? "Not Marked"
+    : updatedAttendance?.[day]?.status ??
+      (record?.Status === "Present"
+        ? "Present"
+        : record?.Status === "Half Day"
+        ? "Half Day"
+        : record?.Status === "Absent"
+        ? "Absent"
+        : "Not Marked");
 
           const statusColor =
             (currentStatus as string) === "Present"
@@ -3537,7 +3574,7 @@ className="
 
               <span
                 onClick={() => {
-                  if (isFuture||isBeforeReplacementDate) return;
+                  if (isFuture||isBeforeReplacementDate||isBeforeStartDate) return;
                   SetShowUpdateAttendece(!ShowUpdateAttendece);
                   SetParticularDate(day);
                   setEditDate(record?.dateKey?record?.dateKey:`${SearchYear}-0${SearchMonth}-${day<=9?
@@ -3547,7 +3584,7 @@ className="
                   setAbsentReason(record?.Reason || "");
                 }}
                 className={`text-[8px] px-2 py-[2px] rounded-full mt-1 cursor-pointer ${
-                  isFuture||isBeforeReplacementDate
+                  isFuture||isBeforeReplacementDate||isBeforeStartDate
                     ? "bg-gray-100 text-gray-300 cursor-not-allowed"
                     : "bg-slate-700 text-white hover:bg-slate-800"
                 }`}

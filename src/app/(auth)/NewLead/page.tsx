@@ -6,7 +6,8 @@ import MedicationSchedule from "@/Components/Medications/page";
 import { normalizeDate } from "@/Lib/Actions";
 import { ClientEnquiry_Filters, filterColors, Headings, Health_Card, healthcareServices, HomeAssistance, hyderabadAreas, indianFamilyRelations, IndianLanguages, LeadSources, Main_Filters, medicalSpecializations, Patient_Home_Supply_Needs, patientCategories, physioSpecializations, SERVICE_SUBTYPE_MAP,  } from "@/Lib/Content";
 import { GetRegidterdUsers, GetUserInformation, UpdateNewLeadInformation } from "@/Lib/user.action";
-import { Refresh, Update_Current_Client_Status, Update_Main_Filter_Status, UpdateClientSuggetion, UpdateFetchedInformation } from "@/Redux/action";
+import { Refresh, setFullInfo, setUsers, Update_Current_Client_Status, Update_Main_Filter_Status, UpdateClientSuggetion, UpdateFetchedInformation } from "@/Redux/action";
+import axios from "axios";
 import { a } from "framer-motion/client";
 import { AlertCircle, Info, ListFilter, LogOut, PhoneCall, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -430,8 +431,32 @@ const handleCmChange = (value: string) => {
     }
 
     setStatusMessage(
-      `${postResult.message || "Lead updated successfully"}, Redirecting...`
+      `${postResult.message || "Lead updated successfully"}, Fetching Updated Data.....`
     );
+ const userId =localStorage.getItem("UserId");
+
+      const { data } = await axios.post(
+        "/api/AdminPageInfo",
+        {
+          userId,
+          refreshType: [
+            "registeredUsers",
+            "fullInfo",
+          ],
+        }
+      );
+
+      console.log (
+"Current Task------",data
+      )
+
+      dispatch(setUsers(
+        data.data.registeredUsers
+      ))
+
+       dispatch(setFullInfo(
+        data.data.fullInfo
+      ))
 
     setTimeout(() => {
       router.push("/DashBoard");

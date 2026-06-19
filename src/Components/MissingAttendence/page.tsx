@@ -1,10 +1,12 @@
 'use client'
 let cachedDeploymentInfo: Record<string, any[]> = {};
-import { GetDeploymentInfo, UpdatehcpDailyAttendce, UpdateAttendence, UpdateMultipleAttendance, EditAttendanceByClientId } from "@/Lib/user.action"
+import { GetDeploymentInfo, UpdatehcpDailyAttendce, UpdateAttendence, UpdateMultipleAttendance, EditAttendanceByClientId, GetDeploymentInfoforMissingAttendece } from "@/Lib/user.action"
 import { useEffect, useState } from "react"
 import { LoadingData } from "../Loading/page"
-import { useSelector } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { useRouter } from "next/navigation";
+import { SetDeploymentInfo } from "@/Redux/action";
+import axios from "axios";
 
 
 
@@ -27,7 +29,7 @@ const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split(
 
 const selectedDateObject = new Date(selectedDate);
  const router = useRouter();
-
+const dispatch=useDispatch()
 useEffect(() => {
   let mounted = true;
 
@@ -38,31 +40,32 @@ useEffect(() => {
  if(loggedInEmail===""){
     router.push("/DashBoard")
   }
-  const fetchFreshData = async () => {
-    try {
-      const cacheKey = `${selectedYear}-${selectedMonth}`;
-
-      // Use cache instantly
-      if (!isSuccessUpdate && cachedDeploymentInfo[cacheKey]?.length) {
-        SetAttendenceInfo(cachedDeploymentInfo[cacheKey]);
-        return;
-      }
-
-      setisChecking(true);
-
-      const deploymentData = await GetDeploymentInfo(cacheKey);
-
-      if (!mounted) return;
-
-      cachedDeploymentInfo[cacheKey] = deploymentData ?? [];
+ const fetchFreshData = async () => {
+  try {
+   const cacheKey = `${selectedYear}-${Number(selectedMonth)}`;
+console.log("Check in cacheKey----", cacheKey);
+    // Use cache instantly
+    if (!isSuccessUpdate && cachedDeploymentInfo[cacheKey]?.length) {
       SetAttendenceInfo(cachedDeploymentInfo[cacheKey]);
-
-    } catch (err) {
-      console.error("Fetch error:", err);
-    } finally {
-      if (mounted) setisChecking(false);
+      return;
     }
-  };
+
+    setisChecking(true);
+
+    const deploymentData = await GetDeploymentInfoforMissingAttendece(cacheKey);
+
+    console.log("Check Imp Data-----", deploymentData);
+
+    if (!mounted) return;
+
+    cachedDeploymentInfo[cacheKey] = deploymentData ?? [];
+    SetAttendenceInfo(cachedDeploymentInfo[cacheKey]);
+  } catch (err) {
+    console.error("Fetch error:", err);
+  } finally {
+    if (mounted) setisChecking(false);
+  }
+};
 
   fetchFreshData();
 
@@ -119,7 +122,7 @@ const hasToday = attendance.some((a: any) =>
  
   const isCurrentMonth = (() => {
   if (!item.StartDate) return false;
-
+console.log ("Check for Start Date------",item.StartDate)
   const [day, month, year] = item.StartDate.split("/").map(Number);
   const startDate = new Date(year, month - 1, day);
 
@@ -134,7 +137,8 @@ const hasToday = attendance.some((a: any) =>
 
   return !hasToday && matchesSearch && isCurrentMonth;
 });
-console.log("Filtered Result:", result);
+console.log("Filtered Result:", AttendenceInfo);
+console.log ("Check Selected Date---",selectedDate)
 const UpdateCurrentAttendence = async () => {
   setStatusMessage("Please Wait...");
 
@@ -147,7 +151,31 @@ const UpdateCurrentAttendence = async () => {
     );
 
   if (UpdateDailyattendece.success) {
-    setStatusMessage("HCPs Attendance Updated Successfully ✅");
+    setStatusMessage("HCPs Attendance Updated Successfully, Fetching Updated Data.....");
+     const userId = localStorage.getItem("UserId");
+      
+          if (userId) {
+            try {
+              const { data } = await axios.post("/api/AdminPageInfo", {
+                userId,
+                refreshType: "deployment",
+              });
+      
+              dispatch(
+                SetDeploymentInfo(
+                  (data?.data?.deployedLength) || 0
+                )
+              );
+              setStatusMessage(
+            "updated data Imported"
+          )
+            } catch (refreshError) {
+              console.error(
+                "Failed to refresh deployment count:",
+                refreshError
+              );
+            }
+          }
   }
 };
 ;
@@ -173,6 +201,30 @@ const UpdateCurrentAttendence = async () => {
     );
 
     if (AttendenceUpdateResult.success) {
+       const userId = localStorage.getItem("UserId");
+      
+          if (userId) {
+            try {
+              const { data } = await axios.post("/api/AdminPageInfo", {
+                userId,
+                refreshType: "deployment",
+              });
+      
+              dispatch(
+                SetDeploymentInfo(
+                  (data?.data?.deployedLength) || 0
+                )
+              );
+              setStatusMessage(
+            "updated data Imported"
+          )
+            } catch (refreshError) {
+              console.error(
+                "Failed to refresh deployment count:",
+                refreshError
+              );
+            }
+          }
       setStatusMessage(AttendenceUpdateResult.message);
     
     }
