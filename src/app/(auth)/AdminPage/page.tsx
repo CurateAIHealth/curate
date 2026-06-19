@@ -720,11 +720,11 @@ const monthNames = [
     if (!DeleteInformation?.userId) return;
 
     dispatch(Refresh("Please wait Deleting Profile..."));
- if (loggedInEmail !== "srivanikasham@curatehealth.in") {
+//  if (loggedInEmail !== "srivanikasham@curatehealth.in") {
      
-              dispatch(Refresh('You don’t have the required permissions to proceed'))
-        return
-      }
+//               dispatch(Refresh('You don’t have the required permissions to proceed'))
+//         return
+//       }
    
      const workingStatus = HCPWorkingStatus(DeleteInformation.userId);
   const isAssigned =
@@ -764,6 +764,7 @@ const userId =
             
         }
       );
+         dispatch(Refresh("Fetched Updated Data Successfully"));
       setTimeout(() => {
         setShowDeletePopUp(false);
         dispatch(Refresh(null))
