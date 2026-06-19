@@ -754,18 +754,19 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
        
             setUpdatedStatusMessage("Creating account and saving profile...");
 const Complitinfo = await PostHCAFullRegistration(FinelForm);
+
 console.log("Check Resistration------",Complitinfo)
 if (!Complitinfo?.success) {
   setUpdatedStatusMessage(
-    "Failed to save complete registration details."
+   Complitinfo.message
   );
   return;
 }
            const PrimaryDetails = await HCARegistration(payload);
-
+console.log ("Check HCA Registration Error----",PrimaryDetails)
 if (!PrimaryDetails.success===true) {
   setUpdatedStatusMessage(
-    "Failed to save registration details."
+PrimaryDetails.message
   );
 const LocaluserId = localStorage.getItem("UserId");
 

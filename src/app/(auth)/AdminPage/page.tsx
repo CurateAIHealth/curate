@@ -764,6 +764,14 @@ const userId =
             
         }
       );
+        dispatch(setUsers(
+        data.data.registeredUsers
+      ))
+
+       dispatch(setFullInfo(
+        data.data.fullInfo
+      ))
+
          dispatch(Refresh("Fetched Updated Data Successfully"));
       setTimeout(() => {
         setShowDeletePopUp(false);
@@ -1531,6 +1539,13 @@ const UpdatePopup = async (a: any) => {
             
         }
       );
+        dispatch(setUsers(
+        data.data.registeredUsers
+      ))
+
+       dispatch(setFullInfo(
+        data.data.fullInfo
+      ))
  dispatch(Refresh(res.message))
     }
     
