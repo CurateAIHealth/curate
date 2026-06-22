@@ -7395,8 +7395,8 @@ export const UpdateClientStatusinCallEnquiry = async (
         { userId: UserId },
         {
           $set: {
-            Status: AvailableStatus,
-            CurrentStatus: AvailableStatus,
+            Status: AvailableStatus||"Bench",
+            CurrentStatus: AvailableStatus||"Bench",
           },
         }
       );
@@ -7406,7 +7406,7 @@ export const UpdateClientStatusinCallEnquiry = async (
     { "HCAComplitInformation.UserId": UserId },
     {
       $set: {
-        "HCAComplitInformation.CurrentStatus": AvailableStatus,
+        "HCAComplitInformation.CurrentStatus": AvailableStatus||"Bench",
       },
       $unset: {
         "HCAComplitInformation.Status": "",
