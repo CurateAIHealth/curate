@@ -524,6 +524,21 @@ console.log(" EnquiryForm.patientHeight:", EnquiryForm.patientHeight);
 
       if (registrationResult.success === true&&EnquiryForm.ClientStatus!=="Send") {
         setEnquiryMessage("Client Enquiry Registered Successfully, Please Wait Navigating to Call Enquiry DashBoard !");
+          const userId = localStorage.getItem("UserId");
+    const { data: result } = await axios.post(
+           "/api/AdminPageInfo",
+           {
+             userId,
+             refreshType: "registeredUsers",
+           }
+         );
+         const {
+      profile,
+      registeredUsers,
+      fullInfo,
+      deployedLength,
+    } = result.data;
+     dispatch( setUsers(registeredUsers))
 
         //         if((EnquiryForm.ClientStatus!="Waiting List")||(EnquiryForm.ClientStatus!="Lost")){
         // setShowNotification(true)
@@ -535,6 +550,7 @@ if(EnquiryForm.ClientStatus!=="Send"){
           dispatch(UpdateUserType("patient"));
           router.push("/AdminPage");
           dispatch(Refresh("New Call Enquiry Added  Successfully"));
+          
         }, 1500);
       }
 
@@ -964,7 +980,7 @@ setIsNavigating(true);
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
             </span>
           </div>
 

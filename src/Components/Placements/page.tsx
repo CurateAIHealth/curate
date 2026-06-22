@@ -974,6 +974,13 @@ const confirmDelete = async (selectedReason: string) => {
     return;
   }
 
+  if (UpdatedCareTakerStatus===""){
+      SetActionStatusMessage(
+"Update HCA Status!"
+    );
+    return
+  }
+
   const {
     HCA_Id,
     Client_Id,
@@ -992,11 +999,11 @@ const confirmDelete = async (selectedReason: string) => {
     SetActionStatusMessage("Please wait, deleting placement...");
 
     
-    await UpdateHCAnstatus(HCA_Id, UpdatedCareTakerStatus);
+    await UpdateHCAnstatus(HCA_Id, UpdatedCareTakerStatus||"Bench");
 
     await UpdateUserContactVerificationstatus(Client_Id, "Lost");
 
-    const deleteDeploymentResponse = await DeleteDeployMent(
+    const deleteDeploymentResponse:any = await DeleteDeployMent(
       Client_Id,
       HCA_Id,
       Month
@@ -1037,18 +1044,20 @@ const confirmDelete = async (selectedReason: string) => {
 
     if (userId) {
       try {
-        const { data } = await axios.post("/api/AdminPageInfo", {
+        const { data:result } = await axios.post("/api/AdminPageInfo", {
           userId,
           refreshType: "deployment",
         });
+   const {
+      profile,
+      registeredUsers,
+      fullInfo,
+      deployedLength,
+    } = result.data;
+       dispatch( SetDeploymentInfo(deployedLength))
 
-        dispatch(
-          SetDeploymentInfo(
-            Number(data?.data?.deployedLength) || 0
-          )
-        );
         SetActionStatusMessage(
-      "updated data Imported"
+      "Date Updated successfully"
     )
       } catch (refreshError) {
         console.error(
@@ -2832,7 +2841,7 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
             <button
             
               className="px-3 py-2 text-xs font-medium cursor-pointer rounded-lg hover:rounded-full hover:bg-gray-100"
-              onClick={() => handleDeleteClick(c,c.HCA_Name)}
+              onClick={() => {handleDeleteClick(c,c.HCA_Name),setUpdatedCareTakerStatus("")}}
             >
               <Trash />
             </button>
