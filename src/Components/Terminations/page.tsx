@@ -645,7 +645,7 @@ const dayInfo = attendanceInfo.days?.find((item: any) => {
 );
 
 const AttendecStatus = attendanceRecord?.status ?? "-";
-console.log ("Check Updated By------",attendanceRecord)
+console.log ("Check Updated By------",attendanceInfo)
 const UpdatedUser:any=attendanceRecord?.UpdatedBy
 
 
