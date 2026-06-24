@@ -1010,7 +1010,8 @@ const confirmDelete = async (selectedReason: string) => {
     );
 
     if (!deleteDeploymentResponse?.success) {
-         SetActionStatusMessage("Deployment deletion failed.");
+         SetActionStatusMessage(deleteDeploymentResponse.message||"Deployment deletion failed.");
+         return
     }
 
     await Promise.all([

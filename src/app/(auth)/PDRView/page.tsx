@@ -387,7 +387,7 @@ const handleLogout = () => {
 
 
  return (
-<div className="w-full min-h-screen bg-gradient-to-br from-[#f9fbfa] via-[#f0fdfa] to-[#ecfeff] flex flex-col gap-10 p-10 relative overflow-hidden">
+<div className="w-full min-h-screen bg-gradient-to-br from-[#f9fbfa] via-[#f0fdfa] to-[#ecfeff] flex flex-col gap-4 sm:gap-6 lg:gap-8 p-3 sm:p-4 md:p-6 lg:p-8 relative overflow-hidden">
 
 
   <div className="absolute inset-0 -z-10">
@@ -396,7 +396,7 @@ const handleLogout = () => {
   </div>
 
   
-  <div className="flex flex-col sm:flex-row justify-between items-center gap-6 bg-white/90 backdrop-blur-xl rounded-2xl shadow-[0_6px_30px_rgba(0,0,0,0.08)] border border-gray-100 px-8 py-6">
+<div className="flex flex-col xl:flex-row justify-between xl:items-center gap-4 lg:gap-6 bg-white/90 backdrop-blur-xl rounded-2xl shadow-[0_6px_30px_rgba(0,0,0,0.08)] border border-gray-100 p-4 sm:p-5 lg:p-6">
     <div>
       <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">🩺 Patient Daily Record</h1>
       <p className="text-gray-500 text-sm mt-1">Monitor, manage, and complete pending PDRs with ease.</p>
@@ -471,10 +471,7 @@ const handleLogout = () => {
   <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
     PDR List
   </h3>
-
-
-  <div className="flex items-center gap-4">
- 
+<div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
    <div className="w-full sm:w-[130px]">
      {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
        Month
@@ -524,7 +521,7 @@ const handleLogout = () => {
        ))}
      </select>
    </div>
-    <div className="flex rounded-lg border border-gray-200 bg-gray-100 p-1">
+    <div className="flex flex-wrap rounded-lg border border-gray-200 bg-gray-100 p-1 w-full sm:w-auto">
       <button
         onClick={() => setActiveTab(false)}
         className={`px-4 py-1.5 text-sm font-medium cursor-pointer rounded-md transition
@@ -560,60 +557,155 @@ const handleLogout = () => {
   </div>
 </div>
 
+{/* Desktop - Existing Table */}
+<div className="hidden lg:block overflow-x-auto rounded-2xl border border-gray-100 shadow-inner">
+  <table className="w-full min-w-[700px] md:min-w-[900px] text-xs sm:text-sm text-left text-gray-700">
+    <thead className="bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-600 text-white uppercase text-[10px] sm:text-xs font-semibold tracking-wider whitespace-nowrap">
+      <tr>
+        <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">S.No</th>
+        <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">Client Name</th>
+        <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">Patient Name</th>
+        <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">HCP Name</th>
+        <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">Contact</th>
+        <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">Location</th>
+        <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-center">
+          Status
+        </th>
+        <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-center">
+          PDR
+        </th>
+      </tr>
+    </thead>
 
-      <div className="overflow-hidden rounded-2xl border border-gray-100 shadow-inner">
-        <table className="w-full text-sm text-left text-gray-700">
-          <thead className="bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-600 text-white uppercase text-xs font-semibold tracking-wider">
-            <tr>
-                <th className="px-6 py-4">S.No</th>
-              <th className="px-6 py-4">Client Name</th>
-                <th className="px-6 py-4">Patient Name</th>
-                    <th className="px-6 py-4">HCP Name</th>
-              <th className="px-6 py-4">Contact</th>
-              <th className="px-6 py-4">Location</th>
-              <th className="px-8 py-4 ">Status</th>
-              <th className="px-6 py-4 text-center">PDR</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredClients.reverse().map((c, i) => (
-              <tr
-                key={i}
-                className="border-b border-gray-400 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-cyan-50 transition-all duration-300"
-              >
-                     <td className="px-6 py-4 font-semibold text-gray-900">{i+1}</td>
-                <td className="px-6 py-4 font-semibold text-gray-900">{c.name}</td>
-                 <td className="px-6 py-4 font-semibold text-gray-900">{c.PatientName}</td>
-                <td className="px-6 py-4 font-semibold text-gray-900">{c.HCA_Name}</td>
-                <td className="px-6 py-4">{c.contact}</td>
-                <td className="px-6 py-4 text-gray-600 truncate max-w-[200px]">{c.location}</td>
-                <td className="px-6 py-4">
-                  <div className="inline-flex items-center gap-2 bg-emerald-100/80 text-emerald-700 rounded-full px-3 py-1 shadow-sm">
-                    <CircleCheckBig className="w-4 h-4 text-emerald-600" />
-                    <span className="text-xs font-medium">Converted</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-center">
-                 <button
-  onClick={() => updatePopup(c)}
-  className="px-6 py-2 cursor-pointer rounded-full shadow-md hover:shadow-lg hover:scale-[1.05] transition-all duration-300 flex items-center justify-center"
->
-  {c.PDRStatus ? (
-    <div  className="p-2 rounded-full bg-emerald-100 text-emerald-600">
-      <Eye size={18} />
-    </div>
-  ) : (
-    <div className="p-2 rounded-full bg-red-100 text-red-600">
-      <SquarePen size={18} />
-    </div>
-  )}
-</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <tbody>
+      {[...filteredClients].reverse().map((c, i) => (
+        <tr
+          key={i}
+          className="border-b border-gray-200 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-cyan-50 transition-all duration-300"
+        >
+          <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-semibold text-gray-900 whitespace-nowrap">
+            {i + 1}
+          </td>
+
+          <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-semibold text-gray-900 whitespace-nowrap">
+            {c.name}
+          </td>
+
+          <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-semibold text-gray-900 whitespace-nowrap">
+            {c.PatientName}
+          </td>
+
+          <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-semibold text-gray-900 whitespace-nowrap">
+            {c.HCA_Name}
+          </td>
+
+          <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
+            {c.contact}
+          </td>
+
+          <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 max-w-[180px] lg:max-w-[250px] truncate">
+            {c.location}
+          </td>
+
+          <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-emerald-100/80 text-emerald-700 rounded-full px-2 sm:px-3 py-1 shadow-sm whitespace-nowrap">
+              <CircleCheckBig className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+              <span className="text-[10px] sm:text-xs font-medium">
+                Converted
+              </span>
+            </div>
+          </td>
+
+          <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-center">
+            <button
+              onClick={() => updatePopup(c)}
+              className="mx-auto p-1 sm:p-2 rounded-full hover:scale-105 transition-all duration-300"
+            >
+              {c.PDRStatus ? (
+                <div className="p-2 rounded-full bg-emerald-100 text-emerald-600">
+                  <Eye size={16} className="sm:w-[18px] sm:h-[18px]" />
+                </div>
+              ) : (
+                <div className="p-2 rounded-full bg-red-100 text-red-600">
+                  <SquarePen size={16} className="sm:w-[18px] sm:h-[18px]" />
+                </div>
+              )}
+            </button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+{/* Mobile & Tablet Cards */}
+<div className="lg:hidden space-y-4">
+  {[...filteredClients].reverse().map((c, i) => (
+    <div
+      key={i}
+      className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <span className="font-bold text-emerald-600">
+          #{i + 1}
+        </span>
+
+        <div className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-700 rounded-full px-3 py-1 text-xs">
+          <CircleCheckBig size={14} />
+          Converted
+        </div>
       </div>
+
+      <div className="space-y-3">
+        <div>
+          <p className="text-xs text-gray-500">Client Name</p>
+          <p className="font-semibold">{c.name}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-gray-500">Patient Name</p>
+          <p className="font-semibold">{c.PatientName}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-gray-500">HCP Name</p>
+          <p className="font-semibold">{c.HCA_Name}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-gray-500">Contact</p>
+          <p>{c.contact}</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-gray-500">Location</p>
+          <p>{c.location}</p>
+        </div>
+      </div>
+
+      <button
+        onClick={() => updatePopup(c)}
+        className={`w-full mt-4 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium transition-all ${
+          c.PDRStatus
+            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+            : "bg-red-50 text-red-700 border border-red-200"
+        }`}
+      >
+        {c.PDRStatus ? (
+          <>
+            <Eye size={18} />
+            View PDR
+          </>
+        ) : (
+          <>
+            <SquarePen size={18} />
+            Update PDR
+          </>
+        )}
+      </button>
+    </div>
+  ))}
+</div>
     </div>
   )}
 </div>
