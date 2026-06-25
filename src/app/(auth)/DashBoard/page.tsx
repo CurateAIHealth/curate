@@ -29,6 +29,7 @@ import {
   Minimize2,
   Share2,
   Info,
+  MessageSquare,
 } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -401,7 +402,12 @@ const run = useCallback(async () => {
         count: stats.hcpListCount,
         icon: Users,
         bg: "bg-red-500",
-      },
+      },{
+  name: "Communication",
+  count: stats.communicationCount, 
+  icon: MessageSquare,
+  bg: "bg-violet-500",
+},
       {
         name: "Pending PDR",
         count: stats.pendingPdrCount,
@@ -836,6 +842,11 @@ setIsNavigating(true);
           setIsNavigating(false);
         router.push("/PDRView");
         break;
+
+        case "Communication":
+          setIsNavigating(false);
+        router.push("/Communication");
+        break;
       case "Vendors":
           setIsNavigating(false);
         router.push("/VendorsPanel");
@@ -980,7 +991,7 @@ setIsNavigating(true);
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
             </span>
           </div>
 
@@ -1212,10 +1223,11 @@ setIsNavigating(true);
           isOpen={LoginEmailPop}
           logoSrc="/Icons/Curate-logoq.png"
           onClose={() => setLoginEmailPop(false)}
-          onRefresh={() => window.location.reload()}
+          onRefresh={() =>  window.location.href = "/"}
           onLoginAgain={() => {
             localStorage.removeItem("UserId");
-            setShowProfileOptions(false); router.push("/login")
+            setShowProfileOptions(false); 
+            router.push("/login")
           }
           }
         />
