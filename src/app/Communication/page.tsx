@@ -119,14 +119,14 @@ export default function BulkMessagePage() {
       : filteredHCAs.length;
 
   return (
- <div className="p-4 md:p-2 bg-slate-50 min-h-screen">
+<div className="w-full min-w-0 overflow-x-hidden bg-slate-50 min-h-screen px-3 py-4 sm:px-4 md:px-6">
 
 
 
  <div className="bg-white rounded-2xl lg:rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-5 lg:p-6 mb-4 lg:mb-6">
   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
-    <div className="flex items-center gap-3 min-w-0">
+<div className="flex flex-1 items-center gap-3 min-w-0">
       <img
         src="/Icons/Curate-logoq.png"
         className="h-10 sm:h-11 lg:h-12 flex-shrink-0"
@@ -149,7 +149,7 @@ export default function BulkMessagePage() {
       className="
         w-full
         sm:w-auto
-        min-w-[160px]
+     sm:min-w-[160px]
         px-4
         py-3
         bg-gradient-to-br
@@ -161,6 +161,7 @@ export default function BulkMessagePage() {
         rounded-xl
         font-semibold
         shadow-md
+        cursor-pointer
         transition-all
       "
     >
@@ -172,7 +173,7 @@ export default function BulkMessagePage() {
 
 
 
-<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
 
   <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm">
     <p className="text-slate-500 text-sm">
@@ -210,11 +211,11 @@ export default function BulkMessagePage() {
 
   <div className="mb-6">
 
-    <div className="inline-flex bg-white rounded-2xl p-1 shadow-sm border border-slate-200">
+<div className="flex w-full sm:w-fit bg-white rounded-2xl p-1 shadow-sm border border-slate-200">
 
       <button
         onClick={() => setTab("clients")}
-        className={`px-6 py-2 rounded-xl font-medium transition-all ${
+        className={`px-6 py-2 rounded-xl cursor-pointer font-medium transition-all ${
           tab === "clients"
             ? "bg-[#1392d3] text-white"
             : "text-slate-600"
@@ -225,7 +226,7 @@ export default function BulkMessagePage() {
 
       <button
         onClick={() => setTab("hcas")}
-        className={`px-6 py-2 rounded-xl font-medium transition-all ${
+        className={`px-6 py-2 rounded-xl font-medium cursor-pointer transition-all ${
           tab === "hcas"
             ? "bg-[#50c896] text-white"
             : "text-slate-600"
@@ -240,8 +241,7 @@ export default function BulkMessagePage() {
 
  
 
-  <div className="grid lg:grid-cols-4 gap-6">
-
+<div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
   
 
     <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5">
@@ -318,7 +318,7 @@ export default function BulkMessagePage() {
 
     
 
-    <div className="lg:col-span-3 space-y-6">
+   <div className="lg:col-span-3 min-w-0 space-y-6">
 
     
 
@@ -457,17 +457,20 @@ export default function BulkMessagePage() {
         />
 
         <button
-          className="
-            mt-5
-            bg-[#1392d3]
-            hover:bg-[#0f7bb3]
-            text-white
-            px-8
-            py-3
-            rounded-xl
-            font-semibold
-            transition-colors
-          "
+         className="
+mt-5
+w-full
+sm:w-auto
+bg-[#1392d3]
+hover:bg-[#0f7bb3]
+text-white
+px-8
+py-3
+rounded-xl
+cursor-pointer
+font-semibold
+transition-colors
+"
           onClick={() => {
             console.log({
               subject,
