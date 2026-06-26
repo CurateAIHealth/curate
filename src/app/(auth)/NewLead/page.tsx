@@ -431,11 +431,11 @@ const handleCmChange = (value: string) => {
     }
 
     setStatusMessage(
-      `${postResult.message || "Lead updated successfully"}, Fetching Updated Data.....`
+      `${postResult.message || "Lead updated successfully"},Please wait untill Fetching Updated Data.....`
     );
  const userId =localStorage.getItem("UserId");
 
-      const { data } = await axios.post(
+      const { data:result } = await axios.post(
         "/api/AdminPageInfo",
         {
           userId,
@@ -445,18 +445,17 @@ const handleCmChange = (value: string) => {
           ],
         }
       );
+   const {
+      profile,
+      registeredUsers,
+      fullInfo,
+      deployedLength,
+    } = result.data;
 
-      console.log (
-"Current Task------",data
-      )
 
-      dispatch(setUsers(
-        data.data.registeredUsers
-      ))
-
-       dispatch(setFullInfo(
-        data.data.fullInfo
-      ))
+          dispatch( setUsers(registeredUsers))
+         
+               dispatch(setFullInfo(fullInfo))
 
     setTimeout(() => {
       router.push("/DashBoard");
