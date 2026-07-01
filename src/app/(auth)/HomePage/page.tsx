@@ -1,16 +1,17 @@
 'use client';
 
 import Logo from '@/Components/Logo/page';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function StaticInfoPage() {
-
+const  router = useRouter();
 
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('UserId');
-      window.location.href = '/'; 
+      router.push('/sign-in');
     }
   };
 

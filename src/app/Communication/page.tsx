@@ -1,517 +1,13 @@
 "use client";
 
 import { Update_Main_Filter_Status } from "@/Redux/action";
+import axios from "axios";
 import { Rethink_Sans } from "next/font/google";
-import { useMemo, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
-const clients = [
-  {
-    _id: "1",
-    patientName: "Kondaiah",
-    location: "Hyderabad",
-    email: "kondaiah@gmail.com",
-    clientStatus: "Waiting List",
-    leadSource: "Google",
-    invoiceStatus: "Pending",
-  },
-  {
-    _id: "2",
-    patientName: "Durga Nayak",
-    location: "Kukatpally",
-    email: "durga.nayak@gmail.com",
-    clientStatus: "Converted",
-    leadSource: "Facebook",
-    invoiceStatus: "Paid",
-  },
-  {
-    _id: "3",
-    patientName: "Mukkera Subamma",
-    location: "Warangal",
-    email: "subamma@gmail.com",
-    clientStatus: "Lost",
-    leadSource: "Reference",
-    invoiceStatus: "Pending",
-  },
-  {
-    _id: "4",
-    patientName: "Rajesh Kumar",
-    location: "Vijayawada",
-    email: "rajesh.kumar@gmail.com",
-    clientStatus: "Follow Up",
-    leadSource: "Website",
-    invoiceStatus: "Paid",
-  },
-  {
-    _id: "5",
-    patientName: "Lakshmi Devi",
-    location: "Guntur",
-    email: "lakshmi.devi@gmail.com",
-    clientStatus: "Converted",
-    leadSource: "Instagram",
-    invoiceStatus: "Paid",
-  },
-  {
-    _id: "6",
-    patientName: "Suresh Babu",
-    location: "Nellore",
-    email: "suresh.babu@gmail.com",
-    clientStatus: "Waiting List",
-    leadSource: "Walk-In",
-    invoiceStatus: "Pending",
-  },
-  {
-    _id: "7",
-    patientName: "Anitha Reddy",
-    location: "Kurnool",
-    email: "anitha.reddy@gmail.com",
-    clientStatus: "Converted",
-    leadSource: "Google",
-    invoiceStatus: "Paid",
-  },
-  {
-    _id: "8",
-    patientName: "Prakash Rao",
-    location: "Tirupati",
-    email: "prakash.rao@gmail.com",
-    clientStatus: "Lost",
-    leadSource: "Facebook",
-    invoiceStatus: "Cancelled",
-  },
-  {
-    _id: "9",
-    patientName: "Sowmya",
-    location: "Karimnagar",
-    email: "sowmya@gmail.com",
-    clientStatus: "Follow Up",
-    leadSource: "Reference",
-    invoiceStatus: "Pending",
-  },
-  {
-    _id: "10",
-    patientName: "Ramesh",
-    location: "Nizamabad",
-    email: "ramesh@gmail.com",
-    clientStatus: "Converted",
-    leadSource: "Google",
-    invoiceStatus: "Paid",
-  },
-  {
-    _id: "11",
-    patientName: "Harika",
-    location: "Visakhapatnam",
-    email: "harika@gmail.com",
-    clientStatus: "Waiting List",
-    leadSource: "Website",
-    invoiceStatus: "Pending",
-  },
-  {
-    _id: "12",
-    patientName: "Ganesh",
-    location: "Khammam",
-    email: "ganesh@gmail.com",
-    clientStatus: "Converted",
-    leadSource: "Instagram",
-    invoiceStatus: "Paid",
-  },
-  {
-    _id: "13",
-    patientName: "Bhavani",
-    location: "Anantapur",
-    email: "bhavani@gmail.com",
-    clientStatus: "Lost",
-    leadSource: "Walk-In",
-    invoiceStatus: "Cancelled",
-  },
-  {
-    _id: "14",
-    patientName: "Mahesh",
-    location: "Rajahmundry",
-    email: "mahesh@gmail.com",
-    clientStatus: "Follow Up",
-    leadSource: "Reference",
-    invoiceStatus: "Pending",
-  },
-  {
-    _id: "15",
-    patientName: "Deepika",
-    location: "Eluru",
-    email: "deepika@gmail.com",
-    clientStatus: "Converted",
-    leadSource: "Google",
-    invoiceStatus: "Paid",
-  },
-  {
-    _id: "16",
-    patientName: "Venkatesh",
-    location: "Kadapa",
-    email: "venkatesh@gmail.com",
-    clientStatus: "Waiting List",
-    leadSource: "Facebook",
-    invoiceStatus: "Pending",
-  },
-  {
-    _id: "17",
-    patientName: "Ravi Teja",
-    location: "Ongole",
-    email: "raviteja@gmail.com",
-    clientStatus: "Converted",
-    leadSource: "Website",
-    invoiceStatus: "Paid",
-  },
-  {
-    _id: "18",
-    patientName: "Keerthana",
-    location: "Adilabad",
-    email: "keerthana@gmail.com",
-    clientStatus: "Lost",
-    leadSource: "Instagram",
-    invoiceStatus: "Cancelled",
-  },
-  {
-    _id: "19",
-    patientName: "Madhavi",
-    location: "Mahabubnagar",
-    email: "madhavi@gmail.com",
-    clientStatus: "Follow Up",
-    leadSource: "Walk-In",
-    invoiceStatus: "Pending",
-  },
-  {
-    _id: "20",
-    patientName: "Chandrasekhar",
-    location: "Srikakulam",
-    email: "chandrasekhar@gmail.com",
-    clientStatus: "Converted",
-    leadSource: "Reference",
-    invoiceStatus: "Paid",
-  },
-];
 
-const hcas = [
-  {
-    _id: "101",
-    name: "Paulsital Behera",
-    location: "Odisha",
-    email: "paulsital@gmail.com",
-    currentStatus: "Active",
-    userType: "HCA",
-  },
-  {
-    _id: "102",
-    name: "Bommathi Madhavi",
-    location: "Hyderabad",
-    email: "madhavi@gmail.com",
-    currentStatus: "Bench",
-    userType: "HCN",
-  },
-  {
-    _id: "103",
-    name: "Madavi Shilpa",
-    location: "Warangal",
-    email: "shilpa@gmail.com",
-    currentStatus: "Leave",
-    userType: "HCA",
-  },
-  {
-    _id: "104",
-    name: "Anil Kumar",
-    location: "Vijayawada",
-    email: "anilkumar@gmail.com",
-    currentStatus: "Active",
-    userType: "HCA",
-  },
-  {
-    _id: "105",
-    name: "Kavitha Reddy",
-    location: "Visakhapatnam",
-    email: "kavitha@gmail.com",
-    currentStatus: "Training",
-    userType: "HCN",
-  },
-  {
-    _id: "106",
-    name: "Ravi Teja",
-    location: "Kurnool",
-    email: "raviteja@gmail.com",
-    currentStatus: "Bench",
-    userType: "HCA",
-  },
-  {
-    _id: "107",
-    name: "Sneha Sharma",
-    location: "Nellore",
-    email: "sneha@gmail.com",
-    currentStatus: "Active",
-    userType: "HCA",
-  },
-  {
-    _id: "108",
-    name: "Mahesh Babu",
-    location: "Rajahmundry",
-    email: "mahesh@gmail.com",
-    currentStatus: "Leave",
-    userType: "HCN",
-  },
-  {
-    _id: "109",
-    name: "Divya Priya",
-    location: "Kadapa",
-    email: "divya@gmail.com",
-    currentStatus: "Training",
-    userType: "HCA",
-  },
-  {
-    _id: "110",
-    name: "Srinivas Rao",
-    location: "Karimnagar",
-    email: "srinivas@gmail.com",
-    currentStatus: "Active",
-    userType: "HCA",
-  },
-  {
-    _id: "111",
-    name: "Harika Devi",
-    location: "Khammam",
-    email: "harika@gmail.com",
-    currentStatus: "Bench",
-    userType: "HCN",
-  },
-  {
-    _id: "112",
-    name: "Venkatesh",
-    location: "Guntur",
-    email: "venkatesh@gmail.com",
-    currentStatus: "Active",
-    userType: "HCA",
-  },
-  {
-    _id: "113",
-    name: "Deepika Singh",
-    location: "Tirupati",
-    email: "deepika@gmail.com",
-    currentStatus: "Training",
-    userType: "HCA",
-  },
-  {
-    _id: "114",
-    name: "Ajay Kumar",
-    location: "Anantapur",
-    email: "ajay@gmail.com",
-    currentStatus: "Leave",
-    userType: "HCN",
-  },
-  {
-    _id: "115",
-    name: "Bhavani",
-    location: "Nizamabad",
-    email: "bhavani@gmail.com",
-    currentStatus: "Active",
-    userType: "HCA",
-  },
-  {
-    _id: "116",
-    name: "Pooja Rani",
-    location: "Ongole",
-    email: "pooja@gmail.com",
-    currentStatus: "Bench",
-    userType: "HCN",
-  },
-  {
-    _id: "117",
-    name: "Naresh Kumar",
-    location: "Eluru",
-    email: "naresh@gmail.com",
-    currentStatus: "Training",
-    userType: "HCA",
-  },
-  {
-    _id: "118",
-    name: "Keerthana",
-    location: "Srikakulam",
-    email: "keerthana@gmail.com",
-    currentStatus: "Active",
-    userType: "HCA",
-  },
-  {
-    _id: "119",
-    name: "Rohit Verma",
-    location: "Mahabubnagar",
-    email: "rohit@gmail.com",
-    currentStatus: "Leave",
-    userType: "HCN",
-  },
-  {
-    _id: "120",
-    name: "Swapna Lakshmi",
-    location: "Adilabad",
-    email: "swapna@gmail.com",
-    currentStatus: "Active",
-    userType: "HCA",
-  },
-];
-const Leads = [
-  {
-    _id: "201",
-    name: "Akhil Reddy",
-    location: "Hyderabad",
-    email: "akhil.reddy@gmail.com",
-    currentStatus: "New",
-    userType: "Lead",
-  },
-  {
-    _id: "202",
-    name: "Sneha Sharma",
-    location: "Warangal",
-    email: "sneha.sharma@gmail.com",
-    currentStatus: "Contacted",
-    userType: "Lead",
-  },
-  {
-    _id: "203",
-    name: "Rakesh Kumar",
-    location: "Vijayawada",
-    email: "rakesh.kumar@gmail.com",
-    currentStatus: "Qualified",
-    userType: "Lead",
-  },
-  {
-    _id: "204",
-    name: "Priyanka Devi",
-    location: "Visakhapatnam",
-    email: "priyanka.devi@gmail.com",
-    currentStatus: "Converted",
-    userType: "Lead",
-  },
-  {
-    _id: "205",
-    name: "Sai Kumar",
-    location: "Guntur",
-    email: "sai.kumar@gmail.com",
-    currentStatus: "Lost",
-    userType: "Lead",
-  },
-  {
-    _id: "206",
-    name: "Niharika",
-    location: "Nellore",
-    email: "niharika@gmail.com",
-    currentStatus: "New",
-    userType: "Lead",
-  },
-  {
-    _id: "207",
-    name: "Abhishek Rao",
-    location: "Kurnool",
-    email: "abhishek.rao@gmail.com",
-    currentStatus: "Contacted",
-    userType: "Lead",
-  },
-  {
-    _id: "208",
-    name: "Pallavi",
-    location: "Kadapa",
-    email: "pallavi@gmail.com",
-    currentStatus: "Qualified",
-    userType: "Lead",
-  },
-  {
-    _id: "209",
-    name: "Tejaswi",
-    location: "Rajahmundry",
-    email: "tejaswi@gmail.com",
-    currentStatus: "Converted",
-    userType: "Lead",
-  },
-  {
-    _id: "210",
-    name: "Vinay Kumar",
-    location: "Karimnagar",
-    email: "vinay@gmail.com",
-    currentStatus: "Lost",
-    userType: "Lead",
-  },
-  {
-    _id: "211",
-    name: "Ramya",
-    location: "Khammam",
-    email: "ramya@gmail.com",
-    currentStatus: "New",
-    userType: "Lead",
-  },
-  {
-    _id: "212",
-    name: "Mohan Krishna",
-    location: "Nizamabad",
-    email: "mohan.krishna@gmail.com",
-    currentStatus: "Contacted",
-    userType: "Lead",
-  },
-  {
-    _id: "213",
-    name: "Sharanya",
-    location: "Anantapur",
-    email: "sharanya@gmail.com",
-    currentStatus: "Qualified",
-    userType: "Lead",
-  },
-  {
-    _id: "214",
-    name: "Lokesh",
-    location: "Tirupati",
-    email: "lokesh@gmail.com",
-    currentStatus: "Converted",
-    userType: "Lead",
-  },
-  {
-    _id: "215",
-    name: "Jyothi",
-    location: "Ongole",
-    email: "jyothi@gmail.com",
-    currentStatus: "Lost",
-    userType: "Lead",
-  },
-  {
-    _id: "216",
-    name: "Naresh",
-    location: "Eluru",
-    email: "naresh@gmail.com",
-    currentStatus: "New",
-    userType: "Lead",
-  },
-  {
-    _id: "217",
-    name: "Sravani",
-    location: "Srikakulam",
-    email: "sravani@gmail.com",
-    currentStatus: "Contacted",
-    userType: "Lead",
-  },
-  {
-    _id: "218",
-    name: "Yashwanth",
-    location: "Mahabubnagar",
-    email: "yashwanth@gmail.com",
-    currentStatus: "Qualified",
-    userType: "Lead",
-  },
-  {
-    _id: "219",
-    name: "Sindhu",
-    location: "Adilabad",
-    email: "sindhu@gmail.com",
-    currentStatus: "Converted",
-    userType: "Lead",
-  },
-  {
-    _id: "220",
-    name: "Ajay Kumar",
-    location: "Kakinada",
-    email: "ajay.kumar@gmail.com",
-    currentStatus: "Lost",
-    userType: "Lead",
-  },
-];
 export default function BulkMessagePage() {
   const [tab, setTab] = useState<
   "clients" | "hcas" | "leads" | "others"
@@ -520,10 +16,78 @@ const [communicationType, setCommunicationType] =
 useState<"email" | "whatsapp" | "both">("email");
   const [clientFilters, setClientFilters] = useState<string[]>([]);
   const [hcaFilters, setHcaFilters] = useState<string[]>([]);
-
+  const [ActionMessage,setActionMessage]=useState("")
+const [search, setSearch] = useState("");
+const users=useSelector((state:any)=>state.AdminUsers)
+const [OtherEMail,setOtherEMail]=useState("")
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const dispatch=useDispatch()
+  const router=useRouter()
+  useEffect(() => {
+    if (
+      users?.length === 0
+     
+    ) {
+      router.push("/");
+    }
+    const userId = localStorage.getItem("UserId");
+  
+    if (!userId) {
+       
+            router.push("/sign-in")
+      return;
+    }
+  
+   
+  }, [router]);
+const hca=users.filter((each:any)=>
+each.userType
+===
+"healthcare-assistant")
+console.log ("Check for Comunicate Usres----",hca)
+const hcas = users
+  .filter((each: any) => each.userType === "healthcare-assistant")
+  .map((each: any) => ({
+    _id: each._id,
+    name: `${each.FirstName} ${each.Surname || ""}`.trim(),
+    location: each.Location,
+    email: each.Email,
+       Phone:each.ContactNumber,
+    currentStatus: each.CurrentStatus,
+    userType: each.PreviewUserType || "HCA",
+  }));
+const clients = users
+  .filter((each: any) => each.userType === "patient")
+  .map((each: any) => ({
+    _id: each._id,
+    patientName: each.FirstName,
+    Adress: each.Location,
+    email: each.Email || "",
+    clientStatus: each.ClientStatus,
+    Phone:each.ContactNumber,
+    leadSource: each.NewLead || "",
+    invoiceStatus:
+      each.RegistrationFee > 0
+        ? "Paid"
+        : each.ClientStatus === "Lost"
+        ? "Cancelled"
+        : "Pending",
+  }));
+console.log ("Check Contact.....",users
+  .filter((each: any) => each.userType === "patient"))
+const Leads = users
+  .filter((each: any) => each.userType === "CallEnquiry")
+  .map((each: any) => ({
+    _id: each._id,
+    name: each.FirstName,
+    location: each.Location,
+    email: each.Email || "",
+    phone: each.ContactNumber,
+    currentStatus: each.CurrentStatus,
+    userType: "Lead",
+  }));
+
 
   const toggleClientFilter = (value: string) => {
     setClientFilters((prev) =>
@@ -542,40 +106,231 @@ useState<"email" | "whatsapp" | "both">("email");
   };
   const handleLogout = () => {
     
- 
-      window.location.href ='/DashBoard';
+ router.push( '/DashBoard')
+     ;
     dispatch(Update_Main_Filter_Status(""))
  
   };
-  const filteredClients = useMemo(() => {
-    if (!clientFilters.length) return clients;
+ const filteredClients = useMemo(() => {
+  return clients.filter((client: any) => {
+    const matchesFilter =
+      !clientFilters.length ||
+      clientFilters.includes(client.clientStatus) ||
+      clientFilters.includes(client.invoiceStatus);
 
-    return clients.filter(
-      (client) =>
-        clientFilters.includes(client.clientStatus) ||
-        clientFilters.includes(client.invoiceStatus)
-    );
-  }, [clientFilters]);
+    const keyword = search.toLowerCase();
 
-  const filteredHCAs = useMemo(() => {
-    if (!hcaFilters.length) return hcas;
+    const matchesSearch =
+      client.patientName?.toLowerCase().includes(keyword) ||
+      client.email?.toLowerCase().includes(keyword) ||
+      client.phone?.toLowerCase().includes(keyword);
 
-    return hcas.filter(
-      (hcp) =>
-        hcaFilters.includes(hcp.currentStatus) ||
-        hcaFilters.includes(hcp.location)
-    );
-  }, [hcaFilters]);
+    return matchesFilter && matchesSearch;
+  });
+}, [clients, clientFilters, search]);
 
-  const selectedCount =
+const filteredHCAs = useMemo(() => {
+  return hcas.filter((hcp: any) => {
+    const matchesFilter =
+      !hcaFilters.length ||
+      hcaFilters.includes(hcp.currentStatus) ||
+      hcaFilters.includes(hcp.location);
+
+    const keyword = search.toLowerCase();
+
+    const matchesSearch =
+      hcp.name?.toLowerCase().includes(keyword) ||
+      hcp.email?.toLowerCase().includes(keyword) ||
+      hcp.phone?.toLowerCase().includes(keyword);
+
+    return matchesFilter && matchesSearch;
+  });
+}, [hcas, hcaFilters, search]);
+
+const filteredLeads = useMemo(() => {
+  const keyword = search.toLowerCase();
+
+  return Leads.filter((lead: any) =>
+    lead.name?.toLowerCase().includes(keyword) ||
+    lead.email?.toLowerCase().includes(keyword) ||
+    lead.phone?.toLowerCase().includes(keyword)
+  );
+}, [Leads, search]);
+
+ const selectedCount =
   tab === "clients"
     ? filteredClients.length
     : tab === "hcas"
     ? filteredHCAs.length
     : tab === "leads"
-    ? Leads.length
+    ? filteredLeads.length
+    : tab === "others"
+        ? 1
     : 0;
+const SendEmail = async () => {
+  try {
+    setActionMessage("Preparing email...");
 
+    const recipients =
+      tab === "clients"
+        ? filteredClients
+        : tab === "hcas"
+        ? filteredHCAs
+        : tab === "leads"
+        ? filteredLeads
+        : tab === "others"
+        ? [{ email: OtherEMail?.trim() }]
+        : [];
+
+    const emails = [
+      ...new Set(
+        recipients
+          .map((item: any) => item?.email?.trim().toLowerCase())
+          .filter(
+            (email: string) =>
+              email &&
+              /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+          )
+      ),
+    ];
+
+    if (!emails.length) {
+      setActionMessage("No valid email recipients found.");
+      return;
+    }
+
+    if (!subject?.trim()) {
+      setActionMessage("Please enter the email subject.");
+      return;
+    }
+
+    if (!message?.trim()) {
+      setActionMessage("Please enter the email message.");
+      return;
+    }
+
+    setActionMessage(`Sending email to ${emails.length} recipient${emails.length > 1 ? "s" : ""}...`);
+
+    const formattedMessage = message
+      .trim()
+      .replace(/\n/g, "<br/>");
+
+    const htmlTemplate = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body style="margin:0;padding:30px 15px;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
+
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<td align="center">
+
+<table width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 4px 12px rgba(0,0,0,.08);">
+
+<tr>
+<td align="center" style="background:#50c896;padding:30px;">
+<img
+src="https://www.curatehealthservices.com/Icons/Curate-logoq.png"
+alt="Curate"
+style="height:60px;"
+/>
+
+<h2 style="margin:15px 0 0;color:#fff;font-weight:600;">
+Curate Healthcare Services
+</h2>
+</td>
+</tr>
+
+<tr>
+<td style="padding:35px 30px 15px;">
+<h2 style="margin:0;color:#222;">
+Hello,
+</h2>
+
+<p style="font-size:15px;color:#555;line-height:1.8;margin-top:15px;">
+We hope you're doing well.
+</p>
+
+<div style="
+margin-top:25px;
+background:#f8fafc;
+border-left:4px solid #1392d3;
+padding:20px;
+border-radius:8px;
+color:#374151;
+font-size:15px;
+line-height:1.8;
+">
+${formattedMessage}
+</div>
+</td>
+</tr>
+
+<tr>
+<td style="padding:25px 30px;background:#fafafa;border-top:1px solid #eee;">
+
+<p style="margin:0;font-size:14px;color:#555;">
+Kind Regards,
+</p>
+
+<p style="margin:6px 0 20px;font-size:16px;font-weight:bold;color:#222;">
+Curate Healthcare Services Team
+</p>
+
+<p style="margin:0;">
+<a href="https://www.curatehealthservices.com"
+style="color:#1392d3;text-decoration:none;">
+🌐 www.curatehealthservices.com
+</a>
+</p>
+
+<p style="margin-top:25px;font-size:12px;color:#888;line-height:1.6;">
+This is an automated email from Curate Healthcare Services.
+Please do not reply directly to this email.
+</p>
+
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
+`;
+
+    const { data } = await axios.post("/api/MailSend", {
+      to: emails,
+      subject: subject.trim(),
+      html: htmlTemplate,
+    });
+
+    if (data?.success) {
+      setActionMessage(
+        `Email sent successfully to ${emails.length} recipient${emails.length > 1 ? "s" : ""}.`
+      );
+      setSubject("")
+      setMessage("")
+    } else {
+      setActionMessage(data?.message || "Failed to send email.");
+    }
+  } catch (err: any) {
+    console.error(err);
+
+    setActionMessage(
+      err?.response?.data?.message ||
+        err?.message ||
+        "Something went wrong while sending the email."
+    );
+  }
+};
   return (
 <div className="w-full min-w-0 overflow-x-hidden bg-slate-50 min-h-screen px-3 py-4 sm:px-4 md:px-6">
 
@@ -630,41 +385,46 @@ useState<"email" | "whatsapp" | "both">("email");
 </div>
 
 
+<div className="p-2 bg-white">
+  <input
+    type="text"
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    placeholder="Search by Name, Email or Contact..."
+    className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1392d3]"
+  />
+</div>
+<div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4 mb-6">
 
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-
-  <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm">
-    <p className="text-slate-500 text-sm">
-      Total Clients
-    </p>
-
-    <h2 className="text-2xl sm:text-3xl font-bold text-[#1392d3] mt-2">
+  <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all">
+    <p className="text-sm text-slate-500">Total Clients</p>
+    <h2 className="mt-2 text-3xl font-bold text-[#1392d3] break-words">
       {clients.length}
     </h2>
   </div>
 
-  <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm">
-    <p className="text-slate-500 text-sm">
-      Total HCAs
-    </p>
-
-    <h2 className="text-2xl sm:text-3xl font-bold text-[#50c896] mt-2">
+  <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all">
+    <p className="text-sm text-slate-500">Total HCAs</p>
+    <h2 className="mt-2 text-3xl font-bold text-[#50c896] break-words">
       {hcas.length}
     </h2>
   </div>
 
-  <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm">
-    <p className="text-slate-500 text-sm">
-      Selected Recipients
-    </p>
+  <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all">
+    <p className="text-sm text-slate-500">Total Leads</p>
+    <h2 className="mt-2 text-3xl font-bold text-[#50c896] break-words">
+      {Leads.length}
+    </h2>
+  </div>
 
-    <h2 className="text-2xl sm:text-3xl font-bold text-[#ff1493] mt-2">
+  <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all">
+    <p className="text-sm text-slate-500">Selected Recipients</p>
+    <h2 className="mt-2 text-3xl font-bold text-[#ff1493] break-words">
       {selectedCount}
     </h2>
   </div>
 
 </div>
-
 
 
 <div className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -906,7 +666,7 @@ useState<"email" | "whatsapp" | "both">("email");
 
   {/* Clients */}
   {tab === "clients" &&
-    filteredClients.map((client) => (
+    filteredClients.map((client:any) => (
       <div
         key={client._id}
         className="grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-3 hover:bg-slate-50 transition"
@@ -925,15 +685,26 @@ useState<"email" | "whatsapp" | "both">("email");
 
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-slate-500">
 
-              <span className="truncate">
-                📧 {client.email}
-              </span>
+  {communicationType === "email" ? (
+    <span className="flex items-center gap-1 truncate">
+      📧 {client.email}
+    </span>
+  ) : (
+    <span className="flex items-center gap-1 truncate">
+      <img
+        src="/Icons/whatsapp.png"
+        alt="WhatsApp"
+        className="w-4 h-4 object-contain"
+      />
+      <span>{client.Phone}</span>
+    </span>
+  )}
 
-              <span>
-                📍 {client.location}
-              </span>
+  <span className="flex items-center gap-1 truncate">
+    📍 {client.Adress||"Not Privided"}
+  </span>
 
-            </div>
+</div>
 
           </div>
 
@@ -947,7 +718,7 @@ useState<"email" | "whatsapp" | "both">("email");
 
   {/* HCAs */}
   {tab === "hcas" &&
-    filteredHCAs.map((hcp) => (
+    filteredHCAs.map((hcp:any) => (
       <div
         key={hcp._id}
         className="grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-3 hover:bg-slate-50 transition"
@@ -964,17 +735,28 @@ useState<"email" | "whatsapp" | "both">("email");
               {hcp.name}
             </h4>
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-slate-500">
+               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-slate-500">
 
-              <span className="truncate">
-                📧 {hcp.email}
-              </span>
+  {communicationType === "email" ? (
+    <span className="flex items-center gap-1 truncate">
+      📧 {hcp.email}
+    </span>
+  ) : (
+    <span className="flex items-center gap-1 truncate">
+      <img
+        src="/Icons/whatsapp.png"
+        alt="WhatsApp"
+        className="w-4 h-4 object-contain"
+      />
+      <span>{hcp.Phone}</span>
+    </span>
+  )}
 
-              <span>
-                📍 {hcp.location}
-              </span>
+  <span className="flex items-center gap-1 truncate">
+    📍 {hcp.location||"Not Privided"}
+  </span>
 
-            </div>
+</div>
 
           </div>
 
@@ -988,7 +770,7 @@ useState<"email" | "whatsapp" | "both">("email");
 
   {/* Leads */}
   {tab === "leads" &&
-    Leads.map((lead) => (
+    filteredLeads.map((lead:any) => (
       <div
         key={lead._id}
         className="grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-3 hover:bg-slate-50 transition"
@@ -1005,17 +787,28 @@ useState<"email" | "whatsapp" | "both">("email");
               {lead.name}
             </h4>
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-slate-500">
+                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-slate-500">
 
-              <span className="truncate">
-                📧 {lead.email}
-              </span>
+  {communicationType === "email" ? (
+    <span className="flex items-center gap-1 truncate">
+      📧 {lead.email}
+    </span>
+  ) : (
+    <span className="flex items-center gap-1 truncate">
+      <img
+        src="/Icons/whatsapp.png"
+        alt="WhatsApp"
+        className="w-4 h-4 object-contain"
+      />
+      <span>{lead.phone}</span>
+    </span>
+  )}
 
-              <span>
-                📍 {lead.location}
-              </span>
+  <span className="flex items-center gap-1 truncate">
+    📍 {lead.location||"Not Privided"}
+  </span>
 
-            </div>
+</div>
 
           </div>
 
@@ -1181,19 +974,21 @@ useState<"email" | "whatsapp" | "both">("email");
       font-semibold
       transition-all
       "
-      onClick={() => {
-        console.log({
-          message,
-          recipients:
-            tab === "clients"
-              ? filteredClients
-              : filteredHCAs,
-        });
-
-        alert(
-          `Sending WhatsApp message to ${selectedCount} users`
-        );
-      }}
+    onClick={() => {
+  console.log({
+    message,
+    recipients:
+      tab === "clients"
+        ? filteredClients
+        : tab === "hcas"
+        ? filteredHCAs
+        : tab === "leads"
+        ? filteredLeads
+        : tab === "others"
+        ? []
+        : [],
+  });
+}}
     >
       <div className="flex items-center justify-center gap-2">
         <img
@@ -1232,12 +1027,14 @@ useState<"email" | "whatsapp" | "both">("email");
     </div>
 
     <label className="block text-sm font-medium text-slate-700 mb-2">
-      Recipient Email Address
+      Recipient Email Address 
     </label>
 
     <input
       type="email"
+      
       placeholder="example@gmail.com"
+      value={OtherEMail}
       className="
         w-full
         rounded-xl
@@ -1254,6 +1051,7 @@ useState<"email" | "whatsapp" | "both">("email");
         focus:ring-4
         focus:ring-violet-100
       "
+      onChange={(e:any)=>setOtherEMail(e.target.value)}
     />
 
     <p className="mt-3 text-xs text-slate-500">
@@ -1299,7 +1097,65 @@ useState<"email" | "whatsapp" | "both">("email");
             focus:ring-[#1392d3]
           "
         />
+<div
+  className={`mt-4 flex items-start gap-3 rounded-xl border p-4 transition-all duration-300 ${
+    ActionMessage?.includes("success")
+      ? "border-green-200 bg-green-50"
+      : ActionMessage?.includes("Failed") ||
+        ActionMessage?.includes("No valid") ||
+        ActionMessage?.includes("Please")
+      ? "border-red-200 bg-red-50"
+      : "border-[#1392d3]/20 bg-[#1392d3]/5"
+  }`}
+>
+  {ActionMessage === "Preparing email..." ||
+  ActionMessage?.includes("Sending") ? (
+    <svg
+      className="mt-0.5 h-5 w-5 animate-spin text-[#1392d3]"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      />
+    </svg>
+  ) : (
+    <span className="text-xl">
+      {ActionMessage?.includes("success")
+        ? "✅"
+        : ActionMessage?.includes("Failed") ||
+          ActionMessage?.includes("No valid") ||
+          ActionMessage?.includes("Please")
+        ? "❌"
+        : "ℹ️"}
+    </span>
+  )}
 
+  <p
+    className={`whitespace-pre-wrap break-words text-[15px] leading-7 font-medium ${
+      ActionMessage?.includes("success")
+        ? "text-green-700"
+        : ActionMessage?.includes("Failed") ||
+          ActionMessage?.includes("No valid") ||
+          ActionMessage?.includes("Please")
+        ? "text-red-700"
+        : "text-slate-700"
+    }`}
+  >
+    {ActionMessage || "Ready to send email."}
+  </p>
+</div>
         <button
          className="
 mt-5
@@ -1315,20 +1171,7 @@ cursor-pointer
 font-semibold
 transition-colors
 "
-          onClick={() => {
-            console.log({
-              subject,
-              message,
-              recipients:
-                tab === "clients"
-                  ? filteredClients
-                  : filteredHCAs,
-            });
-
-            alert(
-              `Sending mail to ${selectedCount} users`
-            );
-          }}
+           onClick={SendEmail}
         >
           Send Email To {selectedCount} Users
         </button>

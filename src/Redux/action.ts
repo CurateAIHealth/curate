@@ -451,3 +451,11 @@ export const SetDeploymentInfo=(FullDeployData:any)=>{
         payload:FullDeployData
     }
 }
+
+
+export const UpdateUserFirstName = (UserName: any) => {
+    return {
+        type: "LoginUser",
+        payload: UserName
+    }
+}

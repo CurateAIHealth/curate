@@ -10,11 +10,12 @@ import { Sparkles, Star, Settings, User, LogIn, BriefcaseMedical, CircleEllipsis
 import FreeConsultationForm from '@/Components/Contactfill/page';
 import ContactSection from '@/Components/Contact/page';
 import ModernFooter from '@/Components/Footer/page';
-import { CurrentLoginUser, UpdateRegisterdType, UpdateTimeStamp, UpdateUserDetails } from '@/Redux/action';
-import { useDispatch } from 'react-redux';
+import { CurrentLoginUser, SetDeploymentInfo, setFullInfo, setUsers, UpdateRegisterdType, UpdateTimeStamp, UpdateUserDetails, UpdateUserFirstName } from '@/Redux/action';
+import { useDispatch, useSelector } from 'react-redux';
 import { LoadingData } from '@/Components/Loading/page';
 import { StaffEmails } from '@/Lib/Content';
 import axios from 'axios';
+import { HomeLoadingData } from '@/Components/HomeLoading/page';
 
 
 
@@ -41,9 +42,17 @@ const mainMenu = [
     "/Icons/AbhaLogo.png",
   ];
 export default function StaticInfoPage() {
+  
   const [isChecking, setIsChecking] = useState(true);
     const [mobileOptsOpen, setMobileOptsOpen] = useState(false);
+    const [loadingProgress, setLoadingProgress] = useState(0);
+const [loadingMessage, setLoadingMessage] = useState("Initializing...");
+ 
     const [ShowPopUp,setShowPopUp]=useState(false)
+    const users=useSelector((state:any)=>state.AdminUsers)
+    const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
+    const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
+console.log ("Check Users---",users)
   const router = useRouter();
   const dispatch=useDispatch()
 const [showAllReviews, setShowAllReviews] = useState(false);
@@ -51,79 +60,193 @@ const INITIAL_REVIEWS_COUNT = 4;
 const visibleReviews = showAllReviews
   ? reviews
   : reviews.slice(0, INITIAL_REVIEWS_COUNT);
+const DASHBOARD_CACHE_KEY = "dashboard_cache";
+const CACHE_TTL = 2 * 60 * 1000;
 
 
- useEffect(() => {
-  const Fetch = async () => {
-    const localValue = typeof window !== "undefined" ? localStorage.getItem("UserId") : null;
- 
+useEffect(() => {
+  
 
+  let isMounted = true;
+  let timer: NodeJS.Timeout;
+
+  const initialize = async () => {
     try {
-      // const ProfileInformation = await GetUserInformation(localValue);
- 
-const response = await axios.post("/api/Home", { localValue });
+      const userId =
+        typeof window !== "undefined"
+          ? localStorage.getItem("UserId")
+          : null;
+if (!userId) {
+         router.push("/sign-in");
+    return;
+  }
+      if (!userId) {
+        if (isMounted) setIsChecking(false);
+        return;
+      }
 
-console.log ("Check impoData----",response.
-data
-)
+      setIsChecking(true);
+      setLoadingProgress(5);
+      setLoadingMessage("Initializing...");
 
-const ProfileInformation:any = response.data;
-dispatch(UpdateUserDetails(ProfileInformation))
-      const email = ProfileInformation?.Email?.toLowerCase();
+      setLoadingProgress(15);
+      setLoadingMessage("Checking session...");
+
+      const { data: profile }: any = await axios.post("/api/Home", {
+        localValue: userId,
+      });
+
+      if (!isMounted) return;
+
+      dispatch(UpdateUserDetails(profile));
+
+      setLoadingProgress(35);
+      setLoadingMessage("Loading profile...");
+
+      const email = profile?.Email?.toLowerCase();
+
+      setLoadingProgress(55);
+      setLoadingMessage("Verifying account...");
+
       if (StaffEmails.includes(email)) {
-        
-                  //  const user = await GetUserInformation(localValue);
-            
-                   dispatch(CurrentLoginUser(ProfileInformation?.Email))
-                   console.log("Check Email------",ProfileInformation?.Email)
+        dispatch(CurrentLoginUser(profile.Email));
+
+        const cached = localStorage.getItem(DASHBOARD_CACHE_KEY);
+
+        if (cached) {
+          const parsed = JSON.parse(cached);
+
+          if (Date.now() - parsed.timestamp < CACHE_TTL) {
+            const {
+              profile: cacheProfile,
+              registeredUsers,
+              fullInfo,
+              deployedLength,
+            } = parsed.data;
+
+            setLoadingProgress(70);
+            setLoadingMessage("Loading cached dashboard...");
+
+            dispatch(setUsers(registeredUsers));
+            dispatch(setFullInfo(fullInfo));
+            dispatch(SetDeploymentInfo(deployedLength));
+
+           console.log ("Cached User Name-----",cacheProfile?.FirstName)
+         dispatch(UpdateUserFirstName(cacheProfile?.FirstName));
+
+            setLoadingProgress(100);
+            setLoadingMessage("Redirecting...");
+
+            router.push("/DashBoard");
+            setIsChecking(false);
+            return;
+          }
+        }
+
+        setLoadingProgress(75);
+        setLoadingMessage("Loading dashboard...");
+
+        const { data: dashboard } = await axios.post(
+          "/api/AdminPageInfo",
+          {
+            userId,
+          }
+        );
+
+        if (!isMounted) return;
+console.log ("Check Dashboard Response---",dashboard)
+        if (dashboard?.success) {
+          const {
+            profile: dashboardProfile,
+            registeredUsers,
+            fullInfo,
+            deployedLength,
+          } = dashboard.data;
+
+          localStorage.setItem(
+            DASHBOARD_CACHE_KEY,
+            JSON.stringify({
+              timestamp: Date.now(),
+              data: dashboard.data,
+            })
+          );
+console.log ("User Name-----",dashboardProfile?.FirstName)
+          dispatch(setUsers(registeredUsers));
+          dispatch(setFullInfo(fullInfo));
+          dispatch(SetDeploymentInfo(deployedLength));
+dispatch(UpdateUserFirstName(dashboardProfile?.FirstName));
+       
+        }
+
+        setLoadingProgress(90);
+        setLoadingMessage("Preparing workspace...");
+
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        setLoadingProgress(100);
+        setLoadingMessage("Redirecting...");
+
         router.push("/DashBoard");
         return;
       }
 
-      if (ProfileInformation?.FinelVerification === false) {
-        if (ProfileInformation?.userType === "healthcare-assistant") {
-          dispatch(UpdateRegisterdType(ProfileInformation?.userType ) as any)
+      if (!profile?.FinelVerification) {
+        setLoadingProgress(100);
+
+        if (profile?.userType === "healthcare-assistant") {
+          setLoadingMessage("Opening registration...");
+          dispatch(UpdateRegisterdType(profile.userType) as any);
           router.push("/HCARegistraion");
-          return;
-        }else{
-            router.push("/HomePage");
-        return;
+        } else {
+          setLoadingMessage("Redirecting...");
+          router.push("/HomePage");
         }
-       
-      
+        return;
       }
 
-      if (ProfileInformation?.FinelVerification === true) {
+      if (profile?.FinelVerification) {
+        setLoadingProgress(100);
+        setLoadingMessage("Opening profile...");
         router.push("/Profile");
         return;
       }
 
-      if (ProfileInformation === null) {
-        setIsChecking(false);
-      } else {
-        setIsChecking(false);
-        const Timer = setTimeout(() => {
+      setIsChecking(false);
+
+      timer = setTimeout(() => {
+        if (isMounted) {
           setShowPopUp(true);
-        }, 3500);
-        return () => clearTimeout(Timer);
+        }
+      }, 3500);
+    } catch (error) {
+      console.error(error);
+      if (isMounted) {
+        setIsChecking(false);
       }
-    } catch (err) {
-      console.error(err);
     }
   };
-  Fetch();
-}, [router]);
+
+  initialize();
+
+  return () => {
+    isMounted = false;
+    if (timer) clearTimeout(timer);
+  };
+}, [ router, dispatch]);
 
 const ViewContactInfo=()=>{
   const Contact_Container=document.getElementById("ContactInformation")
   Contact_Container?.scrollIntoView({behavior:"smooth",block:'center'})
 
 }
-  if (isChecking) {
+ if (isChecking) {
     return (
-      <LoadingData/>
+        <HomeLoadingData
+            progress={loadingProgress}
+            message={loadingMessage}
+        />
     );
-  }
+}
 
   return (
         <div className="font-sans min-h-screen bg-[#f7fafd]">
