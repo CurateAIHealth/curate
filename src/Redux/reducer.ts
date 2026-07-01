@@ -401,3 +401,13 @@ export const DeploymentAdminInfo=(state:any=[],action:any)=>{
                 return state
     }
 }
+
+
+export const CurrentUserName=(state:any="Sidd",action:any)=>{
+switch(action.type){
+    case "LoginUser":
+        return action.payload;
+        default:
+            return state
+}
+}

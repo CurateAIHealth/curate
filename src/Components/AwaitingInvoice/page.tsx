@@ -195,30 +195,33 @@ SetCareTakerName(Name)
  const now = new Date();
 now.setHours(0, 0, 0, 0);
 
-const threeDaysLater = new Date(now);
-threeDaysLater.setDate(now.getDate() + 3);
 const parseDate = (dateString: string) => {
+  if (!dateString) return null;
+
   const [day, month, year] = dateString.split("/").map(Number);
 
-  return new Date(year, month - 1, day);
+  if (!day || !month || !year) return null;
+
+  const date = new Date(year, month - 1, day);
+  date.setHours(0, 0, 0, 0);
+
+  return date;
 };
-const FinelTimeSheet = ClientsInformation
-   .filter((each: any) => {
-    if (!each.EndDate) return false;
 
-    const endDate = parseDate(each.EndDate);
+const FinelTimeSheet = ClientsInformation.filter((client: any) => {
+  if (!client.EndDate) return false;
 
-    endDate.setHours(0, 0, 0, 0);
+  const endDate = parseDate(client.EndDate);
+  if (!endDate) return false;
 
-    console.log("Today:", now);
-    console.log("EndDate:", endDate);
-    console.log(
-      "Within 3 Days:",
-      endDate >= now && endDate <= threeDaysLater
-    );
+  // Show reminder 3 days before EndDate
+  const reminderStartDate = new Date(endDate);
+  reminderStartDate.setDate(reminderStartDate.getDate() - 3);
+  reminderStartDate.setHours(0, 0, 0, 0);
 
-    return endDate >= now && endDate <= threeDaysLater;
-  })
+  // Show from reminderStartDate onwards (including after EndDate)
+  return now >= reminderStartDate;
+})
   .map((each: any) => {
     const normalizedAttendance =
       Array.isArray(each.Attendance) && each.Attendance.length > 0

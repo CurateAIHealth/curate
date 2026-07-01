@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import {UserType,RefreshCount,FullHCPList, Admin_Main_Filter, DocReason, HCAList, LoadingClient, PreviedComponent, SUbHeadings, Submmision_Client_Status, Suitable_HCP, TaskOne, UserIdValue, UserInformation, Medication, FullInfo, TimeStamp, CurrentRegisterUser, VendorReferal, ReferdVendorUserId, InvoiceData, DeploymentInformation, EditInvoice, UpdateInvoicePageStatus, RegisterByAdmin, MonthFilter, YearFilter, AdminMonthFilter, AdminYearFilter, LoginUserEmail, RefreshState, PDRUserId, CallEnquiryInformationfromNotification, Counts, UserDetails, UsersForAdmin, FullInfoForAdmin, DeploymentAdminInfo } from "./reducer";
+import {UserType,RefreshCount,FullHCPList, Admin_Main_Filter, DocReason, HCAList, LoadingClient, PreviedComponent, SUbHeadings, Submmision_Client_Status, Suitable_HCP, TaskOne, UserIdValue, UserInformation, Medication, FullInfo, TimeStamp, CurrentRegisterUser, VendorReferal, ReferdVendorUserId, InvoiceData, DeploymentInformation, EditInvoice, UpdateInvoicePageStatus, RegisterByAdmin, MonthFilter, YearFilter, AdminMonthFilter, AdminYearFilter, LoginUserEmail, RefreshState, PDRUserId, CallEnquiryInformationfromNotification, Counts, UserDetails, UsersForAdmin, FullInfoForAdmin, DeploymentAdminInfo, CurrentUserName } from "./reducer";
 
 export const store = configureStore({
     reducer: {
@@ -40,6 +40,7 @@ export const store = configureStore({
         Useriinformation:UserDetails,
         AdminUsers:UsersForAdmin,
         AdminFullInfo:FullInfoForAdmin,
-        AdminDeployment:DeploymentAdminInfo
+        AdminDeployment:DeploymentAdminInfo,
+        LogUserName:CurrentUserName
     }
 })

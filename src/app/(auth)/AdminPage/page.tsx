@@ -57,10 +57,13 @@ export default function UserTableList() {
   const [loading, setLoading] = useState(true);
   // const [users, setUsers] = useState<any[]>([]);
   const [isChecking, setIsChecking] = useState(true);
-  const [UserFirstName, setUserFirstName] = useState("");
+
 const users=useSelector((state:any)=>state.AdminUsers)
+console.log ("Check Users---",users)
 const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
 const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
+const UserFirstName=useSelector((state:any)=>state.LogUserName)
+
   const [HCPCurrentStatus,setHCPCurrentStatus]=useState("")
   const [SearchDate, SetSearchDate] = useState<any>(null)
   const now = new Date();
@@ -95,6 +98,7 @@ const ProfileInformation=useSelector((state:any)=>state.Useriinformation)
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const updatedStatusMsg=useSelector((each:any)=>each.GlobelRefresh)
+  console.log ("Find Users-----",loggedInEmail)
 const RESTRICTED_EMAILS = new Set([
   "info@curatehealth.in",
   "admin@curatehealth.in",
@@ -107,10 +111,17 @@ const RESTRICTED_EMAILS = new Set([
 const [authChecked, setAuthChecked] = useState(false);
 
 useEffect(() => {
+  if (
+    users?.length === 0 &&
+    UserFullInfo?.length === 0 &&
+    DeploymentInfo?.length === 0
+  ) {
+    router.push("/");
+  }
   const userId = localStorage.getItem("UserId");
 
   if (!userId) {
-         window.location.href = "/sign-in";
+         router.push("/sign-in");
     return;
   }
 
@@ -216,100 +227,11 @@ const ContetUserInterface = () => {
   }
 
   
-const FetchDashboardData = async (
-  refreshType?:
-    | "profile"
-    | "registeredUsers"
-    | "fullInfo"
-    | "deployment"
-) => {
-  try {
-    const userId = localStorage.getItem("UserId");
 
-    if (!userId) return;
-
-    setIsChecking(true);
-
-    if (!refreshType) {
-      const cached = localStorage.getItem(
-        DASHBOARD_CACHE_KEY
-      );
-
-      if (cached) {
-        const parsed = JSON.parse(cached);
-
-        if (
-          Date.now() - parsed.timestamp <
-          CACHE_TTL
-        ) {
-          const {
-            profile,
-            registeredUsers,
-            fullInfo,
-            deployedLength,
-          } = parsed.data;
-
-         
-          dispatch( setUsers(registeredUsers))
-          setUserFirstName(profile?.FirstName);
-          setLoginEmail(profile?.Email);
-         dispatch(setFullInfo(fullInfo))
-         dispatch( SetDeploymentInfo(deployedLength))
-          setIsChecking(false);
-
-          return;
-        }
-      }
-    }
-
-    console.time("DASHBOARD_API");
-
-    const { data: result } = await axios.post(
-      "/api/AdminPageInfo",
-      {
-        userId,
-        refreshType,
-      }
-    );
-
-    console.timeEnd("DASHBOARD_API");
-
-    if (!result?.success) return;
-
-    const {
-      profile,
-      registeredUsers,
-      fullInfo,
-      deployedLength,
-    } = result.data;
-
-    localStorage.setItem(
-      DASHBOARD_CACHE_KEY,
-      JSON.stringify({
-        timestamp: Date.now(),
-        data: result.data,
-      })
-    );
-
-    dispatch( setUsers(registeredUsers))
-    setUserFirstName(profile?.FirstName);
-    setLoginEmail(profile?.Email);
-         dispatch(setFullInfo(fullInfo))
-    dispatch( SetDeploymentInfo(deployedLength))
-  } catch (error) {
-    console.error(error);
-  } finally {
-    setIsChecking(false);
-  }
-};
 useEffect(() => {
-  if (!authChecked) return;
-
-  FetchDashboardData();
-}, [authChecked]);
-useEffect(() => {
-  const email = cachedUserInfo?.Email?.toLowerCase();
+  const email =loggedInEmail
   if (!email) return;
+  console.log ("Check Users---",users)
 
   if (!RESTRICTED_EMAILS.has(email)) {
     router.push("/");
@@ -827,12 +749,7 @@ const userId =
   const UpdateFilterHCA = (e: any) => {
     setAsignStatus(e.target.value)
   }
-  if (!authChecked) {
-  return <LoadingData />;
-}
-  if (isChecking) {
-    return <LoadingData />
-  }
+
   
   const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
     const res = await axios.post("/api/send-whatsapp", {
@@ -1907,7 +1824,7 @@ Awaiting Conversion
   const handleLogout = () => {
     
  
-      window.location.href ='/DashBoard';
+      router.push('/DashBoard');
     dispatch(Update_Main_Filter_Status(""))
  
   };

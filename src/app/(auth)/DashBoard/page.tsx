@@ -171,7 +171,7 @@ console.log("Check Email------",loggedInEmail)
   const [ClientDiscount, SetClientDiscount] = useState<any>(0)
 const ProfileInformation=useSelector((state:any)=>state.Useriinformation)
   const stats=useSelector((state:any)=>state.DashBoardCount)
-console.log ("Check Personal Information----",ProfileInformation)
+console.log ("Check Personal Information----",stats.registeredUsers)
   const DASHBOARD_CACHE_KEY = "dashboardStats";
   const CACHE_TTL = 20 * 60 * 1000;
 
@@ -282,7 +282,7 @@ useEffect(() => {
 
   if (!userId) {
     console.log("Redirecting...");
-     window.location.href = "/sign-in";
+    router.push("/sign-in");
     return;
   }
 
@@ -338,7 +338,8 @@ const run = useCallback(async () => {
   }
 }, [dispatch]);
   useEffect(() => {
-    run();
+    if(stats.registeredUsers==="Loading..."){
+    run();}
   }, [run, updatedRefreshCount]);
 
   const BenchList = useMemo(() => {
@@ -991,7 +992,7 @@ setIsNavigating(true);
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
             </span>
           </div>
 
@@ -1172,7 +1173,7 @@ setIsNavigating(true);
                     onClick={() => {
                       localStorage.removeItem("UserId");
                     
-                        window.location.href = "/sign-in";
+                        router.push("/sign-in");
                       setShowProfileOptions(false);
                     }}
                     className="
