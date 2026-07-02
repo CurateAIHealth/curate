@@ -12,6 +12,7 @@ import {
   BadgeCheck,
   CircleX,
   CheckCircle2,
+  ChartColumn,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
@@ -34,6 +35,12 @@ export default function AccountingSub(){
       count: stats.timesheetcount,
       icon: User,
       bg: "bg-green-500",
+    },
+        {
+      name: "RevenueAnalytics",
+      count: 0, // Update with actual value if needed
+      icon: ChartColumn,
+      bg: "bg-violet-500",
     },
   
     {
@@ -160,6 +167,10 @@ const handleLogout = () => {
                  case "Paid":
                     setIsNavigating(false);
                 router.push("/SuccessfulPayments");
+                break;
+                case "RevenueAnalytics":
+                    setIsNavigating(false);
+                router.push("/RevenueAnalytics");
                 break;
       
       

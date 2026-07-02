@@ -2,6 +2,7 @@
 
 import { Update_Main_Filter_Status } from "@/Redux/action";
 import axios from "axios";
+import { CircleX, CrossIcon, FilterX } from "lucide-react";
 import { Rethink_Sans } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -10,16 +11,19 @@ import { useDispatch, useSelector } from "react-redux";
 
 export default function BulkMessagePage() {
   const [tab, setTab] = useState<
-  "clients" | "hcas" | "leads" | "others"
+  "clients" | "hcas" | "leads" | "others"|"Employs"
 >("clients");
 const [communicationType, setCommunicationType] =
 useState<"email" | "whatsapp" | "both">("email");
   const [clientFilters, setClientFilters] = useState<string[]>([]);
   const [hcaFilters, setHcaFilters] = useState<string[]>([]);
   const [ActionMessage,setActionMessage]=useState("")
+  const [phoneInput, setPhoneInput] = useState("");
+const [otherNumbers, setOtherNumbers] = useState<string[]>([]);
 const [search, setSearch] = useState("");
 const users=useSelector((state:any)=>state.AdminUsers)
-const [OtherEMail,setOtherEMail]=useState("")
+const [OtherEMail,setOtherEMail]=useState<any>([])
+const [emailInput, setEmailInput] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const dispatch=useDispatch()
@@ -87,7 +91,60 @@ const Leads = users
     currentStatus: each.CurrentStatus,
     userType: "Lead",
   }));
-
+const Employs = [
+   {
+    _id: "1",
+    name: "Srinivas",
+    email: "srinivasnew0803@gmail.com",
+  },
+  {
+    _id: "2",
+    name: "Srivani",
+    email: "srivanikasham@curatehealth.in",
+  },
+ 
+  {
+    _id: "3",
+    name: "Kiran",
+    email: "kirancuratehealth@gmail.com",
+  },
+  {
+    _id: "4",
+    name: "Admin",
+    email: "admin@curatehealth.in",
+  },
+  {
+    _id: "5",
+    name: "Sravanthi",
+    email: "sravanthicurate@gmail.com",
+  },
+ 
+  {
+    _id: "6",
+    name: "Info",
+    email: "info@curatehealth.in",
+  },
+   {
+    _id: "7",
+    name: "Siddu",
+    email: "tsiddu805@gmail.com",
+  },
+  {
+    _id: "8",
+    name: "Gouri",
+    email: "gouricurate@gmail.com",
+  },
+  {
+    _id: "9",
+    name: "Shreeshma",
+    email: "shreeshmacurate@gmail.com",
+  },
+  {
+    _id: "10",
+    name: "Pandu",
+    email: "panducurate@gmail.com",
+  },
+];
 
   const toggleClientFilter = (value: string) => {
     setClientFilters((prev) =>
@@ -111,6 +168,17 @@ const Leads = users
     dispatch(Update_Main_Filter_Status(""))
  
   };
+
+
+  const filteredEmploys = useMemo(() => {
+  const keyword = search.toLowerCase();
+
+  return Employs.filter((emp: any) =>
+    emp.name?.toLowerCase().includes(keyword) ||
+    emp.email?.toLowerCase().includes(keyword) ||
+    emp.Phone?.toLowerCase().includes(keyword)
+  );
+}, [Employs, search]);
  const filteredClients = useMemo(() => {
   return clients.filter((client: any) => {
     const matchesFilter =
@@ -157,30 +225,34 @@ const filteredLeads = useMemo(() => {
   );
 }, [Leads, search]);
 
- const selectedCount =
+const selectedCount =
   tab === "clients"
     ? filteredClients.length
     : tab === "hcas"
     ? filteredHCAs.length
     : tab === "leads"
     ? filteredLeads.length
+    : tab === "Employs"
+    ? filteredEmploys.length
     : tab === "others"
-        ? 1
+    ? 1
     : 0;
 const SendEmail = async () => {
   try {
     setActionMessage("Preparing email...");
 
     const recipients =
-      tab === "clients"
-        ? filteredClients
-        : tab === "hcas"
-        ? filteredHCAs
-        : tab === "leads"
-        ? filteredLeads
-        : tab === "others"
-        ? [{ email: OtherEMail?.trim() }]
-        : [];
+  tab === "clients"
+    ? filteredClients
+    : tab === "hcas"
+    ? filteredHCAs
+    : tab === "leads"
+    ? filteredLeads
+    : tab === "Employs"
+    ? filteredEmploys
+    : tab === "others"
+    ? OtherEMail.map((email: any) => ({ email: email.trim() }))
+    : [];
 
     const emails = [
       ...new Set(
@@ -318,6 +390,7 @@ Please do not reply directly to this email.
       );
       setSubject("")
       setMessage("")
+      setOtherEMail([])
     } else {
       setActionMessage(data?.message || "Failed to send email.");
     }
@@ -463,7 +536,16 @@ Please do not reply directly to this email.
   >
     Leads
   </button>
-
+ <button
+    onClick={() => setTab("Employs")}
+    className={`flex-1 sm:flex-none min-w-[110px] px-5 py-3 rounded-xl font-medium transition-all cursor-pointer ${
+      tab === "Employs"
+        ? "bg-gray-300 text-gray-800 shadow"
+        : "text-slate-600 hover:bg-slate-100"
+    }`}
+  >
+    Employs
+  </button>
   <button
     onClick={() => setTab("others")}
     className={`flex-1 sm:flex-none min-w-[110px] px-5 py-3 rounded-xl font-medium transition-all cursor-pointer ${
@@ -474,6 +556,7 @@ Please do not reply directly to this email.
   >
     Others
   </button>
+  
 
 </div>
 
@@ -544,33 +627,31 @@ Please do not reply directly to this email.
         </span>
       </div>
 
-      {tab === "clients" && (
-        <>
-          <p className="font-medium text-slate-700 mb-3">
-            Client Status
-          </p>
 
-          {[
-            "Waiting List",
-            "Converted",
-            "Lost",
-            "Pending",
-          ].map((item) => (
-            <label
-              key={item}
-              className="flex items-center gap-3 mb-3 cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                className="accent-[#1392d3]"
-                onChange={() =>
-                  toggleClientFilter(item)
-                }
-              />
-              {item}
-            </label>
-          ))}
-        </>
+
+      {tab === "clients" && (
+       <>
+  <p className="font-medium text-slate-700 mb-3">
+    Client Status
+  </p>
+
+  <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-6 text-center">
+    <div className="flex justify-center mb-3">
+      <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
+        <FilterX className="w-6 h-6 text-slate-400" />
+      </div>
+    </div>
+
+    <h4 className="text-sm font-semibold text-slate-700">
+      No Filters Available
+    </h4>
+
+    <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+      Clients currently in <span className="font-medium">Ongoing Service</span>{" "}
+      do not have any additional filter options.
+    </p>
+  </div>
+</>
       )}
 
       {tab === "hcas" && (
@@ -582,7 +663,39 @@ Please do not reply directly to this email.
           {[
             "Active",
             "Bench",
+            "Training",
+            "Sick",
             "Leave",
+            "Terminated",
+          
+   
+          ].map((item) => (
+            <label
+              key={item}
+              className="flex items-center gap-3 mb-3 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                className="accent-[#50c896]"
+                onChange={() =>
+                  toggleHcaFilter(item)
+                }
+              />
+              {item}
+            </label>
+          ))}
+        </>
+      )}
+      {tab === "leads" && (
+        <>
+          <p className="font-medium text-slate-700 mb-3">
+            Lead Status
+          </p>
+
+          {[
+           "Waiting List",
+            "Lost",
+            "Pending",
           
    
           ].map((item) => (
@@ -603,7 +716,7 @@ Please do not reply directly to this email.
         </>
       )}
 
-      {(tab ==="leads"||tab ==="others")&&
+      {(tab ==="Employs"||tab ==="others")&&
       <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-4">
         <svg
@@ -820,6 +933,50 @@ Please do not reply directly to this email.
       </div>
     ))}
 
+      {tab === "Employs" &&
+  filteredEmploys.map((emp: any) => (
+    <div
+      key={emp._id}
+      className="grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-3 hover:bg-slate-50 transition"
+    >
+      <div className="flex items-center gap-3">
+        <div className="h-11 w-11 rounded-full bg-pink-100 text-pink-700 flex items-center justify-center font-semibold text-sm shrink-0">
+          {emp.name?.charAt(0)?.toUpperCase()}
+        </div>
+
+        <div className="min-w-0">
+          <h4 className="font-semibold text-slate-800 truncate">
+            {emp.name}
+          </h4>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-slate-500">
+            {communicationType === "email" ? (
+              <span className="flex items-center gap-1 truncate">
+                📧 {emp.email}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 truncate">
+                <img
+                  src="/Icons/whatsapp.png"
+                  className="w-4 h-4"
+                  alt="WhatsApp"
+                />
+                <span>{emp.Phone}</span>
+              </span>
+            )}
+
+            <span className="flex items-center gap-1 truncate">
+              📍 {emp.location || "Not Provided"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <span className="px-3 py-1 rounded-full bg-pink-50 text-pink-700 text-xs font-semibold border border-pink-200">
+        Employee
+      </span>
+    </div>
+  ))}
 </div>
 
       </div>
@@ -876,25 +1033,66 @@ Please do not reply directly to this email.
     WhatsApp Number
   </label>
 
-  <div className="flex rounded-xl border border-slate-300 overflow-hidden bg-white focus-within:border-green-500 focus-within:ring-4 focus-within:ring-green-100 transition-all">
-    <span className="flex items-center px-4 bg-slate-50 border-r border-slate-200 text-slate-600 text-sm font-medium">
-      🇮🇳 +91
-    </span>
+  <div className="rounded-xl border border-slate-300 bg-white p-2 focus-within:border-green-500 focus-within:ring-4 focus-within:ring-green-100 transition-all">
 
-    <input
-      type="tel"
-      placeholder="9876543210"
-      maxLength={10}
-      className="
-        w-full
-        px-4
-        py-3
-        text-sm
-        outline-none
-        placeholder:text-slate-400
-      "
-    />
+  <div className="flex flex-wrap items-center gap-2">
+
+    {otherNumbers.map((number, index) => (
+      <div
+        key={index}
+        className="flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-sm text-green-800"
+      >
+        <span>🇮🇳 +91 {number}</span>
+
+        <CircleX
+          size={16}
+          className="cursor-pointer hover:text-red-500"
+          onClick={() =>
+            setOtherNumbers((prev) => prev.filter((_, i) => i !== index))
+          }
+        />
+      </div>
+    ))}
+
+    <div className="flex items-center flex-1 min-w-[180px]">
+      <span className="mr-2 text-sm font-medium text-slate-600">
+        🇮🇳 +91
+      </span>
+
+      <input
+        type="tel"
+        placeholder="Enter mobile numbers..."
+        value={phoneInput}
+        maxLength={10}
+        onChange={(e) => {
+          const value = e.target.value.replace(/\D/g, "");
+          setPhoneInput(value);
+        }}
+        onKeyDown={(e) => {
+          if (["Enter", ",", "Tab", " "].includes(e.key)) {
+            e.preventDefault();
+
+            if (
+              phoneInput.length === 10 &&
+              !otherNumbers.includes(phoneInput)
+            ) {
+              setOtherNumbers((prev) => [...prev, phoneInput]);
+            }
+
+            setPhoneInput("");
+          }
+
+          if (e.key === "Backspace" && phoneInput === "") {
+            setOtherNumbers((prev) => prev.slice(0, -1));
+          }
+        }}
+        className="flex-1 min-w-[150px] bg-transparent py-2 text-sm outline-none placeholder:text-slate-400"
+      />
+    </div>
+
   </div>
+
+</div>
 
   <p className="mt-3 text-xs text-slate-500">
     Enter a valid WhatsApp mobile number. The number doesn't need to be registered in the application.
@@ -1029,30 +1227,54 @@ Please do not reply directly to this email.
     <label className="block text-sm font-medium text-slate-700 mb-2">
       Recipient Email Address 
     </label>
+<input
+  type="text"
+  placeholder="Enter email addresses..."
+  value={emailInput}
+  onChange={(e) => setEmailInput(e.target.value)}
+  onKeyDown={(e) => {
+    if (["Enter", "Tab", ",", " "].includes(e.key)) {
+      e.preventDefault();
 
-    <input
-      type="email"
-      
-      placeholder="example@gmail.com"
-      value={OtherEMail}
-      className="
-        w-full
-        rounded-xl
-        border
-        border-slate-300
-        bg-white
-        px-4
-        py-3
-        text-sm
-        outline-none
-        transition-all
-        placeholder:text-slate-400
-        focus:border-violet-500
-        focus:ring-4
-        focus:ring-violet-100
-      "
-      onChange={(e:any)=>setOtherEMail(e.target.value)}
-    />
+      const email = emailInput.trim().replace(/,$/, "");
+
+      if (
+        email &&
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+        !OtherEMail.includes(email)
+      ) {
+        setOtherEMail((prev:any[]) => [...prev, email]);
+      }
+
+      setEmailInput("");
+    }
+
+    // Backspace removes last chip when input is empty
+    if (e.key === "Backspace" && emailInput === "") {
+      setOtherEMail((prev:any[]) => prev.slice(0, -1));
+    }
+  }}
+  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
+/>{OtherEMail.length > 0 && (
+  <div className="mt-3 flex flex-wrap gap-2">
+    {OtherEMail.map((email:any, index:any) => (
+      <div
+        key={index}
+        className="flex items-center gap-2 rounded-full bg-violet-100 px-3 py-1 text-sm text-violet-800"
+      >
+        <span>{email}</span>
+
+        <CircleX
+          size={16}
+          className="cursor-pointer hover:text-red-500"
+          onClick={() =>
+            setOtherEMail((prev:any[]) => prev.filter((_:any, i:any) => i !== index))
+          }
+        />
+      </div>
+    ))}
+  </div>
+)}
 
     <p className="mt-3 text-xs text-slate-500">
       You can enter any valid email address that is not registered in the application.
@@ -1173,7 +1395,7 @@ transition-colors
 "
            onClick={SendEmail}
         >
-          Send Email To {selectedCount} Users
+          Send Email To {tab==="others" ?   OtherEMail.length:selectedCount} Users
         </button>
 
       </div>}
