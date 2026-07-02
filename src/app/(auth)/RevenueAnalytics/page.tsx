@@ -73,8 +73,8 @@ function getStatus(client: ClientRecord) {
 }
 
 export default function RevenueAnalyticsPage() {
-  const [selectedMonth, setSelectedMonth] = useState("January");
-  const [selectedYear, setSelectedYear] = useState("2025");
+  const [selectedMonth, setSelectedMonth] = useState("July");
+  const [selectedYear, setSelectedYear] = useState("2026");
   const [activeTab, setActiveTab] = useState<"current" | "Carry Forward">("current");
   const [showCurrentInOutstanding, setShowCurrentInOutstanding] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -161,7 +161,7 @@ const handleLogout = () => {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Revenue Analytics</p>
-                <h1 className="mt-1 text-lg font-semibold text-slate-900">Curate Health Healthcare Service {selectedMonth} {selectedYear} </h1>
+                <h1 className="mt-1 text-lg font-semibold text-slate-900">Curate Health Healthcare Service  </h1>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(["current", "Carry Forward"] as const).map((tab) => (
                     <button
