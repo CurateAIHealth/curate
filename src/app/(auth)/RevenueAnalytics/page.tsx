@@ -1,7 +1,8 @@
 "use client";
 
+import axios from "axios";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type ClientRecord = {
   id: number;
@@ -79,6 +80,18 @@ export default function RevenueAnalyticsPage() {
   const [showCurrentInOutstanding, setShowCurrentInOutstanding] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 const router = useRouter();
+
+const FetchDatFromDb=async()=>{
+  // Fetch data from the database and update the state
+  // This is a placeholder function. Implement your data fetching logic here.
+  console.log("Fetching data from the database...");
+  const fetchedData:any=await axios.get('/api/revenue-data')
+  console.log("Fetched data:", fetchedData.data);
+}
+
+useEffect(() => {
+  FetchDatFromDb();
+}, []); // Empty dependency array means this effect runs once on mount
   const filteredData = useMemo(() => {
     return data.filter((record) => {
       const matchesYear = record.year === selectedYear;

@@ -84,7 +84,22 @@ console.log("SERVER ACTION START", Date.now());
   }
 };;
 
+export const GetInvoiceInfo=async()=>{
+  try{
+const cluster=await clientPromise
+const db=cluster.db("CurateInformation")
+const collection=db.collection("Invoices")
+const TimeSheetInfoData=await collection.find().toArray()
 
+const safeUsers = TimeSheetInfoData.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+return safeUsers
+  }catch(e){
+
+  }
+}
 export const GetDeploymentInfo = async (projection?: any) => {
   try {
     const cluster = await clientPromise;

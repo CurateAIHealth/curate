@@ -107,6 +107,7 @@ const RESTRICTED_EMAILS = new Set([
   "srivanikasham@curatehealth.in",
   "sravanthicurate@gmail.com",
   "srinivasnew0803@gmail.com",
+  "kirancuratehealth@gmail.com"
 ]);
 const [authChecked, setAuthChecked] = useState(false);
 
