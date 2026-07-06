@@ -157,6 +157,7 @@ const revenueData: ClientRecord[] = ImportedData
 
     const [day, month, year] = startDate.split("/");
 
+
     return {
       id: index + 1,
       client: record.ClientName,
@@ -198,7 +199,7 @@ const revenueData: ClientRecord[] = ImportedData
       const matchesSearch = record.client.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesYear && matchesMonth && matchesSearch;
     });
-  }, [selectedMonth, selectedYear, searchTerm, activeTab, showCurrentInOutstanding]);
+  }, [ImportedData,UserFullInfo,selectedMonth, selectedYear, searchTerm, activeTab, showCurrentInOutstanding]);
 console.log("ImpData----",GetHCPPayment("22d311d0-daea-4fe2-a5bf-814e1d332820"));
   const currentMonthName = monthOptions[new Date().getMonth()];
   const currentYearName = new Date().getFullYear().toString();
@@ -274,7 +275,7 @@ const handleLogout = () => {
                         />
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Revenue Analytics</p>
+                <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Revenue Analytics {selectedMonth}</p>
                 <h1 className="mt-1 text-lg font-semibold text-slate-900">Curate Health Healthcare Service  </h1>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(["current", "Carry Forward"] as const).map((tab) => (
