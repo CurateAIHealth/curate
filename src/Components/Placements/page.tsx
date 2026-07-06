@@ -8,14 +8,14 @@ let cachedRegisterdUsers: any[] = [];
 
 
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Minimize2, Info } from "lucide-react";
+import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Minimize2, Info, ChevronDown } from "lucide-react";
 import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId, UpdateClientAttendanceStatus, GetApplicationData, UpdateHCAnstatusInDeplyoment,  } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { SetDeploymentInfo, setUsers, UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
 import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
-import { filterColors, months, Placements_Filters, years } from "@/Lib/Content";
+import { filterColors, IndianStates, months, Placements_Filters, years } from "@/Lib/Content";
 import ReplacementsTable from "../ReplacementsTable/page";
 import { AssignSuitableIcon, getDaysBetween, getDueDaysStatus, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
 import { useRouter } from "next/navigation";
@@ -1766,6 +1766,7 @@ const OmServiceView = () => {
   {/* Filters */}
 
   <div className="flex flex-col items-center sm:flex-row gap-3 w-full sm:w-auto">
+    
 <button
   className="group inline-flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm font-semibold text-slate-800 shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-slate-200 hover:bg-slate-200"
 onClick={() => setShowAttendanceModal(true)}
@@ -1788,12 +1789,37 @@ onClick={() => setShowAttendanceModal(true)}
   </span>
 
   <div className="flex flex-col  leading-tight">
-    <span className="text-xs">Pending Attendance {SearchMonth} {SearchYear}</span>
+    <span className="text-xs">Pending Attendance</span>
     <span className="text-[10px] text-center font-medium text-slate-500">
       Client check-in
     </span>
   </div>
 </button>
+<div className="text-center">
+  <label className="mb-1.5 block text-xs font-semibold text-gray-700">
+    Service Work State
+  </label>
+
+  <div className="relative">
+    <select
+      defaultValue="Telangana"
+      className="w-full text-center h-10 appearance-none rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
+    >
+    
+
+      {IndianStates.map((state) => (
+        <option key={state} value={state}>
+          {state}
+        </option>
+      ))}
+    </select>
+
+    <ChevronDown
+      size={16}
+      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+    />
+  </div>
+</div>
     {/* Month */}
     <select
       value={SearchMonth}

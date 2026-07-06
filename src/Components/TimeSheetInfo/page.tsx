@@ -4,14 +4,14 @@ let cachedUsersFullInfo: any[] = [];
 let cachedRegisterdUsers: any[] = [];
 import { DeleteClientFromDeolyment, EditAttendanceByClientId, EditAttendanceByDateRange, GetApplicationData, GetDeploymentInfo, GetRegidterdUsers, GetRegidterdUsersforTimeSheet, GetUsersFullInfo, GetUsersFullInfoforTimeSheet, PostAttendeceEditRequest, UpdateAllPendingAttendance, UpdateClientTimeSheet, UpdateHCAnstatus, UpdatehcpDailyAttendce } from "@/Lib/user.action";
 import { SetDeploymentInfo, UpdateClient, UpdateUserInformation } from "@/Redux/action";
-import { CalendarDays, CheckCircle, Eye, FilePenLine, Info, LucidePencil, Minimize2, Pencil, PencilIcon, Trash2, X } from "lucide-react";
+import { CalendarDays, CheckCircle, ChevronDown, Eye, FilePenLine, Info, LucidePencil, Minimize2, Pencil, PencilIcon, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import MissingAttendence from "../MissingAttendence/page";
 import PaymentModal from "../PaymentInfoModel/page";
-import { months, years } from "@/Lib/Content";
+import { IndianStates, months, years } from "@/Lib/Content";
 import { AssignSuitableIcon, getDaysInMonth } from "@/Lib/Actions";
 import DeletePopup from "../DeleteTimesheetPopUp/page";
 import { EditDeploymentPopup } from "../TimeSheetEditPopUp/page";
@@ -80,24 +80,46 @@ const [SearchResult,setSearchResult]=useState("")
 
   const dispatch = useDispatch();
   const router = useRouter();
-const getMonthKey = (record: any): string => {
-  // Prefer StartDate (always string in your data)
-  if (typeof record?.StartDate === "string") {
-    const [d, m, y] = record.StartDate.split("/");
-    if (y && m) {
-      return `${y}-${m.padStart(2, "0")}`;
-    }
+
+const parseIndianDate = (dateString: string) => {
+  const [day, month, year] = dateString.split("/").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const getMonthKey = (
+  startDateString: string,
+  endDateString: string
+) => {
+  if (!startDateString || !endDateString) return [];
+
+  const startDate = parseIndianDate(startDateString);
+  const endDate = parseIndianDate(endDateString);
+
+  const monthKeys: string[] = [];
+
+  const current = new Date(
+    startDate.getFullYear(),
+    startDate.getMonth(),
+    1
+  );
+
+  const end = new Date(
+    endDate.getFullYear(),
+    endDate.getMonth(),
+    1
+  );
+
+  while (current <= end) {
+    monthKeys.push(
+      `${current.getFullYear()}-${String(
+        current.getMonth() + 1
+      ).padStart(2, "0")}`
+    );
+
+    current.setMonth(current.getMonth() + 1);
   }
 
-  // Fallback if StartDate is missing
-  if (record?.UpdatedAt instanceof Date) {
-    const date = record.UpdatedAt;
-    return `${date.getFullYear()}-${String(
-      date.getMonth() + 1
-    ).padStart(2, "0")}`;
-  }
-
-  return "Unknown";
+  return monthKeys;
 };
 
 
@@ -117,48 +139,50 @@ useEffect(() => {
   const formattedData: Record<string, any[]> = {};
 
   for (const record of ImpClientsInformation) {
-    const monthKey = getMonthKey(record);
+    const monthKeys = getMonthKey(record.StartDate, record.EndDate);
 
-    if (!formattedData[monthKey]) {
-      formattedData[monthKey] = [];
+    for (const monthKey of monthKeys) {
+      if (!formattedData[monthKey]) {
+        formattedData[monthKey] = [];
+      }
+
+      formattedData[monthKey].push({
+        invoice: record.invoice || "",
+        startDate: record.StartDate || "",
+        endDate: record.EndDate || "",
+        status: record.Status || "",
+        location: record.Address || "N/A",
+        clientPhone: record.ClientContact || "",
+        clientName: record.ClientName || "",
+        ClientId: record.ClientId || "",
+        patientName: record.patientName || "",
+        referralName: record.referralName || "",
+        hcp: "Assist",
+        VendorName: record.VendorName || "Curate",
+        Type: record.Type || "HCA",
+        hcpId: record.HCAId || "",
+        hcpName: record.HCAName || "",
+        hcpPhone: record.HCAContact || "",
+        hcpSource: record.hcpSource || "",
+        provider: record.provider || "",
+        payTerms: record.payTerms || "",
+        cTotal: Number(record.cTotal) || 0,
+        cPay: Number(record.cPay) || 0,
+        hcpTotal: Number(record.hcpTotal) || 0,
+        hcpPay: Number(record.hcpPay) || 0,
+        days: record.Attendance || [],
+        CareTakerPrice: record.CareTakerPrice
+          ? `${Math.round(
+              parseFloat(
+                String(record.CareTakerPrice).replace(/[^0-9.]/g, "")
+              )
+            )}`
+          : "",
+        Month: record.Month,
+        Replacement: record.Replacement,
+        ReplacementDate:record.ReplacementDate
+      });
     }
-
-    formattedData[monthKey].push({
-      invoice: record.invoice || "",
-      startDate: record.StartDate || "",
-      endDate: record.EndDate || "",
-      status: record.Status || "",
-      location: record.Address || "N/A",
-      clientPhone: record.ClientContact || "",
-      clientName: record.ClientName || "",
-      ClientId: record.ClientId || "",
-      patientName: record.patientName || "",
-      referralName: record.referralName || "",
-      hcp: "Assist",
-      VendorName: record.VendorName || "Curate",
-      Type: record.Type || "HCA",
-      hcpId: record.HCAId || "",
-      hcpName: record.HCAName || "",
-      hcpPhone: record.HCAContact || "",
-      hcpSource: record.hcpSource || "",
-      provider: record.provider || "",
-      payTerms: record.payTerms || "",
-      cTotal: Number(record.cTotal) || 0,
-      cPay: Number(record.cPay) || 0,
-      hcpTotal: Number(record.hcpTotal) || 0,
-      hcpPay: Number(record.hcpPay) || 0,
-      days: record.Attendance || [],
-      CareTakerPrice: record.CareTakerPrice
-        ? `${Math.round(
-            parseFloat(
-              String(record.CareTakerPrice).replace(/[^0-9.]/g, "")
-            )
-          )}`
-        : "",
-      Month: record.Month,
-      Replacement: record.Replacement,
-      ReplacementDate:record.ReplacementDate
-    });
   }
 
   console.timeEnd("FORMAT_DATA");
@@ -1015,6 +1039,7 @@ const PresentScreen=()=>{
       >
         View Missing Attendance
       </button>
+      
 {/* 
       <button
         onClick={() => setShowPendingCalendar(true)}
@@ -1337,7 +1362,31 @@ className={`
   >
     {showFull ? "Show Less" : "Show Full Table"}
   </button>
+  
   <div className="flex items-center gap-3">
+    <div className="text-center">
+
+
+  <div className="relative">
+    <select
+      defaultValue="Telangana"
+      className="w-full text-center h-10 appearance-none rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
+    >
+    
+
+      {IndianStates.map((state) => (
+        <option key={state} value={state}>
+          {state}
+        </option>
+      ))}
+    </select>
+
+    <ChevronDown
+      size={16}
+      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+    />
+  </div>
+</div>
   <button
     className="flex items-center gap-2 px-4 py-2 rounded-lg 
                bg-white text-blue-600 text-sm font-medium

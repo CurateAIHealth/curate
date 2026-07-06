@@ -22,6 +22,7 @@ useState<"email" | "whatsapp" | "both">("email");
 const [otherNumbers, setOtherNumbers] = useState<string[]>([]);
 const [search, setSearch] = useState("");
 const users=useSelector((state:any)=>state.AdminUsers)
+const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
 const [OtherEMail,setOtherEMail]=useState<any>([])
 const [emailInput, setEmailInput] = useState("");
   const [subject, setSubject] = useState("");
@@ -61,23 +62,22 @@ const hcas = users
     currentStatus: each.CurrentStatus,
     userType: each.PreviewUserType || "HCA",
   }));
-const clients = users
-  .filter((each: any) => each.userType === "patient")
-  .map((each: any) => ({
-    _id: each._id,
-    patientName: each.FirstName,
-    Adress: each.Location,
-    email: each.Email || "",
-    clientStatus: each.ClientStatus,
-    Phone:each.ContactNumber,
-    leadSource: each.NewLead || "",
-    invoiceStatus:
-      each.RegistrationFee > 0
-        ? "Paid"
-        : each.ClientStatus === "Lost"
-        ? "Cancelled"
-        : "Pending",
-  }));
+
+ 
+const clients = Array.from(
+  new Map(
+    DeploymentInfo.map((each: any) => [each.ClientId, each])
+  ).values()
+).map((each: any) => ({
+  _id: each.ClientId,
+  patientName: each.ClientName,
+  Adress: each.Address,
+  email: each.Email || "",
+  clientStatus: each.Status,
+  Phone: each.ClientContact,
+  leadSource: each.referralName || "",
+}));
+   console.log ("Check for DeploymentInfo:", DeploymentInfo.filter((each: any) => each.ClientName === "Riya Gupta"))
 console.log ("Check Contact.....",users
   .filter((each: any) => each.userType === "patient"))
 const Leads = users
@@ -146,13 +146,25 @@ const Employs = [
   },
 ];
 
-  const toggleClientFilter = (value: string) => {
-    setClientFilters((prev) =>
-      prev.includes(value)
-        ? prev.filter((x) => x !== value)
-        : [...prev, value]
-    );
-  };
+const toggleClientFilter = (value: string) => {
+  let updatedValue = value;
+
+  switch (value) {
+    case "On going service":
+      updatedValue = "Active";
+      break;
+
+    case "Hold client":
+      updatedValue = "Freeze";
+      break;
+  }
+
+  setClientFilters((prev) =>
+    prev.includes(updatedValue)
+      ? prev.filter((x) => x !== updatedValue)
+      : [...prev, updatedValue]
+  );
+};
 
   const toggleHcaFilter = (value: string) => {
     setHcaFilters((prev) =>
@@ -179,12 +191,13 @@ const Employs = [
     emp.Phone?.toLowerCase().includes(keyword)
   );
 }, [Employs, search]);
+
+
  const filteredClients = useMemo(() => {
   return clients.filter((client: any) => {
     const matchesFilter =
       !clientFilters.length ||
-      clientFilters.includes(client.clientStatus) ||
-      clientFilters.includes(client.invoiceStatus);
+      clientFilters.includes(client.clientStatus)
 
     const keyword = search.toLowerCase();
 
@@ -651,7 +664,7 @@ Please do not reply directly to this email.
                 type="checkbox"
                 className="accent-[#50c896]"
                 onChange={() =>
-                  toggleHcaFilter(item)
+                  toggleClientFilter(item)
                 }
               />
               {item}

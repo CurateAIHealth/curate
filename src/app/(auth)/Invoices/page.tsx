@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List, PencilOff, Info, PrinterCheck, ListFilterPlus } from "lucide-react";
+import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List, PencilOff, Info, PrinterCheck, ListFilterPlus, ChevronDown } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { GetInvoiceInfo, GetRegidterdUsers, GetSentInvoiceData, UpdateStatusPayment } from "@/Lib/user.action";
@@ -14,7 +14,7 @@ import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import { useRouter } from "next/navigation";
 import PaymentPopup from "@/Components/PaymentMethod/page";
 import PassbookPopup from "@/Components/Trasactions/page";
-import { ImportedinvoiceData, } from "@/Lib/Content";
+import { ImportedinvoiceData, IndianStates, } from "@/Lib/Content";
 
 
 type InvoiceStatus = "Draft" | "Sent" | "Overdue";
@@ -570,6 +570,25 @@ CheckPaymentStatus:CurrentPaymentStatus
 
 
   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="relative">
+      <select
+        defaultValue="Telangana"
+        className="w-full text-center h-10 appearance-none rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
+      >
+      
+  
+        {IndianStates.map((state) => (
+          <option key={state} value={state}>
+            {state}
+          </option>
+        ))}
+      </select>
+  
+      <ChevronDown
+        size={16}
+        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+      />
+    </div>
     <button
       onClick={handleLogout}
       className="
@@ -690,6 +709,7 @@ CheckPaymentStatus:CurrentPaymentStatus
     <ListFilterPlus  size={14} />
     <span className="text-xs font-medium">Advanced</span>
   </button>
+
 </div>
 
                 <div className="flex items-center gap-2">

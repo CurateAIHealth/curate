@@ -43,7 +43,7 @@ useEffect(() => {
  const fetchFreshData = async () => {
   try {
    const cacheKey = `${selectedYear}-${Number(selectedMonth)}`;
-console.log("Check in cacheKey----", cacheKey);
+
     // Use cache instantly
     if (!isSuccessUpdate && cachedDeploymentInfo[cacheKey]?.length) {
       SetAttendenceInfo(cachedDeploymentInfo[cacheKey]);
@@ -266,7 +266,7 @@ const AttendenceUpdateResult: any = await UpdateMultipleAttendance(
     
     <div>
       <h2 className="text-2xl font-semibold text-gray-800 tracking-tight">
-        HCPs Without Attendance {selectedYear} {Number(selectedMonth)}
+        HCPs Without Attendance 
       </h2>
       <p className="text-sm text-gray-500 mt-1">
         {new Date(selectedDate).toLocaleDateString("en-IN", {
