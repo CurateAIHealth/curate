@@ -60,28 +60,26 @@ const INITIAL_REVIEWS_COUNT = 4;
 const visibleReviews = showAllReviews
   ? reviews
   : reviews.slice(0, INITIAL_REVIEWS_COUNT);
-const DASHBOARD_CACHE_KEY = "dashboard_cache";
-const CACHE_TTL = 2 * 60 * 1000;
+const CACHE_TTL = 30 * 60 * 1000; 
 
+const dashboardCache = new Map<
+  string,
+  {
+    timestamp: number;
+    data: any;
+  }
+>();
 
 useEffect(() => {
-  
-
   let isMounted = true;
   let timer: NodeJS.Timeout;
 
   const initialize = async () => {
     try {
-      const userId =
-        typeof window !== "undefined"
-          ? localStorage.getItem("UserId")
-          : null;
-if (!userId) {
-         router.push("/sign-in");
-    return;
-  }
+      const userId = localStorage.getItem("UserId");
+
       if (!userId) {
-        if (isMounted) setIsChecking(false);
+        router.push("/sign-in");
         return;
       }
 
@@ -111,38 +109,38 @@ if (!userId) {
       if (StaffEmails.includes(email)) {
         dispatch(CurrentLoginUser(profile.Email));
 
-        const cached = localStorage.getItem(DASHBOARD_CACHE_KEY);
+        // Check memory cache
+        const cached = dashboardCache.get(userId);
 
-        if (cached) {
-          const parsed = JSON.parse(cached);
+        if (
+          cached &&
+          Date.now() - cached.timestamp < CACHE_TTL
+        ) {
+          const {
+            profile: cachedProfile,
+            registeredUsers,
+            fullInfo,
+            deployedLength,
+          } = cached.data;
 
-          if (Date.now() - parsed.timestamp < CACHE_TTL) {
-            const {
-              profile: cacheProfile,
-              registeredUsers,
-              fullInfo,
-              deployedLength,
-            } = parsed.data;
+          setLoadingProgress(75);
+          setLoadingMessage("Loading cached dashboard...");
 
-            setLoadingProgress(70);
-            setLoadingMessage("Loading cached dashboard...");
+          dispatch(setUsers(registeredUsers));
+          dispatch(setFullInfo(fullInfo));
+          dispatch(SetDeploymentInfo(deployedLength));
+          dispatch(
+            UpdateUserFirstName(cachedProfile?.FirstName)
+          );
 
-            dispatch(setUsers(registeredUsers));
-            dispatch(setFullInfo(fullInfo));
-            dispatch(SetDeploymentInfo(deployedLength));
+          setLoadingProgress(100);
+          setLoadingMessage("Redirecting...");
 
-           console.log ("Cached User Name-----",cacheProfile?.FirstName)
-         dispatch(UpdateUserFirstName(cacheProfile?.FirstName));
-
-            setLoadingProgress(100);
-            setLoadingMessage("Redirecting...");
-
-            router.push("/DashBoard");
-            setIsChecking(false);
-            return;
-          }
+          router.push("/DashBoard");
+          return;
         }
 
+        // Cache missing or expired — fetch fresh data
         setLoadingProgress(75);
         setLoadingMessage("Loading dashboard...");
 
@@ -154,7 +152,7 @@ if (!userId) {
         );
 
         if (!isMounted) return;
-console.log ("Check Dashboard Response---",dashboard)
+
         if (dashboard?.success) {
           const {
             profile: dashboardProfile,
@@ -163,25 +161,28 @@ console.log ("Check Dashboard Response---",dashboard)
             deployedLength,
           } = dashboard.data;
 
-          localStorage.setItem(
-            DASHBOARD_CACHE_KEY,
-            JSON.stringify({
-              timestamp: Date.now(),
-              data: dashboard.data,
-            })
-          );
-console.log ("User Name-----",dashboardProfile?.FirstName)
+          // Save response in memory cache
+          dashboardCache.set(userId, {
+            timestamp: Date.now(),
+            data: dashboard.data,
+          });
+
           dispatch(setUsers(registeredUsers));
           dispatch(setFullInfo(fullInfo));
           dispatch(SetDeploymentInfo(deployedLength));
-dispatch(UpdateUserFirstName(dashboardProfile?.FirstName));
-       
+          dispatch(
+            UpdateUserFirstName(dashboardProfile?.FirstName)
+          );
         }
 
         setLoadingProgress(90);
         setLoadingMessage("Preparing workspace...");
 
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) =>
+          setTimeout(resolve, 300)
+        );
+
+        if (!isMounted) return;
 
         setLoadingProgress(100);
         setLoadingMessage("Redirecting...");
@@ -201,6 +202,7 @@ dispatch(UpdateUserFirstName(dashboardProfile?.FirstName));
           setLoadingMessage("Redirecting...");
           router.push("/HomePage");
         }
+
         return;
       }
 
@@ -219,7 +221,8 @@ dispatch(UpdateUserFirstName(dashboardProfile?.FirstName));
         }
       }, 3500);
     } catch (error) {
-      console.error(error);
+      console.error("Initialization Error:", error);
+
       if (isMounted) {
         setIsChecking(false);
       }
@@ -230,9 +233,12 @@ dispatch(UpdateUserFirstName(dashboardProfile?.FirstName));
 
   return () => {
     isMounted = false;
-    if (timer) clearTimeout(timer);
+
+    if (timer) {
+      clearTimeout(timer);
+    }
   };
-}, [ router, dispatch]);
+}, [router, dispatch]);
 
 const ViewContactInfo=()=>{
   const Contact_Container=document.getElementById("ContactInformation")

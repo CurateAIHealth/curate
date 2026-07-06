@@ -1,12 +1,19 @@
 "use client";
 
+import { LoadingData } from "@/Components/Loading/page";
+import { getDaysBetween } from "@/Lib/Actions";
 import axios from "axios";
+import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 
 type ClientRecord = {
+  PerDaySalary: any;
+  hcaWorkingDays: any;
   id: number;
   client: string;
+  HCAId: string;
   month: string;
   year: string;
   expectedRevenue: number;
@@ -19,42 +26,7 @@ type ClientRecord = {
   other: number;
 };
 
-const data: ClientRecord[] = [
-  { id: 1, client: "Ramesh", month: "January", year: "2026", expectedRevenue: 1280000, revenueReceived: 1125000, pending: 155000, hcaSalary: 220000, advance: 42000, hostel: 26000, travel: 14000, other: 12000 },
-  { id: 2, client: "Prem", month: "January", year: "2026", expectedRevenue: 980000, revenueReceived: 910000, pending: 70000, hcaSalary: 180000, advance: 31000, hostel: 24000, travel: 12000, other: 9000 },
-  { id: 3, client: "Suresh", month: "January", year: "2026", expectedRevenue: 1430000, revenueReceived: 1260000, pending: 170000, hcaSalary: 240000, advance: 50000, hostel: 28000, travel: 16000, other: 13000 },
-  { id: 4, client: "Neha", month: "January", year: "2026", expectedRevenue: 1185000, revenueReceived: 1090000, pending: 95000, hcaSalary: 210000, advance: 38000, hostel: 23000, travel: 14500, other: 10500 },
 
-  { id: 5, client: "Priya", month: "February", year: "2026", expectedRevenue: 1175000, revenueReceived: 1043000, pending: 131000, hcaSalary: 205000, advance: 35000, hostel: 22500, travel: 15000, other: 10000 },
-  { id: 6, client: "Amit", month: "February", year: "2026", expectedRevenue: 860000, revenueReceived: 770000, pending: 90000, hcaSalary: 165000, advance: 29000, hostel: 19000, travel: 13000, other: 8500 },
-  { id: 7, client: "Sneha", month: "February", year: "2026", expectedRevenue: 1490000, revenueReceived: 1355000, pending: 135000, hcaSalary: 245000, advance: 47000, hostel: 29000, travel: 17000, other: 14000 },
-  { id: 8, client: "Rahul", month: "February", year: "2026", expectedRevenue: 1010000, revenueReceived: 930000, pending: 80000, hcaSalary: 192000, advance: 33000, hostel: 21000, travel: 12500, other: 9500 },
-
-  { id: 9, client: "Kavita", month: "March", year: "2026", expectedRevenue: 1325000, revenueReceived: 1210000, pending: 115000, hcaSalary: 215000, advance: 43000, hostel: 25000, travel: 14500, other: 11500 },
-  { id: 10, client: "Rohit", month: "March", year: "2026", expectedRevenue: 940000, revenueReceived: 830000, pending: 110000, hcaSalary: 185000, advance: 32000, hostel: 22000, travel: 12500, other: 10000 },
-  { id: 11, client: "Seema", month: "March", year: "2026", expectedRevenue: 1570000, revenueReceived: 1410000, pending: 160000, hcaSalary: 250000, advance: 52000, hostel: 29000, travel: 17000, other: 14000 },
-  { id: 12, client: "Kiran", month: "March", year: "2026", expectedRevenue: 1090000, revenueReceived: 995000, pending: 95000, hcaSalary: 198000, advance: 36000, hostel: 22000, travel: 13500, other: 10000 },
-
-  { id: 13, client: "Ajay", month: "April", year: "2026", expectedRevenue: 1110000, revenueReceived: 1060000, pending: 50000, hcaSalary: 202000, advance: 33000, hostel: 23000, travel: 13500, other: 10500 },
-  { id: 14, client: "Anita", month: "April", year: "2026", expectedRevenue: 990000, revenueReceived: 920000, pending: 70000, hcaSalary: 188000, advance: 30000, hostel: 21500, travel: 12500, other: 9500 },
-  { id: 15, client: "Vivek", month: "April", year: "2026", expectedRevenue: 1235000, revenueReceived: 1135000, pending: 100000, hcaSalary: 222000, advance: 41000, hostel: 25500, travel: 15000, other: 12000 },
-  { id: 16, client: "Divya", month: "April", year: "2026", expectedRevenue: 1460000, revenueReceived: 1330000, pending: 130000, hcaSalary: 238000, advance: 45000, hostel: 27500, travel: 16000, other: 12800 },
-
-  { id: 17, client: "Rajesh", month: "May", year: "2026", expectedRevenue: 1580000, revenueReceived: 1490000, pending: 90000, hcaSalary: 262000, advance: 54000, hostel: 30000, travel: 17500, other: 14500 },
-  { id: 18, client: "Pooja", month: "May", year: "2026", expectedRevenue: 1045000, revenueReceived: 940000, pending: 105000, hcaSalary: 200000, advance: 34000, hostel: 22500, travel: 14000, other: 11500 },
-  { id: 19, client: "Tanu", month: "May", year: "2026", expectedRevenue: 1360000, revenueReceived: 1220000, pending: 140000, hcaSalary: 228000, advance: 46000, hostel: 27000, travel: 16000, other: 12500 },
-  { id: 20, client: "Arjun", month: "May", year: "2026", expectedRevenue: 1150000, revenueReceived: 1040000, pending: 110000, hcaSalary: 208000, advance: 39000, hostel: 23500, travel: 14500, other: 11000 },
-
-  { id: 21, client: "Meena", month: "June", year: "2026", expectedRevenue: 1275000, revenueReceived: 1190000, pending: 85000, hcaSalary: 218000, advance: 41000, hostel: 25000, travel: 15000, other: 11800 },
-  { id: 22, client: "Sanjay", month: "June", year: "2026", expectedRevenue: 1420000, revenueReceived: 1305000, pending: 115000, hcaSalary: 236000, advance: 47000, hostel: 28000, travel: 16500, other: 13200 },
-  { id: 23, client: "Lakshmi", month: "June", year: "2026", expectedRevenue: 980000, revenueReceived: 890000, pending: 90000, hcaSalary: 182000, advance: 32000, hostel: 21000, travel: 12500, other: 9800 },
-  { id: 24, client: "Harish", month: "June", year: "2026", expectedRevenue: 1610000, revenueReceived: 1515000, pending: 95000, hcaSalary: 268000, advance: 55000, hostel: 30500, travel: 17800, other: 14800 },
-
-  { id: 25, client: "Naveen", month: "July", year: "2026", expectedRevenue: 1200000, revenueReceived: 1105000, pending: 95000, hcaSalary: 214000, advance: 40000, hostel: 24000, travel: 14500, other: 11200 },
-  { id: 26, client: "Bhavana", month: "July", year: "2026", expectedRevenue: 1340000, revenueReceived: 1240000, pending: 100000, hcaSalary: 226000, advance: 43000, hostel: 25500, travel: 15500, other: 12000 },
-  { id: 27, client: "Manoj", month: "July", year: "2026", expectedRevenue: 1085000, revenueReceived: 985000, pending: 100000, hcaSalary: 194000, advance: 34000, hostel: 22000, travel: 13500, other: 10400 },
-  { id: 28, client: "Deepika", month: "July", year: "2026", expectedRevenue: 1520000, revenueReceived: 1410000, pending: 110000, hcaSalary: 252000, advance: 51000, hostel: 29200, travel: 17000, other: 13800 },
-];
 const monthOptions = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const yearOptions = ["2024", "2025","2026", "2027", "2028"];
 
@@ -74,26 +46,150 @@ function getStatus(client: ClientRecord) {
 }
 
 export default function RevenueAnalyticsPage() {
+  const [ImportedData, setImportedData] = useState<any[]>([]);
+    const [isChecking, setIsChecking] = useState(true)
   const [selectedMonth, setSelectedMonth] = useState("July");
   const [selectedYear, setSelectedYear] = useState("2026");
   const [activeTab, setActiveTab] = useState<"current" | "Carry Forward">("current");
   const [showCurrentInOutstanding, setShowCurrentInOutstanding] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
 const router = useRouter();
 
-const FetchDatFromDb=async()=>{
-  // Fetch data from the database and update the state
-  // This is a placeholder function. Implement your data fetching logic here.
-  console.log("Fetching data from the database...");
-  const fetchedData:any=await axios.get('/api/revenue-data')
-  console.log("Fetched data:", fetchedData.data);
-}
+
+let revenueCache: any[] | null = null;
+let revenueCacheTime = 0;
+
+const CACHE_TIME = 5 * 60 * 1000; 
+
+
+
+const FetchDatFromDb = async (forceRefresh = false) => {
+  try {
+      if (
+    UserFullInfo?.length === 0 
+  ) {
+    router.push("/");
+  }
+  const userId = localStorage.getItem("UserId");
+
+  if (!userId) {
+         router.push("/sign-in");
+    return;
+  }
+    setIsChecking(true);
+
+    const now = Date.now();
+    if (
+      !forceRefresh &&
+      revenueCache &&
+      now - revenueCacheTime < CACHE_TIME
+    ) {
+      console.log("Using Cached Revenue Data");
+      setImportedData(revenueCache);
+      return;
+    }
+
+    console.log("Fetching Revenue Data...");
+
+    const { data } = await axios.get("/api/revenue-data");
+
+    revenueCache = data.data;
+    revenueCacheTime = now;
+console.log("Fetched Revenue Data:", revenueCache);
+    setImportedData(revenueCache || []);
+
+    console.log(
+      "Sent Records:",
+      revenueCache?.filter((record: any) => record.status === "Sent")
+    );
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setIsChecking(false);
+  }
+};
 
 useEffect(() => {
   FetchDatFromDb();
-}, []); // Empty dependency array means this effect runs once on mount
+}, []);
+
+
+
+
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+   const GetHCPPayment = (A: any) => {
+    if (!UserFullInfo?.length || !A) return 0;
+
+    const address =
+      UserFullInfo
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.["PaymentforStaff"] || 0;
+
+    return Number(address) || 0;
+  };
+  const getDaysInMonth = (monthName: string, year: string) => {
+  const monthIndex = monthNames.indexOf(monthName);
+  return new Date(Number(year), monthIndex + 1, 0).getDate();
+};
+const revenueData: ClientRecord[] = ImportedData
+  .filter((record: any) => record.status === "Sent")
+  .map((record: any, index: number) => {
+    const startDate =
+      record.SeriviceStartDate ||
+      record.ServiceStartDate ||
+      record.serviceFrom ||
+      record.DeployDate;
+
+    const [day, month, year] = startDate.split("/");
+
+
+    return {
+      id: index + 1,
+      client: record.ClientName,
+      HCAId: record.HCAId || record.UserId || "",
+      month: monthNames[Number(month) - 1],
+      year,
+      expectedRevenue: Number(record.RoundedTotal || 0),
+      revenueReceived:
+        (record.Trasaction?.reduce(
+          (sum: number, transaction: any) =>
+            sum + Number(transaction.amount || 0),
+          0
+        ) || 0) +
+        Number(
+          record.AdvancePaid ||
+          record.AdvanceReceived ||
+          0
+        ),
+      pending: Number(record.balanceDue || 0),
+      hcaSalary: GetHCPPayment(record.HCAId)/Number(getDaysInMonth(selectedMonth, selectedYear))*getDaysBetween(startDate, record.ServiceEndDate) || 0,
+      hcaWorkingDays: getDaysBetween(startDate, record.ServiceEndDate),
+      PerDaySalary: GetHCPPayment(record.HCAId)/Number(getDaysInMonth(selectedMonth, selectedYear)) || 0,
+      advance: Number(record.AdvancePaid || 0),
+      hostel: 0,
+      travel: 0,
+      other: Number(record.OtherExpenses || 0),
+    };
+  });
+
+
   const filteredData = useMemo(() => {
-    return data.filter((record) => {
+    return revenueData.filter((record) => {
       const matchesYear = record.year === selectedYear;
       const matchesMonth = activeTab === "Carry Forward"
         ? showCurrentInOutstanding
@@ -103,11 +199,11 @@ useEffect(() => {
       const matchesSearch = record.client.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesYear && matchesMonth && matchesSearch;
     });
-  }, [selectedMonth, selectedYear, searchTerm, activeTab, showCurrentInOutstanding]);
-
+  }, [ImportedData,UserFullInfo,selectedMonth, selectedYear, searchTerm, activeTab, showCurrentInOutstanding]);
+console.log("ImpData----",GetHCPPayment("22d311d0-daea-4fe2-a5bf-814e1d332820"));
   const currentMonthName = monthOptions[new Date().getMonth()];
   const currentYearName = new Date().getFullYear().toString();
-  const showExpectedRevenue = activeTab === "current" && selectedMonth === currentMonthName && selectedYear === currentYearName;
+  const showExpectedRevenue = activeTab === "current";
 
   const analytics = useMemo(() => {
     const expectedRevenue = filteredData.reduce((sum, item) => sum + item.expectedRevenue, 0);
@@ -158,6 +254,12 @@ const handleLogout = () => {
   
   router.push("/DashBoard");
 }
+
+ if (isChecking) {
+    return (
+      <LoadingData />
+    );
+  }
   return (
     <main className="h-screen bg-slate-50 p-2 text-slate-900 overflow-hidden flex flex-col">
       <div className="mx-auto max-w-full flex-1 overflow-y-auto">
@@ -173,7 +275,7 @@ const handleLogout = () => {
                         />
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Revenue Analytics</p>
+                <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Revenue Analytics {selectedMonth}</p>
                 <h1 className="mt-1 text-lg font-semibold text-slate-900">Curate Health Healthcare Service  </h1>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(["current", "Carry Forward"] as const).map((tab) => (
@@ -305,7 +407,24 @@ const handleLogout = () => {
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.expectedRevenue)}</td>
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.revenueReceived)}</td>
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.pending)}</td>
-                          <td className="px-2 py-1 text-xs">{formatCurrency(item.hcaSalary)}</td>
+                      <td className="px-2 py-1 text-xs">
+  <div className="flex items-center gap-1">
+    {formatCurrency(item.hcaSalary)}
+
+    <div className="relative group cursor-pointer">
+      <Info size={12} className="text-slate-500" />
+
+      <div className="absolute left-1/2 top-5 z-50 hidden w-64 -translate-x-1/2 rounded-lg bg-slate-800 px-3 py-2 text-[11px] text-white shadow-lg group-hover:block">
+        Monthly Salary: {item.PerDaySalary ? Math.round(item.PerDaySalary * item.hcaWorkingDays) :0}
+        <br />
+        Days Worked: {item.hcaWorkingDays}
+      
+        <br />
+      Per Day: {item.PerDaySalary ?Math.round(item.PerDaySalary) : 0}
+      </div>
+    </div>
+  </div>
+</td>
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.advance)}</td>
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.hostel)}</td>
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.travel)}</td>
@@ -368,7 +487,7 @@ const handleLogout = () => {
                         <div key={item.id} className="rounded-lg bg-slate-50 p-1.5">
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-medium text-slate-900 text-xs">{item.client}</span>
-                            <span className="text-xs text-slate-600">{formatCurrency(profitLoss)}</span>
+                            <span className="text-xs text-slate-600">{formatCurrency(profitLoss)} ({item.hcaWorkingDays} days)</span>
                           </div>
                           <div className="mt-2 h-2 rounded-full bg-slate-200">
                             <div className="h-full rounded-full bg-[#50c896]" style={{ width: `${Math.min((profitLoss / item.revenueReceived) * 100, 100)}%` }} />

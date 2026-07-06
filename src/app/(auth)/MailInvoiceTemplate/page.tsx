@@ -546,7 +546,7 @@ const SendInvoice = async () => {
 
     // ✅ Send email
     const mailResponse = await axios.post("/api/MailSend", {
-      to: "tsiddu805@gmail.com",
+      to: "srinivasnew0803@gmail.com",
       subject:
         "Request for Payment – Attached Invoice from Curate Health Services",
 
