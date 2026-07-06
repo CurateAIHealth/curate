@@ -27,24 +27,21 @@ const dispatch=useDispatch()
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
- console.log("CLIENT BEFORE CALL", Date.now());
+
   setError("");
   setsigninStatus(false);
 
   try {
-    console.time("SIGNIN_API");
-   
-
-console.time("API_LOGIN");
+ 
 
 const { data } =await axios.post("/api/route", {
   Name: loginInfo.field_user.trim(),
   Password: loginInfo.field_pass,
 });
 
-console.timeEnd("API_LOGIN");
 
-console.log(data);
+
+console.log("API Response:", data);
     if (!data.success) {
       setsigninStatus(true);
       setError(data.message);
@@ -52,12 +49,12 @@ console.log(data);
     }
 
     localStorage.setItem("UserId", data.userId);
-console.time("REDUX");
+
     dispatch(CurrentLoginUser(data.email));
-  console.timeEnd("REDUX");
-console.time("ROUTER");
+
+
     router.replace("/");
-console.timeEnd("ROUTER");
+
     setsigninStatus(true);
   } catch (error) {
     console.error(error);
