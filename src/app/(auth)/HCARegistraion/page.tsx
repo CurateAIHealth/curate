@@ -64,6 +64,7 @@ const [ImportedVendors, setImportedVendors] = useState<any>([])
   const CurrentUserType = useSelector((state: any) => state.RegisteredUserType)
 
   interface FormState {
+    preferredWorkStates: any;
     HomeAssistance: any;
     // title: any;
     firstName: any;
@@ -289,6 +290,7 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
     PermanentState:'',
     NotedDtaeForHike:'',
     Remarks:'',
+    preferredWorkStates:[],
   
   });
 
@@ -4034,6 +4036,43 @@ form.HusbendContact!=="Not Available"&&
                 className="input-field w-full border border-gray-300 p-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
                 
               />
+              <div className="w-full">
+  <label className="block text-xs font-medium text-teal-600 mb-2">
+    Preferred Work States
+  </label>
+
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    {[0, 1, 2].map((index) => (
+      <select
+        key={index}
+        value={form.preferredWorkStates?.[index] || ""}
+        onChange={(e) => {
+          const updatedStates = [
+            ...(form.preferredWorkStates || ["", "", ""]),
+          ];
+
+          updatedStates[index] = e.target.value;
+
+          setForm((prev) => ({
+            ...prev,
+            preferredWorkStates: updatedStates,
+          }));
+        }}
+        className="input-field w-full border border-gray-300 px-3 h-8 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-transparent transition-all"
+      >
+        <option value="">
+          Select Preferred State {index + 1}
+        </option>
+
+        {IndianStates.map((state) => (
+          <option key={state} value={state}>
+            {state}
+          </option>
+        ))}
+      </select>
+    ))}
+  </div>
+</div>
              <div className="flex flex-col gap-1">
 
   <input

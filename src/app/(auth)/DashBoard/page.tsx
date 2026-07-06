@@ -55,7 +55,7 @@ import { CallEnquiryRegistration, GetDashboardStats, GetDeploymentInfo, GetInvoi
 
 
 import { UserCheck } from "lucide-react";
-import { filterColors, Health_Card, healthcareServices, healthcareServicesforCallEnquiry, hyderabadAreas, hyderabadAreasforcallEnquiry, IndianLanguages, LeadSources, sectionItems, StaffEmails, TAB_ACCESS_CONTROL } from "@/Lib/Content";
+import { filterColors, Health_Card, healthcareServices, healthcareServicesforCallEnquiry, hyderabadAreas, hyderabadAreasforcallEnquiry, IndianLanguages, IndianStates, LeadSources, sectionItems, StaffEmails, TAB_ACCESS_CONTROL } from "@/Lib/Content";
 
 import PermissionDeniedPopup from "@/Components/Permission/page";
 import ProfileDrawer from "@/Components/ProfileView/page";
@@ -992,7 +992,7 @@ setIsNavigating(true);
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
             </span>
           </div>
 
@@ -2094,6 +2094,29 @@ className="flex-1 min-w-0 rounded-lg border border-gray-300 px-4 py-3 text-sm te
       </div>
     )}
   </div>
+
+
+<div className="w-full relative md:col-span-2">
+  <label className="block text-xs font-medium text-teal-600 mb-1">
+    Service State
+  </label>
+
+  <select
+    name="serviceState"
+    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-teal-500"
+    defaultValue=""
+  >
+    <option value="" disabled>
+      Select Service State
+    </option>
+
+    {IndianStates.map((state) => (
+      <option key={state} value={state}>
+        {state}
+      </option>
+    ))}
+  </select>
+</div>
 </div>
  <div id="Charges" className="bg-white rounded-lg shadow p-4 space-y-2">
                     <h2 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
