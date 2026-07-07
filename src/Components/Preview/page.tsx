@@ -337,6 +337,7 @@ const UpdatePDRInfo = async () => {
         DeploaymentInformation.Type,
         data.serviceCharges,
         ClientAttendece,
+        DeploaymentInformation.ServiceState
 
       );
 
@@ -354,6 +355,8 @@ const UpdatePDRInfo = async () => {
         HCAId: data.HCAId,
         ClientAgreementFront: data.ClientAgreementFront,
         ClientAgreementBack: data.ClientAgreementBack,
+        
+ServiceState:DeploaymentInformation.ServiceState
       }
       const [invoiceRes, statusRes] = await Promise.all([
         PostInvoice(UpdatedDataWithInvoice, Advance, invoiceNo),

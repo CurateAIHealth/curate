@@ -438,7 +438,8 @@ const monthNames = [
     ServiceLocation: each.ServiceArea,
     PreviewUserType: each.PreviewUserType||"None",
     PDRStatus:each.PDRStatus||"No Available",
-    Type:each.Type
+    Type:each.Type,
+    ServiceState:each.ServiceState||"Not Provided"
   }));
 
   const UpdatedFilterUserType = Finel

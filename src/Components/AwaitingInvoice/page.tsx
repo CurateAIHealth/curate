@@ -283,6 +283,7 @@ const FinelTimeSheet = ClientsInformation.filter((client: any) => {
       EndDate: each.EndDate,
       Month: each.Month,
       Replacement: each.Replacement,
+    ServiceState:each.ServiceState||"Not Provided"
     };
   });
 const matchesSearchAndMonth = (
@@ -510,7 +511,8 @@ const confirmDelete = async (selectedReason: string) => {
       TerminationInfo.location,
       TerminationInfo.HCAContact,
       TerminationInfo.TimeSheet,
-      TerminationInfo.ClientAttendance
+      TerminationInfo.ClientAttendance,
+      TerminationInfo.ServiceState
     );
 
    if (deleteTimeSheetResponse?.success) {
@@ -607,7 +609,8 @@ const ExtendTimeSheet = async () => {
       "",
       ExtendInfo.Type,
       CareTakerCharges,
-      ClientAttendece
+      ClientAttendece,
+      ExtendInfo.ServiceState
     );
 
     const UpdatedData = {
@@ -622,6 +625,8 @@ const ExtendTimeSheet = async () => {
      serviceCharges:GetPatientName(ExtendInfo.Client_Id)?.MonthlyServiceCharge || CareTakerCharges,
       MonthlyPayment:GetPatientName(ExtendInfo.Client_Id)?.MonthlyServiceCharge ?true:false,
       RegistrationFee: 0,
+        
+ServiceState:ExtendInfo.ServiceState
     };
 
     const CompliteInvoiceInfo = await PostInvoiceFromDeployment(
@@ -825,7 +830,7 @@ const ExtendTimeSheet = async () => {
 
      <div className="flex items-center justify-between">
        <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
-        Extend Service
+        Extend Service 
       </h2>
 
       <X size={15} className="mb-10 cursor-pointer" onClick={()=>setshowExtendPopup(false)}/>

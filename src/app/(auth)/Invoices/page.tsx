@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import PaymentPopup from "@/Components/PaymentMethod/page";
 import PassbookPopup from "@/Components/Trasactions/page";
 import { ImportedinvoiceData, IndianStates, } from "@/Lib/Content";
+import EmptyState from "@/Components/NoDeployments/page";
 
 
 type InvoiceStatus = "Draft" | "Sent" | "Overdue";
@@ -42,6 +43,7 @@ export default function InvoicesPage() {
   const [isChecking, setisChecking] = useState(true)
   const [isSending, setIsSending] = useState(false);
   const [search, setSearch] = useState("");
+  const [SelectedServiceStates, setSelectedServiceStates] = useState("Telangana");
   const [filter, setFilter] = useState<"All" | InvoiceStatus>("All");
   const [page, setPage] = useState(1);
   const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
@@ -202,7 +204,8 @@ useEffect(() => {
       PaymentStatus:each.PaymentStatus,
       balanceDue:each.balanceDue,
       Trasaction:each.Trasaction||[],
-      RoundedTotal:each.RoundedTotal
+      RoundedTotal:each.RoundedTotal,
+      ServiceState:each.ServiceState||"Not Provided",
 
 
     }
@@ -273,8 +276,8 @@ const filteredInvoices = useMemo(() => {
     data=data.filter((each:any)=>each.status===filter)
   }
 
-  return data;
-}, [computedInvoices, monthFilter, yearFilter, search]);
+  return data.filter((each:any)=>each.ServiceState===SelectedServiceStates);
+}, [computedInvoices, monthFilter, yearFilter, search,SelectedServiceStates]);
 
 
 
@@ -572,7 +575,8 @@ CheckPaymentStatus:CurrentPaymentStatus
   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
       <div className="relative">
       <select
-        defaultValue="Telangana"
+        value={SelectedServiceStates}
+      onChange={(e) => setSelectedServiceStates(e.target.value)}
         className="w-full text-center h-10 appearance-none rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
       >
       
@@ -883,7 +887,7 @@ CheckPaymentStatus:CurrentPaymentStatus
         onClose={() => setOpenPaymentMethods(false)}
         onSubmit={(Data:any)=>UpdatePaymentStatus(Data)}
       />
-      
+      {filteredInvoices.length >0?
   <div className="w-full border rounded-md overflow-hidden">
 <div
   className="
@@ -949,13 +953,27 @@ CheckPaymentStatus:CurrentPaymentStatus
   lg:grid-cols-14
 "
       >
-        {/* Patient */}
+    
             <div>{index+1}</div>
-        <div className="flex flex-col">
-        <span className="text-[10px] font-semibold flex flex-col">
-  {inv.ClientName?.split(' ')[0]}
-  <span>{inv.ClientName?.split(' ').slice(1).join(' ')}</span>
-</span>
+        <div className="flex flex-col ">
+      {(() => {
+  const nameParts = inv.ClientName?.trim().split(/\s+/) || [];
+  const splitAt = Math.ceil(nameParts.length / 2);
+
+  return (
+    <span className="text-[10px] font-semibold flex flex-col leading-tight">
+      <span>
+        {nameParts.slice(0, splitAt).join(" ")}
+      </span>
+
+      {nameParts.length > 1 && (
+        <span>
+          {nameParts.slice(splitAt).join(" ")}
+        </span>
+      )}
+    </span>
+  );
+})()}
           <span className="text-[8px] text-gray-500">
             Invoice ID: {inv.id}
           </span>
@@ -1117,7 +1135,10 @@ Complete invoice sending to update status
     )
   })}
 </div>
-</div>
+</div>:<EmptyState
+    title="No Invoices Found"
+    description="No invoice records match the selected filters. Try changing or clearing your filters."
+  />}
   </div>
 </div>
 

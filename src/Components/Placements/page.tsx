@@ -28,6 +28,7 @@ import RelasementHCPPopup from "../RelasementHCPPopup/page";
 import RepleasementHCPPopup from "../RelasementHCPPopup/page";
 import AttendanceModal from "../ClientAttendece/page";
 import { Console } from "console";
+import EmptyState from "../NoDeployments/page";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -77,7 +78,7 @@ const [ClientsInformation,setClientsInformation]=useState(ImpClientsInformation|
   const currentMonth = String(Timenow.getMonth() + 1).padStart(2, "0");
   const [selectedClient,setselectedClient]=useState<any>()
   const [isChecking, setIsChecking] = useState(false);
-  
+  const [SelectedServiceStates, setSelectedServiceStates] = useState("Telangana");
   const [selectedHCP,setselectedHCP]=useState<any>()
   const [showHCAList, setShowHCAList] = useState(false);
   const [ShowFreezPopUp,setShowFreezPopUp]=useState(false)
@@ -243,7 +244,7 @@ const matchesSearchAndMonth = (
   item: any,
   searchText: string,
   searchMonth: string,
-  searchYear: string
+  searchYear: string,
 ) => {
   const search = searchText?.toLowerCase() || "";
 
@@ -503,7 +504,8 @@ console.log("Check for Reason-----",each.Attendance)
     Month:each.Month,
     Replacement:each.Replacement,
     ClientAttendance: each.ClientAttendance || [],
-    ReplacementDate:each.ReplacementDate
+    ReplacementDate:each.ReplacementDate,
+    ServiceState:each.ServiceState||"Not Provided"
     
   };
 });
@@ -689,7 +691,8 @@ const SelectedCareTakerCharges=GetInfo.serviceCharges
         ExtendInfo.invoice,
         ExtendInfo.Type,
         SelectedCareTakerCharges,
-        ClientAttendece
+        ClientAttendece,
+           ExtendInfo.ServiceState
       );
 
     if (!deploymentRes?.success) {
@@ -844,7 +847,8 @@ serviceCharge
         "",
         ExtendInfo.Type,
         CareTakerCharges,
-        ClientAttendece
+        ClientAttendece,
+           ExtendInfo.ServiceState
       );
   
 if (deploymentRes.success) {
@@ -1033,7 +1037,8 @@ const confirmDelete = async (selectedReason: string) => {
         location,
         HCAContact,
         TimeSheet,
-        ClientAttendance
+        ClientAttendance,
+        TerminationInfo.ServiceState,
       ),
     ]);
 
@@ -1085,7 +1090,7 @@ const confirmDelete = async (selectedReason: string) => {
 
 
 
-const FilterFinelTimeSheet = FinelTimeSheet.filter((item) =>
+const FilterFinelTimeSheet = FinelTimeSheet.filter((item) =>item.ServiceState===SelectedServiceStates&&
   matchesSearchAndMonth(
     item,
     SearchResult,
@@ -1434,7 +1439,8 @@ const processedData = useMemo(() => {
   SearchResult,
   refreshKey,
   SearchMonth,
-SearchYear
+SearchYear,
+SelectedServiceStates
 ]);
 const UpdateServiceCharge=async(A:any)=>{
   SetActionStatusMessage("Please Wait...")
@@ -1802,7 +1808,8 @@ onClick={() => setShowAttendanceModal(true)}
 
   <div className="relative">
     <select
-      defaultValue="Telangana"
+      value={SelectedServiceStates}
+      onChange={(e) => setSelectedServiceStates(e.target.value)}
       className="w-full text-center h-10 appearance-none rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
     >
     
@@ -2109,6 +2116,7 @@ setShowCareTakerPriceUpdate(false)
     </div>
   </div>
 )}
+{processedData.length > 0 ? 
   <table className="min-w-[900px] w-full border-collapse bg-white">
     
   
@@ -2895,7 +2903,10 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
       )}
     </tbody>
 
-  </table>
+  </table>:  <EmptyState
+    title="No Deployments Found"
+    description="No deployment records match the selected filters. Try changing or clearing your filters."
+  />}
 </div>
 
 
