@@ -740,7 +740,8 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
             HusbendContact:form.HusbendContact,
             referralSourceType:form.referralSourceType,
             PermanentHouseNo:form.PermanentHouseNo,
-            PermanentCity:form.PermanentCity
+            PermanentCity:form.PermanentCity,
+            PreferdWorkingStates:form.preferredWorkStates,
           };
 
 
@@ -4044,6 +4045,7 @@ form.HusbendContact!=="Not Available"&&
   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
     {[0, 1, 2].map((index) => (
       <select
+      required
         key={index}
         value={form.preferredWorkStates?.[index] || ""}
         onChange={(e) => {

@@ -16,6 +16,7 @@ import { pre } from 'framer-motion/client';
 const allProfessionalSkills = ["Diaper", "Bathing", "Bedding", "Brushing"];
 
 type ClientType = {
+  ServiceState(userId: any, UserId: any, FirstName: string, Email: any, ContactNumber: any, ServiceArea: any, HCPFirstName: any, HCPContactNumber: any, patientName: string, patientPhone: any, Source: any, hcpType: any, ServiceState: any): void;
   ServiceArea: any;
   patientWeight: any;
   patientAge: any;
@@ -106,6 +107,7 @@ const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
 }, [updatedRefresh]);
 
 const activeClient = clients?.[selectedClientIndex];
+console.log("Check Active Client Information",activeClient)
 useEffect(() => {
   if (!activeClient) return;
 
@@ -138,7 +140,8 @@ const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
  const UpdateAssignHca = async (
   UserIDClient: any, UserIdHCA: any, ClientName: any, ClientEmail: any, 
   ClientContact: any, Adress: any, HCAName: any, HCAContact: any,
-  patientName: any, patientPhone: any, Source: any, Type: any
+  patientName: any, patientPhone: any, Source: any, Type: any,
+  SeriveState:any
 ) => {
 const PlacementInformation: any = await GetTimeSheetInfo();
 
@@ -196,7 +199,8 @@ setStatusMessage("Client Prviouse Information deleted Successfully, Assigneing N
       DateofToday, LastDateOfMonth, "Active", Adress, ClientContact, ClientName,
       patientName, patientPhone, Source, UserIdHCA, UserIDClient, HCAName,
       HCAContact, "Google", "Not Provided", 'PP', "21000", "700", "1800",
-      "900", CurrentMonth, ["P"], TimeStamp, Invoise, Type
+      "900", CurrentMonth, ["P"], TimeStamp, Invoise, Type,
+      SeriveState
     );
 
  
@@ -1245,7 +1249,8 @@ const UpdateResults=await UpdateHCAnstatus(hcp.UserId,"Available for Work")
                                       activeClient.patientName,
                                      activeClient.patientPhone,
                                       activeClient.Source,
-                                      activeClient.hcpType
+                                      activeClient.hcpType,
+                                      activeClient.ServiceState
 
 
                                     )

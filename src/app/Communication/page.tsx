@@ -1,8 +1,9 @@
 "use client";
 
+import { IndianStates } from "@/Lib/Content";
 import { Update_Main_Filter_Status } from "@/Redux/action";
 import axios from "axios";
-import { CircleX, CrossIcon, FilterX } from "lucide-react";
+import { ChevronDown, CircleX, CrossIcon, FilterX } from "lucide-react";
 import { Rethink_Sans } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -21,6 +22,7 @@ useState<"email" | "whatsapp" | "both">("email");
   const [phoneInput, setPhoneInput] = useState("");
 const [otherNumbers, setOtherNumbers] = useState<string[]>([]);
 const [search, setSearch] = useState("");
+ const [SelectedServiceStates, setSelectedServiceStates] = useState("Telangana");
 const users=useSelector((state:any)=>state.AdminUsers)
 const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
 const [OtherEMail,setOtherEMail]=useState<any>([])
@@ -61,6 +63,7 @@ const hcas = users
        Phone:each.ContactNumber,
     currentStatus: each.CurrentStatus,
     userType: each.PreviewUserType || "HCA",
+    PreferdWorkingStates:each.PreferdWorkingStates||[],
   }));
 
  
@@ -76,6 +79,7 @@ const clients = Array.from(
   clientStatus: each.Status,
   Phone: each.ClientContact,
   leadSource: each.referralName || "",
+  ServiceState: each.ServiceState || "Not Provided",
 }));
    console.log ("Check for DeploymentInfo:", DeploymentInfo.filter((each: any) => each.ClientName === "Riya Gupta"))
 console.log ("Check Contact.....",users
@@ -90,7 +94,9 @@ const Leads = users
     phone: each.ContactNumber,
     currentStatus: each.CurrentStatus,
     userType: "Lead",
+    ServiceState: each.ServiceState || "Not Provided",
   }));
+ 
 const Employs = [
    {
     _id: "1",
@@ -206,37 +212,53 @@ const toggleClientFilter = (value: string) => {
       client.email?.toLowerCase().includes(keyword) ||
       client.phone?.toLowerCase().includes(keyword);
 
-    return matchesFilter && matchesSearch;
+    return matchesFilter && matchesSearch&&client.ServiceState===SelectedServiceStates;
   });
-}, [clients, clientFilters, search]);
+}, [clients, clientFilters, search,SelectedServiceStates]);
 
 const filteredHCAs = useMemo(() => {
+  const keyword = search.toLowerCase().trim();
+
   return hcas.filter((hcp: any) => {
-    const matchesFilter =
+    const matchesHcaFilter =
       !hcaFilters.length ||
       hcaFilters.includes(hcp.currentStatus) ||
       hcaFilters.includes(hcp.location);
 
-    const keyword = search.toLowerCase();
+    const matchesState =
+      !SelectedServiceStates ||
+      hcp.PreferdWorkingStates?.includes(SelectedServiceStates);
 
     const matchesSearch =
       hcp.name?.toLowerCase().includes(keyword) ||
       hcp.email?.toLowerCase().includes(keyword) ||
       hcp.phone?.toLowerCase().includes(keyword);
 
-    return matchesFilter && matchesSearch;
+    return matchesHcaFilter && matchesState && matchesSearch;
   });
-}, [hcas, hcaFilters, search]);
+}, [
+  hcas,
+  hcaFilters,
+  search,
+  SelectedServiceStates,
+]);
 
 const filteredLeads = useMemo(() => {
-  const keyword = search.toLowerCase();
+  const keyword = search.toLowerCase().trim();
 
-  return Leads.filter((lead: any) =>
-    lead.name?.toLowerCase().includes(keyword) ||
-    lead.email?.toLowerCase().includes(keyword) ||
-    lead.phone?.toLowerCase().includes(keyword)
-  );
-}, [Leads, search]);
+  return Leads.filter((lead: any) => {
+    const matchesState =
+      !SelectedServiceStates ||
+      lead.ServiceState === SelectedServiceStates;
+
+    const matchesSearch =
+      lead.name?.toLowerCase().includes(keyword) ||
+      lead.email?.toLowerCase().includes(keyword) ||
+      lead.phone?.toLowerCase().includes(keyword);
+
+    return matchesState && matchesSearch;
+  });
+}, [Leads, search, SelectedServiceStates]);
 
 const selectedCount =
   tab === "clients"
@@ -570,8 +592,28 @@ Please do not reply directly to this email.
     Others
   </button>
   
+<div className="relative mt-1">
+    <select
+      value={SelectedServiceStates}
+      onChange={(e) => setSelectedServiceStates(e.target.value)}
+      className="w-full text-center h-10 appearance-none rounded-lg border border-gray-600 bg-white px-3 pr-10 text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
+    >
+    
 
-</div>
+      {IndianStates.map((state) => (
+        <option key={state} value={state}>
+          {state}
+        </option>
+      ))}
+    </select>
+
+    <ChevronDown
+      size={16}
+      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+    />
+  </div>
+</div> 
+
 
   {/* Communication Type */}
   <div className="flex flex-wrap gap-3">

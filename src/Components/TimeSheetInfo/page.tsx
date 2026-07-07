@@ -22,6 +22,7 @@ import TimeSheetReplacementTable from "../Time Sheet Terminations/page";
 import { CurrentRegisterUser } from "@/Redux/reducer";
 import TimeSheetTerminationTableInfo from "../TimeSheetTerminationTableInfo/page";
 import axios from "axios";
+import EmptyState from "../NoDeployments/page";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -57,6 +58,7 @@ const [AttenseceInformation,setAttenseceInformation]=useState<any>()
 const [selectedMonth, setSelectedMonth] = useState<any>(currentMonth);
 const [showEditPopup, setShowEditPopup] = useState(false);
 const [showFull,setShowFull]=useState(false)
+  const [SelectedServiceStates, setSelectedServiceStates] = useState("Telangana");
 const [editForm, setEditForm] = useState<any>(null);
 const [showDeletePopup, setShowDeletePopup] = useState(false)
 const [deleteItem, setDeleteItem] = useState<any>(null)
@@ -180,14 +182,17 @@ useEffect(() => {
           : "",
         Month: record.Month,
         Replacement: record.Replacement,
-        ReplacementDate:record.ReplacementDate
+        ReplacementDate:record.ReplacementDate,
+        ServiceState:record.ServiceState || "Not Provided",
       });
     }
   }
 
-  console.timeEnd("FORMAT_DATA");
 
-  setClientsInformation(formattedData);
+
+  setClientsInformation(
+formattedData
+  );
 }, [ImpClientsInformation]);
 
 
@@ -324,7 +329,7 @@ const DateRange = new Date().toISOString().split("T")[0];
 
 
   const monthKey = `${selectedYear}-${selectedMonth}`;
-  const data: any[] = ClientsInformation[monthKey] || [];
+  const data: any[] = ClientsInformation[monthKey]?.filter((each: any) => each.ServiceState === SelectedServiceStates) || [];
 
 
   const daysInMonth = new Date(
@@ -556,7 +561,7 @@ console.log ("Check for Client-----",client)
         ...counts,
       };
     });
-}, [data, SearchResult]);
+}, [data, SearchResult, SelectedServiceStates]);
 
   const todayIndex = new Date().getDate() - 1;
 
@@ -1369,7 +1374,8 @@ className={`
 
   <div className="relative">
     <select
-      defaultValue="Telangana"
+        value={SelectedServiceStates}
+      onChange={(e) => setSelectedServiceStates(e.target.value)}
       className="w-full text-center h-10 appearance-none rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
     >
     
@@ -1459,11 +1465,12 @@ className={`
   </div>
 )}
 <div className="relative w-full overflow-x-auto rounded-xl border border-gray-200 bg-white">
-  <table className="w-full border-collapse text-[10px] md:text-sm text-gray-800">
-    <thead className="sticky top-0 z-20 bg-gradient-to-r from-teal-600 to-emerald-500 text-white">
-      <tr>
-        <Th className={`${showFull?"":"w-[5%]"} text-center`}>S No</Th>
-        <Th className={`${showFull?"":"w-[12%]"}`}>Invoice</Th>
+  {processedData.length > 0 ? 
+    <table className="w-full border-collapse text-[10px] md:text-sm text-gray-800">
+      <thead className="sticky top-0 z-20 bg-gradient-to-r from-teal-600 to-emerald-500 text-white">
+        <tr>
+          <Th className={`${showFull?"":"w-[5%]"} text-center`}>S No</Th>
+          <Th className={`${showFull?"":"w-[12%]"}`}>Invoice</Th>
         <Th className={`${showFull?"":"w-[12%]"}`}>Start</Th>
         <Th className={`${showFull?"":"w-[12%]"}`}>End</Th>
         <Th className={`${showFull?"":"w-[20%]"}`}>Client</Th>
@@ -1689,7 +1696,10 @@ className={`
         )
       })}
     </tbody>
-  </table>
+  </table>:<EmptyState
+    title="No TimeSheet Found"
+    description="No TimeSheet records match the selected filters. Try changing or clearing your filters."
+  />}
 </div>
 
 

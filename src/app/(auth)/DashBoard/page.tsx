@@ -163,6 +163,7 @@ console.log("Check Email------",loggedInEmail)
      houseNumber: "",
   addressLine1: "",
   addressLine2: "",
+  serviceState: "",
   })
   const [showHealthCardSuggestions, setShowHealthCardSuggestions] =
     useState(false);
@@ -469,12 +470,18 @@ const run = useCallback(async () => {
   setEnquiryMessage("")
   return
 }
-
+    if(EnquiryForm.serviceState===""){
+      alert("Please Enter Service State")
+      setEnquiryMessage("")
+      return
+    }
     if(EnquiryForm.serviceCharges===""){
       alert("Please Enter Service Charges")
       setEnquiryMessage("")
       return
     }
+
+
     try {
       if (!EnquiryForm.ClientStatus) {
         setEnquiryMessage("Pleae Update Call Enquiry Status")
@@ -525,7 +532,8 @@ console.log(" EnquiryForm.patientHeight:", EnquiryForm.patientHeight);
         WorkingHours: EnquiryForm.WorkingHours,
         WorkType: EnquiryForm.WorkType,
         ExtraWorkingHours: EnquiryForm.ExtraWorkingHours,
-        ExtraWorkType: EnquiryForm.ExtraWorkType
+        ExtraWorkType: EnquiryForm.ExtraWorkType,
+        serviceState: EnquiryForm.serviceState || "",
       };
       const registrationResult = await CallEnquiryRegistration(payload);
 
@@ -992,7 +1000,7 @@ setIsNavigating(true);
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
             </span>
           </div>
 
@@ -2098,13 +2106,19 @@ className="flex-1 min-w-0 rounded-lg border border-gray-300 px-4 py-3 text-sm te
 
 <div className="w-full relative md:col-span-2">
   <label className="block text-xs font-medium text-teal-600 mb-1">
-    Service State
+    Service State <span className="text-red-500">*</span> 
   </label>
 
   <select
     name="serviceState"
     className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-teal-500"
     defaultValue=""
+    onChange={(e) => {
+      setEnquiryForm({
+        ...EnquiryForm,
+        serviceState: e.target.value,
+      });
+    }}
   >
     <option value="" disabled>
       Select Service State

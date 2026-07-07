@@ -348,7 +348,8 @@ const deploymentRes = await InsertDeployment(
   "",
   ExtendInfo.Type,
   GetPatientName(ExtendInfo.ClientId)?.MonthlyServiceCharge || CareTakerCharges,
-  ClientAttendece
+  ClientAttendece,
+  ExtendInfo.ServiceState
 );
 
 const UpdatedData = {

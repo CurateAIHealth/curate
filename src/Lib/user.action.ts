@@ -809,7 +809,10 @@ export const PostInvoice = async (InvoiseInfo:any,AdvanceAmount:any,InvoiceNumbe
       ClientAgreementFront: InvoiseInfo.ClientAgreementFront,
         ClientAgreementBack: InvoiseInfo.ClientAgreementBack,
       status: "Draft",
-      PaymentStatus:false
+      PaymentStatus:false,
+      
+ServiceState:InvoiseInfo.ServiceState || "Not Provided"
+
     });
 
     return {
@@ -852,7 +855,8 @@ export const PostInvoiceFromDeployment = async (InvoiseInfo:any,AdvanceAmount:an
 
       RegistrationFee:InvoiseInfo.RegistrationFee,
       status: "Draft",
-      PaymentStatus:false
+      PaymentStatus:false,
+      ServiceState:InvoiseInfo.ServiceState || "Not Provided"
     });
 
     return {
@@ -1194,7 +1198,8 @@ export interface HCAInfo {
   StaffType:any,
   ReferdVedorId:any
   PreviewUserType:any,
-  ClientNote:any
+  ClientNote:any,
+  PreferdWorkingStates:any
 }
 
 export const HCARegistration = async (HCA: HCAInfo) => {
@@ -1250,6 +1255,7 @@ StaffType:HCA.StaffType,
       EmailVerification: HCA.EmailVerification||true,
       PreviewUserType:HCA.PreviewUserType||"HCP",
       ClientNote:HCA.ClientNote,
+      PreferdWorkingStates:HCA.PreferdWorkingStates||[],
       LeadDate: new Date().toISOString().split("T")[0],
       createdAt: new Date().toISOString().split("T")[0],
       updatedAt: new Date(),
@@ -1487,7 +1493,7 @@ Patienttitle:HCA.Patienttitle||"",
       WorkType: HCA.WorkType,
       ExtraWorkingHours: HCA.ExtraWorkingHours,
       ExtraWorkType: HCA.ExtraWorkType,
-
+serviceState:HCA.serviceState||"",
       LeadDate: new Date().toISOString().split("T")[0],
       // createdAt: new Date(),
       updatedAt: new Date(),
@@ -2057,7 +2063,7 @@ export const PostHCAFullRegistration = async (Info: any) => {
       "Service Hours 12hrs": Boolean(Info.serviceHours12hrs),
       "Service Hours 24hrs": Boolean(Info.serviceHours24hrs),
       "Preferred Service": Info.preferredService || "",
-
+PreferdWorkingStates: Info.PreferdWorkingStates || "",
       PaymentforStaff: Info.PaymentforStaff || "",
       NotedDtaeForHike: Info.NotedDtaeForHike || "",
 
@@ -2259,7 +2265,8 @@ export const TestInsertTimeSheet = async (
   TimeSheetArray: any,
   UpdatedBy: any,
   invoice: any,
-  Type: any
+  Type: any,
+  ServiceState: any
 ) => {
   try {
     const cluster = await clientPromise;
@@ -2307,6 +2314,9 @@ export const TestInsertTimeSheet = async (
       invoice,
       Type,
       PDRStatus: false,
+  
+ServiceState: ServiceState
+
     };
 
     const result = await collection.insertOne(TimeSheetData);
@@ -2354,7 +2364,8 @@ export const InsertDeployment = async (
   invoice: any,
   Type: any,
   CareTakerPrice:any,
-  ClientAttendece:any
+  ClientAttendece:any,
+  ServiceState:any
 ) => {
   try {
     const cluster = await clientPromise;
@@ -2400,6 +2411,7 @@ const isExists = await collection.findOne({
       Type,
       CareTakerPrice,
       ClientAttendece,
+      ServiceState,
       PDRStatus: true
     };
 
@@ -2784,7 +2796,7 @@ Month:ImpMonth})
   }
 
 }
-export const InserTerminationData=async(ClientUserId:any,HCAUserId:any,HCA_Name:any,Name:any,Email:any,Contact:any,ClientAdress:any,Contacthca:any,TimeSheetArray:any,ClientAttendece:any)=>{
+export const InserTerminationData=async(ClientUserId:any,HCAUserId:any,HCA_Name:any,Name:any,Email:any,Contact:any,ClientAdress:any,Contacthca:any,TimeSheetArray:any,ClientAttendece:any,ImpState:any)=>{
   try{
 const cluster=await clientPromise
 const db=cluster.db("CurateInformation")
@@ -2800,7 +2812,8 @@ const TimeSheetDataInsert=await collection.insertOne({
   HCAContact:Contacthca,
   Attendence:TimeSheetArray,
   ClientAttendance:ClientAttendece,
-  StartDate:new Date().toLocaleDateString("en-IN")
+  StartDate:new Date().toLocaleDateString("en-IN"),
+  ServiceState: ImpState
 
 })
 return {

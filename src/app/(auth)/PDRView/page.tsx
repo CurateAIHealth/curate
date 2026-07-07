@@ -127,7 +127,8 @@ useEffect(() => {
       hcpSource: each.hcpSource,
       hcpTotal: each.hcpTotal,
       invoice: each.invoice,
-      PDRStatus:each.PDRStatus
+      PDRStatus:each.PDRStatus,
+      ServiceState:each.ServiceState,
 
 
 
@@ -199,6 +200,7 @@ const phoneNumber='919347877159'
 
 const updatePopup = async (payload: any) => {
   try {
+  
     SetActionStatusMessage("Please wait...");
 
     // Run independent operations in parallel
