@@ -12,7 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 export default function BulkMessagePage() {
   const [tab, setTab] = useState<
-  "clients" | "hcas" | "leads" | "others"|"Employs"
+  "clients" | "hcas" | "leads" | "others"|"Employees"
 >("clients");
 const [communicationType, setCommunicationType] =
 useState<"email" | "whatsapp" | "both">("email");
@@ -267,7 +267,7 @@ const selectedCount =
     ? filteredHCAs.length
     : tab === "leads"
     ? filteredLeads.length
-    : tab === "Employs"
+    : tab === "Employees"
     ? filteredEmploys.length
     : tab === "others"
     ? 1
@@ -283,7 +283,7 @@ const SendEmail = async () => {
     ? filteredHCAs
     : tab === "leads"
     ? filteredLeads
-    : tab === "Employs"
+    : tab === "Employees"
     ? filteredEmploys
     : tab === "others"
     ? OtherEMail.map((email: any) => ({ email: email.trim() }))
@@ -502,7 +502,7 @@ Please do not reply directly to this email.
     className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1392d3]"
   />
 </div>
-<div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4 mb-6">
+{/* <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4 mb-6">
 
   <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all">
     <p className="text-sm text-slate-500">Total Clients</p>
@@ -532,7 +532,7 @@ Please do not reply directly to this email.
     </h2>
   </div>
 
-</div>
+</div> */}
 
 
 <div className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -572,14 +572,14 @@ Please do not reply directly to this email.
     Leads
   </button>
  <button
-    onClick={() => setTab("Employs")}
+    onClick={() => setTab("Employees")}
     className={`flex-1 sm:flex-none min-w-[110px] px-5 py-3 rounded-xl font-medium transition-all cursor-pointer ${
-      tab === "Employs"
+      tab === "Employees"
         ? "bg-gray-300 text-gray-800 shadow"
         : "text-slate-600 hover:bg-slate-100"
     }`}
   >
-    Employs
+   Employees
   </button>
   <button
     onClick={() => setTab("others")}
@@ -755,8 +755,7 @@ Please do not reply directly to this email.
 
           {[
            "Waiting List",
-            "Lost",
-            "Pending",
+            "Lost"
           
    
           ].map((item) => (
@@ -777,7 +776,7 @@ Please do not reply directly to this email.
         </>
       )}
 
-      {(tab ==="Employs"||tab ==="others")&&
+      {(tab ==="Employees"||tab ==="others")&&
       <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-4">
         <svg
@@ -994,7 +993,7 @@ Please do not reply directly to this email.
       </div>
     ))}
 
-      {tab === "Employs" &&
+      {tab === "Employees" &&
   filteredEmploys.map((emp: any) => (
     <div
       key={emp._id}

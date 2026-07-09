@@ -134,7 +134,8 @@ if (reason===""){
     WorkingDays,
     RefundDays,
     isProfit,
-    resultAmount
+    resultAmount,
+    ClientRefundAmount:Number(RefundDays)*Number(rupeeToNumber(data.ServiceCharge).toFixed(2))
     });
 setRefundData("")
     onClose();

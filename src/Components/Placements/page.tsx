@@ -366,8 +366,17 @@ const { data: UpdateFreezeStatus } = await axios.post(
 const PostRefunRequest = async (data: any) => {
 
   try {
-console.log ("Check Refund Data---------",data)
+
     SetActionStatusMessage("Please Wait....");
+
+    const response = await axios.post("/api/RefundRequest", {
+     data
+    });
+console.log ("Check Refund Data---------",response.data.success)
+if(!response.data.success){
+SetActionStatusMessage("Refund Request already submitted for this client. You will be notified once the status is updated.")
+return
+}
 
     const updateSalary = await PostRefundRequest(
       data,
@@ -385,7 +394,7 @@ console.log ("Check Refund Data---------",data)
 
   await axios.post("/api/Slack", {
      userIds: phoneNumber,
-     message:  "Hi Medam, Kindly requesting Refund Request update. Please check notification in the application. Thank you.",
+     message:  `Dear Managment, Kindly requesting Refund Request update for Client ${data?.ClientName}. Please check notification in the application. Thank you.`,
    });
   SetActionStatusMessage(
           "Refund Request request submitted to management. You will be notified once the status is updated."
