@@ -17,6 +17,7 @@ type ClientRecord = {
   month: string;
   year: string;
   expectedRevenue: number;
+  Refund:any;
   revenueReceived: number;
   pending: number;
   hcaSalary: number;
@@ -157,7 +158,7 @@ const revenueData: ClientRecord[] = ImportedData
 
     const [day, month, year] = startDate.split("/");
 
-
+console.log("Start Date:", record);
     return {
       id: index + 1,
       client: record.ClientName,
@@ -184,6 +185,8 @@ const revenueData: ClientRecord[] = ImportedData
       hostel: 0,
       travel: 0,
       other: Number(record.OtherExpenses || 0),
+      Refund: Number(record.
+RefundAmount || 0),
     };
   });
 
@@ -203,12 +206,13 @@ const revenueData: ClientRecord[] = ImportedData
 console.log("ImpData----",GetHCPPayment("22d311d0-daea-4fe2-a5bf-814e1d332820"));
   const currentMonthName = monthOptions[new Date().getMonth()];
   const currentYearName = new Date().getFullYear().toString();
-  const showExpectedRevenue = activeTab === "current";
+  const showExpectedRevenue = activeTab === "current"&&currentMonthName===selectedMonth&&currentYearName===selectedYear;
 
   const analytics = useMemo(() => {
     const expectedRevenue = filteredData.reduce((sum, item) => sum + item.expectedRevenue, 0);
     const revenueReceived = filteredData.reduce((sum, item) => sum + item.revenueReceived, 0);
-    const pendingCollection = filteredData.reduce((sum, item) => sum + item.pending, 0);
+    const RefundAmount = filteredData.reduce((sum, item) => sum + item.Refund, 0);
+    const pendingCollection = filteredData.reduce((sum, item) => sum + item.pending - item.Refund, 0);
     const totalExpenses = filteredData.reduce((sum, item) => sum + item.hcaSalary + item.advance + item.hostel + item.travel + item.other, 0);
     const netProfitLoss = revenueReceived - totalExpenses;
     const collectionPercent = expectedRevenue ? revenueReceived / expectedRevenue : 0;
@@ -220,6 +224,7 @@ console.log("ImpData----",GetHCPPayment("22d311d0-daea-4fe2-a5bf-814e1d332820"))
       revenueReceived,
       pendingCollection,
       totalExpenses,
+      RefundAmount,
       netProfitLoss,
       collectionPercent,
       profitMarginPercent,
@@ -276,7 +281,7 @@ const handleLogout = () => {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Revenue Analytics {selectedMonth}</p>
-                <h1 className="mt-1 text-lg font-semibold text-slate-900">Curate Health Healthcare Service  </h1>
+                <h1 className="mt-1 text-lg font-semibold text-slate-900">Curate Health Healthcare Service {currentMonthName} </h1>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(["current", "Carry Forward"] as const).map((tab) => (
                     <button
@@ -344,10 +349,11 @@ const handleLogout = () => {
 
         <section className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
           {[
-            { label: showExpectedRevenue ? "Expected Revenue" : "Revenue", value: showExpectedRevenue ? analytics.expectedRevenue : analytics.revenueReceived, color: "#1392d3" },
+            { label: showExpectedRevenue ? "Expected Revenue" : "Revenue", value: showExpectedRevenue ? analytics.expectedRevenue : analytics.expectedRevenue, color: "#1392d3" },
             { label: "Payment received", value: analytics.revenueReceived, color: "#50c896" },
             { label: "Pending payments", value: analytics.pendingCollection, color: "#ff1493" },
             { label: "Total Expenses", value: analytics.totalExpenses, color: "#1392d3" },
+            { label: "Refund Amount", value: analytics.RefundAmount, color: "#ff1493" },
             { label: "Net Profit/Loss", value: analytics.netProfitLoss, color: analytics.netProfitLoss >= 0 ? "#50c896" : "#ff1493" },
             { label: "Collection %", value: analytics.collectionPercent, percent: true, color: "#1392d3" },
             { label: "Profit Margin %", value: analytics.profitMarginPercent, percent: true, color: "#50c896" },
@@ -383,7 +389,7 @@ const handleLogout = () => {
               <table className="min-w-full border-separate border-spacing-0 text-left text-xs text-slate-700">
                 <thead>
                   <tr className="bg-slate-50 text-slate-600 sticky top-0">
-                    {['Client', 'Revenue', 'Received', 'Pending', 'HCA Salary', 'Advance', 'Hostel', 'Travel', 'Other', 'Total Expense', 'Profit/Loss', 'Profit %', 'Collection %', 'Status'].map((heading) => (
+                    {['Client', 'Revenue', 'Received', 'Pending', 'HCA Salary', 'Advance', 'Hostel', 'Travel', 'Other', "Refund", 'Total Expense', 'Profit/Loss', 'Profit %', 'Collection %', 'Status'].map((heading) => (
                       <th key={heading} className="whitespace-nowrap px-2 py-1 font-semibold text-xs">{heading}</th>
                     ))}
                   </tr>
@@ -391,7 +397,7 @@ const handleLogout = () => {
                 <tbody>
                   {filteredData.length === 0 ? (
                     <tr>
-                      <td colSpan={14} className="px-2 py-4 text-center text-slate-500 text-xs">No clients found for this month.</td>
+                      <td colSpan={15} className="px-2 py-4 text-center text-slate-500 text-xs">No clients found for this month.</td>
                     </tr>
                   ) : (
                     filteredData.map((item) => {
@@ -407,7 +413,8 @@ const handleLogout = () => {
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.expectedRevenue)}</td>
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.revenueReceived)}</td>
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.pending)}</td>
-                      <td className="px-2 py-1 text-xs">
+                        
+                          <td className="px-2 py-1 text-xs">  
   <div className="flex items-center gap-1">
     {formatCurrency(item.hcaSalary)}
 
@@ -429,6 +436,7 @@ const handleLogout = () => {
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.hostel)}</td>
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.travel)}</td>
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.other)}</td>
+                            <td className="px-2 py-1 text-xs">{formatCurrency(item.Refund)}</td>
                           <td className="px-2 py-1 text-xs">{formatCurrency(totalExpense)}</td>
                           <td className={`px-2 py-1 text-xs ${profitLoss >= 0 ? 'text-emerald-600' : 'text-pink-600'}`}>{formatCurrency(profitLoss)}</td>
                           <td className="px-2 py-1 text-xs">{formatPercent(profitPercent)}</td>

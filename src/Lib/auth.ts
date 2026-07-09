@@ -380,6 +380,76 @@ export const UpdateDeploymentStatus = async (
   }
 };
 
+export const UpdateRefundAmount = async (
+  Client_Id: string,
+  ServiceStartDate: any, 
+  RefundAmount: number
+) => {
+  
+
+  try {
+   
+
+    const client = await clientPromise;
+
+  
+
+    const db = client.db("CurateInformation");
+    const collection = db.collection("Invoices");
+
+    console.log("Query:", {
+ Client_Id,
+   ServiceStartDate,
+    });
+
+    console.time("MongoUpdate");
+
+    const result = await collection.updateOne(
+      {
+        ClienId: Client_Id,
+        SeriviceStartDate: ServiceStartDate,
+      },
+      {
+        $set: {
+          RefundAmount: RefundAmount,
+        },
+      }
+    );
+
+    console.timeEnd("MongoUpdate");
+
+    console.log("Matched:", result.matchedCount);
+    console.log("Modified:", result.modifiedCount);
+
+    if (result.matchedCount === 0) {
+      console.warn("No matching document found.");
+
+      console.timeEnd("UpdateRefundAmount");
+
+      return {
+        success: false,
+        message: "No matching document found",
+      };
+    }
+
+    console.timeEnd("UpdateRefundAmount");
+
+    return {
+      success: true,
+      message: "Refund amount updated successfully",
+    };
+  } catch (error) {
+    console.error("UpdateRefundAmount Error:", error);
+
+    console.timeEnd("UpdateRefundAmount");
+
+    return {
+      success: false,
+      message: "Failed to update refund amount",
+    };
+  }
+};
+
 const safeDecrypt = (value: any) => {
   try {
     if (
