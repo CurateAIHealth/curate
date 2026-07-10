@@ -230,7 +230,7 @@ const handleLogout = () => {
           isOpen={LoginEmailPop}
           logoSrc="/Icons/Curate-logoq.png"
           onClose={() => setLoginEmailPop(false)}
-          onRefresh={() => window.location.reload()}
+               onRefresh={() =>  window.location.href = "/"}
           onLoginAgain={() => {
             localStorage.removeItem("UserId");
            router.push("/login")

@@ -495,6 +495,7 @@ console.log("Check for Reason-----",each.Attendance)
     HCA_Name: each.HCAName,
     location: each.Address,
     TimeSheet: normalizedAttendance,
+    TerminatedTimeSheet:each.Attendance,
     PatientName: each.patientName||"Not Provided",
     Patient_PhoneNumber: each.patientPhone,
     RreferralName: each.referralName,
@@ -1006,6 +1007,7 @@ const confirmDelete = async (selectedReason: string) => {
     HCAContact,
     TimeSheet,
     ClientAttendance,
+    TerminatedTimeSheet
   } = TerminationInfo;
 
   try {
@@ -1047,6 +1049,7 @@ const confirmDelete = async (selectedReason: string) => {
         HCAContact,
         TimeSheet,
         ClientAttendance,
+        TerminatedTimeSheet,
         TerminationInfo.ServiceState,
       ),
     ]);

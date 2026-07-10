@@ -2796,7 +2796,7 @@ Month:ImpMonth})
   }
 
 }
-export const InserTerminationData=async(ClientUserId:any,HCAUserId:any,HCA_Name:any,Name:any,Email:any,Contact:any,ClientAdress:any,Contacthca:any,TimeSheetArray:any,ClientAttendece:any,ImpState:any)=>{
+export const InserTerminationData=async(ClientUserId:any,HCAUserId:any,HCA_Name:any,Name:any,Email:any,Contact:any,ClientAdress:any,Contacthca:any,TimeSheetArray:any,ClientAttendece:any,TerminatedTimeSheet:any,ImpState:any)=>{
   try{
 const cluster=await clientPromise
 const db=cluster.db("CurateInformation")
@@ -2810,7 +2810,7 @@ const TimeSheetDataInsert=await collection.insertOne({
   ClientContact:Contact,
   Adress:ClientAdress,
   HCAContact:Contacthca,
-  Attendence:TimeSheetArray,
+  Attendence:TerminatedTimeSheet,
   ClientAttendance:ClientAttendece,
   StartDate:new Date().toLocaleDateString("en-IN"),
   ServiceState: ImpState
@@ -4690,7 +4690,7 @@ export const UpdatePaymentVerificationStatusInDb = async (
   MonthInfo: string
 ) => {
   try {
-    // Validation
+    
     if (!HCAId || !ClientId || !MonthInfo) {
       return {
         success: false,
@@ -4701,6 +4701,72 @@ export const UpdatePaymentVerificationStatusInDb = async (
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Deployment");
+
+    const result = await collection.updateOne(
+      {
+        ClientId,
+        HCAId,
+        Month: MonthInfo,
+      },
+      {
+        $set: {
+          PaymentVerificationStatus: value,
+          UpdatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Deployment record not found",
+      };
+    }
+
+    return {
+      success: true,
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount,
+      message:
+        result.modifiedCount > 0
+          ? "Payment verification status updated successfully"
+          : "No changes were required",
+    };
+  } catch (error) {
+    console.error(
+      "UpdatePaymentVerificationStatusInDb Error:",
+      {
+        HCAId,
+        ClientId,
+        MonthInfo,
+        error,
+      }
+    );
+
+    return {
+      success: false,
+      message: "Failed to update payment verification status",
+    };
+  }
+};
+export const UpdatePaymentVerificationStatusInReplacementDb = async (
+  HCAId: string,
+  ClientId: string,
+  value: string,
+  MonthInfo: string
+) => {
+  try {
+    
+    if (!HCAId || !ClientId || !MonthInfo) {
+      return {
+        success: false,
+        message: "Missing required parameters",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Replacement");
 
     const result = await collection.updateOne(
       {
@@ -4838,13 +4904,14 @@ export const PostINPayblePage = async (
       };
     }
 const { _id, ...payableData } = ImpData;
-    // Insert payable record
+   
     const insertResult = await payableCollection.insertOne({
       ...payableData,
        GrandTotalAmount: GrandTotal,
       ClientId,
       HCAId,
       Month: MonthInfo,
+       PaymentType:"On Service",
       CreatedAt: new Date(),
       UpdatedAt: new Date(),
     });
@@ -4865,7 +4932,123 @@ const { _id, ...payableData } = ImpData;
     };
   }
 };
+export const PostINPayblePageforRepleasments = async (
+  HCAId: string,
+  ClientId: string,
+  MonthInfo: string,
+  ImpData: any,
+  GrandTotal:any
+) => {
+  try {
+   
+    if (!HCAId || !ClientId || !MonthInfo || !ImpData) {
+      return {
+        success: false,
+        message: "Missing required parameters",
+      };
+    }
 
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const deploymentCollection = db.collection("Replacement");
+    const payableCollection = db.collection("PayableINPaymentPage");
+
+    const existingPayable = await payableCollection.findOne({
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+    });
+
+ if (existingPayable) {
+  const { _id, ...updateData } = ImpData;
+
+  const updateResult = await payableCollection.updateOne(
+    {
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+    },
+    {
+      $set: {
+        ...updateData,
+        GrandTotalAmount: GrandTotal,
+        UpdatedAt: new Date(),
+      },
+    }
+  );
+
+  await deploymentCollection.updateOne(
+    {
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+    },
+    {
+      $set: {
+        PreviewINPaymentPage: "Disabled",
+        UpdatedAt: new Date(),
+      },
+    }
+  );
+
+  return {
+    success: true,
+    matchedCount: updateResult.matchedCount,
+    modifiedCount: updateResult.modifiedCount,
+    message: "Status Updated: Payable Information already exists for this HCA",
+  };
+}
+
+    const result = await deploymentCollection.updateOne(
+      {
+        ClientId,
+        HCAId,
+        Month: MonthInfo,
+      },
+      {
+        $set: {
+          PreviewINPaymentPage: "Disabled",
+          UpdatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Deployment record not found",
+      };
+    }
+const { _id, ...payableData } = ImpData;
+   
+    const insertResult = await payableCollection.insertOne({
+      ...payableData,
+       GrandTotalAmount: GrandTotal,
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+      PaymentType:"Repleasment",
+      CreatedAt: new Date(),
+      UpdatedAt: new Date(),
+    });
+
+    return {
+      success: true,
+       insertedId: insertResult.insertedId.toString(),
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount,
+      message:existingPayable?"Status Updated: Payable Information already exists for this HCA":"Payable page created successfully",
+    };
+  } catch (error) {
+    console.error("PostINPayblePage Error:", error);
+
+    return {
+      success: false,
+      message: "Failed to create payable page",
+    };
+  }
+};
 export const PostINRejectionDb = async (
   RejectionInfo: Record<string, any>,
   Reason: string,
@@ -5101,6 +5284,71 @@ export const UpdateStatusEnable = async (
     const db = cluster.db("CurateInformation");
 
     const deploymentCollection = db.collection("Deployment");
+    const payableCollection = db.collection("PayableINPaymentPage");
+
+    const filter = {
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+    };
+
+    // Update deployment status
+    const updateResult = await deploymentCollection.updateOne(filter, {
+      $set: {
+        PreviewINPaymentPage: "Enable",
+        UpdatedAt: new Date(),
+      },
+    });
+
+    if (updateResult.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Deployment record not found",
+      };
+    }
+
+    const deleteResult = await payableCollection.deleteMany(filter);
+
+    return {
+      success: true,
+      matchedCount: updateResult.matchedCount,
+      modifiedCount: updateResult.modifiedCount,
+      deletedCount: deleteResult.deletedCount,
+      message: "Status enabled successfully",
+    };
+  } catch (error: any) {
+    console.error("UpdateStatusEnable Error:", {
+      message: error?.message,
+      stack: error?.stack,
+      HCAId,
+      ClientId,
+      MonthInfo,
+    });
+
+    return {
+      success: false,
+      message: "Failed to enable status",
+    };
+  }
+};
+export const UpdateStatusEnableinRepleasment = async (
+  HCAId: string,
+  ClientId: string,
+  MonthInfo: string
+) => {
+  try {
+   
+    if (!HCAId?.trim() || !ClientId?.trim() || !MonthInfo?.trim()) {
+      return {
+        success: false,
+        message: "Missing required parameters",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const deploymentCollection = db.collection("Replacement");
     const payableCollection = db.collection("PayableINPaymentPage");
 
     const filter = {
