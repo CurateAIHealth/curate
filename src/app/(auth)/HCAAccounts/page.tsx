@@ -966,6 +966,7 @@ onClick={() => router.push("/SubAccountings")}
               <th className=" p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">HCA </th>
                             <th className="p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">TimeSheet</th>
               <th className=" p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">Payment</th>
+                <th className=" p-4 text-left">TDS</th>
               <th className=" p-4 text-left">Advance</th>
               <th className=" p-4 text-left">Hostel</th>
               <th className=" p-4 text-left">Other</th>
@@ -1045,6 +1046,7 @@ const totalExpenses =
   </div>
 
                  </td>
+               
                   <td className="p-4"><button className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out active:scale-95"
                     onClick={() => {
                       setShowFullMonth(true)
@@ -1052,10 +1054,14 @@ const totalExpenses =
                     }}>
                     View
                   </button></td>
+                  
 
  
 
                   <td className="p-4">{formatCurrency(HCPPayment/getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)}</td>
+                    <td className="w-[60px] px-4 py-3">
+                 {formatCurrency(HCPPayment/getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)*1/100}
+                 </td>
 
   {fields.map(([amountField, descField, label]) => (
   <td key={amountField} className="p-3">
@@ -1160,7 +1166,7 @@ defaultValue={row.PaymentVerficationStatus}
                   </td>
 
                   <td className="p-4 font-bold">
-                    {formatCurrency(HCPPayment/ getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)+Additems-MinusItems}
+                    {formatCurrency(HCPPayment/ getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)+Additems-MinusItems-formatCurrency(HCPPayment/getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)*1/100}
                   </td>
 
                   <td className="p-4 font-bold text-center">
