@@ -199,25 +199,32 @@ const toggleClientFilter = (value: string) => {
 }, [Employs, search]);
 
 
- const filteredClients = useMemo(() => {
+const normalize = (value: any) =>
+  String(value || "").trim().toLowerCase();
+
+const filteredClients = useMemo(() => {
+  const keyword = normalize(search);
+
   return clients.filter((client: any) => {
     const matchesFilter =
       !clientFilters.length ||
-      clientFilters.includes(client.clientStatus)
-
-    const keyword = search.toLowerCase();
+      clientFilters.includes(client.clientStatus);
 
     const matchesSearch =
-      client.patientName?.toLowerCase().includes(keyword) ||
-      client.email?.toLowerCase().includes(keyword) ||
-      client.phone?.toLowerCase().includes(keyword);
+      normalize(client.patientName).includes(keyword) ||
+      normalize(client.email).includes(keyword) ||
+      normalize(client.Phone).includes(keyword);
 
-    return matchesFilter && matchesSearch&&client.ServiceState===SelectedServiceStates;
+    const matchesState =
+      !SelectedServiceStates ||
+      normalize(client.ServiceState) === normalize(SelectedServiceStates);
+
+    return matchesFilter && matchesSearch && matchesState;
   });
-}, [clients, clientFilters, search,SelectedServiceStates]);
+}, [clients, clientFilters, search, SelectedServiceStates]);
 
 const filteredHCAs = useMemo(() => {
-  const keyword = search.toLowerCase().trim();
+  const keyword = normalize(search);
 
   return hcas.filter((hcp: any) => {
     const matchesHcaFilter =
@@ -227,34 +234,32 @@ const filteredHCAs = useMemo(() => {
 
     const matchesState =
       !SelectedServiceStates ||
-      hcp.PreferdWorkingStates?.includes(SelectedServiceStates);
+      hcp.PreferdWorkingStates?.some(
+        (state: string) =>
+          normalize(state) === normalize(SelectedServiceStates)
+      );
 
     const matchesSearch =
-      hcp.name?.toLowerCase().includes(keyword) ||
-      hcp.email?.toLowerCase().includes(keyword) ||
-      hcp.phone?.toLowerCase().includes(keyword);
+      normalize(hcp.name).includes(keyword) ||
+      normalize(hcp.email).includes(keyword) ||
+      normalize(hcp.Phone).includes(keyword);
 
     return matchesHcaFilter && matchesState && matchesSearch;
   });
-}, [
-  hcas,
-  hcaFilters,
-  search,
-  SelectedServiceStates,
-]);
+}, [hcas, hcaFilters, search, SelectedServiceStates]);
 
 const filteredLeads = useMemo(() => {
-  const keyword = search.toLowerCase().trim();
+  const keyword = normalize(search);
 
   return Leads.filter((lead: any) => {
     const matchesState =
       !SelectedServiceStates ||
-      lead.ServiceState === SelectedServiceStates;
+      normalize(lead.ServiceState) === normalize(SelectedServiceStates);
 
     const matchesSearch =
-      lead.name?.toLowerCase().includes(keyword) ||
-      lead.email?.toLowerCase().includes(keyword) ||
-      lead.phone?.toLowerCase().includes(keyword);
+      normalize(lead.name).includes(keyword) ||
+      normalize(lead.email).includes(keyword) ||
+      normalize(lead.phone).includes(keyword);
 
     return matchesState && matchesSearch;
   });

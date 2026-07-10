@@ -215,10 +215,12 @@ console.log("ImpData----",GetHCPPayment("22d311d0-daea-4fe2-a5bf-814e1d332820"))
     const pendingCollection = filteredData.reduce((sum, item) => sum + item.pending - item.Refund, 0);
     const totalExpenses = filteredData.reduce((sum, item) => sum + item.hcaSalary + item.advance + item.hostel + item.travel + item.other, 0);
     const netProfitLoss = revenueReceived - totalExpenses;
-    const collectionPercent = expectedRevenue ? revenueReceived / expectedRevenue : 0;
+const collectionPercent = expectedRevenue
+  ? Math.min((revenueReceived + RefundAmount) / expectedRevenue, 1)
+  : 0;
     const profitMarginPercent = revenueReceived ? netProfitLoss / revenueReceived : 0;
     const expenseRatioPercent = revenueReceived ? totalExpenses / revenueReceived : 0;
-
+console.log("Analytics Computed:", 26000/25000>=1?1: 26000/25000)
     return {
       expectedRevenue,
       revenueReceived,
@@ -404,7 +406,12 @@ const handleLogout = () => {
                       const totalExpense = item.hcaSalary + item.advance + item.hostel + item.travel + item.other;
                       const profitLoss = item.revenueReceived - totalExpense;
                       const profitPercent = item.revenueReceived ? profitLoss / item.revenueReceived : 0;
-                      const collectionPercentValue = item.expectedRevenue ? item.revenueReceived / item.expectedRevenue : 0;
+const collectionPercentValue = item.expectedRevenue
+  ? Math.min(
+      (item.revenueReceived + item.Refund) / item.expectedRevenue,
+      1
+    )
+  : 0;
                       const status = getStatus(item);
 
                       return (
