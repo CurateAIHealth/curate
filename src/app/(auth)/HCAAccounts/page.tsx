@@ -12,7 +12,7 @@ import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
-import { GetAllUsersData, PostINPayblePage, updateExpense, UpdatePassword, UpdatePaymentVerificationStatusInDb } from "@/Lib/user.action";
+import { GetAllUsersData, PostINPayblePage, PostINPayblePageforRepleasments, updateExpense, UpdatePassword, UpdatePaymentVerificationStatusInDb, UpdatePaymentVerificationStatusInReplacementDb } from "@/Lib/user.action";
 import { AssignSuitableIcon, getDaysInMonth, toProperCaseLive } from "@/Lib/Actions";
 import PopupToast from "@/Components/ExpencesPopUp/page";
 import axios from "axios";
@@ -76,7 +76,7 @@ const [showFullMonth,setShowFullMonth]=useState(false)
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
   const [ClientsInformation, setClientsInformation] = useState<Deployment[]>([]);
       const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
-      const[PreviewInfo,setPreviewInfo]=useState<any>("")
+      const[PreviewInfo,setPreviewInfo]=useState<any>("OnService Payments")
       const [ReplacementInformation, setReplacementInformation] = useState<Replace[]>([]);
       const [TerminationInformation, setTerminationInformation] = useState<Termination[]>([]);
         const [users, setUsers] = useState<User[]>([]);
@@ -446,14 +446,61 @@ const ReplasementAttendece=ReplacementInformation.map((each: any) => {
 
   };
 });
-const FinelReplasementAttendece = ReplasementAttendece.filter((item) =>
-    matchesSearchAndMonth(
-      item,
-      search,
-      SearchMonth,
-      SearchYear
-    )
-  );
+const TerminatedData=TerminationInformation.map((each: any) => {
+     const attendanceSummary = each.Attendance||[].reduce(
+          (acc: any, att: any) => {
+            const hcp = att.HCPAttendence === true;
+            const admin = att.AdminAttendece === true;
+
+            if (hcp && admin) {
+              acc.present += 1;
+            } else if (hcp || admin) {
+              acc.halfDay += 1;
+            } else {
+              acc.absent += 1;
+            }
+
+            return acc;
+          },
+          {
+            present: 0,
+            halfDay: 0,
+            absent: 0,
+          }
+        );
+        const Expenses=getExpenseList(each.HCAId)
+        const Transactions=getTransactions(each.HCAId)
+  const MonthlyExpensesInfo =
+  Array.isArray(Expenses)
+    ? Expenses.find(
+        (exp: any) => exp.Month === `${SearchMonth}-${SearchYear}`
+      )
+    : null;
+  return {
+    ...each,
+    Clientid: each.ClientId,
+    name: each.HCAName,
+    transactions: MonthlyExpensesInfo?.Transactions||[],
+    attendanceInfo: each.Attendance,
+    PaymentVerficationStatus:each.PaymentVerificationStatus||"Process",
+    CompliteAttendeceSummery: attendanceSummary,
+    PreviewINPaymentPage:each.PreviewINPaymentPage||"Enabled",
+    Expences: MonthlyExpensesInfo?.DueAmounts[0]||MonthlyExpensesInfo?.DueAmounts || {
+      advance: 0,
+      hostel: 0,
+      other: 0,
+      incentives: 0,
+      others: 0,
+      advanceDescription: "",
+      hostelDescription: "",
+      otherDescription: "",
+      incentivesDescription: "",
+      othersDescription: "",
+    }
+
+
+  };
+});
 console.log("Checek-----",ReplasementAttendece)
 // const ReplacementAttendenceinformation= ReplacementInformation.map((each: any) => {
 //      const attendanceSummary = each.Attendance.reduce(
@@ -517,7 +564,7 @@ useEffect(() => {
   if (PreviewInfo === "Replacement Payments") {
     sourceData = ReplasementAttendece;
   } else if (PreviewInfo === "Termination Payments") {
-    sourceData = [];
+    sourceData = TerminatedData;
   } else {
     sourceData = DeployInformation;
   }
@@ -555,8 +602,8 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any)=>{
       type: "loading",
     });
   const value = status
- 
-    const MonthInfo=`${SearchYear}-${SearchMonth}`
+     if (PreviewInfo==="OnService Payments"){
+   const MonthInfo=`${SearchYear}-${SearchMonth}`
     const UpdatedinDB=await UpdatePaymentVerificationStatusInDb(HCAId,ClientId,value,MonthInfo)
     console.log("Check Updated Payment Status----",UpdatedinDB)
     if(UpdatedinDB.success){
@@ -573,14 +620,50 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any)=>{
         message: "Payment Status Updated successfully!",
         type: "success",
       });
-    }else{
+     }else{
         setPopup({
         isOpen: true,
-        message:UpdatedinDB.message || "Failed to update payment status",
+        message: "Failed to update payment status",
         type: "error",
       });
     }
+
+ return
+ 
+    }
+
     
+
+    
+     if(PreviewInfo==="Replacement Payments"){
+   const MonthInfo=`${SearchYear}-${SearchMonth}`
+    const UpdatedinDB=await UpdatePaymentVerificationStatusInReplacementDb(HCAId,ClientId,value,MonthInfo)
+    console.log("Check Updated Payment Status----",UpdatedinDB)
+    if(UpdatedinDB.success){
+      
+      setData((prev) =>
+      prev.map((item) =>
+        item.HCAId === HCAId    ? { ...item, PaymentVerficationStatus: value }
+        : item
+      )
+    ); 
+
+     setPopup({
+        isOpen: true,
+        message: "Payment Status Updated successfully!",
+        type: "success",
+      });
+     }else{
+        setPopup({
+        isOpen: true,
+        message: "Failed to update payment status",
+        type: "error",
+      });
+    }
+
+ return
+ 
+    }
   }
 
   const UpdatePayablePage=async(row:any,totalAmount:any)=>{
@@ -592,7 +675,8 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any)=>{
     });
      const MonthInfo=`${SearchYear}-${SearchMonth}`
      console.log("Check Row Information for Payable Page----",row.ClientId,row.HCAId,MonthInfo)
-    const UpdatedinDB=await PostINPayblePage(row.HCAId,row.ClientId,MonthInfo,row,totalAmount)
+  if(PreviewInfo==="OnService Payments"){
+      const UpdatedinDB=await PostINPayblePage(row.HCAId,row.ClientId,MonthInfo,row,totalAmount)
     console.log("Check Updated Payment Status----",UpdatedinDB)
     if(UpdatedinDB.success){
       
@@ -615,6 +699,32 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any)=>{
         type: "error",
       });
     }
+  }
+    if(PreviewInfo==="Replacement Payments"){
+      const UpdatedinDB=await PostINPayblePageforRepleasments(row.HCAId,row.ClientId,MonthInfo,row,totalAmount)
+    console.log("Check Updated Payment Status----",UpdatedinDB)
+    if(UpdatedinDB.success){
+      
+      setData((prev) =>
+      prev.map((item) =>
+        item.HCAId ===row. HCAId    ? { ...item, PreviewINPaymentPage: "Disabled" }
+        : item
+      )
+    ); 
+
+     setPopup({
+        isOpen: true,
+        message: UpdatedinDB.message || "Moved to Payable Page successfully!",
+        type: "success",
+      });
+    }else{
+        setPopup({
+        isOpen: true,
+        message: UpdatedinDB.message || "Failed to post payment record",
+        type: "error",
+      });
+    }
+  }
     }catch(err){}
   }
   const getTotal = (row: PayrollRow) =>

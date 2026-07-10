@@ -8,82 +8,27 @@ type User = any;
 type Deployment = any;
 type Replace = any;
 type Termination=any;
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CircleSlash2, CornerUpLeft, Eye, Info, Minimize2, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { GetAllUsersData, PostINPayblePage, PostINRejectionDb, PostINSuccesfulPaymentsDb, UpdateStatusEnable } from "@/Lib/user.action";
+import { GetAllUsersData, PostINPayblePage, PostINRejectionDb, PostINSuccesfulPaymentsDb, UpdateStatusEnable, UpdateStatusEnableinRepleasment } from "@/Lib/user.action";
 import { LoadingData } from "@/Components/Loading/page";
 import { months, years } from "@/Lib/Content";
 import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import PopupToast from "@/Components/ExpencesPopUp/page";
 import { AssignSuitableIcon, toProperCaseLive } from "@/Lib/Actions";
+import axios from "axios";
 
 export default function HCAPaymentTable() {
-const [data] = useState([
-  {
-    id: 1,
-    UserType: "Client",
-    name: "Roshani Sunkatrao",
-    total: 540000,
-    refund: 15000,
-    refundDate: "2026-05-28",
-    reject: 0,
-    revert: 1,
-    neft: "HCA2026001",
-    amount: 540000,
-    paid: true,
-  },
 
-  {
-    id: 3,
-    UserType: "Client",
-    name: "Priyanka",
-    total: 499000,
-    refund: 10000,
-    refundDate: "2026-05-24",
-    reject: 1,
-    revert: 2,
-    neft: "HCA2026003",
-    amount: 499000,
-    paid: false,
-  },
-  
-  {
-    id: 6,
-    UserType: "Client",
-    name: "Kavita Koko",
-    total: 546000,
-    refund: 20000,
-    refundDate: "2026-05-30",
-    reject: 0,
-    revert: 0,
-    neft: "",
-    amount: 546000,
-    paid: true,
-  },
-  
-  {
-    id: 8,
-    UserType: "Client",
-    name: "Sanjana",
-    total: 460000,
-    refund: 12000,
-    refundDate: "2026-05-22",
-    reject: 1,
-    revert: 1,
-    neft: "HCA2026008",
-    amount: 460000,
-    paid: false,
-  },
-]);
   const [popup, setPopup] = useState({
     isOpen: false,
     message: "",
     type: "success",
   });
   const [showFullMonth,setShowFullMonth]=useState(false)
-const [userTypeFilter, setUserTypeFilter] = useState("All");
+const [userTypeFilter, setUserTypeFilter] = useState("On Service");
 const [selectedUser, setSelectedUser] = useState<any>(null);
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
 const [ShowRejectPopup,setShowRejectPopup]=useState(false) 
@@ -113,13 +58,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
 
         setIsChecking(true);
    
-        if (!isSuccessUpdate && cachedDeploymentInfo?.length > 0) {
-          setUsers([...cachedUsersFullInfo]);
-          setClientsInformation([...cachedDeploymentInfo]);
-          setRegisterdUsers([...cachedRegisterdUsers])
-          setPaybleData([...cachedPayableData])
-          return;
-        }
+      
   
         // const [
         //   RegisterdUsers,
@@ -134,15 +73,17 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
         //   GetReplacementInfo(),
         //   GetTerminationInfo(),
         // ]);
-        const {
-    RegisterdUsers,
-    usersResult,
-    placementInfo,
-    replacementInfo,
-    terminationInfo,
-    ExportedPayableData
-  } = await GetAllUsersData();
-  
+   
+     const { data } = await axios.get("/api/PayableData");
+      console.log("Check Deployment Data------",data.data)
+      const {
+  RegisterdUsers,
+  usersResult,
+  placementInfo,
+  replacementInfo,
+  terminationInfo,
+  ExportedPayableData,
+} = data.data;
         if (!mounted) return;
   
         cachedUsersFullInfo = usersResult ?? [];
@@ -169,32 +110,8 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
     };
   }, [ActionStatusMessage]);
 
-const PayableDataformation = paybleData.map((each: any) => {
-    console.log("Each Payable Record:", each);
-  return {
-    ...each,
-     UserType: "HCA",
-    Clientid: each.ClientId,
-    HCAid: each.HCAId,
-    name: each.HCAName,
-    attendanceInfo: each.Attendance,
-    total: each.GrandTotalAmount||0,
-    advance: each.Expences.advance||0,
-    hostelFee: each.Expences.hostel||0,
-    Other:each.Expences.other||0,
-    others: each.Expences.others||0,
-    incentive: each.Expences.incentives||0,
-    reject: 0,
-    revert: 0,
-    neft:each.NeftNumber|| "",
-    amount:each.GrandTotalAmount||0,
-    paid: each.PaidStatus ||false,
-Month: each.Month
-    }
 
 
-
-});
  const getDaysInMonth = (month: number, year: number) => {
   return new Date(year, month, 0).getDate(); 
 };
@@ -241,52 +158,179 @@ const NumberOfDaysInMonth = getDaysInMonth(
   return matchesSearch && matchesMonth && matchesYear;
 };
 
-useEffect(() => {
-   const filtered = PayableDataformation.filter((item) =>
-    matchesSearchAndMonth(
-      item,
-      search,
-      SearchMonth,
-      SearchYear
-    )
-  );
 
-  setPaybleData(filtered);
-}, [ClientsInformation, search, SearchMonth, SearchYear]);
 
-const UpdateRevertStatus = async (ClientId:any,HCAId:any,Month:any) => {
-try{
-  setPopup({
+const PayableDataformation = useMemo(() => {
+  return paybleData.map((each: any) => ({
+    ...each,
+
+    UserType: "HCA",
+    Clientid: each.ClientId,
+    HCAid: each.HCAId,
+    name: each.HCAName,
+    attendanceInfo: each.Attendance ?? [],
+
+    total: each.GrandTotalAmount ?? 0,
+    advance: each.Expences?.advance ?? 0,
+    hostelFee: each.Expences?.hostel ?? 0,
+    Other: each.Expences?.other ?? 0,
+    others: each.Expences?.others ?? 0,
+    incentive: each.Expences?.incentives ?? 0,
+
+    reject: 0,
+    revert: 0,
+
+    neft: each.NeftNumber ?? "",
+    amount: each.GrandTotalAmount ?? 0,
+    paid: each.PaidStatus ?? false,
+
+    Month: each.Month,
+    PaymentType: each.PaymentType,
+  }));
+}, [paybleData]);
+
+
+const filteredPayableData = useMemo(() => {
+  const searchText = search.trim().toLowerCase();
+
+  return PayableDataformation.filter((item: any) => {
+
+    // 1. Payment Type
+    const matchesPaymentType =
+      item.PaymentType?.trim().toLowerCase() ===
+      userTypeFilter.trim().toLowerCase();
+
+    // 2. Search
+    const matchesSearch =
+      !searchText ||
+      item.name?.toLowerCase().includes(searchText) ||
+      item.ClientName?.toLowerCase().includes(searchText) ||
+      item.HCAName?.toLowerCase().includes(searchText) ||
+      item.HCAContact?.toString().includes(searchText) ||
+      item.ClientContact?.toString().includes(searchText);
+
+    // 3. Month and Year
+    const [itemYear, itemMonth] = String(item.Month ?? "")
+      .split("-")
+      .map(Number);
+
+    const matchesMonth =
+      !SearchMonth || itemMonth === Number(SearchMonth);
+
+    const matchesYear =
+      !SearchYear || itemYear === Number(SearchYear);
+
+    return (
+      matchesPaymentType &&
+      matchesSearch &&
+      matchesMonth &&
+      matchesYear
+    );
+  });
+}, [
+  PayableDataformation,
+  search,
+  SearchMonth,
+  SearchYear,
+  userTypeFilter,
+]);
+
+console.log("Selected Payment Type:", userTypeFilter);
+console.log("Selected Month:", SearchMonth);
+console.log("Selected Year:", SearchYear);
+console.log(
+  "All Payment Types:",
+  PayableDataformation.map((item) => item.PaymentType)
+);
+console.log(
+  "All Payable Months:",
+  PayableDataformation.map((item) => item.Month)
+);
+console.log("Check for Payable Data------", filteredPayableData);
+
+const UpdateRevertStatus = async (
+  ClientId: any,
+  HCAId: any,
+  Month: any
+) => {
+  try {
+    setPopup({
       isOpen: true,
       message: "Please Wait Updating Payment Status...",
       type: "loading",
     });
-const PostINPayblePageResult = await UpdateStatusEnable(HCAId,ClientId,Month);
-   if(PostINPayblePageResult.success){
-      
-    
 
-     setPopup({
-        isOpen: true,
-        message:"Revert Status Updated successfully!",
-        type: "success",
-      });
-    setPaybleData((prevData) =>
-  prevData.filter(
-    (item) => item.HcaId !== selectedUser.HcaId
-  )
-);
-    }else{
+    if (userTypeFilter === "On Service") {
+      const result = await UpdateStatusEnable(
+        HCAId,
+        ClientId,
+        Month
+      );
+
+      if (result.success) {
         setPopup({
-        isOpen: true,
-        message:PostINPayblePageResult.message || "Failed to update payment status",
-        type: "error",
-      });
+          isOpen: true,
+          message: "Revert Status Updated successfully!",
+          type: "success",
+        });
+
+        setPaybleData((prevData) =>
+          prevData.filter(
+            (item) =>
+              !(
+                item.HCAId === HCAId &&
+                item.ClientId === ClientId &&
+                item.Month === Month
+              )
+          )
+        );
+      } else {
+        setPopup({
+          isOpen: true,
+          message:
+            result.message || "Failed to update payment status",
+          type: "error",
+        });
+      }
     }
-}catch(err){
-  console.error("Error updating revert status:", err);
-}
-}
+
+    if (userTypeFilter === "Repleasment") {
+      const result = await UpdateStatusEnableinRepleasment(
+        HCAId,
+        ClientId,
+        Month
+      );
+
+      if (result.success) {
+        setPopup({
+          isOpen: true,
+          message: "Revert Status Updated successfully!",
+          type: "success",
+        });
+
+        setPaybleData((prevData) =>
+          prevData.filter(
+            (item) =>
+              !(
+                item.HCAId === HCAId &&
+                item.ClientId === ClientId &&
+                item.Month === Month
+              )
+          )
+        );
+      } else {
+        setPopup({
+          isOpen: true,
+          message:
+            result.message || "Failed to update payment status",
+          type: "error",
+        });
+      }
+    }
+  } catch (err) {
+    console.error("Error updating revert status:", err);
+  }
+};
 
 const PostRejctedReason=async()=>{
   try{
@@ -392,10 +436,7 @@ setPopup({
     return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
   };
 
-const filteredData =
-  userTypeFilter === "All"
-    ? data
-    : data.filter((item) => item.UserType === userTypeFilter);
+
       function DayBadge({ status }: { status: any }) {
   const Wrapper = ({ children }: any) => (
     <div className="flex items-center justify-center w-full">
@@ -485,23 +526,18 @@ const filteredData =
 
             <div className="flex flex-col md:flex-row gap-3">
  <div className="inline-flex items-center p-1 bg-slate-100 rounded-xl">
-  {["All", "Client", "HCA"].map((type) => (
+  {["On Service", "Repleasment"].map((type) => (
     <button
       key={type}
       onClick={() => setUserTypeFilter(type)}
-      className={`h-8 px-4 rounded-lg text-sm font-semibold transition-all ${
+      className={`h-8 px-4 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
         userTypeFilter === type
           ? "bg-[#1392d3] text-white shadow-sm"
           : "text-slate-600 hover:text-[#1392d3]"
       }`}
     >
       {type}
-      {" "}
-      (
-      {type === "All"
-        ? data.length
-        : data.filter((item) => item.UserType === type).length}
-      )
+     
     </button>
   ))}
 </div>
@@ -1100,7 +1136,7 @@ onClick={() => router.push("/SubAccountings")}
   </div>
 )}
         <div className="overflow-auto max-h-[650px]">
-          {paybleData.length===0?
+          {filteredPayableData.length===0?
           
           
           <div className="h-[100vh] flex flex-col items-center justify-center py-12 px-6 rounded-2xl border border-pink-100 bg-gradient-to-br from-pink-50 via-white to-cyan-50 shadow-md">
@@ -1173,7 +1209,7 @@ onClick={() => router.push("/SubAccountings")}
 
             <tbody>
        
-              {paybleData.map((row, index) => (
+              {filteredPayableData.map((row, index) => (
                 <tr
                   key={index}
                   className="border-b border-slate-200 hover:bg-sky-50 transition-all duration-200"

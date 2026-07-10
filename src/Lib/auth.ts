@@ -379,7 +379,166 @@ export const UpdateDeploymentStatus = async (
     };
   }
 };
+let cache: any = null;
+let lastFetchTime = 0;
 
+export const GetAllUsersData = async () => {
+  try {
+    const now = Date.now();
+
+    // ✅ Simple cache (30 sec)
+    if (cache && now - lastFetchTime < 30 * 60 * 1000) {
+      return cache;
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const registrationCollection = db.collection("Registration");
+    const fullInfoCollection = db.collection("CompliteRegistrationInformation");
+    const deploymentCollection = db.collection("Deployment");
+    const replacementCollection = db.collection("Replacement");
+    const terminationCollection = db.collection("Termination");
+    const PayableCollection = db.collection("PayableINPaymentPage");
+
+    // ✅ Faster decrypt helper (no Object.entries)
+    const safeDecrypt = (value: any) => {
+      try {
+        if (
+          value &&
+          typeof value === "object" &&
+          value.iv &&
+          value.content
+        ) {
+          return decrypt(value);
+        }
+        return value;
+      } catch {
+        return value;
+      }
+    };
+
+    const decryptFields = (obj: any) => {
+      for (const key in obj) {
+        const value = obj[key];
+        if (
+          value &&
+          typeof value === "object" &&
+          value.iv &&
+          value.content
+        ) {
+          try {
+            obj[key] = decrypt(value);
+          } catch {}
+        }
+      }
+      return obj;
+    };
+
+    // ✅ Fetch all collections in parallel (same as before)
+    const [
+      registrationResult,
+      fullInfoResult,
+      deploymentResult,
+      replacementResult,
+      terminationResult,
+      PayableData
+    ] = await Promise.all([
+      registrationCollection.find().toArray(),
+      fullInfoCollection.find().toArray(),
+      deploymentCollection.find().toArray(),
+      replacementCollection.find().toArray(),
+      terminationCollection.find().toArray(),
+      PayableCollection.find().toArray(),
+    ]);
+
+    // ✅ Process in parallel (FASTER)
+    const registeredUsersPromise = Promise.resolve(
+      registrationResult.map((user: any) => {
+        const decryptedUser = decryptFields({ ...user });
+        return {
+          ...decryptedUser,
+          _id: user._id?.toString() ?? null,
+        };
+      })
+    );
+
+    const usersFullInfoPromise = Promise.resolve(
+      fullInfoResult.map((user: any) => {
+        const info: any = user.HCAComplitInformation || {};
+
+        return {
+          ...user,
+          _id: user._id.toString(),
+          HCAComplitInformation: {
+            ...info,
+            HCPFirstName: safeDecrypt(info["First Name"]),
+            HCPContactNumber: safeDecrypt(info["Mobile Number"]),
+            HCPEmail: safeDecrypt(info["EmailId"]),
+            HCPSurName: safeDecrypt(info["Surname"]),
+            HCPAdharNumber: safeDecrypt(info["Aadhar Card No"]),
+            "Phone No 1": safeDecrypt(info["Phone No 1"]),
+            "Phone No 2": safeDecrypt(info["Phone No 2"]),
+            "Email Id": safeDecrypt(info["Email Id"]),
+            "Client Aadhar No": safeDecrypt(info["Client Aadhar No"]),
+            "Patient Aadhar Number": safeDecrypt(
+              info["Patient Aadhar Number"]
+            ),
+            "Alternative Client Contact": safeDecrypt(
+              info["Alternative Client Contact"]
+            ),
+          },
+        };
+      })
+    );
+
+    const mapIds = (data: any[]) =>
+      data.map((item) => ({
+        ...item,
+        _id: item._id.toString(),
+      }));
+
+    const [
+      registeredUsers,
+      usersFullInfo,
+      placementInfo,
+      replacementInfo,
+      terminationInfo,
+      ExportedPayableData
+    ] = await Promise.all([
+      registeredUsersPromise,
+      usersFullInfoPromise,
+      Promise.resolve(mapIds(deploymentResult)),
+      Promise.resolve(mapIds(replacementResult)),
+      Promise.resolve(mapIds(terminationResult)),
+      Promise.resolve(mapIds(PayableData))
+    ]);
+
+    const result = {
+      RegisterdUsers: registeredUsers,
+      usersResult: usersFullInfo,
+      placementInfo,
+      replacementInfo,
+      terminationInfo,
+      ExportedPayableData
+    };
+
+    // ✅ Save cache
+    cache = result;
+    lastFetchTime = now;
+
+    return result;
+  } catch (err) {
+    console.error("Error fetching all data:", err);
+    return {
+      RegisterdUsers: [],
+      usersResult: [],
+      placementInfo: [],
+      replacementInfo: [],
+      terminationInfo: [],
+    };
+  }
+};
 export const UpdateRefundAmount = async (
   Client_Id: string,
   ServiceStartDate: any, 
