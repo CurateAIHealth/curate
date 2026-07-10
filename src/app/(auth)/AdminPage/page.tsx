@@ -1877,7 +1877,8 @@ const handleSave = async (data: any) => {
   try {
     setIsEditing(false);
     dispatch(Refresh("Please Wait...."));
-
+console.log("Check for Imp Salary Data----",data
+)
     const updateSalary = await PostHCPSalaryRequest(
       data,
       UpdatedHCPSalary,

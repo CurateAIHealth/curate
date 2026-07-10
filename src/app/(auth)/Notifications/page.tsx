@@ -194,7 +194,7 @@ console.log("Check Status------",dateResponse.message)
           setRefreshKey((prev) => prev + 1);
           return;
         }
-
+alert( info?.HCPId)
         const res = await HCASalaryUpdate(
           info?.HCPId,
           info?.RequestedSalary,
@@ -202,7 +202,7 @@ console.log("Check Status------",dateResponse.message)
         );
 
         if (!res?.success) {
-          dispatch(Refresh("Salary update failed."));
+          dispatch(Refresh(res.message));
           return;
         }
 
@@ -456,7 +456,7 @@ console.log("Check Status------",dateResponse.message)
             {(
               item.Type === "LEAVE_REQUEST" ||
               item.Type === "New Referral Request" ||
-              (item.Type === "HCP Salary Request" && loggedInEmail === "kirancuratehealth@gmail.com") ||
+              (item.Type === "HCP Salary Request" && loggedInEmail === "srinivasnew0803@gmail.com") ||
               (item.Type === "New Call Enquiry" && item.NotifyEmploys.includes(loggedInEmail)) ||
 
               item.Type === "EXPENSE_REQUEST" ||

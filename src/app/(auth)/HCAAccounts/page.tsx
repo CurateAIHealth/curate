@@ -3,6 +3,8 @@ let cachedUsersFullInfo: any[] = [];
 let cachedDeploymentInfo: any[] = [];
 
 let cachedRegisterdUsers: any[] = [];
+let cachedReplacementInfo: any[] = [];
+let cachedTerminationInfo: any[] = [];
 import React, { useEffect, useMemo, useState } from "react";
 import { CircleX, Info, Minimize2, Search, Slice, Users } from "lucide-react";
 import { months, years } from "@/Lib/Content";
@@ -74,6 +76,9 @@ const [showFullMonth,setShowFullMonth]=useState(false)
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
   const [ClientsInformation, setClientsInformation] = useState<Deployment[]>([]);
       const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
+      const[PreviewInfo,setPreviewInfo]=useState<any>("")
+      const [ReplacementInformation, setReplacementInformation] = useState<Replace[]>([]);
+      const [TerminationInformation, setTerminationInformation] = useState<Termination[]>([]);
         const [users, setUsers] = useState<User[]>([]);
    const [ActionStatusMessage,SetActionStatusMessage]= useState<any>("");
     const [isChecking, setIsChecking] = useState(true);
@@ -182,6 +187,8 @@ const [attendanceInfo,setAttendenceInfo]=useState<any>()
           setUsers([...cachedUsersFullInfo]);
           setClientsInformation([...cachedDeploymentInfo]);
           setRegisterdUsers([...cachedRegisterdUsers])
+          setReplacementInformation([...cachedReplacementInfo]);
+          setTerminationInformation([...cachedTerminationInfo]);
           return;
         }
   
@@ -210,13 +217,15 @@ const [attendanceInfo,setAttendenceInfo]=useState<any>()
   
         cachedUsersFullInfo = usersResult ?? [];
         cachedDeploymentInfo = placementInfo ?? [];
-   
-      cachedRegisterdUsers=RegisterdUsers??[]
+        cachedReplacementInfo = replacementInfo ?? [];
+        cachedTerminationInfo = terminationInfo ?? [];
+        cachedRegisterdUsers=RegisterdUsers??[]
         setUsers([...cachedUsersFullInfo]);
         setClientsInformation([...cachedDeploymentInfo]);
-   
-         setRegisterdUsers([...cachedRegisterdUsers])
-  
+        setReplacementInformation([...cachedReplacementInfo]);
+        setTerminationInformation([...cachedTerminationInfo]);
+        setRegisterdUsers([...cachedRegisterdUsers])
+
       
       } catch (err) {
         console.error(err);
@@ -282,7 +291,8 @@ const [attendanceInfo,setAttendenceInfo]=useState<any>()
     return address ?? "Not Entered";
   };
 
-
+console.log("Check Replacement----",ReplacementInformation)
+console.log("Check Termination----",TerminationInformation)
      const GetHCPType = (A: any) => {
     if (!RegisterdUsers?.length || !A) return "Not Entered";
 
@@ -380,8 +390,139 @@ const DeployInformation = ClientsInformation.map((each: any) => {
   };
 });
 
+
+const ReplasementAttendece=ReplacementInformation.map((each: any) => {
+     const attendanceSummary = each.Attendance.reduce(
+          (acc: any, att: any) => {
+            const hcp = att.HCPAttendence === true;
+            const admin = att.AdminAttendece === true;
+
+            if (hcp && admin) {
+              acc.present += 1;
+            } else if (hcp || admin) {
+              acc.halfDay += 1;
+            } else {
+              acc.absent += 1;
+            }
+
+            return acc;
+          },
+          {
+            present: 0,
+            halfDay: 0,
+            absent: 0,
+          }
+        );
+        const Expenses=getExpenseList(each.HCAId)
+        const Transactions=getTransactions(each.HCAId)
+  const MonthlyExpensesInfo =
+  Array.isArray(Expenses)
+    ? Expenses.find(
+        (exp: any) => exp.Month === `${SearchMonth}-${SearchYear}`
+      )
+    : null;
+  return {
+    ...each,
+    Clientid: each.ClientId,
+    name: each.HCAName,
+    transactions: MonthlyExpensesInfo?.Transactions||[],
+    attendanceInfo: each.Attendance,
+    PaymentVerficationStatus:each.PaymentVerificationStatus||"Process",
+    CompliteAttendeceSummery: attendanceSummary,
+    PreviewINPaymentPage:each.PreviewINPaymentPage||"Enabled",
+    Expences: MonthlyExpensesInfo?.DueAmounts[0]||MonthlyExpensesInfo?.DueAmounts || {
+      advance: 0,
+      hostel: 0,
+      other: 0,
+      incentives: 0,
+      others: 0,
+      advanceDescription: "",
+      hostelDescription: "",
+      otherDescription: "",
+      incentivesDescription: "",
+      othersDescription: "",
+    }
+
+
+  };
+});
+const FinelReplasementAttendece = ReplasementAttendece.filter((item) =>
+    matchesSearchAndMonth(
+      item,
+      search,
+      SearchMonth,
+      SearchYear
+    )
+  );
+console.log("Checek-----",ReplasementAttendece)
+// const ReplacementAttendenceinformation= ReplacementInformation.map((each: any) => {
+//      const attendanceSummary = each.Attendance.reduce(
+//           (acc: any, att: any) => {
+//             const hcp = att.HCPAttendence === true;
+//             const admin = att.AdminAttendece === true;
+
+//             if (hcp && admin) {
+//               acc.present += 1;
+//             } else if (hcp || admin) {
+//               acc.halfDay += 1;
+//             } else {
+//               acc.absent += 1;
+//             }
+
+//             return acc;
+//           },
+//           {
+//             present: 0,
+//             halfDay: 0,
+//             absent: 0,
+//           }
+//         );
+//         const Expenses=getExpenseList(each.HCAId)
+//         const Transactions=getTransactions(each.HCAId)
+//   const MonthlyExpensesInfo =
+//   Array.isArray(Expenses)
+//     ? Expenses.find(
+//         (exp: any) => exp.Month === `${SearchMonth}-${SearchYear}`
+//       )
+//     : null;
+//   return {
+//     ...each,
+//     Clientid: each.ClientId,
+//     name: each.HCAName,
+//     transactions: MonthlyExpensesInfo?.Transactions||[],
+//     attendanceInfo: each.Attendance,
+//     PaymentVerficationStatus:each.PaymentVerificationStatus||"Process",
+//     CompliteAttendeceSummery: attendanceSummary,
+//     PreviewINPaymentPage:each.PreviewINPaymentPage||"Enabled",
+//     Expences: MonthlyExpensesInfo?.DueAmounts[0]||MonthlyExpensesInfo?.DueAmounts || {
+//       advance: 0,
+//       hostel: 0,
+//       other: 0,
+//       incentives: 0,
+//       others: 0,
+//       advanceDescription: "",
+//       hostelDescription: "",
+//       otherDescription: "",
+//       incentivesDescription: "",
+//       othersDescription: "",
+//     }
+
+
+//   };
+// });
+// console.log("Check Replacementinformation----",ReplacementAttendenceinformation)
 useEffect(() => {
-  const filtered = DeployInformation.filter((item) =>
+  let sourceData: any[] = [];
+
+  if (PreviewInfo === "Replacement Payments") {
+    sourceData = ReplasementAttendece;
+  } else if (PreviewInfo === "Termination Payments") {
+    sourceData = [];
+  } else {
+    sourceData = DeployInformation;
+  }
+
+  const filtered = sourceData.filter((item) =>
     matchesSearchAndMonth(
       item,
       search,
@@ -391,7 +532,15 @@ useEffect(() => {
   );
 
   setData(filtered);
-}, [ClientsInformation, search, SearchMonth, SearchYear]);
+}, [
+  ClientsInformation,
+  ReplacementInformation,
+  TerminationInformation,
+  search,
+  SearchMonth,
+  SearchYear,
+  PreviewInfo,
+]);
 
 const NumberOfDaysInMonth = getDaysInMonth(
   Number(SearchMonth),
@@ -587,12 +736,13 @@ console.log("Check Updated Expenses----",UpdatingExpenses)
 };
 const handleChange = (
   id: number,
+  hcaId:any,
   field: keyof PayrollRow["Expences"],
   value: string | number
 ) => {
   setData((prev) =>
     prev.map((row) =>
-      row.Clientid === id
+      row.Clientid === id&&row.HCAId===hcaId
         ? {
             ...row,
             Expences: {
@@ -681,7 +831,7 @@ const handleChange = (
   
       );
     }
-
+ console.log("Check for Data-----",data)
   return (
     <div className="w-full min-h-screen bg-[#f4f7fb] p-3 md:p-6 overflow-x-hidden">
       <div className="flex flex-wrap items-center gap-4 mb-6">
@@ -699,7 +849,7 @@ const handleChange = (
          Process
             </h1>
             <p className="text-sm text-[#64748b]">
-              Payroll Management Dashboard
+              Payroll Management Dashboard/
             </p>
             </div>
           </div>
@@ -711,11 +861,35 @@ onClick={() => router.push("/SubAccountings")}
         </button>
         </div>
         
-        <div className="flex flex-wrap gap-3 w-full justify-end">
+        <div className="flex flex-wrap gap-3 w-full justify-between items-center">
          
+<div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-1.5">
+   <button
+    type="button"
+  onClick={() => setPreviewInfo("OnService Payments")}
+    className={PreviewInfo === "OnService Payments" ? `rounded-md  cursor-pointer px-4 py-2 text-sm font-semibold text-white transition-colors bg-[#117fb8]` : `rounded-md bg-white cursor-pointer px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100`}
+  >
+    OnService Payments
+  </button>
+  <button
+    type="button"
+     onClick={() => setPreviewInfo("Replacement Payments")}
+    className={PreviewInfo === "Replacement Payments" ? `rounded-md  cursor-pointer px-4 py-2 text-sm font-semibold text-white transition-colors bg-[#117fb8]` : `rounded-md bg-white cursor-pointer px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100`}
+  >
+    Replacement Payments
+  </button>
 
-
+  <button
+    type="button"
+        onClick={() => setPreviewInfo("Termination Payments")}
+    className={PreviewInfo === "Termination Payments" ? `rounded-md  cursor-pointer px-4 py-2 text-sm font-semibold text-white transition-colors bg-[#117fb8]` : `rounded-md bg-white cursor-pointer px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100`}
+  >
+    Termination Payments
+  </button>
+</div>
+<div className="flex flex-wrap gap-3 items-center">
           <div className="relative min-w-[250px] flex-1 max-w-[350px]">
+           
             <Search
               size={16}
               className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94a3b8]"
@@ -757,6 +931,7 @@ onClick={() => router.push("/SubAccountings")}
                 </option>
               ))}
             </select>
+          </div>
           </div>
         </div>
       </div>
@@ -1007,7 +1182,7 @@ const totalExpenses =
                       <td className="p-4 text-center font-semibold">{Ind+1}</td>
                  <td className="p-2 md:p-4 text-[10px] sm:text-xs md:text-sm break-words font-semibold">  
 
-  <div className="relative flex gap-2 items-center justify-between w-[100px]  group ">
+  <div className="relative flex gap-2 items-center justify-between w-[110px]  group ">
 
  
 
@@ -1052,7 +1227,7 @@ const totalExpenses =
                       setShowFullMonth(true)
                       setAttendenceInfo(row)
                     }}>
-                    View
+                    View 
                   </button></td>
                   
 
@@ -1074,6 +1249,7 @@ const totalExpenses =
           onChange={(e) =>
             handleChange(
               row.Clientid,
+              row.HCAId,
               amountField as keyof PayrollRow["Expences"],
               e.target.value
             )
@@ -1088,6 +1264,7 @@ const totalExpenses =
           onChange={(e) =>
             handleChange(
               row.Clientid,
+              row.HCAId,
               descField as keyof PayrollRow["Expences"],
               e.target.value
             )
@@ -1140,7 +1317,7 @@ const totalExpenses =
                         {isEditing ? "Save" : "Edit"}
                       </button>
 <select
-defaultValue={row.PaymentVerficationStatus}
+                        value={row.PaymentVerficationStatus}
   className={`px-4 py-2 rounded-xl border border-slate-300 ${row.PaymentVerficationStatus === "Process" ? "bg-pink-300" : "bg-[#22c55e]"} text-sm font-medium shadow-sm focus:outline-none focus:ring-2  ${row.PaymentVerficationStatus === "Process" ? "focus:ring-pink-500" : "focus:ring-[#16a34a]"}`}
   onChange={(e) => {
     UpdatePaymentStatus(row.HCAId,row.Clientid, e.target.value);  
