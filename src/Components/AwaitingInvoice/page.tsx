@@ -267,6 +267,7 @@ const FinelTimeSheet = ClientsInformation.filter((client: any) => {
       HCA_Name: each.HCAName,
       location: each.Address,
       TimeSheet: normalizedAttendance,
+      TerminatedAttendece:each.Attendance,
       PatientName: each.patientName,
       Patient_PhoneNumber: each.patientPhone,
       RreferralName: each.referralName,
@@ -512,6 +513,7 @@ const confirmDelete = async (selectedReason: string) => {
       TerminationInfo.HCAContact,
       TerminationInfo.TimeSheet,
       TerminationInfo.ClientAttendance,
+       TerminationInfo. TerminatedAttendece,
       TerminationInfo.ServiceState
     );
 
