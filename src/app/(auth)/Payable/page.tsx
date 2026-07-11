@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CircleSlash2, CornerUpLeft, Eye, Info, Minimize2, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { GetAllUsersData, PostINPayblePage, PostINRejectionDb, PostINSuccesfulPaymentsDb, UpdateStatusEnable, UpdateStatusEnableinRepleasment } from "@/Lib/user.action";
+import { GetAllUsersData, PostINPayblePage, PostINRejectionDb, PostINSuccesfulPaymentsDb, UpdateStatusEnable, UpdateStatusEnableinRepleasment, UpdateStatusEnableiNTermination } from "@/Lib/user.action";
 import { LoadingData } from "@/Components/Loading/page";
 import { months, years } from "@/Lib/Content";
 import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
@@ -111,7 +111,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
   }, [ActionStatusMessage]);
 
 
-
+console.log ("Check for UserInfo-----",selectedUser)
  const getDaysInMonth = (month: number, year: number) => {
   return new Date(year, month, 0).getDate(); 
 };
@@ -251,7 +251,8 @@ console.log("Check for Payable Data------", filteredPayableData);
 const UpdateRevertStatus = async (
   ClientId: any,
   HCAId: any,
-  Month: any
+  Month: any,
+  ImpDate:any
 ) => {
   try {
     setPopup({
@@ -327,6 +328,41 @@ const UpdateRevertStatus = async (
         });
       }
     }
+      if (userTypeFilter === "Termination") {
+      const result = await UpdateStatusEnableiNTermination(
+        HCAId,
+        ClientId,
+        Month,
+        ImpDate
+      );
+
+      if (result.success) {
+        setPopup({
+          isOpen: true,
+          message: "Revert Status Updated successfully!",
+          type: "success",
+        });
+
+        setPaybleData((prevData) =>
+          prevData.filter(
+            (item) =>
+              !(
+                item.HCAId === HCAId &&
+                item.ClientId === ClientId &&
+                item.Month === Month
+              )
+          )
+        );
+      } else {
+        setPopup({
+          isOpen: true,
+          message:
+            result.message || "Failed to update payment status",
+          type: "error",
+        });
+      }
+    }
+    
   } catch (err) {
     console.error("Error updating revert status:", err);
   }
@@ -526,7 +562,7 @@ setPopup({
 
             <div className="flex flex-col md:flex-row gap-3">
  <div className="inline-flex items-center p-1 bg-slate-100 rounded-xl">
-  {["On Service", "Repleasment"].map((type) => (
+  {["On Service", "Repleasment", "Termination"].map((type) => (
     <button
       key={type}
       onClick={() => setUserTypeFilter(type)}
@@ -1311,7 +1347,7 @@ onClick={() => router.push("/SubAccountings")}
 <td className="px-5 py-5 text-center">
 <button className="inline-flex items-center gap-2 bg-green-600 cursor-pointer hover:shadow-lg text-white px-5 py-2 rounded-xl font-semibold"
 onClick={() => { 
-  UpdateRevertStatus(row.ClientId,row.HCAid,row.Month)
+  UpdateRevertStatus(row.ClientId,row.HCAid,row.Month,row.StartDate)
  }}
 >
                     <CornerUpLeft size={16} />

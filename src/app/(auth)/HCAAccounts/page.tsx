@@ -12,7 +12,7 @@ import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
-import { GetAllUsersData, PostINPayblePage, PostINPayblePageforRepleasments, updateExpense, UpdatePassword, UpdatePaymentVerificationStatusInDb, UpdatePaymentVerificationStatusInReplacementDb } from "@/Lib/user.action";
+import { GetAllUsersData, PostINPayblePage, PostINPayblePageforRepleasments, PostINPayblePageforTermination, updateExpense, UpdatePassword, UpdatePaymentVerificationStatusInDb, UpdatePaymentVerificationStatusInReplacementDb, UpdatePaymentVerificationStatusInTerminationDb } from "@/Lib/user.action";
 import { AssignSuitableIcon, getDaysInMonth, toProperCaseLive } from "@/Lib/Actions";
 import PopupToast from "@/Components/ExpencesPopUp/page";
 import axios from "axios";
@@ -468,8 +468,8 @@ const TerminatedData=TerminationInformation.map((each: any) => {
             absent: 0,
           }
         );
-        const Expenses=getExpenseList(each.HCAId)
-        const Transactions=getTransactions(each.HCAId)
+        const Expenses=getExpenseList(each.HCAid)
+        const Transactions=getTransactions(each.HCAid)
   const MonthlyExpensesInfo =
   Array.isArray(Expenses)
     ? Expenses.find(
@@ -480,6 +480,7 @@ const TerminatedData=TerminationInformation.map((each: any) => {
     ...each,
     Clientid: each.ClientId,
     name: each.HCAName,
+    HCAId:each.HCAid,
     transactions: MonthlyExpensesInfo?.Transactions||[],
     attendanceInfo: each.Attendance,
     PaymentVerficationStatus:each.PaymentVerificationStatus||"Process",
@@ -595,7 +596,7 @@ const NumberOfDaysInMonth = getDaysInMonth(
 );
 console.log("Check Information------",DeployInformation)
 
-const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any)=>{
+const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
   setPopup({
       isOpen: true,
       message: "Please Wait Updating Payment Status...",
@@ -664,7 +665,39 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any)=>{
  return
  
     }
+       if(PreviewInfo==="Termination Payments"){
+   const MonthInfo=`${SearchYear}-${SearchMonth}`
+   console.log ("Check Datap------",HCAId,ClientId,value,Info.StartDate)
+    const UpdatedinDB=await UpdatePaymentVerificationStatusInTerminationDb(HCAId,ClientId,value,Info.StartDate)
+    console.log("Check Updated Payment Status----",UpdatedinDB)
+    if(UpdatedinDB.success){
+      
+      setData((prev) =>
+      prev.map((item) =>
+        item.HCAId === HCAId    ? { ...item, PaymentVerficationStatus: value }
+        : item
+      )
+    ); 
+
+     setPopup({
+        isOpen: true,
+        message: "Payment Status Updated successfully!",
+        type: "success",
+      });
+     }else{
+        setPopup({
+        isOpen: true,
+        message: "Failed to update payment status",
+        type: "error",
+      });
+    }
+
+ return
+ 
+    }
   }
+
+  
 
   const UpdatePayablePage=async(row:any,totalAmount:any)=>{
     try{
@@ -702,6 +735,32 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any)=>{
   }
     if(PreviewInfo==="Replacement Payments"){
       const UpdatedinDB=await PostINPayblePageforRepleasments(row.HCAId,row.ClientId,MonthInfo,row,totalAmount)
+    console.log("Check Updated Payment Status----",UpdatedinDB)
+    if(UpdatedinDB.success){
+      
+      setData((prev) =>
+      prev.map((item) =>
+        item.HCAId ===row. HCAId    ? { ...item, PreviewINPaymentPage: "Disabled" }
+        : item
+      )
+    ); 
+
+     setPopup({
+        isOpen: true,
+        message: UpdatedinDB.message || "Moved to Payable Page successfully!",
+        type: "success",
+      });
+    }else{
+        setPopup({
+        isOpen: true,
+        message: UpdatedinDB.message || "Failed to post payment record",
+        type: "error",
+      });
+    }
+  }
+   if(PreviewInfo==="Termination Payments"){
+      const UpdatedinDB=await PostINPayblePageforTermination(row.HCAId,row.ClientId,MonthInfo,row,totalAmount,row.
+StartDate)
     console.log("Check Updated Payment Status----",UpdatedinDB)
     if(UpdatedinDB.success){
       
@@ -1063,6 +1122,7 @@ onClick={() => router.push("/SubAccountings")}
   <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-2">
     <div className="bg-white w-[70vw] h-[96vh] rounded-xl shadow-xl overflow-hidden flex flex-col">
       {(() => {
+        console.log("Check for Attendece Summery------",attendanceInfo)
         const attendanceSummary = attendanceInfo.attendanceInfo?.reduce(
           (acc: any, att: any) => {
             const hcp = att.HCPAttendence === true;
@@ -1275,13 +1335,14 @@ const HCPPayment:any=GetHCPPayment(row.HCAId)||0
               const isEditing = editingRowId === row.HCAId;
               const MinusItems=Number(row.Expences.advance)+Number(row.Expences.hostel)+Number(row.Expences.other)
               const Additems=Number(row.Expences.others)+Number(row.Expences.incentives)
+              
          const dailyPayment = formatCurrency(
   HCPPayment / getDaysInMonth(SearchMonth,SearchYear),
   PresentDays,
   HalfDays,
   0
 );
-
+const TDSAmount=dailyPayment*1/100
 const totalExpenses =
   Number(row.Expences?.advance || 0) +
   Number(row.Expences?.hostel || 0) +
@@ -1430,7 +1491,7 @@ const totalExpenses =
                         value={row.PaymentVerficationStatus}
   className={`px-4 py-2 rounded-xl border border-slate-300 ${row.PaymentVerficationStatus === "Process" ? "bg-pink-300" : "bg-[#22c55e]"} text-sm font-medium shadow-sm focus:outline-none focus:ring-2  ${row.PaymentVerficationStatus === "Process" ? "focus:ring-pink-500" : "focus:ring-[#16a34a]"}`}
   onChange={(e) => {
-    UpdatePaymentStatus(row.HCAId,row.Clientid, e.target.value);  
+    UpdatePaymentStatus(row.HCAId,row.Clientid, e.target.value,row);  
   }}
 >
   <option value="Process" >
@@ -1444,7 +1505,7 @@ const totalExpenses =
                      disabled={row.PaymentVerficationStatus==="Process"}
                         className={`h-10 px-3 flex items-center  justify-center gap-2 rounded-xl ${row.PaymentVerficationStatus === "Process" ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-600 cursor-pointer"} text-white text-sm font-medium`}
                         onClick={() => {
-                          UpdatePayablePage(row,(formatCurrency(HCPPayment/ getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)+Additems-MinusItems))
+                          UpdatePayablePage(row,(formatCurrency(HCPPayment/ getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)+Additems-MinusItems-TDSAmount))
                         }}
                       >
                         Pay 
