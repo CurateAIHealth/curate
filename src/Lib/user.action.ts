@@ -3152,13 +3152,14 @@ export const UpdateReplacmentData = async (
    const currentHour = new Date().getHours();
 
 const attendanceEntry = {
+  dateKey: new Date().toISOString().split("T")[0],
   AttendenceDate: new Date(),
   HCPAttendence: currentHour >= 14,
   AdminAttendece: true,
   UpdatedAt: new Date(),
   UpdatedBy: UpdatedBy || "",
   Replacement: true,
-  dateKey: new Date().toISOString().split("T")[0],
+  
 };
 
 
@@ -3178,10 +3179,37 @@ const attendanceEntry = {
       };
 
    
-    const updatedAttendance = Array.isArray(existingInfo.Attendance)
-      ? [...existingInfo.Attendance, attendanceEntry]
-      : [attendanceEntry];
+    // const updatedAttendance = Array.isArray(existingInfo.Attendance)
+    //   ? [...existingInfo.Attendance, attendanceEntry]
+    //   : [attendanceEntry];
 
+
+const updatedAttendance = Array.isArray(existingInfo.Attendance)
+  ? (() => {
+      const attendance = [...existingInfo.Attendance];
+
+      const index = attendance.findIndex((item) => {
+        const itemDate =
+          item.dateKey ||
+          new Date(item.AttendenceDate).toISOString().split("T")[0];
+
+        return itemDate === attendanceEntry.dateKey;
+      });
+
+      if (index !== -1) {
+        // Update existing attendance for the same date
+        attendance[index] = {
+          ...attendance[index],
+          ...attendanceEntry,
+        };
+      } else {
+        // Add new attendance
+        attendance.push(attendanceEntry);
+      }
+
+      return attendance;
+    })()
+  : [attendanceEntry];
    
     const replacementData = {
       ...existingInfo,
@@ -3210,7 +3238,7 @@ const attendanceEntry = {
           ReplacementDate: new Date(ReplacementDate).toISOString().split("T")[0],
           // CareTakerPrice:Available_HCP.CareTakerPrice,
           Replacement:true,
-          Attendance: [attendanceEntry],
+          Attendance:updatedAttendance,
           ClientAttendance:[ClientattendanceEntry]
         // },$push: {
         // Attendance: attendanceEntry   
@@ -4815,6 +4843,72 @@ export const UpdatePaymentVerificationStatusInReplacementDb = async (
     };
   }
 };
+export const UpdatePaymentVerificationStatusInTerminationDb = async (
+  HCAId: string,
+  ClientId: string,
+  value: string,
+  MonthInfo: string
+) => {
+  try {
+    
+    if (!HCAId || !ClientId || !MonthInfo) {
+      return {
+        success: false,
+        message: "Missing required parameters",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Termination");
+
+    const result = await collection.updateOne(
+      {
+       ClientId: ClientId,
+        HCAid:HCAId,
+        StartDate: MonthInfo,
+      },
+      {
+        $set: {
+          PaymentVerificationStatus: value,
+          UpdatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Deployment record not found",
+      };
+    }
+
+    return {
+      success: true,
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount,
+      message:
+        result.modifiedCount > 0
+          ? "Payment verification status updated successfully"
+          : "No changes were required",
+    };
+  } catch (error) {
+    console.error(
+      "UpdatePaymentVerificationStatusInDb Error:",
+      {
+        HCAId,
+        ClientId,
+        MonthInfo,
+        error,
+      }
+    );
+
+    return {
+      success: false,
+      message: "Failed to update payment verification status",
+    };
+  }
+};
 export const PostINPayblePage = async (
   HCAId: string,
   ClientId: string,
@@ -5029,6 +5123,126 @@ const { _id, ...payableData } = ImpData;
       HCAId,
       Month: MonthInfo,
       PaymentType:"Repleasment",
+      CreatedAt: new Date(),
+      UpdatedAt: new Date(),
+    });
+
+    return {
+      success: true,
+       insertedId: insertResult.insertedId.toString(),
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount,
+      message:existingPayable?"Status Updated: Payable Information already exists for this HCA":"Payable page created successfully",
+    };
+  } catch (error) {
+    console.error("PostINPayblePage Error:", error);
+
+    return {
+      success: false,
+      message: "Failed to create payable page",
+    };
+  }
+};
+export const PostINPayblePageforTermination = async (
+  HCAId: string,
+  ClientId: string,
+  MonthInfo: string,
+  ImpData: any,
+  GrandTotal:any,
+  ImpStartDate:any
+) => {
+  try {
+   
+    if (!HCAId || !ClientId || !MonthInfo || !ImpData) {
+      return {
+        success: false,
+        message: "Missing required parameters",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const deploymentCollection = db.collection("Termination");
+    const payableCollection = db.collection("PayableINPaymentPage");
+
+    const existingPayable = await payableCollection.findOne({
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+    });
+
+ if (existingPayable) {
+  const { _id, ...updateData } = ImpData;
+
+  const updateResult = await payableCollection.updateOne(
+    {
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+    },
+    {
+      $set: {
+        ...updateData,
+        GrandTotalAmount: GrandTotal,
+        UpdatedAt: new Date(),
+      },
+    }
+  );
+
+  await deploymentCollection.updateOne(
+    {
+      
+ClientId:ClientId,
+     
+HCAid: HCAId,
+      StartDate: ImpStartDate,
+    },
+    {
+      $set: {
+        PreviewINPaymentPage: "Disabled",
+        UpdatedAt: new Date(),
+      },
+    }
+  );
+
+  return {
+    success: true,
+    matchedCount: updateResult.matchedCount,
+    modifiedCount: updateResult.modifiedCount,
+    message: "Status Updated: Payable Information already exists for this HCA",
+  };
+}
+
+    const result = await deploymentCollection.updateOne(
+      {
+        ClientId:ClientId,
+     HCAid: HCAId,
+      StartDate: ImpStartDate,
+      },
+      {
+        $set: {
+          PreviewINPaymentPage: "Disabled",
+          UpdatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Deployment record not found",
+      };
+    }
+const { _id, ...payableData } = ImpData;
+   
+    const insertResult = await payableCollection.insertOne({
+      ...payableData,
+       GrandTotalAmount: GrandTotal,
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+      PaymentType:"Termination",
       CreatedAt: new Date(),
       UpdatedAt: new Date(),
     });
@@ -5359,6 +5573,76 @@ export const UpdateStatusEnableinRepleasment = async (
 
     // Update deployment status
     const updateResult = await deploymentCollection.updateOne(filter, {
+      $set: {
+        PreviewINPaymentPage: "Enable",
+        UpdatedAt: new Date(),
+      },
+    });
+
+    if (updateResult.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Deployment record not found",
+      };
+    }
+
+    const deleteResult = await payableCollection.deleteMany(filter);
+
+    return {
+      success: true,
+      matchedCount: updateResult.matchedCount,
+      modifiedCount: updateResult.modifiedCount,
+      deletedCount: deleteResult.deletedCount,
+      message: "Status enabled successfully",
+    };
+  } catch (error: any) {
+    console.error("UpdateStatusEnable Error:", {
+      message: error?.message,
+      stack: error?.stack,
+      HCAId,
+      ClientId,
+      MonthInfo,
+    });
+
+    return {
+      success: false,
+      message: "Failed to enable status",
+    };
+  }
+};
+export const UpdateStatusEnableiNTermination = async (
+  HCAId: string,
+  ClientId: string,
+  MonthInfo: string,
+  ImpDate:any
+) => {
+  try {
+   
+    if (!HCAId?.trim() || !ClientId?.trim() || !MonthInfo?.trim()) {
+      return {
+        success: false,
+        message: "Missing required parameters",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const deploymentCollection = db.collection("Termination");
+    const payableCollection = db.collection("PayableINPaymentPage");
+
+    const filter = {
+      ClientId,
+      HCAId,
+      Month: MonthInfo,
+    };
+
+    // Update deployment status
+    const updateResult = await deploymentCollection.updateOne(  {
+        ClientId:ClientId,
+     HCAid: HCAId,
+      StartDate: ImpDate,
+      }, {
       $set: {
         PreviewINPaymentPage: "Enable",
         UpdatedAt: new Date(),
