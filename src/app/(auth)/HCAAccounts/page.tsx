@@ -1337,7 +1337,7 @@ const HCPPayment:any=GetHCPPayment(row.HCAId)||0
               const Additems=Number(row.Expences.others)+Number(row.Expences.incentives)
               
          const dailyPayment = formatCurrency(
-  HCPPayment / getDaysInMonth(SearchMonth,SearchYear),
+  Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),
   PresentDays,
   HalfDays,
   0
@@ -1404,9 +1404,61 @@ const totalExpenses =
 
  
 
-                  <td className="p-4">{formatCurrency(HCPPayment/getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)}</td>
+                 
+
+<td className="p-4">
+  <div className="flex items-center gap-2">
+    <span>
+      {formatCurrency(
+        Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),
+        PresentDays,
+        HalfDays,
+        0
+      )}
+    </span>
+
+    <div className="relative group">
+      <Info
+        size={16}
+        className="text-blue-500 cursor-pointer hover:text-blue-600"
+      />
+
+      <div className="absolute left-6 top-1/2 -translate-y-1/2 z-50 hidden w-64 rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700 shadow-lg group-hover:block">
+  <p className="font-semibold mb-2"> {row.name}Payment Info</p>
+
+  <p className="mt-2">
+    <span className="font-medium">Per Day:</span>{" "}
+    {
+      Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear)))
+    }
+  </p>
+    <p>
+    <span className="font-medium">Present Days:</span>{" "}
+    {
+      PresentDays
+    }
+  </p>
+    <p>
+    <span className="font-medium">Half Days:</span>{" "}
+    {
+    HalfDays
+    }
+  </p>
+   <p>
+    <span className="font-medium">Total Payment:</span>{" "}
+     {formatCurrency(
+        Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),
+        PresentDays,
+        HalfDays,
+        0
+      )}
+  </p>
+</div>
+    </div>
+  </div>
+</td>
                     <td className="w-[60px] px-4 py-3">
-                 {formatCurrency(HCPPayment/getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)*1/100}
+                 {formatCurrency(Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),PresentDays,HalfDays,0)*1/100}
                  </td>
 
   {fields.map(([amountField, descField, label]) => (
@@ -1505,7 +1557,7 @@ const totalExpenses =
                      disabled={row.PaymentVerficationStatus==="Process"}
                         className={`h-10 px-3 flex items-center  justify-center gap-2 rounded-xl ${row.PaymentVerficationStatus === "Process" ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-600 cursor-pointer"} text-white text-sm font-medium`}
                         onClick={() => {
-                          UpdatePayablePage(row,(formatCurrency(HCPPayment/ getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)+Additems-MinusItems-TDSAmount))
+                          UpdatePayablePage(row,(formatCurrency(Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),PresentDays,HalfDays,0)+Additems-MinusItems-TDSAmount))
                         }}
                       >
                         Pay 
@@ -1514,7 +1566,7 @@ const totalExpenses =
                   </td>
 
                   <td className="p-4 font-bold">
-                    {formatCurrency(HCPPayment/ getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)+Additems-MinusItems-formatCurrency(HCPPayment/getDaysInMonth(SearchMonth,SearchYear),PresentDays,HalfDays,0)*1/100}
+                    {formatCurrency(Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),PresentDays,HalfDays,0)+Additems-MinusItems-formatCurrency(Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),PresentDays,HalfDays,0)*1/100}
                   </td>
 
                   <td className="p-4 font-bold text-center">
