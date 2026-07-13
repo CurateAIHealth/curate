@@ -89,20 +89,28 @@ const ClientsInformation=useSelector((state:any)=>state.AdminDeployment)
      const dispatch = useDispatch();
     const [data, setData] = useState<any[]>([])
 
- 
+  // debug lengths
+  console.log("check users Length----", {
+    usersLength: users?.length,
+    registeredUsersLength: RegisterdUsers?.length,
+    clientsLength: ClientsInformation?.length,
+  });
+
   useEffect(() => {
-     if (
-      users?.length === 0 &&
-      RegisterdUsers?.length === 0 &&
-      ClientsInformation?.length === 0
-    ) {
+    // ensure we react to changes in these values and avoid false negatives when undefined
+    const uLen = users?.length ?? 0;
+    const rLen = RegisterdUsers?.length ?? 0;
+    const cLen = ClientsInformation?.length ?? 0;
+
+    if (uLen === 0 && rLen === 0 && cLen === 0) {
       router.push("/");
+      return;
     }
+
     if (loggedInEmail === "") {
       router.push("/DashBoard");
     }
-   
-  }, [ActionStatusMessage]);
+  }, [router, users, RegisterdUsers, ClientsInformation, loggedInEmail]);
   const matchesSearchAndMonth = (
   item: any,
   searchText: string,
