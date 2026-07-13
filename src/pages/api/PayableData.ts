@@ -1,5 +1,5 @@
 
-import { GetAllUsersData } from "@/Lib/auth";
+import { GetPayableData } from "@/Lib/auth";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(
@@ -16,19 +16,9 @@ export default async function handler(
   }
 
   try {
-    console.log("API REQUEST START", Date.now());
-
-    console.time("GetApplicationData");
-    const data = await GetAllUsersData()
+ const data = await GetPayableData()
     console.timeEnd("GetApplicationData");
-
-    console.log("deploymentInfo:", data?.deploymentInfo?.length || 0);
-    console.log("registeredUsers:", data?.registeredUsers?.length || 0);
-    console.log("usersFullInfo:", data?.usersFullInfo?.length || 0);
-
-    console.log("API REQUEST END", Date.now());
-
-    return res.status(200).json({
+return res.status(200).json({
       success: true,
       data,
     });

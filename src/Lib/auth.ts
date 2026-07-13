@@ -307,6 +307,8 @@ export const GetApplicationData = async () => {
 };
 
 
+
+
 export const UpdateDeploymentStatus = async (
   userId: string,
   HCPId: any,
@@ -521,6 +523,122 @@ export const GetAllUsersData = async () => {
       replacementInfo,
       terminationInfo,
       ExportedPayableData
+    };
+
+    // ✅ Save cache
+    cache = result;
+    lastFetchTime = now;
+
+    return result;
+  } catch (err) {
+    console.error("Error fetching all data:", err);
+    return {
+      RegisterdUsers: [],
+      usersResult: [],
+      placementInfo: [],
+      replacementInfo: [],
+      terminationInfo: [],
+    };
+  }
+};
+export const GetPayableData = async () => {
+  try {
+    const now = Date.now();
+    if (cache && now - lastFetchTime < 30 * 60 * 1000) {
+      return cache;
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const PayableCollection = db.collection("PayableINPaymentPage");
+
+const [
+     PayableData
+    ] = await Promise.all([
+    
+      PayableCollection.find().toArray(),
+    ]);
+const mapIds = (data: any[]) =>
+      data.map((item) => ({
+        ...item,
+        _id: item._id.toString(),
+      }));
+
+    const [
+      ExportedPayableData
+    ] = await Promise.all([
+     
+      Promise.resolve(mapIds(PayableData))
+    ]);
+
+    const result = {
+      ExportedPayableData
+    };
+
+   
+    cache = result;
+    lastFetchTime = now;
+
+    return result;
+  } catch (err) {
+    console.error("Error fetching all data:", err);
+    return {
+      RegisterdUsers: [],
+      usersResult: [],
+      placementInfo: [],
+      replacementInfo: [],
+      terminationInfo: [],
+    };
+  }
+};
+export const GetReplasmentandTerminationData = async () => {
+  try {
+    const now = Date.now();
+    if (cache && now - lastFetchTime < 30 * 60 * 1000) {
+      return cache;
+    }
+const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+const replacementCollection = db.collection("Replacement");
+    const terminationCollection = db.collection("Termination");
+const [
+     replacementResult,
+      terminationResult,
+] = await Promise.all([
+   
+      replacementCollection.find().toArray(),
+      terminationCollection.find().toArray(),
+  
+    ]);
+
+
+
+   
+
+    const mapIds = (data: any[]) =>
+      data.map((item) => ({
+        ...item,
+        _id: item._id.toString(),
+      }));
+
+    const [
+  
+      replacementInfo,
+      terminationInfo,
+
+    ] = await Promise.all([
+   
+
+      Promise.resolve(mapIds(replacementResult)),
+      Promise.resolve(mapIds(terminationResult)),
+    
+    ]);
+
+    const result = {
+    
+      replacementInfo,
+      terminationInfo,
+     
     };
 
     // ✅ Save cache

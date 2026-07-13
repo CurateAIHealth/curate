@@ -1,8 +1,5 @@
 "use client";
-let cachedUsersFullInfo: any[] = [];
-let cachedDeploymentInfo: any[] = [];
 
-let cachedRegisterdUsers: any[] = [];
 let cachedPayableData:any[]=[]
 type User = any;
 type Deployment = any;
@@ -35,10 +32,13 @@ const [ShowRejectPopup,setShowRejectPopup]=useState(false)
 const [RejectionReason,SetRejectionReason]=useState("") 
 const [NeftTransactionNumber,setNeftTransactionNumber]=useState("")
   const [search, setSearch] = useState("");
-  const [ClientsInformation, setClientsInformation] = useState<Deployment[]>([]);
+
   const [paybleData,setPaybleData]=useState<any[]>([])
-      const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
-        const [users, setUsers] = useState<User[]>([]);
+   
+     
+        const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
+        const users=useSelector((state:any)=>state.AdminFullInfo)
+        const ClientsInformation=useSelector((state:any)=>state.AdminDeployment)
 const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [ActionStatusMessage,SetActionStatusMessage]= useState<any>("");
    const [isChecking, setIsChecking] = useState(true);
@@ -48,7 +48,13 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
   const router=useRouter()
   const dispatch=useDispatch()
   useEffect(() => {
-   
+    if (
+    users?.length === 0 &&
+    RegisterdUsers?.length === 0 &&
+    ClientsInformation?.length === 0
+  ) {
+    router.push("/");
+  }
     let mounted = true;
   
     const isSuccessUpdate = ActionStatusMessage?.includes("Successfully");
@@ -58,23 +64,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
 
         setIsChecking(true);
    
-      
-  
-        // const [
-        //   RegisterdUsers,
-        //   usersResult,
-        //   placementInfo,
-        //   replacementInfo,
-        //   terminationInfo,
-        // ] = await Promise.all([
-        //    GetRegidterdUsers() ,
-        //   GetUsersFullInfo(),
-        //   GetDeploymentInfo(),
-        //   GetReplacementInfo(),
-        //   GetTerminationInfo(),
-        // ]);
-   
-     const { data } = await axios.get("/api/PayableData");
+const { data } = await axios.get("/api/PayableData");
       console.log("Check Deployment Data------",data.data)
       const {
   RegisterdUsers,
@@ -85,15 +75,8 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
   ExportedPayableData,
 } = data.data;
         if (!mounted) return;
-  
-        cachedUsersFullInfo = usersResult ?? [];
-        cachedDeploymentInfo = placementInfo ?? [];
    cachedPayableData=ExportedPayableData??[]
-      cachedRegisterdUsers=RegisterdUsers??[]
-        setUsers([...cachedUsersFullInfo]);
-        setClientsInformation([...cachedDeploymentInfo]);
-   setPaybleData([...cachedPayableData])
-         setRegisterdUsers([...cachedRegisterdUsers])
+setPaybleData([...cachedPayableData])
   
       
       } catch (err) {

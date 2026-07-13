@@ -74,171 +74,34 @@ const [showFullMonth,setShowFullMonth]=useState(false)
   const SearchMonth = useSelector((state: any) => state.FilterMonth);
   const SearchYear = useSelector((state: any) => state.FilterYear);
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
-  const [ClientsInformation, setClientsInformation] = useState<Deployment[]>([]);
-      const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
+const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
+const users=useSelector((state:any)=>state.AdminFullInfo)
+const ClientsInformation=useSelector((state:any)=>state.AdminDeployment)
+
       const[PreviewInfo,setPreviewInfo]=useState<any>("OnService Payments")
       const [ReplacementInformation, setReplacementInformation] = useState<Replace[]>([]);
       const [TerminationInformation, setTerminationInformation] = useState<Termination[]>([]);
-        const [users, setUsers] = useState<User[]>([]);
+   
    const [ActionStatusMessage,SetActionStatusMessage]= useState<any>("");
-    const [isChecking, setIsChecking] = useState(true);
+    const [isChecking, setIsChecking] = useState(false);
    const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
    const router=useRouter()
      const dispatch = useDispatch();
     const [data, setData] = useState<any[]>([])
 
-  // const [data, setData] = useState<PayrollRow[]>([
-  //   {
-  //     id: 1,
-  //     name: "Srinivas",
-  //     payment: 10000,
-  //     advance: 2000,
-  //     hostel: 1000,
-  //     other: 500,
-  //     incentives: 1000,
-  //     others: 300,
-  //     advanceDescription: "",
-  //     hostelDescription: "",
-  //     otherDescription: "",
-  //     incentivesDescription: "",
-  //     othersDescription: "",
-  //     transactions: [],
-  //   },
-  //   {
-  //     id: 2,
-  //     name: "Ramesh Kumar",
-  //     payment: 14500,
-  //     advance: 1500,
-  //     hostel: 900,
-  //     other: 400,
-  //     incentives: 1200,
-  //     others: 600,
-  //     advanceDescription: "",
-  //     hostelDescription: "",
-  //     otherDescription: "",
-  //     incentivesDescription: "",
-  //     othersDescription: "",
-  //     transactions: [],
-  //   },
-  //   {
-  //     id: 3,
-  //     name: "Anitha Devi",
-  //     payment: 12000,
-  //     advance: 1000,
-  //     hostel: 700,
-  //     other: 300,
-  //     incentives: 900,
-  //     others: 400,
-  //     advanceDescription: "",
-  //     hostelDescription: "",
-  //     otherDescription: "",
-  //     incentivesDescription: "",
-  //     othersDescription: "",
-  //     transactions: [],
-  //   },
-  //   {
-  //     id: 4,
-  //     name: "Kiran Reddy",
-  //     payment: 18000,
-  //     advance: 2500,
-  //     hostel: 1500,
-  //     other: 1000,
-  //     incentives: 2000,
-  //     others: 900,
-  //     advanceDescription: "",
-  //     hostelDescription: "",
-  //     otherDescription: "",
-  //     incentivesDescription: "",
-  //     othersDescription: "",
-  //     transactions: [],
-  //   },
-  //   {
-  //     id: 5,
-  //     name: "Mahesh",
-  //     payment: 16000,
-  //     advance: 1800,
-  //     hostel: 1200,
-  //     other: 700,
-  //     incentives: 1700,
-  //     others: 500,
-  //     advanceDescription: "",
-  //     hostelDescription: "",
-  //     otherDescription: "",
-  //     incentivesDescription: "",
-  //     othersDescription: "",
-  //     transactions: [],
-  //   },
-  // ]);
-
+ 
   useEffect(() => {
     if(loggedInEmail===""){
       router.push("/DashBoard")
     }
-    let mounted = true;
-  
-    const isSuccessUpdate = ActionStatusMessage?.includes("Successfully");
-  
-    const fetchData = async () => {
-      try {
-
-        setIsChecking(true);
-   
-        if (!isSuccessUpdate && cachedDeploymentInfo?.length > 0) {
-          setUsers([...cachedUsersFullInfo]);
-          setClientsInformation([...cachedDeploymentInfo]);
-          setRegisterdUsers([...cachedRegisterdUsers])
-          setReplacementInformation([...cachedReplacementInfo]);
-          setTerminationInformation([...cachedTerminationInfo]);
-          return;
-        }
-  
-        // const [
-        //   RegisterdUsers,
-        //   usersResult,
-        //   placementInfo,
-        //   replacementInfo,
-        //   terminationInfo,
-        // ] = await Promise.all([
-        //    GetRegidterdUsers() ,
-        //   GetUsersFullInfo(),
-        //   GetDeploymentInfo(),
-        //   GetReplacementInfo(),
-        //   GetTerminationInfo(),
-        // ]);
-        const {
-    RegisterdUsers,
-    usersResult,
-    placementInfo,
-    replacementInfo,
-    terminationInfo,
-  } = await GetAllUsersData();
-  
-        if (!mounted) return;
-  
-        cachedUsersFullInfo = usersResult ?? [];
-        cachedDeploymentInfo = placementInfo ?? [];
-        cachedReplacementInfo = replacementInfo ?? [];
-        cachedTerminationInfo = terminationInfo ?? [];
-        cachedRegisterdUsers=RegisterdUsers??[]
-        setUsers([...cachedUsersFullInfo]);
-        setClientsInformation([...cachedDeploymentInfo]);
-        setReplacementInformation([...cachedReplacementInfo]);
-        setTerminationInformation([...cachedTerminationInfo]);
-        setRegisterdUsers([...cachedRegisterdUsers])
-
-      
-      } catch (err) {
-        console.error(err);
-      } finally {
-        if (mounted) setIsChecking(false);
-      }
-    };
-  
-    fetchData();
-  
-    return () => {
-      mounted = false;
-    };
+ if (
+    users?.length === 0 &&
+    RegisterdUsers?.length === 0 &&
+    ClientsInformation?.length === 0
+  ) {
+    router.push("/");
+  }
+ 
   }, [ActionStatusMessage]);
   const matchesSearchAndMonth = (
   item: any,
@@ -559,6 +422,25 @@ console.log("Checek-----",ReplasementAttendece)
 //   };
 // });
 // console.log("Check Replacementinformation----",ReplacementAttendenceinformation)
+
+
+const UpdatePreviewInfo=async(SwitchValue:any)=>{
+try{
+  setIsChecking(true)
+  const getReplasmentandTerminationData= await axios.get("api/Replacmentterminationinfo")
+  const {
+replacementInfo,
+terminationInfo
+  }=getReplasmentandTerminationData.data.data
+  setReplacementInformation(replacementInfo)
+  setTerminationInformation(terminationInfo)
+   setIsChecking(false)
+
+setPreviewInfo(SwitchValue)
+}catch(err:any){
+  
+}
+}
 useEffect(() => {
   let sourceData: any[] = [];
 
@@ -1035,14 +917,14 @@ onClick={() => router.push("/SubAccountings")}
 <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-1.5">
    <button
     type="button"
-  onClick={() => setPreviewInfo("OnService Payments")}
+  onClick={() => UpdatePreviewInfo("OnService Payments")}
     className={PreviewInfo === "OnService Payments" ? `rounded-md  cursor-pointer px-4 py-2 text-sm font-semibold text-white transition-colors bg-[#117fb8]` : `rounded-md bg-white cursor-pointer px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100`}
   >
     OnService Payments
   </button>
   <button
     type="button"
-     onClick={() => setPreviewInfo("Replacement Payments")}
+     onClick={() => UpdatePreviewInfo("Replacement Payments")}
     className={PreviewInfo === "Replacement Payments" ? `rounded-md  cursor-pointer px-4 py-2 text-sm font-semibold text-white transition-colors bg-[#117fb8]` : `rounded-md bg-white cursor-pointer px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100`}
   >
     Replacement Payments
