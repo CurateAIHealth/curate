@@ -543,115 +543,55 @@ export const GetAllUsersData = async () => {
 };
 export const GetPayableData = async () => {
   try {
-    const now = Date.now();
-    if (cache && now - lastFetchTime < 30 * 60 * 1000) {
-      return cache;
-    }
-
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const PayableCollection = db.collection("PayableINPaymentPage");
 
-const [
-     PayableData
-    ] = await Promise.all([
-    
-      PayableCollection.find().toArray(),
-    ]);
-const mapIds = (data: any[]) =>
-      data.map((item) => ({
-        ...item,
-        _id: item._id.toString(),
-      }));
+    const PayableData = await PayableCollection.find({}).toArray();
 
-    const [
-      ExportedPayableData
-    ] = await Promise.all([
-     
-      Promise.resolve(mapIds(PayableData))
-    ]);
+    const ExportedPayableData = PayableData.map((item: any) => ({
+      ...item,
+      _id: item._id.toString(),
+    }));
 
-    const result = {
-      ExportedPayableData
-    };
-
-   
-    cache = result;
-    lastFetchTime = now;
-
-    return result;
-  } catch (err) {
-    console.error("Error fetching all data:", err);
     return {
-      RegisterdUsers: [],
-      usersResult: [],
-      placementInfo: [],
-      replacementInfo: [],
-      terminationInfo: [],
+      ExportedPayableData,
+    };
+  } catch (err) {
+    console.error("Error fetching payable data:", err);
+
+    return {
+      ExportedPayableData: [],
     };
   }
 };
 export const GetReplasmentandTerminationData = async () => {
   try {
-    const now = Date.now();
-    if (cache && now - lastFetchTime < 30 * 60 * 1000) {
-      return cache;
-    }
-const cluster = await clientPromise;
+    const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
-const replacementCollection = db.collection("Replacement");
+
+    const replacementCollection = db.collection("Replacement");
     const terminationCollection = db.collection("Termination");
-const [
-     replacementResult,
-      terminationResult,
-] = await Promise.all([
-   
-      replacementCollection.find().toArray(),
-      terminationCollection.find().toArray(),
-  
+
+    const [replacementResult, terminationResult] = await Promise.all([
+      replacementCollection.find({}).toArray(),
+      terminationCollection.find({}).toArray(),
     ]);
 
-
-
-   
-
-    const mapIds = (data: any[]) =>
+    const mapIds = (data: any[] = []) =>
       data.map((item) => ({
         ...item,
-        _id: item._id.toString(),
+        _id: item?._id?.toString?.() ?? "",
       }));
 
-    const [
-  
-      replacementInfo,
-      terminationInfo,
-
-    ] = await Promise.all([
-   
-
-      Promise.resolve(mapIds(replacementResult)),
-      Promise.resolve(mapIds(terminationResult)),
-    
-    ]);
-
-    const result = {
-    
-      replacementInfo,
-      terminationInfo,
-     
-    };
-
-    // ✅ Save cache
-    cache = result;
-    lastFetchTime = now;
-
-    return result;
-  } catch (err) {
-    console.error("Error fetching all data:", err);
     return {
-      RegisterdUsers: [],
-      usersResult: [],
-      placementInfo: [],
+      replacementInfo: mapIds(replacementResult),
+      terminationInfo: mapIds(terminationResult),
+    };
+  } catch (error) {
+    console.error("GetReplasmentandTerminationData Error:", error);
+
+    return {
       replacementInfo: [],
       terminationInfo: [],
     };
@@ -807,7 +747,7 @@ export const GetDashboardData = async (
       };
     }
 
-    const CACHE_TIME = 10 * 60 * 1000;
+    const CACHE_TIME = 7 * 60 * 1000;
     const now = Date.now();
 
     const cluster = await clientPromise;

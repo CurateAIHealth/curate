@@ -109,7 +109,7 @@ useEffect(() => {
       if (StaffEmails.includes(email)) {
         dispatch(CurrentLoginUser(profile.Email));
 
-        
+        // Check memory cache
         const cached = dashboardCache.get(userId);
 
         if (
@@ -136,11 +136,11 @@ useEffect(() => {
           setLoadingProgress(100);
           setLoadingMessage("Redirecting...");
 
-          router.push("/DashBoard");
+          router.replace("/DashBoard");
           return;
         }
 
-        // Cache missing or expired — fetch fresh data
+      
         setLoadingProgress(75);
         setLoadingMessage("Loading dashboard...");
 
@@ -183,11 +183,18 @@ useEffect(() => {
         );
 
         if (!isMounted) return;
-router.push("/DashBoard");
+
         setLoadingProgress(100);
         setLoadingMessage("Redirecting...");
 
-        
+        try {
+           router.push("/DashBoard");
+        } catch (error) {
+          console.error("Navigation error:", error);
+          if (isMounted) {
+            window.location.href = "/DashBoard";
+          }
+        }
         return;
       }
 

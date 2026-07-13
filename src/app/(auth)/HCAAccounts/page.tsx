@@ -57,6 +57,7 @@ type Deployment = any;
 type Replace = any;
 type Termination=any;
 export default function HCAPayrollTable() {
+  
   const [search, setSearch] = useState("");
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const [selectedTransactions, setSelectedTransactions] =
@@ -91,21 +92,6 @@ const ClientsInformation=useSelector((state:any)=>state.AdminDeployment)
 
 
 
-  useEffect(() => {
-    // ensure we react to changes in these values and avoid false negatives when undefined
-    const uLen = users?.length ?? 0;
-    const rLen = RegisterdUsers?.length ?? 0;
-    const cLen = ClientsInformation?.length ?? 0;
-console.log("check users Length----",uLen === 0 && rLen === 0 && cLen === 0)
-    if (uLen === 0 && rLen === 0 && cLen === 0) {
-      router.push("/SubAccountings");
-      return;
-    }
-
-    if (loggedInEmail === "") {
-      router.push("/DashBoard");
-    }
-  }, [router, users, RegisterdUsers, ClientsInformation, loggedInEmail]);
   const matchesSearchAndMonth = (
   item: any,
   searchText: string,
@@ -313,7 +299,8 @@ const ReplasementAttendece=ReplacementInformation.map((each: any) => {
   };
 });
 const TerminatedData=TerminationInformation.map((each: any) => {
-     const attendanceSummary = each.Attendance||[].reduce(
+
+     const attendanceSummary = (each.Attendence || []).reduce(
           (acc: any, att: any) => {
             const hcp = att.HCPAttendence === true;
             const admin = att.AdminAttendece === true;
@@ -325,15 +312,16 @@ const TerminatedData=TerminationInformation.map((each: any) => {
             } else {
               acc.absent += 1;
             }
-
+  
             return acc;
           },
           {
-            present: 0,
+           present: 0,
             halfDay: 0,
             absent: 0,
           }
         );
+        console.log ("check Attendece Summery-----",attendanceSummary)
         const Expenses=getExpenseList(each.HCAid)
         const Transactions=getTransactions(each.HCAid)
   const MonthlyExpensesInfo =
@@ -348,7 +336,7 @@ const TerminatedData=TerminationInformation.map((each: any) => {
     name: each.HCAName,
     HCAId:each.HCAid,
     transactions: MonthlyExpensesInfo?.Transactions||[],
-    attendanceInfo: each.Attendance,
+    attendanceInfo: each.Attendence,
     PaymentVerficationStatus:each.PaymentVerificationStatus||"Process",
     CompliteAttendeceSummery: attendanceSummary,
     PreviewINPaymentPage:each.PreviewINPaymentPage||"Enabled",
@@ -859,7 +847,18 @@ onClick={() => router.push("/SubAccountings")}
 <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-1.5">
    <button
     type="button"
-  onClick={() => UpdatePreviewInfo("OnService Payments")}
+ onClick={() => {
+  if (
+    users?.length === 0 &&
+    RegisterdUsers?.length === 0 &&
+    ClientsInformation?.length === 0
+  ) {
+    router.push("/");
+    return;
+  }
+
+  setPreviewInfo("OnService Payments");
+}}
     className={PreviewInfo === "OnService Payments" ? `rounded-md  cursor-pointer px-4 py-2 text-sm font-semibold text-white transition-colors bg-[#117fb8]` : `rounded-md bg-white cursor-pointer px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100`}
   >
     OnService Payments
@@ -874,7 +873,7 @@ onClick={() => router.push("/SubAccountings")}
 
   <button
     type="button"
-        onClick={() => setPreviewInfo("Termination Payments")}
+        onClick={() => UpdatePreviewInfo("Termination Payments")}
     className={PreviewInfo === "Termination Payments" ? `rounded-md  cursor-pointer px-4 py-2 text-sm font-semibold text-white transition-colors bg-[#117fb8]` : `rounded-md bg-white cursor-pointer px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100`}
   >
     Termination Payments
