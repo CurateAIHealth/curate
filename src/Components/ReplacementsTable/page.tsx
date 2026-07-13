@@ -123,8 +123,8 @@ const getStatus = (dayInfo: any) => {
   // Absent
   if (!admin && !hcp) return "A";
 
-  // Half Present
-  return "H";
+
+    if ((!admin && hcp)||(admin && !hcp))return "HP";
 };
 const filteredData = useMemo(() => {
   return rawData.filter((item) => {

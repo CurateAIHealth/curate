@@ -582,6 +582,7 @@ error?.message || "Something went wrong while extending timesheet"
           <h2 className="text-lg md:text-xl font-bold text-slate-800">
             Attendance Dashboard
           </h2>
+          
        <p className="text-xs text-gray-400">
   {
     months.find(
@@ -605,52 +606,49 @@ error?.message || "Something went wrong while extending timesheet"
       <div className="grid grid-cols-7 gap-2 h-full">
         {Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
           const today = new Date().getDate();
-         const dateKey = `${year}-${String(month).padStart(2, "0")}-${String(
+       const dateKey = `${year}-${String(month).padStart(2, "0")}-${String(
   i + 1
 ).padStart(2, "0")}`;
 
-const dayInfo = attendanceInfo.days?.find((item: any) => {
-  const attendanceDate = item?.dateKey
-    ? item.dateKey
-    : new Date(item?.AttendenceDate).toISOString().split("T")[0];
+const formatDate = (value: any) => {
+  if (!value) return "";
 
-  return attendanceDate === dateKey;
-});
-          const dayStatus = dayInfo?.status ?? "-";
-          const clientName = dayInfo?.clientName ?? "";
-          const UpdatedBy = dayInfo?.UpdatedBy ?? "-";
-          const AbsentReason=dayInfo?.Reason?? "-";
-  const attendanceRecord = attendanceInfo?.TimeSheetAttendence?.find(
-  (item:any) => {
-    let normalizedDate = "";
-
-    if (typeof item.date === "string") {
-      // YYYY-MM-DD
-      if (/^\d{4}-\d{2}-\d{2}$/.test(item.date)) {
-        normalizedDate = item.date;
-      } else {
-        // ISO String
-        normalizedDate = item.date.split("T")[0];
-      }
-    } else {
-      // Date Object
-      const d = new Date(item.date);
-
-      normalizedDate = `${d.getFullYear()}-${String(
-        d.getMonth() + 1
-      ).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    }
-
-    return normalizedDate === dateKey;
+  if (typeof value === "string") {
+    return value.split("T")[0];
   }
-);
 
-const AttendecStatus = attendanceRecord?.status ?? "-";
-console.log ("Check Updated By------",attendanceInfo)
-const UpdatedUser:any=attendanceRecord?.UpdatedBy
+  return new Date(value).toISOString().split("T")[0];
+};
 
+const attendanceRecord =
+  attendanceInfo?.TimeSheetAttendence?.find((item: any) => {
+    const itemDate = formatDate(item?.dateKey || item?.AttendenceDate);
+    return itemDate === dateKey;
+  }) || null;
 
-          const currentDate = new Date();
+// Debug
+console.log("Current Date :", dateKey);
+console.log("Attendance Record :", attendanceRecord);
+
+const clientName = attendanceRecord?.Client_Name ?? "";
+const UpdatedUser = attendanceRecord?.UpdatedBy ?? "";
+const AbsentReason = attendanceRecord?.Reason ?? "";
+
+// Generate Attendance Status
+let AttendecStatus = "-";
+
+if (attendanceRecord) {
+  const hcp = attendanceRecord?.HCPAttendence;
+  const admin = attendanceRecord?.AdminAttendece;
+
+  if (hcp === true && admin === true) {
+    AttendecStatus = "P";
+  } else if (hcp === false || admin === false) {
+    AttendecStatus = "A";
+  }
+}
+
+const currentDate = new Date();
 currentDate.setHours(0, 0, 0, 0);
 
 const cellDate = new Date(
@@ -706,7 +704,7 @@ const isFutureDate = cellDate > currentDate;
     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-[10px] px-2 py-2 rounded whitespace-nowrap z-50">
       <div>Marked by: {UpdatedUser}</div>
 
-      {AbsentReason && dayStatus!=="P" && (
+      {AbsentReason && AttendecStatus !== "P" && (
         <div className="mt-1 border-t border-gray-700 pt-1">
           Reason: {AbsentReason}
         </div>

@@ -2495,7 +2495,7 @@ const EditDate =
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-gray-800">
-              Request Replacement
+              Request Replacement {ReplacementTime}
             </h2>
             <p className="text-sm text-gray-600 mt-1">
               Let us know the reason to proceed

@@ -2813,6 +2813,7 @@ const TimeSheetDataInsert=await collection.insertOne({
   Attendence:TerminatedTimeSheet,
   ClientAttendance:ClientAttendece,
   StartDate:new Date().toLocaleDateString("en-IN"),
+  TerminationDate:new Date().toLocaleDateString("en-IN"),
   ServiceState: ImpState
 
 })
@@ -3149,24 +3150,52 @@ export const UpdateReplacmentData = async (
 }
 
 
-   const currentHour = new Date().getHours();
+  const [hours, minutes] = (ReplacementTime || "00:00")
+  .split(":")
+  .map(Number);
 
+const totalMinutes = hours * 60 + minutes;
+
+const ELEVEN_THIRTY = 11 * 60 + 30; // 11:30
+const THREE_PM = 15 * 60; // 15:00
+
+// Old HCA (Replacement Record)
 const attendanceEntry = {
-  dateKey: new Date().toISOString().split("T")[0],
-  AttendenceDate: new Date(),
-  HCPAttendence: currentHour >= 14,
-  AdminAttendece: true,
-  UpdatedAt: new Date(),
+  dateKey: new Date(ReplacementDate).toISOString().split("T")[0],
+  AttendenceDate: new Date(ReplacementDate),
+
+  // Before 11:30 -> Absent
+  // 11:30 - 2:59 -> Half Day
+  // 3:00 onwards -> Present
+  HCPAttendence: totalMinutes >= ELEVEN_THIRTY,
+
+  AdminAttendece: totalMinutes >= THREE_PM,
+
+  UpdatedAt: new Date(ReplacementDate),
   UpdatedBy: UpdatedBy || "",
   Replacement: true,
-  
 };
 
+// New HCA (Deployment)
+const newHCAAttendance = {
+  dateKey: new Date(ReplacementDate).toISOString().split("T")[0],
+  AttendenceDate: new Date(ReplacementDate),
 
-    
+  // Before 3:00 -> Present/Half Day
+  // 3:00 onwards -> Absent
+  HCPAttendence: totalMinutes < THREE_PM,
+
+  // Before 11:30 -> Present
+  // 11:30 - 2:59 -> Half Day
+  // 3:00 onwards -> Absent
+  AdminAttendece: totalMinutes < ELEVEN_THIRTY,
+
+  UpdatedAt: new Date(ReplacementDate),
+  UpdatedBy: UpdatedBy || "",
+};
       const ClientattendanceEntry = {
-        dateKey: new Date().toISOString().split("T")[0],
-        AttendanceDate: new Date(),
+        dateKey: new Date(ReplacementDate).toISOString().split("T")[0],
+        AttendanceDate: new Date(ReplacementDate),
         Client_Id: ImpClientId,
         Client_Name: ImpClientName,
         HCA_Id: Available_HCP?.userId,
@@ -3184,11 +3213,44 @@ const attendanceEntry = {
     //   : [attendanceEntry];
 
 
+// const updatedAttendance = Array.isArray(existingInfo.Attendance)
+//   ? (() => {
+//       const attendance = [...existingInfo.Attendance];
+
+//       const index = attendance.findIndex((item) => {
+//         const itemDate =
+//           item.dateKey ||
+//           new Date(item.AttendenceDate).toISOString().split("T")[0];
+
+//         return itemDate === attendanceEntry.dateKey;
+//       });
+
+//       if (index !== -1) {
+//         // Update existing attendance for the same date
+//         attendance[index] = {
+//           ...attendance[index],
+//           ...attendanceEntry,
+//         };
+//       } else {
+//         // Add new attendance
+//         attendance.push(attendanceEntry);
+//       }
+
+//       return attendance;
+//     })()
+//   : [attendanceEntry];
 const updatedAttendance = Array.isArray(existingInfo.Attendance)
   ? (() => {
-      const attendance = [...existingInfo.Attendance];
+      // Keep only attendance up to the current dateKey
+      const attendance = existingInfo.Attendance.filter((item:any) => {
+        const itemDate =
+          item.dateKey ||
+          new Date(item.AttendenceDate).toISOString().split("T")[0];
 
-      const index = attendance.findIndex((item) => {
+        return itemDate <= attendanceEntry.dateKey;
+      });
+
+      const index = attendance.findIndex((item:any) => {
         const itemDate =
           item.dateKey ||
           new Date(item.AttendenceDate).toISOString().split("T")[0];
@@ -3238,8 +3300,8 @@ const updatedAttendance = Array.isArray(existingInfo.Attendance)
           ReplacementDate: new Date(ReplacementDate).toISOString().split("T")[0],
           // CareTakerPrice:Available_HCP.CareTakerPrice,
           Replacement:true,
-          Attendance:[attendanceEntry],
-          ClientAttendance:[ClientattendanceEntry]
+          Attendance:[newHCAAttendance],
+          // ClientAttendance:[ClientattendanceEntry]
         // },$push: {
         // Attendance: attendanceEntry   
       } as any
