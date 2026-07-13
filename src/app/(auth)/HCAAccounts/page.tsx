@@ -91,17 +91,17 @@ const ClientsInformation=useSelector((state:any)=>state.AdminDeployment)
 
  
   useEffect(() => {
-    if(loggedInEmail===""){
-      router.push("/DashBoard")
+     if (
+      users?.length === 0 &&
+      RegisterdUsers?.length === 0 &&
+      ClientsInformation?.length === 0
+    ) {
+      router.push("/");
     }
- if (
-    users?.length === 0 &&
-    RegisterdUsers?.length === 0 &&
-    ClientsInformation?.length === 0
-  ) {
-    router.push("/");
-  }
- 
+    if (loggedInEmail === "") {
+      router.push("/DashBoard");
+    }
+   
   }, [ActionStatusMessage]);
   const matchesSearchAndMonth = (
   item: any,
@@ -900,7 +900,7 @@ const handleChange = (
          Process
             </h1>
             <p className="text-sm text-[#64748b]">
-              Payroll Management Dashboard/
+              Payroll Management Dashboard
             </p>
             </div>
           </div>
