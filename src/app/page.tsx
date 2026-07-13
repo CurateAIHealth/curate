@@ -175,17 +175,10 @@ useEffect(() => {
           );
         }
 
-        setLoadingProgress(90);
-        setLoadingMessage("Preparing workspace...");
-
-        await new Promise((resolve) =>
-          setTimeout(resolve, 300)
-        );
-
-        if (!isMounted) return;
-
         setLoadingProgress(100);
         setLoadingMessage("Redirecting...");
+
+        if (!isMounted) return;
 
         try {
            router.push("/DashBoard");
