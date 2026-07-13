@@ -144,7 +144,7 @@ const ClientsInformation=useSelector((state:any)=>state.AdminDeployment)
   };
 
 console.log("Check Replacement----",ReplacementInformation)
-console.log("Check Termination----",TerminationInformation)
+
      const GetHCPType = (A: any) => {
     if (!RegisterdUsers?.length || !A) return "Not Entered";
 
@@ -153,6 +153,7 @@ console.log("Check Termination----",TerminationInformation)
 
     return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
   };
+  console.log("Check Termination----",GetHCPType("e416b9be-8bc9-41ce-94a7-7b358a422529"))
 const GetHCPPayment = (A: any) => {
   if (!users?.length || !A) return 0;
 
