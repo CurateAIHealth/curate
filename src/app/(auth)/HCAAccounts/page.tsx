@@ -89,21 +89,16 @@ const ClientsInformation=useSelector((state:any)=>state.AdminDeployment)
      const dispatch = useDispatch();
     const [data, setData] = useState<any[]>([])
 
-  // debug lengths
-  console.log("check users Length----", {
-    usersLength: users?.length,
-    registeredUsersLength: RegisterdUsers?.length,
-    clientsLength: ClientsInformation?.length,
-  });
+
 
   useEffect(() => {
     // ensure we react to changes in these values and avoid false negatives when undefined
     const uLen = users?.length ?? 0;
     const rLen = RegisterdUsers?.length ?? 0;
     const cLen = ClientsInformation?.length ?? 0;
-
+console.log("check users Length----",uLen === 0 && rLen === 0 && cLen === 0)
     if (uLen === 0 && rLen === 0 && cLen === 0) {
-      router.push("/");
+      router.push("/SubAccountings");
       return;
     }
 
@@ -493,9 +488,9 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
       type: "loading",
     });
   const value = status
-     if (PreviewInfo==="OnService Payments"){
+  
    const MonthInfo=`${SearchYear}-${SearchMonth}`
-    const UpdatedinDB=await UpdatePaymentVerificationStatusInDb(HCAId,ClientId,value,MonthInfo)
+    const UpdatedinDB:any=await UpdatePaymentVerificationStatusInDb(HCAId,ClientId,value,MonthInfo,Info.StartDate,PreviewInfo)
     console.log("Check Updated Payment Status----",UpdatedinDB)
     if(UpdatedinDB.success){
       
@@ -521,70 +516,9 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
 
  return
  
-    }
-
     
 
-    
-     if(PreviewInfo==="Replacement Payments"){
-   const MonthInfo=`${SearchYear}-${SearchMonth}`
-    const UpdatedinDB=await UpdatePaymentVerificationStatusInReplacementDb(HCAId,ClientId,value,MonthInfo)
-    console.log("Check Updated Payment Status----",UpdatedinDB)
-    if(UpdatedinDB.success){
-      
-      setData((prev) =>
-      prev.map((item) =>
-        item.HCAId === HCAId    ? { ...item, PaymentVerficationStatus: value }
-        : item
-      )
-    ); 
-
-     setPopup({
-        isOpen: true,
-        message: "Payment Status Updated successfully!",
-        type: "success",
-      });
-     }else{
-        setPopup({
-        isOpen: true,
-        message: "Failed to update payment status",
-        type: "error",
-      });
-    }
-
- return
- 
-    }
-       if(PreviewInfo==="Termination Payments"){
-   const MonthInfo=`${SearchYear}-${SearchMonth}`
-   console.log ("Check Datap------",HCAId,ClientId,value,Info.StartDate)
-    const UpdatedinDB=await UpdatePaymentVerificationStatusInTerminationDb(HCAId,ClientId,value,Info.StartDate)
-    console.log("Check Updated Payment Status----",UpdatedinDB)
-    if(UpdatedinDB.success){
-      
-      setData((prev) =>
-      prev.map((item) =>
-        item.HCAId === HCAId    ? { ...item, PaymentVerficationStatus: value }
-        : item
-      )
-    ); 
-
-     setPopup({
-        isOpen: true,
-        message: "Payment Status Updated successfully!",
-        type: "success",
-      });
-     }else{
-        setPopup({
-        isOpen: true,
-        message: "Failed to update payment status",
-        type: "error",
-      });
-    }
-
- return
- 
-    }
+  
   }
 
   

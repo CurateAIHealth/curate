@@ -807,7 +807,7 @@ export const GetDashboardData = async (
       };
     }
 
-    const CACHE_TIME = 30 * 60 * 1000;
+    const CACHE_TIME = 10 * 60 * 1000;
     const now = Date.now();
 
     const cluster = await clientPromise;

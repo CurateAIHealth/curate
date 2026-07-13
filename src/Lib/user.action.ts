@@ -4715,11 +4715,12 @@ export const UpdatePaymentVerificationStatusInDb = async (
   HCAId: string,
   ClientId: string,
   value: string,
-  MonthInfo: string
+  MonthInfo: string,
+  ImpData: any,
+  UpdateType: string
 ) => {
   try {
-    
-    if (!HCAId || !ClientId || !MonthInfo) {
+    if (!HCAId || !ClientId || !UpdateType) {
       return {
         success: false,
         message: "Missing required parameters",
@@ -4728,26 +4729,56 @@ export const UpdatePaymentVerificationStatusInDb = async (
 
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
-    const collection = db.collection("Deployment");
 
-    const result = await collection.updateOne(
-      {
-        ClientId,
-        HCAId,
-        Month: MonthInfo,
+    let collection;
+    let filter: any;
+
+    switch (UpdateType) {
+      case "OnService Payments":
+        collection = db.collection("Deployment");
+        filter = {
+          ClientId,
+          HCAId,
+          Month: MonthInfo,
+        };
+        break;
+
+      case "Replacement Payments":
+        collection = db.collection("Replacement");
+        filter = {
+          ClientId,
+          HCAId,
+          Month: MonthInfo,
+        };
+        break;
+
+      case "Termination Payments":
+        collection = db.collection("Termination");
+        filter = {
+          ClientId,
+          HCAid: HCAId, // Termination collection uses HCAid
+          StartDate: ImpData,
+        };
+        break;
+
+      default:
+        return {
+          success: false,
+          message: `Invalid UpdateType: ${UpdateType}`,
+        };
+    }
+
+    const result = await collection.updateOne(filter, {
+      $set: {
+        PaymentVerificationStatus: value,
+        UpdatedAt: new Date(),
       },
-      {
-        $set: {
-          PaymentVerificationStatus: value,
-          UpdatedAt: new Date(),
-        },
-      }
-    );
+    });
 
     if (result.matchedCount === 0) {
       return {
         success: false,
-        message: "Deployment record not found",
+        message: "Record not found",
       };
     }
 
@@ -4761,15 +4792,13 @@ export const UpdatePaymentVerificationStatusInDb = async (
           : "No changes were required",
     };
   } catch (error) {
-    console.error(
-      "UpdatePaymentVerificationStatusInDb Error:",
-      {
-        HCAId,
-        ClientId,
-        MonthInfo,
-        error,
-      }
-    );
+    console.error("UpdatePaymentVerificationStatusInDb Error:", {
+      HCAId,
+      ClientId,
+      MonthInfo,
+      UpdateType,
+      error,
+    });
 
     return {
       success: false,

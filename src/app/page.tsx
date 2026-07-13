@@ -109,7 +109,7 @@ useEffect(() => {
       if (StaffEmails.includes(email)) {
         dispatch(CurrentLoginUser(profile.Email));
 
-        // Check memory cache
+        
         const cached = dashboardCache.get(userId);
 
         if (
@@ -183,11 +183,11 @@ useEffect(() => {
         );
 
         if (!isMounted) return;
-
+router.push("/DashBoard");
         setLoadingProgress(100);
         setLoadingMessage("Redirecting...");
 
-        router.push("/DashBoard");
+        
         return;
       }
 
