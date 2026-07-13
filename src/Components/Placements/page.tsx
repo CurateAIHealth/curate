@@ -1363,7 +1363,7 @@ const UpdateReplacement = async (
  const userId = localStorage.getItem("UserId");
 
     if (userId) {
-      try {
+      try {const userId = localStorage.getItem("UserId");
         const { data } = await axios.post("/api/AdminPageInfo", {
           userId,
           refreshType: "deployment",
