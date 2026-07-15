@@ -1,45 +1,46 @@
+import type { NextApiRequest, NextApiResponse } from "next";
 import clientPromise from "@/Lib/db";
 
-export async function GET(req: Request) {
-  try {
-    const client = await clientPromise;
-    const db = client.db("CurateInformation");
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          const encoder = new TextEncoder();
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const client = await clientPromise;
+  const db = client.db("CurateInformation");
 
-          const changeStream = db
-            .collection("PayableINPaymentPage")
-            .watch();
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  });
 
-          changeStream.on("change", () => {
-            controller.enqueue(
-              encoder.encode(`data: refresh\n\n`)
-            );
-          });
+  // Initial handshake
+  res.write("data: connected\n\n");
 
-          req.signal.addEventListener("abort", async () => {
-            await changeStream.close();
-            controller.close();
-          });
-        } catch (err) {
-          console.error("Change Stream Error:", err);
-          controller.error(err);
-        }
-      },
-    });
+  const changeStream = db
+    .collection("PayableINPaymentPage")
+    .watch([], { fullDocument: "updateLookup" });
 
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    });
-  } catch (err) {
-    console.error(err);
-    return Response.json({ error: String(err) }, { status: 500 });
-  }
+  changeStream.on("change", (change) => {
+    console.log("Mongo Changed:", change.operationType);
+
+    res.write(
+      `data: ${JSON.stringify({
+        type: change.operationType,
+        refresh: true,
+      })}\n\n`
+    );
+  });
+
+  req.on("close", async () => {
+    console.log("SSE Closed");
+    await changeStream.close();
+    res.end();
+  });
 }
