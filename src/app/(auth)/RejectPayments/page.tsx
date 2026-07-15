@@ -5,10 +5,10 @@ let cachedRegisterdUsers: any[] = [];
 import PopupToast from "@/Components/ExpencesPopUp/page";
 import { LoadingData } from "@/Components/Loading/page";
 import { AssignSuitableIcon, toProperCaseLive } from "@/Lib/Actions";
-import { months, years } from "@/Lib/Content";
+import { months, RejectedmenuItems, SuccussfulmenuItems, years } from "@/Lib/Content";
 import { GetAllUsersData, GetRejectedPaymentData, UpdateStatusEnableinRejection } from "@/Lib/user.action";
 import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
-import { Eye, CornerUpLeft, Search, Minimize2, Info } from "lucide-react";
+import { Eye, CornerUpLeft, Search, Minimize2, Info, ChevronRight, Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -76,7 +76,7 @@ export default function RejectedPayments() {
   //     reason: "Missing Approval From Manager",
   //   },
   // ];
-
+const [menuOpen, setMenuOpen] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [RegisterdUsers, setRegisterdUsers] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([]);
@@ -323,7 +323,51 @@ window.location.reload()
       <div className="px-6 py-5 border-b">
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
           <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-white shadow-md flex items-center justify-center border border-slate-200">
+<div className="relative flex items-center gap-3">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="flex h-10 w-10 shrink-0 items-center cursor-pointer justify-center rounded-lg border border-slate-200 hover:bg-slate-100"
+        >
+          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>   {menuOpen && (
+                    <div className="absolute left-0 top-full z-50 mt-3 w-72 max-w-[90vw] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-black/5">
+                      <div className="border-b border-slate-100 bg-slate-50 px-5 py-3">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                          Advance Payment Options
+                        </p>
+                      </div>
+          
+                      <div className="py-2">
+                        {RejectedmenuItems.map((item) => {
+                          const Icon = item.icon;
+          
+                          return (
+                            <button
+                              key={item.title}
+                              onClick={() => {
+                                setMenuOpen(false);
+                              router.push(item.route);
+                              }}
+                              className="group flex w-full items-center cursor-pointer justify-between px-5 py-3 transition hover:bg-teal-50 hover:text-teal-700"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="rounded-lg bg-slate-100 p-2 group-hover:bg-teal-100">
+                                  <Icon size={18} />
+                                </div>
+          
+                                <span className="font-medium">{item.title}</span>
+                              </div>
+          
+                              <ChevronRight
+                                size={18}
+                                className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-teal-600"
+                              />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
               <img
                 src="/Icons/Curate-logoq.png"
                 alt="Curate Logo"
@@ -392,6 +436,7 @@ onClick={() => router.push("/SubAccountings")}
           Accounts Dashboard
         </button>
           </div>
+       
         </div>
       </div>
 <PopupToast

@@ -6,12 +6,12 @@ type Deployment = any;
 type Replace = any;
 type Termination=any;
 import { useEffect, useMemo, useState } from "react";
-import { CircleSlash2, CornerUpLeft, Eye, Info, Minimize2, Search } from "lucide-react";
+import { ChevronRight, CircleSlash2, CornerUpLeft, Eye, Info, Menu, Minimize2, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { GetAllUsersData, PostINPayblePage, PostINRejectionDb, PostINSuccesfulPaymentsDb, UpdateStatusEnable, UpdateStatusEnableinRepleasment, UpdateStatusEnableiNTermination } from "@/Lib/user.action";
 import { LoadingData } from "@/Components/Loading/page";
-import { months, years } from "@/Lib/Content";
+import { months, PayablemenuItems, SuccussfulmenuItems, years } from "@/Lib/Content";
 import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import PopupToast from "@/Components/ExpencesPopUp/page";
 import { AssignSuitableIcon, toProperCaseLive } from "@/Lib/Actions";
@@ -25,16 +25,16 @@ export default function HCAPaymentTable() {
     type: "success",
   });
   const [showFullMonth,setShowFullMonth]=useState(false)
-const [userTypeFilter, setUserTypeFilter] = useState("On Service");
+// const [userTypeFilter, setUserTypeFilter] = useState("On Service");
 const [selectedUser, setSelectedUser] = useState<any>(null);
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
 const [ShowRejectPopup,setShowRejectPopup]=useState(false) 
 const [RejectionReason,SetRejectionReason]=useState("") 
 const [NeftTransactionNumber,setNeftTransactionNumber]=useState("")
   const [search, setSearch] = useState("");
-
+const [menuOpen, setMenuOpen] = useState(false);
   const [paybleData,setPaybleData]=useState<any[]>([])
-   
+   const [selectedBank, setSelectedBank] = useState("");
      
         const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
         const users=useSelector((state:any)=>state.AdminFullInfo)
@@ -48,13 +48,25 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
   const router=useRouter()
   const dispatch=useDispatch()
   useEffect(() => {
+    // Wait until data fetching is completed
+    if (isChecking) return;
+  
     if (
-    users?.length === 0 &&
-    RegisterdUsers?.length === 0 &&
-    ClientsInformation?.length === 0
-  ) {
-    router.push("/");
-  }
+      RegisterdUsers.length === 0 ||
+      users.length === 0 ||
+      ClientsInformation.length === 0
+    ) {
+      router.replace("/");
+    }
+  }, [
+    isChecking,
+    RegisterdUsers,
+    users,
+    ClientsInformation,
+    router,
+  ]);
+  useEffect(() => {
+  
     let mounted = true;
   
     const isSuccessUpdate = ActionStatusMessage?.includes("Successfully");
@@ -63,7 +75,8 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
       try {
 
         setIsChecking(true);
-   
+    const eventSource = new EventSource("/api/payable-events");
+    console.log ("New Task-------",eventSource)
 const { data } = await axios.get("/api/PayableData");
       console.log("Check Deployment Data------",data.data)
       const {
@@ -178,10 +191,7 @@ const filteredPayableData = useMemo(() => {
 
   return PayableDataformation.filter((item: any) => {
 
-    // 1. Payment Type
-    const matchesPaymentType =
-      item.PaymentType?.trim().toLowerCase() ===
-      userTypeFilter.trim().toLowerCase();
+
 
     // 2. Search
     const matchesSearch =
@@ -204,7 +214,7 @@ const filteredPayableData = useMemo(() => {
       !SearchYear || itemYear === Number(SearchYear);
 
     return (
-      matchesPaymentType &&
+   
       matchesSearch &&
       matchesMonth &&
       matchesYear
@@ -215,10 +225,10 @@ const filteredPayableData = useMemo(() => {
   search,
   SearchMonth,
   SearchYear,
-  userTypeFilter,
+  
 ]);
 
-console.log("Selected Payment Type:", userTypeFilter);
+
 console.log("Selected Month:", SearchMonth);
 console.log("Selected Year:", SearchYear);
 console.log(
@@ -235,7 +245,8 @@ const UpdateRevertStatus = async (
   ClientId: any,
   HCAId: any,
   Month: any,
-  ImpDate:any
+  ImpDate:any,
+  Info:any
 ) => {
   try {
     setPopup({
@@ -244,7 +255,7 @@ const UpdateRevertStatus = async (
       type: "loading",
     });
 
-    if (userTypeFilter === "On Service") {
+    if (Info.PaymentType === "On Service") {
       const result = await UpdateStatusEnable(
         HCAId,
         ClientId,
@@ -278,7 +289,7 @@ const UpdateRevertStatus = async (
       }
     }
 
-    if (userTypeFilter === "Repleasment") {
+    if (Info.PaymentType === "Repleasment") {
       const result = await UpdateStatusEnableinRepleasment(
         HCAId,
         ClientId,
@@ -311,7 +322,7 @@ const UpdateRevertStatus = async (
         });
       }
     }
-      if (userTypeFilter === "Termination") {
+      if (Info.PaymentType === "Termination") {
       const result = await UpdateStatusEnableiNTermination(
         HCAId,
         ClientId,
@@ -526,7 +537,52 @@ setPopup({
           
         
 
-          <div className="flex items-center gap-4">
+        <div className="relative flex items-center gap-3">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="flex h-10 w-10 shrink-0 items-center cursor-pointer justify-center rounded-lg border border-slate-200 hover:bg-slate-100"
+        >
+          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+        {menuOpen && (
+                      <div className="absolute left-0 top-full z-50 mt-3 w-72 max-w-[90vw] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-black/5">
+                        <div className="border-b border-slate-100 bg-slate-50 px-5 py-3">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            Advance Payment Options
+                          </p>
+                        </div>
+            
+                        <div className="py-2">
+                          {PayablemenuItems.map((item) => {
+                            const Icon = item.icon;
+            
+                            return (
+                              <button
+                                key={item.title}
+                                onClick={() => {
+                                  setMenuOpen(false);
+                               router.push(item.route);
+                                }}
+                                className="group flex w-full items-center cursor-pointer justify-between px-5 py-3 transition hover:bg-teal-50 hover:text-teal-700"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="rounded-lg bg-slate-100 p-2 group-hover:bg-teal-100">
+                                    <Icon size={18} />
+                                  </div>
+            
+                                  <span className="font-medium">{item.title}</span>
+                                </div>
+            
+                                <ChevronRight
+                                  size={18}
+                                  className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-teal-600"
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
               <img
             src="/Icons/Curate-logoq.png"
             alt="Company Logo"
@@ -544,22 +600,7 @@ setPopup({
     
 
             <div className="flex flex-col md:flex-row gap-3">
- <div className="inline-flex items-center p-1 bg-slate-100 rounded-xl">
-  {["On Service", "Repleasment", "Termination"].map((type) => (
-    <button
-      key={type}
-      onClick={() => setUserTypeFilter(type)}
-      className={`h-8 px-4 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-        userTypeFilter === type
-          ? "bg-[#1392d3] text-white shadow-sm"
-          : "text-slate-600 hover:text-[#1392d3]"
-      }`}
-    >
-      {type}
-     
-    </button>
-  ))}
-</div>
+
                 <div className="relative min-w-[250px] flex-1 max-w-[350px]">
             <Search
               size={16}
@@ -610,6 +651,7 @@ onClick={() => router.push("/SubAccountings")}
         </button>
           </div>
             </div>
+            
           </div>
         </div>
 {showInfoPopup && selectedUser && (
@@ -1205,8 +1247,9 @@ onClick={() => router.push("/SubAccountings")}
 
               
 
+             
                 <th className=" px-5 py-4 text-center whitespace-nowrap">
-                  NEFT Ref No
+              Bank&Neft Info
                 </th>
 
                 <th className=" px-5 py-4 text-center whitespace-nowrap">
@@ -1305,12 +1348,36 @@ onClick={() => router.push("/SubAccountings")}
 
        
 
-                  <td className="px-5 py-5 text-center">
-                    {row.neft? <span className="bg-slate-100 px-4 py-2 rounded-xl text-sm font-semibold text-slate-700">
-                      {row.neft}
-                    </span>:<input type="text" placeholder="Enter NEFT Ref No" className="bg-slate-100 px-4 py-2 rounded-xl text-sm font-semibold text-slate-700" onChange={(e) => setNeftTransactionNumber(e.target.value)}/>}
-                   
-                  </td>
+                
+                   <td className="px-5 py-5 text-center">
+  {row.neft ? (
+    <span className="bg-slate-100 px-4 py-2 rounded-xl text-sm font-semibold text-slate-700">
+      {row.neft}
+    </span>
+  ) : (
+    <div className="flex flex-col gap-2 items-center">
+      <select
+        className="w-48 bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1392d3]"
+        onChange={(e) => setSelectedBank(e.target.value)}
+        defaultValue=""
+      >
+        <option value="" disabled>
+          Select Bank
+        </option>
+        <option value="SBI">State Bank of India (SBI)</option>
+        <option value="HDFC">HDFC Bank</option>
+        <option value="ICICI">ICICI Bank</option>
+      </select>
+
+      <input
+        type="text"
+        placeholder="Enter NEFT Ref No"
+        className="w-48 bg-slate-100 border border-slate-300 rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1392d3]"
+        onChange={(e) => setNeftTransactionNumber(e.target.value)}
+      />
+    </div>
+  )}
+</td>
 
                   <td className="px-5 py-5 text-center font-bold text-[#50c896] text-lg">
                     {row.amount}
@@ -1330,7 +1397,7 @@ onClick={() => router.push("/SubAccountings")}
 <td className="px-5 py-5 text-center">
 <button className="inline-flex items-center gap-2 bg-green-600 cursor-pointer hover:shadow-lg text-white px-5 py-2 rounded-xl font-semibold"
 onClick={() => { 
-  UpdateRevertStatus(row.ClientId,row.HCAid,row.Month,row.StartDate)
+  UpdateRevertStatus(row.ClientId,row.HCAid,row.Month,row.StartDate,row)
  }}
 >
                     <CornerUpLeft size={16} />

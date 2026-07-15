@@ -15,7 +15,7 @@ import {
   ChartColumn,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function AccountingSub(){
@@ -55,24 +55,24 @@ export default function AccountingSub(){
       icon: Building2,
       bg: "bg-cyan-500",
     },
-    {
-      name: "Payable",
-      count: stats.PaymentCompleteAccountingCount || 0,
-      icon: BadgeCheck,
-      bg: "bg-emerald-500",
-    },
-    {
-      name: "Reject",
-      count: stats.RejectListCount || 0,
-      icon: CircleX,
-      bg: "bg-red-500",
-    },
-    {
-      name: "Paid",
-      count: stats.SuccessfulPaymentsCount || 0,
-      icon: CheckCircle2,
-      bg: "bg-teal-500",
-    },
+    // {
+    //   name: "Payable",
+    //   count: stats.PaymentCompleteAccountingCount || 0,
+    //   icon: BadgeCheck,
+    //   bg: "bg-emerald-500",
+    // },
+    // {
+    //   name: "Reject",
+    //   count: stats.RejectListCount || 0,
+    //   icon: CircleX,
+    //   bg: "bg-red-500",
+    // },
+    // {
+    //   name: "Paid",
+    //   count: stats.SuccessfulPaymentsCount || 0,
+    //   icon: CheckCircle2,
+    //   bg: "bg-teal-500",
+    // },
     {
       name: "Invoices",
       count: stats.invoiceCount,
@@ -96,90 +96,65 @@ const handleLogout = () => {
     []
   );
 
-       const Switching = (name: string) => {
-      
-         if (!loggedInEmail){
-      setLoginEmailPop(true)
- return;
+      const ROUTES: Record<string, string> = {
+  Timesheet: "/AdminPage",
+  "Pending PDR": "/PDRView",
+  Vendors: "/VendorsPanel",
+  "Document Compliance": "/Documents",
+  Invoices: "/Invoices",
+  Payments: "/PaymentsInfo",
+  "HCA Payment": "/HCAAccounts",
+  "Client Payment": "/ClientAccounts",
+  Accounts: "/Accounts",
+  Payable: "/Payable",
+  Reject: "/RejectPayments",
+  Paid: "/SuccessfulPayments",
+  RevenueAnalytics: "/RevenueAnalytics",
+  Notifications: "/Notifications",
+};
+
+const navigationLock = useRef(false);
+
+const Switching = useCallback(
+  (name: string) => {
+    // Prevent duplicate clicks
+    if (navigationLock.current) return;
+
+    if (!loggedInEmail) {
+      setLoginEmailPop(true);
+      return;
     }
-      
-          if (!canAccessTab(name, loggedInEmail)) {
-            setShowPermissionPopup(true);
-            return;
-          }
-      // setShowSideHeadingsPopuo(true)
-      setIsNavigating(true);
-          switch (name) {
- 
-      case "Timesheet":
-          setIsNavigating(false);
+
+    if (!canAccessTab(name, loggedInEmail)) {
+      setShowPermissionPopup(true);
+      return;
+    }
+
+    const route = ROUTES[name];
+
+    if (!route) {
+     alert(`Unknown Route: ${name}`);
+      return;
+    }
+
+    navigationLock.current = true;
+    setIsNavigating(true);
+
+    try {
+      if (name === "Timesheet") {
         dispatch(Update_Main_Filter_Status(name));
         dispatch(UpdateUserType("patient"));
-        router.push("/AdminPage");
-        break;
-            case "Pending PDR":
-                setIsNavigating(false);
-              router.push("/PDRView");
-              break;
-            case "Vendors":
-                setIsNavigating(false);
-              router.push("/VendorsPanel");
-              break;
-      
-            case "Document Compliance":
-                setIsNavigating(false);
-              router.push("/Documents");
-              break;
-      
-            case "Invoices":
-                setIsNavigating(false);
-              router.push("/Invoices");
-              break;
-            case "Payments":
-                setIsNavigating(false);
-              router.push("/PaymentsInfo");
-              break;
-      
-            case "HCA Payment":
-                setIsNavigating(false);
-              router.push("/HCAAccounts");
-              break;
-      
-            case "Client Payment":
-                setIsNavigating(false);
-              router.push("/ClientAccounts");
-              break;
-      
-               case "Accounts":
-                  setIsNavigating(false);
-              router.push("/Accounts");
-              break;
+      }
 
-              case "Payable":
-                  setIsNavigating(false);
-                router.push("/Payable");
-                break;
-                 case "Reject":
-                    setIsNavigating(false);
-                router.push("/RejectPayments");
-                break;
-      
-                 case "Paid":
-                    setIsNavigating(false);
-                router.push("/SuccessfulPayments");
-                break;
-                case "RevenueAnalytics":
-                    setIsNavigating(false);
-                router.push("/RevenueAnalytics");
-                break;
-      
-      
-            case "Notifications":
-                setIsNavigating(false);
-              router.push("/Notifications");
-              break;
-          }
-        };
+      router.replace(route);
+    } finally {
+      requestAnimationFrame(() => {
+        navigationLock.current = false;
+      });
+    }
+  },
+  [loggedInEmail, canAccessTab, dispatch, router]
+);
       
     return(
         <div>

@@ -17,7 +17,13 @@ import { StaffEmails } from '@/Lib/Content';
 import axios from 'axios';
 import { HomeLoadingData } from '@/Components/HomeLoading/page';
 
-
+const dashboardCache = new Map<
+  string,
+  {
+    timestamp: number;
+    data: any;
+  }
+>();
 
 
 const pink = "#ff1493";
@@ -62,33 +68,37 @@ const visibleReviews = showAllReviews
   : reviews.slice(0, INITIAL_REVIEWS_COUNT);
 const CACHE_TTL = 30 * 60 * 1000; 
 
-const dashboardCache = new Map<
-  string,
-  {
-    timestamp: number;
-    data: any;
-  }
->();
+
 
 useEffect(() => {
   let isMounted = true;
-  let timer: NodeJS.Timeout;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let hasNavigated = false;
+
+  const safeNavigate = (path: string) => {
+    if (!isMounted || hasNavigated) return;
+    hasNavigated = true;
+    router.replace(path);
+  };
+
+  const updateLoader = (progress: number, message: string) => {
+    if (!isMounted) return;
+    setLoadingProgress(progress);
+    setLoadingMessage(message);
+  };
 
   const initialize = async () => {
     try {
       const userId = localStorage.getItem("UserId");
 
       if (!userId) {
-        router.push("/sign-in");
+        safeNavigate("/sign-in");
         return;
       }
 
+      updateLoader(5, "Initializing...");
       setIsChecking(true);
-      setLoadingProgress(5);
-      setLoadingMessage("Initializing...");
 
-      setLoadingProgress(15);
-      setLoadingMessage("Checking session...");
 
       const { data: profile }: any = await axios.post("/api/Home", {
         localValue: userId,
@@ -98,24 +108,19 @@ useEffect(() => {
 
       dispatch(UpdateUserDetails(profile));
 
-      setLoadingProgress(35);
-      setLoadingMessage("Loading profile...");
+      updateLoader(35, "Loading profile...");
 
       const email = profile?.Email?.toLowerCase();
 
-      setLoadingProgress(55);
-      setLoadingMessage("Verifying account...");
 
       if (StaffEmails.includes(email)) {
         dispatch(CurrentLoginUser(profile.Email));
 
-        // Check memory cache
         const cached = dashboardCache.get(userId);
 
-        if (
-          cached &&
-          Date.now() - cached.timestamp < CACHE_TTL
-        ) {
+        console.log("Dashboard Cache:", cached);
+
+        if (cached) {
           const {
             profile: cachedProfile,
             registeredUsers,
@@ -123,49 +128,40 @@ useEffect(() => {
             deployedLength,
           } = cached.data;
 
-          setLoadingProgress(75);
-          setLoadingMessage("Loading cached dashboard...");
-
           dispatch(setUsers(registeredUsers));
           dispatch(setFullInfo(fullInfo));
           dispatch(SetDeploymentInfo(deployedLength));
-          dispatch(
-            UpdateUserFirstName(cachedProfile?.FirstName)
-          );
+          dispatch(UpdateUserFirstName(cachedProfile?.FirstName));
 
-          setLoadingProgress(100);
-          setLoadingMessage("Redirecting...");
-
+          updateLoader(100, "Redirecting...");
           router.replace("/DashBoard");
           return;
         }
 
-      
-        setLoadingProgress(75);
-        setLoadingMessage("Loading dashboard...");
+        updateLoader(70, "Loading dashboard...");
 
-        const { data: dashboard } = await axios.post(
+        const { data: dashboard }: any = await axios.post(
           "/api/AdminPageInfo",
-          {
-            userId,
-          }
+          { userId }
         );
 
         if (!isMounted) return;
 
         if (dashboard?.success) {
+          dashboardCache.set(userId, {
+            timestamp: Date.now(),
+            data: dashboard.data,
+          });
+
+          console.log("Dashboard Cached");
+          console.log("Cache Size:", dashboardCache.size);
+
           const {
             profile: dashboardProfile,
             registeredUsers,
             fullInfo,
             deployedLength,
           } = dashboard.data;
-
-          // Save response in memory cache
-          dashboardCache.set(userId, {
-            timestamp: Date.now(),
-            data: dashboard.data,
-          });
 
           dispatch(setUsers(registeredUsers));
           dispatch(setFullInfo(fullInfo));
@@ -175,57 +171,34 @@ useEffect(() => {
           );
         }
 
-        setLoadingProgress(100);
-        setLoadingMessage("Redirecting...");
-
-        if (!isMounted) return;
-
-        try {
-           router.push("/DashBoard");
-        } catch (error) {
-          console.error("Navigation error:", error);
-          if (isMounted) {
-            window.location.href = "/DashBoard";
-          }
-        }
+        updateLoader(100, "Redirecting...");
+        router.replace("/DashBoard");
         return;
       }
+
+      // ---------------- Non Staff ----------------
+
+      updateLoader(100, "Redirecting...");
 
       if (!profile?.FinelVerification) {
-        setLoadingProgress(100);
-
         if (profile?.userType === "healthcare-assistant") {
-          setLoadingMessage("Opening registration...");
-          dispatch(UpdateRegisterdType(profile.userType) as any);
-          router.push("/HCARegistraion");
+          dispatch(UpdateRegisterdType(profile.userType));
+          safeNavigate("/HCARegistraion");
         } else {
-          setLoadingMessage("Redirecting...");
-          router.push("/HomePage");
+          safeNavigate("/HomePage");
         }
-
         return;
       }
 
-      if (profile?.FinelVerification) {
-        setLoadingProgress(100);
-        setLoadingMessage("Opening profile...");
-        router.push("/Profile");
-        return;
-      }
-
-      setIsChecking(false);
+      safeNavigate("/Profile");
 
       timer = setTimeout(() => {
         if (isMounted) {
           setShowPopUp(true);
         }
       }, 3500);
-    } catch (error) {
-      console.error("Initialization Error:", error);
-
-      if (isMounted) {
-        setIsChecking(false);
-      }
+    } catch (err) {
+      console.error("Initialization Error:", err);
     }
   };
 
@@ -238,7 +211,7 @@ useEffect(() => {
       clearTimeout(timer);
     }
   };
-}, [router, dispatch]);
+}, [dispatch, router]);
 
 const ViewContactInfo=()=>{
   const Contact_Container=document.getElementById("ContactInformation")

@@ -72,6 +72,7 @@ const UserFirstName=useSelector((state:any)=>state.LogUserName)
   const SearchYear = useSelector((state: any) => state.YearFilterAdmin)
   const [HCPPreviewtype,setHCPPreviewtype]=useState("")
   const [UpdatedHCPSalary,SetUpdatedHCPSalary]=useState<any>()
+  const [EffectiveDate,SetEffectiveDate]=useState("")
 const [SearchResult, setSearchResult] = useState("")
   const [search, setSearch] = useState('');
    const [isEditing, setIsEditing] = useState(false);
@@ -1526,8 +1527,16 @@ const UpdatePopup = async (a: any) => {
     <div className="flex flex-col items-center justify-center gap-1 bg-white border border-gray-200 rounded-lg p-2 w-full">
       <input
         type="text"
-        value={UpdatedHCPSalary?UpdatedHCPSalary:GetHCPPayment(user.userId)}
+        value={UpdatedHCPSalary}
         onChange={(e: any) => SetUpdatedHCPSalary(e.target.value)}
+        className="w-[70px] px-1 text-center py-1 text-[10px] border border-gray-300 rounded
+                   focus:outline-none focus:ring-1 focus:ring-indigo-400"
+      />
+<label className="text-[9px]">Effective From</label>
+       <input
+        type="date"
+        value={EffectiveDate}
+        onChange={(e: any) => SetEffectiveDate(e.target.value)}
         className="w-[70px] px-1 text-center py-1 text-[10px] border border-gray-300 rounded
                    focus:outline-none focus:ring-1 focus:ring-indigo-400"
       />
@@ -1875,6 +1884,11 @@ Awaiting Conversion
   };
 const handleSave = async (data: any) => {
   try {
+
+    if(EffectiveDate===""){
+      alert("Please Select Effective Date")
+      return
+    }
     setIsEditing(false);
     dispatch(Refresh("Please Wait...."));
 console.log("Check for Imp Salary Data----",data
@@ -1882,7 +1896,8 @@ console.log("Check for Imp Salary Data----",data
     const updateSalary = await PostHCPSalaryRequest(
       data,
       UpdatedHCPSalary,
-      UserFirstName
+      UserFirstName,
+      EffectiveDate
     );
 
     if (updateSalary?.success) {

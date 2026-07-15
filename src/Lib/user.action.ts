@@ -1570,7 +1570,8 @@ Message: `New Call Enquiry from ${NotificationInformation.ClientName} (${Notific
 export const PostHCPSalaryRequest = async (
 HCPInfo:any,
 RequestedSalary:any,
-From:any
+From:any,
+EffectiveDate:any
 ) => {
   try {
     const cluster = await clientPromise;
@@ -1581,6 +1582,7 @@ From:any
       HCPId:HCPInfo.userId,
       HCPName:HCPInfo.FirstName,
       RequestedSalary:RequestedSalary,
+      EffectiveDate:EffectiveDate,
       Message:`Salary Update Request for ${HCPInfo.FirstName} To ₹${RequestedSalary} Per Month, (₹${Math.round(Number(RequestedSalary) / 30)} per day) from ${From}`,
       Date:new Date().toISOString().split("T")[0],
       Type:"HCP Salary Request",
@@ -8196,10 +8198,10 @@ export const DeleteHCAStatusInFullInformation = async (Userid: string) => {
 export const HCASalaryUpdate = async (
   Userid: string,
   Amount: any,
-  ApprovedBy:any
+  ApprovedBy: any,
+  EffectiveDate?: any
 ): Promise<{ success: boolean; message: string }> => {
   try {
-   
     if (!Userid || Number(Amount) < 0) {
       return { success: false, message: "Invalid salary data." };
     }
@@ -8208,35 +8210,78 @@ export const HCASalaryUpdate = async (
     const db = cluster.db("CurateInformation");
     const collection = db.collection("CompliteRegistrationInformation");
 
-    const result = await collection.updateOne(
+    // Get existing HCA
+    const existingUser: any = await collection.findOne(
       { "HCAComplitInformation.UserId": Userid },
       {
-        $set: {
-          
-          "HCAComplitInformation.PaymentforStaff": Amount,
-          "HCAComplitInformation.ApprovedBy" :ApprovedBy
-    
+        projection: {
+          "HCAComplitInformation.PaymentforStaff": 1,
+          "HCAComplitInformation.SalaryHistory": 1,
         },
-      },
-    
+      }
     );
 
-
-    if (result.matchedCount === 0) {
+    if (!existingUser) {
       return { success: false, message: "User not found." };
     }
 
-    if (result.modifiedCount === 0) {
-      return { success: true, message: "Salary already up to date." };
+    const hca = existingUser.HCAComplitInformation;
+
+    const salaryHistory = hca.SalaryHistory || [];
+    const currentSalary = Number(hca.PaymentforStaff || 0);
+    const newSalary = Number(Amount);
+
+    const updateOps: any = {
+      $set: {
+        "HCAComplitInformation.PaymentforStaff": newSalary,
+        "HCAComplitInformation.ApprovedBy": ApprovedBy,
+      },
+      $push: {
+        "HCAComplitInformation.SalaryHistory": {
+          Salary: newSalary,
+          EffectiveFrom: EffectiveDate,
+        },
+      },
+    };
+
+    // First salary update? Preserve the previous salary.
+    if (salaryHistory.length === 0) {
+      updateOps.$push["HCAComplitInformation.SalaryHistory"] = {
+        $each: [
+          {
+            Salary: currentSalary,
+            EffectiveFrom: hca.JoiningDate || "2021-01-01",
+          },
+          {
+            Salary: newSalary,
+            EffectiveFrom: EffectiveDate,
+          },
+        ],
+      };
     }
 
-    return { success: true, message: "Salary updated Successfully." };
-  } catch (error: unknown) {
+    const result = await collection.updateOne(
+      { "HCAComplitInformation.UserId": Userid },
+      updateOps
+    );
+
+    if (result.modifiedCount === 0) {
+      return {
+        success: true,
+        message: "Salary already up to date.",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Salary updated Successfully.",
+    };
+  } catch (error: any) {
     console.error("HCASalaryUpdate Error:", error);
 
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Internal server error",
+      message: error.message || "Internal server error",
     };
   }
 };

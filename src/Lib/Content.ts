@@ -1,3 +1,4 @@
+import { CheckCircle2, FileText, LayoutDashboard, Receipt, Settings, Users, Wallet, XCircle } from "lucide-react";
 import { title } from "process";
 
 export const medicalSpecialties = [
@@ -426,6 +427,80 @@ export const ClientEnquiry_Filters = ["CallEnquiry", "Converted", "Waiting List"
 
 export const Placements_Filters = ["On Service", "Replacements", "Termination" ,"Awaiting Invoice"];
 
+
+export const menuItems = [
+
+  {
+    title: "Payable Payments",
+    icon: Wallet,
+    route: "/Payable",
+  },
+  {
+    title: "Completed Payments",
+    icon: CheckCircle2,
+    route: "/SuccessfulPayments",
+  },
+  {
+    title: "Rejected Payments",
+    icon: XCircle,
+    route: "/RejectPayments",
+  },
+];
+export const SuccussfulmenuItems = [
+
+  {
+    title: "Payable Payments",
+    icon: Wallet,
+    route: "/Payable",
+  },
+  {
+    title: "Process Payments",
+    icon: CheckCircle2,
+    route: "/HCAAccounts",
+  },
+  {
+    title: "Rejected Payments",
+    icon: XCircle,
+    route: "/RejectPayments",
+  },
+];
+export const RejectedmenuItems = [
+
+  {
+    title: "Payable Payments",
+    icon: Wallet,
+    route: "/Payable",
+  },
+  {
+    title: "Process Payments",
+    icon: CheckCircle2,
+    route: "/HCAAccounts",
+  },
+  {
+    title: "Completed Payments",
+    icon: CheckCircle2,
+    route: "/SuccessfulPayments",
+  },
+  
+];
+export const PayablemenuItems = [
+{
+    title: "Completed Payments",
+    icon: CheckCircle2,
+    route: "/SuccessfulPayments",
+  },
+ 
+  {
+    title: "Process Payments",
+    icon: CheckCircle2,
+    route: "/HCAAccounts",
+  },
+  {
+    title: "Rejected Payments",
+    icon: XCircle,
+    route: "/RejectPayments",
+  },
+];
 export const Timesheet_Filters = ["Provider Staff", "Co-provider", "Curate"];
 
 export const ReferralPay_Filters = ["Lead Referral", "Institute Referral", "Staff Referral"];
