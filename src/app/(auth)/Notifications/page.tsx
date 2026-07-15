@@ -70,6 +70,7 @@ export default function NotificationsCenter() {
 
   const filteredNotifications = useMemo(() => {
     if (filter === "All") return notifications;
+    
     return notifications.filter((n) => n.Status === filter);
   }, [notifications, filter]);
 
@@ -79,6 +80,7 @@ export default function NotificationsCenter() {
     action: "Approved" | "Rejected",
     dept: "HCP" | "Accounts"
   ) => {
+    console.log ("Check for Effective Date-----",info)
     const phoneNumbers: Record<string, string> = {
       HCP: "U0724CR5U8K",
       Accounts: "U07G1JX820K",
@@ -198,7 +200,9 @@ alert( info?.HCPId)
         const res = await HCASalaryUpdate(
           info?.HCPId,
           info?.RequestedSalary,
-          loggedInEmail
+          loggedInEmail,
+            info?.EffectiveDate
+
         );
 
         if (!res?.success) {

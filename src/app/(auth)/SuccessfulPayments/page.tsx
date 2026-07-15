@@ -4,10 +4,10 @@ let cachedUsersFullInfo: any[] = [];
 let cachedRegisterdUsers: any[] = [];
 import { LoadingData } from "@/Components/Loading/page";
 import { AssignSuitableIcon, toProperCaseLive } from "@/Lib/Actions";
-import { months, years } from "@/Lib/Content";
+import { menuItems, months, SuccussfulmenuItems, years } from "@/Lib/Content";
 import { GetAllUsersData, GetSuccesfulPaymentData } from "@/Lib/user.action";
 import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
-import { Eye, CheckCircle2, Search, Info, Minimize2 } from "lucide-react";
+import { Eye, CheckCircle2, Search, Info, Minimize2, X, Menu, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -88,8 +88,11 @@ export default function SuccessfulPayments() {
     const [isChecking, setIsChecking] = useState(true);
     const [showFullMonth,setShowFullMonth]=useState(false)
     const [attendanceInfo,setAttendenceInfo]=useState<any>()
-  const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
-        const [users, setUsers] = useState<any[]>([]);
+
+    const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
+    const users=useSelector((state:any)=>state.AdminFullInfo)
+  const [menuOpen, setMenuOpen] = useState(false);
+      
 const [PreviewData,setPreviewData]=useState<any>()
   const SearchMonth = useSelector((state: any) => state.FilterMonth);
   const SearchYear = useSelector((state: any) => state.FilterYear);
@@ -100,28 +103,28 @@ useEffect(() => {
   const FetchSuccessfullData = async () => {
     try {
       if (cachedSuccesfulpayments.length > 0) {
-            setUsers([...cachedUsersFullInfo]);
+          //   setUsers([...cachedUsersFullInfo]);
           
-          setRegisterdUsers([...cachedRegisterdUsers])
+          // setRegisterdUsers([...cachedRegisterdUsers])
         setPreviewData(cachedSuccesfulpayments);
         setIsChecking(false)
         return;
       }
 
       const GetData = await GetSuccesfulPaymentData();
-          const {
-          RegisterdUsers,
-          usersResult,
-          placementInfo,
-          replacementInfo,
-          terminationInfo,
-        } = await GetAllUsersData();
+        //   const {
+        //   RegisterdUsers,
+        //   usersResult,
+        //   placementInfo,
+        //   replacementInfo,
+        //   terminationInfo,
+        // } = await GetAllUsersData();
 
       console.log("Check ImportedData-------", GetData);
- cachedUsersFullInfo = usersResult ?? [];
-   cachedRegisterdUsers=RegisterdUsers??[]
-        setUsers([...cachedUsersFullInfo]);
-      setRegisterdUsers([...cachedRegisterdUsers])
+//  cachedUsersFullInfo = usersResult ?? [];
+//    cachedRegisterdUsers=RegisterdUsers??[]
+//         setUsers([...cachedUsersFullInfo]);
+//       setRegisterdUsers([...cachedRegisterdUsers])
       cachedSuccesfulpayments = Array.isArray(GetData) ? GetData : [];
       setPreviewData(cachedSuccesfulpayments);
       setIsChecking(false)
@@ -292,78 +295,142 @@ console.log("search", search);
     }
   return (
     <div className="bg-white rounded-3xl border border-green-100 shadow-xl overflow-hidden">
- <div className="px-6 py-5 border-b">
-  <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
-    <div className="flex items-center gap-4">
-      <div className="h-14 w-14 rounded-2xl bg-white shadow-md flex items-center justify-center border border-slate-200">
+<div className="border-b px-4 py-4 sm:px-6 sm:py-5">
+  <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+
+    {/* Left */}
+    <div className="relative flex w-full items-start gap-4 lg:w-auto">
+
+      {/* Menu + Logo */}
+      <div className="relative flex items-center gap-3">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="flex h-10 w-10 shrink-0 items-center cursor-pointer justify-center rounded-lg border border-slate-200 hover:bg-slate-100"
+        >
+          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+
         <img
           src="/Icons/Curate-logoq.png"
           alt="Curate Logo"
           className="h-10 w-10 object-contain"
         />
+
+        {menuOpen && (
+          <div className="absolute left-0 top-full z-50 mt-3 w-72 max-w-[90vw] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-black/5">
+            <div className="border-b border-slate-100 bg-slate-50 px-5 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Advance Payment Options
+              </p>
+            </div>
+
+            <div className="py-2">
+              {SuccussfulmenuItems.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <button
+                    key={item.title}
+                    onClick={() => {
+                      setMenuOpen(false);
+                    router.push(item.route);
+                    }}
+                    className="group flex w-full items-center cursor-pointer justify-between px-5 py-3 transition hover:bg-teal-50 hover:text-teal-700"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-slate-100 p-2 group-hover:bg-teal-100">
+                        <Icon size={18} />
+                      </div>
+
+                      <span className="font-medium">{item.title}</span>
+                    </div>
+
+                    <ChevronRight
+                      size={18}
+                      className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-teal-600"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
-      <div>
-        <h2 className="text-2xl font-bold text-green-600">
+      {/* Title */}
+      <div className="min-w-0">
+        <h2 className="text-xl font-bold text-green-600 sm:text-2xl">
           Successful Payments
         </h2>
 
-        <p className="text-slate-500 text-sm">
+        <p className="text-sm text-slate-500">
           Successfully processed payroll transactions
         </p>
       </div>
     </div>
 
-    
-          <div className="relative min-w-[250px] flex-1 max-w-[350px]">
-            <Search
-              size={16}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94a3b8]"
-            />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-11 rounded-2xl border border-[#d9e2ec] bg-white pl-12 pr-4 text-black"
-            />
-          </div>
+    {/* Right Controls */}
+    <div className="flex w-full flex-col gap-3 lg:w-auto lg:flex-row lg:items-center">
 
-          <div className="flex flex-wrap gap-3">
-            <select
-              value={SearchMonth}
-              onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
-              className="w-[140px] h-[40px] rounded-xl border border-gray-300 px-3 text-sm bg-white text-gray-800"
-            >
-              <option value="">All Months</option>
-              {[...Array(12)].map((_, i) => (
-                <option key={i} value={`${i + 1}`}>
-                  {new Date(0, i).toLocaleString("default", {
-                    month: "long",
-                  })}
-                </option>
-              ))}
-            </select>
+      {/* Search */}
+      <div className="relative w-full lg:w-[320px]">
+        <Search
+          size={16}
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+        />
 
-            <select
-              value={SearchYear}
-              onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
-              className="w-[120px] h-[40px] rounded-xl border border-gray-300 px-3 text-sm bg-white text-gray-800"
-            >
-              <option value="">All Years</option>
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-              <button
-onClick={() => router.push("/SubAccountings")}
-          className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+        <input
+          type="text"
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-11 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4"
+        />
+      </div>
+
+      {/* Filters */}
+      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3 lg:flex lg:w-auto">
+
+        <select
+          value={SearchMonth}
+          onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
+          className="h-11 w-full rounded-xl border border-gray-300 px-3 text-sm"
+        >
+          <option value="">All Months</option>
+
+          {[...Array(12)].map((_, i) => (
+            <option key={i} value={`${i + 1}`}>
+              {new Date(0, i).toLocaleString("default", {
+                month: "long",
+              })}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={SearchYear}
+          onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
+          className="h-11 w-full rounded-xl border border-gray-300 px-3 text-sm"
+        >
+          <option value="">All Years</option>
+
+          {years.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+
+        <button
+          onClick={() => router.push("/SubAccountings")}
+          className="flex h-11 w-full items-center justify-center rounded-xl bg-gradient-to-br from-[#00A9A5] to-[#005f61] px-4 font-semibold text-white transition hover:from-[#01cfc7] hover:to-[#00403e] sm:w-auto"
         >
           Accounts Dashboard
         </button>
-          </div>
+      </div>
+
+    </div>
+
   </div>
 </div>
   {showFullMonth && (

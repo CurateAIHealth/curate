@@ -448,7 +448,7 @@ const GetMonthlyCharges = (A:any) => {
 
   const FinelTimeSheet = ClientsInformation?.map((each: any) => {
 const normalizedAttendance =
-console.log("Check for Reason-----",each.Attendance)
+
   Array.isArray(each.Attendance) && each.Attendance.length > 0
     ? each.Attendance.map((att: any) => {
         const hcp =
@@ -1454,6 +1454,7 @@ const processedData = useMemo(() => {
 SearchYear,
 SelectedServiceStates
 ]);
+
 const UpdateServiceCharge=async(A:any)=>{
   SetActionStatusMessage("Please Wait...")
   alert(A)
@@ -2232,7 +2233,7 @@ setShowCareTakerPriceUpdate(false)
 
    
       <th className="w-[70px] px-2 py-2 text-center">
-   Rise Refund
+   Rise Refund {processedData.length}
     </th>
      <th className="w-[70px] px-2 py-2 text-center">
       Terminate
@@ -2711,7 +2712,83 @@ const EditDate =
     {ActionStatusMessage}
   </p>
 )}
+{ReplacementTime&&(() => {
+  const [h, m] = ReplacementTime.split(":").map(Number);
+  const totalMinutes = h * 60 + m;
 
+  const ELEVEN_THIRTY = 11 * 60 + 30;
+  const THREE_PM = 15 * 60;
+
+  let oldStatus = "";
+  let newStatus = "";
+  let oldPayment = "";
+  let newPayment = "";
+
+  if (totalMinutes < ELEVEN_THIRTY) {
+    oldStatus = "Absent";
+    newStatus = "Present";
+    oldPayment = "0%";
+    newPayment = "100%";
+  } else if (totalMinutes < THREE_PM) {
+    oldStatus = "Half Day";
+    newStatus = "Half Day";
+    oldPayment = "50%";
+    newPayment = "50%";
+  } else {
+    oldStatus = "Present";
+    newStatus = "Absent";
+    oldPayment = "100%";
+    newPayment = "0%";
+  }
+
+  return (
+    <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 mt-4">
+      <h3 className="text-sm font-semibold text-blue-900 mb-3">
+        Attendance & Payment Preview
+      </h3>
+
+      <div className="grid grid-cols-2 gap-4 text-sm">
+
+        <div className="bg-white rounded-lg p-3 border">
+          <p className="font-semibold text-gray-700 mb-2">
+            Existing HCA
+          </p>
+
+          <p>
+            <span className="text-gray-500">Attendance:</span>{" "}
+            <span className="font-semibold">{oldStatus}</span>
+          </p>
+
+          <p>
+            <span className="text-gray-500">Payment:</span>{" "}
+            <span className="font-semibold">{oldPayment}</span>
+          </p>
+        </div>
+
+        <div className="bg-white rounded-lg p-3 border">
+          <p className="font-semibold text-gray-700 mb-2">
+            New HCA
+          </p>
+
+          <p>
+            <span className="text-gray-500">Attendance:</span>{" "}
+            <span className="font-semibold">{newStatus}</span>
+          </p>
+
+          <p>
+            <span className="text-gray-500">Payment:</span>{" "}
+            <span className="font-semibold">{newPayment}</span>
+          </p>
+        </div>
+
+      </div>
+
+      <p className="text-xs text-gray-600 mt-3">
+        Attendance and payment will be calculated automatically based on the selected replacement time.
+      </p>
+    </div>
+  );
+})()}
 
         <div className="flex justify-end gap-4 pt-2">
           <button
@@ -3297,7 +3374,13 @@ setSelectedDate(e.target.value)
     {ActionStatusMessage}
   </p>
 )}
- 
+ {ReplacementDate&&<div className="flex items-start gap-2 rounded-lg border mt-2 text-center border-amber-300 bg-amber-50 px-4 py-3 text-amber-800">
+  <span className="text-xl">⚠️</span>
+  <p className="text-sm font-medium">
+    Make sure HCA attendance is marked for{" "}
+    <span className="font-bold">{ReplacementDate}</span>.
+  </p>
+</div>}
       <div className="flex justify-end gap-4 mt-8">
         <button
           onClick={() => setShowDeletePopup(false)}
@@ -3926,7 +4009,7 @@ function DayBadge({ status }: { status: any }) {
 const GetFilterCount = (type: string) => {
   switch (type) {
     case "On Service":
-      return onServiceCount;
+      return processedData.length;
     case "Termination":
       return terminationInfo.filter(item =>
         matchesSearchAndMonth(item, "", SearchMonth, SearchYear)

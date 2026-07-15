@@ -1,13 +1,21 @@
 "use client";
-let cachedUsersFullInfo: any[] = [];
-let cachedDeploymentInfo: any[] = [];
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-let cachedRegisterdUsers: any[] = [];
-let cachedReplacementInfo: any[] = [];
-let cachedTerminationInfo: any[] = [];
+let replacementTerminationCache: {
+  data: {
+    replacementInfo: any[];
+    terminationInfo: any[];
+  } | null;
+  timestamp: number;
+  promise: Promise<any> | null;
+} = {
+  data: null,
+  timestamp: 0,
+  promise: null,
+};
 import React, { useEffect, useMemo, useState } from "react";
-import { CircleX, Info, Minimize2, Search, Slice, Users } from "lucide-react";
-import { months, years } from "@/Lib/Content";
+import { ChevronRight, CircleX, Info, Menu, Minimize2, Search, Slice, Users, X } from "lucide-react";
+import { menuItems, months, years } from "@/Lib/Content";
 import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
@@ -79,7 +87,9 @@ const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
 const users=useSelector((state:any)=>state.AdminFullInfo)
 const ClientsInformation=useSelector((state:any)=>state.AdminDeployment)
 
-      const[PreviewInfo,setPreviewInfo]=useState<any>("OnService Payments")
+     const [activeStatus, setActiveStatus] = useState("Process");
+const [menuOpen, setMenuOpen] = useState(false);
+const statuses = ["Process", "Save", "Hold", "Rejected"];
       const [ReplacementInformation, setReplacementInformation] = useState<Replace[]>([]);
       const [TerminationInformation, setTerminationInformation] = useState<Termination[]>([]);
    
@@ -89,8 +99,89 @@ const ClientsInformation=useSelector((state:any)=>state.AdminDeployment)
    const router=useRouter()
      const dispatch = useDispatch();
     const [data, setData] = useState<any[]>([])
+useEffect(() => {
+  // Wait until data fetching is completed
+  if (isChecking) return;
+
+  if (
+    RegisterdUsers.length === 0 ||
+    users.length === 0 ||
+    ClientsInformation.length === 0
+  ) {
+    router.replace("/");
+  }
+}, [
+  isChecking,
+  RegisterdUsers,
+  users,
+  ClientsInformation,
+  router,
+]);
+useEffect(() => {
+const fetchData = async (forceRefresh = false) => {
+  const now = Date.now();
+
+  // Use cache if valid
+  if (
+    !forceRefresh &&
+    replacementTerminationCache.data &&
+    now - replacementTerminationCache.timestamp < CACHE_DURATION
+  ) {
+    const { replacementInfo, terminationInfo } =
+      replacementTerminationCache.data;
+
+    setReplacementInformation(replacementInfo);
+    setTerminationInformation(terminationInfo);
+    return;
+  }
+
+  // Prevent duplicate simultaneous requests
+  if (replacementTerminationCache.promise && !forceRefresh) {
+    setIsChecking(true);
+
+    try {
+      const data = await replacementTerminationCache.promise;
+
+      setReplacementInformation(data.replacementInfo);
+      setTerminationInformation(data.terminationInfo);
+    } finally {
+      setIsChecking(false);
+    }
+
+    return;
+  }
+
+  setIsChecking(true);
+
+  replacementTerminationCache.promise = axios
+    .get("/api/Replacmentterminationinfo")
+    .then((res) => res.data.data);
+
+  try {
+    const data = await replacementTerminationCache.promise;
+
+    replacementTerminationCache = {
+      data,
+      timestamp: Date.now(),
+      promise: null,
+    };
+
+    setReplacementInformation(data.replacementInfo);
+    setTerminationInformation(data.terminationInfo);
+  } catch (error) {
+    replacementTerminationCache.promise = null;
+    console.error("Failed to fetch replacement/termination data:", error);
+  } finally {
+    setIsChecking(false);
+  }
+};
+
+  fetchData();
 
 
+}, [
+ 
+]);
 
   const matchesSearchAndMonth = (
   item: any,
@@ -143,7 +234,6 @@ const ClientsInformation=useSelector((state:any)=>state.AdminDeployment)
     return address ?? "Not Entered";
   };
 
-console.log("Check Replacement----",ReplacementInformation)
 
      const GetHCPType = (A: any) => {
     if (!RegisterdUsers?.length || !A) return "Not Entered";
@@ -153,7 +243,7 @@ console.log("Check Replacement----",ReplacementInformation)
 
     return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
   };
-  console.log("Check Termination----",GetHCPType("e416b9be-8bc9-41ce-94a7-7b358a422529"))
+
 const GetHCPPayment = (A: any) => {
   if (!users?.length || !A) return 0;
 
@@ -185,9 +275,18 @@ const getTransactions = (userId: string) => {
   )?.HCAComplitInformation.Transactions
 ;
 };
+const GetSalaryHistory= (userId: string) => {
+  if (!users?.length || !userId) return null;
+
+  return users.find(
+    (each: any) =>
+      each?.HCAComplitInformation?.UserId === userId
+  )?.HCAComplitInformation.SalaryHistory
+;
+};
  
-
-const DeployInformation = ClientsInformation.map((each: any) => {
+const DeployInformation= useMemo(() => {
+return  ClientsInformation.map((each: any) => {
      const attendanceSummary = each.Attendance.reduce(
           (acc: any, att: any) => {
             const hcp = att.HCPAttendence === true;
@@ -222,6 +321,7 @@ const DeployInformation = ClientsInformation.map((each: any) => {
     Clientid: each.ClientId,
     name: each.HCAName,
     transactions: MonthlyExpensesInfo?.Transactions||[],
+    SalaryHistory: GetSalaryHistory(each.HCAId),
     attendanceInfo: each.Attendance,
     PaymentVerficationStatus:each.PaymentVerificationStatus||"Process",
     CompliteAttendeceSummery: attendanceSummary,
@@ -242,9 +342,71 @@ const DeployInformation = ClientsInformation.map((each: any) => {
 
   };
 });
+}, [
+    ClientsInformation,
+    users,
+    RegisterdUsers,
+    SearchMonth,
+    SearchYear
+]);
+// const DeployInformation = ClientsInformation.map((each: any) => {
+//      const attendanceSummary = each.Attendance.reduce(
+//           (acc: any, att: any) => {
+//             const hcp = att.HCPAttendence === true;
+//             const admin = att.AdminAttendece === true;
+
+//             if (hcp && admin) {
+//               acc.present += 1;
+//             } else if (hcp || admin) {
+//               acc.halfDay += 1;
+//             } else {
+//               acc.absent += 1;
+//             }
+
+//             return acc;
+//           },
+//           {
+//             present: 0,
+//             halfDay: 0,
+//             absent: 0,
+//           }
+//         );
+//         const Expenses=getExpenseList(each.HCAId)
+//         const Transactions=getTransactions(each.HCAId)
+//   const MonthlyExpensesInfo =
+//   Array.isArray(Expenses)
+//     ? Expenses.find(
+//         (exp: any) => exp.Month === `${SearchMonth}-${SearchYear}`
+//       )
+//     : null;
+//   return {
+//     ...each,
+//     Clientid: each.ClientId,
+//     name: each.HCAName,
+//     transactions: MonthlyExpensesInfo?.Transactions||[],
+//     SalaryHistory: GetSalaryHistory(each.HCAId),
+//     attendanceInfo: each.Attendance,
+//     PaymentVerficationStatus:each.PaymentVerificationStatus||"Process",
+//     CompliteAttendeceSummery: attendanceSummary,
+//     PreviewINPaymentPage:each.PreviewINPaymentPage||"Enabled",
+//     Expences: MonthlyExpensesInfo?.DueAmounts[0]||MonthlyExpensesInfo?.DueAmounts || {
+//       advance: 0,
+//       hostel: 0,
+//       other: 0,
+//       incentives: 0,
+//       others: 0,
+//       advanceDescription: "",
+//       hostelDescription: "",
+//       otherDescription: "",
+//       incentivesDescription: "",
+//       othersDescription: "",
+//     }
 
 
-const ReplasementAttendece=ReplacementInformation.map((each: any) => {
+//   };
+// });
+const ReplasementAttendece=useMemo(() => {
+    return ReplacementInformation.map((each: any) => {
      const attendanceSummary = each.Attendance.reduce(
           (acc: any, att: any) => {
             const hcp = att.HCPAttendence === true;
@@ -278,6 +440,7 @@ const ReplasementAttendece=ReplacementInformation.map((each: any) => {
     ...each,
     Clientid: each.ClientId,
     name: each.HCAName,
+     SalaryHistory: GetSalaryHistory(each.HCAId),
     transactions: MonthlyExpensesInfo?.Transactions||[],
     attendanceInfo: each.Attendance,
     PaymentVerficationStatus:each.PaymentVerificationStatus||"Process",
@@ -299,7 +462,74 @@ const ReplasementAttendece=ReplacementInformation.map((each: any) => {
 
   };
 });
-const TerminatedData=TerminationInformation.map((each: any) => {
+
+}, [
+    ReplacementInformation,
+    users,
+    RegisterdUsers,
+    SearchMonth,
+    SearchYear
+]);
+
+// const ReplasementAttendece=ReplacementInformation.map((each: any) => {
+//      const attendanceSummary = each.Attendance.reduce(
+//           (acc: any, att: any) => {
+//             const hcp = att.HCPAttendence === true;
+//             const admin = att.AdminAttendece === true;
+
+//             if (hcp && admin) {
+//               acc.present += 1;
+//             } else if (hcp || admin) {
+//               acc.halfDay += 1;
+//             } else {
+//               acc.absent += 1;
+//             }
+
+//             return acc;
+//           },
+//           {
+//             present: 0,
+//             halfDay: 0,
+//             absent: 0,
+//           }
+//         );
+//         const Expenses=getExpenseList(each.HCAId)
+//         const Transactions=getTransactions(each.HCAId)
+//   const MonthlyExpensesInfo =
+//   Array.isArray(Expenses)
+//     ? Expenses.find(
+//         (exp: any) => exp.Month === `${SearchMonth}-${SearchYear}`
+//       )
+//     : null;
+//   return {
+//     ...each,
+//     Clientid: each.ClientId,
+//     name: each.HCAName,
+//      SalaryHistory: GetSalaryHistory(each.HCAId),
+//     transactions: MonthlyExpensesInfo?.Transactions||[],
+//     attendanceInfo: each.Attendance,
+//     PaymentVerficationStatus:each.PaymentVerificationStatus||"Process",
+//     CompliteAttendeceSummery: attendanceSummary,
+//     PreviewINPaymentPage:each.PreviewINPaymentPage||"Enabled",
+//     Expences: MonthlyExpensesInfo?.DueAmounts[0]||MonthlyExpensesInfo?.DueAmounts || {
+//       advance: 0,
+//       hostel: 0,
+//       other: 0,
+//       incentives: 0,
+//       others: 0,
+//       advanceDescription: "",
+//       hostelDescription: "",
+//       otherDescription: "",
+//       incentivesDescription: "",
+//       othersDescription: "",
+//     }
+
+
+//   };
+// });
+
+const TerminatedData=useMemo(() => {
+    return TerminationInformation.map((each: any) => {
 
      const attendanceSummary = (each.Attendence || []).reduce(
           (acc: any, att: any) => {
@@ -322,7 +552,7 @@ const TerminatedData=TerminationInformation.map((each: any) => {
             absent: 0,
           }
         );
-        console.log ("check Attendece Summery-----",attendanceSummary)
+ 
         const Expenses=getExpenseList(each.HCAid)
         const Transactions=getTransactions(each.HCAid)
   const MonthlyExpensesInfo =
@@ -336,6 +566,7 @@ const TerminatedData=TerminationInformation.map((each: any) => {
     Clientid: each.ClientId,
     name: each.HCAName,
     HCAId:each.HCAid,
+     SalaryHistory: GetSalaryHistory(each.HCAId),
     transactions: MonthlyExpensesInfo?.Transactions||[],
     attendanceInfo: each.Attendence,
     PaymentVerficationStatus:each.PaymentVerificationStatus||"Process",
@@ -357,7 +588,143 @@ const TerminatedData=TerminationInformation.map((each: any) => {
 
   };
 });
-console.log("Checek-----",ReplasementAttendece)
+
+}, [
+    TerminationInformation,
+    users,
+    RegisterdUsers,
+    SearchMonth,
+    SearchYear
+]);
+// const TerminatedData=TerminationInformation.map((each: any) => {
+
+//      const attendanceSummary = (each.Attendence || []).reduce(
+//           (acc: any, att: any) => {
+//             const hcp = att.HCPAttendence === true;
+//             const admin = att.AdminAttendece === true;
+
+//             if (hcp && admin) {
+//               acc.present += 1;
+//             } else if (hcp || admin) {
+//               acc.halfDay += 1;
+//             } else {
+//               acc.absent += 1;
+//             }
+  
+//             return acc;
+//           },
+//           {
+//            present: 0,
+//             halfDay: 0,
+//             absent: 0,
+//           }
+//         );
+ 
+//         const Expenses=getExpenseList(each.HCAid)
+//         const Transactions=getTransactions(each.HCAid)
+//   const MonthlyExpensesInfo =
+//   Array.isArray(Expenses)
+//     ? Expenses.find(
+//         (exp: any) => exp.Month === `${SearchMonth}-${SearchYear}`
+//       )
+//     : null;
+//   return {
+//     ...each,
+//     Clientid: each.ClientId,
+//     name: each.HCAName,
+//     HCAId:each.HCAid,
+//      SalaryHistory: GetSalaryHistory(each.HCAId),
+//     transactions: MonthlyExpensesInfo?.Transactions||[],
+//     attendanceInfo: each.Attendence,
+//     PaymentVerficationStatus:each.PaymentVerificationStatus||"Process",
+//     CompliteAttendeceSummery: attendanceSummary,
+//     PreviewINPaymentPage:each.PreviewINPaymentPage||"Enabled",
+//     Expences: MonthlyExpensesInfo?.DueAmounts[0]||MonthlyExpensesInfo?.DueAmounts || {
+//       advance: 0,
+//       hostel: 0,
+//       other: 0,
+//       incentives: 0,
+//       others: 0,
+//       advanceDescription: "",
+//       hostelDescription: "",
+//       otherDescription: "",
+//       incentivesDescription: "",
+//       othersDescription: "",
+//     }
+
+
+//   };
+// });
+
+
+
+const mergedPayments = useMemo(() => {
+  return [
+    ...DeployInformation.map((item: { attendanceInfo: any; }) => ({
+      ...item,
+      PreviewInfo:"OnService Payments",
+      attendanceInfo: item.attendanceInfo || [],
+    })),
+
+    ...ReplasementAttendece.map(item => ({
+      ...item,
+            PreviewInfo:"Replacement Payments",
+      attendanceInfo: item.attendanceInfo || [],
+    })),
+
+    ...TerminatedData.map(item => ({
+      ...item,
+            PreviewInfo:"Termination Payments",
+      attendanceInfo: item.attendanceInfo || [],
+    })),
+  ];
+}, [
+  DeployInformation,
+  ReplasementAttendece,
+  TerminatedData,
+]);
+
+const filtered = useMemo(() => {
+  return mergedPayments.filter((item) =>
+    item.PaymentVerficationStatus===activeStatus&&
+    matchesSearchAndMonth(
+      item,
+      search,
+      SearchMonth,
+      SearchYear
+    )
+  );
+}, [
+  mergedPayments,
+  search,
+  activeStatus,
+  SearchMonth,
+  SearchYear,
+]);
+
+useEffect(() => {
+  setData(filtered);
+}, [filtered]);
+
+const grouped = Object.values(
+  mergedPayments.reduce((acc: any, item: any) => {
+    if (!acc[item.HCAId]) {
+      acc[item.HCAId] = {
+        ...item,
+        attendanceInfo: [...(item.attendanceInfo || [])],
+        Sources: [item.Source],
+      };
+    } else {
+      acc[item.HCAId].attendanceInfo.push(
+        ...(item.attendanceInfo || [])
+      );
+
+      acc[item.HCAId].Sources.push(item.Source);
+    }
+
+    return acc;
+  }, {})
+);
 // const ReplacementAttendenceinformation= ReplacementInformation.map((each: any) => {
 //      const attendanceSummary = each.Attendance.reduce(
 //           (acc: any, att: any) => {
@@ -416,59 +783,13 @@ console.log("Checek-----",ReplasementAttendece)
 // console.log("Check Replacementinformation----",ReplacementAttendenceinformation)
 
 
-const UpdatePreviewInfo=async(SwitchValue:any)=>{
-try{
-  setIsChecking(true)
-  const getReplasmentandTerminationData= await axios.get("api/Replacmentterminationinfo")
-  const {
-replacementInfo,
-terminationInfo
-  }=getReplasmentandTerminationData.data.data
-  setReplacementInformation(replacementInfo)
-  setTerminationInformation(terminationInfo)
-   setIsChecking(false)
 
-setPreviewInfo(SwitchValue)
-}catch(err:any){
-  
-}
-}
-useEffect(() => {
-  let sourceData: any[] = [];
-
-  if (PreviewInfo === "Replacement Payments") {
-    sourceData = ReplasementAttendece;
-  } else if (PreviewInfo === "Termination Payments") {
-    sourceData = TerminatedData;
-  } else {
-    sourceData = DeployInformation;
-  }
-
-  const filtered = sourceData.filter((item) =>
-    matchesSearchAndMonth(
-      item,
-      search,
-      SearchMonth,
-      SearchYear
-    )
-  );
-
-  setData(filtered);
-}, [
-  ClientsInformation,
-  ReplacementInformation,
-  TerminationInformation,
-  search,
-  SearchMonth,
-  SearchYear,
-  PreviewInfo,
-]);
 
 const NumberOfDaysInMonth = getDaysInMonth(
   Number(SearchMonth),
   Number(SearchYear)
 );
-console.log("Check Information------",DeployInformation)
+
 
 const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
   setPopup({
@@ -479,8 +800,8 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
   const value = status
   
    const MonthInfo=`${SearchYear}-${SearchMonth}`
-    const UpdatedinDB:any=await UpdatePaymentVerificationStatusInDb(HCAId,ClientId,value,MonthInfo,Info.StartDate,PreviewInfo)
-    console.log("Check Updated Payment Status----",UpdatedinDB)
+    const UpdatedinDB:any=await UpdatePaymentVerificationStatusInDb(HCAId,ClientId,value,MonthInfo,Info.StartDate,Info.PreviewInfo)
+
     if(UpdatedinDB.success){
       
       setData((prev) =>
@@ -520,10 +841,10 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
       type: "loading",
     });
      const MonthInfo=`${SearchYear}-${SearchMonth}`
-     console.log("Check Row Information for Payable Page----",row.ClientId,row.HCAId,MonthInfo)
-  if(PreviewInfo==="OnService Payments"){
+    
+  if(row.PreviewInfo==="OnService Payments"){
       const UpdatedinDB=await PostINPayblePage(row.HCAId,row.ClientId,MonthInfo,row,totalAmount)
-    console.log("Check Updated Payment Status----",UpdatedinDB)
+   
     if(UpdatedinDB.success){
       
       setData((prev) =>
@@ -546,9 +867,9 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
       });
     }
   }
-    if(PreviewInfo==="Replacement Payments"){
+    if(row.PreviewInfo==="Replacement Payments"){
       const UpdatedinDB=await PostINPayblePageforRepleasments(row.HCAId,row.ClientId,MonthInfo,row,totalAmount)
-    console.log("Check Updated Payment Status----",UpdatedinDB)
+ 
     if(UpdatedinDB.success){
       
       setData((prev) =>
@@ -571,10 +892,10 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
       });
     }
   }
-   if(PreviewInfo==="Termination Payments"){
+   if(row.PreviewInfo==="Termination Payments"){
       const UpdatedinDB=await PostINPayblePageforTermination(row.HCAId,row.ClientId,MonthInfo,row,totalAmount,row.
 StartDate)
-    console.log("Check Updated Payment Status----",UpdatedinDB)
+   
     if(UpdatedinDB.success){
       
       setData((prev) =>
@@ -606,12 +927,75 @@ StartDate)
     row.other +
     row.incentives +
     row.others;
+const formatCurrency = (
+  attendanceInfo: any[],
+  salaryHistory: any[],
+  currentSalary: number,
+  searchMonth: number,
+  searchYear: number
+) => {
+  if (!attendanceInfo?.length) return 0;
 
-  const formatCurrency = (amount: number,present: any, halfDay: any, absent:any) =>{
-    const FullPayment=Number(present)*Number(amount)
-    const HalfDayAmount=Number(halfDay)*Number(amount)/2
-     return Math.round(FullPayment + HalfDayAmount);
-  };
+  const history =
+    salaryHistory && salaryHistory.length
+      ? [...salaryHistory].sort(
+          (a: any, b: any) =>
+            new Date(a.EffectiveFrom).getTime() -
+            new Date(b.EffectiveFrom).getTime()
+        )
+      : [
+          {
+            Salary: currentSalary,
+            EffectiveFrom: "2000-01-01",
+          },
+        ];
+
+  let total = 0;
+
+  attendanceInfo.forEach((attendance: any) => {
+const attendanceDate = new Date(attendance.AttendenceDate);
+attendanceDate.setHours(0, 0, 0, 0);
+
+    let salary = currentSalary;
+if (
+    attendanceDate.getMonth() + 1 !== searchMonth ||
+    attendanceDate.getFullYear() !== searchYear
+  ) {
+    return;
+  }
+ 
+  const attendanceKey = attendance.AttendenceDate.toString().substring(0, 10);
+
+for (const item of history) {
+  const effectiveKey = item.EffectiveFrom.toString().substring(0, 10);
+
+  if (effectiveKey <= attendanceKey) {
+    salary = Number(item.Salary);
+  } else {
+    break;
+  }
+}
+
+    const daysInMonth = getDaysInMonth(
+      attendanceDate.getMonth() + 1,
+      attendanceDate.getFullYear()
+    );
+
+   const dailySalary = Math.floor(salary / daysInMonth);
+
+
+    const hcp = attendance.HCPAttendence === true;
+    const admin = attendance.AdminAttendece === true;
+
+    if (hcp && admin) {
+      total += dailySalary;
+    } else if (hcp || admin) {
+      total += dailySalary / 2;
+    }
+  });
+
+  return Math.ceil(total);
+};
 
  const handleSave = async (row: PayrollRow) => {
 
@@ -675,7 +1059,7 @@ StartDate)
         : item
     )
   );
-console.log("Check loggedInEmail",loggedInEmail)
+
     const UpdatingExpenses = await updateExpense(
     row.HCAId,
     row.Expences,
@@ -683,7 +1067,7 @@ console.log("Check loggedInEmail",loggedInEmail)
     newTransactions,
     `${SearchMonth}-${SearchYear}`
   );
-console.log("Check Updated Expenses----",UpdatingExpenses)
+
   if(UpdatingExpenses.success){
      const res:any=await axios.post("/api/Slack", {
   userIds: ["U0992KS6811", "U04RYNQJJF7"],
@@ -813,119 +1197,167 @@ const handleChange = (
   
       );
     }
- console.log("Check for Data-----",data)
-  return (
-    <div className="w-full min-h-screen bg-[#f4f7fb] p-3 md:p-6 overflow-x-hidden">
-      <div className="flex flex-wrap items-center gap-4 mb-6">
-        <div  className="flex items-center gap-4 justify-between w-full">
-        
 
-          <div className="flex items-center gap-4">
-              <img
-            src="/Icons/Curate-logoq.png"
-            alt="Company Logo"
-            className="h-12 w-12 object-contain"
-          />
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#0f172a]">
-         Process
-            </h1>
-            <p className="text-sm text-[#64748b]">
-              Payroll Management Dashboard
-            </p>
-            </div>
-          </div>
+  return (
+    <div className="w-full min-h-screen bg-[#f4f7fb] p-3 md:p-2 overflow-x-hidden">
+      <div className="flex flex-wrap items-center gap-4 mb-6">
+        <div className="relative flex items-center justify-between w-full rounded-2xl bg-white p-4 shadow-sm">
+
+  {/* Left */}
+  <div className="flex items-center gap-3">
+    {/* Mobile Menu */}
+    <button
+      onClick={() => setMenuOpen(!menuOpen)}
+      className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-100 "
+    >
+      {menuOpen ? <X size={22} /> : <Menu size={22} />}
+    </button>
+
+    {/* Logo */}
+    <img
+      src="/Icons/Curate-logoq.png"
+      alt="Company Logo"
+      className="h-11 w-11 md:h-12 md:w-12 object-contain"
+    />
+
+    {/* Title */}
+    <div>
+      <h1 className="text-xl font-bold text-slate-900 md:text-3xl">
+        Process
+      </h1>
+
+      <p className="hidden text-sm text-slate-500 sm:block">
+        Payroll Management Dashboard
+      </p>
+    </div>
+  </div>
+
+  {/* Desktop Button */}
+  <button
+    onClick={() => (window.location.href = "/SubAccountings")}
+    className="hidden lg:flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 font-semibold text-white shadow transition hover:bg-teal-700"
+  >
+    Accounts Dashboard
+  </button>
+
+  {/* Mobile Dropdown */}
+  {menuOpen && (
+  <div className="absolute left-0 top-full z-50 mt-3 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-200">
+
+    {/* Header */}
+    <div className="border-b border-slate-100 bg-slate-50 px-5 py-3">
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        Avandce Payment Options
+      </p>
+    </div>
+
+    {/* Menu Items */}
+    <div className="py-2">
+      {menuItems.map((item) => {
+        const Icon = item.icon;
+
+        return (
           <button
-onClick={() => router.push("/SubAccountings")}
-          className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
-        >
-          Accounts Dashboard
-        </button>
-        </div>
+            key={item.title}
+            onClick={() => {
+              setMenuOpen(false);
+            router.push(item.route)
+            }}
+            className="group flex w-full items-center justify-between px-5 py-3 transition-all duration-200 hover:bg-teal-50 hover:text-teal-700 cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-slate-100 p-2 transition group-hover:bg-teal-100">
+                <Icon size={18} />
+              </div>
+
+              <span className="font-medium">
+                {item.title}
+              </span>
+            </div>
+
+            <ChevronRight
+              size={18}
+              className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-teal-600"
+            />
+          </button>
+        );
+      })}
+    </div>
+  </div>
+)}
+</div>
         
         <div className="flex flex-wrap gap-3 w-full justify-between items-center">
          
-<div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-1.5">
-   <button
-    type="button"
- onClick={() => {
-  if (
-    users?.length === 0 &&
-    RegisterdUsers?.length === 0 &&
-    ClientsInformation?.length === 0
-  ) {
-    router.push("/");
-    return;
-  }
+<div className="flex w-full flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+  {/* Left Section */}
+  <div className="flex flex-wrap gap-3">
+    {statuses.map((status) => (
+      <button
+        key={status}
+        onClick={() => setActiveStatus(status)}
+        className={`rounded-xl px-5 cursor-pointer py-2.5 text-sm font-semibold transition-all duration-200 border whitespace-nowrap
+          ${
+            activeStatus === status
+              ? "bg-teal-600 text-white border-teal-600 shadow-lg scale-105"
+              : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100 hover:border-teal-500 hover:text-teal-600"
+          }`}
+      >
+        {status}
+      </button>
+    ))}
+  </div>
 
-  setPreviewInfo("OnService Payments");
-}}
-    className={PreviewInfo === "OnService Payments" ? `rounded-md  cursor-pointer px-4 py-2 text-sm font-semibold text-white transition-colors bg-[#117fb8]` : `rounded-md bg-white cursor-pointer px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100`}
-  >
-    OnService Payments
-  </button>
-  <button
-    type="button"
-     onClick={() => UpdatePreviewInfo("Replacement Payments")}
-    className={PreviewInfo === "Replacement Payments" ? `rounded-md  cursor-pointer px-4 py-2 text-sm font-semibold text-white transition-colors bg-[#117fb8]` : `rounded-md bg-white cursor-pointer px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100`}
-  >
-    Replacement Payments
-  </button>
+  {/* Right Section */}
+  <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
+    {/* Search */}
+    <div className="relative w-full sm:min-w-[260px] xl:min-w-[320px]">
+      <Search
+        size={16}
+        className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+      />
 
-  <button
-    type="button"
-        onClick={() => UpdatePreviewInfo("Termination Payments")}
-    className={PreviewInfo === "Termination Payments" ? `rounded-md  cursor-pointer px-4 py-2 text-sm font-semibold text-white transition-colors bg-[#117fb8]` : `rounded-md bg-white cursor-pointer px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100`}
-  >
-    Termination Payments
-  </button>
+      <input
+        type="text"
+        placeholder="Search..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="h-11 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200"
+      />
+    </div>
+
+    {/* Filters */}
+    <div className="flex gap-3 sm:w-auto">
+      <select
+        value={SearchMonth}
+        onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
+        className="h-11 flex-1 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:w-[150px] sm:flex-none"
+      >
+        <option value="">All Months</option>
+        {[...Array(12)].map((_, i) => (
+          <option key={i} value={`${i + 1}`}>
+            {new Date(0, i).toLocaleString("default", {
+              month: "long",
+            })}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={SearchYear}
+        onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
+        className="h-11 flex-1 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:w-[130px] sm:flex-none"
+      >
+        <option value="">All Years</option>
+        {years.map((year) => (
+          <option key={year} value={year}>
+            {year}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
 </div>
-<div className="flex flex-wrap gap-3 items-center">
-          <div className="relative min-w-[250px] flex-1 max-w-[350px]">
-           
-            <Search
-              size={16}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94a3b8]"
-            />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-11 rounded-2xl border border-[#d9e2ec] bg-white pl-12 pr-4 text-black"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <select
-              value={SearchMonth}
-              onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
-              className="w-[140px] h-[40px] rounded-xl border border-gray-300 px-3 text-sm bg-white text-gray-800"
-            >
-              <option value="">All Months</option>
-              {[...Array(12)].map((_, i) => (
-                <option key={i} value={`${i + 1}`}>
-                  {new Date(0, i).toLocaleString("default", {
-                    month: "long",
-                  })}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={SearchYear}
-              onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
-              className="w-[120px] h-[40px] rounded-xl border border-gray-300 px-3 text-sm bg-white text-gray-800"
-            >
-              <option value="">All Years</option>
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-          </div>
         </div>
       </div>
        <PopupToast
@@ -946,7 +1378,7 @@ onClick={() => router.push("/SubAccountings")}
   <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-2">
     <div className="bg-white w-[70vw] h-[96vh] rounded-xl shadow-xl overflow-hidden flex flex-col">
       {(() => {
-        console.log("Check for Attendece Summery------",attendanceInfo)
+       
         const attendanceSummary = attendanceInfo.attendanceInfo?.reduce(
           (acc: any, att: any) => {
             const hcp = att.HCPAttendence === true;
@@ -1152,7 +1584,7 @@ onClick={() => router.push("/SubAccountings")}
           <tbody>
             {data.filter((row) => row.PreviewINPaymentPage !== "Disabled")
   .map((row:any,Ind:any) => {
-     
+
 const PresentDays=row?.CompliteAttendeceSummery.present
 const HalfDays=row?.CompliteAttendeceSummery.halfDay
 const HCPPayment:any=GetHCPPayment(row.HCAId)||0
@@ -1160,11 +1592,13 @@ const HCPPayment:any=GetHCPPayment(row.HCAId)||0
               const MinusItems=Number(row.Expences.advance)+Number(row.Expences.hostel)+Number(row.Expences.other)
               const Additems=Number(row.Expences.others)+Number(row.Expences.incentives)
               
-         const dailyPayment = formatCurrency(
-  Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),
-  PresentDays,
-  HalfDays,
-  0
+ 
+const dailyPayment = formatCurrency(
+    row.attendanceInfo,
+    row.SalaryHistory,
+    HCPPayment,
+    Number(SearchMonth),
+    Number(SearchYear)
 );
 const TDSAmount=dailyPayment*1/100
 const totalExpenses =
@@ -1233,12 +1667,7 @@ const totalExpenses =
 <td className="p-4">
   <div className="flex items-center gap-2">
     <span>
-      {formatCurrency(
-        Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),
-        PresentDays,
-        HalfDays,
-        0
-      )}
+      {dailyPayment}
     </span>
 
     <div className="relative group">
@@ -1249,7 +1678,7 @@ const totalExpenses =
 
       <div className="absolute left-6 top-1/2 -translate-y-1/2 z-50 hidden w-64 rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700 shadow-lg group-hover:block">
   <p className="font-semibold mb-2"> {row.name}Payment Info</p>
-
+<p> {row.PreviewInfo}</p>
   <p className="mt-2">
     <span className="font-medium">Per Day:</span>{" "}
     {
@@ -1270,19 +1699,27 @@ const totalExpenses =
   </p>
    <p>
     <span className="font-medium">Total Payment:</span>{" "}
-     {formatCurrency(
-        Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),
-        PresentDays,
-        HalfDays,
-        0
-      )}
+     {dailyPayment}
   </p>
+{row.SalaryHistory?.length > 0 && (
+  <div>
+  <p>
+    * Salary hiked from{" "}
+    {new Date(row.SalaryHistory[row.SalaryHistory.length - 1].EffectiveFrom).toLocaleDateString("en-In")}
+  </p>
+    <p>
+    * Per Day  Befor{" "}
+    {new Date(row.SalaryHistory[row.SalaryHistory.length - 1].EffectiveFrom).toLocaleDateString("en-In")} {Math.round(Number(row.SalaryHistory[0].Salary)/ getDaysInMonth(SearchMonth, SearchYear))}
+  </p>
+  </div>
+)}
 </div>
+
     </div>
   </div>
 </td>
                     <td className="w-[60px] px-4 py-3">
-                 {formatCurrency(Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),PresentDays,HalfDays,0)*1/100}
+                 {dailyPayment*1/100}
                  </td>
 
   {fields.map(([amountField, descField, label]) => (
@@ -1373,6 +1810,12 @@ const totalExpenses =
   <option value="Process" >
     Process
   </option>
+   <option value="Hold" >
+    Hold
+  </option>
+   <option value="Reject" >
+    Reject
+  </option>
   <option value="Save" >
     Save
   </option>
@@ -1381,7 +1824,7 @@ const totalExpenses =
                      disabled={row.PaymentVerficationStatus==="Process"}
                         className={`h-10 px-3 flex items-center  justify-center gap-2 rounded-xl ${row.PaymentVerficationStatus === "Process" ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-600 cursor-pointer"} text-white text-sm font-medium`}
                         onClick={() => {
-                          UpdatePayablePage(row,(formatCurrency(Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),PresentDays,HalfDays,0)+Additems-MinusItems-TDSAmount))
+                          UpdatePayablePage(row,(dailyPayment+Additems-MinusItems-TDSAmount))
                         }}
                       >
                         Pay 
@@ -1390,7 +1833,7 @@ const totalExpenses =
                   </td>
 
                   <td className="p-4 font-bold">
-                    {formatCurrency(Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),PresentDays,HalfDays,0)+Additems-MinusItems-formatCurrency(Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear))),PresentDays,HalfDays,0)*1/100}
+                    {dailyPayment+Additems-MinusItems-dailyPayment*1/100}
                   </td>
 
                   <td className="p-4 font-bold text-center">

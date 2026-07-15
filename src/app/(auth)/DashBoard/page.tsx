@@ -811,91 +811,101 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
     []
   );
 
+const navigationLock = useRef(false);
+const Switching = useCallback(
+  (name: string) => {
+    // Prevent multiple clicks
+    if (navigationLock.current) return;
 
-
-  const Switching = (name: string) => {
-
-    if (!loggedInEmail){
-      setLoginEmailPop(true)
- return;
+    if (!loggedInEmail) {
+      setLoginEmailPop(true);
+      return;
     }
-      
 
     if (!canAccessTab(name, loggedInEmail)) {
       setShowPermissionPopup(true);
       return;
     }
-// setShowSideHeadingsPopuo(true)
-setIsNavigating(true);
-    switch (name) {
-      
-      case "Call Enquiry":
-     case "Deployment":
-      case "Timesheet":
-        setIsNavigating(false);
-        dispatch(Update_Main_Filter_Status(name));
-        dispatch(UpdateUserType("patient"));
-        router.push("/AdminPage");
-        break;
-        
 
-      case "HCP List":
-          setIsNavigating(false);
-        dispatch(Update_Main_Filter_Status(name));
-        dispatch(UpdateUserType("healthcare-assistant"));
-        router.push("/AdminPage");
-        break;
- 
-     
-      case "Pending PDR":
-          setIsNavigating(false);
-        router.push("/PDRView");
-        break;
+    navigationLock.current = true;
+    setIsNavigating(true);
+
+    try {
+      switch (name) {
+        case "Call Enquiry":
+        case "Deployment":
+        case "Timesheet":
+          dispatch(Update_Main_Filter_Status(name));
+          dispatch(UpdateUserType("patient"));
+          router.push("/AdminPage");
+          break;
+
+        case "HCP List":
+          dispatch(Update_Main_Filter_Status(name));
+          dispatch(UpdateUserType("healthcare-assistant"));
+          router.push("/AdminPage");
+          break;
+
+        case "Pending PDR":
+          router.push("/PDRView");
+          break;
 
         case "Communication":
-          setIsNavigating(false);
-        router.push("/Communication");
-        break;
-      case "Vendors":
-          setIsNavigating(false);
-        router.push("/VendorsPanel");
-        break;
+          router.push("/Communication");
+          break;
 
-      case "Document Compliance":
-          setIsNavigating(false);
-        router.push("/Documents");
-        break;
+        case "Vendors":
+          router.push("/VendorsPanel");
+          break;
 
-      case "Invoices":
-          setIsNavigating(false);
-        router.push("/Invoices");
-        break;
-      case "Payments":
-          setIsNavigating(false);
-        router.push("/PaymentsInfo");
-        break;
+        case "Document Compliance":
+          router.push("/Documents");
+          break;
 
-      case "Registration":
-          setIsNavigating(false);
-        router.push("/UserTypeRegistration");
-        break;
+        case "Invoices":
+          router.push("/Invoices");
+          break;
 
-      case "Hostel Attendance":
-          setIsNavigating(false);
-        router.push("/HostelAttendence");
-        break;
+        case "Payments":
+          router.push("/PaymentsInfo");
+          break;
 
-         case "Accounts":
-            setIsNavigating(false);
-        router.push("/SubAccountings");
-        break;
+        case "Registration":
+          router.push("/UserTypeRegistration");
+          break;
 
-      case "Notifications":
+        case "Hostel Attendance":
+          router.push("/HostelAttendence");
+          break;
+
+        case "Accounts":
+          router.push("/SubAccountings");
+          break;
+
+        case "Notifications":
+          router.push("/Notifications");
+          break;
+
+        default:
+          navigationLock.current = false;
           setIsNavigating(false);
-        router.push("/Notifications");
-        break;
+          console.warn(`Unknown navigation: ${name}`);
+          return;
+      }
+    } catch (err) {
+      console.error("Navigation Error:", err);
+      navigationLock.current = false;
+      setIsNavigating(false);
     }
-  };
+
+    // Failsafe in case navigation doesn't happen
+    setTimeout(() => {
+      navigationLock.current = false;
+      setIsNavigating(false);
+    }, 3000);
+  },
+  [loggedInEmail, canAccessTab, dispatch, router]
+);
 
   const PostNotificationInfo = async (Emails: string[]) => {
     try {
@@ -1000,7 +1010,7 @@ setIsNavigating(true);
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard..
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
             </span>
           </div>
 
