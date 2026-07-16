@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronRight, CircleSlash2, CornerUpLeft, Eye, Info, Menu, Minimize2, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { GetAllUsersData, PostINPayblePage, PostINRejectionDb, PostINSuccesfulPaymentsDb, UpdateStatusEnable, UpdateStatusEnableinRepleasment, UpdateStatusEnableiNTermination } from "@/Lib/user.action";
+import { DeletePayableRecord, GetAllUsersData, PostINPayblePage, PostINRejectionDb, PostINSuccesfulPaymentsDb, UpdateStatusEnable, UpdateStatusEnableinRepleasment, UpdateStatusEnableiNTermination } from "@/Lib/user.action";
 import { LoadingData } from "@/Components/Loading/page";
 import { months, PayablemenuItems, SuccussfulmenuItems, years } from "@/Lib/Content";
 import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
@@ -309,8 +309,8 @@ const UpdateRevertStatus = async (
   ClientId: any,
   HCAId: any,
   Month: any,
-  ImpDate:any,
-  Info:any
+  ImpDate: any,
+  Info: any
 ) => {
   try {
     setPopup({
@@ -319,110 +319,76 @@ const UpdateRevertStatus = async (
       type: "loading",
     });
 
-    if (Info.PaymentType === "On Service") {
-      const result = await UpdateStatusEnable(
+    const paymentTypes = Array.isArray(Info.PaymentSources)
+      ? Info.PaymentSources
+      : [Info.PaymentType];
+
+    const payableResult = await DeletePayableRecord(
+      HCAId,
+      ClientId,
+      Month
+    );
+
+    if (!payableResult.success) {
+      setPopup({
+        isOpen: true,
+        message: payableResult.message,
+        type: "error",
+      });
+      return;
+    }
+
+    if (paymentTypes.includes("OnService Payments")) {
+      await UpdateStatusEnable(
         HCAId,
         ClientId,
         Month
       );
-
-      if (result.success) {
-        setPopup({
-          isOpen: true,
-          message: "Revert Status Updated successfully!",
-          type: "success",
-        });
-
-        setPaybleData((prevData) =>
-          prevData.filter(
-            (item) =>
-              !(
-                item.HCAId === HCAId &&
-                item.ClientId === ClientId &&
-                item.Month === Month
-              )
-          )
-        );
-      } else {
-        setPopup({
-          isOpen: true,
-          message:
-            result.message || "Failed to update payment status",
-          type: "error",
-        });
-      }
     }
 
-    if (Info.PaymentType === "Repleasment") {
-      const result = await UpdateStatusEnableinRepleasment(
+
+    if (paymentTypes.includes("Replacement Payments")) {
+      await UpdateStatusEnableinRepleasment(
         HCAId,
         ClientId,
         Month
       );
-
-      if (result.success) {
-        setPopup({
-          isOpen: true,
-          message: "Revert Status Updated successfully!",
-          type: "success",
-        });
-
-        setPaybleData((prevData) =>
-          prevData.filter(
-            (item) =>
-              !(
-                item.HCAId === HCAId &&
-                item.ClientId === ClientId &&
-                item.Month === Month
-              )
-          )
-        );
-      } else {
-        setPopup({
-          isOpen: true,
-          message:
-            result.message || "Failed to update payment status",
-          type: "error",
-        });
-      }
     }
-      if (Info.PaymentType === "Termination") {
-      const result = await UpdateStatusEnableiNTermination(
+
+   
+    if (paymentTypes.includes("Termination Payments")) {
+      await UpdateStatusEnableiNTermination(
         HCAId,
         ClientId,
         Month,
         ImpDate
       );
-
-      if (result.success) {
-        setPopup({
-          isOpen: true,
-          message: "Revert Status Updated successfully!",
-          type: "success",
-        });
-
-        setPaybleData((prevData) =>
-          prevData.filter(
-            (item) =>
-              !(
-                item.HCAId === HCAId &&
-                item.ClientId === ClientId &&
-                item.Month === Month
-              )
-          )
-        );
-      } else {
-        setPopup({
-          isOpen: true,
-          message:
-            result.message || "Failed to update payment status",
-          type: "error",
-        });
-      }
     }
-    
+
+    setPopup({
+      isOpen: true,
+      message: "Reverted Successfully!",
+      type: "success",
+    });
+
+    setPaybleData((prev) =>
+      prev.filter(
+        (item) =>
+          !(
+            item.HCAId === HCAId &&
+            item.ClientId === ClientId &&
+            item.Month === Month
+          )
+      )
+    );
   } catch (err) {
-    console.error("Error updating revert status:", err);
+    console.error(err);
+
+    setPopup({
+      isOpen: true,
+      message: "Something went wrong",
+      type: "error",
+    });
   }
 };
 
@@ -1486,7 +1452,7 @@ onClick={() => {
  }}
 >
                     <CornerUpLeft size={16} />
-                    Revert {row.HCAid}
+                    Revert 
                   </button>
 </td>
                   <td className="px-5 py-5 text-center">

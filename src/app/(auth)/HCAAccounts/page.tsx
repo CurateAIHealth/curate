@@ -11,11 +11,11 @@ const replacementTerminationCache: {
 import React, { useEffect, useMemo, useState } from "react";
 import { Blend, ChevronRight, CircleX, Info, Menu, Minimize2, Search, Slice, Users, X } from "lucide-react";
 import { menuItems, months, years } from "@/Lib/Content";
-import { SetDeploymentInfo, UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
+import { SetDeploymentInfo, setFullInfo, setUsers, UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
-import { GetAllUsersData, PostINPayblePage, PostINPayblePageforRepleasments, PostINPayblePageforTermination, updateExpense, UpdatePassword, UpdatePaymentVerificationStatusInDb, UpdatePaymentVerificationStatusInReplacementDb, UpdatePaymentVerificationStatusInTerminationDb } from "@/Lib/user.action";
+import { GetAllUsersData, PostINPayblePage, PostINPayblePageforRepleasments, PostINPayblePageforTermination, UpdateDeploymentPreviewStatus, updateExpense, UpdatePassword, UpdatePaymentVerificationStatusInDb, UpdatePaymentVerificationStatusInReplacementDb, UpdatePaymentVerificationStatusInTerminationDb } from "@/Lib/user.action";
 import { AssignSuitableIcon, getDaysInMonth, toProperCaseLive } from "@/Lib/Actions";
 import PopupToast from "@/Components/ExpencesPopUp/page";
 import axios from "axios";
@@ -772,6 +772,7 @@ useEffect(() => {
         acc[item.HCAId] = {
           ...item,
            isitMerged: "No", 
+           SourceRows: [{ ...item }],
            MergedPreviewInfos: [item.PreviewInfo],
           attendanceInfo: [...(item.attendanceInfo || [])],
           PreviewInfo: [item.PreviewInfo],
@@ -779,6 +780,7 @@ useEffect(() => {
       } else {
         // Merge attendance
           acc[item.HCAId].isitMerged = "In Process";
+            acc[item.HCAId].SourceRows.push({ ...item });
             if (
     !acc[item.HCAId].MergedPreviewInfos.includes(item.PreviewInfo)
   ) {
@@ -917,10 +919,10 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
       type: "loading",
     });
   const value = status
-  
+   
    const MonthInfo=`${SearchYear}-${SearchMonth}`
-    const UpdatedinDB:any=await UpdatePaymentVerificationStatusInDb(HCAId,ClientId,value,MonthInfo,Info.StartDate,Info.PreviewInfo)
-
+    const UpdatedinDB:any=await UpdatePaymentVerificationStatusInDb(HCAId,ClientId,value,MonthInfo,Info.StartDate,Info.MergedPreviewInfos)
+ console.log("PaymentInfo to be posted:",UpdatedinDB)
     if(UpdatedinDB.success){
         const userId = localStorage.getItem("UserId");
       
@@ -965,132 +967,123 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
 
   
 
-  const UpdatePayablePage=async(row:any,totalAmount:any)=>{
-    try{
-       setPopup({
+const UpdatePayablePage = async (row: any, totalAmount: any) => {
+  try {
+    setPopup({
       isOpen: true,
       message: "Generating payable page details...",
       type: "loading",
     });
-     const MonthInfo=`${SearchYear}-${SearchMonth}`
-    
-  if(row.PreviewInfo==="OnService Payments"){
-      const UpdatedinDB=await PostINPayblePage(row.HCAId,row.ClientId,MonthInfo,row,totalAmount)
-   
-    if(UpdatedinDB.success){
-        const userId = localStorage.getItem("UserId");
-      
-      
-          
-              const { data } = await axios.post("/api/AdminPageInfo", {
-                userId,
-                refreshType: "deployment",
-              });
-      
-              dispatch(
-                SetDeploymentInfo(
-                  (data?.data?.deployedLength) || 0
-                )
-              );
-      setData((prev) =>
-      prev.map((item) =>
-        item.HCAId ===row. HCAId    ? { ...item, PreviewINPaymentPage: "Disabled" }
-        : item
-      )
-    ); 
 
-     setPopup({
+    const MonthInfo = `${SearchYear}-${SearchMonth}`;
+
+    const paymentTypes = Array.isArray(row.MergedPreviewInfos)
+      ? row.MergedPreviewInfos
+      : [row.MergedPreviewInfos];
+
+
+    const payableResult = await PostINPayblePage(
+      row.HCAId,
+      row.Clientid,
+      MonthInfo,
+      row,
+      totalAmount
+    );
+
+    if (!payableResult.success) {
+      setPopup({
         isOpen: true,
-        message: UpdatedinDB.message || "Moved to Payable Page successfully!",
-        type: "success",
-      });
-    }else{
-        setPopup({
-        isOpen: true,
-        message: UpdatedinDB.message || "Failed to post payment record",
+        message:
+          payableResult.message ||
+          "Failed to create payable record",
         type: "error",
       });
-    }
-  }
-    if(row.PreviewInfo==="Replacement Payments"){
-      const UpdatedinDB=await PostINPayblePageforRepleasments(row.HCAId,row.ClientId,MonthInfo,row,totalAmount)
- 
-    if(UpdatedinDB.success){
-        const userId = localStorage.getItem("UserId");
-      
-      
-          
-              const { data } = await axios.post("/api/AdminPageInfo", {
-                userId,
-                refreshType: "deployment",
-              });
-      
-              dispatch(
-                SetDeploymentInfo(
-                  (data?.data?.deployedLength) || 0
-                )
-              );
-      setData((prev) =>
-      prev.map((item) =>
-        item.HCAId ===row. HCAId    ? { ...item, PreviewINPaymentPage: "Disabled" }
-        : item
-      )
-    ); 
 
-     setPopup({
-        isOpen: true,
-        message: UpdatedinDB.message || "Moved to Payable Page successfully!",
-        type: "success",
-      });
-    }else{
-        setPopup({
-        isOpen: true,
-        message: UpdatedinDB.message || "Failed to post payment record",
-        type: "error",
-      });
+      return;
     }
-  }
-   if(row.PreviewInfo==="Termination Payments"){
-      const UpdatedinDB=await PostINPayblePageforTermination(row.HCAId,row.ClientId,MonthInfo,row,totalAmount,row.
-StartDate)
-   
-    if(UpdatedinDB.success){
-        const userId = localStorage.getItem("UserId");
-      
-      
-          
-              const { data } = await axios.post("/api/AdminPageInfo", {
-                userId,
-                refreshType: "deployment",
-              });
-      
-              dispatch(
-                SetDeploymentInfo(
-                  (data?.data?.deployedLength) || 0
-                )
-              );
-      setData((prev) =>
-      prev.map((item) =>
-        item.HCAId ===row. HCAId    ? { ...item, PreviewINPaymentPage: "Disabled" }
-        : item
-      )
-    ); 
 
-     setPopup({
-        isOpen: true,
-        message: UpdatedinDB.message || "Moved to Payable Page successfully!",
-        type: "success",
-      });
-    }else{
-        setPopup({
-        isOpen: true,
-        message: UpdatedinDB.message || "Failed to post payment record",
-        type: "error",
-      });
+
+    if (paymentTypes.includes("OnService Payments")) {
+      await UpdateDeploymentPreviewStatus(
+        row.HCAId,
+        row.Clientid,
+        MonthInfo
+      );
     }
+
+    if (paymentTypes.includes("Replacement Payments")) {
+      await PostINPayblePageforRepleasments(
+        row.HCAId,
+        row.Clientid,
+        MonthInfo
+      );
+    }
+
+    if (paymentTypes.includes("Termination Payments")) {
+      await PostINPayblePageforTermination(
+        row.HCAId,
+        row.Clientid,
+        MonthInfo,
+        row.StartDate
+      );
+    }
+
+    // --------------------------------------------------
+    // STEP 3 : Refresh Deployment
+    // --------------------------------------------------
+
+    const userId = localStorage.getItem("UserId");
+
+    const { data } = await axios.post("/api/AdminPageInfo", {
+      userId,
+      refreshType: "deployment",
+    });
+
+    dispatch(
+      SetDeploymentInfo(
+        data?.data?.deployedLength || 0
+      )
+    );
+
+    // --------------------------------------------------
+    // STEP 4 : Update Local UI
+    // --------------------------------------------------
+
+    setData((prev: any[]) =>
+      prev.map((item) =>
+        item.HCAId === row.HCAId
+          ? {
+              ...item,
+              PreviewINPaymentPage: "Disabled",
+
+              SourceRows: Array.isArray(item.SourceRows)
+                ? item.SourceRows.map((source: any) => ({
+                    ...source,
+                    PreviewINPaymentPage: "Disabled",
+                  }))
+                : item.SourceRows,
+            }
+          : item
+      )
+    );
+
+    setPopup({
+      isOpen: true,
+      message:
+        payableResult.message ||
+        "Moved to Payable Page successfully!",
+      type: "success",
+    });
+  } catch (err) {
+    console.error(err);
+
+    setPopup({
+      isOpen: true,
+      message: "Something went wrong",
+      type: "error",
+    });
   }
-    }catch(err){}
-  }
+};
   const getTotal = (row: PayrollRow) =>
     row.payment -
     row.advance -
@@ -1168,14 +1161,14 @@ for (const item of history) {
   return Math.ceil(total);
 };
 
- const handleSave = async (row: PayrollRow) => {
-
+const handleSave = async (row: any) => {
   setPopup({
-      isOpen: true,
-      message: "Posting Payment Record...",
-      type: "loading",
-    });
-  const originalRow = originalValues[row.Clientid];
+    isOpen: true,
+    message: "Posting Payment Record...",
+    type: "loading",
+  });
+
+  const originalRow = originalValues[row.HCAId];
   if (!originalRow) return;
 
   const editableFields = [
@@ -1214,86 +1207,119 @@ for (const item of history) {
         description,
         createdAt: new Date().toLocaleString(),
         action: newValue > oldValue ? "added" : "reduced",
-        UpdatedBy:loggedInEmail
+        UpdatedBy: loggedInEmail,
       });
     }
   });
 
-  setData((prev) =>
-    prev.map((item) =>
-      item.Clientid === row.Clientid
-        ? {
-            ...item,
-            Expences: row.Expences,
-            transactions: [...item.transactions, ...newTransactions],
-          }
-        : item
-    )
-  );
+  try {
+    // Save only once per HCA
+    const PostExpence=await updateExpense(
+      row.HCAId,
+      row.Expences,
+      loggedInEmail,
+      newTransactions,
+      `${SearchMonth}-${SearchYear}`
+    );
+    if(PostExpence.success){
+ const userId = localStorage.getItem("UserId");
+      
+      
+          
+               const { data } = await axios.post(
+        "/api/AdminPageInfo",
+        {
+          userId,
+          refreshType: [
+            "registeredUsers",
+            "fullInfo",
+          ],
+        }
+      );
 
-    const UpdatingExpenses = await updateExpense(
-    row.HCAId,
-    row.Expences,
-    loggedInEmail,
-    newTransactions,
-    `${SearchMonth}-${SearchYear}`
-  );
+      console.log (
+"Current Task------",data
+      )
 
-  if(UpdatingExpenses.success){
-     const res:any=await axios.post("/api/Slack", {
-  userIds: ["U0992KS6811", "U04RYNQJJF7"],
-  isHighlight: true,
-  message: {
-    title: "New Expence/Incentive Updated",
-    body: `Expense/incentive records have been updated for ${row.HCAName} the latest changes`,
-  },
-});
- setPopup({
-        isOpen: true,
-        message: "Payment Record Posted successfully!",
-        type: "success",
-      });
-  }else{  
-     setPopup({
-        isOpen: true,
-        message: UpdatingExpenses.message || "Failed to post payment record",
-        type: "error",
-      });
+      dispatch(setUsers(
+        data.data.registeredUsers
+      ))
+
+       dispatch(setFullInfo(
+        data.data.fullInfo
+      ))
+               await axios.post("/api/Slack", {
+      userIds: ["U0992KS6811", "U04RYNQJJF7"],
+      isHighlight: true,
+      message: {
+        title: "New Expense/Incentive Updated",
+        body: `Expense/incentive records have been updated for ${row.HCAName}`,
+      },
+    });
+
+    setPopup({
+      isOpen: true,
+      message: "Payment Record Posted Successfully!",
+      type: "success",
+    });
+
+    setEditingRowId(null);
+    }else{
+     
+    setPopup({
+      isOpen: true,
+      message: "Failed to update payment record",
+      type: "error",
+    }); 
+    }
+ 
+
+   
+
   
+  } catch (err) {
+    console.error(err);
+
+    setPopup({
+      isOpen: true,
+      message: "Failed to update payment record",
+      type: "error",
+    });
   }
-  
-
-  setEditingRowId(null);
-
-  setOriginalValues((prev) => {
-    const updated = { ...prev };
-    delete updated[row.Clientid];
-    return updated;
-  });
 };
 const handleChange = (
   id: number,
-  hcaId:any,
+  hcaId: any,
   field: keyof PayrollRow["Expences"],
   value: string | number
 ) => {
   setData((prev) =>
-    prev.map((row) =>
-      row.Clientid === id&&row.HCAId===hcaId
-        ? {
-            ...row,
-            Expences: {
-              ...row.Expences,
-              [field]:
-                typeof row.Expences[field] === "number"
-                  ? value === ""
-                    ? 0
-                    : Number(value)
-                  : value,
-            },
-          }
-        : row
-    )
+    prev.map((item) => {
+      if (item.HCAId !== hcaId) return item;
+
+      const updatedExpenses = {
+        ...item.Expences,
+        [field]:
+          typeof item.Expences[field] === "number"
+            ? value === ""
+              ? 0
+              : Number(value)
+            : value,
+      };
+
+      return {
+        ...item,
+        Expences: updatedExpenses,
+
+        // Keep every merged source in sync
+        SourceRows: Array.isArray(item.SourceRows)
+          ? item.SourceRows.map((source: any) => ({
+              ...source,
+              Expences: updatedExpenses,
+            }))
+          : item.SourceRows,
+      };
+    })
   );
 };
 
@@ -1755,7 +1781,7 @@ const handleChange = (
           <tbody>
             {data.filter((row) => row.PreviewINPaymentPage !== "Disabled")
   .map((row:any,Ind:any) => {
-
+console.log ("Check for Row Expences-------",row.Expences)
 const PresentDays=row?.CompliteAttendeceSummery.present
 const HalfDays=row?.CompliteAttendeceSummery.halfDay
 const HCPPayment:any=GetHCPPayment(row.HCAId)||0
@@ -1966,30 +1992,36 @@ const totalExpenses =
 
                   <td className="w-[260px] px-4 py-3">
                     <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => {
-                          if (isEditing) {
-                            handleSave(row);
-                          } else {
-                            setOriginalValues((prev) => ({
-                              ...prev,
-                              [row.Clientid]: {
-  ...row,
-  Expences: { ...row.Expences },
-},
-                            }));
-                            setEditingRowId(row.HCAId);
-                          }
-                        }}
-                        className={`h-10 px-3 cursor-pointer flex items-center justify-center gap-2 rounded-xl border text-sm font-medium whitespace-nowrap ${
-                          isEditing
-                            ? "bg-slate-900 text-white border-slate-900"
-                            : "bg-white text-slate-900 border-slate-300"
-                        }`}
-                        
-                      >
-                        {isEditing ? "Save" : "Edit"}
-                      </button>
+                    <button
+  onClick={() => {
+    if (isEditing) {
+      const latestRow = data.find(
+        (item) => item.HCAId === row.HCAId
+      );
+
+      if (latestRow) {
+        handleSave(latestRow);
+      }
+    } else {
+      setOriginalValues((prev) => ({
+        ...prev,
+        [row.HCAId]: {
+          ...row,
+          Expences: structuredClone(row.Expences),
+        },
+      }));
+
+      setEditingRowId(row.HCAId);
+    }
+  }}
+  className={`h-10 px-3 cursor-pointer flex items-center justify-center gap-2 rounded-xl border text-sm font-medium whitespace-nowrap ${
+    isEditing
+      ? "bg-slate-900 text-white border-slate-900"
+      : "bg-white text-slate-900 border-slate-300"
+  }`}
+>
+  {isEditing ? "Save" : "Edit"}
+</button>
 <select
                         value={row.PaymentVerficationStatus}
   className={`px-4 py-2 rounded-xl border border-slate-300 ${row.PaymentVerficationStatus === "Process" ? "bg-pink-300" : "bg-[#22c55e]"} text-sm font-medium shadow-sm focus:outline-none focus:ring-2  ${row.PaymentVerficationStatus === "Process" ? "focus:ring-pink-500" : "focus:ring-[#16a34a]"}`}
@@ -2071,9 +2103,9 @@ const totalExpenses =
                 {selectedTransactions.transactions
                   .slice()
                   .reverse()
-                  .map((transaction) => (
+                  .map((transaction,index) => (
                     <div
-                      key={transaction.id}
+                      key={index}
                       className="border rounded-2xl p-4 bg-[#f8fafc]"
                     >
                       <div className="flex justify-between items-center mb-2">
