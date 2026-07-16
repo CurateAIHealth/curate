@@ -5413,6 +5413,8 @@ export const PostINSuccesfulPaymentsDb = async (
   PaymentInfo:any,
   NeftTransactionNumber: any,
   MonthInfo: any,
+  ImpId:any,
+  ImpBank:any
 ) => {
   try {
   console.log("Validation Check:", {
@@ -5448,6 +5450,8 @@ export const PostINSuccesfulPaymentsDb = async (
       db.collection("SuccessfulPayments");
     const payableCollection = db.collection("PayableINPaymentPage");
 
+    const CompiteRegisterd= db.collection("CompliteRegistrationInformation");
+
 const date = new Date();
 
 const now = `${date.toLocaleDateString("en-GB", {
@@ -5463,6 +5467,7 @@ const now = `${date.toLocaleDateString("en-GB", {
     const payload = {
       ...PaymentInfo,
       NeftTransactionNumber: String(NeftTransactionNumber).trim(),
+      Bank:ImpBank,
       Month: String(MonthInfo).trim(),
       CreatedAt: now,
       UpdatedAt: now,
@@ -5483,6 +5488,14 @@ const now = `${date.toLocaleDateString("en-GB", {
     }
 
     const insertResult = await successfulPaymentsCollection.insertOne(payload);
+    const result = await CompiteRegisterd.updateOne(
+  { "HCAComplitInformation.UserId": ImpId },
+  {
+    $push: {
+      "HCAComplitInformation.PaymentHistory": payload,
+    },
+  }
+);
 
     const filter = {
       ClientId: PaymentInfo.ClientId ,

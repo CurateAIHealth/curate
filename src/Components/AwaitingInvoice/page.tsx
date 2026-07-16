@@ -567,13 +567,16 @@ const ExtendTimeSheet = async () => {
 
     const attendance = [
       {
-        AttendenceDate: new Date().toISOString().split("T")[0],
+        dateKey: new Date().toISOString().split("T")[0],
+         AttendenceDate: new Date(),
         HCPAttendence: true,
         AdminAttendece: true,
         UpdatedBy: loggedInEmail || "Unknown",
 
       },
     ];
+
+    
 
     const ClientAttendece = [
       {

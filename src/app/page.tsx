@@ -25,6 +25,14 @@ const dashboardCache = new Map<
   }
 >();
 
+const dashboardRequestCache: {
+  data: any | null;
+  promise: Promise<any> | null;
+} = {
+  data: null,
+  promise: null,
+};
+
 
 const pink = "#ff1493";
 const blue = "#1392d3";
@@ -69,22 +77,98 @@ const visibleReviews = showAllReviews
 const CACHE_TTL = 30 * 60 * 1000; 
 
 
-
 useEffect(() => {
-  let isMounted = true;
+  let mounted = true;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let hasNavigated = false;
 
   const safeNavigate = (path: string) => {
-    if (!isMounted || hasNavigated) return;
+    if (!mounted || hasNavigated) return;
     hasNavigated = true;
     router.replace(path);
   };
 
   const updateLoader = (progress: number, message: string) => {
-    if (!isMounted) return;
+    if (!mounted) return;
     setLoadingProgress(progress);
     setLoadingMessage(message);
+  };
+
+  const applyDashboardData = (dashboardData: any) => {
+    const {
+      profile,
+      registeredUsers,
+      fullInfo,
+      deployedLength,
+    } = dashboardData;
+
+    dispatch(setUsers(registeredUsers));
+    dispatch(setFullInfo(fullInfo));
+    dispatch(SetDeploymentInfo(deployedLength));
+    dispatch(UpdateUserFirstName(profile?.FirstName));
+  };
+
+  const loadDashboard = async (
+    userId: string,
+    forceRefresh = false
+  ) => {
+    try {
+   
+      if (!forceRefresh && dashboardRequestCache.data) {
+        console.log("📦 Using Cached Dashboard Data");
+
+        if (mounted) {
+          applyDashboardData(dashboardRequestCache.data);
+        }
+
+        return;
+      }
+
+    
+      if (!forceRefresh && dashboardRequestCache.promise) {
+        console.log("⏳ Waiting for existing dashboard request...");
+
+        const data = await dashboardRequestCache.promise;
+
+        if (!mounted) return;
+
+        applyDashboardData(data);
+
+        return;
+      }
+
+      console.log("🌐 Fetching Fresh Dashboard Data...");
+
+      dashboardRequestCache.promise = axios
+        .post("/api/AdminPageInfo", { userId })
+        .then((res) => {
+          if (!res.data.success) {
+            throw new Error("Dashboard fetch failed");
+          }
+
+          return res.data.data;
+        });
+
+      const dashboardData = await dashboardRequestCache.promise;
+
+      dashboardRequestCache.data = dashboardData;
+
+      dashboardCache.set(userId, {
+        timestamp: Date.now(),
+        data: dashboardData,
+      });
+
+      dashboardRequestCache.promise = null;
+
+      if (!mounted) return;
+
+      applyDashboardData(dashboardData);
+
+      console.log("✅ Dashboard Cache Updated");
+    } catch (err) {
+      dashboardRequestCache.promise = null;
+      console.error(err);
+    }
   };
 
   const initialize = async () => {
@@ -99,12 +183,11 @@ useEffect(() => {
       updateLoader(5, "Initializing...");
       setIsChecking(true);
 
-
       const { data: profile }: any = await axios.post("/api/Home", {
         localValue: userId,
       });
 
-      if (!isMounted) return;
+      if (!mounted) return;
 
       dispatch(UpdateUserDetails(profile));
 
@@ -112,67 +195,33 @@ useEffect(() => {
 
       const email = profile?.Email?.toLowerCase();
 
-
       if (StaffEmails.includes(email)) {
         dispatch(CurrentLoginUser(profile.Email));
 
         const cached = dashboardCache.get(userId);
 
-        console.log("Dashboard Cache:", cached);
-
         if (cached) {
-          const {
-            profile: cachedProfile,
-            registeredUsers,
-            fullInfo,
-            deployedLength,
-          } = cached.data;
+          console.log("📦 Using User Dashboard Cache");
 
-          dispatch(setUsers(registeredUsers));
-          dispatch(setFullInfo(fullInfo));
-          dispatch(SetDeploymentInfo(deployedLength));
-          dispatch(UpdateUserFirstName(cachedProfile?.FirstName));
+          applyDashboardData(cached.data);
+
+          dashboardRequestCache.data = cached.data;
 
           updateLoader(100, "Redirecting...");
-          router.replace("/DashBoard");
+          safeNavigate("/DashBoard");
+
           return;
         }
 
         updateLoader(70, "Loading dashboard...");
 
-        const { data: dashboard }: any = await axios.post(
-          "/api/AdminPageInfo",
-          { userId }
-        );
+        await loadDashboard(userId);
 
-        if (!isMounted) return;
-
-        if (dashboard?.success) {
-          dashboardCache.set(userId, {
-            timestamp: Date.now(),
-            data: dashboard.data,
-          });
-
-          console.log("Dashboard Cached");
-          console.log("Cache Size:", dashboardCache.size);
-
-          const {
-            profile: dashboardProfile,
-            registeredUsers,
-            fullInfo,
-            deployedLength,
-          } = dashboard.data;
-
-          dispatch(setUsers(registeredUsers));
-          dispatch(setFullInfo(fullInfo));
-          dispatch(SetDeploymentInfo(deployedLength));
-          dispatch(
-            UpdateUserFirstName(dashboardProfile?.FirstName)
-          );
-        }
+        if (!mounted) return;
 
         updateLoader(100, "Redirecting...");
-        router.replace("/DashBoard");
+        safeNavigate("/DashBoard");
+
         return;
       }
 
@@ -187,29 +236,73 @@ useEffect(() => {
         } else {
           safeNavigate("/HomePage");
         }
+
         return;
       }
 
       safeNavigate("/Profile");
 
       timer = setTimeout(() => {
-        if (isMounted) {
+        if (mounted) {
           setShowPopUp(true);
         }
       }, 3500);
     } catch (err) {
       console.error("Initialization Error:", err);
+    } finally {
+      if (mounted) {
+        setIsChecking(false);
+      }
     }
   };
 
   initialize();
 
+  // ==========================
+  // MongoDB Live Updates (SSE)
+  // ==========================
+ const eventSource = new EventSource("/api/payable-events");
+
+  eventSource.onopen = () => {
+    console.log("✅ Dashboard SSE Connected");
+  };
+
+  eventSource.onmessage = async (event) => {
+    try {
+      const message = JSON.parse(event.data);
+
+      if (!message.refresh) return;
+
+      console.log("🔄 Dashboard Collection Changed");
+
+      dashboardRequestCache.data = null;
+
+      const userId = localStorage.getItem("UserId");
+
+      if (!userId) return;
+
+      await loadDashboard(userId, true);
+
+      console.log("✅ Dashboard Refreshed");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  eventSource.onerror = (err) => {
+    console.error("❌ Dashboard SSE Error", err);
+  };
+
   return () => {
-    isMounted = false;
+    mounted = false;
 
     if (timer) {
       clearTimeout(timer);
     }
+
+    eventSource.close();
+
+    console.log("🔌 Dashboard SSE Disconnected");
   };
 }, [dispatch, router]);
 

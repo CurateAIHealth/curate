@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { X, Eye, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import { calculateAgeIndianFormat } from "@/Lib/Actions";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
@@ -42,6 +42,7 @@ const RepleasementHCPPopup = ({
   onUpdate,
 }: RepleasementHCPPopup) => {
   const [searchResult, setSearchResult] = useState("");
+  const users=useSelector((state:any)=>state.AdminFullInfo)
  const [form, setForm] = useState({
    
     Gender: "Male" as any,
@@ -62,7 +63,25 @@ console.log ("Check information of Hcps-----",filteredHcps.filter((each:any)=>ea
     router.push("/UserInformation");
   };
 
+const GetHCPFullName = (A: any) => {
+  if (!users?.length || !A) return "";
 
+  const info = users
+    ?.map((each: any) => each?.HCAComplitInformation)
+    ?.find((info: any) => info?.UserId === A);
+
+  if (!info) return "";
+
+  const fullName = [
+    info.HCPSurName,
+    info.HCPFirstName,
+    info.LastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return fullName;
+}
   const HCA_List = filteredHcps.filter((each: any) => {
 const typeMatch = [
   "healthcare-assistant",
