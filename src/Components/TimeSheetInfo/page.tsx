@@ -183,7 +183,7 @@ useEffect(() => {
         Month: record.Month,
         Replacement: record.Replacement,
         ReplacementDate:record.ReplacementDate,
-        ServiceState:record.ServiceState || "Not Provided",
+        ServiceState:record.ServiceState || "Telangana",
       });
     }
   }

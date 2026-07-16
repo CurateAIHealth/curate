@@ -47,64 +47,128 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
        const SearchYear = useSelector((state: any) => state.FilterYear);
   const router=useRouter()
   const dispatch=useDispatch()
-  useEffect(() => {
-    // Wait until data fetching is completed
-    if (isChecking) return;
-  
-    if (
-      RegisterdUsers.length === 0 ||
-      users.length === 0 ||
-      ClientsInformation.length === 0
-    ) {
-      router.replace("/");
-    }
-  }, [
-    isChecking,
-    RegisterdUsers,
-    users,
-    ClientsInformation,
-    router,
-  ]);
-  useEffect(() => {
-  
-    let mounted = true;
-  
-    const isSuccessUpdate = ActionStatusMessage?.includes("Successfully");
-  
-    const fetchData = async () => {
-      try {
+ 
+const payableCache = {
+  data: null as any[] | null,
+  promise: null as Promise<any[]> | null,
+};
+useEffect(() => {
+  // Wait until data fetching is completed
+  if (isChecking) return;
 
-        setIsChecking(true);
-    const eventSource = new EventSource("/api/payable-events");
-    console.log ("New Task-------",eventSource)
-const { data } = await axios.get("/api/PayableData");
-      console.log("Check Deployment Data------",data.data)
-      const {
+  if (
+    RegisterdUsers.length === 0 ||
+    users.length === 0 ||
+    ClientsInformation.length === 0
+  ) {
+    router.replace("/");
+  }
+}, [
+  isChecking,
   RegisterdUsers,
-  usersResult,
-  placementInfo,
-  replacementInfo,
-  terminationInfo,
-  ExportedPayableData,
-} = data.data;
-        if (!mounted) return;
-   cachedPayableData=ExportedPayableData??[]
-setPaybleData([...cachedPayableData])
-  
-      
-      } catch (err) {
-        console.error(err);
-      } finally {
-        if (mounted) setIsChecking(false);
+  users,
+  ClientsInformation,
+  router,
+]);
+useEffect(() => {
+  let mounted = true;
+
+  const fetchData = async (forceRefresh = false) => {
+    try {
+      // ✅ Use cache
+      if (!forceRefresh && payableCache.data) {
+        console.log("📦 Using Cached Payable Data");
+
+        if (mounted) {
+          cachedPayableData = payableCache.data;
+          setPaybleData([...cachedPayableData]);
+        }
+
+        return;
       }
-    };
-  
-    fetchData();
-  
-    return () => {
-      mounted = false;
-    };
-  }, [ActionStatusMessage]);
+
+      // ✅ Prevent duplicate requests
+      if (!forceRefresh && payableCache.promise) {
+        console.log("⏳ Waiting for existing request...");
+
+        const data = await payableCache.promise;
+
+        if (!mounted) return;
+
+        cachedPayableData = data;
+        setPaybleData([...cachedPayableData]);
+
+        return;
+      }
+
+      console.log("🌐 Fetching Fresh Payable Data...");
+      setIsChecking(true);
+
+      payableCache.promise = axios
+        .get("/api/PayableData")
+        .then((res) => res.data.data.ExportedPayableData ?? []);
+
+      const payableData = await payableCache.promise;
+
+      payableCache.data = payableData;
+      payableCache.promise = null;
+
+      if (!mounted) return;
+
+      cachedPayableData = payableData;
+      setPaybleData([...cachedPayableData]);
+
+      console.log("✅ Cache Updated");
+    } catch (err) {
+      payableCache.promise = null;
+      console.error(err);
+    } finally {
+      if (mounted) {
+        setIsChecking(false);
+      }
+    }
+  };
+
+  // Initial load
+  fetchData();
+
+  // Create ONE SSE connection
+  const eventSource = new EventSource("/api/payable-events");
+
+  eventSource.onopen = () => {
+    console.log("✅ SSE Connected");
+  };
+
+  eventSource.onmessage = (event) => {
+    console.log("📩 Mongo Event:", event.data);
+
+    try {
+      const message = JSON.parse(event.data);
+
+      if (message.refresh) {
+        console.log("🔄 Collection changed. Refreshing cache...");
+
+        // Clear cache
+        payableCache.data = null;
+
+        // Fetch fresh data
+        fetchData(true);
+      }
+    } catch {
+      console.log("Received:", event.data);
+    }
+  };
+
+  eventSource.onerror = (err) => {
+    console.error("❌ SSE Error", err);
+  };
+
+  return () => {
+    mounted = false;
+    eventSource.close();
+    console.log("🔌 SSE Disconnected");
+  };
+}, []);
 
 
 console.log ("Check for UserInfo-----",selectedUser)
@@ -405,7 +469,7 @@ setPopup({
   }
 }
 
-const PostSuccesfullPayment=async()=>{
+const PostSuccesfullPayment=async(ImpId:any)=>{
   try{
     if(NeftTransactionNumber.trim()===""&&selectedUser?.neft===""){
 setPopup({
@@ -424,7 +488,7 @@ setPopup({
      const MonthInfo=`${SearchYear}-${SearchMonth}`
      const ExportNeftNumber=NeftTransactionNumber||selectedUser?.neft
      console.log("PaymentInfo to be posted:", ExportNeftNumber,MonthInfo)
-    const PostinDb=await PostINSuccesfulPaymentsDb(selectedUser,ExportNeftNumber,MonthInfo)
+    const PostinDb=await PostINSuccesfulPaymentsDb(selectedUser,ExportNeftNumber,MonthInfo,ImpId,selectedBank)
     if(PostinDb.success){
    
       setPopup({
@@ -455,6 +519,27 @@ setPopup({
 
     return address ?? "Not Entered";
   };
+  const GetHCPFullName = (A: any) => {
+    if (!users?.length || !A) return "Not Entered";
+
+    const HCPFirstName =
+      users
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.['HCPFirstName']||"Not Provided";
+      const HCPSurName =
+      users
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.['HCPSurName']||"Not Provided";
+      const LastName =
+      users
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.['LastName']||"Not Provided";
+
+    return `${HCPSurName} ${HCPFirstName} ${LastName}` || "Not Entered";
+  }
 
 
      const GetHCPType = (A: any) => {
@@ -1401,7 +1486,7 @@ onClick={() => {
  }}
 >
                     <CornerUpLeft size={16} />
-                    Revert
+                    Revert {row.HCAid}
                   </button>
 </td>
                   <td className="px-5 py-5 text-center">
@@ -1410,7 +1495,7 @@ onClick={() => {
               className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
               onClick={() => {
                 setSelectedUser(row);
-                PostSuccesfullPayment()
+                PostSuccesfullPayment(row.HCAid)
               }}
             >
               Paid

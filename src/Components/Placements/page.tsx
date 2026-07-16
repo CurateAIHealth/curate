@@ -515,7 +515,7 @@ const normalizedAttendance =
     Replacement:each.Replacement,
     ClientAttendance: each.ClientAttendance || [],
     ReplacementDate:each.ReplacementDate,
-    ServiceState:each.ServiceState||"Not Provided"
+    ServiceState:each.ServiceState||"Telangana"
     
   };
 });
@@ -732,7 +732,25 @@ const SelectedCareTakerCharges=GetInfo.serviceCharges
       router.push("/UserInformation");
     }
   };
+const GetHCPFullName = (A: any) => {
+  if (!users?.length || !A) return "";
 
+  const info = users
+    ?.map((each: any) => each?.HCAComplitInformation)
+    ?.find((info: any) => info?.UserId === A);
+
+  if (!info) return "";
+
+  const fullName = [
+    info.HCPSurName,
+    info.HCPFirstName,
+    info.LastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return fullName;
+};
    const GetHCPGender = (A: any) => {
     if (!users?.length || !A) return "Not Entered";
 
@@ -2381,7 +2399,7 @@ const EditDate =
 
 
     <span className="hover:underline font-semibold text-[10px] mb-4 break-words leading-tight">
-      {toProperCaseLive(c.HCA_Name)}
+      {GetHCPFullName(c.HCA_Id)}
     </span>
 
   

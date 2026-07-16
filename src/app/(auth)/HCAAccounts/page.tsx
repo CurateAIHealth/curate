@@ -1,22 +1,17 @@
 "use client";
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-let replacementTerminationCache: {
-  data: {
-    replacementInfo: any[];
-    terminationInfo: any[];
-  } | null;
-  timestamp: number;
+const replacementTerminationCache: {
+  data: any | null;
   promise: Promise<any> | null;
 } = {
   data: null,
-  timestamp: 0,
   promise: null,
 };
 import React, { useEffect, useMemo, useState } from "react";
-import { ChevronRight, CircleX, Info, Menu, Minimize2, Search, Slice, Users, X } from "lucide-react";
+import { Blend, ChevronRight, CircleX, Info, Menu, Minimize2, Search, Slice, Users, X } from "lucide-react";
 import { menuItems, months, years } from "@/Lib/Content";
-import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
+import { SetDeploymentInfo, UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
@@ -99,6 +94,7 @@ const statuses = ["Process", "Save", "Hold", "Rejected"];
    const router=useRouter()
      const dispatch = useDispatch();
     const [data, setData] = useState<any[]>([])
+    
 useEffect(() => {
   // Wait until data fetching is completed
   if (isChecking) return;
@@ -118,70 +114,118 @@ useEffect(() => {
   router,
 ]);
 useEffect(() => {
-const fetchData = async (forceRefresh = false) => {
-  const now = Date.now();
+  let mounted = true;
 
-  // Use cache if valid
-  if (
-    !forceRefresh &&
-    replacementTerminationCache.data &&
-    now - replacementTerminationCache.timestamp < CACHE_DURATION
-  ) {
-    const { replacementInfo, terminationInfo } =
-      replacementTerminationCache.data;
+  const applyData = (data: any) => {
+    if (!mounted) return;
 
-    setReplacementInformation(replacementInfo);
-    setTerminationInformation(terminationInfo);
-    return;
-  }
+    setReplacementInformation(data?.replacementInfo ?? []);
+    setTerminationInformation(data?.terminationInfo ?? []);
+  };
 
-  // Prevent duplicate simultaneous requests
-  if (replacementTerminationCache.promise && !forceRefresh) {
-    setIsChecking(true);
-
+  const fetchData = async (forceRefresh = false) => {
     try {
-      const data = await replacementTerminationCache.promise;
+      // ✅ Use Memory Cache
+      if (!forceRefresh && replacementTerminationCache.data) {
+        console.log("📦 Using Cached Replacement/Termination Data");
 
-      setReplacementInformation(data.replacementInfo);
-      setTerminationInformation(data.terminationInfo);
+        applyData(replacementTerminationCache.data);
+        return;
+      }
+
+      // ✅ Wait for Existing Request
+      if (!forceRefresh && replacementTerminationCache.promise) {
+        console.log("⏳ Waiting for existing request...");
+
+        const data = await replacementTerminationCache.promise;
+
+        if (!mounted) return;
+
+        applyData(data);
+        return;
+      }
+
+      console.log("🌐 Fetching Fresh Replacement/Termination Data...");
+
+      // if (mounted) {
+      //   setIsChecking(true);
+      // }
+
+      replacementTerminationCache.promise = axios
+        .get("/api/Replacmentterminationinfo")
+        .then((res) => res.data.data);
+
+      try {
+        const data = await replacementTerminationCache.promise;
+
+        replacementTerminationCache.data = data;
+
+        if (!mounted) return;
+
+        applyData(data);
+
+        console.log("✅ Replacement/Termination Cache Updated");
+      } finally {
+        replacementTerminationCache.promise = null;
+      }
+    } catch (error) {
+      replacementTerminationCache.promise = null;
+      console.error("❌ Failed to fetch replacement/termination data:", error);
     } finally {
-      setIsChecking(false);
+      if (mounted) {
+        setIsChecking(false);
+      }
     }
+  };
 
-    return;
-  }
-
-  setIsChecking(true);
-
-  replacementTerminationCache.promise = axios
-    .get("/api/Replacmentterminationinfo")
-    .then((res) => res.data.data);
-
-  try {
-    const data = await replacementTerminationCache.promise;
-
-    replacementTerminationCache = {
-      data,
-      timestamp: Date.now(),
-      promise: null,
-    };
-
-    setReplacementInformation(data.replacementInfo);
-    setTerminationInformation(data.terminationInfo);
-  } catch (error) {
-    replacementTerminationCache.promise = null;
-    console.error("Failed to fetch replacement/termination data:", error);
-  } finally {
-    setIsChecking(false);
-  }
-};
+  // ===========================
+  // Initial Load
+  // ===========================
 
   fetchData();
 
+  // ===========================
+  // MongoDB Live Updates (SSE)
+  // ===========================
 
-}, [
- 
-]);
+  const eventSource = new EventSource("/api/payable-events");
+
+  eventSource.onopen = () => {
+    console.log("✅ SSE Connected");
+  };
+
+  eventSource.onmessage = (event) => {
+    console.log("📩 Mongo Event:", event.data);
+
+    try {
+      const message = JSON.parse(event.data);
+
+      if (message.refresh) {
+        console.log("🔄 MongoDB Changed - Refreshing Cache");
+
+        // Clear Memory Cache
+        replacementTerminationCache.data = null;
+
+        // Fetch Fresh Data
+        fetchData(true);
+      }
+    } catch {
+      console.log("Received:", event.data);
+    }
+  };
+
+  eventSource.onerror = (err) => {
+    console.error("❌ SSE Error", err);
+  };
+
+  return () => {
+    mounted = false;
+
+    eventSource.close();
+
+    console.log("🔌 SSE Disconnected");
+  };
+}, []);
 
   const matchesSearchAndMonth = (
   item: any,
@@ -234,7 +278,25 @@ const fetchData = async (forceRefresh = false) => {
     return address ?? "Not Entered";
   };
 
+const GetHCPFullName = (A: any) => {
+  if (!users?.length || !A) return "";
 
+  const info = users
+    ?.map((each: any) => each?.HCAComplitInformation)
+    ?.find((info: any) => info?.UserId === A);
+
+  if (!info) return "";
+
+  const fullName = [
+    info.HCPSurName,
+    info.HCPFirstName,
+    info.LastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return fullName;
+};
      const GetHCPType = (A: any) => {
     if (!RegisterdUsers?.length || !A) return "Not Entered";
 
@@ -679,6 +741,7 @@ const mergedPayments = useMemo(() => {
     })),
   ];
 }, [
+  RegisterdUsers,users,ClientsInformation,
   DeployInformation,
   ReplasementAttendece,
   TerminatedData,
@@ -703,18 +766,74 @@ const filtered = useMemo(() => {
 ]);
 
 useEffect(() => {
-  setData(filtered);
+  const mergedData = Object.values(
+    filtered.reduce((acc: any, item: any) => {
+      if (!acc[item.HCAId]) {
+        acc[item.HCAId] = {
+          ...item,
+           isitMerged: "No", 
+           MergedPreviewInfos: [item.PreviewInfo],
+          attendanceInfo: [...(item.attendanceInfo || [])],
+          PreviewInfo: [item.PreviewInfo],
+        };
+      } else {
+        // Merge attendance
+          acc[item.HCAId].isitMerged = "In Process";
+            if (
+    !acc[item.HCAId].MergedPreviewInfos.includes(item.PreviewInfo)
+  ) {
+    acc[item.HCAId].MergedPreviewInfos.push(item.PreviewInfo);
+  }
+        acc[item.HCAId].attendanceInfo.push(
+          ...(item.attendanceInfo || [])
+        );
+
+        // Store payment sources
+        if (!acc[item.HCAId].PreviewInfo.includes(item.PreviewInfo)) {
+          acc[item.HCAId].PreviewInfo.push(item.PreviewInfo);
+        }
+
+        // If both records have expenses, combine them (optional)
+        acc[item.HCAId].transactions = [
+          ...(acc[item.HCAId].transactions || []),
+          ...(item.transactions || []),
+        ];
+
+        // Attendance summary
+        acc[item.HCAId].CompliteAttendeceSummery = {
+          present:
+            (acc[item.HCAId].CompliteAttendeceSummery?.present || 0) +
+            (item.CompliteAttendeceSummery?.present || 0),
+
+          halfDay:
+            (acc[item.HCAId].CompliteAttendeceSummery?.halfDay || 0) +
+            (item.CompliteAttendeceSummery?.halfDay || 0),
+
+          absent:
+            (acc[item.HCAId].CompliteAttendeceSummery?.absent || 0) +
+            (item.CompliteAttendeceSummery?.absent || 0),
+        };
+      }
+
+      return acc;
+    }, {})
+  );console.log("Merged Data", mergedData);
+
+  setData(mergedData);
 }, [filtered]);
+
 
 const grouped = Object.values(
   mergedPayments.reduce((acc: any, item: any) => {
     if (!acc[item.HCAId]) {
       acc[item.HCAId] = {
         ...item,
+        
         attendanceInfo: [...(item.attendanceInfo || [])],
         Sources: [item.Source],
       };
     } else {
+         acc[item.HCAId].isitMerged = "In Process";
       acc[item.HCAId].attendanceInfo.push(
         ...(item.attendanceInfo || [])
       );
@@ -803,7 +922,20 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
     const UpdatedinDB:any=await UpdatePaymentVerificationStatusInDb(HCAId,ClientId,value,MonthInfo,Info.StartDate,Info.PreviewInfo)
 
     if(UpdatedinDB.success){
+        const userId = localStorage.getItem("UserId");
       
+      
+          
+              const { data } = await axios.post("/api/AdminPageInfo", {
+                userId,
+                refreshType: "deployment",
+              });
+      
+              dispatch(
+                SetDeploymentInfo(
+                  (data?.data?.deployedLength) || 0
+                )
+              );
       setData((prev) =>
       prev.map((item) =>
         item.HCAId === HCAId    ? { ...item, PaymentVerficationStatus: value }
@@ -846,7 +978,20 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
       const UpdatedinDB=await PostINPayblePage(row.HCAId,row.ClientId,MonthInfo,row,totalAmount)
    
     if(UpdatedinDB.success){
+        const userId = localStorage.getItem("UserId");
       
+      
+          
+              const { data } = await axios.post("/api/AdminPageInfo", {
+                userId,
+                refreshType: "deployment",
+              });
+      
+              dispatch(
+                SetDeploymentInfo(
+                  (data?.data?.deployedLength) || 0
+                )
+              );
       setData((prev) =>
       prev.map((item) =>
         item.HCAId ===row. HCAId    ? { ...item, PreviewINPaymentPage: "Disabled" }
@@ -871,7 +1016,20 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
       const UpdatedinDB=await PostINPayblePageforRepleasments(row.HCAId,row.ClientId,MonthInfo,row,totalAmount)
  
     if(UpdatedinDB.success){
+        const userId = localStorage.getItem("UserId");
       
+      
+          
+              const { data } = await axios.post("/api/AdminPageInfo", {
+                userId,
+                refreshType: "deployment",
+              });
+      
+              dispatch(
+                SetDeploymentInfo(
+                  (data?.data?.deployedLength) || 0
+                )
+              );
       setData((prev) =>
       prev.map((item) =>
         item.HCAId ===row. HCAId    ? { ...item, PreviewINPaymentPage: "Disabled" }
@@ -897,7 +1055,20 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
 StartDate)
    
     if(UpdatedinDB.success){
+        const userId = localStorage.getItem("UserId");
       
+      
+          
+              const { data } = await axios.post("/api/AdminPageInfo", {
+                userId,
+                refreshType: "deployment",
+              });
+      
+              dispatch(
+                SetDeploymentInfo(
+                  (data?.data?.deployedLength) || 0
+                )
+              );
       setData((prev) =>
       prev.map((item) =>
         item.HCAId ===row. HCAId    ? { ...item, PreviewINPaymentPage: "Disabled" }
@@ -1608,7 +1779,24 @@ const totalExpenses =
 
               return (
                 <tr key={Ind} className="border-b">
-                      <td className="p-4 text-center font-semibold">{Ind+1}</td>
+                     <td className="p-4">
+  <div className="flex items-center justify-center gap-2">
+    {row.isitMerged === "In Process" && (
+      <span
+        className="flex h-7 w-7 items-center justify-center rounded-full
+                   bg-violet-100 text-violet-600 border border-violet-200
+                   shadow-sm"
+        title="Merged Payment"
+      >
+        <Blend size={15} strokeWidth={2.3} />
+      </span>
+    )}
+
+    <span className="font-semibold text-slate-700">
+      {Ind + 1}
+    </span>
+  </div>
+</td>
                  <td className="p-2 md:p-4 text-[10px] sm:text-xs md:text-sm break-words font-semibold">  
 
   <div className="relative flex gap-2 items-center justify-between w-[110px]  group ">
@@ -1617,7 +1805,9 @@ const totalExpenses =
 
 
     <span className="hover:underline font-semibold text-xm break-words leading-tight">
-      {toProperCaseLive(row.name)}{row.clientid}
+    {GetHCPFullName(row.HCAId)
+  ? GetHCPFullName(row.HCAId)
+  : `${toProperCaseLive(row.name)} ${row.clientid}`}
     </span>
 
      <img
