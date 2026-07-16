@@ -485,27 +485,25 @@ setPopup({
 
     return address ?? "Not Entered";
   };
-  const GetHCPFullName = (A: any) => {
-    if (!users?.length || !A) return "Not Entered";
+ const GetHCPFullName = (A: any) => {
+  if (!users?.length || !A) return "";
 
-    const HCPFirstName =
-      users
-        ?.map((each: any) => each?.HCAComplitInformation)
-        ?.find((info: any) => info?.UserId === A)
-      ?.['HCPFirstName']||"Not Provided";
-      const HCPSurName =
-      users
-        ?.map((each: any) => each?.HCAComplitInformation)
-        ?.find((info: any) => info?.UserId === A)
-      ?.['HCPSurName']||"Not Provided";
-      const LastName =
-      users
-        ?.map((each: any) => each?.HCAComplitInformation)
-        ?.find((info: any) => info?.UserId === A)
-      ?.['LastName']||"Not Provided";
+  const info = users
+    ?.map((each: any) => each?.HCAComplitInformation)
+    ?.find((info: any) => info?.UserId === A);
 
-    return `${HCPSurName} ${HCPFirstName} ${LastName}` || "Not Entered";
-  }
+  if (!info) return "";
+
+  const fullName = [
+    info.HCPSurName,
+    info.HCPFirstName,
+    info.LastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return fullName;
+};
 
 
      const GetHCPType = (A: any) => {
@@ -1331,45 +1329,49 @@ onClick={() => router.push("/SubAccountings")}
                     {index + 1}
                   </td>
 
-                  <td className="sticky left-[80px] bg-white px-5 py-5 font-semibold text-slate-800">
-                    <div className="relative flex gap-2 items-center justify-between w-[100px]  group ">
-                    
-                     
-                    
-                    
-                        <span className="hover:underline font-semibold text-xm break-words leading-tight">
-                          {toProperCaseLive(row.name)}{row.clientid}
-                        </span>
-                    
-                         <img
-                          className="h-4 w-4"
-                          src={
-                            AssignSuitableIcon(
-                              GetHCPGender(row.HCAId),
-                              GetHCPType(row.HCAId)
-                            ).image
-                          }
-                        />
-                        <div
-                          className="absolute -top-12 left-1/2 -translate-x-1/2
-                                     opacity-0 group-hover:opacity-100
-                                     translate-y-2 group-hover:translate-y-0
-                                     transition-all duration-300 ease-out
-                                     bg-gradient-to-br from-[#00A9A5] to-[#005f61]
-                                     text-white text-xs font-medium
-                                     px-3 py-2 rounded-xl shadow-xl
-                                     whitespace-nowrap pointer-events-none z-50"
-                        >
-                          {
-                            AssignSuitableIcon(
-                              GetHCPGender(row.HCAId),
-                              GetHCPType(row.HCAId)
-                            ).caseType
-                          }
-                        </div>
-                    
-                      </div>
-                  </td>
+                <td className="p-2 md:p-4 text-[10px] sm:text-xs md:text-sm break-words font-semibold">  
+                
+                  <div className="relative flex gap-2 items-center justify-between w-[110px]  group ">
+                
+                 
+                
+                
+                    <span className="hover:underline font-semibold text-xm break-words leading-tight">
+                    {GetHCPFullName(row.HCAId)
+                  ? GetHCPFullName(row.HCAId)
+                  : `${toProperCaseLive(row.name)} ${row.clientid}`}
+                    </span>
+                
+                     <img
+                      className="h-4 w-4"
+                      src={
+                        AssignSuitableIcon(
+                          GetHCPGender(row.HCAId),
+                          GetHCPType(row.HCAId)
+                        ).image
+                      }
+                    />
+                    <div
+                      className="absolute -top-12 left-1/2 -translate-x-1/2
+                                 opacity-0 group-hover:opacity-100
+                                 translate-y-2 group-hover:translate-y-0
+                                 transition-all duration-300 ease-out
+                                 bg-gradient-to-br from-[#00A9A5] to-[#005f61]
+                                 text-white text-xs font-medium
+                                 px-3 py-2 rounded-xl shadow-xl
+                                 whitespace-nowrap pointer-events-none z-50"
+                    >
+                      {
+                        AssignSuitableIcon(
+                          GetHCPGender(row.HCAId),
+                          GetHCPType(row.HCAId)
+                        ).caseType
+                      }
+                    </div>
+                
+                  </div>
+                
+                                 </td>
 
                  <td className="px-5 py-5 text-center">
   <button
