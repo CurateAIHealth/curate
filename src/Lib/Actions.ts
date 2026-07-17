@@ -55,7 +55,14 @@ export function calculateAgeIndianFormat(dob:any) {
 
 const algorithm = "aes-256-cbc";
 
-const secretKey = Buffer.from(process.env.NEXT_PUBLIC_ENCRYPTION_KEY!, "hex");
+// const secretKey = Buffer.from(process.env.NEXT_PUBLIC_ENCRYPTION_KEY!, "hex");
+const encryptionKey = process.env.NEXT_PUBLIC_ENCRYPTION_KEY;
+
+if (!encryptionKey) {
+  throw new Error("NEXT_PUBLIC_ENCRYPTION_KEY is missing");
+}
+
+const secretKey = Buffer.from(encryptionKey, "hex");
 
 export function encrypt(text: any) {
   const value = text == null ? "" : String(text);

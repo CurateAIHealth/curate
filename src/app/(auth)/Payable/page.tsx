@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { DeletePayableRecord, GetAllUsersData, PostINPayblePage, PostINRejectionDb, PostINSuccesfulPaymentsDb, UpdateStatusEnable, UpdateStatusEnableinRepleasment, UpdateStatusEnableiNTermination } from "@/Lib/user.action";
 import { LoadingData } from "@/Components/Loading/page";
-import { months, PayablemenuItems, SuccussfulmenuItems, years } from "@/Lib/Content";
+import { IndianStates, months, PayablemenuItems, SuccussfulmenuItems, years } from "@/Lib/Content";
 import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import PopupToast from "@/Components/ExpencesPopUp/page";
 import { AssignSuitableIcon, toProperCaseLive } from "@/Lib/Actions";
@@ -27,6 +27,7 @@ export default function HCAPaymentTable() {
   const [showFullMonth,setShowFullMonth]=useState(false)
 // const [userTypeFilter, setUserTypeFilter] = useState("On Service");
 const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [SelectedServiceState,SetServiceState]=useState("Telangana")
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
 const [ShowRejectPopup,setShowRejectPopup]=useState(false) 
 const [RejectionReason,SetRejectionReason]=useState("") 
@@ -276,9 +277,10 @@ const filteredPayableData = useMemo(() => {
 
     const matchesYear =
       !SearchYear || itemYear === Number(SearchYear);
+      const State=item.ServiceState===SelectedServiceState
 
     return (
-   
+   State&&
       matchesSearch &&
       matchesMonth &&
       matchesYear
@@ -289,7 +291,7 @@ const filteredPayableData = useMemo(() => {
   search,
   SearchMonth,
   SearchYear,
-  
+  SelectedServiceState
 ]);
 
 
@@ -649,7 +651,28 @@ setPopup({
     
 
             <div className="flex flex-col md:flex-row gap-3">
-
+ <div className=" relative md:col-span-2">
+     
+      
+        <select
+          
+          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-teal-500"
+          defaultValue={SelectedServiceState}
+          onChange={(e) => {
+           SetServiceState(e.target.value)
+          }}
+        >
+          <option value="" disabled>
+            Select Service State
+          </option>
+      
+          {IndianStates.map((state) => (
+            <option key={state} value={state}>
+              {state}
+            </option>
+          ))}
+        </select>
+      </div>
                 <div className="relative min-w-[250px] flex-1 max-w-[350px]">
             <Search
               size={16}
@@ -1409,18 +1432,37 @@ onClick={() => router.push("/SubAccountings")}
     </span>
   ) : (
     <div className="flex flex-col gap-2 items-center">
-      <select
-        className="w-48 bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1392d3]"
-        onChange={(e) => setSelectedBank(e.target.value)}
-        defaultValue=""
-      >
-        <option value="" disabled>
-          Select Bank
-        </option>
-        <option value="SBI">State Bank of India (SBI)</option>
-        <option value="HDFC">HDFC Bank</option>
-        <option value="ICICI">ICICI Bank</option>
-      </select>
+    <input
+  type="text"
+  list="bank-list"
+  placeholder="Select or Enter Bank"
+  value={selectedBank}
+  onChange={(e) => setSelectedBank(e.target.value)}
+  className="w-48 bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1392d3]"
+/>
+
+<datalist id="bank-list">
+  <option value="Cash" />
+  <option value="State Bank of India (SBI)" />
+  <option value="HDFC Bank" />
+  <option value="ICICI Bank" />
+  <option value="Axis Bank" />
+  <option value="Canara Bank" />
+  <option value="Punjab National Bank (PNB)" />
+  <option value="Union Bank of India" />
+  <option value="Bank of Baroda" />
+  <option value="Indian Bank" />
+  <option value="Indian Overseas Bank" />
+  <option value="UCO Bank" />
+  <option value="IDBI Bank" />
+  <option value="Yes Bank" />
+  <option value="Kotak Mahindra Bank" />
+  <option value="IndusInd Bank" />
+  <option value="Federal Bank" />
+  <option value="South Indian Bank" />
+  <option value="Bandhan Bank" />
+  <option value="AU Small Finance Bank" />
+</datalist>
 
       <input
         type="text"

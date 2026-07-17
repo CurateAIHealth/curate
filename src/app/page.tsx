@@ -225,7 +225,7 @@ useEffect(() => {
         return;
       }
 
-      // ---------------- Non Staff ----------------
+   
 
       updateLoader(100, "Redirecting...");
 
@@ -250,9 +250,7 @@ useEffect(() => {
     } catch (err) {
       console.error("Initialization Error:", err);
     } finally {
-      if (mounted) {
-        setIsChecking(false);
-      }
+      
     }
   };
 
