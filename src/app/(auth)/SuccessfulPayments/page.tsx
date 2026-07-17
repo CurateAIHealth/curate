@@ -4,7 +4,7 @@ let cachedUsersFullInfo: any[] = [];
 let cachedRegisterdUsers: any[] = [];
 import { LoadingData } from "@/Components/Loading/page";
 import { AssignSuitableIcon, toProperCaseLive } from "@/Lib/Actions";
-import { menuItems, months, SuccussfulmenuItems, years } from "@/Lib/Content";
+import { IndianStates, menuItems, months, SuccussfulmenuItems, years } from "@/Lib/Content";
 import { GetAllUsersData, GetSuccesfulPaymentData } from "@/Lib/user.action";
 import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import { Eye, CheckCircle2, Search, Info, Minimize2, X, Menu, ChevronRight } from "lucide-react";
@@ -88,7 +88,7 @@ export default function SuccessfulPayments() {
     const [isChecking, setIsChecking] = useState(true);
     const [showFullMonth,setShowFullMonth]=useState(false)
     const [attendanceInfo,setAttendenceInfo]=useState<any>()
-
+const [SelectedServiceState,SetServiceState]=useState("Telangana")
     const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
     const users=useSelector((state:any)=>state.AdminFullInfo)
   const [menuOpen, setMenuOpen] = useState(false);
@@ -156,7 +156,25 @@ const NumberOfDaysInMonth = getDaysInMonth(
     return address ?? "Not Entered";
   };
 
+const GetHCPFullName = (A: any) => {
+  if (!users?.length || !A) return "";
 
+  const info = users
+    ?.map((each: any) => each?.HCAComplitInformation)
+    ?.find((info: any) => info?.UserId === A);
+
+  if (!info) return "";
+
+  const fullName = [
+    info.HCPSurName,
+    info.HCPFirstName,
+    info.LastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return fullName;
+}
      const GetHCPType = (A: any) => {
     if (!RegisterdUsers?.length || !A) return "Not Entered";
 
@@ -177,7 +195,8 @@ const PaymentInformation = useMemo(
       total: each.GrandTotalAmount,
       neft: each.NeftNumber||each.NeftTransactionNumber,
       dateTime: each.CreatedAt,
-      Month:each.Month
+      Month:each.Month,
+      ServiceState:each.ServiceState
     })) || [],
   [PreviewData]
 );
@@ -216,6 +235,7 @@ const matchesSearchAndMonth = (
 const data = useMemo(
   () =>
     PaymentInformation.filter((item: any) =>
+      item.ServiceState===SelectedServiceState&&
       matchesSearchAndMonth(
         item,
         search,
@@ -223,7 +243,7 @@ const data = useMemo(
         SearchYear
       )
     ),
-  [PaymentInformation, search, SearchMonth, SearchYear]
+  [SelectedServiceState,PaymentInformation, search, SearchMonth, SearchYear]
 );
       function DayBadge({ status }: { status: any }) {
   const Wrapper = ({ children }: any) => (
@@ -371,7 +391,28 @@ console.log("search", search);
 
     {/* Right Controls */}
     <div className="flex w-full flex-col gap-3 lg:w-auto lg:flex-row lg:items-center">
-
+ <div className=" relative md:col-span-2">
+     
+      
+        <select
+          
+          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-teal-500"
+          defaultValue={SelectedServiceState}
+          onChange={(e) => {
+           SetServiceState(e.target.value)
+          }}
+        >
+          <option value="" disabled>
+            Select Service State
+          </option>
+      
+          {IndianStates.map((state) => (
+            <option key={state} value={state}>
+              {state}
+            </option>
+          ))}
+        </select>
+      </div>
       {/* Search */}
       <div className="relative w-full lg:w-[320px]">
         <Search
@@ -674,9 +715,11 @@ No Successfull Payment for Selected Month
                 
                
                
-                   <span className="hover:underline font-semibold text-xm break-words leading-tight">
-                     {toProperCaseLive(row.name)}{row.clientid}
-                   </span>
+                     <span className="hover:underline font-semibold text-xm break-words leading-tight">
+                     {GetHCPFullName(row.HCAId)
+                   ? GetHCPFullName(row.HCAId)
+                   : `${toProperCaseLive(row.name)} ${row.clientid}`}
+                     </span>
                
                     <img
                      className="h-4 w-4"
@@ -715,7 +758,7 @@ No Successfull Payment for Selected Month
                       setAttendenceInfo(row)
                     }}
                   >
-  View 
+  View  
 </button>
                 </td>
 

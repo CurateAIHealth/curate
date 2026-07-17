@@ -5385,6 +5385,23 @@ const now = `${date.toLocaleDateString("en-GB", {
       UpdatedAt: now,
     };
 
+const HCPPaymentInfo = {
+  total: PaymentInfo.total,
+  advance: PaymentInfo.advance,
+  hostelFee: PaymentInfo.hostelFee,
+  Other: PaymentInfo.Other,
+  others: PaymentInfo.others,
+  incentive: PaymentInfo.incentive,
+  reject: PaymentInfo.reject,
+  revert: PaymentInfo.revert,
+  neft: PaymentInfo.neft,
+  amount: PaymentInfo.amount,
+  NeftTransactionNumber: String(NeftTransactionNumber).trim(),
+  Bank: ImpBank,
+  Month: String(MonthInfo).trim(),
+  CreatedAt: now,
+};
+
     const existingPayment = await successfulPaymentsCollection.findOne({
       ClientId: PaymentInfo.ClientId,
       HCAId: PaymentInfo.HCAId,
@@ -5404,8 +5421,8 @@ const now = `${date.toLocaleDateString("en-GB", {
   { "HCAComplitInformation.UserId": ImpId },
   {
     $push: {
-      "HCAComplitInformation.PaymentHistory": payload,
-    },
+      "HCAComplitInformation.PaymentHistory": HCPPaymentInfo,
+    }as any,
   }
 );
 
@@ -5454,7 +5471,7 @@ const successfulPaymentsCollection =db.collection("SuccessfulPayments");
         {},
         { projection: { 
 NeftNumber: 1,
-
+ServiceState:1,
 NeftTransactionNumber:1,
  GrandTotalAmount: 1, 
 ClientId: 1,

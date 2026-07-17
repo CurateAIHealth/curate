@@ -10,7 +10,7 @@ const replacementTerminationCache: {
 };
 import React, { useEffect, useMemo, useState } from "react";
 import { Blend, ChevronRight, CircleX, Info, Menu, Minimize2, Search, Slice, Users, X } from "lucide-react";
-import { menuItems, months, years } from "@/Lib/Content";
+import { IndianStates, menuItems, months, years } from "@/Lib/Content";
 import { SetDeploymentInfo, setFullInfo, setUsers, UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
@@ -63,6 +63,7 @@ export default function HCAPayrollTable() {
   
   const [search, setSearch] = useState("");
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
+  const [SelectedServiceState,SetServiceState]=useState("Telangana")
   const [selectedTransactions, setSelectedTransactions] =
     useState<PayrollRow | null>(null);
   const [originalValues, setOriginalValues] = useState<Record<number, PayrollRow>>(
@@ -84,7 +85,7 @@ const ClientsInformation=useSelector((state:any)=>state.AdminDeployment)
 
      const [activeStatus, setActiveStatus] = useState("Process");
 const [menuOpen, setMenuOpen] = useState(false);
-const statuses = ["Process", "Save", "Hold", "Rejected"];
+const statuses = ["Process", "Save", "Hold", "Reject"];
       const [ReplacementInformation, setReplacementInformation] = useState<Replace[]>([]);
       const [TerminationInformation, setTerminationInformation] = useState<Termination[]>([]);
    
@@ -749,7 +750,7 @@ const mergedPayments = useMemo(() => {
 
 const filtered = useMemo(() => {
   return mergedPayments.filter((item) =>
-    item.PaymentVerficationStatus===activeStatus&&
+    item.PaymentVerficationStatus===activeStatus&&item.ServiceState===SelectedServiceState&&
     matchesSearchAndMonth(
       item,
       search,
@@ -761,6 +762,7 @@ const filtered = useMemo(() => {
   mergedPayments,
   search,
   activeStatus,
+  SelectedServiceState,
   SearchMonth,
   SearchYear,
 ]);
@@ -1507,12 +1509,35 @@ const handleChange = (
 
   {/* Right Section */}
   <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
+    <div className="w-full relative md:col-span-2">
+     
+      
+        <select
+          
+          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-teal-500"
+          defaultValue={SelectedServiceState}
+          onChange={(e) => {
+           SetServiceState(e.target.value)
+          }}
+        >
+          <option value="" disabled>
+            Select Service State
+          </option>
+      
+          {IndianStates.map((state) => (
+            <option key={state} value={state}>
+              {state}
+            </option>
+          ))}
+        </select>
+      </div>
     {/* Search */}
     <div className="relative w-full sm:min-w-[260px] xl:min-w-[320px]">
       <Search
         size={16}
         className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
       />
+      
 
       <input
         type="text"
@@ -1807,16 +1832,7 @@ const totalExpenses =
                 <tr key={Ind} className="border-b">
                      <td className="p-4">
   <div className="flex items-center justify-center gap-2">
-    {row.isitMerged === "In Process" && (
-      <span
-        className="flex h-7 w-7 items-center justify-center rounded-full
-                   bg-violet-100 text-violet-600 border border-violet-200
-                   shadow-sm"
-        title="Merged Payment"
-      >
-        <Blend size={15} strokeWidth={2.3} />
-      </span>
-    )}
+ 
 
     <span className="font-semibold text-slate-700">
       {Ind + 1}

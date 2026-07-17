@@ -10,9 +10,32 @@ import { Pencil, User, X } from 'lucide-react';
 import { PROFESSIONAL_SKILL_OPTIONS } from '@/Lib/Content';
 import { LoadingData } from '../Loading/page';
 import { Refresh, Update_Main_Filter_Status, UpdateUserType } from '@/Redux/action';
+import PaymentPassbook from '../HCAStatastics/page';
+const payment = {
+  total: 10000.28,
+  advance: 4723,
+  hostelFee: 1000,
+  Other: 500,
+  others: 1000,
+  incentive: 500,
+  reject: 0,
+  revert: 0,
+  amount: 10000.28,
+  paid: true,
+  NeftTransactionNumber: "123456",
+  Bank: "SBI",
+};
 
+const transactions: { title: string; amount: number; type: 'credit' | 'debit' }[] = [
+  { title: "Monthly Salary", amount: payment.total, type: "credit" as const },
+  { title: "Advance Deduction", amount: payment.advance, type: "debit" as const },
+  { title: "Hostel Fee", amount: payment.hostelFee, type: "debit" as const },
+  { title: "Other Deduction", amount: payment.Other, type: "debit" as const },
+  { title: "Other Charges", amount: payment.others, type: "debit" as const },
+  { title: "Performance Incentive", amount: payment.incentive, type: "credit" as const },
+].filter((item) => item.amount > 0);
 
-const TABS = ['Personal Info', 'Bank Details', 'Documents', 'Work Experience', 'Identifiers'];
+const TABS = ['Personal Info', 'Bank Details', 'Documents', 'Work Experience', 'Identifiers' ,"Payment"];
 
 type DocumentKeys = 'ProfilePic' | 'AdharCard' | 'PanCard' | 'AccountPassBook' | 'CertificatOne' | 'CertificatTwo';
 
@@ -504,6 +527,22 @@ console.log("FinalData:", normalizedData);
           <TextInput label="PAN No" name="panNumber" value={user.panNumber} onChange={handleChange} />
 
         </div>
+      );
+        case 'Payment':
+      return (
+        <PaymentPassbook
+  summary={{
+    month: "July 2026",
+    total: payment.total,
+    finalAmount: payment.amount,
+    paid: payment.paid,
+    bank: payment.Bank,
+    paymentMode: "NEFT",
+    transactionNumber: payment.NeftTransactionNumber,
+    paymentDate: "15 Jul 2026",
+  }}
+  transactions={transactions}
+/>
       );
     default:
       return null;
