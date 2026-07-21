@@ -6,11 +6,14 @@ import axios from 'axios';
 import { GetHCACompliteInformation, GetUserCompliteInformation, GetUserInformation, HCASalaryUpdate, UpdateClientComplitInformation, UpdateHCAComplitInformation, updateHCARegistration } from '@/Lib/user.action';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import { Pencil, User, X } from 'lucide-react';
+import { Pencil, TrendingUp, User, X, History, Landmark } from 'lucide-react';
 import { PROFESSIONAL_SKILL_OPTIONS } from '@/Lib/Content';
 import { LoadingData } from '../Loading/page';
 import { Refresh, Update_Main_Filter_Status, UpdateUserType } from '@/Redux/action';
 import PaymentPassbook from '../HCAStatastics/page';
+import FullYearTransactions from '../FullYearHistory/page';
+import HikeHistory from '../HikeHistory/page';
+import HCPReviews from '../Reviews/page';
 const payment = {
   total: 10000.28,
   advance: 4723,
@@ -40,6 +43,7 @@ const TABS = ['Personal Info', 'Bank Details', 'Documents', 'Work Experience', '
 type DocumentKeys = 'ProfilePic' | 'AdharCard' | 'PanCard' | 'AccountPassBook' | 'CertificatOne' | 'CertificatTwo';
 
 type UserData = {
+  PaymentHistory: any;
   HCPSalary: any;
   firstName: string;
   surname: string;
@@ -91,6 +95,7 @@ const UserDetail = () => {
 const [loadingDocs, setLoadingDocs] = useState<Record<string, boolean>>({});
 const [SubmitstatusMessage,setSubmitstatusMessage]=useState("")
   const [isChecking, setIsChecking] = useState(true);
+  const [CurrentPaymentView,setCurrentPaymentView]=useState("MonthlySalarySlip")
   const [ProfetionlSkillsEdit,setProfetionlSkillsEdit]=useState(false)
     const [isEditing, setIsEditing] = useState(false);
 const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
@@ -153,6 +158,7 @@ preferredService:"",
 ProfetionSkill:[],
     DocumentSkipReason:'',
     HCPSalary:"",
+    PaymentHistory:[]
   });
 
 useEffect(()=>{
@@ -206,6 +212,7 @@ useEffect(()=>{
   DocumentSkipReason: FilterValue["DocumentSkipReason"] || "",
   HCPSalary:FilterValue['PaymentforStaff']||'',
   ProfetionSkill:FilterValue['Professional Skill']||FilterValue.ProfessionalSkills||'',
+  PaymentHistory:FilterValue['PaymentHistory']||FilterValue.PaymentHistory,
 
     Documents: {
           ...prev.Documents,
@@ -233,7 +240,7 @@ useEffect(()=>{
     Fetch()
 },[])
 
-
+console.log ("Check for Trasactions----",user.PaymentHistory)
 
   const handleSave =async () => {
     setSubmitstatusMessage("Please Wait....")
@@ -352,6 +359,80 @@ console.log("FinalData:", normalizedData);
   } finally {
     // Optional: reset loading state if you have one
     // setLoading(false);
+  }
+};
+
+const PaymentInfoPreview = () => {
+  switch (CurrentPaymentView) {
+    case "MonthlySalarySlip":
+      return (
+        <PaymentPassbook
+          PAYMENT_HISTORY={user.PaymentHistory}
+          HCAName={`${user.firstName} ${user.surname}`}
+        />
+      );
+
+  case "FullYearTransactions":
+  return (
+    <FullYearTransactions
+      HCAName="REDDYVARI DHANALAKSHMI"
+      PAYMENT_HISTORY={user.PaymentHistory}
+    />
+  );
+
+case "HikeHistory":
+  return (
+    <HikeHistory
+      HCAName="REDDYVARI DHANALAKSHMI"
+   history={[
+  {
+    Salary: 18000,
+    EffectiveDate: "01 Jan 2025",
+    UpdatedBy: "Kiran",
+    Reason: "Initial joining salary.",
+    NextHikeDate: "01 Jul 2025",
+  },
+  {
+    Salary: 20000,
+    EffectiveDate: "01 Jul 2025",
+    UpdatedBy: "Srinivas",
+    Reason: "Completed probation with excellent performance.",
+    NextHikeDate: "01 Jan 2026",
+  },
+  {
+    Salary: 22500,
+    EffectiveDate: "01 Jan 2026",
+    UpdatedBy: "Kiran",
+    Reason: "Outstanding attendance and consistent client feedback.",
+    NextHikeDate: "01 Apr 2026",
+  },
+  {
+    Salary: 25000,
+    EffectiveDate: "01 Apr 2026",
+    UpdatedBy: "Srinivas",
+    Reason: "Assigned additional responsibilities and leadership role.",
+    NextHikeDate: "01 Jun 2026",
+  },
+  {
+    Salary: 27500,
+    EffectiveDate: "01 Jun 2026",
+    UpdatedBy: "Kiran",
+    Reason: "Exceptional performance during quarterly evaluation.",
+    NextHikeDate: "15 Jul 2026",
+  },
+  {
+    Salary: 30000,
+    EffectiveDate: "15 Jul 2026",
+    UpdatedBy: "Srinivas",
+    Reason: "Annual appraisal with excellent overall performance.",
+    NextHikeDate: "15 Jan 2027",
+  },
+]}
+    />
+  );
+
+    default:
+      return null;
   }
 };
   if (isChecking) {
@@ -512,13 +593,16 @@ console.log("FinalData:", normalizedData);
       );
     case 'Work Experience':
       return (
+        <div>
         <div className="grid md:grid-cols-2 gap-4">
           <TextInput label="Experience (Years)" name="experience" value={user.experience} onChange={handleChange} />
           {/* <TextInput label="Recent Job" name="professionalWork1" value={user.professionalWork1} onChange={handleChange} /> */}
           <TextInput label="Higher Education" name="professionalWork2" value={user.professionalWork2} onChange={handleChange} />
           <TextInput label="Professional Education" name="professionalEducation" value={user.professionalEducation} onChange={handleChange} />
-         
+       
         </div>
+          <HCPReviews  HCAName={`${user.firstName} ${user.surname}`}/>
+          </div>
       );
     case 'Identifiers':
       return (
@@ -530,19 +614,66 @@ console.log("FinalData:", normalizedData);
       );
         case 'Payment':
       return (
-        <PaymentPassbook
-  summary={{
-    month: "July 2026",
-    total: payment.total,
-    finalAmount: payment.amount,
-    paid: payment.paid,
-    bank: payment.Bank,
-    paymentMode: "NEFT",
-    transactionNumber: payment.NeftTransactionNumber,
-    paymentDate: "15 Jul 2026",
-  }}
-  transactions={transactions}
-/>
+     <div>
+    <div className="flex flex-wrap gap-3 mb-6">
+  <button
+    onClick={() => setCurrentPaymentView("MonthlySalarySlip")}
+    className={`group flex items-center gap-2 cursor-pointer rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-300 ${
+      CurrentPaymentView === "MonthlySalarySlip"
+        ? "bg-[#1392d3] text-white shadow-lg"
+        : "bg-white text-slate-700 border border-slate-200 hover:bg-[#1392d3]/10 hover:border-[#1392d3]"
+    }`}
+  >
+    <Landmark
+      className={`h-5 w-5 ${
+        CurrentPaymentView === "MonthlySalarySlip"
+          ? "text-white"
+          : "text-[#1392d3]"
+      }`}
+    />
+    Monthly Salary Slip
+  </button>
+
+  <button
+    onClick={() => setCurrentPaymentView("FullYearTransactions")}
+    className={`group flex items-center gap-2 rounded-xl px-5 cursor-pointer py-3 text-sm font-semibold transition-all duration-300 ${
+      CurrentPaymentView === "FullYearTransactions"
+        ? "bg-[#50c896] text-white shadow-lg"
+        : "bg-white text-slate-700 border border-slate-200 hover:bg-[#50c896]/10 hover:border-[#50c896]"
+    }`}
+  >
+    <History
+      className={`h-5 w-5 ${
+        CurrentPaymentView === "FullYearTransactions"
+          ? "text-white"
+          : "text-[#50c896]"
+      }`}
+    />
+    Full Payment History
+  </button>
+
+  <button
+    onClick={() => setCurrentPaymentView("HikeHistory")}
+    className={`group flex items-center gap-2 rounded-xl px-5 py-3 cursor-pointer text-sm font-semibold transition-all duration-300 ${
+      CurrentPaymentView === "HikeHistory"
+        ? "bg-[#ff1493] text-white shadow-lg"
+        : "bg-white text-slate-700 border border-slate-200 hover:bg-[#ff1493]/10 hover:border-[#ff1493]"
+    }`}
+  >
+    <TrendingUp
+      className={`h-5 w-5 ${
+        CurrentPaymentView === "HikeHistory"
+          ? "text-white"
+          : "text-[#ff1493]"
+      }`}
+    />
+    Hike History
+  </button>
+</div>
+         
+
+{PaymentInfoPreview()}
+     </div>
       );
     default:
       return null;
@@ -551,11 +682,9 @@ console.log("FinalData:", normalizedData);
 
 
   return (
-    <div className="min-h-screen p-4 md:p-4 bg-gray-100">
-         <div className='flex justify-end items-end  cursor-pointer   rounded-full  ' >
-                   <p onClick={Revert} className='bg-blue-400 text-white p-1 text-[12px] rounded-md mb-1'> Back to Admin Page </p>
-                </div>
-      <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+
+         
+      <div className="mx-auto bg-white rounded-xl shadow-md overflow-hidden">
         
         <div className="flex items-center justify-between gap-6 p-6 border-b">
  
@@ -584,10 +713,25 @@ console.log("FinalData:", normalizedData);
     <p className={ `${SubmitstatusMessage==="Profile Updated Succesfully"?"text-[#15803d]":"text-black"} text-center font-semibold ml-15 mt-10`}>{SubmitstatusMessage}</p>
   </div>
 
- 
-  <button className="bg-teal-600 p-2 text-white rounded-md cursor-pointer" onClick={updateWithNewData}>
-    Update Profile
+<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+  
+  <button
+    onClick={Revert}
+    className="inline-flex items-center gap-2 self-start cursor-pointer rounded-xl border border-[#1392d3] bg-[#1392d3]/10 px-4 py-2 text-sm font-semibold text-[#1392d3] transition-all duration-200 hover:bg-[#1392d3] hover:text-white"
+  >
+    <span>←</span>
+    <span>Back to Admin Page</span>
   </button>
+
+
+  <button
+    onClick={updateWithNewData}
+    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#50c896] px-6 cursor-pointer py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-[#43b785] hover:shadow-lg active:scale-95"
+  >
+    <span>💾</span>
+    <span>Update Profile</span>
+  </button>
+</div>
       
 </div>
 
@@ -685,7 +829,7 @@ console.log("FinalData:", normalizedData);
           </div>
         </div>
       </div>
-    </div>
+  
   );
 };
 

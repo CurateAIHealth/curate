@@ -969,7 +969,8 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
 
   
 
-const UpdatePayablePage = async (row: any, totalAmount: any) => {
+const UpdatePayablePage = async (row: any, totalAmount: any,DailyPay:any) => {
+  alert(DailyPay)
   try {
     setPopup({
       isOpen: true,
@@ -989,7 +990,8 @@ const UpdatePayablePage = async (row: any, totalAmount: any) => {
       row.Clientid,
       MonthInfo,
       row,
-      totalAmount
+      totalAmount,
+      DailyPay
     );
 
     if (!payableResult.success) {
@@ -2062,7 +2064,7 @@ const totalExpenses =
                      disabled={row.PaymentVerficationStatus==="Process"}
                         className={`h-10 px-3 flex items-center  justify-center gap-2 rounded-xl ${row.PaymentVerficationStatus === "Process" ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-600 cursor-pointer"} text-white text-sm font-medium`}
                         onClick={() => {
-                          UpdatePayablePage(row,(dailyPayment+Additems-MinusItems-TDSAmount))
+                          UpdatePayablePage(row,(dailyPayment+Additems-MinusItems-TDSAmount),dailyPayment)
                         }}
                       >
                         Pay 
