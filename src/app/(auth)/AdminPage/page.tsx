@@ -50,6 +50,7 @@ import CallEnquiryList from '@/Components/CallEnquiry/page';
 import { stat } from 'fs';
 import { ClientsPopup } from '@/Components/SentProfile/page';
 import NotIntrestedTable from '@/Components/NotIntrested/page';
+import { HCPProfileCard } from '@/Components/ShowHcpProfile/page';
 
 
 export default function UserTableList() {
@@ -68,6 +69,7 @@ const UserFirstName=useSelector((state:any)=>state.LogUserName)
   const [SearchDate, SetSearchDate] = useState<any>(null)
   const now = new Date();
   const [showClients, setShowClients] = useState(false);
+  const [ProfileId,setProfileId]=useState("")
   const SearchMonth = useSelector((state: any) => state.MonthFilterAdmin)
   const SearchYear = useSelector((state: any) => state.YearFilterAdmin)
   const [HCPPreviewtype,setHCPPreviewtype]=useState("")
@@ -983,11 +985,19 @@ const UpdatePopup = async (a: any) => {
             )}
 
 
-            <ClientsPopup
+            {/* <ClientsPopup
   open={showClients}
   onClose={() => setShowClients(false)}
   clients={clientsData}
   title="Clients List"
+/> */}
+
+
+<HCPProfileCard
+  userId={ProfileId}
+  open={showClients}
+   onClose={() => setShowClients(false)}
+  clients={[]}
 />
             <>
       <StatusPopup
@@ -1511,11 +1521,12 @@ const UpdatePopup = async (a: any) => {
   
   <td className="md:px-8 md:py-2">
 
-                                <button
+                              <button
   type="button"
-  className="px-1 py-1.5 text-xs sm:text-xs cursor-pointer font-medium rounded-md bg-white/60 hover:shadow-lg backdrop-blur border border-gray-200 text-gray-800 hover:bg-white transition shadow-sm"  onClick={() => setShowClients(true)}
+  onClick={() => {setShowClients(true),setProfileId(user.userId)}}
+  className="inline-flex items-center justify-center rounded-lg border border-[#1392d3] bg-[#1392d3] px-1 py-1.5 text-[10px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#0f7bb3] hover:shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
 >
-  Send Profile
+  Download Profile
 </button>
                               </td>
                               

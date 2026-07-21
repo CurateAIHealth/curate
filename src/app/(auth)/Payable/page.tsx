@@ -247,6 +247,7 @@ const PayableDataformation = useMemo(() => {
 
     Month: each.Month,
     PaymentType: each.PaymentType,
+    TotalHcaPayment:each.TotalHcaPayment
   }));
 }, [paybleData]);
 
@@ -1414,7 +1415,7 @@ onClick={() => router.push("/SubAccountings")}
                       setAttendenceInfo(row)
                     }}
                   >
-  View 
+View  {row.HCAid}
 </button>
                   </td>
 

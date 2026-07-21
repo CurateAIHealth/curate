@@ -3179,22 +3179,26 @@ const attendanceEntry = {
 };
 
 // New HCA (Deployment)
-const newHCAAttendance = {
-  dateKey: new Date(ReplacementDate).toISOString().split("T")[0],
-  AttendenceDate: new Date(ReplacementDate),
+    const newHCAAttendance = {
+      dateKey: new Date(ReplacementDate).toISOString().split("T")[0],
+      AttendenceDate: new Date(ReplacementDate),
 
-  // Before 3:00 -> Present/Half Day
-  // 3:00 onwards -> Absent
-  HCPAttendence: totalMinutes < THREE_PM,
+      // Before 3:00 -> Present/Half Day
+      // 3:00 onwards -> Absent
+      HCPAttendence: totalMinutes < THREE_PM,
 
-  // Before 11:30 -> Present
-  // 11:30 - 2:59 -> Half Day
-  // 3:00 onwards -> Absent
-  AdminAttendece: totalMinutes < ELEVEN_THIRTY,
+      // Before 11:30 -> Present
+      // 11:30 - 2:59 -> Half Day
+      // 3:00 onwards -> Absent
+      AdminAttendece: totalMinutes < ELEVEN_THIRTY,
+      Client_Id: ImpClientId,
+      Client_Name: ImpClientName,
+      HCA_Id: Available_HCP?.userId,
+      HCA_Name: Available_HCP?.FirstName,
 
-  UpdatedAt: new Date(ReplacementDate),
-  UpdatedBy: UpdatedBy || "",
-};
+      UpdatedAt: new Date(ReplacementDate),
+      UpdatedBy: UpdatedBy || "",
+    };
       const ClientattendanceEntry = {
         dateKey: new Date(ReplacementDate).toISOString().split("T")[0],
         AttendanceDate: new Date(ReplacementDate),
@@ -5019,7 +5023,8 @@ export const PostINPayblePage = async (
   ClientId: string,
   MonthInfo: string,
   ImpData: any,
-  GrandTotal: any
+  GrandTotal: any,
+  TotalHCPPay:any
 ) => {
   try {
     if (!HCAId || !ClientId || !MonthInfo || !ImpData) {
@@ -5056,6 +5061,7 @@ export const PostINPayblePage = async (
           $set: {
             ...payableData,
             GrandTotalAmount: GrandTotal,
+            TotalHcaPayment:TotalHCPPay,
             UpdatedAt: new Date(),
           },
         }
@@ -5082,7 +5088,7 @@ export const PostINPayblePage = async (
       Month: MonthInfo,
 
       GrandTotalAmount: GrandTotal,
-
+ TotalHcaPayment:TotalHCPPay,
       // Helpful for future reporting
       PaymentSources: ImpData.MergedPreviewInfos || [],
 
@@ -5400,6 +5406,7 @@ const HCPPaymentInfo = {
   Bank: ImpBank,
   Month: String(MonthInfo).trim(),
   CreatedAt: now,
+  TotalHcaPayment:PaymentInfo.TotalHcaPayment
 };
 
     const existingPayment = await successfulPaymentsCollection.findOne({
@@ -6325,6 +6332,7 @@ export const GetHCACompliteInformation = async (UserIdFromLocal: any) => {
       "DocumentSkipReason": info["DocumentSkipReason"],
       "ProfilePic": info["ProfilePic"],
       "Documents": info["Documents"],
+      "PaymentHistory":info["PaymentHistory"]
     };
 
     return {
