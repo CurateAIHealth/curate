@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 type IconProps = { className?: string };
 
@@ -309,10 +310,12 @@ const badgeStyles = {
 };
 type Props = {
   HCAName: string;
+  UserId:any;
+  ImportedReviews:any
 };
 
-export function HCPReviews({ HCAName }: Props){
-  const [reviews, setReviews] = useState<Review[]>(sampleReviews);
+export function HCPReviews({ HCAName,UserId,ImportedReviews }: Props){
+  const [reviews, setReviews] = useState<Review[]>(ImportedReviews);
   const [search, setSearch] = useState('');
   const [filterTab, setFilterTab] = useState<'all' | 'curate' | 'client' | '5star' | 'images'>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'highest' | 'lowest'>('newest');
@@ -320,9 +323,10 @@ export function HCPReviews({ HCAName }: Props){
   const [reviewType, setReviewType] = useState<ReviewType>('curate');
   const [reviewerName, setReviewerName] = useState('');
   const [reviewerRole, setReviewerRole] = useState('');
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(2);
   const [reviewText, setReviewText] = useState('');
   const [profilePreview, setProfilePreview] = useState<string>('');
+  const [UploadStatusMessage,setUploadStatusMessage]=useState("")
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -388,33 +392,137 @@ export function HCPReviews({ HCAName }: Props){
   const curateCount = reviews.filter((item) => item.type === 'curate').length;
   const clientCount = reviews.filter((item) => item.type === 'client').length;
 
-  const handleProfileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (profilePreview) URL.revokeObjectURL(profilePreview);
-    setProfileFile(file);
-    setProfilePreview(URL.createObjectURL(file));
-  };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    if (!files.length) return;
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setImageFiles((prev) => [...prev, ...files]);
-    setImagePreviews((prev) => [...prev, ...previews]);
-  };
+
+
+  const handleProfileUpload = useCallback(
+  async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUploadStatusMessage("Please Wait Uploading Profile Picture....");
+
+    const file = e.target.files?.[0];
+    const inputName = e.target.name;
+
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File too large. Max allowed is 10MB.");
+      return;
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "video/mp4",
+      "video/webm",
+      "video/ogg",
+      "application/pdf",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      alert("Only image, video, or PDF files are allowed.");
+      return;
+    }
+
+    const formDataData = new FormData();
+    formDataData.append("file", file);
+
+    try {
+      const res = await axios.post("/api/Upload", formDataData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const url = res?.data?.url;
+
+      if (url) {
+          setProfileFile(url);
+    setProfilePreview(url);
+      }
+
+      setUploadStatusMessage("Profile Picture Uploaded Successfully");
+    } catch (error: any) {
+      console.error("Upload failed:", error.message);
+      setUploadStatusMessage("Upload Failed");
+    }
+  },
+  []
+);
+
+
+
+    const handleImageUpload = useCallback(
+  async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUploadStatusMessage("Please Wait Uploading Review Image....");
+
+    const file = e.target.files?.[0];
+    const inputName = e.target.name;
+
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File too large. Max allowed is 10MB.");
+      return;
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "video/mp4",
+      "video/webm",
+      "video/ogg",
+      "application/pdf",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      alert("Only image, video, or PDF files are allowed.");
+      return;
+    }
+
+    const formDataData = new FormData();
+    formDataData.append("file", file);
+
+    try {
+      const res = await axios.post("/api/Upload", formDataData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const url = res?.data?.url;
+
+   if (url) {
+  setImageFiles((prev) => [...prev, file]);
+  setImagePreviews((prev) => [...prev, url]);
+}
+
+      setUploadStatusMessage("Review Image Uploaded Successfully");
+    } catch (error: any) {
+      console.error("Upload failed:", error.message);
+      setUploadStatusMessage("Upload Failed");
+    }
+  },
+  []
+);
 
   const handleRemoveImage = (index: number) => {
     setImagePreviews((prev) => prev.filter((_, idx) => idx !== index));
     setImageFiles((prev) => prev.filter((_, idx) => idx !== index));
   };
 
-  const handlePublish = () => {
-    if (!reviewerName.trim() || !reviewerRole.trim() || !reviewText.trim()) {
+  const handlePublish = async() => {
+    if (!reviewerName.trim() ||  !reviewText.trim()) {
+      setUploadStatusMessage("Please Enter Reviewer Name& Review!")
       return;
     }
+
+    setUploadStatusMessage("Please Wait Posting Review......")
     const newReview: Review = {
-      id: `new-${Date.now()}`,
+      id: UserId,
       name: reviewerName.trim(),
       role: reviewerRole.trim(),
       type: reviewType,
@@ -430,6 +538,12 @@ export function HCPReviews({ HCAName }: Props){
       images: imagePreviews,
       isLiked: false,
     };
+    
+const PostReview=await axios.post("api/NewReview",{newReview,UserId})
+console.log("CheckReview Status------",PostReview.data.success)
+alert(UserId)
+if(PostReview.data.success){
+ setUploadStatusMessage("Review Posted Successfully")
     setReviews((prev) => [newReview, ...prev]);
     setDrawerOpen(false);
     setReviewType('curate');
@@ -441,6 +555,22 @@ export function HCPReviews({ HCAName }: Props){
     setProfilePreview('');
     setImageFiles([]);
     setImagePreviews([]);
+}else{
+  setUploadStatusMessage("Review Posted Failed!")
+    setReviews((prev) => [newReview, ...prev]);
+    setDrawerOpen(false);
+    setReviewType('curate');
+    setReviewerName('');
+    setReviewerRole('');
+    setRating(5);
+    setReviewText('');
+    setProfileFile(null);
+    setProfilePreview('');
+    setImageFiles([]);
+    setImagePreviews([]);
+}
+
+   
   };
 
   const toggleLike = (id: string) => {
@@ -633,9 +763,9 @@ export function HCPReviews({ HCAName }: Props){
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {filteredReviews.map((review) => (
+            {filteredReviews.map((review,index) => (
               <div
-                key={review.id}
+                key={index}
                 className="group rounded-[2rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_25px_70px_-40px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-1 hover:border-[#50c896]/50 hover:bg-slate-100"
               >
                         
@@ -677,7 +807,7 @@ export function HCPReviews({ HCAName }: Props){
                             </div>
                         )}
                         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t  pt-4 text-sm text-slate-400">
-                            <div className="flex items-center gap-4">
+                            {/* <div className="flex items-center gap-4">
                                 <button
                                     type="button"
                                     onClick={() => toggleLike(review.id)}
@@ -692,7 +822,7 @@ export function HCPReviews({ HCAName }: Props){
                                 <div className="inline-flex items-center gap-2 rounded-full border  bg-white/5 px-3 py-2 text-slate-900">
                                     <AiOutlineShareAlt className="h-4 w-4" /> {review.shares}
                                 </div>
-                            </div>
+                            </div> */}
                             <span className="text-xs uppercase tracking-[0.2em] text-slate-500">{review.date}</span>
                         </div>
                     </div>
@@ -711,13 +841,26 @@ export function HCPReviews({ HCAName }: Props){
             <div>
               <p className="text-sm uppercase tracking-[0.3em] text-[#ff1493]">Add Review</p>
               <h2 className="mt-2 text-3xl font-semibold text-[#1392d3]">New Review For {HCAName} </h2>
+             {UploadStatusMessage && (
+  <div
+    className={`mt-4 rounded-xl px-4 py-3 shadow-sm transition-all duration-300 ${
+      UploadStatusMessage.toLowerCase().includes("success")
+        ? "border border-[#50c896]/30 bg-[#50c896]/10 text-[#166534]"
+        : UploadStatusMessage.toLowerCase().includes("error")
+        ? "border border-red-300 bg-red-50 text-red-700"
+        : "border border-yellow-300 bg-yellow-50 text-yellow-700"
+    }`}
+  >
+    <p className="text-sm font-semibold">{UploadStatusMessage}</p>
+  </div>
+)}
             </div>
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-3xl border bg-slate-900/80 text-slate-900 transition hover:bg-white/10"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-3xl border bg-slate-900/80 text-slate-900 transition cursor-pointer hover:shadow-lg bg-white/10"
             >
-              <AiOutlineClose className="h-5 w-5" />
+              <AiOutlineClose className="h-4 w-4" />
             </button>
           </div>
 
@@ -763,34 +906,39 @@ export function HCPReviews({ HCAName }: Props){
                   value={reviewerName}
                   onChange={(e) => setReviewerName(e.target.value)}
                   className="mt-3 w-full bg-transparent  outline-none placeholder:text-slate-500"
-                  placeholder="Sidd"
+                  placeholder="Enter Your Name"
                 />
               </label>
+              {reviewType!=="client"&&
               <label className="block rounded-3xl border bg-white/5 p-4">
                 <span className="text-sm font-medium text-slate-900">Designation / Company</span>
                 <input
                   value={reviewerRole}
                   onChange={(e) => setReviewerRole(e.target.value)}
                   className="mt-3 w-full bg-transparent  outline-none placeholder:text-slate-500"
-                  placeholder="Application Developer"
+                  placeholder="Ex: Application Developer"
                 />
-              </label>
+              </label>}
             </div>
 
             <div className="rounded-3xl border bg-white/5 p-5">
               <p className="text-sm font-medium text-slate-900">Rating</p>
-              <div className="mt-4 flex items-center gap-2 text-[#ff1493]">
-                {Array.from({ length: 5 }).map((_, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setRating(idx + 1)}
-                    className="transition hover:-translate-y-0.5"
-                  >
-                    {idx < rating ? <AiFillStar className="h-7 w-7" /> : <AiOutlineStar className="h-7 w-7" />}
-                  </button>
-                ))}
-              </div>
+           <div className="mt-4 flex items-center gap-2 text-[#ff1493]">
+  {Array.from({ length: 5 }).map((_, idx) => (
+    <button
+      key={idx}
+      type="button"
+      onClick={() => setRating(rating === idx + 1 ? 0 : idx + 1)}
+      className="transition hover:-translate-y-0.5"
+    >
+      {idx < rating ? (
+        <AiFillStar className="h-7 w-7" />
+      ) : (
+        <AiOutlineStar className="h-7 w-7" />
+      )}
+    </button>
+  ))}
+</div>
             </div>
 
             <label className="block rounded-3xl border bg-white/5 p-5">

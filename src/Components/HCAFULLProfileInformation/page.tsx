@@ -87,7 +87,8 @@ BankAccountHolderName:any,
   DocumentSkipReason:string;
   paymentService:string
 preferredService:string,
-ProfetionSkill:any
+ProfetionSkill:any,
+Reviews:any
 };
 
 const UserDetail = () => {
@@ -158,7 +159,8 @@ preferredService:"",
 ProfetionSkill:[],
     DocumentSkipReason:'',
     HCPSalary:"",
-    PaymentHistory:[]
+    PaymentHistory:[],
+    Reviews:[]
   });
 
 useEffect(()=>{
@@ -168,7 +170,8 @@ useEffect(()=>{
       const BasicInfo:any=await GetUserInformation(ImportedUserId)
     setShowPassword(BasicInfo.PreviewPassword)
       const FilterValue=Result.HCAComplitInformation
-    
+    console.log("Check Imported Documents-----",FilterValue.Reviews
+)
       setUser(prev=>({...prev,
     firstName: FilterValue["First Name"] || "",
     LastName: FilterValue["LastName"] || "", 
@@ -213,17 +216,19 @@ useEffect(()=>{
   HCPSalary:FilterValue['PaymentforStaff']||'',
   ProfetionSkill:FilterValue['Professional Skill']||FilterValue.ProfessionalSkills||'',
   PaymentHistory:FilterValue['PaymentHistory']||FilterValue.PaymentHistory,
-
+Reviews:FilterValue.Reviews,
     Documents: {
           ...prev.Documents,
       ProfilePic: FilterValue.Documents.ProfilePic||'/Icons/PatientDefault.png',
-      AdharCard:FilterValue.Documents.AdharCard||'/Icons/PatientDefault.png',
+      AdharCard:FilterValue.Documents.AdharCard||FilterValue.Documents.AadharCard||'/Icons/PatientDefault.png',
       PanCard: FilterValue.Documents.PanCard||'/Icons/PatientDefault.png',
-      AccountPassBook:FilterValue.Documents. AccountPassBook||'/Icons/PatientDefault.png',
-      CertificatOne:FilterValue.Documents.CertificatOne||'/Icons/PatientDefault.png',
-      CertificatTwo: FilterValue.Documents.CertificatTwo||'/Icons/PatientDefault.png',
+      AccountPassBook:FilterValue.Documents. AccountPassBook||FilterValue.Documents["Account Pass Book"]||'/Icons/PatientDefault.png',
+      CertificatOne:FilterValue.Documents.CertificatOne||FilterValue.Documents["Certificate One"]||'/Icons/PatientDefault.png',
+      CertificatTwo: FilterValue.Documents.CertificatTwo||FilterValue.Documents["Certificate Two"]||'/Icons/PatientDefault.png',
       BVR:FilterValue.BVR||'',
-      HCPform:FilterValue.HCPform||'/Icons/PatientDefault.png'
+      HCPform:FilterValue.HCPform||FilterValue.Documents["HCP form"]||'/Icons/PatientDefault.png',
+      
+
 
 
 
@@ -240,7 +245,7 @@ useEffect(()=>{
     Fetch()
 },[])
 
-console.log ("Check for Trasactions----",user.PaymentHistory)
+console.log ("Check for Reviews----",user.Reviews)
 
   const handleSave =async () => {
     setSubmitstatusMessage("Please Wait....")
@@ -440,6 +445,8 @@ case "HikeHistory":
         <LoadingData/>
     );
   }
+
+  console.log ("Check for Documets-----",user.Documents)
   const handleprofessionalSkillChange = (skill:any) => {
     setUser((prev:any) => {
       const skills:any = prev.ProfetionSkill || [];
@@ -566,7 +573,7 @@ case "HikeHistory":
                           <path d="M12 0C8.686 0 6 2.686 6 6v12c0 3.314 2.686 6 6 6s6-2.686 6-6V6c0-3.314-2.686-6-6-6zm3 18h-6v-2h6v2zm0-4h-6v-2h6v2zm0-4h-6V8h6v2z" />
                         </svg>
                       </div>:
-                       <img src={value||''} alt={key} className="w-full h-40 object-cover rounded border" />}
+                       <img src={value} alt={key} className="w-full h-40 object-cover rounded border" />}
                   </div>
                 )}
               </div>
@@ -601,7 +608,7 @@ case "HikeHistory":
           <TextInput label="Professional Education" name="professionalEducation" value={user.professionalEducation} onChange={handleChange} />
        
         </div>
-          <HCPReviews  HCAName={`${user.firstName} ${user.surname}`}/>
+          <HCPReviews  HCAName={`${user.firstName} ${user.surname}`} UserId={ImportedUserId} ImportedReviews={user.Reviews||[]}/>
           </div>
       );
     case 'Identifiers':
