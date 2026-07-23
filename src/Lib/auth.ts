@@ -166,7 +166,68 @@ export const GetRegidterdUsersforTimeSheet = async () => {
     return [];
   }
 };
+export const HCPRevew = async (
+  Userid: string,
+  Review: Record<string, any>
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    // Validation
+    if (!Userid?.trim()) {
+      return {
+        success: false,
+        message: "Invalid User ID.",
+      };
+    }
 
+    if (!Review || typeof Review !== "object" || Array.isArray(Review)) {
+      return {
+        success: false,
+        message: "Invalid review data.",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("CompliteRegistrationInformation");
+
+    const result = await collection.updateOne(
+      {
+        "HCAComplitInformation.UserId": Userid,
+      },
+      {
+        $push: {
+          "HCAComplitInformation.Reviews": Review,
+        }as any,
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "User not found.",
+      };
+    }
+
+    if (result.modifiedCount === 0) {
+      return {
+        success: false,
+        message: "Review could not be added.",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Review posted successfully.",
+    };
+  } catch (error: any) {
+    console.error("HCPReview Error:", error);
+
+    return {
+      success: false,
+      message: error?.message || "Internal server error.",
+    };
+  }
+};
 export const GetUsersFullInfoforTimeSheet = async () => {
   try {
     const Cluster = await clientPromise;

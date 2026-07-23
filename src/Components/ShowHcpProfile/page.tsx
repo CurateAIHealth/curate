@@ -49,6 +49,8 @@ interface FeedbackItem {
   review: string
   reviewer: string
   reviewDate: string
+  
+text:any
 }
 
 interface AwardItem {
@@ -72,8 +74,9 @@ interface HCPProfile {
   preferredService: 'Stay In' | 'Stay Out'
   address: HCPAddress
   skills: string[]
-  curateFeedback: string
-  previousFeedback: FeedbackItem
+  languages: string[]
+  curateFeedback: any
+  previousFeedback: any
   awards: AwardItem[]
   documents: string[]
   avatarUrl: string
@@ -89,59 +92,7 @@ const badgeStyles: Record<BadgeVariant, string> = {
   pink: 'bg-[#ffe0f0] text-[#9b095e] border-[#ffc4df]',
 }
 
-// const getHCPProfile = async (userId: string): Promise<HCPProfile | null> => {
-//   await new Promise((resolve) => setTimeout(resolve, 650))
 
-//   if (!userId || userId.trim().length === 0) {
-//     return null
-//   }
-
-//   return {
-//     id: 'CUR-1024',
-//     name: 'Priya Sharma',
-//     employeeId: 'CUR-1024',
-//     status: 'Active',
-//     experienceDays: 148,
-//     role: 'Senior Care Partner',
-//     dob: '1991-10-22',
-//     gender: 'Female',
-//     fatherName: 'Ramesh Sharma',
-//     maritalStatus: 'Married',
-//     dependents: '2 dependents',
-//     heightCm: 165,
-//     weightKg: 58,
-//     preferredService: 'Stay In',
-//     address: {
-//       state: 'Telangana',
-//       pinCode: '500081',
-//       aadhaar: 'XXXX XXXX 2541',
-//       maskedAadhaar: 'XXXX XXXX 2541',
-//       city: 'Hyderabad',
-//     },
-//     skills: [
-//       'Dementia Care',
-//       'Stroke Patient',
-//       'Bedridden Care',
-//       'Catheter Care',
-//       'Feeding Tube',
-//       'Elderly Care',
-//       'ICU Experience',
-//     ],
-//     curateFeedback:
-//       'Very punctual, caring and maintains excellent communication with patients.',
-//     previousFeedback: {
-//       rating: 5,
-//       review:
-//         'Priya supported the family with empathy and kept the patient comfortable at every stage.',
-//       reviewer: 'Sunita Rao',
-//       reviewDate: 'May 8, 2025',
-//     },
-//     awards: [{ title: 'Best Employee 2025' }, { title: 'Star Caregiver Award' }],
-//     documents: ['Aadhaar', '10th Certificate', 'PAN', 'Medical Certificate'],
-//     avatarUrl:
-//       'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
-//   }
-// }
 
 const SectionCard: React.FC<{
   title: string
@@ -217,6 +168,15 @@ const StatusBadge = ({
   </div>
 )
 
+const parseStringArray = (value: any): string[] => {
+  if (!value) return []
+  if (Array.isArray(value)) return value.filter(Boolean).map(String)
+  return String(value)
+    .split(/[,;]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
 const DocumentChip: React.FC<{ label: string }> = ({ label }) => (
   <span className="inline-flex items-center gap-2 rounded-full border border-[#e2e8f0] bg-[#f8fafc] px-3 py-1 text-xs font-medium text-[#334155]">
     <FileText className="h-3.5 w-3.5 text-[#64748b]" aria-hidden="true" />
@@ -252,7 +212,7 @@ const FeedbackCard: React.FC<{ feedback: FeedbackItem }> = ({ feedback }) => (
         <Star key={index} className="h-4 w-4 text-[#fbbf24]" aria-hidden="true" />
       ))}
     </div>
-    <p className="mb-3 text-sm text-[#334155]">“{feedback.review}”</p>
+    <p className="mb-3 text-sm text-[#334155]">“{feedback.text}”</p>
     <div className="text-xs text-[#64748b]">
       <span>{feedback.reviewer}</span>
       <span className="mx-2">•</span>
@@ -287,6 +247,7 @@ export const HCPProfileCard: React.FC<ClientsPopupProps> = ({ userId, open, onCl
   const [loading, setLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
    const [ActionMessage,setActionMessage]=useState("")
+   const [ResumeType,SetResumeType]=useState("Basic")
 
 const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
 const userss=useSelector((state:any)=>state.AdminUsers)
@@ -327,7 +288,7 @@ useEffect(() => {
       }
 
       const profileData = result.HCAComplitInformation;
-console.log ("Check Dataaa-----",profileData)
+console.log ("Check imported Data------",profileData)
       setProfile({
         id: profileData.UserId,
         name: `${profileData["First Name"] || ""} ${profileData.LastName || ""}`.trim(),
@@ -371,20 +332,24 @@ console.log ("Check Dataaa-----",profileData)
           profileData.ProfessionalSkills ||
           [],
 
-        curateFeedback:
-          profileData["Curate Feedback"] ||
-          "No feedback available.",
+       curateFeedback:
+  profileData?.Reviews?.filter(
+    (each: any) => each.type === "curate"
+  ) ?? [],
 
-        previousFeedback: {
-          rating: 5,
-          review: "No previous feedback available.",
-          reviewer: "Curate",
-          reviewDate: "",
-        },
+        previousFeedback:  profileData?.Reviews?.filter(
+    (each: any) => each.type !== "curate"
+  ) ?? [],
 
         awards: [],
 
         documents: Object.keys(profileData.Documents || {}),
+        languages: parseStringArray(
+          profileData.Language ||
+          profileData.Languages ||
+          profileData.Langue ||
+          profileData.LanguagesKnown
+        ),
 
         avatarUrl:
           profileData.Documents?.ProfilePic ||
@@ -489,8 +454,10 @@ const options = {
     })
   }, [profile])
 
+  const isBasic = ResumeType === 'Basic'
   const skillChips = useMemo(() => profile?.skills ?? [], [profile?.skills])
   const documentChips = useMemo(() => profile?.documents ?? [], [profile?.documents])
+  const languageChips = useMemo(() => profile?.languages ?? [], [profile?.languages])
 
   useEffect(() => {
     setActionMessage("")
@@ -531,7 +498,7 @@ const options = {
   setActionMessage("");
   onClose();
 };
-
+console.log("Check for Feedbacksss------",profile )
   if (loading) {
     return renderOverlay(
       <div className="relative h-full max-h-[850px] overflow-hidden rounded-3xl border border-[#e2e8f0] bg-[#ffffff] p-5 shadow-sm">
@@ -570,21 +537,42 @@ const options = {
 
   return renderOverlay(
     <div>
-           {ActionMessage&&
-  <div className="my-4 rounded-xl border border-[#a7f3d0] bg-[#ecfdf5] px-5 py-4 shadow-sm">
-  <p className="text-sm font-medium text-[#166534]">
-    {ActionMessage}
-  </p>
-</div>}
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      exit={{ opacity: 0, y: 20, scale: 0.95 }}
-      className="relative w-full max-w-[1400px] overflow-visible rounded-3xl border border-[#e2e8f0] bg-gradient-to-br from-[#ffffff] via-[#f9fafc] to-[#f1f5f9] p-8 shadow-lg" id="ProfessionalResume"
+
+ <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+  <div className="inline-flex w-fit rounded-xl  p-1 shadow-inner" style={{ backgroundColor: "#f3f4f6" }}>
+    <button
+      type="button"
+      onClick={() => SetResumeType("Basic")}
+      className={`cursor-pointer rounded-lg px-6 py-2 text-sm font-semibold transition-all duration-200 ${
+        ResumeType === "Basic"
+          ? "bg-[#1392d3] text-[#ffffff] shadow-md"
+          : "text-[#6b7280] hover:bg-[#ffffff] hover:text-[#1392d3]"
+      }`}
     >
-      <CloseButton onClick={onClose} />
-      <motion.button
+      Basic
+    </button>
+
+    <button
+      type="button"
+      onClick={() => SetResumeType("Advanced")}
+      className={`cursor-pointer rounded-lg px-6 py-2 text-sm font-semibold transition-all duration-200 ${
+        ResumeType === "Advanced"
+          ? "bg-[#1392d3] text-[#ffffff] shadow-md"
+          : "text-[#6b7280] hover:bg-[#ffffff] hover:text-[#1392d3]"
+      }`}
+    >
+      Advanced
+    </button>
+    {ActionMessage && (
+    <div className="w-fit rounded-xl border border-[#a7f3d0] bg-[#ecfdf5] px-5 py-3 shadow-sm md:ml-auto">
+      <p className="text-sm font-medium text-[#166534]">
+        {ActionMessage}
+      </p>
+    </div>
+  )}
+    
+  </div>
+    <motion.button
         type="button"
         onClick={downloadPDF}
         whileHover={{ y: -2, boxShadow: "0 20px 25px -5px rgba(19, 146, 211, 0.3)" }}
@@ -608,12 +596,31 @@ const options = {
 
         <span>Download Resume </span>
       </motion.button>
+  
+</div>
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      exit={{ opacity: 0, y: 20, scale: 0.95 }}
+      className="relative w-full max-w-[1400px] overflow-visible rounded-3xl border border-[#e2e8f0] bg-gradient-to-br from-[#ffffff] via-[#f9fafc] to-[#f1f5f9] p-8 shadow-lg" id="ProfessionalResume"
+    >
+
+        <div
+    className="relative rounded-2xl border-[3px] border-[#0f172a] p-8"
+    style={{
+      boxShadow: "inset 0 0 0 2px #1392d3",
+    }}
+  >
+      <CloseButton onClick={onClose} />
+  
 
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
         className="mb-8 flex flex-col gap-6 border-b border-[#e2e8f0] pb-8 xl:flex-row xl:items-end xl:justify-between">
+          
         <div className="flex flex-col gap-6 xl:flex-row xl:items-center">
           <motion.div 
             whileHover={{ scale: 1.05 }}
@@ -679,32 +686,72 @@ const options = {
             
           </motion.div>
         </div>
-       
+          <div className="flex flex-shrink-0 items-center gap-4 rounded-2xl   px-5 py-4 mb-8">
+    <img
+      src="/Icons/Curate-logoq.png"
+      alt="Curate Health Care"
+      className="h-16 w-16 object-contain"
+    />
+
+    <div>
+      <h2 className="text-xl font-bold tracking-tight text-[#0f172a]">
+        Curate Health Care
+      </h2>
+
+      <p className="text-sm font-medium text-[#1392d3]">
+        Connecting Compassion with Care
+      </p>
+
+      <p className="mt-2 text-xs ">
+        📧 admin@curatehealth.in
+      </p>
+    </div>
+  </div>
       </motion.div>
 
       <div className="grid gap-4 xl:grid-cols-[320px_1fr]">
         <div className="space-y-4">
-          <SectionCard title="Professional Summary" icon={FileText}>
-            <p className="text-sm leading-6 text-[#475569]">
-              {profile.curateFeedback || 'A dedicated caregiver with strong attention to patient needs and care coordination. Experienced in patient support, communication, and clinical assistance.'}
-            </p>
-          </SectionCard>
+          {/* {!isBasic && (
+            <SectionCard title="Professional Summary" icon={FileText}>
+              <p className="text-sm leading-6 text-[#475569]">
+                  {profile.curateFeedback?.length ? (
+    profile.curateFeedback.map((review: any) => (
+      <blockquote
+        key={review.id}
+        className="text-sm leading-6 text-[#334155]"
+      >
+        "{review.text}"
+      </blockquote>
+    ))
+  ) : (
+    <blockquote className="text-sm leading-6 text-[#334155]">
+      No feedback available.
+    </blockquote>
+  )}
+                {profile.curateFeedback || 'A dedicated caregiver with strong attention to patient needs and care coordination. Experienced in patient support, communication, and clinical assistance.'}
+              </p>
+            </SectionCard>
+          )} */}
 
-          <SectionCard title="Key Skills" icon={ShieldCheck}>
+          <SectionCard title="Skill Certification" icon={ShieldCheck}>
             <div className="flex flex-wrap gap-2">
               {skillChips.map((skill) => (
                 <SkillChip key={skill} label={skill} />
               ))}
             </div>
           </SectionCard>
-  <SectionCard title="Location" icon={MapPin}>
+
+          <SectionCard title="Address" icon={MapPin}>
             <div className="grid gap-2">
-              <InfoItem label="City" value={profile.address.city} icon={MapPin} />
-              <InfoItem label="State" value={profile.address.state} icon={Building2} />
-              <InfoItem label="PIN Code" value={profile.address.pinCode} icon={Calendar} />
-              <InfoItem label="Aadhaar" value={profile.address.maskedAadhaar} icon={ShieldCheck} />
+              <InfoItem label="City" value={profile.address.city || 'N/A'} icon={MapPin} />
+              <InfoItem label="State" value={profile.address.state || 'N/A'} icon={Building2} />
+              <InfoItem label="PIN Code" value={profile.address.pinCode || 'N/A'} icon={Calendar} />
+              {!isBasic && (
+                <InfoItem label="Aadhaar" value={profile.address.maskedAadhaar || 'N/A'} icon={ShieldCheck} />
+              )}
             </div>
           </SectionCard>
+
           <SectionCard title="Documents" icon={FileText}>
             <div className="flex flex-wrap gap-2">
               {documentChips.map((doc) => (
@@ -712,47 +759,87 @@ const options = {
               ))}
             </div>
           </SectionCard>
-
-        
         </div>
 
         <div className="space-y-4">
-               <SectionCard title="Personal Details" icon={Building2}>
+          <SectionCard title={isBasic ? 'Basic Details' : 'Personal Details'} icon={Building2}>
             <div className="grid gap-1">
-              <InfoItem label="Date of birth" value={formattedDob} icon={Calendar} />
-              <InfoItem label="Gender" value={profile.gender} icon={UserRound} />
-              <InfoItem label="Father Name" value={profile.fatherName} icon={Home} />
+              <InfoItem label="Father Name" value={profile.fatherName || 'N/A'} icon={Home} />
               <InfoItem label="Height" value={`${profile.heightCm} cm`} icon={Ruler} />
               <InfoItem label="Weight" value={`${profile.weightKg} kg`} icon={Weight} />
-              <InfoItem label="Marital Status" value={profile.maritalStatus} icon={HeartHandshake} />
-              <InfoItem label="Dependents" value={profile.dependents} icon={BadgeCheck} />
-            </div>
-          </SectionCard>
-          <SectionCard title="Resume Snapshot" icon={BriefcaseBusiness}>
-            <div className="grid gap-1">
-              {/* <InfoItem label="Employee ID" value={profile.employeeId} icon={FileText} /> */}
-              <InfoItem label="Role" value={GetHCPPayment(profile.id)} icon={BriefcaseBusiness} />
-              <InfoItem label="Experience" value={`${Math.floor(Math.random() * (90 - 60 + 1)) + 60} Days with Curate`} icon={BriefcaseBusiness} />
-              <InfoItem label="Preferred Service" value={serviceBadge ?? profile.preferredService} icon={HeartHandshake} />
-              <InfoItem label="Status" value={<StatusBadge variant="success" label={profile.status} />} icon={BadgeCheck} />
+              <InfoItem label="BVR Status" value={<StatusBadge variant="success" label="Done" />} icon={ShieldCheck} />
+              <InfoItem label="Languages" value={languageChips.length ? languageChips.join(', ') : 'N/A'} icon={MessageSquare} />
+              {!isBasic && (
+                <>
+                  <InfoItem label="Date of birth" value={formattedDob} icon={Calendar} />
+                  <InfoItem label="Gender" value={profile.gender || 'N/A'} icon={UserRound} />
+                  <InfoItem label="Marital Status" value={profile.maritalStatus || 'N/A'} icon={HeartHandshake} />
+                  <InfoItem label="Dependents" value={profile.dependents || 'N/A'} icon={BadgeCheck} />
+                </>
+              )}
             </div>
           </SectionCard>
 
-       
-
-          <SectionCard title="Feedback & Awards" icon={MessageSquare}>
-            <div className="space-y-4">
-              <div className="rounded-3xl border border-[#e2e8f0] bg-[#f8fafc] p-4">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#64748b]">⭐ Curate Feedback</p>
-                <blockquote className="text-sm leading-6 text-[#334155]">“{profile.curateFeedback}”</blockquote>
+          {!isBasic && (
+            <SectionCard title="Resume Snapshot" icon={BriefcaseBusiness}>
+              <div className="grid gap-1">
+                <InfoItem label="Role" value={GetHCPPayment(profile.id)} icon={BriefcaseBusiness} />
+                <InfoItem label="Experience" value={`${Math.floor(Math.random() * (90 - 60 + 1)) + 60} Days with Curate`} icon={BriefcaseBusiness} />
+                <InfoItem label="Preferred Service" value={serviceBadge ?? profile.preferredService} icon={HeartHandshake} />
+                <InfoItem label="Status" value={<StatusBadge variant="success" label={profile.status} />} icon={BadgeCheck} />
               </div>
-              <FeedbackCard feedback={profile.previousFeedback} />
-              <AwardCard awards={profile.awards} />
-            </div>
-          </SectionCard>
+            </SectionCard>
+          )}
+
+          {!isBasic && (
+            <SectionCard title="Feedback & Awards" icon={MessageSquare}>
+              <div className="space-y-4">
+                <div className="rounded-3xl border border-[#e2e8f0] bg-[#f8fafc] p-4">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#64748b]">⭐ Curate Feedback</p>
+<div className="space-y-3">
+  {profile.curateFeedback?.length ? (
+    profile.curateFeedback.map((review: any) => (
+      <blockquote
+        key={review.id}
+        className="text-sm leading-6 text-[#334155]"
+      >
+        "{review.text}"
+      </blockquote>
+    ))
+  ) : (
+    <blockquote className="text-sm leading-6 text-[#334155]">
+      No feedback available.
+    </blockquote>
+  )}
+</div>
+                </div>
+                {profile?.previousFeedback?.length===0?(
+  <div className="rounded-3xl border  bg-gradient-to-r from-[#f9fafb] to-[#f3f4f6] px-6 py-6 shadow-sm" style={{ borderColor: "#e5e7eb" }}>
+    <div className="flex items-center gap-2">
+      <span className="text-[#f59e0b] text-sm">⭐</span>
+      <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-[#64748b]">
+        Curate Feedback
+      </h3>
+    </div>
+
+    <p className="mt-4 text-lg font-medium" style={{ color: "#475569" }}>
+      No Client Reviews Found.
+    </p>
+  </div>
+):
+         
+         <div>
+          
+                 {profile?.previousFeedback?.map((each:any)=>     <FeedbackCard feedback={each} />)}
+                 
+                 </div>}
+                <AwardCard awards={profile.awards} />
+              </div>
+            </SectionCard>
+          )}
         </div>
       </div>
-    </motion.div>
+    </div></motion.div>
   </div>
   )
 }

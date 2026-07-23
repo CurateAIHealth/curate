@@ -6332,7 +6332,8 @@ export const GetHCACompliteInformation = async (UserIdFromLocal: any) => {
       "DocumentSkipReason": info["DocumentSkipReason"],
       "ProfilePic": info["ProfilePic"],
       "Documents": info["Documents"],
-      "PaymentHistory":info["PaymentHistory"]
+      "PaymentHistory":info["PaymentHistory"],
+      "Reviews":info['Reviews']
     };
 
     return {
