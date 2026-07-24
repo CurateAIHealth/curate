@@ -20,7 +20,7 @@ const ReplacementTable = ({ StatusMessage }: any) => {
   const [HeadingSearch,setHeadingSearch]=useState('')
   const [isChecking, setIsChecking] = useState(true);
  const now = new Date();
-
+const users=useSelector((state:any)=>state.AdminFullInfo)
   // const [RegisterdUsers,setRegisterdUsers]=useState<any[]>([])
 const month=useSelector((state:any)=>state.FilterMonth) 
 const year=useSelector((state:any)=>state.FilterYear) 
@@ -102,6 +102,27 @@ useEffect(() => {
     Number(month),
     Number(year)
   );
+
+
+  const GetHCPFullName = (A: any) => {
+  if (!users?.length || !A) return "";
+
+  const info = users
+    ?.map((each: any) => each?.HCAComplitInformation)
+    ?.find((info: any) => info?.UserId === A);
+
+  if (!info) return "";
+
+  const fullName = [
+    info.HCPSurName,
+    info.HCPFirstName,
+    info.LastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return fullName;
+};
   const ShowDompleteInformation = async (userId: any, ClientName: any) => {
     if (userId) {
       dispatch(UpdateClient(ClientName));
@@ -461,8 +482,8 @@ const isFutureDate = cellDate > currentDate;
       }
     /> */}
 
-    {item.hcpName}
-
+  
+{GetHCPFullName(item.CurrentHCA_id)}
    
     {/* <div
       className="absolute left-0 -top-11 z-50
@@ -501,7 +522,8 @@ const isFutureDate = cellDate > currentDate;
       }
     /> */}
 
-    {item.NewHCA}
+
+    {GetHCPFullName(item.AssignedHCA_id)}
 
     {/* Premium Tooltip */}
     {/* <div

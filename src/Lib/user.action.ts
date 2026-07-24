@@ -8076,16 +8076,19 @@ export const UpdateClientStatusinCallEnquiry = async (
         }
       );
     
-    
-    const removeStatusFromComplite = await CompliteCollection.updateOne(
-    { "HCAComplitInformation.UserId": UserId },
-    {
-      $set: {
-        "HCAComplitInformation.CurrentStatus": AvailableStatus,
-      },
-    
-    }
-  );
+const Try = "Assigned";
+
+const removeStatusFromComplite = await CompliteCollection.updateOne(
+  { "HCAComplitInformation.UserId": UserId },
+  {
+    $set: {
+      "HCAComplitInformation.CurrentStatus": AvailableStatus,
+    },
+    $push: {
+      "HCAComplitInformation.Status": Try,
+    }as any,
+  }
+);
 
 
 

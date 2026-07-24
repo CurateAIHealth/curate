@@ -1240,9 +1240,9 @@ const UpdateReplacement = async (
         Available_HCP.HCA_Id,
         "Active"
       ),
-      UpdateHCAnstatusInFullInformation(
-        Available_HCP.userId
-      ),
+      // UpdateHCAnstatusInFullInformation(
+      //   Available_HCP.userId
+      // ),
       // DeleteHCAStatus(Exsting_HCP.HCA_Id),
     ]);
 
@@ -3043,7 +3043,7 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
               Assign Additional  HCP general professionals
             </h2>
             <p className="text-xs text-gray-500">
-           Select a healthcare professional to assign
+           Select a healthcare professional to assig
             </p>
           </div>
 

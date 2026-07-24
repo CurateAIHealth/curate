@@ -47,7 +47,9 @@ const TerminationTable: React.FC = () => {
   const TimeStamp = useSelector((state: any) => state.TimeStampInfo)
   const month = useSelector((state: any) => state.FilterMonth)
   const year = useSelector((state: any) => state.FilterYear)
+  const Impusers=useSelector((state:any)=>state.AdminFullInfo)
   const dispatch = useDispatch()
+
   useEffect(() => {
     const Fetch = async () => {
       try {
@@ -101,6 +103,26 @@ const TerminationTable: React.FC = () => {
     Number(month),
     Number(year)
   );
+  
+  const GetHCPFullName = (A: any) => {
+  if (!Impusers?.length || !A) return "";
+
+  const info = Impusers
+    ?.map((each: any) => each?.HCAComplitInformation)
+    ?.find((info: any) => info?.UserId === A);
+
+  if (!info) return "";
+
+  const fullName = [
+    info.HCPSurName,
+    info.HCPFirstName,
+    info.LastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return fullName;
+};
   const GetHCPGender = (A: any) => {
     if (!users?.length || !A) return "Not Entered";
 
@@ -941,7 +963,7 @@ const isFutureDate = cellDate > currentDate;
                           }
                         />
 
-                        {placement.hcaName || "NA"}
+                        {GetHCPFullName(placement.HCA_Id)}
                       </span>
 
 
