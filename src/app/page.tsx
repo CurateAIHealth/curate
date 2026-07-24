@@ -79,8 +79,8 @@ const CACHE_TTL = 30 * 60 * 1000;
 
 useEffect(() => {
   let mounted = true;
-  let timer: ReturnType<typeof setTimeout> | null = null;
   let hasNavigated = false;
+  let timer: ReturnType<typeof setTimeout> | null = null;
 
   const safeNavigate = (path: string) => {
     if (!mounted || hasNavigated) return;
@@ -95,58 +95,33 @@ useEffect(() => {
   };
 
   const applyDashboardData = (dashboardData: any) => {
-    const {
-      profile,
-      registeredUsers,
-      fullInfo,
-      deployedLength,
-    } = dashboardData;
+    if (!mounted || !dashboardData) return;
 
-    dispatch(setUsers(registeredUsers));
-    dispatch(setFullInfo(fullInfo));
-    dispatch(SetDeploymentInfo(deployedLength));
-    dispatch(UpdateUserFirstName(profile?.FirstName));
+    dispatch(setUsers(dashboardData.registeredUsers));
+    dispatch(setFullInfo(dashboardData.fullInfo));
+    dispatch(SetDeploymentInfo(dashboardData.deployedLength));
+    dispatch(UpdateUserFirstName(dashboardData.profile?.FirstName));
   };
 
-  const loadDashboard = async (
-    userId: string,
-    forceRefresh = false
-  ) => {
+  const loadDashboard = async (userId: string, forceRefresh = false) => {
     try {
-   
-      if (!forceRefresh && dashboardRequestCache.data) {
-        console.log("📦 Using Cached Dashboard Data");
-
-        if (mounted) {
+      if (!forceRefresh) {
+        if (dashboardRequestCache.data) {
           applyDashboardData(dashboardRequestCache.data);
+          return;
         }
 
-        return;
+        if (dashboardRequestCache.promise) {
+          applyDashboardData(await dashboardRequestCache.promise);
+          return;
+        }
       }
-
-    
-      if (!forceRefresh && dashboardRequestCache.promise) {
-        console.log("⏳ Waiting for existing dashboard request...");
-
-        const data = await dashboardRequestCache.promise;
-
-        if (!mounted) return;
-
-        applyDashboardData(data);
-
-        return;
-      }
-
-      console.log("🌐 Fetching Fresh Dashboard Data...");
 
       dashboardRequestCache.promise = axios
         .post("/api/AdminPageInfo", { userId })
-        .then((res) => {
-          if (!res.data.success) {
-            throw new Error("Dashboard fetch failed");
-          }
-
-          return res.data.data;
+        .then(({ data }) => {
+          if (!data.success) throw new Error("Dashboard fetch failed");
+          return data.data;
         });
 
       const dashboardData = await dashboardRequestCache.promise;
@@ -158,16 +133,9 @@ useEffect(() => {
         data: dashboardData,
       });
 
-      dashboardRequestCache.promise = null;
-
-      if (!mounted) return;
-
       applyDashboardData(dashboardData);
-
-      console.log("✅ Dashboard Cache Updated");
-    } catch (err) {
+    } finally {
       dashboardRequestCache.promise = null;
-      console.error(err);
     }
   };
 
@@ -183,7 +151,7 @@ useEffect(() => {
       updateLoader(5, "Initializing...");
       setIsChecking(true);
 
-      const { data: profile }: any = await axios.post("/api/Home", {
+      const { data: profile } = await axios.post("/api/Home", {
         localValue: userId,
       });
 
@@ -201,31 +169,18 @@ useEffect(() => {
         const cached = dashboardCache.get(userId);
 
         if (cached) {
-          console.log("📦 Using User Dashboard Cache");
-
-          applyDashboardData(cached.data);
-
           dashboardRequestCache.data = cached.data;
-
-          updateLoader(100, "Redirecting...");
-          safeNavigate("/DashBoard");
-
-          return;
+          applyDashboardData(cached.data);
+        } else {
+          updateLoader(70, "Loading dashboard...");
+          await loadDashboard(userId);
+          if (!mounted) return;
         }
-
-        updateLoader(70, "Loading dashboard...");
-
-        await loadDashboard(userId);
-
-        if (!mounted) return;
 
         updateLoader(100, "Redirecting...");
         safeNavigate("/DashBoard");
-
         return;
       }
-
-   
 
       updateLoader(100, "Redirecting...");
 
@@ -236,7 +191,6 @@ useEffect(() => {
         } else {
           safeNavigate("/HomePage");
         }
-
         return;
       }
 
@@ -247,49 +201,13 @@ useEffect(() => {
           setShowPopUp(true);
         }
       }, 3500);
-    } catch (err) {
-      console.error("Initialization Error:", err);
-    } finally {
-      
+    } catch (error) {
+      console.error("Initialization Error:", error);
+      if (mounted) safeNavigate("/sign-in");
     }
   };
 
   initialize();
-
-  // ==========================
-  // MongoDB Live Updates (SSE)
-  // ==========================
- const eventSource = new EventSource("/api/payable-events");
-
-  eventSource.onopen = () => {
-    console.log("✅ Dashboard SSE Connected");
-  };
-
-  eventSource.onmessage = async (event) => {
-    try {
-      const message = JSON.parse(event.data);
-
-      if (!message.refresh) return;
-
-      console.log("🔄 Dashboard Collection Changed");
-
-      dashboardRequestCache.data = null;
-
-      const userId = localStorage.getItem("UserId");
-
-      if (!userId) return;
-
-      await loadDashboard(userId, true);
-
-      console.log("✅ Dashboard Refreshed");
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  eventSource.onerror = (err) => {
-    console.error("❌ Dashboard SSE Error", err);
-  };
 
   return () => {
     mounted = false;
@@ -297,10 +215,6 @@ useEffect(() => {
     if (timer) {
       clearTimeout(timer);
     }
-
-    eventSource.close();
-
-    console.log("🔌 Dashboard SSE Disconnected");
   };
 }, [dispatch, router]);
 
