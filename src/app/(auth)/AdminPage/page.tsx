@@ -1486,18 +1486,17 @@ const UpdatePopup = async (a: any) => {
     <td className="px-2 py-2">
       
 
-      {isAssigned ? (
+      {isAssigned||user.CurrentStatus==="Active" ? (
        <div className="flex flex-col items-center justify-center text-center gap-1">
   
-  {/* Current Status */}
   <p className="inline-flex items-center gap-1.5 rounded-full 
-                 bg-gradient-to-r from-red-500 to-rose-500 
+                 bg-gradient-to-r from-teal-500 to-green-500 
                  px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
-    🚫 Deployed
+    Active
   </p>
 
  
-  <button
+  {/* <button
     onClick={handleUpdate}
     className="text-[11px] font-medium text-blue-600 
                hover:text-blue-700 hover:underline  cursor-pointer
@@ -1505,12 +1504,12 @@ const UpdatePopup = async (a: any) => {
   >
 
     Make Unassigned
-  </button>
+  </button> */}
 
 </div>
 
       ):<p className="inline-flex items-center rounded-full bg-amber-50 text-amber-600 text-xs font-semibold px-1 py-1 border border-amber-200">
-  Yet to be Placed
+  {user.CurrentStatus}
 </p>
 }
     </td>
@@ -1659,7 +1658,15 @@ const UpdatePopup = async (a: any) => {
     `}
                                   value={user.CurrentStatus || ""}
                                   onChange={(e) =>
+
+                                {
+                                      if(user.CurrentStatus==="Active"){
+                                      
+                                        dispatch(Refresh(`${user.FirstName} Currently in ${user.CurrentStatus} Status,Sorry  We dont let You Updated Status`));
+                                      return
+                                    }
                                     UpdateCurrentstatus(user.FirstName, e.target.value, user.userId)
+                                }
                                   }
                                 >
 
