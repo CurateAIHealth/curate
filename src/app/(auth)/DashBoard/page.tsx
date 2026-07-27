@@ -812,9 +812,49 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
   );
 
 const navigationLock = useRef(false);
+
+const routeMap = useMemo(
+  () => ({
+    "Call Enquiry": () => {
+      dispatch(Update_Main_Filter_Status("Call Enquiry"));
+      dispatch(UpdateUserType("patient"));
+      router.push("/AdminPage");
+    },
+
+    Deployment: () => {
+      dispatch(Update_Main_Filter_Status("Deployment"));
+      dispatch(UpdateUserType("patient"));
+      router.push("/AdminPage");
+    },
+
+    Timesheet: () => {
+      dispatch(Update_Main_Filter_Status("Timesheet"));
+      dispatch(UpdateUserType("patient"));
+      router.push("/AdminPage");
+    },
+
+    "HCP List": () => {
+      dispatch(Update_Main_Filter_Status("HCP List"));
+      dispatch(UpdateUserType("healthcare-assistant"));
+      router.push("/AdminPage");
+    },
+
+    Communication: () => router.push("/Communication"),
+    "Pending PDR": () => router.push("/PDRView"),
+    Vendors: () => router.push("/VendorsPanel"),
+    "Document Compliance": () => router.push("/Documents"),
+    Invoices: () => router.push("/Invoices"),
+    Payments: () => router.push("/PaymentsInfo"),
+    Registration: () => router.push("/UserTypeRegistration"),
+    "Hostel Attendance": () => router.push("/HostelAttendence"),
+    Accounts: () => router.push("/SubAccountings"),
+    Notifications: () => router.push("/Notifications"),
+  }),
+  [dispatch, router]
+);
+
 const Switching = useCallback(
-  (name: string) => {
-    // Prevent multiple clicks
+  (tab: string) => {
     if (navigationLock.current) return;
 
     if (!loggedInEmail) {
@@ -822,89 +862,29 @@ const Switching = useCallback(
       return;
     }
 
-    if (!canAccessTab(name, loggedInEmail)) {
+    if (!canAccessTab(tab, loggedInEmail)) {
       setShowPermissionPopup(true);
+      return;
+    }
+
+    const navigate = routeMap[tab as keyof typeof routeMap];
+
+    if (!navigate) {
+      console.warn(`Unknown tab: ${tab}`);
       return;
     }
 
     navigationLock.current = true;
     setIsNavigating(true);
 
-    try {
-      switch (name) {
-        case "Call Enquiry":
-        case "Deployment":
-        case "Timesheet":
-          dispatch(Update_Main_Filter_Status(name));
-          dispatch(UpdateUserType("patient"));
-          router.push("/AdminPage");
-          break;
+    navigate();
 
-        case "HCP List":
-          dispatch(Update_Main_Filter_Status(name));
-          dispatch(UpdateUserType("healthcare-assistant"));
-          router.push("/AdminPage");
-          break;
-
-        case "Pending PDR":
-          router.push("/PDRView");
-          break;
-
-        case "Communication":
-          router.push("/Communication");
-          break;
-
-        case "Vendors":
-          router.push("/VendorsPanel");
-          break;
-
-        case "Document Compliance":
-          router.push("/Documents");
-          break;
-
-        case "Invoices":
-          router.push("/Invoices");
-          break;
-
-        case "Payments":
-          router.push("/PaymentsInfo");
-          break;
-
-        case "Registration":
-          router.push("/UserTypeRegistration");
-          break;
-
-        case "Hostel Attendance":
-          router.push("/HostelAttendence");
-          break;
-
-        case "Accounts":
-          router.push("/SubAccountings");
-          break;
-
-        case "Notifications":
-          router.push("/Notifications");
-          break;
-
-        default:
-          navigationLock.current = false;
-          setIsNavigating(false);
-          console.warn(`Unknown navigation: ${name}`);
-          return;
-      }
-    } catch (err) {
-      console.error("Navigation Error:", err);
+    requestAnimationFrame(() => {
       navigationLock.current = false;
       setIsNavigating(false);
-    }
-
-    // Failsafe in case navigation doesn't happen
-    setTimeout(() => {
-      navigationLock.current = false;
-      setIsNavigating(false);
-    }, 3000);
+    });
   },
-  [loggedInEmail, canAccessTab, dispatch, router]
+  [loggedInEmail, canAccessTab, routeMap]
 );
 
   const PostNotificationInfo = async (Emails: string[]) => {

@@ -15,7 +15,7 @@ import { SetDeploymentInfo, setUsers, UpdateClient, UpdateInvoiceInfo, UpdateMon
 import TerminationTable from "../Terminations/page";
 import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
-import { filterColors, IndianStates, months, Placements_Filters, years } from "@/Lib/Content";
+import { filterColors, IndianStates, months, Placements_Filters, teams, years } from "@/Lib/Content";
 import ReplacementsTable from "../ReplacementsTable/page";
 import { AssignSuitableIcon, getDaysBetween, getDueDaysStatus, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
 import { useRouter } from "next/navigation";
@@ -29,6 +29,7 @@ import RepleasementHCPPopup from "../RelasementHCPPopup/page";
 import AttendanceModal from "../ClientAttendece/page";
 import { Console } from "console";
 import EmptyState from "../NoDeployments/page";
+import { stringify } from "querystring";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -70,6 +71,7 @@ const ClientTable = ({
 const [ClientsInformation,setClientsInformation]=useState(ImpClientsInformation||[])
     const [EditDate,setEditDate]=useState<any>()
   const [selectedAssignHCP,setselectedAssignHCP]=useState<any>()
+  const [activeTeam, setActiveTeam] = useState(1);
    const Timenow = new Date();
    const [ParticularDate,SetParticularDate]=useState<any>()
  const [AttendeceEditReason,SetAttendeceEditReason]=useState("")
@@ -78,6 +80,7 @@ const [ClientsInformation,setClientsInformation]=useState(ImpClientsInformation|
   const currentMonth = String(Timenow.getMonth() + 1).padStart(2, "0");
   const [selectedClient,setselectedClient]=useState<any>()
   const [isChecking, setIsChecking] = useState(false);
+  const [open, setOpen] = useState(false);
   const [SelectedServiceStates, setSelectedServiceStates] = useState("Telangana");
   const [selectedHCP,setselectedHCP]=useState<any>()
   const [showHCAList, setShowHCAList] = useState(false);
@@ -341,7 +344,44 @@ const { data: UpdateFreezeStatus } = await axios.post(
     }
   }
 
+ const handleTeamChange = async(ClientInfo:any,team: any) => {
+  console.log ("Check for Deployinf00-----",ClientInfo)
 
+    SetActionStatusMessage("Please Wait.....")
+
+  const {
+Month,
+HCA_Id,
+Client_Id
+}=ClientInfo
+
+const UpdateTeamStatus=await axios.post("api/UpdateTeam",{
+  Month,
+HCA_Id,
+Client_Id,
+team
+})
+
+if(UpdateTeamStatus.data.success){
+  SetActionStatusMessage("Team Updated Fetching Updated Data.....")
+    const userId = localStorage.getItem("UserId");
+    const { data:result } = await axios.post("/api/AdminPageInfo", {
+          userId,
+          refreshType: "deployment",
+        });
+   const {
+      profile,
+      registeredUsers,
+      fullInfo,
+      deployedLength,
+    } = result.data;
+       dispatch( SetDeploymentInfo(deployedLength))
+  SetActionStatusMessage("Team Status Updates Successfully")
+setOpen(false);
+}
+    
+
+  };
 
   const GetPatientName = (A:any) => {
   const filtered = RegisterdUsers?.find(
@@ -515,7 +555,8 @@ const normalizedAttendance =
     Replacement:each.Replacement,
     ClientAttendance: each.ClientAttendance || [],
     ReplacementDate:each.ReplacementDate,
-    ServiceState:each.ServiceState||"Telangana"
+    ServiceState:each.ServiceState||"Telangana",
+    Team:Number(each.Team)
     
   };
 });
@@ -1120,7 +1161,7 @@ const confirmDelete = async (selectedReason: string) => {
 
 
 
-const FilterFinelTimeSheet = FinelTimeSheet.filter((item) =>item.ServiceState===SelectedServiceStates&&
+const FilterFinelTimeSheet = FinelTimeSheet.filter((item) =>item.ServiceState===SelectedServiceStates&&item.Team===activeTeam&&
   matchesSearchAndMonth(
     item,
     SearchResult,
@@ -1470,7 +1511,8 @@ const processedData = useMemo(() => {
   refreshKey,
   SearchMonth,
 SearchYear,
-SelectedServiceStates
+SelectedServiceStates,
+activeTeam
 ]);
 
 const UpdateServiceCharge=async(A:any)=>{
@@ -1786,7 +1828,23 @@ const OmServiceView = () => {
       onChange={(e: any) => setSearchResult(e.target.value)}
       className="w-full bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
     />
+   
   </div>
+<div className="inline-flex rounded-2xl bg-gray-100 p-1.5 shadow-inner">
+  {teams.map((team:any) => (
+    <button
+      key={team}
+      onClick={() => setActiveTeam(team)}
+      className={`rounded-xl px-6 py-2.5 cursor-pointer text-sm font-semibold transition-all duration-200 ${
+        activeTeam === team
+  ? "bg-white text-pink-600 border border-pink-600 shadow-md scale-105"
+  : "text-gray-600 hover:bg-white hover:text-pink-600"
+      }`}
+    >
+      { `Team${team}`}
+    </button>
+  ))}
+</div>
 {ActionStatusMessage && (
   <div className="mt-4 flex justify-center">
     <p
@@ -1834,7 +1892,7 @@ onClick={() => setShowAttendanceModal(true)}
 </button>
 <div className="text-center">
   <label className="mb-1.5 block text-xs font-semibold text-gray-700">
-    Service Work State
+    Service Work State {activeTeam}
   </label>
 
   <div className="relative">
@@ -2249,9 +2307,11 @@ setShowCareTakerPriceUpdate(false)
       Add HCP
     </th>
 
-   
+     <th className="w-[70px] px-2 py-2 text-center">
+Team
+    </th>
       <th className="w-[70px] px-2 py-2 text-center">
-   Rise Refund {processedData.length}
+   Rise Refund 
     </th>
      <th className="w-[70px] px-2 py-2 text-center">
       Terminate
@@ -2971,6 +3031,40 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
        <Plus size={19} className="h-5 w-5 text-center text-teal-600"/>
             </button>
           </td>
+        <td>
+      <div className="relative rounded-lg px-2 py-3 text-center" >
+        <p className="inline-flex items-center justify-center rounded-full bg-pink-100 px-3 py-1 text-xs font-bold text-pink-700">
+          {c.Team}
+        </p>
+
+        <p
+          onClick={() => setOpen(c.Client_Id)}
+          className="cursor-pointer text-[9px] font-semibold text-blue-600 underline underline-offset-2 hover:text-blue-700"
+        >
+          Update
+        </p>
+
+        {open===c.Client_Id && (
+          <div className="absolute left-1/2 top-full z-50 mt-2 w-28 -translate-x-1/2 rounded-lg border border-gray-200 bg-white shadow-lg">
+           
+
+    {[1, 2, 3].map((each) => (
+  <button
+    key={each}
+    onClick={() => handleTeamChange(c,each)}
+    className={`w-full px-3 py-2 text-left text-xs hover:bg-pink-50 ${
+      c.Team === each
+        ? "bg-pink-100 text-pink-700 font-semibold"
+        : "text-gray-700"
+    }`}
+  >
+    Team {each}
+  </button>
+))}
+          </div>
+        )}
+      </div>
+    </td>
         
           <td className="px-3 py-3 text-center break-words relative">
   

@@ -75,12 +75,47 @@ const visibleReviews = showAllReviews
   ? reviews
   : reviews.slice(0, INITIAL_REVIEWS_COUNT);
 const CACHE_TTL = 30 * 60 * 1000; 
-
+const loadingSteps = [
+  {
+    icon: "🔐",
+    text: "Verifying your account...",
+  },
+  {
+    icon: "👩‍⚕️",
+    text: "Loading Healthcare Assistants...",
+  },
+  {
+    icon: "🏥",
+    text: "Preparing Active Deployments...",
+  },
+  {
+    icon: "📋",
+    text: "Processing Healthcare Profiles...",
+  },
+  {
+    icon: "🔒",
+    text: "Decrypting Secure Records...",
+  },
+  {
+    icon: "📊",
+    text: "Building Dashboard Analytics...",
+  },
+  {
+    icon: "💰",
+    text: "Preparing Payroll Information...",
+  },
+  {
+    icon: "🚀",
+    text: "Almost Ready...",
+  },
+];
 
 useEffect(() => {
   let mounted = true;
   let hasNavigated = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
+  let progress = 0;
+  let progressTimer: ReturnType<typeof setInterval> | null = null;
 
   const safeNavigate = (path: string) => {
     if (!mounted || hasNavigated) return;
@@ -88,10 +123,53 @@ useEffect(() => {
     router.replace(path);
   };
 
-  const updateLoader = (progress: number, message: string) => {
+  const updateLoader = (progressValue: number, message: string) => {
     if (!mounted) return;
-    setLoadingProgress(progress);
+    setLoadingProgress(progressValue);
     setLoadingMessage(message);
+  };
+
+  const startLoader = () => {
+    updateLoader(0, "Initializing...");
+
+    progressTimer = setInterval(() => {
+      if (!mounted) return;
+
+      if (progress >= 95) return;
+
+      if (progress < 25) {
+        progress += 5;
+      } else if (progress < 50) {
+        progress += 3;
+      } else if (progress < 75) {
+        progress += 2;
+      } else if (progress < 90) {
+        progress += 1;
+      } else {
+        progress += 0.5;
+      }
+
+      const value = Math.min(Math.floor(progress), 95);
+
+  const index = Math.min(
+  Math.floor((value / 95) * loadingSteps.length),
+  loadingSteps.length - 1
+);
+
+updateLoader(
+  value,
+  `${loadingSteps[index].icon} ${loadingSteps[index].text}`
+);
+    }, 180);
+  };
+
+  const finishLoader = () => {
+    if (progressTimer) {
+      clearInterval(progressTimer);
+      progressTimer = null;
+    }
+
+    updateLoader(100, "Redirecting...");
   };
 
   const applyDashboardData = (dashboardData: any) => {
@@ -103,40 +181,50 @@ useEffect(() => {
     dispatch(UpdateUserFirstName(dashboardData.profile?.FirstName));
   };
 
-  const loadDashboard = async (userId: string, forceRefresh = false) => {
-    try {
-      if (!forceRefresh) {
-        if (dashboardRequestCache.data) {
-          applyDashboardData(dashboardRequestCache.data);
-          return;
-        }
-
-        if (dashboardRequestCache.promise) {
-          applyDashboardData(await dashboardRequestCache.promise);
-          return;
-        }
+  const loadDashboard = async (
+    userId: string,
+    forceRefresh = false
+  ) => {
+    if (!forceRefresh) {
+      if (dashboardRequestCache.data) {
+        applyDashboardData(dashboardRequestCache.data);
+        return dashboardRequestCache.data;
       }
 
-      dashboardRequestCache.promise = axios
-        .post("/api/AdminPageInfo", { userId })
-        .then(({ data }) => {
-          if (!data.success) throw new Error("Dashboard fetch failed");
-          return data.data;
+      if (dashboardRequestCache.promise) {
+        const data = await dashboardRequestCache.promise;
+        applyDashboardData(data);
+        return data;
+      }
+    }
+
+    dashboardRequestCache.promise = axios
+      .post("/api/AdminPageInfo", {
+        userId,
+      })
+      .then(({ data }) => {
+        if (!data.success) {
+          throw new Error("Dashboard fetch failed");
+        }
+
+        dashboardRequestCache.data = data.data;
+
+        dashboardCache.set(userId, {
+          timestamp: Date.now(),
+          data: data.data,
         });
 
-      const dashboardData = await dashboardRequestCache.promise;
-
-      dashboardRequestCache.data = dashboardData;
-
-      dashboardCache.set(userId, {
-        timestamp: Date.now(),
-        data: dashboardData,
+        return data.data;
+      })
+      .finally(() => {
+        dashboardRequestCache.promise = null;
       });
 
-      applyDashboardData(dashboardData);
-    } finally {
-      dashboardRequestCache.promise = null;
-    }
+    const dashboardData = await dashboardRequestCache.promise;
+
+    applyDashboardData(dashboardData);
+
+    return dashboardData;
   };
 
   const initialize = async () => {
@@ -148,8 +236,8 @@ useEffect(() => {
         return;
       }
 
-      updateLoader(5, "Initializing...");
       setIsChecking(true);
+      startLoader();
 
       const { data: profile } = await axios.post("/api/Home", {
         localValue: userId,
@@ -158,8 +246,6 @@ useEffect(() => {
       if (!mounted) return;
 
       dispatch(UpdateUserDetails(profile));
-
-      updateLoader(35, "Loading profile...");
 
       const email = profile?.Email?.toLowerCase();
 
@@ -172,17 +258,17 @@ useEffect(() => {
           dashboardRequestCache.data = cached.data;
           applyDashboardData(cached.data);
         } else {
-          updateLoader(70, "Loading dashboard...");
           await loadDashboard(userId);
+
           if (!mounted) return;
         }
 
-        updateLoader(100, "Redirecting...");
+        finishLoader();
         safeNavigate("/DashBoard");
         return;
       }
 
-      updateLoader(100, "Redirecting...");
+      finishLoader();
 
       if (!profile?.FinelVerification) {
         if (profile?.userType === "healthcare-assistant") {
@@ -191,6 +277,7 @@ useEffect(() => {
         } else {
           safeNavigate("/HomePage");
         }
+
         return;
       }
 
@@ -203,7 +290,14 @@ useEffect(() => {
       }, 3500);
     } catch (error) {
       console.error("Initialization Error:", error);
-      if (mounted) safeNavigate("/sign-in");
+
+      if (progressTimer) {
+        clearInterval(progressTimer);
+      }
+
+      if (mounted) {
+        safeNavigate("/sign-in");
+      }
     }
   };
 
@@ -214,6 +308,10 @@ useEffect(() => {
 
     if (timer) {
       clearTimeout(timer);
+    }
+
+    if (progressTimer) {
+      clearInterval(progressTimer);
     }
   };
 }, [dispatch, router]);

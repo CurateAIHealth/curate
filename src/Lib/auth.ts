@@ -787,7 +787,18 @@ export const globalDashboardCache: {
   deployment?: any[];
   deploymentTime?: number;
 } = {};
-
+const dashboardResponseCache = new Map<
+  string,
+  {
+    timestamp: number;
+    data: {
+      profile: any;
+      registeredUsers: any[];
+      fullInfo: any[];
+      deployedLength: any[];
+    };
+  }
+>();
 export const profileCache: Record<
   string,
   {
@@ -795,10 +806,7 @@ export const profileCache: Record<
     profileTime?: number;
   }
 > = {};
-
-export const GetDashboardData = async (
-  userId: string
-) => {
+export const GetDashboardData = async (userId: string) => {
   try {
     if (!userId) {
       return {
@@ -811,6 +819,7 @@ export const GetDashboardData = async (
     const CACHE_TIME = 7 * 60 * 1000;
     const now = Date.now();
 
+   
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
 
@@ -820,56 +829,16 @@ export const GetDashboardData = async (
     );
     const Deployment = db.collection("Deployment");
 
-    // ==========================
-    // PROFILE CACHE (PER USER)
-    // ==========================
-
     if (!profileCache[userId]) {
       profileCache[userId] = {};
     }
 
-    const userProfileCache =
-      profileCache[userId];
-
-    let profile = userProfileCache.profile;
+    const userProfileCache = profileCache[userId];
 
     const needsProfile =
-      !profile ||
-      now -
-        (userProfileCache.profileTime || 0) >
+      !userProfileCache.profile ||
+      now - (userProfileCache.profileTime || 0) >
         CACHE_TIME;
-
-    if (needsProfile) {
-      const profileRaw = await Users.findOne(
-        { userId },
-        {
-          projection: {
-            _id: 0,
-            userId: 1,
-            FirstName: 1,
-            Email: 1,
-          },
-        }
-      );
-
-      profile =
-        profileRaw &&
-        Object.fromEntries(
-          Object.entries(profileRaw).map(
-            ([key, value]) => [
-              key,
-              safeDecrypt(value),
-            ]
-          )
-        );
-
-      userProfileCache.profile = profile;
-      userProfileCache.profileTime = now;
-    }
-
-    // ==========================
-    // GLOBAL CACHE CHECKS
-    // ==========================
 
     const needsUsers =
       !globalDashboardCache.registeredUsers ||
@@ -892,10 +861,25 @@ export const GetDashboardData = async (
         CACHE_TIME;
 
     const [
+      profileRaw,
       registeredUsersRaw,
       fullInfoRaw,
       deploymentRaw,
     ] = await Promise.all([
+      needsProfile
+        ? Users.findOne(
+            { userId },
+            {
+              projection: {
+                _id: 0,
+                userId: 1,
+                FirstName: 1,
+                Email: 1,
+              },
+            }
+          )
+        : Promise.resolve(null),
+
       needsUsers
         ? Users.find({}).toArray()
         : Promise.resolve(null),
@@ -916,7 +900,20 @@ export const GetDashboardData = async (
         : Promise.resolve(null),
     ]);
 
-  
+    if (needsProfile) {
+      userProfileCache.profile =
+        profileRaw &&
+        Object.fromEntries(
+          Object.entries(profileRaw).map(
+            ([key, value]) => [
+              key,
+              safeDecrypt(value),
+            ]
+          )
+        );
+
+      userProfileCache.profileTime = now;
+    }
 
     if (needsUsers && registeredUsersRaw) {
       globalDashboardCache.registeredUsers =
@@ -955,10 +952,6 @@ export const GetDashboardData = async (
       globalDashboardCache.registeredUsersTime =
         now;
     }
-
-    // ==========================
-    // FULL INFO
-    // ==========================
 
     if (needsFullInfo && fullInfoRaw) {
       globalDashboardCache.fullInfo =
@@ -1016,10 +1009,6 @@ export const GetDashboardData = async (
       globalDashboardCache.fullInfoTime = now;
     }
 
-    // ==========================
-    // DEPLOYMENT
-    // ==========================
-
     if (
       needsDeployment &&
       deploymentRaw
@@ -1031,22 +1020,30 @@ export const GetDashboardData = async (
         now;
     }
 
+    const responseData = {
+      profile:
+        userProfileCache.profile || null,
+
+      registeredUsers:
+        globalDashboardCache
+          .registeredUsers || [],
+
+      fullInfo:
+        globalDashboardCache.fullInfo || [],
+
+      deployedLength:
+        globalDashboardCache.deployment ||
+        [],
+    };
+
+    dashboardResponseCache.set(userId, {
+      timestamp: now,
+      data: responseData,
+    });
+
     return {
       success: true,
-      data: {
-        profile: profile || null,
-
-        registeredUsers:
-          globalDashboardCache
-            .registeredUsers || [],
-
-        fullInfo:
-          globalDashboardCache.fullInfo || [],
-
-        deployedLength:
-          globalDashboardCache.deployment ||
-          [],
-      },
+      data: responseData,
     };
   } catch (error) {
     console.error(
@@ -1062,3 +1059,315 @@ export const GetDashboardData = async (
     };
   }
 };
+export const UpdateClientTeam = async (
+  ImpClientId: any,
+  ImpHCPId:any,
+  ImpDate: any,
+  ImpTeamValue: any
+) => {
+  try {
+    const cluster = await clientPromise
+    const db = cluster.db("CurateInformation")
+    const collection = db.collection("Deployment")
+
+
+    const result = await collection.updateOne(
+      {
+        ClientId: ImpClientId,
+        HCAId:ImpHCPId,
+        Month: ImpDate
+      },
+      {
+        $set: {
+          Team:ImpTeamValue
+        }
+      },
+      {
+        upsert: true   
+      }
+    )
+
+    return {
+      success: true,
+      message:
+        result.upsertedCount > 0
+          ? "New Team Created"
+          : result.modifiedCount === 0
+          ? "No changes made"
+          : "Client Team updated Successfully"
+    }
+  } catch (e) {
+    console.error("UpdateClientTimeSheet Error:", e)
+    return {
+      success: false,
+      message: "Update failed"
+    }
+  }
+}
+// 
+// export const GetDashboardData = async (
+//   userId: string
+// ) => {
+//   try {
+//     if (!userId) {
+//       return {
+//         success: false,
+//         message: "UserId is required",
+//         data: null,
+//       };
+//     }
+
+//     const CACHE_TIME = 7 * 60 * 1000;
+//     const now = Date.now();
+
+//     const cluster = await clientPromise;
+//     const db = cluster.db("CurateInformation");
+
+//     const Users = db.collection("Registration");
+//     const UsersFullInfo = db.collection(
+//       "CompliteRegistrationInformation"
+//     );
+//     const Deployment = db.collection("Deployment");
+
+//     // ==========================
+//     // PROFILE CACHE (PER USER)
+//     // ==========================
+
+//     if (!profileCache[userId]) {
+//       profileCache[userId] = {};
+//     }
+
+//     const userProfileCache =
+//       profileCache[userId];
+
+//     let profile = userProfileCache.profile;
+
+//     const needsProfile =
+//       !profile ||
+//       now -
+//         (userProfileCache.profileTime || 0) >
+//         CACHE_TIME;
+
+//     if (needsProfile) {
+//       const profileRaw = await Users.findOne(
+//         { userId },
+//         {
+//           projection: {
+//             _id: 0,
+//             userId: 1,
+//             FirstName: 1,
+//             Email: 1,
+//           },
+//         }
+//       );
+
+//       profile =
+//         profileRaw &&
+//         Object.fromEntries(
+//           Object.entries(profileRaw).map(
+//             ([key, value]) => [
+//               key,
+//               safeDecrypt(value),
+//             ]
+//           )
+//         );
+
+//       userProfileCache.profile = profile;
+//       userProfileCache.profileTime = now;
+//     }
+
+//     // ==========================
+//     // GLOBAL CACHE CHECKS
+//     // ==========================
+
+//     const needsUsers =
+//       !globalDashboardCache.registeredUsers ||
+//       now -
+//         (globalDashboardCache.registeredUsersTime ||
+//           0) >
+//         CACHE_TIME;
+
+//     const needsFullInfo =
+//       !globalDashboardCache.fullInfo ||
+//       now -
+//         (globalDashboardCache.fullInfoTime || 0) >
+//         CACHE_TIME;
+
+//     const needsDeployment =
+//       !globalDashboardCache.deployment ||
+//       now -
+//         (globalDashboardCache.deploymentTime ||
+//           0) >
+//         CACHE_TIME;
+
+//     const [
+//       registeredUsersRaw,
+//       fullInfoRaw,
+//       deploymentRaw,
+//     ] = await Promise.all([
+//       needsUsers
+//         ? Users.find({}).toArray()
+//         : Promise.resolve(null),
+
+//       needsFullInfo
+//         ? UsersFullInfo.find({}).toArray()
+//         : Promise.resolve(null),
+
+//       needsDeployment
+//         ? Deployment.find(
+//             {},
+//             {
+//               projection: {
+//                 _id: 0,
+//               },
+//             }
+//           ).toArray()
+//         : Promise.resolve(null),
+//     ]);
+
+  
+
+//     if (needsUsers && registeredUsersRaw) {
+//       globalDashboardCache.registeredUsers =
+//         registeredUsersRaw.map((user: any) => {
+//           const decryptedUser: any = {
+//             ...user,
+//             _id: user._id?.toString() ?? null,
+//           };
+
+//           for (const [
+//             key,
+//             value,
+//           ] of Object.entries(user)) {
+//             if (
+//               value &&
+//               typeof value === "object" &&
+//               "iv" in value &&
+//               "content" in value
+//             ) {
+//               try {
+//                 decryptedUser[key] = decrypt(
+//                   value as {
+//                     iv: string;
+//                     content: string;
+//                   }
+//                 );
+//               } catch {
+//                 decryptedUser[key] = value;
+//               }
+//             }
+//           }
+
+//           return decryptedUser;
+//         });
+
+//       globalDashboardCache.registeredUsersTime =
+//         now;
+//     }
+
+//     // ==========================
+//     // FULL INFO
+//     // ==========================
+
+//     if (needsFullInfo && fullInfoRaw) {
+//       globalDashboardCache.fullInfo =
+//         fullInfoRaw.map((user: any) => {
+//           const info =
+//             user.HCAComplitInformation || {};
+
+//           return {
+//             ...user,
+//             HCAComplitInformation: {
+//               ...info,
+//               HCPFirstName: safeDecrypt(
+//                 info["First Name"]
+//               ),
+//               HCPContactNumber: safeDecrypt(
+//                 info["Mobile Number"]
+//               ),
+//               HCPEmail: safeDecrypt(
+//                 info["EmailId"]
+//               ),
+//               HCPSurName: safeDecrypt(
+//                 info["Surname"]
+//               ),
+//               HCPAdharNumber: safeDecrypt(
+//                 info["Aadhar Card No"]
+//               ),
+//               "Phone No 1": safeDecrypt(
+//                 info["Phone No 1"]
+//               ),
+//               "Phone No 2": safeDecrypt(
+//                 info["Phone No 2"]
+//               ),
+//               "Email Id": safeDecrypt(
+//                 info["Email Id"]
+//               ),
+//               "Client Aadhar No": safeDecrypt(
+//                 info["Client Aadhar No"]
+//               ),
+//               "Patient Aadhar Number":
+//                 safeDecrypt(
+//                   info[
+//                     "Patient Aadhar Number"
+//                   ]
+//                 ),
+//               "Alternative Client Contact":
+//                 safeDecrypt(
+//                   info[
+//                     "Alternative Client Contact"
+//                   ]
+//                 ),
+//             },
+//           };
+//         });
+
+//       globalDashboardCache.fullInfoTime = now;
+//     }
+
+//     // ==========================
+//     // DEPLOYMENT
+//     // ==========================
+
+//     if (
+//       needsDeployment &&
+//       deploymentRaw
+//     ) {
+//       globalDashboardCache.deployment =
+//         deploymentRaw;
+
+//       globalDashboardCache.deploymentTime =
+//         now;
+//     }
+
+//     return {
+//       success: true,
+//       data: {
+//         profile: profile || null,
+
+//         registeredUsers:
+//           globalDashboardCache
+//             .registeredUsers || [],
+
+//         fullInfo:
+//           globalDashboardCache.fullInfo || [],
+
+//         deployedLength:
+//           globalDashboardCache.deployment ||
+//           [],
+//       },
+//     };
+//   } catch (error) {
+//     console.error(
+//       "Dashboard Fetch Error:",
+//       error
+//     );
+
+//     return {
+//       success: false,
+//       message:
+//         "Failed to fetch dashboard data",
+//       data: null,
+//     };
+//   }
+// };

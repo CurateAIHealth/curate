@@ -115,9 +115,33 @@ const handleLogout = () => {
 
 const navigationLock = useRef(false);
 
+const routeMap = useMemo(
+  () => ({
+    Timesheet: () => {
+      dispatch(Update_Main_Filter_Status("Timesheet"));
+      dispatch(UpdateUserType("patient"));
+      router.replace("/AdminPage");
+    },
+
+    "Pending PDR": () => router.replace("/PDRView"),
+    Vendors: () => router.replace("/VendorsPanel"),
+    "Document Compliance": () => router.replace("/Documents"),
+    Invoices: () => router.replace("/Invoices"),
+    Payments: () => router.replace("/PaymentsInfo"),
+    "HCA Payment": () => router.replace("/HCAAccounts"),
+    "Client Payment": () => router.replace("/ClientAccounts"),
+    Accounts: () => router.replace("/Accounts"),
+    Payable: () => router.replace("/Payable"),
+    Reject: () => router.replace("/RejectPayments"),
+    Paid: () => router.replace("/SuccessfulPayments"),
+    RevenueAnalytics: () => router.replace("/RevenueAnalytics"),
+    Notifications: () => router.replace("/Notifications"),
+  }),
+  [dispatch, router]
+);
+
 const Switching = useCallback(
   (name: string) => {
-    // Prevent duplicate clicks
     if (navigationLock.current) return;
 
     if (!loggedInEmail) {
@@ -130,10 +154,10 @@ const Switching = useCallback(
       return;
     }
 
-    const route = ROUTES[name];
+    const navigate = routeMap[name as keyof typeof routeMap];
 
-    if (!route) {
-     alert(`Unknown Route: ${name}`);
+    if (!navigate) {
+      console.warn(`Unknown route: ${name}`);
       return;
     }
 
@@ -141,19 +165,20 @@ const Switching = useCallback(
     setIsNavigating(true);
 
     try {
-      if (name === "Timesheet") {
-        dispatch(Update_Main_Filter_Status(name));
-        dispatch(UpdateUserType("patient"));
-      }
-
-      router.replace(route);
-    } finally {
-      requestAnimationFrame(() => {
-        navigationLock.current = false;
-      });
+      navigate();
+    } catch (error) {
+      console.error(error);
+      navigationLock.current = false;
+      setIsNavigating(false);
+      return;
     }
+
+    requestAnimationFrame(() => {
+      navigationLock.current = false;
+      setIsNavigating(false);
+    });
   },
-  [loggedInEmail, canAccessTab, dispatch, router]
+  [loggedInEmail, canAccessTab, routeMap]
 );
       
     return(
