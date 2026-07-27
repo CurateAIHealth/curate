@@ -170,7 +170,7 @@ useEffect(()=>{
       const BasicInfo:any=await GetUserInformation(ImportedUserId)
     setShowPassword(BasicInfo.PreviewPassword)
       const FilterValue=Result.HCAComplitInformation
-    console.log("Check Imported Documents-----",FilterValue.Reviews
+    console.log("Check Imported Documents-----",FilterValue
 )
       setUser(prev=>({...prev,
     firstName: FilterValue["First Name"] || "",

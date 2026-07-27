@@ -638,10 +638,12 @@ const HEIGHT_OPTIONS = Array.from(
         return
       }
 
-      if(form.PaymentforStaff===''){
-        alert("Payment for staff cannot be empty.")
-        return
-      }
+const payment = Number(form.PaymentforStaff);
+
+if (!form.PaymentforStaff?.trim() || payment <= 0) {
+  alert("Payment for staff must be greater than 0.");
+  return;
+}
 
       if (CurrentUserType === null) {
         alert("UserType Not Selected");

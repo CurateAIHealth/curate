@@ -33,7 +33,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 ,Hourglass ,BadgeCheck, MapPin,FileCheck,FileX, Router, List, Calendar1 } from 'lucide-react';
 import { CurrrentPDRUserId, GetCurrentDeploymentData, Refresh, SetDeploymentInfo, setFullInfo, setUsers, Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateClient, UpdateClientSuggetion, UpdateFetchedInformation, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
-import { ClientEnquiry_Filters, filterColors, HCPFilters, hyderabadAreas, LeadSources, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, Timesheet_Filters } from '@/Lib/Content';
+import { ClientEnquiry_Filters, filterColors, HCPFilters, hyderabadAreas, LeadSources, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, statusStyles, Timesheet_Filters } from '@/Lib/Content';
 
 import { select, thead, tr } from 'framer-motion/client';
 import ClientTable from '@/Components/Placements/page';
@@ -1492,7 +1492,7 @@ const UpdatePopup = async (a: any) => {
   <p className="inline-flex items-center gap-1.5 rounded-full 
                  bg-gradient-to-r from-teal-500 to-green-500 
                  px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
-    Active
+    Active  
   </p>
 
  
@@ -1508,7 +1508,12 @@ const UpdatePopup = async (a: any) => {
 
 </div>
 
-      ):<p className="inline-flex items-center rounded-full bg-amber-50 text-amber-600 text-xs font-semibold px-1 py-1 border border-amber-200">
+      ):<p
+  className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold border ${
+    statusStyles[user.CurrentStatus] ||
+    "bg-gray-50 text-gray-700 border-gray-200"
+  }`}
+>
   {user.CurrentStatus}
 </p>
 }
@@ -1660,11 +1665,11 @@ const UpdatePopup = async (a: any) => {
                                   onChange={(e) =>
 
                                 {
-                                      if(user.CurrentStatus==="Active"){
+                                    //   if(user.CurrentStatus==="Active"){
                                       
-                                        dispatch(Refresh(`${user.FirstName} Currently in ${user.CurrentStatus} Status,Sorry  We dont let You Updated Status`));
-                                      return
-                                    }
+                                    //     dispatch(Refresh(`${user.FirstName} Currently in ${user.CurrentStatus} Status,Sorry  We dont let You Updated Status`));
+                                    //   return
+                                    // }
                                     UpdateCurrentstatus(user.FirstName, e.target.value, user.userId)
                                 }
                                   }
