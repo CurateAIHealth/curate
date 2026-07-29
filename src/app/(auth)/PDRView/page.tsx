@@ -11,6 +11,7 @@ import TerminationTable from "@/Components/Terminations/page";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
 import { normalizeDate, years } from "@/Lib/Actions";
+import { teams } from "@/Lib/Content";
 
 
 type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday";
@@ -34,7 +35,8 @@ const ClientTable = () => {
   const [ClientsInformation, setClientsInformation] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState(false); 
   const [isChecking, setIsChecking] = useState(true);
-  const [users, setUsers] = useState<any[]>([]);
+ 
+  const users=useSelector((state:any)=>state.AdminUsers)
   const [Fineldate, setFineldate] = useState({
     date: '', day: "",
     updatedAt: "",
@@ -57,6 +59,7 @@ const ClientTable = () => {
   const [deleteTargetId, setDeleteTargetId] =  useState<any>();
   const [ActionStatusMessage,SetActionStatusMessage]= useState<any>();
   const [SearchResult,setSearchResult]=useState("")
+  const [activeTeam, setActiveTeam] = useState(1);
   const SearchMonth=useSelector((state:any)=>state.FilterMonth) 
   const SearchYear=useSelector((state:any)=>state.FilterYear) 
 const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
@@ -64,20 +67,23 @@ const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
   const dispatch = useDispatch();
 const Router=useRouter()
 useEffect(() => {
+    if (users?.length === 0) {
+    Router.push("/");
+  }
   let mounted = true;
 
   const fetchData = async () => {
     try {
       setIsChecking(true);
 
-      const [usersResult, timesheetInfo] = await Promise.all([
-        GetRegidterdUsers(),
+      const [ timesheetInfo] = await Promise.all([
+      
         GetTimeSheetInfo(),
       ]);
 
       if (!mounted) return;
 
-      setUsers(usersResult ?? []);
+    
       setClientsInformation(timesheetInfo ?? []);
       dispatch(UpdateSubHeading("On Service"));
     } catch (err) {
@@ -93,8 +99,14 @@ useEffect(() => {
     mounted = false;
   };
 }, [dispatch,]);
+console.log ("Check Userssss-",users)
+  const GetTeamNumber = (A: any) => {
+    if (!users?.length || !A) return "Not Entered";
 
+    const ImpTeamNumber=users.find((each:any)=>each.userType==="patient"&&each.userId===A)
 
+    return Number(ImpTeamNumber?.Team) ?? "Not Entered";
+  };
 
   const FinelTimeSheet = ClientsInformation.map((each: any) => {
     const normalizedAttendance =
@@ -129,6 +141,7 @@ useEffect(() => {
       invoice: each.invoice,
       PDRStatus:each.PDRStatus,
       ServiceState:each.ServiceState,
+      Team:GetTeamNumber(each.ClientId)
 
 
 
@@ -384,7 +397,7 @@ const handleLogout = () => {
 
 
   const filteredClients = FilterFinelTimeSheet.filter(client =>
- client.PDRStatus === activeTab
+ client.PDRStatus === activeTab&&client.Team===activeTeam
 );
 
 
@@ -402,6 +415,21 @@ const handleLogout = () => {
     <div>
       <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">🩺 Patient Daily Record</h1>
       <p className="text-gray-500 text-sm mt-1">Monitor, manage, and complete pending PDRs with ease.</p>
+    </div>
+    <div className="inline-flex rounded-2xl bg-gray-100 p-1.5 shadow-inner">
+      {teams.map((team:any) => (
+        <button
+          key={team}
+          onClick={() => setActiveTeam(team)}
+          className={`rounded-xl px-6 py-2.5 cursor-pointer text-sm font-semibold transition-all duration-200 ${
+            activeTeam === team
+      ? "bg-white text-pink-600 border border-pink-600 shadow-md scale-105"
+      : "text-gray-600 hover:bg-white hover:text-pink-600"
+          }`}
+        >
+          { `Team${team}`}
+        </button>
+      ))}
     </div>
     <div className="relative w-full sm:w-[320px]">
       <input
@@ -570,6 +598,7 @@ const handleLogout = () => {
         <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">HCP Name</th>
         <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">Contact</th>
         <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">Location</th>
+         <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">Team</th>
         <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-center">
           Status
         </th>
@@ -607,6 +636,17 @@ const handleLogout = () => {
 
           <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 max-w-[180px] lg:max-w-[250px] truncate">
             {c.location}
+          </td>
+           <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 max-w-[180px] lg:max-w-[250px] truncate">
+             <div className="relative rounded-lg px-2 py-3 text-center" >
+                   <p className="inline-flex items-center justify-center rounded-full bg-pink-100 px-3 py-1 text-xs font-bold text-pink-700">
+                     {c.Team}
+                   </p>
+           
+                 
+           
+          
+                 </div>
           </td>
 
           <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">

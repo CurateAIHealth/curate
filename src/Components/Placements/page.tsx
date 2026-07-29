@@ -294,7 +294,13 @@ const matchesSearchAndMonth = (
 
   return matchesSearch && overlaps;
 };
+   const GetTeamNumber = (A: any) => {
+    if (!RegisterdUsers?.length || !A) return "Not Entered";
 
+    const ImpTeamNumber=RegisterdUsers.find((each:any)=>each.userType==="patient"&&each.userId===A)
+
+    return Number(ImpTeamNumber.Team) ?? "Not Entered";
+  };
   const UpdateFreezeInformation = async() => {
 
     try {
@@ -345,7 +351,6 @@ const { data: UpdateFreezeStatus } = await axios.post(
   }
 
  const handleTeamChange = async(ClientInfo:any,team: any) => {
-  console.log ("Check for Deployinf00-----",ClientInfo)
 
     SetActionStatusMessage("Please Wait.....")
 
@@ -365,17 +370,24 @@ team
 if(UpdateTeamStatus.data.success){
   SetActionStatusMessage("Team Updated Fetching Updated Data.....")
     const userId = localStorage.getItem("UserId");
-    const { data:result } = await axios.post("/api/AdminPageInfo", {
+ 
+      const { data } = await axios.post(
+        "/api/AdminPageInfo",
+        {
           userId,
-          refreshType: "deployment",
-        });
-   const {
-      profile,
-      registeredUsers,
-      fullInfo,
-      deployedLength,
-    } = result.data;
-       dispatch( SetDeploymentInfo(deployedLength))
+          refreshType: 
+            "registeredUsers",
+            
+        }
+      );
+
+      console.log (
+"Current Task------",data
+      )
+
+      dispatch(setUsers(
+        data.data.registeredUsers
+      ))
   SetActionStatusMessage("Team Status Updates Successfully")
 setOpen(false);
 }
@@ -556,7 +568,7 @@ const normalizedAttendance =
     ClientAttendance: each.ClientAttendance || [],
     ReplacementDate:each.ReplacementDate,
     ServiceState:each.ServiceState||"Telangana",
-    Team:Number(each.Team)
+    Team:GetTeamNumber(each.ClientId)
     
   };
 });
@@ -1512,7 +1524,8 @@ const processedData = useMemo(() => {
   SearchMonth,
 SearchYear,
 SelectedServiceStates,
-activeTeam
+activeTeam,
+ActionStatusMessage
 ]);
 
 const UpdateServiceCharge=async(A:any)=>{
@@ -3044,25 +3057,44 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
           Update
         </p>
 
-        {open===c.Client_Id && (
-          <div className="absolute left-1/2 top-full z-50 mt-2 w-28 -translate-x-1/2 rounded-lg border border-gray-200 bg-white shadow-lg">
-           
+    {open === c.Client_Id && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="w-64 rounded-xl bg-white shadow-2xl">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b px-4 py-3">
+        <h3 className="text-sm font-bold text-gray-800">
+          Select Team
+        </h3>
 
-    {[1, 2, 3].map((each) => (
-  <button
-    key={each}
-    onClick={() => handleTeamChange(c,each)}
-    className={`w-full px-3 py-2 text-left text-xs hover:bg-pink-50 ${
-      c.Team === each
-        ? "bg-pink-100 text-pink-700 font-semibold"
-        : "text-gray-700"
-    }`}
-  >
-    Team {each}
-  </button>
-))}
-          </div>
-        )}
+        <button
+          onClick={() => setOpen(false)}
+          className="text-lg font-bold text-gray-500 hover:text-red-500 cursor-pointer"
+        >
+          ✕
+        </button>
+      </div>
+
+    
+      <div className="p-3 space-y-2">
+        {[1, 2, 3].map((each) => (
+          <button
+            key={each}
+            onClick={() => handleTeamChange(c, each)}
+            className={`w-full rounded-lg border px-4 py-2 cursor-pointer text-sm font-medium transition ${
+              c.Team === each
+                ? "border-pink-500 bg-pink-100 text-pink-700"
+                : "border-gray-200 bg-white text-gray-700 hover:bg-pink-50"
+            }`}
+          >
+            Team {each}
+          </button>
+        ))}
+      </div>
+
+  
+    </div>
+  </div>
+)}
       </div>
     </td>
         

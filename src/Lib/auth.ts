@@ -1061,22 +1061,16 @@ export const GetDashboardData = async (userId: string) => {
 };
 export const UpdateClientTeam = async (
   ImpClientId: any,
-  ImpHCPId:any,
-  ImpDate: any,
   ImpTeamValue: any
 ) => {
   try {
     const cluster = await clientPromise
     const db = cluster.db("CurateInformation")
-    const collection = db.collection("Deployment")
+    const collection = db.collection("Registration")
 
 
-    const result = await collection.updateOne(
-      {
-        ClientId: ImpClientId,
-        HCAId:ImpHCPId,
-        Month: ImpDate
-      },
+    const result = await collection.updateMany(
+      {userId: ImpClientId},
       {
         $set: {
           Team:ImpTeamValue

@@ -11,7 +11,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import MissingAttendence from "../MissingAttendence/page";
 import PaymentModal from "../PaymentInfoModel/page";
-import { IndianStates, months, years } from "@/Lib/Content";
+import { IndianStates, months, teams, years } from "@/Lib/Content";
 import { AssignSuitableIcon, getDaysInMonth } from "@/Lib/Actions";
 import DeletePopup from "../DeleteTimesheetPopUp/page";
 import { EditDeploymentPopup } from "../TimeSheetEditPopUp/page";
@@ -73,6 +73,7 @@ const [ShowUpdateAttendece,SetShowUpdateAttendece]=useState(false)
    const [showMissingCalendar, setShowMissingCalendar] = useState(false);
    
       const [showAttendeceMissingCalendar, setshowAttendeceMissingCalendar] = useState(false);
+       const [activeTeam, setActiveTeam] = useState(1);
     const [status, setStatus] =useState<any>('')
      const [AbsentReason,setAbsentReason]=useState("")
     
@@ -87,7 +88,13 @@ const parseIndianDate = (dateString: string) => {
   const [day, month, year] = dateString.split("/").map(Number);
   return new Date(year, month - 1, day);
 };
+  const GetTeamNumber = (A: any) => {
+    if (!RegisterdUsers?.length || !A) return "Not Entered";
 
+    const ImpTeamNumber=RegisterdUsers.find((each:any)=>each.userType==="patient"&&each.userId===A)
+
+    return Number(ImpTeamNumber.Team) ?? "Not Entered";
+  };
 const getMonthKey = (
   startDateString: string,
   endDateString: string
@@ -184,6 +191,7 @@ useEffect(() => {
         Replacement: record.Replacement,
         ReplacementDate:record.ReplacementDate,
         ServiceState:record.ServiceState || "Telangana",
+        Team:GetTeamNumber(record.ClientId)
       });
     }
   }
@@ -329,8 +337,8 @@ const DateRange = new Date().toISOString().split("T")[0];
 
 
   const monthKey = `${selectedYear}-${selectedMonth}`;
-  const data: any[] = ClientsInformation[monthKey]?.filter((each: any) => each.ServiceState === SelectedServiceStates) || [];
-
+  const data: any[] = ClientsInformation[monthKey]?.filter((each: any) => each.ServiceState === SelectedServiceStates&&each.Team===activeTeam) || [];
+console
 
   const daysInMonth = new Date(
     Number(selectedYear),
@@ -561,7 +569,7 @@ console.log ("Check for Client-----",client)
         ...counts,
       };
     });
-}, [data, SearchResult, SelectedServiceStates]);
+}, [data, SearchResult, SelectedServiceStates,activeTeam]);
 
   const todayIndex = new Date().getDate() - 1;
 
@@ -1034,7 +1042,21 @@ const PresentScreen=()=>{
         View invoice and attendance details by month and year.,,,
       </p>
     </div>
-
+<div className="inline-flex rounded-2xl bg-gray-100 p-1.5 shadow-inner">
+  {teams.map((team:any) => (
+    <button
+      key={team}
+      onClick={() => setActiveTeam(team)}
+      className={`rounded-xl px-6 py-2.5 cursor-pointer text-sm font-semibold transition-all duration-200 ${
+        activeTeam === team
+  ? "bg-white text-pink-600 border border-pink-600 shadow-md scale-105"
+  : "text-gray-600 hover:bg-white hover:text-pink-600"
+      }`}
+    >
+      { `Team${team}`}
+    </button>
+  ))}
+</div>
     
     <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 w-full lg:w-auto">
      
@@ -1476,7 +1498,7 @@ className={`
         <Th className={`${showFull?"":"w-[20%]"}`}>Client</Th>
         <Th className={`${showFull?"":"w-[15%]"}`}>HCP</Th>
         <Th className={`${showFull?"":"w-[12%]"}`}>Charge</Th>
-
+ <Th className={`${showFull?"":"w-[12%]"}`}>Team</Th>
         {showFull && <Th className="max-w-[160px]">Patient</Th>}
         {showFull && <Th className="max-w-[160px]">Referral</Th>}
         {showFull && <Th className="text-left">HCP Ref</Th>}
@@ -1606,13 +1628,23 @@ className={`
 
   </div>
 </td>
-
+   
           <Td className="font-bold break-words">
   {r.CareTakerPrice
     ? String(r.CareTakerPrice).includes("₹")
       ? r.CareTakerPrice
       : `${r.CareTakerPrice}`
     : "0"}
+</Td>
+ <Td className="font-bold break-words">
+<div className="relative rounded-lg px-2 py-3 text-start" >
+        <p className="inline-flex items-center justify-center rounded-full bg-pink-100 px-3 py-1 text-xs font-bold text-pink-700">
+          {r.Team}
+        </p>
+
+
+       
+      </div>
 </Td>
 
 
