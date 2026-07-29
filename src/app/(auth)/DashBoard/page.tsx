@@ -99,6 +99,7 @@ const [isNavigating, setIsNavigating] = useState(false);
   const [ShowNotification, setShowNotification] = useState(false)
   const [DiscountStatus, SetDiscountStatus] = useState(true)
   const [showAccessDenied, setShowAccessDenied] = useState(false);
+  const [Team,SetTeam]=useState<any>("")
   const [showCallEnquiry, setShowCallEnquiry] = useState(false);
   const [EnquiryMessage, setEnquiryMessage] = useState<any>(null)
   const [showPermissionPopup, setShowPermissionPopup] = useState(false);
@@ -164,6 +165,7 @@ console.log("Check Email------",loggedInEmail)
   addressLine1: "",
   addressLine2: "",
   serviceState: "",
+  Team:""
   })
   const [showHealthCardSuggestions, setShowHealthCardSuggestions] =
     useState(false);
@@ -475,6 +477,11 @@ const run = useCallback(async () => {
       setEnquiryMessage("")
       return
     }
+     if(EnquiryForm.Team===""){
+      alert("Please Select Team")
+      setEnquiryMessage("")
+      return
+    }
     if(EnquiryForm.serviceCharges===""){
       alert("Please Enter Service Charges")
       setEnquiryMessage("")
@@ -534,6 +541,7 @@ console.log(" EnquiryForm.patientHeight:", EnquiryForm.patientHeight);
         ExtraWorkingHours: EnquiryForm.ExtraWorkingHours,
         ExtraWorkType: EnquiryForm.ExtraWorkType,
         serviceState: EnquiryForm.serviceState || "Telangana",
+        Team: EnquiryForm.Team 
       };
       const registrationResult = await CallEnquiryRegistration(payload);
 
@@ -990,7 +998,7 @@ const Switching = useCallback(
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
             </span>
           </div>
 
@@ -1918,6 +1926,7 @@ className="flex-1 min-w-0 rounded-lg border border-gray-300 px-4 py-3 text-sm te
                         </div>
                       )}
                     </div>
+                    
                     <div className="w-full mt-100px">
                       <label className="block text-xs font-medium text-teal-600 mb-2">{EnquiryForm.ServiceType ? EnquiryForm.ServiceType : "HCP"} Preferred</label>
 
@@ -2205,7 +2214,7 @@ className="flex-1 min-w-0 rounded-lg border border-gray-300 px-4 py-3 text-sm te
   <div className="flex items-center justify-between">
     <div>
       <h3 className="text-sm font-semibold text-teal-600 whitespace-nowrap">
-        Registration Fee
+        Registration Fee 
       </h3>
       <p className="text-xs text-gray-500">
         Apply a discount if available
@@ -2245,6 +2254,76 @@ className="flex-1 min-w-0 rounded-lg border border-gray-300 px-4 py-3 text-sm te
       />
     </div>
   )}
+  <div>
+<div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+  <div className="border-b border-gray-100 px-3 py-2">
+    <h3 className="text-xs font-bold uppercase tracking-wide text-[#1392d3]">
+      Team Selection
+    </h3>
+  </div>
+
+  <div className="space-y-1 p-2">
+    {[1, 2, 3].map((each) => {
+      const isActive =EnquiryForm.Team===each
+
+      return (
+        <button
+          key={each}
+          onClick={() => setEnquiryForm((prev: any) => ({
+                              ...prev,
+                              Team: each,
+                            }))}
+          className={`
+            group relative flex h-9 w-full items-center justify-between cursor-pointer
+            rounded-lg border px-3 transition-all duration-200
+            ${
+              isActive
+                ? "border-[#ff1493] bg-pink-50 shadow-sm"
+                : "border-gray-200 bg-white hover:border-[#ff1493] hover:bg-pink-50"
+            }
+          `}
+        >
+          {/* Left Indicator */}
+          <div
+            className={`absolute left-0 top-0 h-full w-1 rounded-l-lg ${
+              isActive ? "bg-[#ff1493]" : "bg-[#50c896]"
+            }`}
+          />
+
+          <div className="flex items-center gap-2 pl-2">
+            <div
+              className={`flex h-6 w-6 items-center justify-center rounded-md text-[11px] ${
+                isActive
+                  ? "bg-[#ff1493] text-white"
+                  : "bg-[#ff1493]/10 text-[#ff1493]"
+              }`}
+            >
+              👥
+            </div>
+
+            <span
+              className={`text-xs font-semibold ${
+                isActive ? "text-[#ff1493]" : "text-gray-700"
+              }`}
+            >
+              Team {each}
+            </span>
+          </div>
+
+          {isActive ? (
+            <span className="text-sm text-[#50c896]">✓</span>
+          ) : (
+            <span className="text-sm text-gray-400 transition-transform group-hover:translate-x-1">
+              →
+            </span>
+          )}
+        </button>
+      );
+    })}
+  </div>
+</div>
+                
+  </div>
 </div>
 
 

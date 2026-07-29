@@ -30,10 +30,10 @@ import {
 } from '@/Lib/user.action';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 ,Hourglass ,BadgeCheck, MapPin,FileCheck,FileX, Router, List, Calendar1 } from 'lucide-react';
+import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 ,Hourglass ,BadgeCheck, MapPin,FileCheck,FileX, Router, List, Calendar1, ChevronDown } from 'lucide-react';
 import { CurrrentPDRUserId, GetCurrentDeploymentData, Refresh, SetDeploymentInfo, setFullInfo, setUsers, Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateClient, UpdateClientSuggetion, UpdateFetchedInformation, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
 import { useDispatch, useSelector } from 'react-redux';
-import { ClientEnquiry_Filters, filterColors, HCPFilters, hyderabadAreas, LeadSources, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, statusStyles, Timesheet_Filters } from '@/Lib/Content';
+import { ClientEnquiry_Filters, filterColors, HCPFilters, hyderabadAreas, IndianStates, LeadSources, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, statusStyles, Timesheet_Filters } from '@/Lib/Content';
 
 import { select, thead, tr } from 'framer-motion/client';
 import ClientTable from '@/Components/Placements/page';
@@ -83,6 +83,7 @@ const [SearchResult, setSearchResult] = useState("")
   const [DeleteInformation, SetDeleteInformation] = useState<any>()
   const [SelectedHCPSalaryId,setSelectedHCPSalaryId]=useState()
   const [showOptions,setShowOptions] = useState(false);
+  const [SelectedServiceStates, setSelectedServiceStates] = useState("Telangana");
 const [searchLead, setSearchLead] = useState("");
 // const [DeploymentInfo,SetDeploymentInfo]=useState<any[]>([])
 const [showSuggestions, setShowSuggestions] = useState(true);
@@ -1998,6 +1999,9 @@ console.log("Check for Imp Salary Data----",data
   };
 
 
+ 
+
+
 
 
 
@@ -2100,7 +2104,29 @@ console.log("Check for Imp Salary Data----",data
 
           <div className='flex gap-2 items-center'>
             {(UpdateMainFilter === "Call Enquiry" || UpdateMainFilter === "HCP List")
-              && <div
+              &&
+              <div className='md:flex items-center gap-2'>
+              <div className="relative">
+    <select
+      value={SelectedServiceStates}
+      onChange={(e) => setSelectedServiceStates(e.target.value)}
+      className="w-full text-center h-10 appearance-none rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
+    >
+    
+
+      {IndianStates.map((state) => (
+        <option key={state} value={state}>
+          {state}
+        </option>
+      ))}
+    </select>
+
+    <ChevronDown
+      size={16}
+      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+    />
+  </div>
+              <div
                 className="
       flex items-center bg-white shadow-md rounded-xl
       px-4 h-[44px]
@@ -2134,6 +2160,7 @@ console.log("Check for Imp Salary Data----",data
         text-sm text-gray-700 placeholder-gray-400
       "
                 />
+              </div>
               </div>}
 
             

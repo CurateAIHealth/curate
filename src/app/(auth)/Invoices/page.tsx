@@ -14,7 +14,7 @@ import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import { useRouter } from "next/navigation";
 import PaymentPopup from "@/Components/PaymentMethod/page";
 import PassbookPopup from "@/Components/Trasactions/page";
-import { ImportedinvoiceData, IndianStates, } from "@/Lib/Content";
+import { ImportedinvoiceData, IndianStates, teams, } from "@/Lib/Content";
 import EmptyState from "@/Components/NoDeployments/page";
 
 
@@ -33,6 +33,7 @@ interface Invoice {
 export default function InvoicesPage() {
   const now = new Date();
   const [monthFilter, setMonthFilter] =useState<any>(now.getMonth() + 1);
+   const [activeTeam, setActiveTeam] = useState(1);
   const [yearFilter, setYearFilter] =useState(String(now.getFullYear()));
     const [openTransactions, setOpenTransactions] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
@@ -52,7 +53,8 @@ const [toDate, setToDate] = useState("");
  const [CurrentPaymentStatus,SetCurrentPaymentStatus]=useState<any>(null)
  const [invoiceTransactionData,setinvoiceTransactionData]=useState(ImportedinvoiceData)
   const [InvoiceData, setInvoiceData] = useState<any>()
-  const [RegUserInfo,setRegUserInfo]=useState<any>()
+
+  const RegUserInfo=useSelector((state:any)=>state.AdminUsers)
   const [status, setStatus] = useState<any>(null);
   const Router = useRouter()
   const dispatch = useDispatch()
@@ -63,9 +65,7 @@ const refreshInvoices = async () => {
   try {
     setisChecking(true)
     const data = await GetInvoiceInfo()
-    const CompliteInfo=await GetRegidterdUsers()
-  
-    setRegUserInfo(CompliteInfo)
+ 
     setFetchedInfo(data)
   } catch (err) {
     console.error("Error fetching invoices:", err)
@@ -75,6 +75,9 @@ const refreshInvoices = async () => {
 }
 
 useEffect(() => {
+  if (RegUserInfo?.length === 0 ) {
+    Router.push("/");
+  }
   refreshInvoices()
 }, [status])
 
@@ -122,7 +125,13 @@ useEffect(() => {
     saveAs(fileData, "Invoice_Preview.xlsx");
   };
 
+const GetTeamNumber = (A: any) => {
+    if (!RegUserInfo?.length || !A) return "Not Entered";
 
+    const ImpTeamNumber=RegUserInfo.find((each:any)=>each.userType==="patient"&&each.userId===A)
+
+    return Number(ImpTeamNumber.Team) ?? "Not Entered";
+  };
   const DownloadInvoice = async (id: any) => {
     try {
    
@@ -206,6 +215,7 @@ useEffect(() => {
       Trasaction:each.Trasaction||[],
       RoundedTotal:each.RoundedTotal,
       ServiceState:each.ServiceState||"Not Provided",
+      Team:GetTeamNumber(each.ClienId)
 
 
     }
@@ -276,8 +286,8 @@ const filteredInvoices = useMemo(() => {
     data=data.filter((each:any)=>each.status===filter)
   }
 
-  return data.filter((each:any)=>each.ServiceState===SelectedServiceStates);
-}, [computedInvoices, monthFilter, yearFilter, search,SelectedServiceStates]);
+  return data.filter((each:any)=>each.ServiceState===SelectedServiceStates&&each.Team===activeTeam);
+}, [computedInvoices, monthFilter, yearFilter, search,SelectedServiceStates,activeTeam]);
 
 
 
@@ -570,7 +580,21 @@ CheckPaymentStatus:CurrentPaymentStatus
       </p>
     </div>
   </div>
-
+<div className="inline-flex rounded-2xl bg-gray-100 p-1.5 shadow-inner">
+  {teams.map((team:any) => (
+    <button
+      key={team}
+      onClick={() => setActiveTeam(team)}
+      className={`rounded-xl px-6 py-2.5 cursor-pointer text-sm font-semibold transition-all duration-200 ${
+        activeTeam === team
+  ? "bg-white text-pink-600 border border-pink-600 shadow-md scale-105"
+  : "text-gray-600 hover:bg-white hover:text-pink-600"
+      }`}
+    >
+      { `Team${team}`}
+    </button>
+  ))}
+</div>
 
   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
       <div className="relative">
@@ -898,7 +922,7 @@ CheckPaymentStatus:CurrentPaymentStatus
   grid-cols-3
   sm:grid-cols-5
   md:grid-cols-9
-  lg:grid-cols-14
+  lg:grid-cols-15
 "
 >
 
@@ -922,6 +946,7 @@ CheckPaymentStatus:CurrentPaymentStatus
 
   <div className="hidden lg:block lg:col-span-1 ml-8">Edit</div>
   <div className="hidden lg:block lg:col-span-1">Payment</div>
+   <div className="hidden lg:block lg:col-span-1">Team</div>
    <div className="hidden lg:flex lg:col-span-1 flex-col   gap-1 text-[9px] font-semibold text-white">
   <span>Payment</span>
   <span className="ml-1">History</span>
@@ -950,7 +975,7 @@ CheckPaymentStatus:CurrentPaymentStatus
   grid-cols-3
   sm:grid-cols-5
   md:grid-cols-9
-  lg:grid-cols-14
+  lg:grid-cols-15
 "
       >
     
@@ -1105,6 +1130,15 @@ Complete invoice sending to update status
   </span>
 </div>
         </div>}
+        <div className="relative rounded-lg px-2 py-3 text-center" >
+               <p className="inline-flex items-center justify-center rounded-full bg-pink-100 px-3 py-1 text-xs font-bold text-pink-700">
+                 {inv.Team}
+               </p>
+       
+            
+       
+              
+             </div>
 
      <div className="flex flex-col ml-4">
          <PrinterCheck  size={18} className="text-teal-700" onClick={()=>{setOpenTransactions(true),setinvoiceTransactionData(inv)}}/>
