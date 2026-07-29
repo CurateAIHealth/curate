@@ -865,7 +865,7 @@ setSelectedDate(e.target.value)
       selected.getFullYear() === today.getFullYear();
 
     
-    setShowWarning(!isCurrentMonth);
+    // setShowWarning(!isCurrentMonth);
 
           }}
           className="w-full border rounded-lg px-3 py-2 text-sm"
@@ -894,7 +894,7 @@ setSelectedEndDate(e.target.value)
       selected.getFullYear() === today.getFullYear();
 
     
-    setShowWarning(!isCurrentMonth);
+    // setShowWarning(!isCurrentMonth);
 
           }}
           className="w-full border rounded-lg px-3 py-2 text-sm"
