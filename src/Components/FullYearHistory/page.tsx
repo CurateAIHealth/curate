@@ -60,9 +60,13 @@ export default function FullYearTransactions({
    };
    
      const handleShare = async () => {
+      
     try {
     
-
+if(PAYMENT_HISTORY===undefined){
+  setActionMessage("There are no transaction records available");
+  return
+}
       const element = document.getElementById(
         "ComplitePaySlip"
       );
@@ -70,7 +74,7 @@ export default function FullYearTransactions({
       if (!element) {
         throw new Error("Transaction history HTML not found");
       }
-setActionMessage("Sending Salary Slip via Email...");
+setActionMessage("Sending Full transaction History via Email...");
       const { default: html2pdf } = await import("html2pdf.js");
 
       const pdfBlob: Blob = await html2pdf()

@@ -1572,7 +1572,8 @@ export const PostHCPSalaryRequest = async (
 HCPInfo:any,
 RequestedSalary:any,
 From:any,
-EffectiveDate:any
+EffectiveDate:any,
+ImpReason:any
 ) => {
   try {
     const cluster = await clientPromise;
@@ -1584,7 +1585,8 @@ EffectiveDate:any
       HCPName:HCPInfo.FirstName,
       RequestedSalary:RequestedSalary,
       EffectiveDate:EffectiveDate,
-      Message:`Salary Update Request for ${HCPInfo.FirstName} To ₹${RequestedSalary} Per Month, (₹${Math.round(Number(RequestedSalary) / 30)} per day) from ${From}`,
+      
+      Message:`Salary Update Request for ${HCPInfo.FirstName} To ₹${RequestedSalary} Per Month, (₹${Math.round(Number(RequestedSalary) / 30)} per day) from ${From}, Reason:${ImpReason}`,
       Date:new Date().toISOString().split("T")[0],
       Type:"HCP Salary Request",
       Status :"Pending",

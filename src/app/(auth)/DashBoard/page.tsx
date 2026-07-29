@@ -86,7 +86,7 @@ const DOCUMENT_KEYS = [
 export default function Dashboard() {
   const router = useRouter()
   const dispatch = useDispatch();
-const [isNavigating, setIsNavigating] = useState(false);
+
   const updatedRefreshCount = useSelector((afterEach: any) => afterEach.updatedCount);
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
   const [OtherArea, setOtherArea] = useState<any>("")
@@ -174,7 +174,7 @@ console.log("Check Email------",loggedInEmail)
   const [ClientDiscount, SetClientDiscount] = useState<any>(0)
 const ProfileInformation=useSelector((state:any)=>state.Useriinformation)
   const stats=useSelector((state:any)=>state.DashBoardCount)
-console.log ("Check Personal Information----",stats.registeredUsers)
+
   const DASHBOARD_CACHE_KEY = "dashboardStats";
   const CACHE_TTL = 20 * 60 * 1000;
 
@@ -819,7 +819,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
     []
   );
 
-const navigationLock = useRef(false);
+
 
 const routeMap = useMemo(
   () => ({
@@ -863,36 +863,40 @@ const routeMap = useMemo(
 
 const Switching = useCallback(
   (tab: string) => {
-    if (navigationLock.current) return;
-
+    // Login check
     if (!loggedInEmail) {
       setLoginEmailPop(true);
       return;
     }
 
+    // Permission check
     if (!canAccessTab(tab, loggedInEmail)) {
       setShowPermissionPopup(true);
       return;
     }
 
+    // Find destination
     const navigate = routeMap[tab as keyof typeof routeMap];
 
-    if (!navigate) {
-      console.warn(`Unknown tab: ${tab}`);
+    if (typeof navigate !== "function") {
+      console.warn(`No route found for "${tab}"`);
       return;
     }
 
-    navigationLock.current = true;
-    setIsNavigating(true);
-
-    navigate();
-
-    requestAnimationFrame(() => {
-      navigationLock.current = false;
-      setIsNavigating(false);
-    });
+    try {
+      // Navigate immediately
+      navigate();
+    } catch (error) {
+      console.error("Navigation failed:", error);
+    }
   },
-  [loggedInEmail, canAccessTab, routeMap]
+  [
+    loggedInEmail,
+    canAccessTab,
+    routeMap,
+    setLoginEmailPop,
+    setShowPermissionPopup,
+  ]
 );
 
   const PostNotificationInfo = async (Emails: string[]) => {
@@ -998,7 +1002,7 @@ const Switching = useCallback(
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
             </span>
           </div>
 
@@ -1290,13 +1294,7 @@ const Switching = useCallback(
           onClose={() => setShowPermissionPopup(false)}
         />
 
-        {isNavigating && (
-  <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-    <div className="bg-white px-6 py-4 rounded-lg">
-      Loading...
-    </div>
-  </div>
-)}
+ 
         {/* <main className="flex-1 overflow-y-auto p-4 sm:p-3 lg:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6"> */}
         <main className="p-4">
           <div className="lg:col-span-8 space-y-6">

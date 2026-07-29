@@ -75,7 +75,7 @@ export default function HikeHistory({
       if (!element) {
         throw new Error("Transaction history HTML not found");
       }
-setActionMessage("Sending Salary Slip via Email...");
+setActionMessage("Sending Hike History via Email...");
       const { default: html2pdf } = await import("html2pdf.js");
 
       const pdfBlob: Blob = await html2pdf()
