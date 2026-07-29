@@ -1890,7 +1890,7 @@ const totalExpenses =
                       setShowFullMonth(true)
                       setAttendenceInfo(row)
                     }}>
-                    View 
+                    View {row.HCAId}
                   </button></td>
                   
 

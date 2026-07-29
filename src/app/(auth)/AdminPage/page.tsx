@@ -75,6 +75,7 @@ const UserFirstName=useSelector((state:any)=>state.LogUserName)
   const [HCPPreviewtype,setHCPPreviewtype]=useState("")
   const [UpdatedHCPSalary,SetUpdatedHCPSalary]=useState<any>()
   const [EffectiveDate,SetEffectiveDate]=useState("")
+  const [Reason,SetReason]=useState("")
 const [SearchResult, setSearchResult] = useState("")
   const [search, setSearch] = useState('');
    const [isEditing, setIsEditing] = useState(false);
@@ -564,6 +565,9 @@ const monthNames = [
   const MonthlyCount = Finel.filter((each:any) =>
     filterByMonthAndYear(each, SearchMonth, SearchYear)&&!GetUserCurrentStatus(each.userId)
   );
+
+
+  console.log("Check on Cur----",users.filter((each:any) => each.Type === 'Irrelevant'))
 
  
 
@@ -1059,7 +1063,7 @@ const UpdatePopup = async (a: any) => {
                           <th className="px-4 py-2 text-center w-[10%]">PDR</th>}
                             
                           {UpdateduserType === 'patient' && <th className="px-2 py-2 w-[10%]">Suitable HCP</th>}
-                          <th className="px-2 py-2 w-[10%]">Delete</th>
+                          {/* <th className="px-2 py-2 w-[10%]">Delete</th> */}
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -1541,39 +1545,80 @@ const UpdatePopup = async (a: any) => {
                               
         <div className="flex items-center justify-center w-fit">
   {isEditing&&SelectedHCPSalaryId===user.userId ? (
-    <div className="flex flex-col items-center justify-center gap-1 bg-white border border-gray-200 rounded-lg p-2 w-full">
-      <input
-        type="text"
-        value={UpdatedHCPSalary}
-        onChange={(e: any) => SetUpdatedHCPSalary(e.target.value)}
-        className="w-[70px] px-1 text-center py-1 text-[10px] border border-gray-300 rounded
-                   focus:outline-none focus:ring-1 focus:ring-indigo-400"
-      />
-<label className="text-[9px]">Effective From</label>
-       <input
-        type="date"
-        value={EffectiveDate}
-        onChange={(e: any) => SetEffectiveDate(e.target.value)}
-        className="w-[70px] px-1 text-center py-1 text-[10px] border border-gray-300 rounded
-                   focus:outline-none focus:ring-1 focus:ring-indigo-400"
-      />
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div className="w-[340px] rounded-xl bg-white shadow-2xl border border-gray-200 p-5 animate-in fade-in zoom-in-95">
 
-      <div className="flex gap-1">
-        <button
-          onClick={() => handleSave(user)}
-          className="flex-1 px-1 py-1 text-[8px] font-medium text-white bg-emerald-500 rounded hover:bg-emerald-600"
-        >
-          Save
-        </button>
+      <h2 className="text-sm font-semibold text-gray-800">
+        Update HCP Salary
+      </h2>
+      <p className="text-[11px] text-gray-500 mb-4">
+        Enter the new salary details.
+      </p>
 
+      {/* Salary */}
+      <div className="mb-3">
+        <label className="block text-[11px] font-medium text-gray-600 mb-1">
+          New Salary
+        </label>
+        <input
+          type="number"
+          value={UpdatedHCPSalary}
+          onChange={(e) => SetUpdatedHCPSalary(e.target.value)}
+          placeholder="Enter Salary"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                     focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none"
+        />
+      </div>
+
+      {/* Effective Date */}
+      <div className="mb-3">
+        <label className="block text-[11px] font-medium text-gray-600 mb-1">
+          Effective From
+        </label>
+        <input
+          type="date"
+          value={EffectiveDate}
+          onChange={(e) => SetEffectiveDate(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                     focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none"
+        />
+      </div>
+
+
+      <div className="mb-4">
+        <label className="block text-[11px] font-medium text-gray-600 mb-1">
+          Reason
+        </label>
+        <textarea
+          rows={3}
+          value={Reason}
+          onChange={(e) => SetReason(e.target.value)}
+          placeholder="Example: Annual appraisal, Promotion, Performance increment..."
+          className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm
+                     focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none"
+        />
+      </div>
+
+      {/* Buttons */}
+      <div className="flex justify-end gap-2">
         <button
           onClick={() => setIsEditing(false)}
-          className="flex-1 px-1 py-1 text-[8px] font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium
+                     text-gray-700 hover:bg-gray-100"
         >
           Cancel
         </button>
+
+        <button
+          onClick={() => handleSave(user)}
+          className="rounded-lg bg-pink-600 px-4 py-2 text-sm font-medium
+                     text-white hover:bg-pink-700 cursor-pointer"
+        >
+          Save Changes
+        </button>
       </div>
     </div>
+  </div>
   ) : (
     <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 w-full">
       <p className="text-[8px] text-gray-500 leading-none">HCP Salary</p>
@@ -1603,6 +1648,7 @@ const UpdatePopup = async (a: any) => {
       setIsEditing(true);
       setSelectedHCPSalaryId(user.userId);
       SetUpdatedHCPSalary(GetHCPPayment(user.userId));
+      SetReason("")
     }}
     className="text-[9px] text-indigo-600 bg-indigo-50 px-1 cursor-pointer py-[2px] rounded"
   >
@@ -1758,7 +1804,7 @@ Awaiting Conversion
                                
                               </td>}
                             
-                              <td className="md:px-8 md:py-2">
+                              {/* <td className="md:px-8 md:py-2">
 
                                 <button
 
@@ -1768,7 +1814,7 @@ Awaiting Conversion
                                   <Trash onClick={() => { setShowDeletePopUp(true), SetDeleteInformation(user),dispatch(Refresh(null)) }} />
 
                                 </button>
-                              </td>
+                              </td> */}
                           </tr>
                         ))}
                       </tbody>
@@ -1910,10 +1956,10 @@ Awaiting Conversion
 const handleSave = async (data: any) => {
   try {
 
-    if(EffectiveDate===""){
-      alert("Please Select Effective Date")
-      return
-    }
+    // if(EffectiveDate===""){
+    //   alert("Please Select Effective Date")
+    //   return
+    // }
     setIsEditing(false);
     dispatch(Refresh("Please Wait...."));
 console.log("Check for Imp Salary Data----",data
@@ -1922,7 +1968,8 @@ console.log("Check for Imp Salary Data----",data
       data,
       UpdatedHCPSalary,
       UserFirstName,
-      EffectiveDate
+      EffectiveDate,
+      Reason
     );
 
     if (updateSalary?.success) {
@@ -2243,7 +2290,7 @@ console.log("Check for Imp Salary Data----",data
                         UpdateMainFilter === "Call Enquiry"
                           ? `${each} (${MonthlyCount?.filter(
                             (Try:any) => (Try.ClientStatus === each && Try.userType==="patient")|| Try.userType === each||Try.Type === each
-                          )?.length || 0
+                          )?.length || each==="Irrelevant"&&users.filter((each:any) => each.Type === 'Irrelevant').length||0
                           })`
                           : each
                       }

@@ -4,7 +4,7 @@ let cachedDeploymentInfo: any[] = [];
 let cachedReplacementInfo: any[] = [];
 let cachedTermination: any[] = [];
 let cachedRegisterdUsers: any[] = [];
-
+let terminationCache: any[] | null = null;
 
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -135,6 +135,7 @@ const [enableStatus,setenableStatus]=useState(false)
   const [showExtendPopup,setshowExtendPopup]=useState(false)
   const [ExtendInfo,setExtendInfo]=useState<any>({})
   const [deleteTargetId, setDeleteTargetId] =  useState<any>();
+   const [placements, setPlacements] = useState<any[]>([]);
   const [ActionStatusMessage,SetActionStatusMessage]= useState<any>("");
   const [ShowUpdateAttendece,SetShowUpdateAttendece]=useState(false)
   const [AttenseceInformation,setAttenseceInformation]=useState<any>()
@@ -242,6 +243,77 @@ useEffect(() => {
 
   setLastDateOfMonth(`${yyyy}-${mm}-${dd}`);
 }, [selectedDate]);
+
+
+  useEffect(() => {
+    const Fetch = async () => {
+      try {
+        if (terminationCache) {
+          setPlacements(terminationCache);
+          
+          setIsChecking(false);
+          return;
+        }
+
+        const [ FetchData ] = await Promise.all([
+          
+            GetTerminationInfo(),
+         
+
+          ])
+
+       
+        const Result = FetchData?.map((each: any) => ({
+          ClientId: each.ClientId,
+          HCA_Id: each.HCAid,
+          clientName: each.ClientName,
+          contact: each.HCAContact,
+          location: each.Adress,
+          hcaName: each.HCAName,
+          TimeSheetAttendence: each.Attendence,
+          StartDate: each.StartDate,
+          status: "Terminated",
+        })) ?? [];
+
+setPlacements(Result);
+     
+        setIsChecking(false);
+      } catch (err) {
+        setIsChecking(false);
+      }
+    };
+
+    Fetch();
+  }, []);
+
+  
+  const FilterValues =
+    placements?.filter((item) => {
+      const searchText = "";
+
+      const matchesSearch =
+        !searchText ||
+        item.clientName?.toLowerCase().includes(searchText) ||
+        item.patientName?.toLowerCase().includes(searchText) ||
+        item.invoice?.toLowerCase().includes(searchText) ||
+        item.clientPhone?.includes(searchText);
+
+      if (!item.StartDate) return false;
+
+      const [, itemMonth, itemYear] = item.StartDate.split("/");
+
+      const matchesMonth = SearchMonth
+        ? Number(itemMonth) === Number(SearchMonth)
+        : true;
+
+      const matchesYear = SearchYear
+        ? Number(itemYear) === Number(SearchYear)
+        : true;
+
+      return matchesSearch && matchesMonth && matchesYear;
+    }) || [];
+
+
 
 const matchesSearchAndMonth = (
   item: any,
@@ -4155,9 +4227,7 @@ const GetFilterCount = (type: string) => {
     case "On Service":
       return processedData.length;
     case "Termination":
-      return terminationInfo.filter(item =>
-        matchesSearchAndMonth(item, "", SearchMonth, SearchYear)
-      ).length;
+      return FilterValues.length||"...";
     case "Replacements":
       return ReplacementInformation.filter(item =>
         matchesSearchAndMonth(item, "", SearchMonth, SearchYear)

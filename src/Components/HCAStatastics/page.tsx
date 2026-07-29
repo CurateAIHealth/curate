@@ -63,6 +63,7 @@ export default function PaymentPassbook({ PAYMENT_HISTORY ,HCAName }: Props) {
 
   const [monthDate, setMonthDate] = useState<Date>(() => new Date());
 const [ActionMessage,setActionMessage]=useState("")
+
   const built:any = PAYMENT_HISTORY?.map((p:any) => {
     const monthStr = p.Month; 
     const monthParts = monthStr.split("-");
@@ -232,9 +233,12 @@ const handleNextMonth = () =>
      }
    };
    
-     const handleShare = async () => {
+     const handleShare = async (ImpTransactions:any) => {
     try {
-    
+     if(ImpTransactions.length===0){
+setActionMessage("No transactions found for this period.")
+return
+     }
 
       const element = document.getElementById(
         "ComplitePaySlip"
@@ -559,7 +563,7 @@ setActionMessage("Sent Email as Successfully")
 
   <button
     type="button"
-    onClick={handleShare}
+    onClick={()=>handleShare(transactions)}
     className="flex items-center gap-2 px-5 py-3 text-[#334155] hover:bg-[#f8fafc] transition"
     style={{ color: '#334155', backgroundColor: '#ffffff' }}
   >

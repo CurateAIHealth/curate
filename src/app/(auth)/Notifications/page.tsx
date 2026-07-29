@@ -47,9 +47,9 @@ export default function NotificationsCenter() {
   const dispatch = useDispatch()
   const [refreshKey, setRefreshKey] = useState(0);
   const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (showLoader = false) => {
     try {
-      setLoading(true);
+      if (showLoader) setLoading(true);
       const res: any = await GetNotificationsInformation();
       setNotifications(res.reverse() || []);
     } catch (err) {
@@ -60,12 +60,13 @@ export default function NotificationsCenter() {
   };
 
   useEffect(() => {
+    dispatch(Refresh(""));
     if (loggedInEmail === "") {
       router.push("/DashBoard")
     }
-    fetchNotifications();
+    fetchNotifications(true);
 
-  }, [refreshKey]);
+  }, [refreshKey]); 
 
 
   const filteredNotifications = useMemo(() => {
@@ -80,7 +81,11 @@ export default function NotificationsCenter() {
     action: "Approved" | "Rejected",
     dept: "HCP" | "Accounts"
   ) => {
-    console.log ("Check for Effective Date-----",info)
+
+   document.getElementById("TopView")?.scrollIntoView({
+  behavior: "auto",
+});
+  dispatch(Refresh("Please Wait......"));
     const phoneNumbers: Record<string, string> = {
       HCP: "U0724CR5U8K",
       Accounts: "U07G1JX820K",
@@ -186,6 +191,7 @@ console.log("Check Status------",dateResponse.message)
 
        
         if (action === "Rejected") {
+              dispatch(Refresh("Please Wait......"));
           await updateStatusSafe();
 
           sendWhatsApp(
@@ -193,10 +199,10 @@ console.log("Check Status------",dateResponse.message)
           );
 
           dispatch(Refresh("Rejected successfully."));
-          setRefreshKey((prev) => prev + 1);
+         await fetchNotifications(false);
           return;
         }
-alert( info?.HCPId)
+
         const res = await HCASalaryUpdate(
           info?.HCPId,
           info?.RequestedSalary,
@@ -217,7 +223,8 @@ alert( info?.HCPId)
         );
 
         dispatch(Refresh("Salary updated successfully."));
-        setRefreshKey((prev) => prev + 1);
+       
+        fetchNotifications(false)
         return;
       }
 
@@ -227,6 +234,7 @@ alert( info?.HCPId)
 
 
       if (action === "Rejected") {
+         dispatch(Refresh("Please Wait......"));
         await updateStatusSafe();
 
         sendWhatsApp(
@@ -234,7 +242,7 @@ alert( info?.HCPId)
         );
 
         dispatch(Refresh("Rejected successfully."));
-        setRefreshKey((prev) => prev + 1);
+           fetchNotifications(false)
         return;
       }
 
@@ -245,7 +253,7 @@ alert( info?.HCPId)
       );
 
       dispatch(Refresh("Processed successfully."));
-      setRefreshKey((prev) => prev + 1);
+       fetchNotifications(false)
       return;
 
     } catch (err: any) {
@@ -256,7 +264,7 @@ alert( info?.HCPId)
     }
   };
   const handleLogout = () => {
-
+dispatch(Refresh(""));
     router.push('/DashBoard');
 
   };
@@ -290,7 +298,7 @@ alert( info?.HCPId)
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" id="TopView">
 
       {showModal && selectedItem && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
@@ -425,7 +433,7 @@ alert( info?.HCPId)
 
 
 
-      <div className="flex items-center justify-between p-3 flex-wrap">
+      <div className="flex items-center justify-between p-3 flex-wrap" >
         <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 items-center justify-start">
           {(["All", "Pending", "Approved", "Rejected", "Read"] as FilterType[]).map(
             (status) => (
@@ -543,7 +551,7 @@ alert( info?.HCPId)
                             handleAction(item, "Approved", item.Department)
                           }
                           disabled={actionLoading === item._id}
-                          className="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50"
+                          className="flex items-center gap-2 rounded-full border cursor-pointer border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50"
                         >
                           <CheckCircle size={16} />
                           Approve
@@ -554,7 +562,7 @@ alert( info?.HCPId)
                             handleAction(item, "Rejected", item.Department)
                           }
                           disabled={actionLoading === item._id}
-                          className="flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition disabled:opacity-50"
+                          className="flex items-center gap-2 rounded-full border cursor-pointer border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition disabled:opacity-50"
                         >
                           <XCircle size={16} />
                           Reject

@@ -13,8 +13,8 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { LoadingData } from "../Loading/page";
 import { AssignSuitableIcon, getDaysBetween, getDueDaysStatus, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
-import { CalendarCheck2, ChevronsRight, CircleCheckBig, CirclePause, FolderX, MapPin, X } from "lucide-react";
-import { years } from "@/Lib/Content";
+import { CalendarCheck2, ChevronDown, ChevronsRight, CircleCheckBig, CirclePause, FolderX, MapPin, X } from "lucide-react";
+import { IndianStates, teams, years } from "@/Lib/Content";
 
 const    AwaitingInvoice=({
   users,
@@ -26,7 +26,9 @@ const    AwaitingInvoice=({
   RegisterdUsers: any;
 })=>{
      const [ActionStatusMessage,SetActionStatusMessage]= useState<any>("");
+      const [activeTeam, setActiveTeam] = useState(1);
        const [selectedReason, setSelectedReason] = useState("");
+         const [SelectedServiceStates, setSelectedServiceStates] = useState("Telangana");
      const [lastDateOfMonth, setLastDateOfMonth] = useState("");
        const [ExtendInfo,setExtendInfo]=useState<any>({})
        const [otherReason, setOtherReason] = useState("");
@@ -145,7 +147,13 @@ const    AwaitingInvoice=({
     
       setLastDateOfMonth(`${yyyy}-${mm}-${dd}`);
     }, [selectedDate]);
-  
+   const GetTeamNumber = (A: any) => {
+    if (!RegisterdUsers?.length || !A) return "Not Entered";
+
+    const ImpTeamNumber=RegisterdUsers.find((each:any)=>each.userType==="patient"&&each.userId===A)
+
+    return Number(ImpTeamNumber.Team) ?? "Not Entered";
+  };
    const GetHCPGender = (A: any) => {
     if (!users?.length || !A) return "Not Entered";
 
@@ -284,7 +292,8 @@ const FinelTimeSheet = ClientsInformation.filter((client: any) => {
       EndDate: each.EndDate,
       Month: each.Month,
       Replacement: each.Replacement,
-    ServiceState:each.ServiceState||"Not Provided"
+    ServiceState:each.ServiceState||"Not Provided",
+    Team:GetTeamNumber(each.ClientId)
     };
   });
 const matchesSearchAndMonth = (
@@ -327,7 +336,7 @@ const matchesSearchAndMonth = (
 
   return matchesSearch && matchesMonth && matchesYear
 };
-const FilterFinelTimeSheet = FinelTimeSheet.filter((item:any) =>
+const FilterFinelTimeSheet = FinelTimeSheet.filter((item:any) =>item.Team===activeTeam&&item.ServiceState===SelectedServiceStates&&
   matchesSearchAndMonth(
     item,
     SearchResult,
@@ -688,7 +697,7 @@ ServiceState:ExtendInfo.ServiceState
           
        
               
-           <div className="flex itemcs-center gap-2 justify-end">
+           <div className="flex items-center gap-2 justify-end">
        
    {ActionStatusMessage && (
      <p
@@ -701,6 +710,48 @@ ServiceState:ExtendInfo.ServiceState
        {ActionStatusMessage}
      </p>
    )}
+ 
+   <div className="inline-flex rounded-2xl bg-gray-100 p-1.5 shadow-inner">
+     {teams.map((team:any) => (
+       <button
+         key={team}
+         onClick={() => setActiveTeam(team)}
+         className={`rounded-xl px-6 py-2.5 cursor-pointer text-sm font-semibold transition-all duration-200 ${
+           activeTeam === team
+     ? "bg-white text-pink-600 border border-pink-600 shadow-md scale-105"
+     : "text-gray-600 hover:bg-white hover:text-pink-600"
+         }`}
+       >
+         { `Team${team}`}
+       </button>
+     ))}
+   </div>
+     <div className="text-center">
+     <label className="mb-1.5 block text-xs font-semibold text-gray-700">
+       Service Work State {activeTeam}
+     </label>
+   
+     <div className="relative">
+       <select
+         value={SelectedServiceStates}
+         onChange={(e) => setSelectedServiceStates(e.target.value)}
+         className="w-full text-center h-10 appearance-none rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
+       >
+       
+   
+         {IndianStates.map((state) => (
+           <option key={state} value={state}>
+             {state}
+           </option>
+         ))}
+       </select>
+   
+       <ChevronDown
+         size={16}
+         className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+       />
+     </div>
+   </div>
                <div
        className="
          flex items-center bg-white shadow-md rounded-xl
@@ -848,6 +899,7 @@ ServiceState:ExtendInfo.ServiceState
         </label>
         <input
           type="date"
+          min={new Date().toISOString().split("T")[0]}
           value={selectedDate}
           onChange={(e) => {
               const value = e.target.value;
@@ -877,6 +929,7 @@ setSelectedDate(e.target.value)
         </label>
         <input
           type="date"
+          min={new Date().toISOString().split("T")[0]}
           value={selectedEndDate}
           onChange={(e) => {
               const value = e.target.value;
