@@ -8229,7 +8229,7 @@ export const HCASalaryUpdate = async (
         "HCAComplitInformation.SalaryHistory": {
           Salary: newSalary,
           EffectiveFrom: EffectiveDate,
-
+          ApprovedBy:ApprovedBy,
           Reason:ImpReason
         },
       },
@@ -8246,6 +8246,7 @@ export const HCASalaryUpdate = async (
           {
             Salary: newSalary,
             EffectiveFrom: EffectiveDate,
+            ApprovedBy:ApprovedBy,
             Reason:ImpReason
           },
         ],

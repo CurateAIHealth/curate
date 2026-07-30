@@ -2095,8 +2095,8 @@ onClick={() => setShowAttendanceModal(true)}
   title={selectedHCP?.FirstName||selectedAssignHCP?.FirstName}
   onClose={() => setShowCareTakerPriceUpdate(false)}
   onSubmit={async(value) => {
-   
-    const UpdateSalary= await HCASalaryUpdate(selectedHCP?.id||selectedAssignHCP?.id,value,loggedInEmail)
+   const currentDate = new Date().toLocaleDateString("en-IN");
+    const UpdateSalary= await HCASalaryUpdate(selectedHCP?.id||selectedAssignHCP?.id,value,loggedInEmail,currentDate,"Performance Hike")
     if(UpdateSalary.success){
     SetActionStatusMessage(`${selectedHCP?.FirstName||selectedAssignHCP?.FirstName} ${UpdateSalary.message}`)
 setTimeout(()=>{
