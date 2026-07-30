@@ -43,6 +43,7 @@ const TABS = ['Personal Info', 'Bank Details', 'Documents', 'Work Experience', '
 type DocumentKeys = 'ProfilePic' | 'AdharCard' | 'PanCard' | 'AccountPassBook' | 'CertificatOne' | 'CertificatTwo';
 
 type UserData = {
+  HikeHistory: [];
   PaymentHistory: any;
   HCPSalary: any;
   firstName: string;
@@ -160,7 +161,10 @@ ProfetionSkill:[],
     DocumentSkipReason:'',
     HCPSalary:"",
     PaymentHistory:[],
-    Reviews:[]
+    Reviews:[],
+    HikeHistory:[]
+
+    
   });
 
 useEffect(()=>{
@@ -217,6 +221,8 @@ useEffect(()=>{
   ProfetionSkill:FilterValue['Professional Skill']||FilterValue.ProfessionalSkills||'',
   PaymentHistory:FilterValue['PaymentHistory']||FilterValue.PaymentHistory,
 Reviews:FilterValue.Reviews,
+HikeHistory:FilterValue.SalaryHistory,
+
     Documents: {
           ...prev.Documents,
       ProfilePic: FilterValue.Documents.ProfilePic||'/Icons/PatientDefault.png',
@@ -391,50 +397,7 @@ case "HikeHistory":
   return (
     <HikeHistory
       HCAName="REDDYVARI DHANALAKSHMI"
-   history={[
-  {
-    Salary: 18000,
-    EffectiveDate: "01 Jan 2025",
-    UpdatedBy: "Kiran",
-    Reason: "Initial joining salary.",
-    NextHikeDate: "01 Jul 2025",
-  },
-  {
-    Salary: 20000,
-    EffectiveDate: "01 Jul 2025",
-    UpdatedBy: "Srinivas",
-    Reason: "Completed probation with excellent performance.",
-    NextHikeDate: "01 Jan 2026",
-  },
-  {
-    Salary: 22500,
-    EffectiveDate: "01 Jan 2026",
-    UpdatedBy: "Kiran",
-    Reason: "Outstanding attendance and consistent client feedback.",
-    NextHikeDate: "01 Apr 2026",
-  },
-  {
-    Salary: 25000,
-    EffectiveDate: "01 Apr 2026",
-    UpdatedBy: "Srinivas",
-    Reason: "Assigned additional responsibilities and leadership role.",
-    NextHikeDate: "01 Jun 2026",
-  },
-  {
-    Salary: 27500,
-    EffectiveDate: "01 Jun 2026",
-    UpdatedBy: "Kiran",
-    Reason: "Exceptional performance during quarterly evaluation.",
-    NextHikeDate: "15 Jul 2026",
-  },
-  {
-    Salary: 30000,
-    EffectiveDate: "15 Jul 2026",
-    UpdatedBy: "Srinivas",
-    Reason: "Annual appraisal with excellent overall performance.",
-    NextHikeDate: "15 Jan 2027",
-  },
-]}
+   history={user.HikeHistory}
     />
   );
 

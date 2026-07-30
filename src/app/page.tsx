@@ -113,9 +113,16 @@ const loadingSteps = [
 useEffect(() => {
   let mounted = true;
   let hasNavigated = false;
-  let timer: ReturnType<typeof setTimeout> | null = null;
+
   let progress = 0;
   let progressTimer: ReturnType<typeof setInterval> | null = null;
+
+  const cleanupProgress = () => {
+    if (progressTimer) {
+      clearInterval(progressTimer);
+      progressTimer = null;
+    }
+  };
 
   const safeNavigate = (path: string) => {
     if (!mounted || hasNavigated) return;
@@ -123,9 +130,9 @@ useEffect(() => {
     router.replace(path);
   };
 
-  const updateLoader = (progressValue: number, message: string) => {
+  const updateLoader = (value: number, message: string) => {
     if (!mounted) return;
-    setLoadingProgress(progressValue);
+    setLoadingProgress(value);
     setLoadingMessage(message);
   };
 
@@ -133,44 +140,38 @@ useEffect(() => {
     updateLoader(0, "Initializing...");
 
     progressTimer = setInterval(() => {
-      if (!mounted) return;
+      if (!mounted || progress >= 95) return;
 
-      if (progress >= 95) return;
-
-      if (progress < 25) {
-        progress += 5;
-      } else if (progress < 50) {
-        progress += 3;
-      } else if (progress < 75) {
-        progress += 2;
-      } else if (progress < 90) {
-        progress += 1;
-      } else {
-        progress += 0.5;
-      }
+      if (progress < 25) progress += 5;
+      else if (progress < 50) progress += 3;
+      else if (progress < 75) progress += 2;
+      else if (progress < 90) progress += 1;
+      else progress += 0.5;
 
       const value = Math.min(Math.floor(progress), 95);
 
-  const index = Math.min(
-  Math.floor((value / 95) * loadingSteps.length),
-  loadingSteps.length - 1
-);
+      const index = Math.min(
+        Math.floor((value / 95) * loadingSteps.length),
+        loadingSteps.length - 1
+      );
 
-updateLoader(
-  value,
-  `${loadingSteps[index].icon} ${loadingSteps[index].text}`
-);
+      updateLoader(
+        value,
+        `${loadingSteps[index].icon} ${loadingSteps[index].text}`
+      );
     }, 180);
   };
 
-  const finishLoader = () => {
-    if (progressTimer) {
-      clearInterval(progressTimer);
-      progressTimer = null;
-    }
+  const finishLoader = (path: string) => {
+  cleanupProgress();
 
-    updateLoader(100, "Redirecting...");
-  };
+  if (mounted) {
+    setLoadingProgress(100);
+    setLoadingMessage("Redirecting...");
+  }
+
+  safeNavigate(path);
+};
 
   const applyDashboardData = (dashboardData: any) => {
     if (!mounted || !dashboardData) return;
@@ -181,27 +182,20 @@ updateLoader(
     dispatch(UpdateUserFirstName(dashboardData.profile?.FirstName));
   };
 
-  const loadDashboard = async (
-    userId: string,
-    forceRefresh = false
-  ) => {
-    if (!forceRefresh) {
-      if (dashboardRequestCache.data) {
-        applyDashboardData(dashboardRequestCache.data);
-        return dashboardRequestCache.data;
-      }
+  const loadDashboard = async (userId: string) => {
+    if (dashboardRequestCache.data) {
+      applyDashboardData(dashboardRequestCache.data);
+      return dashboardRequestCache.data;
+    }
 
-      if (dashboardRequestCache.promise) {
-        const data = await dashboardRequestCache.promise;
-        applyDashboardData(data);
-        return data;
-      }
+    if (dashboardRequestCache.promise) {
+      const data = await dashboardRequestCache.promise;
+      applyDashboardData(data);
+      return data;
     }
 
     dashboardRequestCache.promise = axios
-      .post("/api/AdminPageInfo", {
-        userId,
-      })
+      .post("/api/AdminPageInfo", { userId })
       .then(({ data }) => {
         if (!data.success) {
           throw new Error("Dashboard fetch failed");
@@ -221,7 +215,6 @@ updateLoader(
       });
 
     const dashboardData = await dashboardRequestCache.promise;
-
     applyDashboardData(dashboardData);
 
     return dashboardData;
@@ -259,45 +252,26 @@ updateLoader(
           applyDashboardData(cached.data);
         } else {
           await loadDashboard(userId);
-
-        
         }
 
-        finishLoader();
-        safeNavigate("/DashBoard");
+        finishLoader("/DashBoard");
         return;
       }
-
-      finishLoader();
 
       if (!profile?.FinelVerification) {
-        if (profile?.userType === "healthcare-assistant") {
-          dispatch(UpdateRegisterdType(profile.userType));
-          safeNavigate("/HCARegistraion");
-        } else {
-          safeNavigate("/HomePage");
-        }
-
+        finishLoader(
+          profile?.userType === "healthcare-assistant"
+            ? "/HCARegistraion"
+            : "/HomePage"
+        );
         return;
       }
 
-      safeNavigate("/Profile");
-
-      timer = setTimeout(() => {
-        if (mounted) {
-          setShowPopUp(true);
-        }
-      }, 3500);
+      finishLoader("/Profile");
     } catch (error) {
       console.error("Initialization Error:", error);
-
-      if (progressTimer) {
-        clearInterval(progressTimer);
-      }
-
-      if (mounted) {
-        safeNavigate("/sign-in");
-      }
+      cleanupProgress();
+      safeNavigate("/sign-in");
     }
   };
 
@@ -305,14 +279,7 @@ updateLoader(
 
   return () => {
     mounted = false;
-
-    if (timer) {
-      clearTimeout(timer);
-    }
-
-    if (progressTimer) {
-      clearInterval(progressTimer);
-    }
+    cleanupProgress();
   };
 }, [dispatch, router]);
 

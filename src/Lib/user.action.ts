@@ -1213,12 +1213,12 @@ export const HCARegistration = async (HCA: HCAInfo) => {
   aadharHash: hashValue(HCA.AadharNumber),
 });
 
-if (existingHCA) {
-  return {
-    success: false,
-    message: `${decrypt(existingHCA.Surname)} ${decrypt(existingHCA.FirstName)} ${decrypt(existingHCA.LastName)} already has an account with this Aadhaar number.`,
-  };
-}
+// if (existingHCA) {
+//   return {
+//     success: false,
+//     message: `${decrypt(existingHCA.Surname)} ${decrypt(existingHCA.FirstName)} ${decrypt(existingHCA.LastName)} already has an account with this Aadhaar number.`,
+//   };
+// }
 
     
     const encryptedData = {
@@ -6336,7 +6336,8 @@ export const GetHCACompliteInformation = async (UserIdFromLocal: any) => {
       "ProfilePic": info["ProfilePic"],
       "Documents": info["Documents"],
       "PaymentHistory":info["PaymentHistory"],
-      "Reviews":info['Reviews']
+      "Reviews":info['Reviews'],
+      "SalaryHistory":info['SalaryHistory']
     };
 
     return {
