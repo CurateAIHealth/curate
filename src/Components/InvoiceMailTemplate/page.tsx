@@ -67,11 +67,11 @@ UPI: curateservices@ucobank
 ;
 
   const billTo = {
-  name: "HCAH",
-  addressLines: 
-    "Plot No. 45, 2nd Floor, Madhapur Hitech City Main Road Hyderabad, Telangana - 500081",
-  patientName: "Savita",
-};
+    ClientName: "HCAH",
+    addressLines:
+      "Plot No. 45, 2nd Floor, Madhapur Hitech City Main Road Hyderabad, Telangana - 500081",
+    patientName: "Savita",
+  };
 
 
   const items = [

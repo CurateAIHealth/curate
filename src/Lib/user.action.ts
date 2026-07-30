@@ -8187,7 +8187,8 @@ export const HCASalaryUpdate = async (
   Userid: string,
   Amount: any,
   ApprovedBy: any,
-  EffectiveDate?: any
+  EffectiveDate: any,
+  ImpReason:any
 ): Promise<{ success: boolean; message: string }> => {
   try {
     if (!Userid || Number(Amount) < 0) {
@@ -8228,6 +8229,8 @@ export const HCASalaryUpdate = async (
         "HCAComplitInformation.SalaryHistory": {
           Salary: newSalary,
           EffectiveFrom: EffectiveDate,
+
+          Reason:ImpReason
         },
       },
     };
@@ -8243,6 +8246,7 @@ export const HCASalaryUpdate = async (
           {
             Salary: newSalary,
             EffectiveFrom: EffectiveDate,
+            Reason:ImpReason
           },
         ],
       };
