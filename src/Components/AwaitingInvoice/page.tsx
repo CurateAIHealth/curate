@@ -6,7 +6,7 @@ let cachedTermination: any[] = [];
 let cachedRegisterdUsers: any[] = [];
 
 import { DeleteDeployMent, GetAllUsersData, GetUserInformation, InsertDeployment, InserTerminationData, PostInvoiceFromDeployment, PostReason, UpdateHCAnstatus, updateServicePrice, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
-import { UpdateMonthFilter, UpdateSubHeading, UpdateYearFilter } from "@/Redux/action";
+import { setUsers, UpdateMonthFilter, UpdateSubHeading, UpdateYearFilter } from "@/Redux/action";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,6 +15,7 @@ import { LoadingData } from "../Loading/page";
 import { AssignSuitableIcon, getDaysBetween, getDueDaysStatus, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
 import { CalendarCheck2, ChevronDown, ChevronsRight, CircleCheckBig, CirclePause, FolderX, MapPin, X } from "lucide-react";
 import { IndianStates, teams, years } from "@/Lib/Content";
+import axios from "axios";
 
 const    AwaitingInvoice=({
   users,
@@ -670,6 +671,28 @@ ServiceState:ExtendInfo.ServiceState
     }
 
     if (deploymentRes?.success) {
+
+      SetActionStatusMessage("Your Done,Fetching Updated Data........");
+          const userId =
+        localStorage.getItem("UserId");
+
+      const { data } = await axios.post(
+        "/api/AdminPageInfo",
+        {
+          userId,
+          refreshType: 
+            "registeredUsers",
+            
+        }
+      );
+
+      console.log (
+"Current Task------",data
+      )
+
+      dispatch(setUsers(
+        data.data.registeredUsers
+      ))
       SetActionStatusMessage("Service Successfully Extended");
 
       setTimeout(() => {
