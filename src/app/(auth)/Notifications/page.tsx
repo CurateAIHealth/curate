@@ -12,6 +12,7 @@ import { Refresh, UpdateCallEnquiryInformation } from "@/Redux/action";
 type FilterType = "All" | "Pending" | "Approved" | "Rejected" | "Read";
 
 interface NotificationItem {
+  Reason: any;
   NotifyEmploys: any;
   patientName: any;
   clientName: any;
@@ -207,7 +208,8 @@ console.log("Check Status------",dateResponse.message)
           info?.HCPId,
           info?.RequestedSalary,
           loggedInEmail,
-            info?.EffectiveDate
+          info?.EffectiveDate,
+         info?.Reason
 
         );
 
@@ -554,7 +556,7 @@ dispatch(Refresh(""));
                           className="flex items-center gap-2 rounded-full border cursor-pointer border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50"
                         >
                           <CheckCircle size={16} />
-                          Approve
+                          Approve 
                         </button>
 
                         <button

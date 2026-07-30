@@ -447,12 +447,13 @@ console.log("MainTemplateInfo", MainTemplateInfo)
       serviceTo: InvoiceData?.serviceTo,
       terms: InvoiceData?.terms ?? "7 Days",
       patientName: InvoiceData?.patientName,
+      ClientName:InvoiceData?.ClientName,
       invoiceName: InvoiceData?.name,
       Adress  : InvoiceData?.Adress
     },
 
     billTo: {
-
+      ClientName: InvoiceData?.ClientName,
       name: InvoiceData?.ClientName,
       patientName: InvoiceData?.name,
       contact: InvoiceData?.contact,

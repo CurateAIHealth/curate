@@ -441,7 +441,7 @@ const monthNames = [
     LeadDate: each.LeadDate,
     ServiceArea: each.ServiceArea,
     ServiceLocation: each.ServiceArea,
-    PreviewUserType: each.PreviewUserType||"None",
+    PreviewUserType: each.PreviewUserType||"HCA",
     PDRStatus:each.PDRStatus||"No Available",
     Type:each.Type,
     ServiceState:each.ServiceState||"Not Provided"

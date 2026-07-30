@@ -245,11 +245,13 @@ Reviews:FilterValue.Reviews,
     Fetch()
 },[])
 
-console.log ("Check for Reviews----",user.Reviews)
+console.log ("Check for Reviews----",user)
 
   const handleSave =async () => {
     setSubmitstatusMessage("Please Wait....")
-const UpdateSalary:any=await HCASalaryUpdate(ImportedUserId,user.HCPSalary,loggedInEmail)
+    const currentDate = new Date().toLocaleDateString("en-IN");
+
+const UpdateSalary:any=await HCASalaryUpdate(ImportedUserId,user.HCPSalary,loggedInEmail,currentDate,"Performance Hike")
 
 if(UpdateSalary.success){
   setSubmitstatusMessage("Salary Updated Successfully.")

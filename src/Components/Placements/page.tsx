@@ -17,7 +17,7 @@ import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
 import { filterColors, IndianStates, months, Placements_Filters, teams, years } from "@/Lib/Content";
 import ReplacementsTable from "../ReplacementsTable/page";
-import { AssignSuitableIcon, getDaysBetween, getDueDaysStatus, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
+import { AssignSuitableIcon, GetAwaitInfoData, getDaysBetween, getDueDaysStatus, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
 import { useRouter } from "next/navigation";
 import { button, div } from "framer-motion/client";
 import SalaryPopup from "../HCPSalary/page";
@@ -70,6 +70,7 @@ const ClientTable = ({
 }: ClientTableProps) => {
 const [ClientsInformation,setClientsInformation]=useState(ImpClientsInformation||[])
     const [EditDate,setEditDate]=useState<any>()
+    const [ImpReplasmentInfo,setImpReplasmentInfo]=useState<any>([])
   const [selectedAssignHCP,setselectedAssignHCP]=useState<any>()
   const [activeTeam, setActiveTeam] = useState(1);
    const Timenow = new Date();
@@ -255,14 +256,14 @@ useEffect(() => {
           return;
         }
 
-        const [ FetchData ] = await Promise.all([
+        const [ FetchData,RepleasmentInfo ] = await Promise.all([
           
             GetTerminationInfo(),
-         
+         GetReplacementInfo()
 
           ])
 
-       
+       setImpReplasmentInfo(RepleasmentInfo)
         const Result = FetchData?.map((each: any) => ({
           ClientId: each.ClientId,
           HCA_Id: each.HCAid,
@@ -1976,8 +1977,9 @@ onClick={() => setShowAttendanceModal(true)}
   </div>
 </button>
 <div className="text-center">
+   
   <label className="mb-1.5 block text-xs font-semibold text-gray-700">
-    Service Work State {activeTeam}
+    Service Work State 
   </label>
 
   <div className="relative">
@@ -2093,8 +2095,8 @@ onClick={() => setShowAttendanceModal(true)}
   title={selectedHCP?.FirstName||selectedAssignHCP?.FirstName}
   onClose={() => setShowCareTakerPriceUpdate(false)}
   onSubmit={async(value) => {
-   
-    const UpdateSalary= await HCASalaryUpdate(selectedHCP?.id||selectedAssignHCP?.id,value,loggedInEmail)
+   const currentDate = new Date().toLocaleDateString("en-IN");
+    const UpdateSalary= await HCASalaryUpdate(selectedHCP?.id||selectedAssignHCP?.id,value,loggedInEmail,currentDate,"Performance Hike")
     if(UpdateSalary.success){
     SetActionStatusMessage(`${selectedHCP?.FirstName||selectedAssignHCP?.FirstName} ${UpdateSalary.message}`)
 setTimeout(()=>{
@@ -4222,16 +4224,23 @@ function DayBadge({ status }: { status: any }) {
     </Wrapper>
   );
 }
+
+
 const GetFilterCount = (type: string) => {
   switch (type) {
     case "On Service":
       return processedData.length;
     case "Termination":
-      return FilterValues.length||"...";
-    case "Replacements":
-      return ReplacementInformation.filter(item =>
+      return FilterValues.length||0;
+          case "Awaiting Invoice":
+      return GetAwaitInfoData(ClientsInformation).filter((item: any) =>item.ServiceState===SelectedServiceStates&&
         matchesSearchAndMonth(item, "", SearchMonth, SearchYear)
-      ).length;
+      ).length||0;
+   
+    case "Replacements":
+      return ImpReplasmentInfo.filter((item: any) =>
+        matchesSearchAndMonth(item, "", SearchMonth, SearchYear)
+      ).length||0
     default:
       return 0;
   }
@@ -4277,7 +4286,20 @@ const GetFilterCount = (type: string) => {
                 }`}
               >
               
-        {`${each}   ${each !== "Awaiting Invoice"?(GetFilterCount(each) || 0):''}`}
+     <>
+  {each}
+
+  
+    <>
+      {" "}
+      {GetFilterCount(each) === 0 ? (
+        <div className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-pink-600 align-middle" />
+      ) : (
+        GetFilterCount(each)
+      )}
+    </>
+  
+</>
 
                 
               </button>)}
