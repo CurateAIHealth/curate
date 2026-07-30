@@ -1,7 +1,10 @@
+import { GetStaffName } from "@/Lib/Actions";
 import axios from "axios";
 import { useState } from "react";
 
 type SalaryHistory = {
+  ApprovedBy: any;
+  EffectiveFrom: any;
   Salary: number;
   EffectiveDate: string;
   UpdatedBy?: string;
@@ -18,7 +21,7 @@ export default function HikeHistory({
   history,
   HCAName,
 }: HikeHistoryProps) {
-
+console.log ("Check Hike info----",history)
    const [ActionMessage,setActionMessage]=useState("")
  const downloadPDF = async () => {
      try {
@@ -347,6 +350,20 @@ setActionMessage("Sent Email as Successfully")
     } 
   };
 
+
+
+const getNextYearDate = (dateString: string): string => {
+  if (!dateString) return "";
+
+  const [year, month, day] = dateString.split("-").map(Number);
+
+  if (!year || !month || !day) return "";
+
+  const date = new Date(year, month - 1, day);
+  date.setFullYear(date.getFullYear() + 1);
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+};
   return (
 
 
@@ -428,16 +445,21 @@ setActionMessage("Sent Email as Successfully")
           </span>
         </div>
 
-        {/* Details */}
+       
         <div className="mt-6 grid gap-6 md:grid-cols-2">
           <div>
             <p className="text-sm" style={{ color: "#6b7280" }}>Effective Date</p>
-            <p className="font-semibold">{item.EffectiveDate}</p>
+            <p className="font-semibold">{item.EffectiveFrom}</p>
           </div>
 
           <div>
             <p className="text-sm" style={{ color: "#6b7280" }}>Updated By</p>
-            <p className="font-semibold">{item.UpdatedBy}</p>
+            <p className="text-sm font-semibold text-gray-900">
+  {GetStaffName(item.ApprovedBy)}
+  <span className="ml-2 text-xs font-normal text-gray-500">
+    ({item.ApprovedBy})
+  </span>
+</p>
           </div>
 
           <div>
@@ -453,7 +475,7 @@ setActionMessage("Sent Email as Successfully")
               className="font-semibold"
               style={{ color: "#1392d3" }}
             >
-              {item.NextHikeDate}
+              {getNextYearDate(item.EffectiveFrom)}
             </p>
           </div>
         </div>

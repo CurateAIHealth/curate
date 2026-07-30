@@ -1740,7 +1740,7 @@ const UpdatePopup = async (a: any) => {
                             <td className="px-2 py-2">
                               {(user?.DetailedVerification === false && UpdateduserType === "healthcare-assistant")||(UpdateduserType==='patient'&&user?.PDRStatus!=="Filled") ? <p className="inline-block px-2 py-1 text-[10px] text-center font-semibold 
               text-neutral-700 bg-neutral-100 rounded-md">
-  Full Info Required
+  Full Info Required 
 </p>
  :
                                 <button

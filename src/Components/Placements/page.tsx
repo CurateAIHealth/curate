@@ -74,6 +74,7 @@ const [ClientsInformation,setClientsInformation]=useState(ImpClientsInformation|
   const [selectedAssignHCP,setselectedAssignHCP]=useState<any>()
   const [activeTeam, setActiveTeam] = useState(1);
    const Timenow = new Date();
+   const [Loading,setLoading]=useState(true)
    const [ParticularDate,SetParticularDate]=useState<any>()
  const [AttendeceEditReason,SetAttendeceEditReason]=useState("")
  const [AbsentReason,setAbsentReason]=useState("")
@@ -251,7 +252,7 @@ useEffect(() => {
       try {
         if (terminationCache) {
           setPlacements(terminationCache);
-          
+          setLoading(false)
           setIsChecking(false);
           return;
         }
@@ -277,6 +278,7 @@ useEffect(() => {
         })) ?? [];
 
 setPlacements(Result);
+    setLoading(false)
      
         setIsChecking(false);
       } catch (err) {
@@ -4227,6 +4229,7 @@ function DayBadge({ status }: { status: any }) {
 
 
 const GetFilterCount = (type: string) => {
+  if (Loading) return         <div className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-pink-600 align-middle" />
   switch (type) {
     case "On Service":
       return processedData.length;
@@ -4293,7 +4296,7 @@ const GetFilterCount = (type: string) => {
     <>
       {" "}
       {GetFilterCount(each) === 0 ? (
-        <div className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-pink-600 align-middle" />
+0
       ) : (
         GetFilterCount(each)
       )}

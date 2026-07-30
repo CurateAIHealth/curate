@@ -544,3 +544,23 @@ export const GetAwaitInfoData = (ClientsInformation: any[]) => {
     };
   });
 };
+
+
+const StaffNames: Record<string, string> = {
+  "admin@curatehealth.in": "Admin",
+  "tsiddu805@gmail.com": "Sidd",
+  "panducurate@gmail.com": "Pandu",
+  "info@curatehealth.in": "Info",
+  "gouricurate@gmail.com": "Gouri",
+  "kirancuratehealth@gmail.com": "Kiran",
+  "srivanikasham@curatehealth.in": "Srivani Kasham",
+  "sravanthicurate@gmail.com": "Sravanthi",
+  "srinivasnew0803@gmail.com": "Srinivas",
+  "rpandu823@gmail.com": "R. Pandu",
+  "shreeshmacurate@gmail.com": "Shreeshma",
+};
+
+export const GetStaffName = (email?: string): string => {
+  if (!email) return "Not Provided";
+  return StaffNames[email.trim().toLowerCase()] ?? email;
+};
