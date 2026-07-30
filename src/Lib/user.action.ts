@@ -1585,12 +1585,12 @@ ImpReason:any
       HCPName:HCPInfo.FirstName,
       RequestedSalary:RequestedSalary,
       EffectiveDate:EffectiveDate,
-      
+      Reason:ImpReason,
       Message:`Salary Update Request for ${HCPInfo.FirstName} To ₹${RequestedSalary} Per Month, (₹${Math.round(Number(RequestedSalary) / 30)} per day) from ${From}, Reason:${ImpReason}`,
       Date:new Date().toISOString().split("T")[0],
       Type:"HCP Salary Request",
       Status :"Pending",
-        Department:"HCP"
+      Department:"HCP"
     };
 
     const result = await collection.insertOne(payload);

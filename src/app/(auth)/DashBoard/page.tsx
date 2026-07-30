@@ -86,7 +86,7 @@ const DOCUMENT_KEYS = [
 export default function Dashboard() {
   const router = useRouter()
   const dispatch = useDispatch();
-
+const [isNavigating, setIsNavigating] = useState(false);
   const updatedRefreshCount = useSelector((afterEach: any) => afterEach.updatedCount);
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
   const [OtherArea, setOtherArea] = useState<any>("")
@@ -127,7 +127,7 @@ export default function Dashboard() {
   const ImportedInformationOfCallEnquiry = useSelector((state: any) => state.NotificationCallEnquiryInformation)
    const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
   const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
-console.log("Check Email------",loggedInEmail)
+console.log("Check Email------",ImportedInformationOfCallEnquiry)
 
 
   const [EnquiryForm, setEnquiryForm] = useState<any>({
@@ -174,7 +174,7 @@ console.log("Check Email------",loggedInEmail)
   const [ClientDiscount, SetClientDiscount] = useState<any>(0)
 const ProfileInformation=useSelector((state:any)=>state.Useriinformation)
   const stats=useSelector((state:any)=>state.DashBoardCount)
-
+console.log ("Check Personal Information----",stats.registeredUsers)
   const DASHBOARD_CACHE_KEY = "dashboardStats";
   const CACHE_TTL = 20 * 60 * 1000;
 
@@ -278,36 +278,24 @@ const ProfileInformation=useSelector((state:any)=>state.Useriinformation)
   //     mounted = false;
   //   };
   // }, []);
-useEffect(() => {
-  const userId = localStorage.getItem("UserId");
 
-  console.log("UserId:", userId);
-
-  if (!userId) {
-    console.log("Redirecting...");
-    router.push("/sign-in");
-    return;
-  }
-
-  console.log("User Found");
-}, [router]);
-  useEffect(() => {
+  // useEffect(() => {
   
-    if (ImportedInformationOfCallEnquiry) {
+  //   if (ImportedInformationOfCallEnquiry) {
 
 
 
-      const mapped = mapEnquiryToForm(ImportedInformationOfCallEnquiry);
+  //     const mapped = mapEnquiryToForm(ImportedInformationOfCallEnquiry);
 
-      setEnquiryForm((prev: any) => ({
-        ...prev,
-        ...mapped
-      }));
+  //     setEnquiryForm((prev: any) => ({
+  //       ...prev,
+  //       ...mapped
+  //     }));
 
-      setShowCallEnquiry(true);
+  //     setShowCallEnquiry(true);
      
-    }
-  }, [ImportedInformationOfCallEnquiry]);
+  //   }
+  // }, [ImportedInformationOfCallEnquiry]);
 const run = useCallback(async () => {
   const userId = localStorage.getItem("UserId");
   let currentEmail = null;
@@ -324,10 +312,7 @@ const run = useCallback(async () => {
   }
 
   try {
-    const [statsRes, benchRes] = await Promise.all([
-      GetDashboardStats(currentEmail),
-      GetUsersFullInfo(),
-    ]);
+    const statsRes=await  GetDashboardStats(currentEmail)
 
     if (statsRes?.success) {
    
@@ -340,10 +325,18 @@ const run = useCallback(async () => {
     setLoading(false);
   }
 }, [dispatch]);
-  useEffect(() => {
-    if(stats.registeredUsers==="Loading..."){
-    run();}
-  }, [run, updatedRefreshCount]);
+useEffect(() => {
+  const userId = localStorage.getItem("UserId");
+
+  if (!userId) {
+    router.push("/sign-in");
+    return;
+  }
+
+  if (stats.registeredUsers === "Loading...") {
+    run();
+  }
+}, [router, run, updatedRefreshCount, stats.registeredUsers]);
 
   const BenchList = useMemo(() => {
     if (!benchSource) return [];
@@ -819,7 +812,7 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
     []
   );
 
-
+const navigationLock = useRef(false);
 
 const routeMap = useMemo(
   () => ({
@@ -863,40 +856,36 @@ const routeMap = useMemo(
 
 const Switching = useCallback(
   (tab: string) => {
-    // Login check
+    if (navigationLock.current) return;
+
     if (!loggedInEmail) {
       setLoginEmailPop(true);
       return;
     }
 
-    // Permission check
     if (!canAccessTab(tab, loggedInEmail)) {
       setShowPermissionPopup(true);
       return;
     }
 
-    // Find destination
     const navigate = routeMap[tab as keyof typeof routeMap];
 
-    if (typeof navigate !== "function") {
-      console.warn(`No route found for "${tab}"`);
+    if (!navigate) {
+      console.warn(`Unknown tab: ${tab}`);
       return;
     }
 
-    try {
-      // Navigate immediately
-      navigate();
-    } catch (error) {
-      console.error("Navigation failed:", error);
-    }
+    navigationLock.current = true;
+    setIsNavigating(true);
+
+    navigate();
+
+    requestAnimationFrame(() => {
+      navigationLock.current = false;
+      setIsNavigating(false);
+    });
   },
-  [
-    loggedInEmail,
-    canAccessTab,
-    routeMap,
-    setLoginEmailPop,
-    setShowPermissionPopup,
-  ]
+  [loggedInEmail, canAccessTab, routeMap]
 );
 
   const PostNotificationInfo = async (Emails: string[]) => {
@@ -1294,7 +1283,13 @@ const Switching = useCallback(
           onClose={() => setShowPermissionPopup(false)}
         />
 
- 
+        {isNavigating && (
+  <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+    <div className="bg-white px-6 py-4 rounded-lg">
+      Loading...
+    </div>
+  </div>
+)}
         {/* <main className="flex-1 overflow-y-auto p-4 sm:p-3 lg:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6"> */}
         <main className="p-4">
           <div className="lg:col-span-8 space-y-6">

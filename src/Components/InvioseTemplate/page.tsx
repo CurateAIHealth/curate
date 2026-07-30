@@ -9,7 +9,9 @@ import { UpdateInvoiceIntialStatus, UpdateInvoiceStatus } from "@/Redux/action";
 import { useRouter } from "next/navigation";
 
 interface InvoiceInfo { number?: string; date?: string; dueDate?: string; terms?: string; serviceFrom?: string; serviceTo?: string; Adress?:string }
-interface BillToInfo { name?: string; addressLines?: string; patientName?: string; otherDetails?: string; }
+interface BillToInfo {
+  ClientName: string; name?: string; addressLines?: string; patientName?: string; otherDetails?: string; 
+}
 interface ItemRow { description: string; days: number | string; rate: number | string; amount: number | string; }
 interface Totals {
   Discount?: any;
@@ -26,7 +28,9 @@ interface ColorConfig { primary?: string; accent?: string; pink?: string; }
 interface Props { invoice?: InvoiceInfo; billTo?: BillToInfo; items?: ItemRow[]; totals?: Totals; colors?: ColorConfig; }
 
 export default function ReusableInvoice({
-  invoice = {}, billTo = {}, items = [], totals = {},
+  invoice = {}, billTo = {
+    ClientName: ""
+  }, items = [], totals = {},
   colors = { primary: "#50c896", accent: "#1392d3", pink: "#ff1493" }
 }: Props): JSX.Element {
 
@@ -277,7 +281,7 @@ const recalcTotals = () => {
     }
   };
 
-
+console.log ("Check Client Name------",billTo)
   return (
     <div style={{ padding: "4px", width: "100%", background: "#fff", borderRadius: "10px", boxShadow: "0 0 10px #0001" }} id="Updated-pdf-area">
 <>
@@ -391,7 +395,8 @@ const recalcTotals = () => {
       {/* LEFT */}
       <td valign="top">
         <h4 style={{ marginBottom: 6, color: "#374151" }}>Invoice To:</h4>
-        <b style={{ fontSize: 16 }}>{billTo.patientName || "-"}</b><br />
+         <b style={{ fontSize: 16 }}>Client: {billTo.ClientName || "-"}</b><br />
+        <b style={{ fontSize: 16 }}>Patient: {billTo.patientName || "-"}</b><br />
         <span style={{ fontSize: 13, color: "#6b7280" }}>
           {invoice.Adress || "-"}
         </span>
@@ -572,8 +577,8 @@ const recalcTotals = () => {
       <td align="right" valign="top">
 
         <table style={{ width: 260 }}>
-
-          {renderRow("Discount", display.Discount, updateTotals, InvoiceStatus)}
+{display.Discount!==0&&renderRow("Discount", display.Discount, updateTotals, InvoiceStatus)}
+          
           {renderRow("AdvancePaid", display.AdvancePaid, updateTotals, InvoiceStatus)}
           {renderRow("Tax", display.Tax, updateTotals, InvoiceStatus)}
           {renderRow("RegistraionFee", display.RegistraionFee, updateTotals, InvoiceStatus)}

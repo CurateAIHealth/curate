@@ -728,7 +728,7 @@ ServiceState:ExtendInfo.ServiceState
    </div>
      <div className="text-center">
      <label className="mb-1.5 block text-xs font-semibold text-gray-700">
-       Service Work State {activeTeam}
+       Service Work State 
      </label>
    
      <div className="relative">
@@ -1149,7 +1149,7 @@ const isProfit = invoiceProfit >= 0;
           onClick={ExtendTimeSheet}
           className="px-5 py-2 rounded-full bg-[#16a34a] text-white hover:bg-[#15803d]"
         >
-          Yes
+     Prepare Dreaft Invoice
         </button>
       </div>}
   <p

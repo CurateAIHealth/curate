@@ -105,6 +105,8 @@ const { month, year } = getMonthYear(InvoiceData?.StartDate);
     Patienttitle: InvoiceData?.Patienttitle,
     name: InvoiceData?.ClientName,
     patientName: InvoiceData?.name,
+    
+ClientName: InvoiceData?.ClientName,
     contact: InvoiceData?.contact,
     email: InvoiceData?.Email,
     addressLines: InvoiceData?.Adress,

@@ -260,7 +260,7 @@ updateLoader(
         } else {
           await loadDashboard(userId);
 
-          if (!mounted) return;
+        
         }
 
         finishLoader();

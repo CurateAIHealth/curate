@@ -459,4 +459,88 @@ case "HCA":
   }
 }
 
+const parseDate = (dateString: string) => {
+  if (!dateString) return null;
 
+  const [day, month, year] = dateString.split("/").map(Number);
+
+  if (!day || !month || !year) return null;
+
+  const date = new Date(year, month - 1, day);
+  date.setHours(0, 0, 0, 0);
+
+  return date;
+};
+export const GetAwaitInfoData = (ClientsInformation: any[]) => {
+  return ClientsInformation.filter((client: any) => {
+    if (!client.EndDate) return false;
+ const now = new Date();
+    const endDate = parseDate(client.EndDate);
+    if (!endDate) return false;
+
+    const reminderStartDate = new Date(endDate);
+    reminderStartDate.setDate(reminderStartDate.getDate() - 3);
+    reminderStartDate.setHours(0, 0, 0, 0);
+
+    return now >= reminderStartDate;
+  }).map((each: any) => {
+    const normalizedAttendance =
+      Array.isArray(each.Attendance) && each.Attendance.length > 0
+        ? each.Attendance.map((att: any) => {
+            const hcp =
+              att.HCPAttendence ??
+              att.HCPAttendance ??
+              att.hcpAttendence ??
+              false;
+
+            const admin =
+              att.AdminAttendece ??
+              att.AdminAttendence ??
+              att.AdminAttendance ??
+              att.adminAttendence ??
+              false;
+
+            return {
+              date: att.AttendenceDate,
+              status: hcp && admin
+                ? "Present"
+                : hcp || admin
+                ? "Half Day"
+                : "Absent",
+            };
+          })
+        : [];
+
+    return {
+      Client_Id: each.ClientId,
+      HCA_Id: each.HCAId,
+      Address: each.Address,
+      name: each.ClientName,
+      email: each.ClientEmail,
+      contact: each.ClientContact,
+      HCAContact: each.HCAContact,
+      HCA_Name: each.HCAName,
+      location: each.Address,
+      TimeSheet: normalizedAttendance,
+      TerminatedAttendece: each.Attendance,
+      PatientName: each.patientName,
+      Patient_PhoneNumber: each.patientPhone,
+      RreferralName: each.referralName,
+      Type: each.Type,
+      Status: each.Status,
+      cPay: each.cPay,
+      cTotal: each.cTotal,
+      hcpPay: each.hcpPay,
+      hcpSource: each.hcpSource,
+      hcpTotal: each.hcpTotal,
+      invoice: each.invoice,
+      ServiceCharge: each.CareTakerPrice,
+      StartDate: each.StartDate,
+      EndDate: each.EndDate,
+      Month: each.Month,
+      Replacement: each.Replacement,
+      ServiceState: each.ServiceState || "Not Provided",
+   
+    };
+  });
+};
