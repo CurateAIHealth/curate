@@ -215,7 +215,11 @@ const GetTeamNumber = (A: any) => {
       Trasaction:each.Trasaction||[],
       RoundedTotal:each.RoundedTotal,
       ServiceState:each.ServiceState||"Not Provided",
-      Team:GetTeamNumber(each.ClienId)
+      Team:GetTeamNumber(each.ClienId),
+      RefundAmount:each.RefundAmount||"",
+      RefundDate:each.RefundDate||"",
+      RefundDays:each.RefundDays||"",
+      HACAttendeceforRefund:each.HACAttendeceforRefund||[]
 
 
     }

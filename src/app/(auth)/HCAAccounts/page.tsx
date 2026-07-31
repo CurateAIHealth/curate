@@ -1135,12 +1135,16 @@ if (
   const attendanceKey = attendance.AttendenceDate.toString().substring(0, 10);
 
 for (const item of history) {
-  const effectiveKey = item.EffectiveFrom.toString().substring(0, 10);
+  if (!item?.EffectiveFrom) continue;
+
+  const effectiveKey = String(item.EffectiveFrom).slice(0, 10);
 
   if (effectiveKey <= attendanceKey) {
-    salary = Number(item.Salary);
-  } else {
-    break;
+    const parsedSalary = Number(item.Salary);
+
+    if (!Number.isNaN(parsedSalary)) {
+      salary = parsedSalary;
+    }
   }
 }
 
@@ -1890,7 +1894,7 @@ const totalExpenses =
                       setShowFullMonth(true)
                       setAttendenceInfo(row)
                     }}>
-                    View {row.HCAId}
+                    View 
                   </button></td>
                   
 

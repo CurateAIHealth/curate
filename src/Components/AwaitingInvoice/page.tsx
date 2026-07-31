@@ -225,7 +225,7 @@ const FinelTimeSheet = ClientsInformation.filter((client: any) => {
 
   // Show reminder 3 days before EndDate
   const reminderStartDate = new Date(endDate);
-  reminderStartDate.setDate(reminderStartDate.getDate() - 3);
+  reminderStartDate.setDate(reminderStartDate.getDate() - 4);
   reminderStartDate.setHours(0, 0, 0, 0);
 
   // Show from reminderStartDate onwards (including after EndDate)
@@ -293,7 +293,7 @@ const FinelTimeSheet = ClientsInformation.filter((client: any) => {
       EndDate: each.EndDate,
       Month: each.Month,
       Replacement: each.Replacement,
-    ServiceState:each.ServiceState||"Not Provided",
+    ServiceState:each.ServiceState||"Telangana",
     Team:GetTeamNumber(each.ClientId)
     };
   });

@@ -133,6 +133,7 @@ if (reason===""){
       bankDetails,
     WorkingDays,
     RefundDays,
+    RefundData,
     isProfit,
     resultAmount,
     ClientRefundAmount:Number(RefundDays)*Number(rupeeToNumber(data.ServiceCharge).toFixed(2))

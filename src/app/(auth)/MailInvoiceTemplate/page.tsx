@@ -70,16 +70,20 @@ const [otherService, setOtherService] = useState({
 });
 
   const Router=useRouter()
-    const refundData = {
+  const refundData = {
     receiptId: "RR-001",
     invoiceId: "INV-100",
-    clientName: "Ravi Kumar",
-    serviceStartDate: "2026-03-01",
-    serviceEndDate: "2026-03-10",
-    perDayCharge: 1200,
-    clientPaymentDays: 7,
-    refundRequestDate: "2026-03-12",
-    reason: "Service stopped early"
+    clientName: InvoiceData.ClientName,
+    ClientId:InvoiceData.ClienId,
+    serviceStartDate: InvoiceData.StartDate,
+    serviceEndDate: InvoiceData.ServiceEndDate,
+    perDayCharge: InvoiceData.CareTakeCharge,
+    clientPaymentDays: InvoiceData.RefundDays,
+    RefundAmount: InvoiceData.RefundAmount,
+    refundRequestDate: InvoiceData.RefundDate,
+    reason: "Service stopped early",
+    HCAAttendece: InvoiceData.HACAttendeceforRefund || []
+
   };
   const [ShowMailTemplate, setShowMailTemplate] = useState(true);
 const [isSending, setIsSending] = useState(false);
