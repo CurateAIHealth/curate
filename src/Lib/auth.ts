@@ -661,7 +661,10 @@ export const GetReplasmentandTerminationData = async () => {
 export const UpdateRefundAmount = async (
   Client_Id: string,
   ServiceStartDate: any, 
-  RefundAmount: number
+  RefundAmount: number,
+  RefundDate:any,
+  RefundDays:any,
+  HCAAttendece:any
 ) => {
   
 
@@ -690,6 +693,9 @@ export const UpdateRefundAmount = async (
       {
         $set: {
           RefundAmount: RefundAmount,
+            RefundDate:RefundDate,
+  RefundDays:RefundDays,
+  HACAttendeceforRefund:HCAAttendece
         },
       }
     );

@@ -19,12 +19,23 @@ export default async function handler(
   Client_Id,
   StartDate,
   ClientRefundAmount,
+  
+RefundData,
+
+RefundDays,
+
+TerminatedTimeSheet
+
+
 } = req.body.data;
   console.log("API START Data", req.body);
     const result = await UpdateRefundAmount(
       Client_Id,
       StartDate,
-      ClientRefundAmount
+      ClientRefundAmount,
+      RefundData,
+      RefundDays,
+      TerminatedTimeSheet
     );
 
     console.log("API END Data", result);
