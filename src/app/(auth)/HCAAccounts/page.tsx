@@ -97,7 +97,7 @@ const statuses = ["Process", "Save", "Hold", "Reject"];
     const [data, setData] = useState<any[]>([])
     
 useEffect(() => {
-  // Wait until data fetching is completed
+
   if (isChecking) return;
 
   if (
@@ -750,7 +750,8 @@ const mergedPayments = useMemo(() => {
 
 const filtered = useMemo(() => {
   return mergedPayments.filter((item) =>
-    item.PaymentVerficationStatus===activeStatus&&item.ServiceState===SelectedServiceState&&
+    item.PaymentVerficationStatus === activeStatus &&
+    (item.ServiceState || "Telangana") === SelectedServiceState &&
     matchesSearchAndMonth(
       item,
       search,
@@ -1894,7 +1895,7 @@ const totalExpenses =
                       setShowFullMonth(true)
                       setAttendenceInfo(row)
                     }}>
-                    View 
+                    View  
                   </button></td>
                   
 
