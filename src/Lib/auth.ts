@@ -664,7 +664,8 @@ export const UpdateRefundAmount = async (
   RefundAmount: number,
   RefundDate:any,
   RefundDays:any,
-  HCAAttendece:any
+  HCAAttendece:any,
+  HCAId:any
 ) => {
   
 
@@ -686,16 +687,21 @@ export const UpdateRefundAmount = async (
     console.time("MongoUpdate");
 
     const result = await collection.updateOne(
-      {
-        ClienId: Client_Id,
-        SeriviceStartDate: ServiceStartDate,
-      },
+        {
+    ClienId: Client_Id,
+    $or: [
+      { HCA_Id: HCAId },
+      { HCAId: HCAId },
+    ],
+    SeriviceStartDate: ServiceStartDate,
+  },
       {
         $set: {
           RefundAmount: RefundAmount,
             RefundDate:RefundDate,
   RefundDays:RefundDays,
-  HACAttendeceforRefund:HCAAttendece
+  HACAttendeceforRefund:HCAAttendece,
+  HCAId:HCAId
         },
       }
     );

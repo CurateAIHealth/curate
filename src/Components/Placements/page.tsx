@@ -499,7 +499,7 @@ const PostRefunRequest = async (data: any) => {
     const response = await axios.post("/api/RefundRequest", {
      data
     });
-console.log ("Check Refund Data---------",response.data.success)
+
 if(!response.data.success){
 SetActionStatusMessage("Refund Request already submitted for this client. You will be notified once the status is updated.")
 return

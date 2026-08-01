@@ -75,6 +75,7 @@ const refreshInvoices = async () => {
 }
 
 useEffect(() => {
+
   if (RegUserInfo?.length === 0 ) {
     Router.push("/");
   }

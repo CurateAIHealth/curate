@@ -1956,10 +1956,10 @@ Awaiting Conversion
 const handleSave = async (data: any) => {
   try {
 
-    // if(EffectiveDate===""){
-    //   alert("Please Select Effective Date")
-    //   return
-    // }
+    if(EffectiveDate===""){
+      alert("Please Select Effective Date")
+      return
+    }
     setIsEditing(false);
     dispatch(Refresh("Please Wait...."));
 console.log("Check for Imp Salary Data----",data

@@ -24,7 +24,11 @@ RefundData,
 
 RefundDays,
 
-TerminatedTimeSheet
+TerminatedTimeSheet,
+
+HCA_Id,
+HCAId
+
 
 
 } = req.body.data;
@@ -35,7 +39,10 @@ TerminatedTimeSheet
       ClientRefundAmount,
       RefundData,
       RefundDays,
-      TerminatedTimeSheet
+      TerminatedTimeSheet,
+      
+HCA_Id
+
     );
 
     console.log("API END Data", result);

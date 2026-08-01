@@ -75,6 +75,7 @@ const [otherService, setOtherService] = useState({
     invoiceId: "INV-100",
     clientName: InvoiceData.ClientName,
     ClientId:InvoiceData.ClienId,
+    patientName: InvoiceData.name,
     serviceStartDate: InvoiceData.StartDate,
     serviceEndDate: InvoiceData.ServiceEndDate,
     perDayCharge: InvoiceData.CareTakeCharge,
@@ -82,6 +83,8 @@ const [otherService, setOtherService] = useState({
     RefundAmount: InvoiceData.RefundAmount,
     refundRequestDate: InvoiceData.RefundDate,
     reason: "Service stopped early",
+    HCAId:InvoiceData.HCAId,
+
     HCAAttendece: InvoiceData.HACAttendeceforRefund || []
 
   };

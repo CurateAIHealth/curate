@@ -577,8 +577,8 @@ const ExtendTimeSheet = async () => {
 
     const attendance = [
       {
-        dateKey: new Date().toISOString().split("T")[0],
-         AttendenceDate: new Date(),
+        dateKey: new Date(selectedDate).toISOString().split("T")[0],
+        AttendenceDate: new Date(selectedDate),
         HCPAttendence: true,
         AdminAttendece: true,
         UpdatedBy: loggedInEmail || "Unknown",
@@ -590,7 +590,7 @@ const ExtendTimeSheet = async () => {
 
     const ClientAttendece = [
       {
-        AttendenceDate: today,
+        AttendenceDate:  new Date(selectedDate).getDate(),
         AttendeceStatus: "Present",
         UpdatedBy: loggedInEmail || "Unknown",
       },
