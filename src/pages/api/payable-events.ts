@@ -60,9 +60,13 @@ export default async function handler(
      * Watch the ENTIRE DATABASE
      * Every collection will trigger an event.
      */
+    console.log("Before watch");
     changeStream = db.watch([], {
       fullDocument: "updateLookup",
     });
+
+
+console.log("After watch");
 
     changeStream.on("change", (change: any) => {
       send({

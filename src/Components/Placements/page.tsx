@@ -156,6 +156,15 @@ const router=useRouter()
  const TimeStampInfo = useSelector(
     (state: any) => state.TimeStampInfo
   );
+  useEffect(() => {
+  setClientsInformation(ImpClientsInformation || []);
+  setImpReplasmentInfo(ReplacementInformation || []);
+  SetTerminationInfo(terminationInfo || []);
+}, [
+  ImpClientsInformation,
+  ReplacementInformation,
+  terminationInfo,
+]);
 // useEffect(() => {
 //   if (loggedInEmail === "") {
 //     router.push("/DashBoard");
@@ -1601,6 +1610,8 @@ SearchYear,
 SelectedServiceStates,
 activeTeam,
 ActionStatusMessage
+
+
 ]);
 
 const UpdateServiceCharge=async(A:any)=>{
@@ -1979,7 +1990,7 @@ onClick={() => setShowAttendanceModal(true)}
   </div>
 </button>
 <div className="text-center">
-   
+ 
   <label className="mb-1.5 block text-xs font-semibold text-gray-700">
     Service Work State 
   </label>
@@ -2116,6 +2127,12 @@ setShowCareTakerPriceUpdate(false)
       <p className="bg-gradient-to-r from-emerald-200 to-teal-200 text-emerald-900 px-8 py-3 rounded-full shadow-lg font-semibold text-sm tracking-wide">
         🔎 Check <span className="font-bold text-emerald-800">Terminations</span> for Previous Placements
       </p>
+        <button
+    onClick={() => window.location.reload()}
+    className="mt-2 flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-white font-semibold shadow-lg transition-all duration-200 hover:bg-emerald-700 hover:scale-105 active:scale-95"
+  >
+    🔄 Refresh
+  </button>
     </div>
   )}
 {ShowcreatIvocePopup&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md">

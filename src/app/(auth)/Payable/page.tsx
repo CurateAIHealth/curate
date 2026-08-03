@@ -133,42 +133,7 @@ useEffect(() => {
   // Initial load
   fetchData();
 
-  // Create ONE SSE connection
-  const eventSource = new EventSource("/api/payable-events");
 
-  eventSource.onopen = () => {
-    console.log("✅ SSE Connected");
-  };
-
-  eventSource.onmessage = (event) => {
-    console.log("📩 Mongo Event:", event.data);
-
-    try {
-      const message = JSON.parse(event.data);
-
-      if (message.refresh) {
-        console.log("🔄 Collection changed. Refreshing cache...");
-
-        // Clear cache
-        payableCache.data = null;
-
-        // Fetch fresh data
-        fetchData(true);
-      }
-    } catch {
-      console.log("Received:", event.data);
-    }
-  };
-
-  eventSource.onerror = (err) => {
-    console.error("❌ SSE Error", err);
-  };
-
-  return () => {
-    mounted = false;
-    eventSource.close();
-    console.log("🔌 SSE Disconnected");
-  };
 }, []);
 
 

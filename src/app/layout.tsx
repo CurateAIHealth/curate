@@ -4,6 +4,9 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import WrapProvider from "./Provider";
 import { NotificationProvider } from "./NotificationProvider";
+import ReduxGuard from "@/Components/ReduxGuard/page";
+import AuthGuard from "@/Components/AuthGuard/page";
+import GlobalSync from "./GlobalSync";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -34,7 +37,12 @@ export default function RootLayout({
       <body className="antialiased">
         <WrapProvider>
           <NotificationProvider>
+             <GlobalSync />
+                  <AuthGuard>
+                  <ReduxGuard>
             {children}
+              </ReduxGuard>
+                </AuthGuard>
           </NotificationProvider>
         </WrapProvider>
       </body>

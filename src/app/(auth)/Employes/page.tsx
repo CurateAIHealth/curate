@@ -147,7 +147,7 @@ const Router=useRouter()
             </p>
           </div>
 
-          <img src="Icons/Curate-logoq.png" onClick={()=>Router.push("/DashBoard")} className="h-14 w-14" />
+          <img src="Icons/Curate-logoq.png" onClick={()=>Router.replace("/DashBoard")} className="h-14 w-14" />
         </div>
       </div>
 

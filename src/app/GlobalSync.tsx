@@ -1,124 +1,170 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useDispatch } from "react-redux";
 import axios from "axios";
+import { useDispatch } from "react-redux";
 
 import {
   setUsers,
   setFullInfo,
   SetDeploymentInfo,
-  UpdateUserFirstName,
 } from "@/Redux/action";
+
+const dashboardCache = {
+  data: null as any,
+  promise: null as Promise<any> | null,
+};
+
+const RECONNECT_DELAY = 3000;
+const REFRESH_DEBOUNCE = 250;
 
 export default function GlobalSync() {
   const dispatch = useDispatch();
 
-  const mounted = useRef(false);
-  const refreshing = useRef(false);
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
-  const lastClusterTime = useRef<string>("");
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const reconnectTimer = useRef<NodeJS.Timeout | null>(null);
+  const refreshTimer = useRef<NodeJS.Timeout | null>(null);
+ 
+  const mounted = useRef(true);
+const refreshMap: Record<string, string[]> = {
+  Registration: ["registeredUsers"],
+  CompliteRegistrationInformation: ["fullInfo"],
+  Deployment: ["deployment"],
+};
 
   useEffect(() => {
     mounted.current = true;
 
-    const refreshDashboard = async () => {
-      if (refreshing.current) {
-        console.log("⏳ Refresh already running");
-        return;
-      }
+    const cleanup = () => {
+      eventSourceRef.current?.close();
+      eventSourceRef.current = null;
 
-      refreshing.current = true;
+      
 
-      try {
-        console.log("🚀 Refreshing Dashboard...");
-
-        const userId = localStorage.getItem("UserId");
-
-        const { data } = await axios.post("/api/AdminPageInfo", {
-          userId,
-        });
-
-        if (!mounted.current) return;
-
-        dispatch(setUsers(data.data.registeredUsers));
-        dispatch(setFullInfo(data.data.fullInfo));
-        dispatch(SetDeploymentInfo(data.data.deployedLength));
-        dispatch(UpdateUserFirstName(data.data.profile?.FirstName));
-
-        console.log("✅ Redux Updated");
-      } catch (err) {
-        console.error("❌ Refresh Error", err);
-      } finally {
-        refreshing.current = false;
-      }
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
     };
 
-    console.log("📡 Opening Global SSE...");
+const applyData = (data: any) => {
+  if (!mounted.current) return;
 
-    const eventSource = new EventSource("/api/payable-events");
+  dispatch(setUsers(data.registeredUsers));
+  dispatch(setFullInfo(data.fullInfo));
+  dispatch(SetDeploymentInfo(data.deployedLength));
+};
 
-    eventSource.onopen = () => {
-      console.log("✅ Global SSE Connected");
-    };
+const refreshCollection = async (forceRefresh = false,collection?: string) => {
+  const userId = localStorage.getItem("UserId");
 
-    eventSource.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
+  if (!userId) return;
 
-        if (!message.refresh) return;
+  try {
+    // ✅ Use client cache
+    if (!forceRefresh && dashboardCache.data) {
+      console.log("📦 Using Dashboard Cache");
+      applyData(dashboardCache.data);
+      return;
+    }
 
-        console.log("📩 Mongo Event:", message);
+    // ✅ Wait for existing request
+    if (!forceRefresh && dashboardCache.promise) {
+      console.log("⏳ Waiting for existing dashboard request...");
 
-        // Ignore duplicate Mongo events
-        const clusterTime = JSON.stringify(message.clusterTime);
+      const data = await dashboardCache.promise;
 
-        if (clusterTime === lastClusterTime.current) {
-          console.log("⏭ Duplicate Event Ignored");
-          return;
-        }
+      applyData(data);
+      return;
+    }
+const refreshType =
+  refreshMap[collection || ""] || undefined;
+    console.log("🌐 Fetching Fresh Dashboard Data...");
 
-        lastClusterTime.current = clusterTime;
+    dashboardCache.promise = axios
+      .post("/api/AdminPageInfo", {
+        userId,
+        refreshType: refreshType 
+      })
+      .then((res) => res.data.data);
 
-        // Debounce multiple updates
-        if (debounceTimer.current) {
-          clearTimeout(debounceTimer.current);
-        }
+    try {
+      const data = await dashboardCache.promise;
 
-        debounceTimer.current = setTimeout(() => {
-          refreshDashboard();
-        }, 500);
-      } catch (err) {
-        console.error("❌ SSE Parse Error:", err);
-      }
-    };
+      dashboardCache.data = data;
 
- eventSource.onerror = () => {
-  const states = ["CONNECTING", "OPEN", "CLOSED"];
+      applyData(data);
 
-  console.log(
-    "SSE Error - State:",
-    states[eventSource.readyState] ?? eventSource.readyState
-  );
-
- 
-  if (eventSource.readyState === EventSource.CLOSED) {
-    console.log("SSE Connection Closed");
-  } else if (eventSource.readyState === EventSource.CONNECTING) {
-    console.log("SSE Reconnecting...");
+      console.log("✅ Dashboard Cache Updated");
+    } finally {
+      dashboardCache.promise = null;
+    }
+  } catch (error) {
+    dashboardCache.promise = null;
+    console.error("❌ Dashboard Refresh Error:", error);
   }
 };
 
-    return () => {
-      mounted.current = false;
+    const connect = () => {
+      if (!mounted.current) return;
 
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
+      const userId = localStorage.getItem("UserId");
+
+      if (!userId) {
+        reconnectTimer.current = setTimeout(connect, 1000);
+        return;
       }
 
-      eventSource.close();
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
 
-      console.log("❌ Global SSE Closed");
+      const es = new EventSource("/api/payable-events");
+      eventSourceRef.current = es;
+
+      es.onopen = () => {
+        console.log("✅ GlobalSync Connected");
+      };
+
+      es.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+
+          if (!payload.refresh || !payload.collection) return;
+
+          if (refreshTimer.current) {
+            clearTimeout(refreshTimer.current);
+          }
+
+          refreshTimer.current = setTimeout(() => {
+    
+          
+             console.log("Refreshing collection:", payload.collection);
+         dashboardCache.data = null;
+
+refreshCollection(true, payload.collection);
+          }, REFRESH_DEBOUNCE);
+        } catch (err) {
+          console.error("Invalid SSE payload:", err);
+        }
+      };
+
+      es.onerror = () => {
+        es.close();
+
+        if (!mounted.current) return;
+
+        reconnectTimer.current = setTimeout(() => {
+          connect();
+        }, RECONNECT_DELAY);
+      };
+    };
+
+    refreshCollection();
+
+connect();
+
+    return () => {
+      mounted.current = false;
+      cleanup();
     };
   }, [dispatch]);
 
