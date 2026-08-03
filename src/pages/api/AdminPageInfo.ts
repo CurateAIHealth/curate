@@ -26,9 +26,11 @@ export default async function handler(
     const {
       userId,
       refreshType,
+      Month
     }: {
       userId: string;
       refreshType?: RefreshType | RefreshType[];
+      Month: string;
     } = req.body;
 
     console.time("API_DASHBOARD");
@@ -67,8 +69,8 @@ export default async function handler(
       }
     }
 
-    const result = await GetDashboardData(userId);
-
+    const result = await GetDashboardData(userId,Month);
+console.log(`Dashboard data fetched for :`, result);
     console.timeEnd("API_DASHBOARD");
 
     return res.status(200).json(result);

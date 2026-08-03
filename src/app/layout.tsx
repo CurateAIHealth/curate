@@ -37,7 +37,7 @@ export default function RootLayout({
       <body className="antialiased">
         <WrapProvider>
           <NotificationProvider>
-             <GlobalSync />
+             {/* <GlobalSync /> */}
                   <AuthGuard>
                   <ReduxGuard>
             {children}

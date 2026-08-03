@@ -30,6 +30,7 @@ import AttendanceModal from "../ClientAttendece/page";
 import { Console } from "console";
 import EmptyState from "../NoDeployments/page";
 import { stringify } from "querystring";
+import LoadingPopup from "../SwitchMonth/page";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -82,6 +83,7 @@ const [ClientsInformation,setClientsInformation]=useState(ImpClientsInformation|
   const currentMonth = String(Timenow.getMonth() + 1).padStart(2, "0");
   const [selectedClient,setselectedClient]=useState<any>()
   const [isChecking, setIsChecking] = useState(false);
+  const [isSwitchingMonth, setIsSwitchingMonth] = useState(false);
   const [open, setOpen] = useState(false);
   const [SelectedServiceStates, setSelectedServiceStates] = useState("Telangana");
   const [selectedHCP,setselectedHCP]=useState<any>()
@@ -150,7 +152,7 @@ const [serviceCharge, setServiceCharge] = useState("");
     const [search, setSearch] = useState("On Service");
   const [billingRecord, setBillingRecord] = useState<any>(null);
 const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
-  
+   const ArgumentMonth=`${SearchYear}-${SearchMonth}`
   const dispatch = useDispatch();
 const router=useRouter()
  const TimeStampInfo = useSelector(
@@ -165,6 +167,9 @@ const router=useRouter()
   ReplacementInformation,
   terminationInfo,
 ]);
+
+
+
 // useEffect(() => {
 //   if (loggedInEmail === "") {
 //     router.push("/DashBoard");
@@ -877,7 +882,7 @@ const GetHCPFullName = (A: any) => {
     ?.find((info: any) => info?.UserId === A);
 
   if (!info) return "";
-
+console.log("HCP Info:", info);
   const fullName = [
     info.HCPSurName,
     info.HCPFirstName,
@@ -1613,7 +1618,7 @@ ActionStatusMessage
 
 
 ]);
-
+console.log("Check Processed Data",FinelTimeSheet)
 const UpdateServiceCharge=async(A:any)=>{
   SetActionStatusMessage("Please Wait...")
   alert(A)
@@ -1883,7 +1888,34 @@ if (dateResponse?.success) {
     SetActionStatusMessage(message);
   }
 };
+const GetMonthFreshData = async (r: string) => {
+  try {
+  
+    setIsSwitchingMonth(true);
+    dispatch(UpdateMonthFilter(r));
 
+    const userId = localStorage.getItem("UserId");
+
+   const { data } = await axios.post(
+  "/api/AdminPageInfo",
+  {
+    userId,
+    Month: `${SearchYear}-${r}`,
+  }
+);
+
+
+
+    console.log("Check New Data", data.data.deployedLength);
+setClientsInformation(data.data.deployedLength)
+    dispatch(SetDeploymentInfo(data.data.deployedLength));
+ setIsSwitchingMonth(false);
+    
+  } catch (error) {
+    console.error("GetMonthFreshData Error:", error);
+    SetActionStatusMessage("Failed to fetch data. Please try again.");
+  }
+};
 const OmServiceView = () => {
     return (
       <div className="w-full flex flex-col gap-8 p-2 bg-gray-50">
@@ -1992,7 +2024,7 @@ onClick={() => setShowAttendanceModal(true)}
 <div className="text-center">
  
   <label className="mb-1.5 block text-xs font-semibold text-gray-700">
-    Service Work State 
+    Service Work State , 
   </label>
 
   <div className="relative">
@@ -2019,7 +2051,7 @@ onClick={() => setShowAttendanceModal(true)}
     {/* Month */}
     <select
       value={SearchMonth}
-      onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
+      onChange={(e) =>GetMonthFreshData(e.target.value)}
       className="
         w-full sm:w-[140px] h-[40px]
         rounded-xl border border-gray-300
@@ -2128,7 +2160,7 @@ setShowCareTakerPriceUpdate(false)
         🔎 Check <span className="font-bold text-emerald-800">Terminations</span> for Previous Placements
       </p>
         <button
-    onClick={() => window.location.reload()}
+    onClick={() => { window.location.href = "/" }}
     className="mt-2 flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-white font-semibold shadow-lg transition-all duration-200 hover:bg-emerald-700 hover:scale-105 active:scale-95"
   >
     🔄 Refresh
@@ -3238,6 +3270,13 @@ hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
 
   
   )}
+
+
+<LoadingPopup
+  open={isSwitchingMonth}
+  title="Switching Month"
+  description="Updating dashboard data..."
+/>
  {showAssignPopup && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
     
@@ -4246,7 +4285,7 @@ function DayBadge({ status }: { status: any }) {
 
 
 const GetFilterCount = (type: string) => {
-  if (Loading) return         <div className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-pink-600 align-middle" />
+
   switch (type) {
     case "On Service":
       return processedData.length;

@@ -113,44 +113,20 @@ const routeMap: Record<string, () => void> = {
   Invoices: () => router.replace("/Invoices")
 };
 
-const Switching = async (tab: string) => {
-  if (navigationLock.current) return;
+const Switching = (tab: string) => {
+  if (!loggedInEmail) {
+    setLoginEmailPop(true);
+    return;
+  }
 
-  navigationLock.current = true;
-  setIsNavigating(true);
-
-  try {
-    setLoadingMessage("Checking permissions...");
-
-    if (!loggedInEmail) {
-      setLoadingMessage("");
-      setLoginEmailPop(true);
-      navigationLock.current = false;
-      setIsNavigating(false);
-      return;
-    }
-
-    if (!canAccessTab(tab, loggedInEmail)) {
-      setLoadingMessage("");
-      setShowPermissionPopup(true);
-      navigationLock.current = false;
-      setIsNavigating(false);
-      return;
-    }
+  if (!canAccessTab(tab, loggedInEmail)) {
+    setShowPermissionPopup(true);
+    return;
+  }
+setIsNavigating(true);
 
     setLoadingMessage(`Preparing ${tab} page...`);
-
-    const action = routeMap[tab];
-    if (action) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      action();
-      await new Promise(resolve => setTimeout(resolve, 500));
-    } else {
-      console.warn(`No route defined for tab: ${tab}`);
-    }
-  } catch (error) {
-    console.error("Navigation error:", error);
-  }
+  routeMap[tab]?.();
 };
       
     return(

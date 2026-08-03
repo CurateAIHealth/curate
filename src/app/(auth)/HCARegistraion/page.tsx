@@ -773,32 +773,32 @@ if (!PrimaryDetails.success===true) {
   setUpdatedStatusMessage(
 PrimaryDetails.message
   );
-const LocaluserId = localStorage.getItem("UserId");
+// const LocaluserId = localStorage.getItem("UserId");
 
-   const { data: result } = await axios.post(
-        "/api/AdminPageInfo",
-        {
-          LocaluserId,
-            refreshType: [
-            "registeredUsers",
-            "fullInfo",
-          ],
-        }
-      );
+//    const { data: result } = await axios.post(
+//         "/api/AdminPageInfo",
+//         {
+//           LocaluserId,
+//             refreshType: [
+//             "registeredUsers",
+//             "fullInfo",
+//           ],
+//         }
+//       );
   
-      console.timeEnd("DASHBOARD_API");
+//       console.timeEnd("DASHBOARD_API");
   
-      if (!result?.success) return;
+//       if (!result?.success) return;
   
-      const {
-        profile,
-        registeredUsers,
-        fullInfo,
-        deployedLength,
-      } = result.data;
-   dispatch( setUsers(registeredUsers))
+//       const {
+//         profile,
+//         registeredUsers,
+//         fullInfo,
+//         deployedLength,
+//       } = result.data;
+//    dispatch( setUsers(registeredUsers))
   
-           dispatch(setFullInfo(fullInfo))
+//            dispatch(setFullInfo(fullInfo))
 
   return;
 }
