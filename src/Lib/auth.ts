@@ -782,10 +782,9 @@ export const ClearDashboardCache = (
         delete globalDashboardCache.fullInfoTime;
         break;
 
-      case "deployment":
-        delete globalDashboardCache.deployment;
-        delete globalDashboardCache.deploymentTime;
-        break;
+     case "deployment":
+  globalDashboardCache.deployment = {};
+  break;
     }
   });
 };
@@ -796,9 +795,16 @@ export const globalDashboardCache: {
   fullInfo?: any[];
   fullInfoTime?: number;
 
-  deployment?: any[];
-  deploymentTime?: number;
-} = {};
+  deployment: Record<
+    string,
+    {
+      data: any[];
+      time: number;
+    }
+  >;
+} = {
+  deployment: {},
+};
 const dashboardResponseCache = new Map<
   string,
   {
@@ -818,7 +824,7 @@ export const profileCache: Record<
     profileTime?: number;
   }
 > = {};
-export const GetDashboardData = async (userId: string) => {
+export const GetDashboardData = async (userId: string, Month: string) => {
   try {
     if (!userId) {
       return {
@@ -865,12 +871,12 @@ export const GetDashboardData = async (userId: string) => {
         (globalDashboardCache.fullInfoTime || 0) >
         CACHE_TIME;
 
-    const needsDeployment =
-      !globalDashboardCache.deployment ||
-      now -
-        (globalDashboardCache.deploymentTime ||
-          0) >
-        CACHE_TIME;
+  const deploymentCache =
+  globalDashboardCache.deployment[Month];
+
+const needsDeployment =
+  !deploymentCache ||
+  now - deploymentCache.time > CACHE_TIME;
 
     const [
       profileRaw,
@@ -892,24 +898,75 @@ export const GetDashboardData = async (userId: string) => {
           )
         : Promise.resolve(null),
 
-      needsUsers
-        ? Users.find({}).toArray()
-        : Promise.resolve(null),
-
+    needsUsers
+  ? Users.find(
+      {},
+      {
+        projection: {
+          _id: 1,
+          userId: 1,
+          userType: 1,
+          Surname: 1,
+          FirstName: 1,
+          LastName: 1,
+          patientName: 1,
+          AadharNumber: 1,
+          Age: 1,
+          Location: 1,
+          ServiceArea: 1,
+          ServiceState: 1,
+          Email: 1,
+          ContactNumber: 1,
+          VerificationStatus: 1,
+          FinelVerification: 1,
+          EmailVerification: 1,
+          ClientStatus: 1,
+          Status: 1,
+          CurrentStatus: 1,
+          Source: 1,
+          NewLead: 1,
+          ClientPriority: 1,
+          LeadDate: 1,
+          PreviewUserType: 1,
+          PDRStatus: 1,
+          Type: 1,
+          Team: 1,
+        },
+      }
+    ).toArray()
+  : Promise.resolve(null),
       needsFullInfo
-        ? UsersFullInfo.find({}).toArray()
-        : Promise.resolve(null),
+  ? UsersFullInfo.find(
+      {},
+      {
+         projection: {
+  _id: 0,
+  "HCAComplitInformation.UserId": 1,
+  "HCAComplitInformation.PermanentState": 1,
+  "HCAComplitInformation.PaymentforStaff": 1,
+  "HCAComplitInformation.ApprovedBy": 1,
+  "HCAComplitInformation.Gender": 1,
+  "HCAComplitInformation.Status": 1,
+  "HCAComplitInformation.Surname": 1,
+  "HCAComplitInformation.First Name": 1,
+   "HCAComplitInformation.LastName": 1,
+}
+      }
+    ).toArray()
+  : Promise.resolve(null),
 
-      needsDeployment
-        ? Deployment.find(
-            {},
-            {
-              projection: {
-                _id: 0,
-              },
-            }
-          ).toArray()
-        : Promise.resolve(null),
+     needsDeployment
+  ? Deployment.find(
+      { Month },
+      {
+        projection: {
+          _id: 0,
+        },
+      }
+    ).toArray()
+  : Promise.resolve(
+      deploymentCache.data
+    ),
     ]);
 
     if (needsProfile) {
@@ -971,66 +1028,31 @@ export const GetDashboardData = async (userId: string) => {
           const info =
             user.HCAComplitInformation || {};
 
-          return {
-            ...user,
-            HCAComplitInformation: {
-              ...info,
-              HCPFirstName: safeDecrypt(
-                info["First Name"]
-              ),
-              HCPContactNumber: safeDecrypt(
-                info["Mobile Number"]
-              ),
-              HCPEmail: safeDecrypt(
-                info["EmailId"]
-              ),
-              HCPSurName: safeDecrypt(
-                info["Surname"]
-              ),
-              HCPAdharNumber: safeDecrypt(
-                info["Aadhar Card No"]
-              ),
-              "Phone No 1": safeDecrypt(
-                info["Phone No 1"]
-              ),
-              "Phone No 2": safeDecrypt(
-                info["Phone No 2"]
-              ),
-              "Email Id": safeDecrypt(
-                info["Email Id"]
-              ),
-              "Client Aadhar No": safeDecrypt(
-                info["Client Aadhar No"]
-              ),
-              "Patient Aadhar Number":
-                safeDecrypt(
-                  info[
-                    "Patient Aadhar Number"
-                  ]
-                ),
-              "Alternative Client Contact":
-                safeDecrypt(
-                  info[
-                    "Alternative Client Contact"
-                  ]
-                ),
-            },
-          };
+    return {
+  ...user,
+  HCAComplitInformation: {
+    UserId: info.UserId,
+    PermanentState: info.PermanentState,
+    PaymentforStaff: info.PaymentforStaff,
+    ApprovedBy: info.ApprovedBy,
+    Gender: info.Gender,
+    Status: info.Status,
+    LastName: info.LastName,
+
+    HCPFirstName: safeDecrypt(info["First Name"]),
+    HCPSurName: safeDecrypt(info.Surname),
+  },
+};
         });
 
       globalDashboardCache.fullInfoTime = now;
     }
-
-    if (
-      needsDeployment &&
-      deploymentRaw
-    ) {
-      globalDashboardCache.deployment =
-        deploymentRaw;
-
-      globalDashboardCache.deploymentTime =
-        now;
-    }
+if (needsDeployment && deploymentRaw) {
+  globalDashboardCache.deployment[Month] = {
+    data: deploymentRaw,
+    time: now,
+  };
+}
 
     const responseData = {
       profile:
@@ -1043,9 +1065,9 @@ export const GetDashboardData = async (userId: string) => {
       fullInfo:
         globalDashboardCache.fullInfo || [],
 
-      deployedLength:
-        globalDashboardCache.deployment ||
-        [],
+    deployedLength:
+  globalDashboardCache.deployment[Month]
+    ?.data || [],
     };
 
     dashboardResponseCache.set(userId, {

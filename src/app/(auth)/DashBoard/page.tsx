@@ -181,7 +181,12 @@ console.log ("Check Personal Information----",stats.registeredUsers)
 
   const BENCH_CACHE_KEY = "benchListInfo";
   const BENCH_CACHE_TTL = 20 * 60 * 1000;
-
+useEffect(() => {
+  router.prefetch("/AdminPage");
+  router.prefetch("/Communication");
+  router.prefetch("/PaymentsInfo");
+  router.prefetch("/SubAccountings");
+}, []);
   // useEffect(() => {
   //   let mounted = true;
 
@@ -853,72 +858,41 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
 //     "Hostel Attendance": () => router.replace("/HostelAttendence"),
 //   };
 
-const navigationLock = useRef(false);
 
-const routeMap: Record<string, () => void> = {
-  "Call Enquiry": () => {
-    dispatch(Update_Main_Filter_Status("Call Enquiry"));
-    dispatch(UpdateUserType("patient"));
-    router.replace("/AdminPage");
-  },
-  Deployment: () => {
-    dispatch(Update_Main_Filter_Status("Deployment"));
-    dispatch(UpdateUserType("patient"));
-    router.replace("/AdminPage");
-  },
-  Timesheet: () => {
-    dispatch(Update_Main_Filter_Status("Timesheet"));
-    dispatch(UpdateUserType("patient"));
-    router.replace("/AdminPage");
-  },
-  "HCP List": () => {
-    dispatch(Update_Main_Filter_Status("HCP List"));
-    dispatch(UpdateUserType("healthcare-assistant"));
-    router.replace("/AdminPage");
-  },
-  Communication: () => router.replace("/Communication"),
-  Payments: () => router.replace("/PaymentsInfo"),
-  Accounts: () => router.replace("/SubAccountings"),
-  Notifications: () => router.replace("/Notifications")
+
+const adminTabs: Record<string, "patient" | "healthcare-assistant"> = {
+  "Call Enquiry": "patient",
+  Deployment: "patient",
+  Timesheet: "patient",
+  "HCP List": "healthcare-assistant",
 };
 
-const Switching = async (tab: string) => {
-  if (navigationLock.current) return;
+const pageRoutes: Record<string, string> = {
+  Communication: "/Communication",
+  Payments: "/PaymentsInfo",
+  Accounts: "/SubAccountings",
+  Notifications: "/Notifications",
+};
 
-  navigationLock.current = true;
+const Switching = (tab: string) => {
+  if (!loggedInEmail) return setLoginEmailPop(true);
+
+  if (!canAccessTab(tab, loggedInEmail))
+    return setShowPermissionPopup(true);
+
   setIsNavigating(true);
-
-  try {
-    setLoadingMessage("Checking permissions...");
-
-    if (!loggedInEmail) {
-      setLoadingMessage("");
-      setLoginEmailPop(true);
-      navigationLock.current = false;
-      setIsNavigating(false);
-      return;
-    }
-
-    if (!canAccessTab(tab, loggedInEmail)) {
-      setLoadingMessage("");
-      setShowPermissionPopup(true);
-      navigationLock.current = false;
-      setIsNavigating(false);
-      return;
-    }
-
-    setLoadingMessage(`Preparing ${tab} page...`);
-
-    const action = routeMap[tab];
-    if (action) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      action();
-      await new Promise(resolve => setTimeout(resolve, 500));
-    } else {
-      console.warn(`No route defined for tab: ${tab}`);
-    }
-  } catch (error) {
-    console.error("Navigation error:", error);
+  setLoadingMessage(`Preparing ${tab} page...`);
+console.time("Checking Navigation Way");
+  if (adminTabs[tab]) {
+    dispatch(Update_Main_Filter_Status(tab));
+    dispatch(UpdateUserType(adminTabs[tab]));
+     setIsNavigating(true);
+    return router.replace("/AdminPage");
+  }
+console.timeEnd("Checking Navigation Way");
+  if (pageRoutes[tab]) {
+     setIsNavigating(true);
+    return router.replace(pageRoutes[tab]);
   }
 };
 
@@ -1025,7 +999,7 @@ const Switching = async (tab: string) => {
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
             </span>
 
           </div>

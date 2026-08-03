@@ -71,6 +71,9 @@ const [loadingMessage, setLoadingMessage] = useState("Initializing...");
 console.log ("Check Users---",users)
   const router = useRouter();
   const dispatch=useDispatch()
+  const SearchMonth=useSelector((state:any)=>state.FilterMonth) 
+  const SearchYear=useSelector((state:any)=>state.FilterYear) 
+  const ArgumentMonth=`${SearchYear}-${SearchMonth}`
 const [showAllReviews, setShowAllReviews] = useState(false);
 const INITIAL_REVIEWS_COUNT = 4;
 const visibleReviews = showAllReviews
@@ -177,7 +180,7 @@ useEffect(() => {
           } else {
             if (!dashboardRequestCache.promise) {
               dashboardRequestCache.promise = axios
-                .post("/api/AdminPageInfo", { userId })
+                .post("/api/AdminPageInfo", { userId, Month: ArgumentMonth })
                 .then(({ data }) => {
                   if (!data.success) throw new Error("Dashboard fetch failed");
 
@@ -189,6 +192,7 @@ useEffect(() => {
                   });
 
                   return data.data;
+                  console.log("Dashboard data fetched and cached:", data.data); 
                 })
                 .finally(() => {
                   dashboardRequestCache.promise = null;
@@ -215,11 +219,11 @@ useEffect(() => {
 
        
         router.replace("/DashBoard");
-        setTimeout(() => {
+       
           if ( window.location.pathname !== "/DashBoard") {
             router.replace("/DashBoard");
           }
-        }, 100);
+ 
 
         return;
       }
@@ -256,7 +260,7 @@ useEffect(() => {
     mounted = false;
     clearInterval(progressTimer);
   };
-}, [dispatch, router]);
+}, [dispatch, router,]);
 
 const ViewContactInfo=()=>{
   const Contact_Container=document.getElementById("ContactInformation")

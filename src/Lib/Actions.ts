@@ -77,7 +77,22 @@ export function encrypt(text: any) {
     content: encrypted,
   };
 }
-
+export const safeDecrypt = (value: any) => {
+  try {
+    if (
+      value &&
+      typeof value === "object" &&
+      "iv" in value &&
+      "content" in value
+    ) {
+      return decrypt(value);
+    }
+    return value;
+  } catch (err) {
+    console.warn("Decryption failed:", err);
+    return value;
+  }
+};
 export function decrypt(hash: { iv: any; content: any }) {
   const decipher = crypto.createDecipheriv(
     algorithm,
