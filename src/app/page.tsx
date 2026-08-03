@@ -16,6 +16,8 @@ import { LoadingData } from '@/Components/Loading/page';
 import { StaffEmails } from '@/Lib/Content';
 import axios from 'axios';
 import { HomeLoadingData } from '@/Components/HomeLoading/page';
+import { startTransition } from "react";
+import { flushSync } from 'react-dom';
 
 const dashboardCache = new Map<
   string,
@@ -112,126 +114,44 @@ const loadingSteps = [
 
 useEffect(() => {
   let mounted = true;
-  let hasNavigated = false;
-
   let progress = 0;
-  let progressTimer: ReturnType<typeof setInterval> | null = null;
 
-  const cleanupProgress = () => {
-    if (progressTimer) {
-      clearInterval(progressTimer);
-      progressTimer = null;
-    }
-  };
+  const progressTimer = setInterval(() => {
+    if (!mounted || progress >= 95) return;
 
-  const safeNavigate = (path: string) => {
-    if (!mounted || hasNavigated) return;
-    hasNavigated = true;
-    router.replace(path);
-  };
+    if (progress < 25) progress += 5;
+    else if (progress < 50) progress += 3;
+    else if (progress < 75) progress += 2;
+    else if (progress < 90) progress += 1;
+    else progress += 0.5;
 
-  const updateLoader = (value: number, message: string) => {
-    if (!mounted) return;
+    const value = Math.min(Math.floor(progress), 95);
+
+    const index = Math.min(
+      Math.floor((value / 95) * loadingSteps.length),
+      loadingSteps.length - 1
+    );
+
     setLoadingProgress(value);
-    setLoadingMessage(message);
-  };
+    setLoadingMessage(
+      `${loadingSteps[index].icon} ${loadingSteps[index].text}`
+    );
+  }, 180);
 
-  const startLoader = () => {
-    updateLoader(0, "Initializing...");
-
-    progressTimer = setInterval(() => {
-      if (!mounted || progress >= 95) return;
-
-      if (progress < 25) progress += 5;
-      else if (progress < 50) progress += 3;
-      else if (progress < 75) progress += 2;
-      else if (progress < 90) progress += 1;
-      else progress += 0.5;
-
-      const value = Math.min(Math.floor(progress), 95);
-
-      const index = Math.min(
-        Math.floor((value / 95) * loadingSteps.length),
-        loadingSteps.length - 1
-      );
-
-      updateLoader(
-        value,
-        `${loadingSteps[index].icon} ${loadingSteps[index].text}`
-      );
-    }, 180);
-  };
-
-  const finishLoader = (path: string) => {
-  cleanupProgress();
-
-  if (mounted) {
-    setLoadingProgress(100);
-    setLoadingMessage("Redirecting...");
-  }
-
-  safeNavigate(path);
-};
-
-  const applyDashboardData = (dashboardData: any) => {
-    if (!mounted || !dashboardData) return;
-
-    dispatch(setUsers(dashboardData.registeredUsers));
-    dispatch(setFullInfo(dashboardData.fullInfo));
-    dispatch(SetDeploymentInfo(dashboardData.deployedLength));
-    dispatch(UpdateUserFirstName(dashboardData.profile?.FirstName));
-  };
-
-  const loadDashboard = async (userId: string) => {
-    if (dashboardRequestCache.data) {
-      applyDashboardData(dashboardRequestCache.data);
-      return dashboardRequestCache.data;
-    }
-
-    if (dashboardRequestCache.promise) {
-      const data = await dashboardRequestCache.promise;
-      applyDashboardData(data);
-      return data;
-    }
-
-    dashboardRequestCache.promise = axios
-      .post("/api/AdminPageInfo", { userId })
-      .then(({ data }) => {
-        if (!data.success) {
-          throw new Error("Dashboard fetch failed");
-        }
-
-        dashboardRequestCache.data = data.data;
-
-        dashboardCache.set(userId, {
-          timestamp: Date.now(),
-          data: data.data,
-        });
-
-        return data.data;
-      })
-      .finally(() => {
-        dashboardRequestCache.promise = null;
-      });
-
-    const dashboardData = await dashboardRequestCache.promise;
-    applyDashboardData(dashboardData);
-
-    return dashboardData;
-  };
-
-  const initialize = async () => {
+  (async () => {
     try {
       const userId = localStorage.getItem("UserId");
 
       if (!userId) {
-        safeNavigate("/sign-in");
+        router.replace("/sign-in");
         return;
       }
 
       setIsChecking(true);
-      startLoader();
+      setLoadingProgress(0);
+      setLoadingMessage("Initializing...");
 
+      // ---------------- Profile ----------------
       const { data: profile } = await axios.post("/api/Home", {
         localValue: userId,
       });
@@ -242,44 +162,99 @@ useEffect(() => {
 
       const email = profile?.Email?.toLowerCase();
 
+      // ---------------- Admin ----------------
       if (StaffEmails.includes(email)) {
         dispatch(CurrentLoginUser(profile.Email));
 
-        const cached = dashboardCache.get(userId);
+        let dashboardData = dashboardRequestCache.data;
 
-        if (cached) {
-          dashboardRequestCache.data = cached.data;
-          applyDashboardData(cached.data);
-        } else {
-          await loadDashboard(userId);
+        if (!dashboardData) {
+          const cached = dashboardCache.get(userId);
+
+          if (cached) {
+            dashboardData = cached.data;
+            dashboardRequestCache.data = cached.data;
+          } else {
+            if (!dashboardRequestCache.promise) {
+              dashboardRequestCache.promise = axios
+                .post("/api/AdminPageInfo", { userId })
+                .then(({ data }) => {
+                  if (!data.success) throw new Error("Dashboard fetch failed");
+
+                  dashboardRequestCache.data = data.data;
+
+                  dashboardCache.set(userId, {
+                    timestamp: Date.now(),
+                    data: data.data,
+                  });
+
+                  return data.data;
+                })
+                .finally(() => {
+                  dashboardRequestCache.promise = null;
+                });
+            }
+
+            dashboardData = await dashboardRequestCache.promise;
+          }
         }
 
-        finishLoader("/DashBoard");
+
+
+        dispatch(setUsers(dashboardData.registeredUsers));
+        dispatch(setFullInfo(dashboardData.fullInfo));
+        dispatch(SetDeploymentInfo(dashboardData.deployedLength));
+        dispatch(UpdateUserFirstName(dashboardData.profile?.FirstName));
+
+        clearInterval(progressTimer);
+
+        flushSync(() => {
+          setLoadingProgress(100);
+          setLoadingMessage("Redirecting...");
+        });
+
+       
+        router.replace("/DashBoard");
+        setTimeout(() => {
+          if ( window.location.pathname !== "/DashBoard") {
+            router.replace("/DashBoard");
+          }
+        }, 100);
+
         return;
       }
 
-      if (!profile?.FinelVerification) {
-        finishLoader(
-          profile?.userType === "healthcare-assistant"
-            ? "/HCARegistraion"
-            : "/HomePage"
-        );
-        return;
-      }
+      // ---------------- Normal User ----------------
+      clearInterval(progressTimer);
 
-      finishLoader("/Profile");
-    } catch (error) {
-      console.error("Initialization Error:", error);
-      cleanupProgress();
-      safeNavigate("/sign-in");
+      flushSync(() => {
+        setLoadingProgress(100);
+        setLoadingMessage("Redirecting...");
+      });
+
+      setIsChecking(false);
+      const destination = !profile?.FinelVerification
+        ? profile?.userType === "healthcare-assistant"
+          ? "/HCARegistraion"
+          : "/HomePage"
+        : "/Profile";
+
+      router.replace(destination);
+      setTimeout(() => {
+        if (mounted && window.location.pathname !== destination) {
+          router.replace(destination);
+        }
+      }, 200);
+    } catch (err) {
+      console.error(err);
+      clearInterval(progressTimer);
+      router.replace("/sign-in");
     }
-  };
-
-  initialize();
+  })();
 
   return () => {
     mounted = false;
-    cleanupProgress();
+    clearInterval(progressTimer);
   };
 }, [dispatch, router]);
 

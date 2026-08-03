@@ -2515,8 +2515,69 @@ export const EducationLevels = [
   "Post Graduate (PG)",
   "Other"
 ];
+export type NavigationResult =
+  | { success: true }
+  | { success: false; reason: "LOGIN_REQUIRED" | "PERMISSION_DENIED" | "UNKNOWN_ROUTE" };
 
+export interface NavigationCallbacks {
+  onLoginRequired?: () => void;
+  onPermissionDenied?: () => void;
+}
+export const ROUTE_MAP = {
+  "Call Enquiry": {
+    path: "/AdminPage",
+    filter: "Call Enquiry",
+    userType: "patient",
+  },
 
+  Deployment: {
+    path: "/AdminPage",
+    filter: "Deployment",
+    userType: "patient",
+  },
+
+  "HCP List": {
+    path: "/AdminPage",
+    filter: "HCP List",
+    userType: "healthcare-assistant",
+  },
+
+  Accounts: {
+    path: "/SubAccountings",
+  },
+
+  Communication: {
+    path: "/Communication",
+  },
+
+  Notifications: {
+    path: "/Notifications",
+  },
+
+  Vendors: {
+    path: "/VendorsPanel",
+  },
+
+  Registration: {
+    path: "/UserTypeRegistration",
+  },
+
+  Payments: {
+    path: "/PaymentsInfo",
+  },
+
+  "Pending PDR": {
+    path: "/PDRView",
+  },
+
+  "Hostel Attendance": {
+    path: "/HostelAttendence",
+  },
+
+  "Document Compliance": {
+    path: "/Documents",
+  },
+} as const;
 export const StaffEmails = [
   "admin@curatehealth.in",
   "tsiddu805@gmail.com",

@@ -23,7 +23,7 @@ export default function AccountingSub(){
         const [showPermissionPopup, setShowPermissionPopup] = useState(false);
           const [LoginEmailPop,setLoginEmailPop]=useState(false)
           const [isNavigating, setIsNavigating] = useState(false);
- 
+ const [loadingMessage, setLoadingMessage] = useState<any>("");
 
   const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
         const router = useRouter()
@@ -38,7 +38,7 @@ export default function AccountingSub(){
     },
         {
       name: "RevenueAnalytics",
-      count: 0, // Update with actual value if needed
+      count: 0, 
       icon: ChartColumn,
       bg: "bg-violet-500",
     },
@@ -96,90 +96,62 @@ const handleLogout = () => {
     []
   );
 
-      const ROUTES: Record<string, string> = {
-  Timesheet: "/AdminPage",
-  "Pending PDR": "/PDRView",
-  Vendors: "/VendorsPanel",
-  "Document Compliance": "/Documents",
-  Invoices: "/Invoices",
-  Payments: "/PaymentsInfo",
-  "HCA Payment": "/HCAAccounts",
-  "Client Payment": "/ClientAccounts",
-  Accounts: "/Accounts",
-  Payable: "/Payable",
-  Reject: "/RejectPayments",
-  Paid: "/SuccessfulPayments",
-  RevenueAnalytics: "/RevenueAnalytics",
-  Notifications: "/Notifications",
-};
-
+   
 const navigationLock = useRef(false);
 
-const routeMap = useMemo(
-  () => ({
-    Timesheet: () => {
-      dispatch(Update_Main_Filter_Status("Timesheet"));
-      dispatch(UpdateUserType("patient"));
-      router.replace("/AdminPage");
-    },
+const routeMap: Record<string, () => void> = {
+ 
+  Timesheet: () => {
+    dispatch(Update_Main_Filter_Status("Timesheet"));
+    dispatch(UpdateUserType("patient"));
+    router.replace("/AdminPage");
+  },
+  
+  RevenueAnalytics: () => router.replace("/RevenueAnalytics"),
+  "HCA Payment": () => router.replace("/HCAAccounts"),
+  "Client Payment": () => router.replace("/ClientPayment"),
+  Invoices: () => router.replace("/Invoices")
+};
 
-    "Pending PDR": () => router.replace("/PDRView"),
-    Vendors: () => router.replace("/VendorsPanel"),
-    "Document Compliance": () => router.replace("/Documents"),
-    Invoices: () => router.replace("/Invoices"),
-    Payments: () => router.replace("/PaymentsInfo"),
-    "HCA Payment": () => router.replace("/HCAAccounts"),
-    "Client Payment": () => router.replace("/ClientAccounts"),
-    Accounts: () => router.replace("/Accounts"),
-    Payable: () => router.replace("/Payable"),
-    Reject: () => router.replace("/RejectPayments"),
-    Paid: () => router.replace("/SuccessfulPayments"),
-    RevenueAnalytics: () => router.replace("/RevenueAnalytics"),
-    Notifications: () => router.replace("/Notifications"),
-  }),
-  [dispatch, router]
-);
+const Switching = async (tab: string) => {
+  if (navigationLock.current) return;
 
-const Switching = useCallback(
-  (name: string) => {
-    if (navigationLock.current) return;
+  navigationLock.current = true;
+  setIsNavigating(true);
+
+  try {
+    setLoadingMessage("Checking permissions...");
 
     if (!loggedInEmail) {
+      setLoadingMessage("");
       setLoginEmailPop(true);
+      navigationLock.current = false;
+      setIsNavigating(false);
       return;
     }
 
-    if (!canAccessTab(name, loggedInEmail)) {
+    if (!canAccessTab(tab, loggedInEmail)) {
+      setLoadingMessage("");
       setShowPermissionPopup(true);
-      return;
-    }
-
-    const navigate = routeMap[name as keyof typeof routeMap];
-
-    if (!navigate) {
-      console.warn(`Unknown route: ${name}`);
-      return;
-    }
-
-    navigationLock.current = true;
-    setIsNavigating(true);
-
-    try {
-      navigate();
-    } catch (error) {
-      console.error(error);
       navigationLock.current = false;
       setIsNavigating(false);
       return;
     }
 
-    requestAnimationFrame(() => {
-      navigationLock.current = false;
-      setIsNavigating(false);
-    });
-  },
-  [loggedInEmail, canAccessTab, routeMap]
-);
+    setLoadingMessage(`Preparing ${tab} page...`);
+
+    const action = routeMap[tab];
+    if (action) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      action();
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } else {
+      console.warn(`No route defined for tab: ${tab}`);
+    }
+  } catch (error) {
+    console.error("Navigation error:", error);
+  }
+};
       
     return(
         <div>
@@ -238,10 +210,11 @@ const Switching = useCallback(
           }
         />
                 
-                      {isNavigating && (
-  <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-    <div className="bg-white px-6 py-4 rounded-lg">
-      Loading...
+     {isNavigating && (
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
+    <div className="bg-white rounded-xl shadow-xl px-8 py-6 flex flex-col items-center gap-4">
+      <div className="h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <p className="text-lg font-semibold">{loadingMessage}</p>
     </div>
   </div>
 )}

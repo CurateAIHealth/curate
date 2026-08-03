@@ -117,23 +117,12 @@ const RESTRICTED_EMAILS = new Set([
 ]);
 const [authChecked, setAuthChecked] = useState(false);
 
-useEffect(() => {
-  if (
-    users?.length === 0 &&
-    UserFullInfo?.length === 0 &&
-    DeploymentInfo?.length === 0
-  ) {
-    router.push("/");
-  }
-  const userId = localStorage.getItem("UserId");
+const hasData =
+  users?.length > 0 &&
+  UserFullInfo?.length > 0  &&
+  DeploymentInfo?.length > 0;
 
-  if (!userId) {
-         router.push("/sign-in");
-    return;
-  }
 
-  setAuthChecked(true);
-}, [router]);
 // useEffect(() => {
 //   let mounted = true;
 
@@ -239,9 +228,11 @@ useEffect(() => {
   const email =loggedInEmail
   if (!email) return;
   console.log ("Check Users---",users)
-
+  if (!hasData) {
+    router.replace("/");
+  }
   if (!RESTRICTED_EMAILS.has(email)) {
-    router.push("/");
+    router.replace("/");
     return;
   }
 
@@ -1535,7 +1526,7 @@ const UpdatePopup = async (a: any) => {
   onClick={() => {setShowClients(true),setProfileId(user.userId)}}
   className="inline-flex items-center justify-center rounded-lg border border-[#1392d3] bg-[#1392d3] px-1 py-1.5 text-[10px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#0f7bb3] hover:shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
 >
-  Download Profile
+  Download Profile 
 </button>
                               </td>
                               
@@ -1898,7 +1889,7 @@ Awaiting Conversion
     if (userId) {
       dispatch(UpdateClient(ClientName));
       dispatch(UpdateUserInformation(userId));
-      router.push("/UserInformation");
+      router.replace("/UserInformation");
     }
   };
 
@@ -1907,7 +1898,7 @@ Awaiting Conversion
   const handleLogout = () => {
     
  
-      router.push('/DashBoard');
+      router.replace('/DashBoard');
     dispatch(Update_Main_Filter_Status(""))
  
   };
@@ -1915,7 +1906,7 @@ Awaiting Conversion
   const handleMainLogout = async () => {
     localStorage.removeItem("UserId");
    
-    router.push("/");
+    router.replace("/");
   };
 
 
@@ -2138,7 +2129,7 @@ console.log("Check for Imp Salary Data----",data
   />
 
   <h1 className="text-lg sm:text-2xl font-extrabold text-[#007B7F] tracking-tight leading-tight flex items-center gap-2">
-    Hi,<span className="text-[#ff1493]">{UserFirstName}</span>
+    Hi,<span className="text-[#ff1493]">{UserFirstName}</span> <button onClick={()=>dispatch(setUsers([]))}>Check{users.length}</button>
 
     
   

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import ModernFooter from "@/Components/Footer/page";
 import { images } from "@/Lib/HomePageContent";
+import { useRouter } from "next/navigation";
 
 const mainMenu = [
   { label: "Home Health", icon: <BriefcaseMedical size={18} />, href: "/" },
@@ -24,7 +25,7 @@ const mainMenu = [
 
 export default function OccupationalHealth() {
   const [mobileOptsOpen, setMobileOptsOpen] = useState(false);
-
+const router = useRouter();
   return (
     <section className="w-full min-h-screen bg-white font-sans">
       <nav className="flex justify-between items-center max-w-7xl mx-auto px-6 py-5">
@@ -116,7 +117,7 @@ export default function OccupationalHealth() {
             Not just checking boxes—transforming workforce wellness through journeys, not programs.
           </p>
           <button
-            onClick={() => window.location.href = "/contact"}
+            onClick={() => router.push("/contact")}
             className="mt-10 bg-[#50c896] hover:bg-blue-800 transition text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg"
           >
             Get Your Custom Plan

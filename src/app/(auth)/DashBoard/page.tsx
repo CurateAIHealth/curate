@@ -69,6 +69,7 @@ import { title } from "process";
 import SubheadingPop from "@/Components/Sunheading/page";
 import SessionExpiredPopup from "@/Components/LoginSesion/page";
 import { useRouter } from "next/navigation";
+import { useDashboardNavigation } from "@/Components/Navigation/page";
 
 const DOCUMENT_KEYS = [
   "AadharAttachmentURL",
@@ -85,8 +86,8 @@ const DOCUMENT_KEYS = [
 
 export default function Dashboard() {
   const router = useRouter()
-  const dispatch = useDispatch();
-const [isNavigating, setIsNavigating] = useState(false);
+    const dispatch = useDispatch();
+  const [isNavigating, setIsNavigating] = useState<boolean>(false);
   const updatedRefreshCount = useSelector((afterEach: any) => afterEach.updatedCount);
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
   const [OtherArea, setOtherArea] = useState<any>("")
@@ -119,7 +120,7 @@ const [isNavigating, setIsNavigating] = useState(false);
   const [showLeadSuggestions, setShowLeadSuggestions] = useState(false);
 
   const [showExtra, setShowExtra] = useState(false);
-
+const [loadingMessage, setLoadingMessage] = useState<any>("");
 
   const options = ["Stay In", "Long Day", "Long Night"];
     const Weightoptions = ["Actual", "Reported", "Estimated"];
@@ -326,16 +327,14 @@ const run = useCallback(async () => {
   }
 }, [dispatch]);
 useEffect(() => {
-  const userId = localStorage.getItem("UserId");
+   const userId = localStorage.getItem("UserId");
 
   if (!userId) {
-    router.push("/sign-in");
+    router.replace("/sign-in");
     return;
   }
 
-  if (stats.registeredUsers === "Loading...") {
-    run();
-  }
+  run();
 }, [router, run, updatedRefreshCount, stats.registeredUsers]);
 
   const BenchList = useMemo(() => {
@@ -564,7 +563,7 @@ if(EnquiryForm.ClientStatus!=="Send"){
           setShowCallEnquiry(false);
           dispatch(Update_Main_Filter_Status('Call Enquiry'));
           dispatch(UpdateUserType("patient"));
-          router.push("/AdminPage");
+          router.replace("/AdminPage");
           dispatch(Refresh("New Call Enquiry Added  Successfully"));
           
         }, 1500);
@@ -711,37 +710,37 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
   const RoutToAdminPage = (A: string) => {
     dispatch(Update_Main_Filter_Status(A));
     dispatch(UpdateUserType("patient"));
-    router.push("/AdminPage");
+    router.replace("/AdminPage");
   };
 
   const navigateToRegistration = () => {
-    router.push("/UserTypeRegistration");
+    router.replace("/UserTypeRegistration");
   };
 
   const navigateToHCPList = () => {
     dispatch(Update_Main_Filter_Status("HCP List"));
     dispatch(UpdateUserType("healthcare-assistant"));
-    router.push("/AdminPage");
+    router.replace("/AdminPage");
   };
 
   const navigateToPDRView = () => {
-    router.push("/PDRView");
+    router.replace("/PDRView");
   };
 
   const navigateToVendors = () => {
-    router.push("/VendorsPanel");
+    router.replace("/VendorsPanel");
   };
 
   const navigateToDocuments = () => {
-    router.push("/Documents");
+    router.replace("/Documents");
   };
 
   const navigateToInvoices = () => {
-    router.push("/Invoices");
+    router.replace("/Invoices");
   };
 
   const navigateToHostel = () => {
-    router.push("/HostelAttendence")
+    router.replace("/HostelAttendence")
   }
 
   const navigateToEmployes = () => {
@@ -755,14 +754,14 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
     }
 
     if (isManagement === true) {
-      router.push("/Employes")
+      router.replace("/Employes")
     }
 
 
   }
 
   const navigateToPayments = () => {
-    router.push("/Payments")
+    router.replace("/Payments")
   }
 
   // const Switching = (A: string) => {
@@ -812,81 +811,116 @@ if(registrationResult.success === true&&EnquiryForm.ClientStatus==="Send"){
     []
   );
 
+
+
+
+
+
+
+// const routeMap = {
+//     "Call Enquiry": () => {
+//       dispatch(Update_Main_Filter_Status("Call Enquiry"));
+//       dispatch(UpdateUserType("patient"));
+//       router.replace("/AdminPage");
+//     },
+
+//     Deployment: () => {
+//       dispatch(Update_Main_Filter_Status("Deployment"));
+//       dispatch(UpdateUserType("patient"));
+//       router.replace("/AdminPage");
+//     },
+
+//     Timesheet: () => {
+//       dispatch(Update_Main_Filter_Status("Timesheet"));
+//       dispatch(UpdateUserType("patient"));
+//       router.replace("/AdminPage");
+//     },
+
+//     "HCP List": () => {
+//       dispatch(Update_Main_Filter_Status("HCP List"));
+//       dispatch(UpdateUserType("healthcare-assistant"));
+//       router.replace("/AdminPage");
+//     },
+
+//     Communication: () => router.replace("/Communication"),
+//     Registration: () => router.replace("/UserTypeRegistration"),
+//     Vendors: () => router.replace("/VendorsPanel"),
+//     Accounts: () => router.replace("/SubAccountings"),
+//     Notifications: () => router.replace("/Notifications"),
+//     Payments: () => router.replace("/PaymentsInfo"),
+//     "Pending PDR": () => router.replace("/PDRView"),
+//     "Document Compliance": () => router.replace("/Documents"),
+//     "Hostel Attendance": () => router.replace("/HostelAttendence"),
+//   };
+
 const navigationLock = useRef(false);
 
-const routeMap = useMemo(
-  () => ({
-    "Call Enquiry": () => {
-      dispatch(Update_Main_Filter_Status("Call Enquiry"));
-      dispatch(UpdateUserType("patient"));
-      router.push("/AdminPage");
-    },
+const routeMap: Record<string, () => void> = {
+  "Call Enquiry": () => {
+    dispatch(Update_Main_Filter_Status("Call Enquiry"));
+    dispatch(UpdateUserType("patient"));
+    router.replace("/AdminPage");
+  },
+  Deployment: () => {
+    dispatch(Update_Main_Filter_Status("Deployment"));
+    dispatch(UpdateUserType("patient"));
+    router.replace("/AdminPage");
+  },
+  Timesheet: () => {
+    dispatch(Update_Main_Filter_Status("Timesheet"));
+    dispatch(UpdateUserType("patient"));
+    router.replace("/AdminPage");
+  },
+  "HCP List": () => {
+    dispatch(Update_Main_Filter_Status("HCP List"));
+    dispatch(UpdateUserType("healthcare-assistant"));
+    router.replace("/AdminPage");
+  },
+  Communication: () => router.replace("/Communication"),
+  Payments: () => router.replace("/PaymentsInfo"),
+  Accounts: () => router.replace("/SubAccountings"),
+  Notifications: () => router.replace("/Notifications")
+};
 
-    Deployment: () => {
-      dispatch(Update_Main_Filter_Status("Deployment"));
-      dispatch(UpdateUserType("patient"));
-      router.push("/AdminPage");
-    },
+const Switching = async (tab: string) => {
+  if (navigationLock.current) return;
 
-    Timesheet: () => {
-      dispatch(Update_Main_Filter_Status("Timesheet"));
-      dispatch(UpdateUserType("patient"));
-      router.push("/AdminPage");
-    },
+  navigationLock.current = true;
+  setIsNavigating(true);
 
-    "HCP List": () => {
-      dispatch(Update_Main_Filter_Status("HCP List"));
-      dispatch(UpdateUserType("healthcare-assistant"));
-      router.push("/AdminPage");
-    },
-
-    Communication: () => router.push("/Communication"),
-    "Pending PDR": () => router.push("/PDRView"),
-    Vendors: () => router.push("/VendorsPanel"),
-    "Document Compliance": () => router.push("/Documents"),
-    Invoices: () => router.push("/Invoices"),
-    Payments: () => router.push("/PaymentsInfo"),
-    Registration: () => router.push("/UserTypeRegistration"),
-    "Hostel Attendance": () => router.push("/HostelAttendence"),
-    Accounts: () => router.push("/SubAccountings"),
-    Notifications: () => router.push("/Notifications"),
-  }),
-  [dispatch, router]
-);
-
-const Switching = useCallback(
-  (tab: string) => {
-    if (navigationLock.current) return;
+  try {
+    setLoadingMessage("Checking permissions...");
 
     if (!loggedInEmail) {
+      setLoadingMessage("");
       setLoginEmailPop(true);
+      navigationLock.current = false;
+      setIsNavigating(false);
       return;
     }
 
     if (!canAccessTab(tab, loggedInEmail)) {
+      setLoadingMessage("");
       setShowPermissionPopup(true);
-      return;
-    }
-
-    const navigate = routeMap[tab as keyof typeof routeMap];
-
-    if (!navigate) {
-      console.warn(`Unknown tab: ${tab}`);
-      return;
-    }
-
-    navigationLock.current = true;
-    setIsNavigating(true);
-
-    navigate();
-
-    requestAnimationFrame(() => {
       navigationLock.current = false;
       setIsNavigating(false);
-    });
-  },
-  [loggedInEmail, canAccessTab, routeMap]
-);
+      return;
+    }
+
+    setLoadingMessage(`Preparing ${tab} page...`);
+
+    const action = routeMap[tab];
+    if (action) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      action();
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } else {
+      console.warn(`No route defined for tab: ${tab}`);
+    }
+  } catch (error) {
+    console.error("Navigation error:", error);
+  }
+};
 
   const PostNotificationInfo = async (Emails: string[]) => {
     try {
@@ -955,13 +989,13 @@ const Switching = useCallback(
 
   const UpdateNewLead = async () => {
     router.prefetch("/NewLead");
-    router.push("/NewLead");
+    router.replace("/NewLead");
   };
 
   const handleLogout = async () => {
     localStorage.removeItem("UserId");
     router.prefetch("/");
-    router.push("/");
+    router.replace("/");
   };
 
   const ShowDompleteInformation = async (userId: any, ClientName: any) => {
@@ -969,7 +1003,7 @@ const Switching = useCallback(
       dispatch(UpdateClient(ClientName));
       dispatch(UpdateUserInformation(userId));
       dispatch(UpdateUserType("patient"));
-      router.push("/UserInformation");
+      router.replace("/UserInformation");
     }
   };
 
@@ -977,7 +1011,7 @@ const Switching = useCallback(
     dispatch(Update_Main_Filter_Status("HCP List"));
     dispatch(UpdateUserType("healthcare-assistant"));
 
-    router.push("/AdminPage");
+    router.replace("/AdminPage");
   };
 
 
@@ -991,8 +1025,9 @@ const Switching = useCallback(
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
             </span>
+
           </div>
 
 
@@ -1172,7 +1207,7 @@ const Switching = useCallback(
                     onClick={() => {
                       localStorage.removeItem("UserId");
                     
-                        router.push("/sign-in");
+                        router.replace("/sign-in");
                       setShowProfileOptions(false);
                     }}
                     className="
@@ -1227,7 +1262,7 @@ const Switching = useCallback(
           onLoginAgain={() => {
             localStorage.removeItem("UserId");
             setShowProfileOptions(false); 
-            router.push("/login")
+            router.replace("/sign-in");
           }
           }
         />
@@ -1283,10 +1318,11 @@ const Switching = useCallback(
           onClose={() => setShowPermissionPopup(false)}
         />
 
-        {isNavigating && (
-  <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-    <div className="bg-white px-6 py-4 rounded-lg">
-      Loading...
+     {isNavigating && (
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
+    <div className="bg-white rounded-xl shadow-xl px-8 py-6 flex flex-col items-center gap-4">
+      <div className="h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <p className="text-lg font-semibold">{loadingMessage}</p>
     </div>
   </div>
 )}

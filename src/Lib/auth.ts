@@ -828,7 +828,7 @@ export const GetDashboardData = async (userId: string) => {
       };
     }
 
-    const CACHE_TIME = 7 * 60 * 1000;
+    const CACHE_TIME = 15 * 60 * 1000;
     const now = Date.now();
 
    

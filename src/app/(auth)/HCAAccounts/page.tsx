@@ -1440,7 +1440,7 @@ const handleChange = (
 
   {/* Desktop Button */}
   <button
-    onClick={() => (window.location.href = "/SubAccountings")}
+    onClick={() => router.replace("/SubAccountings")}
     className="hidden lg:flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 font-semibold text-white shadow transition hover:bg-teal-700"
   >
     Accounts Dashboard
