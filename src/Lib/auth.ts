@@ -834,7 +834,7 @@ export const GetDashboardData = async (userId: string, Month: string) => {
       };
     }
 
-    const CACHE_TIME = 15 * 60 * 1000;
+    const CACHE_TIME = 1 * 60 * 1000;
     const now = Date.now();
 
    
@@ -939,17 +939,41 @@ const needsDeployment =
   ? UsersFullInfo.find(
       {},
       {
-         projection: {
+      projection: {
   _id: 0,
+
   "HCAComplitInformation.UserId": 1,
-  "HCAComplitInformation.PermanentState": 1,
+  "HCAComplitInformation.First Name": 1,
+  "HCAComplitInformation.LastName": 1,
+  "HCAComplitInformation.HCPAdharNumber": 1,
+   "HCAComplitInformation.Date of Birth": 1,
+  "HCAComplitInformation.Age": 1,
+  "HCAComplitInformation.userType": 1,
+  "HCAComplitInformation.Permanent Address": 1,
+  "HCAComplitInformation.HCPEmail": 1,
+  "HCAComplitInformation.Mobile Number": 1,
+  "HCAComplitInformation.CurrentStatus": 1,
+  "HCAComplitInformation.VerificationStatus": 1,
+  "HCAComplitInformation.FinelVerification": 1,
+  "HCAComplitInformation.EmailVerification": 1,
+  "HCAComplitInformation.ClientStatus": 1,
+  "HCAComplitInformation.Status": 1,
+  "HCAComplitInformation.provider": 1,
+  "HCAComplitInformation.payTerms": 1,
   "HCAComplitInformation.PaymentforStaff": 1,
+   "HCAComplitInformation.Current Address": 1,
+   "HCAComplitInformation.Experience": 1,
+   
+ 
+
+
+  // Already present in your projection
   "HCAComplitInformation.ApprovedBy": 1,
   "HCAComplitInformation.Gender": 1,
-  "HCAComplitInformation.Status": 1,
   "HCAComplitInformation.Surname": 1,
-  "HCAComplitInformation.First Name": 1,
-   "HCAComplitInformation.LastName": 1,
+  "HCAComplitInformation.PermanentState": 1,
+   "HCAComplitInformation.Aadhar Card No": 1,
+ 
 }
       }
     ).toArray()
@@ -1021,26 +1045,47 @@ const needsDeployment =
       globalDashboardCache.registeredUsersTime =
         now;
     }
-
+console.log("Current Task",fullInfoRaw)
     if (needsFullInfo && fullInfoRaw) {
       globalDashboardCache.fullInfo =
         fullInfoRaw.map((user: any) => {
           const info =
             user.HCAComplitInformation || {};
-
-    return {
+;
+return {
   ...user,
   HCAComplitInformation: {
     UserId: info.UserId,
-    PermanentState: info.PermanentState,
-    PaymentforStaff: info.PaymentforStaff,
-    ApprovedBy: info.ApprovedBy,
-    Gender: info.Gender,
-    Status: info.Status,
-    LastName: info.LastName,
 
     HCPFirstName: safeDecrypt(info["First Name"]),
     HCPSurName: safeDecrypt(info.Surname),
+
+    LastName: info.LastName,
+    HCPAdharNumber: safeDecrypt(info["Aadhar Card No"]),
+    DateOfBirth: info["Date of Birth"],
+    Age: safeDecrypt(info.Age),
+    userType: info.userType,
+
+    PermanentAddress: safeDecrypt(info["Permanent Address"]),
+    HCPEmail: safeDecrypt(info.HCPEmail),
+    HCPContactNumber: safeDecrypt(info["Mobile Number"]),
+
+    CurrentStatus: info.CurrentStatus||"Leave",
+    CurrentAddress: info["Current Address"],
+    VerificationStatus: info.VerificationStatus,
+    FinelVerification: info.FinelVerification,
+    EmailVerification: info.EmailVerification,
+    ClientStatus: info.ClientStatus,
+    Status: info.Status,
+    Experience: info.Experience,
+
+    Provider: info.provider,
+    PayTerms: info.payTerms,
+    PaymentforStaff: info.PaymentforStaff,
+    ApprovedBy: info.ApprovedBy,
+
+    Gender: info.Gender,
+    PermanentState: info.PermanentState,
   },
 };
         });
@@ -1069,7 +1114,7 @@ if (needsDeployment && deploymentRaw) {
   globalDashboardCache.deployment[Month]
     ?.data || [],
     };
-
+console.groupCollapsed("Dashboard Data Response",responseData.fullInfo);
     dashboardResponseCache.set(userId, {
       timestamp: now,
       data: responseData,

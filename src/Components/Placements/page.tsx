@@ -685,7 +685,7 @@ const normalizedAttendance =
     payTerms:each.payTerms,
     HCPPrice:Math.round(Number(each.PaymentforStaff)) / 30||"Not Provided"
   }));
-
+console.log("Finel TimeSheet Data:", Finel);
  const handleDelete = () => {
     if (selectedReason === "Other") {
       confirmDelete(otherReason.trim());

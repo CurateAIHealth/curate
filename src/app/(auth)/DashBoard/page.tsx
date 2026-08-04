@@ -415,24 +415,24 @@ useEffect(() => {
         icon: FileClock,
         bg: "bg-cyan-500",
       },
-      {
-        name: "Vendors",
-        count: stats.vendorsCount,
-        icon: Building2,
-        bg: "bg-indigo-500",
-      },
-      {
-        name: "Training",
-        count: 0,
-        icon: GraduationCap,
-        bg: "bg-emerald-500",
-      },
-      {
-        name: "Document Compliance",
-        count: stats.documentComplianceCount,
-        icon: FileCheck,
-        bg: "bg-amber-500",
-      },
+      // {
+      //   name: "Vendors",
+      //   count: stats.vendorsCount,
+      //   icon: Building2,
+      //   bg: "bg-indigo-500",
+      // },
+      // {
+      //   name: "Training",
+      //   count: 0,
+      //   icon: GraduationCap,
+      //   bg: "bg-emerald-500",
+      // },
+      // {
+      //   name: "Document Compliance",
+      //   count: stats.documentComplianceCount,
+      //   icon: FileCheck,
+      //   bg: "bg-amber-500",
+      // },
       {
         name: "Registration",
         count: stats.registrationCount,
@@ -446,18 +446,18 @@ useEffect(() => {
         icon: BellRing,
         bg: "bg-sky-500",
       },
-      {
-        name: "Hostel Attendance",
-        count: stats.hostelAttendanceCount,
-        icon: ClipboardCheck,
-        bg: "bg-green-600",
-      },
-      {
-        name: "Employees",
-        count: stats.Employs,
-        icon: UserCheck,
-        bg: "bg-teal-500",
-      },
+      // {
+      //   name: "Hostel Attendance",
+      //   count: stats.hostelAttendanceCount,
+      //   icon: ClipboardCheck,
+      //   bg: "bg-green-600",
+      // },
+      // {
+      //   name: "Employees",
+      //   count: stats.Employs,
+      //   icon: UserCheck,
+      //   bg: "bg-teal-500",
+      // },
     ],
     [stats]
   );
@@ -868,10 +868,17 @@ const adminTabs: Record<string, "patient" | "healthcare-assistant"> = {
 };
 
 const pageRoutes: Record<string, string> = {
+  "Pending PDR": "/PDRView",
   Communication: "/Communication",
   Payments: "/PaymentsInfo",
   Accounts: "/SubAccountings",
   Notifications: "/Notifications",
+  Registration: "/UserTypeRegistration",
+  
+  Vendors: "/VendorsPanel",
+  "Document Compliance": "/Documents",
+  "Hostel Attendance": "/HostelAttendence",
+  Employees: "/Employes",
 };
 
 const Switching = (tab: string) => {
@@ -882,18 +889,25 @@ const Switching = (tab: string) => {
 
   setIsNavigating(true);
   setLoadingMessage(`Preparing ${tab} page...`);
-console.time("Checking Navigation Way");
+
+  console.time("Checking Navigation Way");
+
   if (adminTabs[tab]) {
     dispatch(Update_Main_Filter_Status(tab));
     dispatch(UpdateUserType(adminTabs[tab]));
-     setIsNavigating(true);
+
+    console.timeEnd("Checking Navigation Way");
+
     return router.replace("/AdminPage");
   }
-console.timeEnd("Checking Navigation Way");
+
   if (pageRoutes[tab]) {
-     setIsNavigating(true);
+    console.timeEnd("Checking Navigation Way");
+
     return router.replace(pageRoutes[tab]);
   }
+
+  console.timeEnd("Checking Navigation Way");
 };
 
   const PostNotificationInfo = async (Emails: string[]) => {
@@ -999,7 +1013,7 @@ console.timeEnd("Checking Navigation Way");
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
             </span>
 
           </div>

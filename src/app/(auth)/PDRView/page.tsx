@@ -3,8 +3,8 @@ let cachedRegisteredUsers: any[] = [];
 let cachedTimeSheetInfo: any[] = [];
 
 import React, { useEffect, useState } from "react";
-import { CircleCheckBig, Eye, LogOut, SquarePen, Trash } from "lucide-react";
-import { DeleteDeployMent, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, InserTerminationData, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
+import { AlertCircle, CheckCircle2, CircleCheckBig, Eye, Loader2, LogOut, SquarePen, Trash } from "lucide-react";
+import { DeleteDeployMent, GetRegidterdUsers, GetTimeSheetInfo, GetTimeSheetInfoforPdr, GetUserInformation, InserTerminationData, TestInserTimeSheet, UpdateHCAnstatus, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { GetCurrentDeploymentData, Update_Main_Filter_Status, UpdateFetchedInformation, UpdateMonthFilter, UpdateSubHeading, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "@/Components/Terminations/page";
@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
 import { normalizeDate, years } from "@/Lib/Actions";
 import { teams } from "@/Lib/Content";
+import LoadingPopup from "@/Components/SwitchMonth/page";
 
 
 type AttendanceStatus = "Present" | "Absent" | "Leave" | "Holiday";
@@ -61,6 +62,7 @@ const ClientTable = () => {
   const [SearchResult,setSearchResult]=useState("")
   const [activeTeam, setActiveTeam] = useState(1);
   const SearchMonth=useSelector((state:any)=>state.FilterMonth) 
+    const [isSwitchingMonth, setIsSwitchingMonth] = useState(false);
   const SearchYear=useSelector((state:any)=>state.FilterYear) 
 const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
   const SubHeading = useSelector((state: any) => state.SubHeadinList);
@@ -78,7 +80,7 @@ useEffect(() => {
 
       const [ timesheetInfo] = await Promise.all([
       
-        GetTimeSheetInfo(),
+        GetTimeSheetInfoforPdr(SearchMonth, SearchYear),
       ]);
 
       if (!mounted) return;
@@ -98,8 +100,8 @@ useEffect(() => {
   return () => {
     mounted = false;
   };
-}, [dispatch,]);
-console.log ("Check Userssss-",users)
+}, [dispatch]);
+console.log ("ssssqs",ClientsInformation)
   const GetTeamNumber = (A: any) => {
     if (!users?.length || !A) return "Not Entered";
 
@@ -399,7 +401,27 @@ const handleLogout = () => {
   const filteredClients = FilterFinelTimeSheet.filter(client =>
  client.PDRStatus === activeTab&&client.Team===activeTeam
 );
+const GetMonthFreshData = async (r: string) => {
+  try {
+     setIsSwitchingMonth(true);
+  SetActionStatusMessage("Please Wait Fetching Data...")
+   
+    dispatch(UpdateMonthFilter(r)); 
+`${SearchYear}-${r}`
+   
 
+       const UpdatedData:any=await GetTimeSheetInfoforPdr(r, SearchYear)
+       console.log("UpdatedData:", UpdatedData);
+       console.log("Redux SearchMonth:", SearchMonth);
+console.log("Selected Month:", r);
+      setClientsInformation(UpdatedData ?? []);
+       setIsSwitchingMonth(false);
+        SetActionStatusMessage("Data Updated Successfully")
+  } catch (error) {
+    console.error("GetMonthFreshData Error:", error);
+    SetActionStatusMessage("Failed to fetch data. Please try again.");
+  }
+};
 
  return (
 <div className="w-full min-h-screen bg-gradient-to-br from-[#f9fbfa] via-[#f0fdfa] to-[#ecfeff] flex flex-col gap-4 sm:gap-6 lg:gap-8 p-3 sm:p-4 md:p-6 lg:p-8 relative overflow-hidden">
@@ -411,6 +433,11 @@ const handleLogout = () => {
   </div>
 
   
+  <LoadingPopup
+    open={isSwitchingMonth}
+    title="Switching Month"
+    description="Updating dashboard data..."
+  />
 <div className="flex flex-col xl:flex-row justify-between xl:items-center gap-4 lg:gap-6 bg-white/90 backdrop-blur-xl rounded-2xl shadow-[0_6px_30px_rgba(0,0,0,0.08)] border border-gray-100 p-4 sm:p-5 lg:p-6">
     <div>
       <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">🩺 Patient Daily Record</h1>
@@ -501,6 +528,32 @@ const handleLogout = () => {
   <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
     PDR List
   </h3>
+ <div className="flex justify-center">
+  {ActionStatusMessage && (
+    <div
+      className={`inline-flex items-center gap-3 px-5 py-3 rounded-2xl shadow-lg border transition-all duration-300
+        ${
+          ActionStatusMessage.toLowerCase().includes("please wait")
+            ? "bg-blue-50 border-blue-200 text-blue-700"
+            : ActionStatusMessage.toLowerCase().includes("success")
+            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+            : ActionStatusMessage.toLowerCase().includes("failed")
+            ? "bg-red-50 border-red-200 text-red-700"
+            : "bg-gray-50 border-gray-200 text-gray-700"
+        }`}
+    >
+      {ActionStatusMessage.toLowerCase().includes("please wait") ? (
+        <Loader2 className="w-5 h-5 animate-spin" />
+      ) : ActionStatusMessage.toLowerCase().includes("success") ? (
+        <CheckCircle2 className="w-5 h-5" />
+      ) : (
+        <AlertCircle className="w-5 h-5" />
+      )}
+
+      <span className="font-medium">{ActionStatusMessage}</span>
+    </div>
+  )}
+</div>
 <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
    <div className="w-full sm:w-[130px]">
      {/* <label className="block text-xs font-semibold text-gray-600 mb-1">
@@ -509,7 +562,7 @@ const handleLogout = () => {
  
      <select
        value={SearchMonth}
-       onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
+       onChange={(e) => GetMonthFreshData(e.target.value)}
        className="
          w-full h-[44px] rounded-xl
          border border-gray-300
