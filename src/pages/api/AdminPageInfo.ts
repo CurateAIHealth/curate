@@ -36,6 +36,10 @@ export default async function handler(
     console.time("API_DASHBOARD");
 
     if (refreshType) {
+      console.log(
+        `Refreshing cache for user ${userId} with types:`,
+        refreshType
+      );
       const refreshArray = Array.isArray(refreshType)
         ? refreshType
         : [refreshType];
@@ -70,7 +74,7 @@ export default async function handler(
     }
 
     const result = await GetDashboardData(userId,Month);
-console.log(`Dashboard data fetched for :`, result);
+console.log(`Dashboard data fetched for :`, result.data);
     console.timeEnd("API_DASHBOARD");
 
     return res.status(200).json(result);

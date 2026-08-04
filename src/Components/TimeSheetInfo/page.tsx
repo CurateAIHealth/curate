@@ -23,6 +23,7 @@ import { CurrentRegisterUser } from "@/Redux/reducer";
 import TimeSheetTerminationTableInfo from "../TimeSheetTerminationTableInfo/page";
 import axios from "axios";
 import EmptyState from "../NoDeployments/page";
+import LoadingPopup from "../SwitchMonth/page";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -51,6 +52,7 @@ const [attendanceInfo,setAttendenceInfo]=useState<any>()
    const [Attendecestatus, setAttendenceStatus] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+    const [isSwitchingMonth, setIsSwitchingMonth] = useState(false);
   const [ShowAttendencePopUp,setShowAttendencePopUp]=useState(false)
 const [showFullMonth,setShowFullMonth]=useState(false)
 const [ParticularDate,SetParticularDate]=useState<any>()
@@ -1023,7 +1025,29 @@ const UpdateAttendecByDateRange = async () => {
     );
   }
 };
+const GetMonthFreshData = async (r: string) => {
+  try {
+    setIsSwitchingMonth(true);
+    setSelectedMonth(r);
 
+    const month = Number(r);
+    const userId = localStorage.getItem("UserId");
+
+    const { data } = await axios.post("/api/AdminPageInfo", {
+      userId,
+      Month: `${selectedYear}-${month}`,
+    });
+
+    console.log("Check New Data", data.data.deployedLength);
+
+    setClientsInformation(data.data.deployedLength);
+    dispatch(SetDeploymentInfo(data.data.deployedLength));
+    setIsSwitchingMonth(false);
+  } catch (error) {
+    console.error("GetMonthFreshData Error:", error);
+    SetStatusMessage("Failed to fetch data. Please try again.");
+  }
+};
 
     const flexDate = `${selectedYear}-${selectedMonth}-${String(
       ParticularDate
@@ -1067,7 +1091,7 @@ const PresentScreen=()=>{
         onClick={() => setshowAttendeceMissingCalendar(true)}
         className="px-4 py-2 text-sm bg-blue-500 text-white cursor-pointer rounded-lg shadow hover:bg-blue-800 w-full sm:w-auto"
       >
-        View Missing Attendance
+        View Missing Attendance {selectedMonth} {selectedYear}
       </button>
       
 {/* 
@@ -1113,7 +1137,10 @@ const PresentScreen=()=>{
      
       <select
         value={selectedMonth}
-        onChange={(e) => setSelectedMonth(e.target.value)}
+        onChange={(e) => {
+         GetMonthFreshData(e.target.value);
+          
+        }}
         className="rounded-xl border border-gray-300 p-2 bg-white shadow-sm
                    hover:border-[#4ade80] focus:border-[#22c55e] focus:ring-1 focus:ring-[#4ade80]
                    w-full sm:w-auto"
@@ -1155,7 +1182,11 @@ const PresentScreen=()=>{
     }}
   />
 )}
-
+<LoadingPopup
+  open={isSwitchingMonth}
+  title="Switching Month"
+  description="Updating dashboard data..."
+/>
 <DeletePopup
   open={showDeletePopup}
   data={deleteItem}

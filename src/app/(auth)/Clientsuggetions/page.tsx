@@ -6,6 +6,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import SuitableHcpList from '@/Components/HCPSugetions/page';
 import {
   GetRegidterdUsers,
+  GetRegidterdUsersForClient,
+  GetRegidterdUsersForMathing,
   GetUserInformation,
   GetUsersFullInfo,
 } from '@/Lib/user.action';
@@ -75,20 +77,18 @@ const ClientSuggetions = () => {
       setLoading(true);
 
       try {
-        if (updatedRefresh > 0) {
-          cacheRef.current.users = null;
-          cacheRef.current.fullInfo = null;
-        }
+       
 
-        const [users, fullInfo] = await Promise.all([
-          cacheRef.current.users ?? GetRegidterdUsers(),
-          cacheRef.current.fullInfo ?? GetUsersFullInfo(),
+        const [users, fullInfo,Final] = await Promise.all([
+           GetRegidterdUsersForMathing(currentClientUserId),
+          GetUsersFullInfo(),
+         GetRegidterdUsersForClient()
         ]);
 
-        if (!cacheRef.current.users) cacheRef.current.users = users;
-        if (!cacheRef.current.fullInfo) cacheRef.current.fullInfo = fullInfo;
+        console.log('Fetched users:', users);
+        console.log('Fetched full info:', Final);
 
-        if (!mounted) return;
+      
 
         const patient = users.filter(
           (u: any) =>
@@ -108,12 +108,11 @@ const ClientSuggetions = () => {
 
         setClients(patient);
         setHCP(hcpList);
-        setUsersInfo(users);
+        setUsersInfo(Final);
+          setLoading(false);
       } catch (err) {
         console.error('Fetch error', err);
-      } finally {
-        mounted && setLoading(false);
-      }
+      } 
     };
 
     fetchData();

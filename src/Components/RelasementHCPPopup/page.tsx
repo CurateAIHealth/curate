@@ -9,6 +9,8 @@ import { calculateAgeIndianFormat } from "@/Lib/Actions";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
 
 interface HCP {
+  CurrentAddress: string;
+  DateOfBirth: string | number | Date;
   UserId: string;
   HCPFirstName: string;
   HCPSurName?: string;
@@ -51,8 +53,7 @@ const RepleasementHCPPopup = ({
   const dispatch = useDispatch();
 
   if (!open) return null;
-console.log ("Check information of Hcps-----",filteredHcps.filter((each:any)=>each.UserId
-==="391a2c83-3ef3-4029-a215-7539cbc66707"))
+
   const showCompleteInformation = (
     userId: string,
     clientName: string
@@ -82,6 +83,8 @@ const GetHCPFullName = (A: any) => {
 
   return fullName;
 }
+
+
   const HCA_List = filteredHcps.filter((each: any) => {
 const typeMatch = [
   "healthcare-assistant",
@@ -89,6 +92,8 @@ const typeMatch = [
   "HCP",
   "HCPT",
 ].includes(each.userType?.trim());
+
+
 
  const isNotAssigned =
   !Array.isArray(each.Status) ||
@@ -102,7 +107,7 @@ const typeMatch = [
 
   return typeMatch && isNotAssigned && isValidCurrentStatus&&genderMatch;
 });
-
+console.log ("Check information of Hcps-----",filteredHcps)
   const searchedHcps = HCA_List.filter((hcp) =>
     `${hcp.HCPFirstName} ${hcp.HCPLastName || ""}`
       .toLowerCase()
@@ -259,17 +264,17 @@ const typeMatch = [
                       </p>
 
                       <p className="text-[10px] text-gray-500 truncate mt-1">
-                        {hcp["Current Address"] || "-"}
+                        {hcp.CurrentAddress || "-"}
                       </p>
 
                       {/* Tags */}
                       <div className="flex justify-center flex-wrap gap-1 mt-2">
                         <span className="text-[9px] px-2 py-1 rounded-full bg-green-100 text-green-700">
                           Age :
-                          {hcp["Date of Birth"]
+                          {hcp.DateOfBirth
                             ? calculateAgeIndianFormat(
                                 new Date(
-                                  hcp["Date of Birth"]
+                                  hcp.DateOfBirth
                                 ).toLocaleDateString("en-IN")
                               )
                             : "-"}

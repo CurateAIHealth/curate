@@ -59,7 +59,7 @@ type Props = {
 };
 
 const SuitableHcpList: React.FC<Props> = ({ clients, hcps ,usersInfo}) => {
-console.log("Check Client Information------",clients)
+
   const [selectedClientIndex, setSelectedClientIndex] = useState<number>(0);
   const [ExsitingInformedUsers, setExsitingInformedUsers] = useState<any[]>([]);
   const [StatusMessage, setStatusMessage] = useState<any>();
@@ -292,7 +292,7 @@ const filteredHcps = hcps.filter((each: any) => {
   const matchesSearch =
     each?.HCPFirstName?.toLowerCase().includes(query.toLowerCase()) ||
     each?.HCPSurName?.toLowerCase().includes(query.toLowerCase());
-
+console.log("Check Filter Information------",each)
   // Find matching user
   const matchedUser = usersInfo.find(
     (user: any) => user.userId === each.UserId
@@ -326,7 +326,7 @@ const filteredHcps = hcps.filter((each: any) => {
         GenderMatch;
 });
 
-
+console.log("Check Client Information------",filteredHcps)
 
 
 

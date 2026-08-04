@@ -2848,6 +2848,37 @@ return safeUsers
   }
 }
 
+export const GetTimeSheetInfoforPdr = async (
+  SearchMonth?: string,
+  SearchYear?: string
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("TimeSheet");
+
+    const filter: any = {};
+
+    if (SearchMonth && SearchYear) {
+      filter.Month = `${SearchYear}-${Number(SearchMonth)}`;
+    } else if (SearchYear) {
+      filter.Month = { $regex: `^${SearchYear}-` };
+    } else if (SearchMonth) {
+      filter.Month = { $regex: `-${Number(SearchMonth)}$` };
+    }
+
+    const TimeSheetInfoData = await collection.find(filter).toArray();
+
+    return TimeSheetInfoData.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+};
+
 export const ClearClientTimeSheetInfo=async(ImpClientId:any,ImpHCAId:any)=>{
   try{
 const cluster=await clientPromise
@@ -6623,6 +6654,91 @@ export const GetRegidterdUsers = async () => {
     const Collection = Db.collection("Registration");
 
     const RegistrationResult = await Collection.find().toArray();
+
+    const safeUsers = RegistrationResult.map((user: any) => {
+      const decryptedUser: any = {
+        ...user,
+        _id: user._id?.toString() ?? null,
+      };
+
+      for (const [key, value] of Object.entries(user)) {
+        if (
+          value &&
+          typeof value === "object" &&
+          "iv" in value &&
+          "content" in value
+        ) {
+          try {
+            decryptedUser[key] = decrypt(value as { iv: string; content: string });
+          } catch (e) {
+            console.warn(`Failed to decrypt field ${key} for user ${user._id}:`, e);
+            decryptedUser[key] = value;
+          }
+        }
+      }
+
+      return decryptedUser;
+    });
+
+    return safeUsers;
+  } catch (err: any) {
+    console.error("Error in GetRegidterdUsers:", err);
+    return [];
+  }
+};
+
+export const GetRegidterdUsersForClient = async () => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Registration");
+
+    const RegistrationResult = await Collection.find().project({
+      PreviewUserType: 1,
+      userId: 1,
+      CurrentStatus: 1,
+    }).toArray();
+
+    const safeUsers = RegistrationResult.map((user: any) => {
+      const decryptedUser: any = {
+        ...user,
+        _id: user._id?.toString() ?? null,
+      };
+
+      for (const [key, value] of Object.entries(user)) {
+        if (
+          value &&
+          typeof value === "object" &&
+          "iv" in value &&
+          "content" in value
+        ) {
+          try {
+            decryptedUser[key] = decrypt(value as { iv: string; content: string });
+          } catch (e) {
+            console.warn(`Failed to decrypt field ${key} for user ${user._id}:`, e);
+            decryptedUser[key] = value;
+          }
+        }
+      }
+
+      return decryptedUser;
+    });
+
+    return safeUsers;
+  } catch (err: any) {
+    console.error("Error in GetRegidterdUsers:", err);
+    return [];
+  }
+};
+
+
+export const GetRegidterdUsersForMathing = async (ImpId:any) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Registration");
+
+    const RegistrationResult = await Collection.find({ userId: ImpId }).toArray();
 
     const safeUsers = RegistrationResult.map((user: any) => {
       const decryptedUser: any = {
