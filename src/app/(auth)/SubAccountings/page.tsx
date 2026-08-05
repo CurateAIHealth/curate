@@ -104,6 +104,7 @@ const routeMap: Record<string, () => void> = {
   Timesheet: () => {
     dispatch(Update_Main_Filter_Status("Timesheet"));
     dispatch(UpdateUserType("patient"));
+    setIsNavigating(false);
     router.replace("/AdminPage");
   },
   

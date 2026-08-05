@@ -19,6 +19,7 @@ import { GetAllUsersData, PostINPayblePage, PostINPayblePageforRepleasments, Pos
 import { AssignSuitableIcon, getDaysInMonth, toProperCaseLive } from "@/Lib/Actions";
 import PopupToast from "@/Components/ExpencesPopUp/page";
 import axios from "axios";
+import LoadingPopup from "@/Components/SwitchMonth/page";
 
 type Transaction = {
   id: string;
@@ -64,6 +65,7 @@ export default function HCAPayrollTable() {
   const [search, setSearch] = useState("");
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const [SelectedServiceState,SetServiceState]=useState("Telangana")
+  const [isSwitchingMonth, setIsSwitchingMonth] = useState(false);
   const [selectedTransactions, setSelectedTransactions] =
     useState<PayrollRow | null>(null);
   const [originalValues, setOriginalValues] = useState<Record<number, PayrollRow>>(
@@ -81,13 +83,14 @@ const [showFullMonth,setShowFullMonth]=useState(false)
 const [attendanceInfo,setAttendenceInfo]=useState<any>()
 const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
 const users=useSelector((state:any)=>state.AdminFullInfo)
-const ClientsInformation=useSelector((state:any)=>state.AdminDeployment)
+const ReduxClientsInformation=useSelector((state:any)=>state.AdminDeployment)
 
      const [activeStatus, setActiveStatus] = useState("Process");
 const [menuOpen, setMenuOpen] = useState(false);
 const statuses = ["Process", "Save", "Hold", "Reject"];
       const [ReplacementInformation, setReplacementInformation] = useState<Replace[]>([]);
       const [TerminationInformation, setTerminationInformation] = useState<Termination[]>([]);
+      const [ClientsInformation, setClientsInformation] = useState<any>(ReduxClientsInformation);
    
    const [ActionStatusMessage,SetActionStatusMessage]= useState<any>("");
     const [isChecking, setIsChecking] = useState(false);
@@ -907,7 +910,34 @@ const grouped = Object.values(
 // console.log("Check Replacementinformation----",ReplacementAttendenceinformation)
 
 
+const GetMonthFreshData = async (r: string) => {
+  try {
+  
+    setIsSwitchingMonth(true);
+    dispatch(UpdateMonthFilter(r));
 
+    const userId = localStorage.getItem("UserId");
+
+   const { data } = await axios.post(
+  "/api/AdminPageInfo",
+  {
+    userId,
+    Month: `${SearchYear}-${r}`,
+  }
+);
+
+
+
+    console.log("Check New Data", data.data.deployedLength);
+setClientsInformation(data.data.deployedLength)
+    dispatch(SetDeploymentInfo(data.data.deployedLength));
+ setIsSwitchingMonth(false);
+    
+  } catch (error) {
+    console.error("GetMonthFreshData Error:", error);
+    SetActionStatusMessage("Failed to fetch data. Please try again.");
+  }
+};
 
 const NumberOfDaysInMonth = getDaysInMonth(
   Number(SearchMonth),
@@ -1559,7 +1589,7 @@ const handleChange = (
     <div className="flex gap-3 sm:w-auto">
       <select
         value={SearchMonth}
-        onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
+        onChange={(e) => GetMonthFreshData(e.target.value)}
         className="h-11 flex-1 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200 sm:w-[150px] sm:flex-none"
       >
         <option value="">All Months</option>
@@ -1602,6 +1632,11 @@ const handleChange = (
         }
       />
 
+<LoadingPopup
+  open={isSwitchingMonth}
+  title="Switching Month"
+  description="Updating dashboard data..."
+/>
     <div className="w-full bg-white rounded-2xl shadow-md overflow-hidden">
       {showFullMonth && (
   <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-2">

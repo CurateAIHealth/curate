@@ -24,37 +24,47 @@ export default function LoadingPopup({
       <div className="p-7">
 
         {/* Loader */}
-        <div className="mx-auto relative flex h-20 w-20 items-center justify-center">
+       <div className="relative mx-auto flex h-24 w-24 items-center justify-center">
 
-          <div className="absolute h-20 w-20 rounded-full border-4 border-[#1392d3]/15"></div>
+  {/* Soft Glow */}
+  <div className="absolute h-24 w-24 rounded-full bg-[#1392d3]/15 blur-xl animate-pulse" />
 
-          <div className="absolute h-20 w-20 rounded-full border-4 border-t-[#1392d3] border-r-[#1392d3] border-b-transparent border-l-transparent animate-spin"></div>
+  {/* Static Ring */}
+  <div className="absolute h-24 w-24 rounded-full border-[3px] border-[#1392d3]/15" />
 
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1392d3]/10">
-            <span className="text-2xl">📅</span>
-          </div>
+  {/* Rotating Ring */}
+  <div className="absolute h-24 w-24 animate-spin rounded-full border-[3px] border-transparent border-t-[#1392d3] border-r-[#50c896]" />
 
-        </div>
+  {/* Inner Glass Circle */}
+  <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-white/30 bg-white shadow-lg backdrop-blur-md">
+
+    <div className="absolute inset-0 rounded-full bg-[#1392d3]/10 animate-ping opacity-20" />
+
+   <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-xl ring-4 ring-[#1392d3]/10">
+  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1392d3]/10">
+    <CalendarDays
+      className="text-[#1392d3]"
+      size={22}
+      strokeWidth={2.2}
+    />
+  </div>
+</div>
+
+  </div>
+
+</div>
 
         <h2 className="mt-5 text-center text-xl font-bold text-gray-800">
           Switching Month
         </h2>
 
         <p className="mt-2 text-center text-sm text-gray-500">
-          Loading deployment data for
+Switching to Selected Month. Please wait a moment........
         </p>
 
        
 
-        {/* Progress */}
-
-        <div className="mt-7">
-         
-
-          <p className="mt-3 text-center text-xs text-gray-400">
-            Please wait a moment...
-          </p>
-        </div>
+       
 
       </div>
     </div>

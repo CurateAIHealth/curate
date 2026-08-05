@@ -421,11 +421,11 @@ const updateInvoiceEditedInformation = async () => {
             </div> */}
             <button
            onClick={()=>{ 
-               router.push('/AdminPage');
+               router.replace('/PDRView');
             dispatch(Refresh(""))}}
               className="flex cursor-pointer items-center gap-2 ml-auto w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
             >
-             Admin  Page 
+             PDR Dashboard
             </button>
           </h1>
 

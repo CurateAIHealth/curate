@@ -134,7 +134,7 @@ const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
 
 };
   const Revert = () => {
-    router.push('/AdminPage');
+    router.replace('/AdminPage');
   };
 
  const UpdateAssignHca = async (
