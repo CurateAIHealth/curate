@@ -1091,7 +1091,7 @@ const PresentScreen=()=>{
         onClick={() => setshowAttendeceMissingCalendar(true)}
         className="px-4 py-2 text-sm bg-blue-500 text-white cursor-pointer rounded-lg shadow hover:bg-blue-800 w-full sm:w-auto"
       >
-        View Missing Attendance {selectedMonth} {selectedYear}
+        View Missing Attendance 
       </button>
       
 {/* 

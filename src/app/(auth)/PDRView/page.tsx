@@ -374,7 +374,7 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((each: any) => {
 
 const handleLogout = () => {
   dispatch(Update_Main_Filter_Status(""))
-  Router.push('/DashBoard'); 
+  Router.replace('/DashBoard'); 
        
 };
 
