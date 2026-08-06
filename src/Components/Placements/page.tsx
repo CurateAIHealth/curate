@@ -17,7 +17,7 @@ import { LoadingData } from "../Loading/page";
 import PaymentModal from "../PaymentInfoModel/page";
 import { filterColors, IndianStates, months, Placements_Filters, teams, years } from "@/Lib/Content";
 import ReplacementsTable from "../ReplacementsTable/page";
-import { AssignSuitableIcon, GetAwaitInfoData, getDaysBetween, getDueDaysStatus, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
+import { AssignSuitableIcon, calculateMargin, GetAwaitInfoData, getDaysBetween, getDaysInMonthForMonthName, getDueDaysStatus, getPopularArea, rupeeToNumber, toProperCaseLive } from "@/Lib/Actions";
 import { useRouter } from "next/navigation";
 import { button, div } from "framer-motion/client";
 import SalaryPopup from "../HCPSalary/page";
@@ -438,7 +438,17 @@ const { data: UpdateFreezeStatus } = await axios.post(
 
     }
   }
+const GetHCPPayment = (A: any) => {
+    if (!users?.length || !A) return "Not Entered";
 
+    const address =
+      users
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.["PaymentforStaff"]||0;
+
+    return Number(address) 
+  };
  const handleTeamChange = async(ClientInfo:any,team: any) => {
 
     SetActionStatusMessage("Please Wait.....")
@@ -1618,6 +1628,18 @@ ActionStatusMessage
 
 
 ]);
+const TotalServiceCharge = processedData.reduce((acc: number, record: any) => {
+  const serviceCharge = parseFloat(record.ServiceCharge) || 0;
+  return acc + serviceCharge;
+}, 0);
+
+const TotalHCPPayment = processedData.reduce((acc: number, record: any) => {
+  const hcpTotal =Math.round(Number(GetHCPPayment(record.HCA_Id)) / getDaysInMonthForMonthName(SearchMonth,SearchYear)) || 0;
+  return acc + hcpTotal;
+}, 0);
+
+const TotalMargin=calculateMargin(TotalServiceCharge,TotalHCPPayment)
+  
 console.log("Check Processed Data",FinelTimeSheet)
 const UpdateServiceCharge=async(A:any)=>{
   SetActionStatusMessage("Please Wait...")
@@ -1990,7 +2012,33 @@ const OmServiceView = () => {
   </div>
 )}
   {/* Filters */}
+<div className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white px-2 py-3 shadow-sm">
+  <div className="flex flex-col items-center text-center">
+    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+      Daily Total Margin
+    </p>
 
+    <h2 className="mt-1 text-md font-bold text-slate-800">
+      ₹{TotalMargin.marginAmount.toLocaleString()}
+    </h2>
+  </div>
+
+  <div className="h-10 w-px bg-gray-200" />
+
+  <div
+    className={`rounded-lg px-3 py-2 text-center ${
+      TotalMargin.marginPercentage < 36
+        ? "bg-red-50 text-red-600"
+        : "bg-emerald-50 text-emerald-600"
+    }`}
+  >
+    <p className="text-md font-bold">
+      {Math.round(TotalMargin.marginPercentage)}%
+    </p>
+
+ 
+  </div>
+</div>
   <div className="flex flex-col items-center sm:flex-row gap-3 w-full sm:w-auto">
     
 <button
@@ -2013,6 +2061,7 @@ onClick={() => setShowAttendanceModal(true)}
       />
     </svg>
   </span>
+
 
   <div className="flex flex-col  leading-tight">
     <span className="text-xs">Pending Attendance</span>
@@ -2366,6 +2415,9 @@ setShowCareTakerPriceUpdate(false)
     <th className="w-[120px] px-2 py-2 text-left">
       Service Charge
     </th>
+     <th className="w-[120px] px-2 py-2 text-left">
+  Margin
+    </th>
 
     <th className="min-w-[120px] max-w-[150px] px-2 py-2 text-left truncate">
       Patient 
@@ -2552,6 +2604,7 @@ const EditDate =
   <span className="text-[11px] font-medium whitespace-nowrap mt-1">
     ₹{rupeeToNumber(c.ServiceCharge).toFixed(2)}
     <span className="text-gray-500 text-[10px] ml-1">/D</span>
+    
   </span>
 </div>:      <span>
         <span className="text-[10px] text-green-900 underline">* Monthly Payment </span>
@@ -2560,6 +2613,46 @@ const EditDate =
       
       </span>}
  
+</td>
+
+
+<td className="px-3 py-3 text-xs">
+  {(() => {
+    const HCPAmount=Math.round(Number(GetHCPPayment(c.HCA_Id)) / getDaysInMonthForMonthName(SearchMonth,SearchYear))
+    const { marginPercentage, marginAmount } = calculateMargin(
+      c.ServiceCharge,
+      HCPAmount
+    );
+
+    const isLow = marginPercentage < 36;
+
+    return (
+      <div className="leading-tight">
+        <div className="flex items-center gap-1">
+          <span
+            className={`h-2 w-2 rounded-full ${
+              isLow ? "bg-red-500" : "bg-emerald-500"
+            }`}
+          />
+
+          <span
+            className={`text-base font-extrabold tracking-tight ${
+              isLow ? "text-red-600" : "text-emerald-600"
+            }`}
+          >
+            {marginPercentage}%
+          </span>
+        </div>
+
+        <div className="mt-1 text-[13px] font-semibold text-slate-700">
+          ₹{marginAmount.toLocaleString()}
+          <span className="ml-1 text-[11px] font-medium text-slate-400">
+            / D
+          </span>
+        </div>
+      </div>
+    );
+  })()}
 </td>
 
 

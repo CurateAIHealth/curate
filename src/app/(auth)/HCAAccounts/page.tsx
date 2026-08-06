@@ -930,8 +930,9 @@ const GetMonthFreshData = async (r: string) => {
 
     console.log("Check New Data", data.data.deployedLength);
 setClientsInformation(data.data.deployedLength)
-    dispatch(SetDeploymentInfo(data.data.deployedLength));
  setIsSwitchingMonth(false);
+    dispatch(SetDeploymentInfo(data.data.deployedLength));
+
     
   } catch (error) {
     console.error("GetMonthFreshData Error:", error);
