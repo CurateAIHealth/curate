@@ -579,3 +579,26 @@ export const GetStaffName = (email?: string): string => {
   if (!email) return "Not Provided";
   return StaffNames[email.trim().toLowerCase()] ?? email;
 };
+
+
+type MarginResult = {
+  marginAmount: number;
+  marginPercentage: number;
+};
+
+export const calculateMargin = (
+  clientDailyAmount: number,
+  caretakerDailyAmount: number
+): MarginResult => {
+  const marginAmount = clientDailyAmount - caretakerDailyAmount;
+
+  const marginPercentage =
+    clientDailyAmount > 0
+      ? Math.round((marginAmount / clientDailyAmount) * 100)
+      : 0;
+
+  return {
+    marginAmount: Math.round(marginAmount),
+    marginPercentage,
+  };
+};
