@@ -4819,8 +4819,14 @@ export const UpdatePaymentVerificationStatusInDb = async (
   value: string,
   MonthInfo: string,
   ImpData: any,
-  UpdateType: string[]
+  UpdateType: any[]
 ) => {
+  console.log("Check For UpdateType",UpdateType)
+  console.log("Check For MonthInfo",{
+            ClientId,
+            HCAId,
+            Month: MonthInfo,
+          })
   try {
     if (
       !HCAId ||
@@ -4856,8 +4862,8 @@ export const UpdatePaymentVerificationStatusInDb = async (
         case "Replacement Payments":
           collection = db.collection("Replacement");
           filter = {
-            ClientId,
-            HCAId,
+       
+            HCAId:HCAId,
             Month: MonthInfo,
           };
           break;
@@ -4865,7 +4871,7 @@ export const UpdatePaymentVerificationStatusInDb = async (
         case "Termination Payments":
           collection = db.collection("Termination");
           filter = {
-            ClientId,
+            
             HCAid: HCAId, // Termination uses HCAid
             StartDate: ImpData,
           };
