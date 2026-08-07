@@ -4845,7 +4845,11 @@ export const UpdatePaymentVerificationStatusInDb = async (
     const db = cluster.db("CurateInformation");
 
     const results = [];
-
+const replacementClientId =
+  UpdateType.includes("OnService Payments") &&
+  UpdateType.includes("Replacement Payments")
+    ? MergedClienid
+    : ClientId;
     for (const type of UpdateType) {
       let collection;
       let filter: any;
@@ -4863,7 +4867,7 @@ export const UpdatePaymentVerificationStatusInDb = async (
         case "Replacement Payments":
           collection = db.collection("Replacement");
           filter = {
-        ClientId:MergedClienid,
+          ClientId: replacementClientId,
             HCAId:HCAId,
             Month: MonthInfo,
           };

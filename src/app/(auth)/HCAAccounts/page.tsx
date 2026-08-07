@@ -960,6 +960,7 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
   const value = status
    
    const MonthInfo=`${SearchYear}-${SearchMonth}`
+   console.log("Check first---",Info)
     const UpdatedinDB:any=await UpdatePaymentVerificationStatusInDb(HCAId,ClientId,value,MonthInfo,Info.StartDate,Info.MergedPreviewInfos,Info.MergedClienid)
  console.log("PaymentInfo to be posted:",UpdatedinDB)
     if(UpdatedinDB.success){
