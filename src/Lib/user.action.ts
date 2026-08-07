@@ -4819,7 +4819,8 @@ export const UpdatePaymentVerificationStatusInDb = async (
   value: string,
   MonthInfo: string,
   ImpData: any,
-  UpdateType: any[]
+  UpdateType: any[],
+  MergedClienid:any
 ) => {
   console.log("Check For UpdateType",UpdateType)
   console.log("Check For MonthInfo",{
@@ -4862,7 +4863,7 @@ export const UpdatePaymentVerificationStatusInDb = async (
         case "Replacement Payments":
           collection = db.collection("Replacement");
           filter = {
-       
+        ClientId:MergedClienid,
             HCAId:HCAId,
             Month: MonthInfo,
           };
@@ -4871,7 +4872,7 @@ export const UpdatePaymentVerificationStatusInDb = async (
         case "Termination Payments":
           collection = db.collection("Termination");
           filter = {
-            
+        
             HCAid: HCAId, // Termination uses HCAid
             StartDate: ImpData,
           };
@@ -5064,7 +5065,9 @@ export const PostINPayblePage = async (
   MonthInfo: string,
   ImpData: any,
   GrandTotal: any,
-  TotalHCPPay:any
+  TotalHCPPay:any,
+  MergedClienid:any
+
 ) => {
   try {
     if (!HCAId || !ClientId || !MonthInfo || !ImpData) {
@@ -5131,6 +5134,7 @@ export const PostINPayblePage = async (
  TotalHcaPayment:TotalHCPPay,
       // Helpful for future reporting
       PaymentSources: ImpData.MergedPreviewInfos || [],
+  MergedClienid:MergedClienid,
 
       CreatedAt: new Date(),
       UpdatedAt: new Date(),
