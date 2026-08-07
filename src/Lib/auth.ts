@@ -963,7 +963,7 @@ const needsDeployment =
   "HCAComplitInformation.PaymentforStaff": 1,
    "HCAComplitInformation.Current Address": 1,
    "HCAComplitInformation.Experience": 1,
-   
+   "HCAComplitInformation.MonthlyExpenses": 1,
  
 
 
@@ -1069,7 +1069,7 @@ return {
     PermanentAddress: safeDecrypt(info["Permanent Address"]),
     HCPEmail: safeDecrypt(info.HCPEmail),
     HCPContactNumber: safeDecrypt(info["Mobile Number"]),
-
+MonthlyExpenses: info.MonthlyExpenses,
     CurrentStatus: info.CurrentStatus||"Leave",
     CurrentAddress: info["Current Address"],
     VerificationStatus: info.VerificationStatus,
