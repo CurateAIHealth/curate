@@ -230,7 +230,9 @@ useEffect(() => {
     console.log("🔌 SSE Disconnected");
   };
 }, []);
-
+useEffect(() => {
+  setClientsInformation(ReduxClientsInformation);
+}, [ReduxClientsInformation]);
   const matchesSearchAndMonth = (
   item: any,
   searchText: string,
@@ -769,6 +771,7 @@ const filtered = useMemo(() => {
   SelectedServiceState,
   SearchMonth,
   SearchYear,
+  ClientsInformation
 ]);
 
 useEffect(() => {
@@ -962,16 +965,20 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
       
       
           
-              const { data } = await axios.post("/api/AdminPageInfo", {
-                userId,
-                refreshType: "deployment",
-              });
-      
-              dispatch(
-                SetDeploymentInfo(
-                  (data?.data?.deployedLength) || 0
-                )
-              );
+               const { data:result } = await axios.post("/api/AdminPageInfo", {
+          userId,
+          Month:MonthInfo,
+          refreshType: "deployment",
+        });
+   const {
+      profile,
+      registeredUsers,
+      fullInfo,
+      deployedLength,
+    } = result.data;
+      dispatch(SetDeploymentInfo(deployedLength));
+      console.log("TaSk One---",deployedLength)
+              console.log("Deployment Info Updated Successfully",deployedLength.filter((each:any)=>each.ClientId==="fb9832ee-c4fd-4632-be73-67dd0b539db6"));
       setData((prev) =>
       prev.map((item) =>
         item.HCAId === HCAId    ? { ...item, PaymentVerficationStatus: value }
