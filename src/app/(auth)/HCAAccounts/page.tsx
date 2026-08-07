@@ -782,6 +782,7 @@ useEffect(() => {
           ...item,
            isitMerged: "No", 
            SourceRows: [{ ...item }],
+           MergedClienid:"",
            MergedPreviewInfos: [item.PreviewInfo],
           attendanceInfo: [...(item.attendanceInfo || [])],
           PreviewInfo: [item.PreviewInfo],
@@ -789,6 +790,7 @@ useEffect(() => {
       } else {
         // Merge attendance
           acc[item.HCAId].isitMerged = "In Process";
+          acc[item.HCAId].MergedClienid =item.ClientId
             acc[item.HCAId].SourceRows.push({ ...item });
             if (
     !acc[item.HCAId].MergedPreviewInfos.includes(item.PreviewInfo)
@@ -958,7 +960,7 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
   const value = status
    
    const MonthInfo=`${SearchYear}-${SearchMonth}`
-    const UpdatedinDB:any=await UpdatePaymentVerificationStatusInDb(HCAId,ClientId,value,MonthInfo,Info.StartDate,Info.MergedPreviewInfos)
+    const UpdatedinDB:any=await UpdatePaymentVerificationStatusInDb(HCAId,ClientId,value,MonthInfo,Info.StartDate,Info.MergedPreviewInfos,Info.MergedClienid)
  console.log("PaymentInfo to be posted:",UpdatedinDB)
     if(UpdatedinDB.success){
         const userId = localStorage.getItem("UserId");
@@ -1030,7 +1032,9 @@ const UpdatePayablePage = async (row: any, totalAmount: any,DailyPay:any) => {
       MonthInfo,
       row,
       totalAmount,
-      DailyPay
+      DailyPay,
+      row.MergedClienid
+
     );
 
     if (!payableResult.success) {
