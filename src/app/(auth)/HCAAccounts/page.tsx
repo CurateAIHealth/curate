@@ -1196,7 +1196,7 @@ for (const item of history) {
       attendanceDate.getFullYear()
     );
 
-   const dailySalary = Math.floor(salary / daysInMonth);
+   const dailySalary = Math.round(salary / daysInMonth);
 
 
     const hcp = attendance.HCPAttendence === true;
