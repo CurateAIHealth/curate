@@ -602,3 +602,44 @@ export const calculateMargin = (
     marginPercentage,
   };
 };
+
+const parseIndianDate = (dateString: string) => {
+  const [day, month, year] = dateString.split("/").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+export const getMonthKey = (
+  startDateString: string,
+  endDateString: string
+) => {
+  if (!startDateString || !endDateString) return [];
+
+  const startDate = parseIndianDate(startDateString);
+  const endDate = parseIndianDate(endDateString);
+
+  const monthKeys: string[] = [];
+
+  const current = new Date(
+    startDate.getFullYear(),
+    startDate.getMonth(),
+    1
+  );
+
+  const end = new Date(
+    endDate.getFullYear(),
+    endDate.getMonth(),
+    1
+  );
+
+  while (current <= end) {
+    monthKeys.push(
+      `${current.getFullYear()}-${String(
+        current.getMonth() + 1
+      ).padStart(2, "0")}`
+    );
+
+    current.setMonth(current.getMonth() + 1);
+  }
+
+  return monthKeys;
+};

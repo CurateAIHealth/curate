@@ -1371,7 +1371,8 @@ const UpdateReplacement = async (
         selectedCase.Client_Id,
         selectedCase.Month,
         selectedCase.name,
-        selectedCase.HCA_Name
+        selectedCase.HCA_Name,
+        selectedCase.StartDate
 
       );
       console.log ("Check Replasement Info----",UpdateReplacmentInfo)

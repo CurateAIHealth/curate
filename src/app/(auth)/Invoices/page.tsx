@@ -197,7 +197,7 @@ const GetTeamNumber = (A: any) => {
     return {
       id: each.Invoice||each.number,
       ClienId:each.ClienId,
-      HCAId:each.HCAId,
+      HCAId:each.HCAId||each.HCA_Id,
       ClientName: each.ClientName,
     
       Adress: each.Adress,

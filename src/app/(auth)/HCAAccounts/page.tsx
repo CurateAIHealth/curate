@@ -1148,8 +1148,9 @@ const formatCurrency = (
 ) => {
   if (!attendanceInfo?.length) return 0;
 
+  // Sort salary history by EffectiveFrom
   const history =
-    salaryHistory && salaryHistory.length
+    salaryHistory && salaryHistory.length > 0
       ? [...salaryHistory].sort(
           (a: any, b: any) =>
             new Date(a.EffectiveFrom).getTime() -
@@ -1162,55 +1163,108 @@ const formatCurrency = (
           },
         ];
 
+  // Total days in the selected month
+  const daysInMonth = getDaysInMonth(searchMonth, searchYear);
+
   let total = 0;
 
   attendanceInfo.forEach((attendance: any) => {
-const attendanceDate = new Date(attendance.AttendenceDate);
-attendanceDate.setHours(0, 0, 0, 0);
+    if (!attendance?.AttendenceDate) return;
 
-    let salary = currentSalary;
-if (
-    attendanceDate.getMonth() + 1 !== searchMonth ||
-    attendanceDate.getFullYear() !== searchYear
-  ) {
-    return;
-  }
- 
-  const attendanceKey = attendance.AttendenceDate.toString().substring(0, 10);
+    // Attendance date
+    const attendanceDate = new Date(attendance.AttendenceDate);
 
-for (const item of history) {
-  if (!item?.EffectiveFrom) continue;
+    if (Number.isNaN(attendanceDate.getTime())) return;
 
-  const effectiveKey = String(item.EffectiveFrom).slice(0, 10);
+    attendanceDate.setHours(0, 0, 0, 0);
 
-  if (effectiveKey <= attendanceKey) {
-    const parsedSalary = Number(item.Salary);
-
-    if (!Number.isNaN(parsedSalary)) {
-      salary = parsedSalary;
+    // Only process attendance from selected month/year
+    if (
+      attendanceDate.getMonth() + 1 !== searchMonth ||
+      attendanceDate.getFullYear() !== searchYear
+    ) {
+      return;
     }
-  }
-}
 
-    const daysInMonth = getDaysInMonth(
-      attendanceDate.getMonth() + 1,
-      attendanceDate.getFullYear()
-    );
+    // --------------------------------------------------
+    // Find salary applicable on this attendance date
+    // --------------------------------------------------
 
-   const dailySalary = Math.round(salary / daysInMonth);
+    let salary = Number(currentSalary) || 0;
 
+    for (const item of history) {
+      if (!item?.EffectiveFrom) continue;
 
-    const hcp = attendance.HCPAttendence === true;
-    const admin = attendance.AdminAttendece === true;
+      const effectiveDate = new Date(item.EffectiveFrom);
 
-    if (hcp && admin) {
-      total += dailySalary;
-    } else if (hcp || admin) {
-      total += dailySalary / 2;
+      if (Number.isNaN(effectiveDate.getTime())) continue;
+
+      effectiveDate.setHours(0, 0, 0, 0);
+
+      // Salary becomes applicable from EffectiveFrom date
+      if (effectiveDate <= attendanceDate) {
+        const parsedSalary = Number(item.Salary);
+
+        if (!Number.isNaN(parsedSalary)) {
+          salary = parsedSalary;
+        }
+      }
     }
+
+    // --------------------------------------------------
+    // Calculate daily salary
+    // --------------------------------------------------
+
+    const dailySalary = salary / daysInMonth;
+
+    // --------------------------------------------------
+    // Attendance status
+    // --------------------------------------------------
+
+    const hcpPresent = attendance.HCPAttendence === true;
+    const adminPresent = attendance.AdminAttendece === true;
+
+    let attendanceValue = 0;
+
+    // Both HCP and Admin present = Full Day
+    if (hcpPresent && adminPresent) {
+      attendanceValue = 1;
+    }
+
+    // Either HCP or Admin present = Half Day
+    else if (hcpPresent || adminPresent) {
+      attendanceValue = 0.5;
+    }
+
+    // Both absent = 0
+    else {
+      attendanceValue = 0;
+    }
+
+    // --------------------------------------------------
+    // Add payment for this attendance date
+    // --------------------------------------------------
+
+    const paymentForDay = dailySalary * attendanceValue;
+
+    total += paymentForDay;
+
+    // Debug
+    console.log("HCA SALARY CALCULATION", {
+      attendanceDate: attendance.AttendenceDate,
+      salary,
+      daysInMonth,
+      dailySalary,
+      hcpPresent,
+      adminPresent,
+      attendanceValue,
+      paymentForDay,
+      runningTotal: total,
+    });
   });
 
-  return Math.ceil(total);
+  // Round only final amount
+  return Math.round(total);
 };
 
 const handleSave = async (row: any) => {

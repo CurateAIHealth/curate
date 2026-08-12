@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import React, { useState, useMemo } from "react";
 import RefundInvoice from "../RefundInvoice/page";
 import axios from "axios";
+import { UpdateRefundAmountfromInoice } from "@/Lib/user.action";
+
 
 type EditRefundProps = {
   initialData?: any;
@@ -185,6 +187,37 @@ const formatDateForInput = (date?: string) => {
 
   const SendInvoice = async () => {
     setIsSending("Please Wait......");
+   
+
+    const Client_Id = form.clientId
+    const StartDate = form.serviceStartDate
+    const ClientRefundAmount = (
+          (getDaysBetween(
+            form.refundRequestDate,
+            form.serviceEndDate
+          ) - 1) * form.perDayCharge
+        ).toLocaleString("en-IN")
+    const RefundData = form.refundRequestDate
+    const RefundDays = getDaysBetween(form.refundRequestDate, form.serviceEndDate)-1
+    const HCAId = form.HCAId
+   
+  const result = await UpdateRefundAmountfromInoice(
+      Client_Id,
+      StartDate,
+      Number(ClientRefundAmount.replace(/,/g, "")),
+      RefundData,
+      RefundDays,
+      
+      
+HCAId
+
+    );
+    console.log("Check Update Results------",result)
+    if (result.success === false) {
+     setIsSending("Failed to update refund information.");
+      return
+    }
+   setIsSending('Updated Information in Db,Sending Invoice to Client.....')
   
     try {
       const element = document.getElementById("RefundInvoice");
@@ -621,7 +654,8 @@ Your refund request has been successfully processed. Please find the attached re
   
       alert(errorMessage);
     } 
-  };
+  
+};
 
   return (
     <div>
@@ -675,12 +709,17 @@ Your refund request has been successfully processed. Please find the attached re
   service={{
     startDate: form.serviceStartDate,
     endDate: form.serviceEndDate,
-    serviceDays: getDaysBetween(form.serviceStartDate,form.refundRequestDate),
-    usedDays: form.clientPaymentDays,
-    refundDays: form.clientPaymentDays,
+    serviceDays: getDaysBetween(form.serviceStartDate, form.serviceEndDate),
+    usedDays: getDaysBetween(form.serviceStartDate, form.refundRequestDate),
+    refundDays: getDaysBetween(form.refundRequestDate, form.serviceEndDate) - 1,
     perDayCharge: form.perDayCharge,
   }}
-  amount={form.clientPaymentDays*form.perDayCharge}
+  amount={(
+          (getDaysBetween(
+            form.refundRequestDate,
+            form.serviceEndDate
+          ) - 1) * form.perDayCharge
+        ).toLocaleString("en-IN")}
   reason="Service stopped before completion."
 />
 </div>

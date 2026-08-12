@@ -343,7 +343,7 @@ const DateRange = new Date().toISOString().split("T")[0];
 
   const monthKey = `${selectedYear}-${selectedMonth}`;
   const data: any[] = ClientsInformation[monthKey]?.filter((each: any) => each.ServiceState === SelectedServiceStates&&each.Team===activeTeam) || [];
-console
+
 
   const daysInMonth = new Date(
     Number(selectedYear),
