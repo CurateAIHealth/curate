@@ -1481,7 +1481,7 @@ const UpdatePopup = async (a: any) => {
 
   return (
     <td className="px-2 py-2">
-      {user.userId}
+  
 
       {isAssigned||user.CurrentStatus==="Active" ? (
        <div className="flex flex-col items-center justify-center text-center gap-1">
