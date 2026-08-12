@@ -3163,7 +3163,8 @@ export const UpdateReplacmentData = async (
       ImpClientId:any,
       ImpMonth:any,
       ImpClientName:any,
-      ImpHCA_Name:any
+      ImpHCA_Name:any,
+      ImpStartDate:any
 ) => {
   try {
     const cluster = await clientPromise;
@@ -3171,6 +3172,7 @@ export const UpdateReplacmentData = async (
 
     const deploymentCollection = db.collection("Deployment");
     const replacementCollection = db.collection("Replacement");
+      const InvoiceCollection = db.collection("Invoices");
 
   
     const existingInfo: any = await deploymentCollection.findOne({
@@ -3348,6 +3350,26 @@ const updatedAttendance = Array.isArray(existingInfo.Attendance)
       }
     );
 
+      
+    const UpdateInvoice= await deploymentCollection.updateOne(
+      { 
+        HCA_Id: Exsting_HCP.HCA_Id,
+        ClienId:ImpClientId,
+        SeriviceStartDate:ImpStartDate
+       },
+      {
+        $set: {
+             HCA_Id: Available_HCP.userId,
+         HCA_Name: Available_HCP.FirstName,
+       
+         
+      } as any
+      }
+    );
+
+    if (UpdateInvoice.matchedCount === 0) {
+      return { success: false, message: "Update failed, no match found" };
+    }
     if (UpdateReplasementInfo.matchedCount === 0) {
       return { success: false, message: "Update failed, no match found" };
     }
@@ -4994,6 +5016,87 @@ export const UpdatePaymentVerificationStatusInReplacementDb = async (
     return {
       success: false,
       message: "Failed to update payment verification status",
+    };
+  }
+};
+export const UpdateRefundAmountfromInoice = async (
+  Client_Id: string,
+  ServiceStartDate: any, 
+  RefundAmount: number,
+  RefundDate:any,
+  RefundDays:any,
+ 
+  HCAId:any
+) => {
+  
+
+  try {
+   
+
+    const client = await clientPromise;
+
+  
+
+    const db = client.db("CurateInformation");
+    const collection = db.collection("Invoices");
+
+    console.log("Query:", {
+ Client_Id,
+   ServiceStartDate,
+    });
+
+    console.time("MongoUpdate");
+
+    const result = await collection.updateOne(
+        {
+    ClienId: Client_Id,
+   $or: [
+      { HCA_Id: HCAId },
+      { HCAId: HCAId },
+    ],
+    SeriviceStartDate: ServiceStartDate,
+  },
+      {
+        $set: {
+          RefundAmount: RefundAmount,
+            RefundDate:RefundDate,
+  RefundDays:RefundDays,
+
+  HCAId:HCAId
+        },
+      }
+    );
+
+    console.timeEnd("MongoUpdate");
+
+    console.log("Matched:", result.matchedCount);
+    console.log("Modified:", result.modifiedCount);
+
+    if (result.matchedCount === 0) {
+      console.warn("No matching document found.");
+
+      console.timeEnd("UpdateRefundAmount");
+
+      return {
+        success: false,
+        message: "No matching document found",
+      };
+    }
+
+    console.timeEnd("UpdateRefundAmount");
+
+    return {
+      success: true,
+      message: "Refund amount updated successfully",
+    };
+  } catch (error) {
+    console.error("UpdateRefundAmount Error:", error);
+
+    console.timeEnd("UpdateRefundAmount");
+
+    return {
+      success: false,
+      message: "Failed to update refund amount",
     };
   }
 };

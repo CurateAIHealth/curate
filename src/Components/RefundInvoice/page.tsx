@@ -29,7 +29,7 @@ import React from "react";
     perDayCharge: number;
   };
 
-  amount: number;
+  amount: any;
 
   reason: string;
 }

@@ -88,6 +88,7 @@ const [otherService, setOtherService] = useState({
     HCAAttendece: InvoiceData.HACAttendeceforRefund || []
 
   };
+  console.log("Check for hcaid-----",refundData.HCAId)
   const [ShowMailTemplate, setShowMailTemplate] = useState(true);
 const [isSending, setIsSending] = useState(false);
 const [selected, setSelected] = useState<any>({

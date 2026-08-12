@@ -1,14 +1,20 @@
 "use client";
 
 import { LoadingData } from "@/Components/Loading/page";
-import { getDaysBetween } from "@/Lib/Actions";
+import LoadingPopup from "@/Components/SwitchMonth/page";
+import { getDaysBetween, getMonthKey } from "@/Lib/Actions";
+import { SetDeploymentInfo } from "@/Redux/action";
 import axios from "axios";
 import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 type ClientRecord = {
+  HCAMonthlySalary: number;
+  HCAName: any;
+  halfDays: any;
+  presentDays: any;
   PerDaySalary: any;
   hcaWorkingDays: any;
   id: number;
@@ -33,7 +39,7 @@ const yearOptions = ["2024", "2025","2026", "2027", "2028"];
 
 
 function formatCurrency(value: number) {
-  return value.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+  return Math.round(value)
 }
 
 function formatPercent(value: number) {
@@ -49,14 +55,31 @@ function getStatus(client: ClientRecord) {
 export default function RevenueAnalyticsPage() {
   const [ImportedData, setImportedData] = useState<any[]>([]);
     const [isChecking, setIsChecking] = useState(true)
-  const [selectedMonth, setSelectedMonth] = useState("July");
-  const [selectedYear, setSelectedYear] = useState("2026");
+  
+      const [isSwitchingMonth, setIsSwitchingMonth] = useState(false);
+const currentDate = new Date();
+
+const [selectedMonth, setSelectedMonth] = useState(
+  currentDate.toLocaleString("en-US", { month: "long" })
+);
+
+const [selectedYear, setSelectedYear] = useState(
+  currentDate.getFullYear().toString()
+);
   const [activeTab, setActiveTab] = useState<"current" | "Carry Forward">("current");
   const [showCurrentInOutstanding, setShowCurrentInOutstanding] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
-const router = useRouter();
+const AdminDeployment = useSelector(
+  (state: any) => state.AdminDeployment
+);
 
+const [ClientsInformation, setClientsInformation] = useState<
+  Record<string, any[]>
+>({});
+
+const router = useRouter();
+const dispatch=useDispatch()
 
 let revenueCache: any[] | null = null;
 let revenueCacheTime = 0;
@@ -115,9 +138,223 @@ useEffect(() => {
   FetchDatFromDb();
 }, []);
 
+useEffect(() => {
+  if (!Array.isArray(AdminDeployment)) {
+    setClientsInformation({});
+    return;
+  }
+
+  const formattedData: Record<string, any[]> = {};
+
+  for (const record of AdminDeployment) {
+    const monthKeys = getMonthKey(
+      record.StartDate,
+      record.EndDate
+    );
+
+    for (const monthKey of monthKeys) {
+      if (!formattedData[monthKey]) {
+        formattedData[monthKey] = [];
+      }
+
+      formattedData[monthKey].push({
+        invoice: record.invoice || "",
+        startDate: record.StartDate || "",
+        endDate: record.EndDate || "",
+        status: record.Status || "",
+        location: record.Address || "N/A",
+        clientPhone: record.ClientContact || "",
+        clientName: record.ClientName || "",
+        ClientId: record.ClientId || "",
+        patientName: record.patientName || "",
+        referralName: record.referralName || "",
+        hcp: "Assist",
+        VendorName: record.VendorName || "Curate",
+        Type: record.Type || "HCA",
+        hcpId: record.HCAId || "",
+        hcpName: record.HCAName || "",
+        hcpPhone: record.HCAContact || "",
+        hcpSource: record.hcpSource || "",
+        provider: record.provider || "",
+        payTerms: record.payTerms || "",
+        cTotal: Number(record.cTotal) || 0,
+        cPay: Number(record.cPay) || 0,
+        hcpTotal: Number(record.hcpTotal) || 0,
+        hcpPay: Number(record.hcpPay) || 0,
+        days: record.Attendance || [],
+        CareTakerPrice: record.CareTakerPrice
+          ? `${Math.round(
+              parseFloat(
+                String(record.CareTakerPrice).replace(
+                  /[^0-9.]/g,
+                  ""
+                )
+              )
+            )}`
+          : "",
+        Month: record.Month,
+        Replacement: record.Replacement,
+        ReplacementDate: record.ReplacementDate,
+        ServiceState: record.ServiceState || "Telangana",
+      });
+    }
+  }
+
+  setClientsInformation(formattedData);
+}, [AdminDeployment]);
+
+const GetMonthFreshData = async (r: string) => {
+  try {
+  
+    setIsSwitchingMonth(true);
+   setSelectedMonth(r)
+const FilterMonth= new Date(`${r} 1, ${selectedYear}`).getMonth() + 1
+alert(FilterMonth)
+    const userId = localStorage.getItem("UserId");
+
+   const { data } = await axios.post(
+  "/api/AdminPageInfo",
+  {
+    userId,
+    Month: `${selectedYear}-${FilterMonth}`,
+  }
+);
 
 
 
+    console.log("Check New Data", data.data.deployedLength);
+setClientsInformation(data.data.deployedLength)
+    dispatch(SetDeploymentInfo(data.data.deployedLength));
+      setSelectedMonth(r);
+ setIsSwitchingMonth(false);
+    
+  } catch (error) {
+    console.error("GetMonthFreshData Error:", error);
+
+  }
+};
+const monthNumber = new Date(
+  `${selectedMonth} 1, ${selectedYear}`
+).getMonth() + 1;
+
+const monthTwoDigit = String(monthNumber).padStart(2, "0");
+  const monthKey = `${selectedYear}-${monthTwoDigit}`;
+  const data: any[] = ClientsInformation[monthKey]||[]
+const processedData = useMemo(() => {
+  const search = searchTerm?.toLowerCase().trim() || "";
+
+  return data?.filter((record: any) => {
+      if (!search) return true;
+console.log(record.days?.[0]);
+      return (record.days || []).some((att: any) => {
+        
+        const client = att.Client_Name?.toLowerCase() || "";
+        const hca = att.HCA_Name?.toLowerCase() || "";
+        const phone = record.clientPhone?.toString() || "";
+
+        return (
+          client.includes(search) ||
+          hca.includes(search) ||
+          phone.includes(search)
+        );
+      });
+    })
+
+    .sort((a: any, b: any) => {
+      const getInvoiceNumber = (inv: string) =>
+        Number(inv?.replace("INV#", "") || 0);
+
+      return getInvoiceNumber(a.invoice) - getInvoiceNumber(b.invoice);
+    })
+
+    .map((record: any) => {
+      const dayStatusArray: ({ status: string; clientName: string; hcaName: string; UpdatedBy: string; Reason: string } | null)[] =
+        Array.from({ length: 31 }, () => null);
+
+      (record.days || []).forEach((att: any) => {
+        const day = new Date(att.AttendenceDate).getDate();
+
+        const hcp = att.HCPAttendence === true;
+        const admin = att.AdminAttendece === true;
+
+        let status = "A";
+
+        if (hcp && admin) status = "P";
+        else if (hcp || admin) status = "HP";
+
+        if (day >= 1 && day <= 31) {
+          dayStatusArray[day - 1] = {
+            status,
+            clientName: att.Client_Name || "-",
+            hcaName: att.HCA_Name || "-",
+            UpdatedBy: att.UpdatedBy || "-",
+            Reason: att.Reason || ""
+          };
+        }
+      });
+
+      const counts = dayStatusArray.reduce(
+        (acc: any, v: any) => {
+          if (v?.status === "P") acc.pd++;
+          if (v?.status === "A") acc.ad++;
+          if (v?.status === "HP") acc.hp++;
+          return acc;
+        },
+        { pd: 0, ad: 0, hp: 0 }
+      );
+
+      return {
+        ...record,
+        days: dayStatusArray,
+        ...counts,
+      };
+    });
+}, [data, searchTerm,AdminDeployment,ClientsInformation]);
+console.log("sssss---",processedData)
+console.log("Check for Current ProcessData-----",processedData.filter(
+    (each: any) =>
+      each.ClientId
+
+=== "c3830186-0781-4a16-8871-ed91ce822fc8" &&
+      each.
+startDate
+ === "1/8/2026" 
+  ))
+const getAttendanceCount = (
+  ImpprocessedData: any[],
+  clientId: string,
+  startDate: string,
+  hcpId?: string
+) => {
+  const FilterInformation = ImpprocessedData.filter(
+    (each: any) =>
+      each.
+        ClientId
+      === clientId &&
+      each.
+        startDate
+      === startDate &&
+      (!hcpId || each.HCAId
+        === hcpId)
+  );
+
+  const presentDays = FilterInformation.filter(
+    (item: any) => item?.status === "P"
+  ).length;
+
+  const halfDays = FilterInformation.filter(
+    (item: any) => item?.status === "HP"
+  ).length;
+
+  return {
+    presentDays,
+    halfDays,
+    totalAttendance: presentDays + halfDays * 0.5,
+    data: FilterInformation,
+  };
+};
+
+console.log ("Chekc for ")
 const monthNames = [
   "January",
   "February",
@@ -157,11 +394,28 @@ const revenueData: ClientRecord[] = ImportedData
       record.DeployDate;
 
     const [day, month, year] = startDate.split("/");
+;
+const result=processedData.filter(
+    (each: any) =>
+      each.ClientId=== record.ClienId &&(each.hcpId===record.HCAId)||(each.hcpId===record.HCA_Id)&&each.startDate===record.SeriviceStartDate
+  )
+    const presentDays = result[0]?.days.filter(
+    (item: any) => item?.status === "P"
+  ).length||0;
 
-console.log("Start Date:", record);
+  const halfDays = result[0]?.days.filter(
+    (item: any) => item?.status === "HP"
+  ).length||0;
+console.log("Present Days:", presentDays);
+console.log ("halfDays",halfDays)
+const monthlySalary = GetHCPPayment(record.HCA_Id);
+const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
+
+const perDaySalary = Math.round(monthlySalary / daysInMonth);
     return {
       id: index + 1,
       client: record.ClientName,
+      HCAName:record.HCA_Name,
       HCAId: record.HCAId || record.UserId || "",
       month: monthNames[Number(month) - 1],
       year,
@@ -178,9 +432,12 @@ console.log("Start Date:", record);
           0
         ),
       pending: Number(record.balanceDue || 0),
-      hcaSalary: GetHCPPayment(record.HCAId)/Number(getDaysInMonth(selectedMonth, selectedYear))*getDaysBetween(startDate, record.ServiceEndDate) || 0,
+ hcaSalary :perDaySalary * Number(presentDays + halfDays),
+      presentDays: presentDays,
+      halfDays: halfDays,
       hcaWorkingDays: getDaysBetween(startDate, record.ServiceEndDate),
-      PerDaySalary: GetHCPPayment(record.HCAId)/Number(getDaysInMonth(selectedMonth, selectedYear)) || 0,
+      PerDaySalary: Math.round(GetHCPPayment(record.HCA_Id)/Number(getDaysInMonth(selectedMonth, selectedYear))) || 0,
+      HCAMonthlySalary:GetHCPPayment(record.HCA_Id),
       advance: Number(record.AdvancePaid || 0),
       hostel: 0,
       travel: 0,
@@ -189,7 +446,7 @@ console.log("Start Date:", record);
 RefundAmount || 0),
     };
   });
-
+console.log("Check for info-----",ImportedData)
 
   const filteredData = useMemo(() => {
     return revenueData.filter((record) => {
@@ -203,36 +460,75 @@ RefundAmount || 0),
       return matchesYear && matchesMonth && matchesSearch;
     });
   }, [ImportedData,UserFullInfo,selectedMonth, selectedYear, searchTerm, activeTab, showCurrentInOutstanding]);
-console.log("ImpData----",GetHCPPayment("22d311d0-daea-4fe2-a5bf-814e1d332820"));
+
   const currentMonthName = monthOptions[new Date().getMonth()];
   const currentYearName = new Date().getFullYear().toString();
   const showExpectedRevenue = activeTab === "current"&&currentMonthName===selectedMonth&&currentYearName===selectedYear;
 
-  const analytics = useMemo(() => {
-    const expectedRevenue = filteredData.reduce((sum, item) => sum + item.expectedRevenue, 0);
-    const revenueReceived = filteredData.reduce((sum, item) => sum + item.revenueReceived, 0);
-    const RefundAmount = filteredData.reduce((sum, item) => sum + item.Refund, 0);
-    const pendingCollection = filteredData.reduce((sum, item) => sum + item.pending - item.Refund, 0);
-    const totalExpenses = filteredData.reduce((sum, item) => sum + item.hcaSalary + item.advance + item.hostel + item.travel + item.other, 0);
-    const netProfitLoss = revenueReceived - totalExpenses;
-const collectionPercent = expectedRevenue
-  ? Math.min((revenueReceived + RefundAmount) / expectedRevenue, 1)
-  : 0;
-    const profitMarginPercent = revenueReceived ? netProfitLoss / revenueReceived : 0;
-    const expenseRatioPercent = revenueReceived ? totalExpenses / revenueReceived : 0;
-console.log("Analytics Computed:", 26000/25000>=1?1: 26000/25000)
-    return {
-      expectedRevenue,
-      revenueReceived,
-      pendingCollection,
-      totalExpenses,
-      RefundAmount,
-      netProfitLoss,
-      collectionPercent,
-      profitMarginPercent,
-      expenseRatioPercent,
-    };
-  }, [filteredData]);
+const analytics = useMemo(() => {
+  const expectedRevenue = filteredData.reduce(
+    (sum, item) => sum + (Number(item.expectedRevenue) || 0),
+    0
+  );
+
+  const revenueReceived = filteredData.reduce(
+    (sum, item) => sum + (Number(item.revenueReceived) || 0),
+    0
+  );
+
+  const RefundAmount = filteredData.reduce(
+    (sum, item) => sum + (Number(item.Refund) || 0),
+    0
+  );
+
+  const pendingCollection = filteredData.reduce(
+    (sum, item) =>
+      sum +
+      (Number(item.pending) || 0) -
+      (Number(item.Refund) || 0),
+    0
+  );
+
+  const totalExpenses = filteredData.reduce(
+    (sum, item) =>
+      sum +
+      (Number(item.hcaSalary) || 0) +
+      (Number(item.advance) || 0) +
+      (Number(item.hostel) || 0) +
+      (Number(item.travel) || 0) +
+      (Number(item.other) || 0),
+    0
+  );
+
+  const netProfitLoss = revenueReceived - totalExpenses;
+
+  const collectionPercent = expectedRevenue
+    ? Math.min(
+        (revenueReceived + RefundAmount) / expectedRevenue,
+        1
+      )
+    : 0;
+
+  const profitMarginPercent = revenueReceived
+    ? netProfitLoss / revenueReceived
+    : 0;
+
+  const expenseRatioPercent = revenueReceived
+    ? totalExpenses / revenueReceived
+    : 0;
+
+  return {
+    expectedRevenue,
+    revenueReceived,
+    pendingCollection,
+    totalExpenses,
+    RefundAmount,
+    netProfitLoss,
+    collectionPercent,
+    profitMarginPercent,
+    expenseRatioPercent,
+  };
+}, [filteredData]);
 
   const topProfitable = useMemo(() => {
     return [...filteredData]
@@ -280,6 +576,8 @@ const handleLogout = () => {
                           className="h-10"
                           alt="Company Logo"
                         />
+                
+                      
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Revenue Analytics {selectedMonth}</p>
@@ -319,7 +617,7 @@ const handleLogout = () => {
                 Month
                 <select
                   value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
+                onChange={(e) =>GetMonthFreshData(e.target.value)}
                 
                   className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-slate-900 shadow-sm outline-none transition focus:border-[#1392d3] disabled:cursor-not-allowed disabled:bg-slate-100"
                 >
@@ -348,18 +646,22 @@ const handleLogout = () => {
      
           </div>
         </div>
-
+<LoadingPopup
+  open={isSwitchingMonth}
+  title="Switching Month"
+  description="Updating dashboard data..."
+/>
         <section className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
           {[
             { label: showExpectedRevenue ? "Expected Revenue" : "Revenue", value: showExpectedRevenue ? analytics.expectedRevenue : analytics.expectedRevenue, color: "#1392d3" },
             { label: "Payment received", value: analytics.revenueReceived, color: "#50c896" },
             { label: "Pending payments", value: analytics.pendingCollection, color: "#ff1493" },
-            { label: "Total Expenses", value: analytics.totalExpenses, color: "#1392d3" },
+            // { label: "Total Expenses", value: analytics.totalExpenses, color: "#1392d3" },
             { label: "Refund Amount", value: analytics.RefundAmount, color: "#ff1493" },
             { label: "Net Profit/Loss", value: analytics.netProfitLoss, color: analytics.netProfitLoss >= 0 ? "#50c896" : "#ff1493" },
             { label: "Collection %", value: analytics.collectionPercent, percent: true, color: "#1392d3" },
             { label: "Profit Margin %", value: analytics.profitMarginPercent, percent: true, color: "#50c896" },
-            { label: "Expense Ratio %", value: analytics.expenseRatioPercent, percent: true, color: "#ff1493" },
+            // { label: "Expense Ratio %", value: analytics.expenseRatioPercent, percent: true, color: "#ff1493" },
           ].map((card) => (
             <div key={card.label} className="rounded-2xl bg-white p-2 shadow-sm">
               <p className="text-xs uppercase tracking-[0.1em] text-slate-500">{card.label}</p>
@@ -391,7 +693,7 @@ const handleLogout = () => {
               <table className="min-w-full border-separate border-spacing-0 text-left text-xs text-slate-700">
                 <thead>
                   <tr className="bg-slate-50 text-slate-600 sticky top-0">
-                    {['Client', 'Revenue', 'Received', 'Pending', 'HCA Salary', 'Advance', 'Hostel', 'Travel', 'Other', "Refund", 'Total Expense', 'Profit/Loss', 'Profit %', 'Collection %', 'Status'].map((heading) => (
+                    {["S.No",'Client','HCA', 'Revenue', 'Received', 'Pending', 'HCA Salary', 'Advance', 'Hostel', 'Travel', 'Other', "Refund", 'Total Expense', 'Profit/Loss', 'Profit %', 'Collection %', 'Status'].map((heading) => (
                       <th key={heading} className="whitespace-nowrap px-2 py-1 font-semibold text-xs">{heading}</th>
                     ))}
                   </tr>
@@ -402,7 +704,7 @@ const handleLogout = () => {
                       <td colSpan={15} className="px-2 py-4 text-center text-slate-500 text-xs">No clients found for this month.</td>
                     </tr>
                   ) : (
-                    filteredData.map((item) => {
+                    filteredData.map((item,index) => {
                       const totalExpense = item.hcaSalary + item.advance + item.hostel + item.travel + item.other;
                       const profitLoss = item.revenueReceived - totalExpense;
                       const profitPercent = item.revenueReceived ? profitLoss / item.revenueReceived : 0;
@@ -416,7 +718,9 @@ const collectionPercentValue = item.expectedRevenue
 
                       return (
                         <tr key={item.id} className="border-t border-slate-200 hover:bg-slate-50">
+<td className="px-2 py-1 font-medium text-slate-900 text-xs">{index+1}</td>
                           <td className="px-2 py-1 font-medium text-slate-900 text-xs">{item.client}</td>
+                                 <td className="px-2 py-1 font-medium text-slate-900 text-xs">{item.HCAName}</td>
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.expectedRevenue)}</td>
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.revenueReceived)}</td>
                           <td className="px-2 py-1 text-xs">{formatCurrency(item.pending)}</td>
@@ -429,9 +733,9 @@ const collectionPercentValue = item.expectedRevenue
       <Info size={12} className="text-slate-500" />
 
       <div className="absolute left-1/2 top-5 z-50 hidden w-64 -translate-x-1/2 rounded-lg bg-slate-800 px-3 py-2 text-[11px] text-white shadow-lg group-hover:block">
-        Monthly Salary: {item.PerDaySalary ? Math.round(item.PerDaySalary * item.hcaWorkingDays) :0}
+        Monthly Salary: {item.HCAMonthlySalary ||0}
         <br />
-        Days Worked: {item.hcaWorkingDays}
+        Days Worked: {item.presentDays+item.halfDays}
       
         <br />
       Per Day: {item.PerDaySalary ?Math.round(item.PerDaySalary) : 0}
