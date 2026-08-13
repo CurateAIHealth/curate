@@ -668,3 +668,86 @@ export const GetHCPFullName = (users: any[], userId: any): string => {
 
   return fullName;
 };
+
+export const GetPreviewUserType = (Regusers: any[], ImpUserid: string) => {
+  const Task = Regusers?.find(
+    (each: any) => each?.userId === ImpUserid
+  );
+
+  return Task?.PreviewUserType || "HCP";
+};
+export const parseFlexibleDate = (value: any): Date | null => {
+  if (!value) return null;
+
+  // Already a Date
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? null : value;
+  }
+
+  // Mongo / JSON date object
+  if (typeof value === "object" && value.$date) {
+    const date = new Date(value.$date);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  if (typeof value !== "string" && typeof value !== "number") {
+    return null;
+  }
+
+  const str = String(value).trim();
+
+  if (!str) return null;
+
+  // Timestamp
+  if (/^\d+$/.test(str)) {
+    const date = new Date(Number(str));
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  // ISO / normal JS date
+  if (
+    /^\d{4}-\d{2}-\d{2}/.test(str) ||
+    /^\d{4}\/\d{2}\/\d{2}/.test(str)
+  ) {
+    const date = new Date(str);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  // DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY
+  const parts = str.split(/[\/\-\.]/);
+
+  if (parts.length === 3) {
+    let [a, b, c] = parts.map(Number);
+
+    if (
+      !isNaN(a) &&
+      !isNaN(b) &&
+      !isNaN(c) &&
+      c >= 1000
+    ) {
+      // Assume DD/MM/YYYY
+      const date = new Date(c, b - 1, a);
+
+      if (
+        !isNaN(date.getTime()) &&
+        date.getDate() === a &&
+        date.getMonth() === b - 1 &&
+        date.getFullYear() === c
+      ) {
+        return date;
+      }
+
+      // Also support MM/DD/YYYY
+      const usDate = new Date(c, a - 1, b);
+
+      if (!isNaN(usDate.getTime())) {
+        return usDate;
+      }
+    }
+  }
+
+  // Final fallback
+  const date = new Date(str);
+
+  return isNaN(date.getTime()) ? null : date;
+};

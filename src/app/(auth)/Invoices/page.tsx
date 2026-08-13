@@ -5,7 +5,7 @@ import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, El
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { GetInvoiceInfo, GetRegidterdUsers, GetSentInvoiceData, UpdateStatusPayment } from "@/Lib/user.action";
-import { GeneratePDF, getDaysBetween } from "@/Lib/Actions";
+import { GeneratePDF, getDaysBetween, parseFlexibleDate } from "@/Lib/Actions";
 import { LoadingData } from "@/Components/Loading/page";
 
 import { Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateInvoiceInfo, UpdateInvoiceIntialStatus, UpdateInvoiceStatus, UpdateUserType } from "@/Redux/action";
@@ -33,7 +33,7 @@ interface Invoice {
 export default function InvoicesPage() {
   const now = new Date();
   const [monthFilter, setMonthFilter] =useState<any>(now.getMonth() + 1);
-   const [activeTeam, setActiveTeam] = useState(1);
+  const [activeTeam, setActiveTeam] = useState<number | "All">("All");
   const [yearFilter, setYearFilter] =useState(String(now.getFullYear()));
     const [openTransactions, setOpenTransactions] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
@@ -215,8 +215,12 @@ const GetTeamNumber = (A: any) => {
       balanceDue:each.balanceDue,
       Trasaction:each.Trasaction||[],
       RoundedTotal:each.RoundedTotal,
-      ServiceState:each.ServiceState||"Not Provided",
-      Team:GetTeamNumber(each.ClienId),
+      ServiceState:
+  !each.ServiceState ||
+  each.ServiceState === "Not Provided"
+    ? "Telangana"
+    : each.ServiceState,
+      Team:GetTeamNumber(each.ClienId)||"1",
       RefundAmount:each.RefundAmount||"",
       RefundDate:each.RefundDate||"",
       RefundDays:each.RefundDays||"",
@@ -251,50 +255,75 @@ const GetTeamNumber = (A: any) => {
 const filteredInvoices = useMemo(() => {
   let data = [...computedInvoices];
 
- 
-  if (monthFilter !== "All") {
+  // MONTH + YEAR
+  if (monthFilter !== "All" || yearFilter !== "All") {  
     data = data.filter((inv: any) => {
-      const iso = convertToISO(inv.StartDate);
-      if (!iso) return false;
+      const date = parseFlexibleDate(
+        inv.StartDate ??
+        inv.SeriviceStartDate ??
+        inv.ServiceStartDate ??
+        inv.DeployDate
+      );
 
-      const date = new Date(iso);
-      if (isNaN(date.getTime())) return false;
+      if (!date) return false;
 
-      return date.getMonth() + 1 === Number(monthFilter);
+      const monthMatches =
+        monthFilter === "All" ||
+        date.getMonth() + 1 === Number(monthFilter);
+
+      const yearMatches =
+        yearFilter === "All" ||
+        date.getFullYear() === Number(yearFilter);
+
+      return monthMatches && yearMatches;
     });
   }
 
-
-  if (yearFilter !== "All") {
-    data = data.filter((inv: any) => {
-      const iso = convertToISO(inv.StartDate);
-      if (!iso) return false;
-
-      const date = new Date(iso);
-      if (isNaN(date.getTime())) return false;
-
-      return date.getFullYear() === Number(yearFilter);
-    });
-  }
-
-
+  // SEARCH
   if (search.trim() !== "") {
-    const q = search.toLowerCase();
-    data = data.filter(
-      (x: any) =>
-        x.name?.toLowerCase().includes(q) ||
-        x.contact?.toLowerCase().includes(q)
+    const q = search.trim().toLowerCase();
+
+    data = data.filter((x: any) =>
+      x.name?.toLowerCase().includes(q) ||
+      x.ClientName?.toLowerCase().includes(q) ||
+      x.contact?.toString().toLowerCase().includes(q)
     );
   }
 
-  if (filter!=="All"){
-    data=data.filter((each:any)=>each.status===filter)
+  // STATUS
+  if (filter !== "All") {
+    data = data.filter(
+      (each: any) => each.status === filter
+    );
   }
 
-  return data.filter((each:any)=>each.ServiceState===SelectedServiceStates&&each.Team===activeTeam);
-}, [computedInvoices, monthFilter, yearFilter, search,SelectedServiceStates,activeTeam]);
+  // SERVICE STATE
+  if (SelectedServiceStates !== "All") {
+    data = data.filter(
+      (each: any) =>
+        each.ServiceState === SelectedServiceStates
+    );
+  }
 
+  // TEAM
+  if (activeTeam !== "All") {
+    data = data.filter(
+      (each: any) => each.Team === activeTeam
+    );
+  }
 
+  return data;
+}, [
+  computedInvoices,
+  monthFilter,
+  yearFilter,
+  search,
+  filter,
+  SelectedServiceStates,
+  activeTeam
+]);
+
+console.log("Check info-----",filteredInvoices)
 
   const totalPages = Math.max(
     1,
@@ -1017,9 +1046,7 @@ CheckPaymentStatus:CurrentPaymentStatus
     </span>
   </div>
 
-  <span className="text-[10px] whitespace-nowrap shrink-0">
-    {inv.id}
-  </span>
+  
 </div>
 
         <div className="text-left text-xs">+91{inv.contact}</div>
