@@ -51,6 +51,7 @@ import { stat } from 'fs';
 import { ClientsPopup } from '@/Components/SentProfile/page';
 import NotIntrestedTable from '@/Components/NotIntrested/page';
 import { HCPProfileCard } from '@/Components/ShowHcpProfile/page';
+import StatusUpdateWarning from '@/Components/StatusUpdateWarning/page';
 
 
 export default function UserTableList() {
@@ -58,7 +59,7 @@ export default function UserTableList() {
   const [loading, setLoading] = useState(true);
   // const [users, setUsers] = useState<any[]>([]);
   const [isChecking, setIsChecking] = useState(true);
-
+const [showStatusWarning, setShowStatusWarning] = useState(false);
 const users=useSelector((state:any)=>state.AdminUsers)
 
 const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
@@ -328,6 +329,11 @@ const GetHCPTypeCount = (HCPType: string) => {
   e: string,
   UserId: any
 ) => {
+ if(e==="Active"){
+   setShowStatusWarning(true);
+  return
+ }
+ 
   dispatch(
     Refresh(
       `Updating ${first} Current Status....`
@@ -1004,6 +1010,12 @@ const UpdatePopup = async (a: any) => {
          onClose={()=>setOpen(false)}
       />
     </>
+    <StatusUpdateWarning
+  isOpen={showStatusWarning}
+  onClose={() => setShowStatusWarning(false)}
+  logoSrc="/Icons/Curate-logoq.png"
+  
+/>
             {UpdatedFilterUserType.length > 0 ? (
               <div className="bg-white/90 rounded-2xl shadow-2xl border border-gray-100">
                 <div className=" overflow-y-auto">
@@ -1704,11 +1716,10 @@ const UpdatePopup = async (a: any) => {
                                   onChange={(e) =>
 
                                 {
-                                    //   if(user.CurrentStatus==="Active"){
-                                      
-                                    //     dispatch(Refresh(`${user.FirstName} Currently in ${user.CurrentStatus} Status,Sorry  We dont let You Updated Status`));
-                                    //   return
-                                    // }
+                                   if(user.CurrentStatus==="Active"){
+  setShowStatusWarning(true);
+  return;
+  }
                                     UpdateCurrentstatus(user.FirstName, e.target.value, user.userId)
                                 }
                                   }

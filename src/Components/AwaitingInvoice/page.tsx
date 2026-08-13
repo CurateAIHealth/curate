@@ -1309,13 +1309,12 @@ const isProfit = invoiceProfit >= 0;
             <option>
               Manage {toProperCaseLive(CareTakerName)} Status
             </option>
-            <option value="Active">🟢 Active</option>
-           
-            <option value="Sick">🟡 Sick</option>
-            <option value="Leave">🔵 Leave</option>
-            <option value="Bench">🟣 Bench</option>
-        
-            <option value="Terminated">🔴 Terminated</option>
+         <option value="Training">🟠 Training</option>
+<option value="Sick">🟡 Sick</option>
+<option value="Leave">🔵 Leave</option>
+<option value="Bench">🟣 Bench</option>
+
+<option value="Terminated">🔴 Terminated</option>
           </select>
         </div>
       )}

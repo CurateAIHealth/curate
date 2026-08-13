@@ -1101,7 +1101,7 @@ const toggleStatus = () => {
   const handleDeleteClick = (Info: any,Name:any) => {
     console.log ("Check Termination Info-------",Info)
     SetTerminationInfo(Info)
-SetCareTakerName(Name)
+SetCareTakerName(GetHCPFullName(Info.HCA_Id))
     setShowDeletePopup(true);
   };
 
@@ -1158,13 +1158,8 @@ const confirmDelete = async (selectedReason: string) => {
     return;
   }
 
-  if (UpdatedCareTakerStatus===""){
-      SetActionStatusMessage(
-"Update HCA Status!"
-    );
-    return
-  }
-
+ const finalCareTakerStatus =
+  UpdatedCareTakerStatus?.trim() || "Bench";
   const {
     HCA_Id,
     Client_Id,
@@ -1184,7 +1179,7 @@ const confirmDelete = async (selectedReason: string) => {
     SetActionStatusMessage("Please wait, deleting placement...");
 
     
-    await UpdateHCAnstatus(HCA_Id, UpdatedCareTakerStatus||"Bench");
+    await UpdateHCAnstatus(HCA_Id, finalCareTakerStatus);
 
     await UpdateUserContactVerificationstatus(Client_Id, "Lost");
 
@@ -1387,7 +1382,7 @@ const UpdateReplacement = async (
     await Promise.all([
       UpdateHCAnstatus(
         Exsting_HCP.HCA_Id,
-        UpdatedCareTakerStatus
+          UpdatedCareTakerStatus?.trim() || "Bench"
       ),
       UpdateHCAnstatusInDeplyoment(
         Available_HCP.HCA_Id,
@@ -2252,6 +2247,7 @@ setShowCareTakerPriceUpdate(false)
 </div>}
 <RepleasementHCPPopup
   open={showHCAList}
+  ClientInformation={selectedCase}
   onClose={() => {setShowHCAList(false);setShowReassignmentPopUp(true)}}
   filteredHcps={filterProfilePic}
   onAssign={(hcp) => {
@@ -2770,7 +2766,7 @@ const EditDate =
   Reassignment
 </button> */}
 
-<img src="Icons/Repleasement.png" alt="Repleasement Icons"  className="h-6 ml-4 cursor-pointer "   onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(toProperCaseLive(c.HCA_Name)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA(""),console.log("Check Test Data-----",)}}/>
+<img src="Icons/Repleasement.png" alt="Repleasement Icons"  className="h-6 ml-4 cursor-pointer "   onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(GetHCPFullName(c.HCA_Id)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA(""),console.log("Check Test Data-----",)}}/>
 
 {ShowReassignmentPopUp && (
   <div
@@ -3000,7 +2996,7 @@ const EditDate =
                 <option>
             Manage {CareTakerName} Status
                 </option>
-                <option value="Active">🟢 Active</option>
+                
                
                 <option value="Sick">🟡 Sick</option>
                 <option value="Leave">🔵 Leave</option>
@@ -3723,13 +3719,14 @@ setSelectedDate(e.target.value)
             <option>
               Manage {toProperCaseLive(CareTakerName)} Status
             </option>
-            <option value="Active">🟢 Active</option>
-            <option value="Available">🟢 Available for Work</option>
-            <option value="Sick">🟡 Sick</option>
-            <option value="Leave">🔵 Leave</option>
-            <option value="Bench">🟣 Bench</option>
-            <option value="None">⚪ None</option>
-            <option value="Terminated">🔴 Terminated</option>
+        
+
+<option value="Training">🟠 Training</option>
+<option value="Sick">🟡 Sick</option>
+<option value="Leave">🔵 Leave</option>
+<option value="Bench">🟣 Bench</option>
+
+<option value="Terminated">🔴 Terminated</option>
           </select>
         </div>
       )}
