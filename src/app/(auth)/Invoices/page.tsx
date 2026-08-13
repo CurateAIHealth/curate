@@ -692,7 +692,7 @@ CheckPaymentStatus:CurrentPaymentStatus
 
   <div className="flex items-center gap-2 bg-red-50 border-l-4 border-red-600 text-red-700 p-2 rounded w-full md:w-auto">
     <p className="text-xs font-semibold whitespace-nowrap">⚠ Pending Amount</p>
-    <h3 className="text-sm md:text-base font-bold">{BalanceDue}</h3>
+    <h3 className="text-sm md:text-base font-bold">{Math.round(BalanceDue)}</h3>
   </div>
 
   
@@ -1005,18 +1005,22 @@ CheckPaymentStatus:CurrentPaymentStatus
     </span>
   );
 })()}
-          <span className="text-[8px] text-gray-500">
+          {/* <span className="text-[8px] text-gray-500">
             Invoice ID: {inv.id}
-          </span>
+          </span> */}
         </div>
 
-         <div className="flex flex-col">
-        <span className="text-[10px] font-semibold flex flex-col">
-  {inv.name?.split(' ')[0]}
-  <span>{inv.name?.split(' ').slice(1).join(' ')}</span>
-</span>
-          
-        </div>
+         <div className="flex items-center justify-between w-full gap-2">
+  <div className="flex flex-col min-w-0">
+    <span className="text-[10px] font-semibold truncate">
+      {inv.name}
+    </span>
+  </div>
+
+  <span className="text-[10px] whitespace-nowrap shrink-0">
+    {inv.id}
+  </span>
+</div>
 
         <div className="text-left text-xs">+91{inv.contact}</div>
 
