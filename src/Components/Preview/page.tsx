@@ -1,5 +1,6 @@
 'use client';
 
+import { GetHCPFullName } from "@/Lib/Actions";
 import {
   GetDeploymentInfo,
   GetInvoiceInfo,
@@ -102,6 +103,7 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
   const TimeStampInfo = useSelector(
     (state: any) => state.TimeStampInfo
   );
+  const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
 
   const [UpdatedData, setFormData] = useState(reduxData);
   const [selectedRecord, setSelectedRecord] = useState(false);
@@ -708,7 +710,8 @@ const ClientName=data.FirstName
           </p>
 
           <h3 className="relative mt-1 text-sm font-bold text-gray-900 truncate">
-            {data?.InvoiseInformation?.hcaName}
+            {/* {data?.InvoiseInformation?.hcaName} */}
+          {GetHCPFullName(UserFullInfo,data.HCAId)}
           </h3>
         </div>
 

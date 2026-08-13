@@ -643,3 +643,28 @@ export const getMonthKey = (
 
   return monthKeys;
 };
+
+
+export const GetHCPFullName = (users: any[], userId: any): string => {
+  if (!Array.isArray(users) || !users.length || !userId) {
+    return "";
+  }
+
+  const info = users
+    .map((each: any) => each?.HCAComplitInformation)
+    .find((info: any) => info?.UserId === userId);
+
+  if (!info) {
+    return "";
+  }
+
+  const fullName = [
+    info?.HCPSurName,
+    info?.HCPFirstName,
+    info?.LastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return fullName;
+};

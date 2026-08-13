@@ -1172,6 +1172,15 @@ const isAssigned =
                               </span>
                             </div>
 
+                <div className="flex items-center justify-center gap-1.5 m-1 border border-gray-400 shadow-lg  rounded p-1">
+  <span className="text-[10px] font-medium  tracking-wide text-gray-800">
+    Gender:
+  </span>
+  <span className="text-[10px] font-semibold text-gray-500">
+    {hcp.Gender || "N/A"}
+  </span>
+</div>
+
  {hcp.Languages?
  <div>
                             
