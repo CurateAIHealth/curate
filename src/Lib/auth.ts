@@ -602,13 +602,15 @@ export const GetAllUsersData = async () => {
     };
   }
 };
-export const GetPayableData = async () => {
+export const GetPayableData = async (ImpMonth:any) => {
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
     const PayableCollection = db.collection("PayableINPaymentPage");
 
-    const PayableData = await PayableCollection.find({}).toArray();
+    const PayableData = await PayableCollection.find({
+      Month:ImpMonth
+    }).toArray();
 
     const ExportedPayableData = PayableData.map((item: any) => ({
       ...item,
