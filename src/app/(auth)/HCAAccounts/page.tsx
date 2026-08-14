@@ -20,7 +20,7 @@ import { AssignSuitableIcon, getDaysInMonth, toProperCaseLive } from "@/Lib/Acti
 import PopupToast from "@/Components/ExpencesPopUp/page";
 import axios from "axios";
 import LoadingPopup from "@/Components/SwitchMonth/page";
-
+  import { usePathname } from "next/navigation";
 type Transaction = {
   id: string;
   field: "advance" | "hostel" | "other" | "incentives" | "others";
@@ -77,6 +77,9 @@ export default function HCAPayrollTable() {
     message: "",
     type: "success",
   });
+
+
+const pathname = usePathname();
 const [showFullMonth,setShowFullMonth]=useState(false)
   const SearchMonth = useSelector((state: any) => state.FilterMonth);
   const SearchYear = useSelector((state: any) => state.FilterYear);
@@ -1012,7 +1015,7 @@ const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
   
 
 const UpdatePayablePage = async (row: any, totalAmount: any,DailyPay:any) => {
-  alert(DailyPay)
+
   try {
     setPopup({
       isOpen: true,
@@ -1084,6 +1087,7 @@ const UpdatePayablePage = async (row: any, totalAmount: any,DailyPay:any) => {
 
     const { data } = await axios.post("/api/AdminPageInfo", {
       userId,
+          Month: MonthInfo,
       refreshType: "deployment",
     });
 
@@ -1554,38 +1558,71 @@ const handleChange = (
       </p>
     </div>
 
-    {/* Menu Items */}
-    <div className="py-2">
-      {menuItems.map((item) => {
-        const Icon = item.icon;
+{/* Quick Navigation Items */}
+<div className="p-2">
+  {menuItems.map((item) => {
+    const Icon = item.icon;
+    const isActive = pathname === item.route;
 
-        return (
-          <button
-            key={item.title}
-            onClick={() => {
-              setMenuOpen(false);
-            router.push(item.route)
-            }}
-            className="group flex w-full items-center justify-between px-5 py-3 transition-all duration-200 hover:bg-teal-50 hover:text-teal-700 cursor-pointer"
+    return (
+      <button
+        key={item.title}
+        onClick={() => {
+          router.push(item.route);
+          setMenuOpen(false);
+        }}
+        className={`
+          group flex w-full items-center justify-between
+          rounded-xl px-3 py-2.5
+          text-left transition-all duration-150
+          cursor-pointer
+          focus:outline-none focus:ring-2 focus:ring-teal-500/30
+          ${
+            isActive
+              ? "bg-teal-50 text-teal-700"
+              : "text-slate-700 hover:bg-teal-50 hover:text-teal-700"
+          }
+        `}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+
+          {/* Icon */}
+          <div
+            className={`
+              flex h-9 w-9 shrink-0 items-center justify-center
+              rounded-lg transition-colors
+              ${
+                isActive
+                  ? "bg-teal-100 text-teal-700"
+                  : "bg-slate-100 text-slate-600 group-hover:bg-teal-100 group-hover:text-teal-700"
+              }
+            `}
           >
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-slate-100 p-2 transition group-hover:bg-teal-100">
-                <Icon size={18} />
-              </div>
+            <Icon size={18} />
+          </div>
 
-              <span className="font-medium">
-                {item.title}
-              </span>
-            </div>
+          {/* Title */}
+          <span className="truncate text-sm font-medium">
+            {item.title}
+          </span>
+        </div>
 
-            <ChevronRight
-              size={18}
-              className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-teal-600"
-            />
-          </button>
-        );
-      })}
-    </div>
+        {/* Arrow */}
+        <ChevronRight
+          size={17}
+          className={`
+            shrink-0 transition-all duration-150
+            ${
+              isActive
+                ? "translate-x-1 text-teal-600"
+                : "text-slate-400 group-hover:translate-x-1 group-hover:text-teal-600"
+            }
+          `}
+        />
+      </button>
+    );
+  })}
+</div>
   </div>
 )}
 </div>

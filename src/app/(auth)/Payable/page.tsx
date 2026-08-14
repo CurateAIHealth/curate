@@ -12,18 +12,22 @@ import { useDispatch, useSelector } from "react-redux";
 import { DeletePayableRecord, GetAllUsersData, PostINPayblePage, PostINRejectionDb, PostINSuccesfulPaymentsDb, UpdateStatusEnable, UpdateStatusEnableinRepleasment, UpdateStatusEnableiNTermination } from "@/Lib/user.action";
 import { LoadingData } from "@/Components/Loading/page";
 import { IndianStates, months, PayablemenuItems, SuccussfulmenuItems, years } from "@/Lib/Content";
-import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
+import { SetDeploymentInfo, UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import PopupToast from "@/Components/ExpencesPopUp/page";
 import { AssignSuitableIcon, toProperCaseLive } from "@/Lib/Actions";
 import axios from "axios";
-
+import LoadingPopup from "@/Components/SwitchMonth/page";
+  import { usePathname } from "next/navigation";
 export default function HCAPaymentTable() {
-
+ const [isSwitchingMonth, setIsSwitchingMonth] = useState(false);
   const [popup, setPopup] = useState({
     isOpen: false,
     message: "",
     type: "success",
   });
+
+
+const pathname = usePathname();
   const [showFullMonth,setShowFullMonth]=useState(false)
 // const [userTypeFilter, setUserTypeFilter] = useState("On Service");
 const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -35,7 +39,7 @@ const [NeftTransactionNumber,setNeftTransactionNumber]=useState("")
   const [search, setSearch] = useState("");
 const [menuOpen, setMenuOpen] = useState(false);
   const [paybleData,setPaybleData]=useState<any[]>([])
-   const [selectedBank, setSelectedBank] = useState("");
+  const [selectedBank, setSelectedBank] = useState<Record<string, string>>({});
      
         const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
         const users=useSelector((state:any)=>state.AdminFullInfo)
@@ -104,10 +108,13 @@ useEffect(() => {
 
       console.log("🌐 Fetching Fresh Payable Data...");
       setIsChecking(true);
+const MonthInfo = `${SearchYear}-${SearchMonth}`;
 
-      payableCache.promise = axios
-        .get("/api/PayableData")
-        .then((res) => res.data.data.ExportedPayableData ?? []);
+payableCache.promise = axios
+  .post("/api/PayableData", {
+    ImpMonth: MonthInfo,
+  })
+  .then((res) => res.data?.data?.ExportedPayableData ?? []);
 
       const payableData = await payableCache.promise;
 
@@ -296,7 +303,7 @@ const UpdateRevertStatus = async (
       ClientId,
       Month
     );
-
+ 
     if (!payableResult.success) {
       setPopup({
         isOpen: true,
@@ -332,7 +339,17 @@ const UpdateRevertStatus = async (
         ImpDate
       );
     }
-
+ const userId = localStorage.getItem("UserId");
+   const MonthInfo = `${SearchYear}-${SearchMonth}`;
+   const { data } = await axios.post(
+  "/api/AdminPageInfo",
+  {
+    userId,
+    Month: MonthInfo,
+        refreshType: "deployment",
+  }
+);
+dispatch(SetDeploymentInfo(data.data.deployedLength));
     setPopup({
       isOpen: true,
       message: "Reverted Successfully!",
@@ -421,7 +438,7 @@ setPopup({
     });
      const MonthInfo=`${SearchYear}-${SearchMonth}`
      const ExportNeftNumber=NeftTransactionNumber||selectedUser?.neft
-     console.log("PaymentInfo to be posted:", ExportNeftNumber,MonthInfo)
+     console.log("PaymentInfo to be posted:", selectedBank)
     const PostinDb=await PostINSuccesfulPaymentsDb(selectedUser,ExportNeftNumber,MonthInfo,ImpId,selectedBank)
     if(PostinDb.success){
    
@@ -430,7 +447,7 @@ setPopup({
         message: "Successful payment information recorded successfully!",
         type: "success",
       });
-       window.location.reload()
+   
     }else{
       setPopup({
         isOpen: true,
@@ -482,7 +499,34 @@ setPopup({
 
     return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
   };
+const GetMonthFreshData = async (r: string) => {
+  try {
+     dispatch(UpdateMonthFilter(r))
+  const MonthInfo = `${SearchYear}-${r}`;
+    setIsSwitchingMonth(true);
+    dispatch(UpdateMonthFilter(r));
+payableCache.promise = axios
+  .post("/api/PayableData", {
+    ImpMonth: MonthInfo,
+  })
+  .then((res) => res.data?.data?.ExportedPayableData ?? []);
 
+      const payableData = await payableCache.promise;
+
+      payableCache.data = payableData;
+      payableCache.promise = null;
+
+    
+
+      cachedPayableData = payableData;
+      setPaybleData([...cachedPayableData]);
+ setIsSwitchingMonth(false);
+    
+  } catch (error) {
+    console.error("GetMonthFreshData Error:", error);
+    SetActionStatusMessage("Failed to fetch data. Please try again.");
+  }
+};
 
       function DayBadge({ status }: { status: any }) {
   const Wrapper = ({ children }: any) => (
@@ -562,43 +606,79 @@ setPopup({
           {menuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
         {menuOpen && (
-                      <div className="absolute left-0 top-full z-50 mt-3 w-72 max-w-[90vw] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-black/5">
-                        <div className="border-b border-slate-100 bg-slate-50 px-5 py-3">
-                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                            Advance Payment Options
-                          </p>
-                        </div>
-            
-                        <div className="py-2">
-                          {PayablemenuItems.map((item) => {
-                            const Icon = item.icon;
-            
-                            return (
-                              <button
-                                key={item.title}
-                                onClick={() => {
-                                  setMenuOpen(false);
-                               router.push(item.route);
-                                }}
-                                className="group flex w-full items-center cursor-pointer justify-between px-5 py-3 transition hover:bg-teal-50 hover:text-teal-700"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className="rounded-lg bg-slate-100 p-2 group-hover:bg-teal-100">
-                                    <Icon size={18} />
-                                  </div>
-            
-                                  <span className="font-medium">{item.title}</span>
-                                </div>
-            
-                                <ChevronRight
-                                  size={18}
-                                  className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-teal-600"
-                                />
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
+                 <div className="absolute left-0 top-full z-50 mt-3 w-72 max-w-[90vw] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-black/5">
+  {/* Header */}
+  <div className="border-b border-slate-100 bg-slate-50 px-5 py-3">
+    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+      Quick Navigation
+    </p>
+  </div>
+
+  {/* Navigation Items */}
+  <div className="p-2">
+    {PayablemenuItems.map((item, index) => {
+      const Icon = item.icon;
+
+      const isActive = pathname === item.route;
+
+      return (
+        <button
+          key={item.title}
+          onClick={() => {
+            router.push(item.route);
+            setMenuOpen(false);
+          }}
+          className={`
+            group flex w-full items-center justify-between
+            rounded-xl px-3 py-2.5
+            text-left transition-all duration-150
+            focus:outline-none focus:ring-2 focus:ring-teal-500/30
+            ${
+              isActive
+                ? "bg-teal-50 text-teal-700"
+                : "text-slate-700 hover:bg-teal-50 hover:text-teal-700"
+            }
+          `}
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            {/* Icon */}
+            <div
+              className={`
+                flex h-9 w-9 shrink-0 items-center justify-center
+                rounded-lg transition-colors
+                ${
+                  isActive
+                    ? "bg-teal-100 text-teal-700"
+                    : "bg-slate-100 text-slate-600 group-hover:bg-teal-100 group-hover:text-teal-700"
+                }
+              `}
+            >
+              <Icon size={18} />
+            </div>
+
+            {/* Title */}
+            <span className="truncate text-sm font-medium">
+              {item.title}
+            </span>
+          </div>
+
+          {/* Arrow */}
+          <ChevronRight
+            size={17}
+            className={`
+              shrink-0 transition-all duration-150
+              ${
+                isActive
+                  ? "translate-x-1 text-teal-600"
+                  : "text-slate-400 group-hover:translate-x-1 group-hover:text-teal-600"
+              }
+            `}
+          />
+        </button>
+      );
+    })}
+  </div>
+</div>
                     )}
               <img
             src="/Icons/Curate-logoq.png"
@@ -656,7 +736,7 @@ setPopup({
           <div className="flex flex-wrap gap-3">
             <select
               value={SearchMonth}
-              onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
+              onChange={(e) => GetMonthFreshData(e.target.value)}
               className="w-[140px] h-[40px] rounded-xl border border-gray-300 px-3 text-sm bg-white text-gray-800"
             >
               <option value="">All Months</option>
@@ -1233,7 +1313,11 @@ onClick={() => router.push("/SubAccountings")}
       })()}
     </div>
   </div>
-)}
+)}<LoadingPopup
+  open={isSwitchingMonth}
+  title="Switching Month"
+  description="Updating Payable Data..."
+/>
         <div className="overflow-auto max-h-[650px]">
           {filteredPayableData.length===0?
           
@@ -1380,7 +1464,7 @@ onClick={() => router.push("/SubAccountings")}
                       setAttendenceInfo(row)
                     }}
                   >
-View  {row.HCAid}
+View  
 </button>
                   </td>
 
@@ -1398,12 +1482,17 @@ View  {row.HCAid}
     </span>
   ) : (
     <div className="flex flex-col gap-2 items-center">
-    <input
+<input
   type="text"
   list="bank-list"
   placeholder="Select or Enter Bank"
-  value={selectedBank}
-  onChange={(e) => setSelectedBank(e.target.value)}
+  value={selectedBank[row.HCAId] || ""}
+  onChange={(e) =>
+    setSelectedBank((prev) => ({
+      ...prev,
+      [row.HCAId]: e.target.value,
+    }))
+  }
   className="w-48 bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1392d3]"
 />
 
