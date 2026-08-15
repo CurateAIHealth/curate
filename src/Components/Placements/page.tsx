@@ -2686,7 +2686,7 @@ const EditDate =
     />
 
 
-    <span className="hover:underline font-semibold text-[10px] mb-4 break-words leading-tight">
+   <span className="min-w-0 flex-1 text-xs font-semibold leading-5 break-words whitespace-normal">
       {GetHCPFullName(c.HCA_Id)}
     </span>
 
