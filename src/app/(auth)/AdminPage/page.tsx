@@ -258,6 +258,27 @@ const GetHCPTypeCount = (HCPType: string) => {
   }
 };
 
+
+const GetHCPFullName = (A: any) => {
+  if (!UserFullInfo?.length || !A) return "";
+
+  const info = UserFullInfo
+    ?.map((each: any) => each?.HCAComplitInformation)
+    ?.find((info: any) => info?.UserId === A);
+
+  if (!info) return "";
+console.log("HCP Info:", info);
+  const fullName = [
+    info.HCPSurName,
+    info.HCPFirstName,
+    info.LastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return fullName;
+};
+
   const UpdateStatus = async (first: string, e: string, UserId: any) => {
    
       dispatch(Refresh(`Updating Client Status....`))
@@ -1302,11 +1323,8 @@ const UpdatePopup = async (a: any) => {
 
 
 <img className='h-4' src={AssignSuitableIcon(GetHCPGender(user.id),user.PreviewUserType).image}/>
-}<span className="text-xs font-semibold flex flex-col">
-  <span>{toProperCaseLive(user.Surname)}</span>
-  <span>
-    {toProperCaseLive(user.FirstName)} {toProperCaseLive(user.LastName)} 
-  </span>
+}<span className="min-w-0 flex-1 text-xs font-semibold leading-5 break-words whitespace-normal">
+  {GetHCPFullName(user.id)||toProperCaseLive(user.FirstName)} {toProperCaseLive(user.LastName)}
 </span>
 
                               </div>
