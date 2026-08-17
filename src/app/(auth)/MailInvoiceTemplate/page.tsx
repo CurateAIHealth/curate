@@ -496,7 +496,7 @@ const SendInvoice = async () => {
     if (!invoiceProps || !invoice || !InvoiceData) {
       throw new Error("Missing invoice data");
     }
-
+  console.log("Check for Arguments-----",InvoiceData)
     // ✅ Save invoice before generating PDF
     const saveResponse = await UpdateInvoiceData(InvoiceData, {
       invoice: invoiceProps.invoice,
@@ -668,6 +668,8 @@ const SendInvoice = async () => {
     console.log("Mail Response:", mailResponse?.data);
 
     // ✅ Update invoice status
+
+  
     const updateInvoiceStatus = await UpdateInvoice(InvoiceData);
 
     console.log(
@@ -675,9 +677,12 @@ const SendInvoice = async () => {
       updateInvoiceStatus
     );
 
-    if (updateInvoiceStatus?.success) {
-      setMailstatus(false);
+        if (!updateInvoiceStatus?.success) {
+      throw new Error("Invoice email sent, but invoice status update failed.");
     }
+
+    // Show success screen
+    setMailstatus(false);
   } catch (error: any) {
     console.error("SendInvoice Error:", error);
 
@@ -687,11 +692,9 @@ const SendInvoice = async () => {
       "Something went wrong while sending invoice.";
 
     alert(errorMessage);
-  } 
+  }
 };
-const NavigatetoInvoices=()=>{
-  Router.push("/Invoices")
-}
+
 const removeService = (code: string) => {
   setServices((prev: any[]) =>
     prev.filter(service => service.code !== code)
@@ -819,9 +822,12 @@ const addOtherService = () => {
     The invoice email has been delivered.
   </p>
 
-<button className="px-6 py-3 border cursor-pointer border-teal-600 text-teal-600 rounded-lg font-semibold hover:bg-blue-50 transition" onClick={NavigatetoInvoices}>
-  Go to Invoices
-</button>
+ <button 
+        className="w-full cursor-pointer sm:w-auto bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white px-3 py-1 rounded"
+        onClick={() => Router.push("/Invoices")}
+      >
+        Invoice
+      </button>
 
 </div>}
   </div>
@@ -1538,8 +1544,13 @@ message="Please provide the client’s email address to send the invoice."
         
       />
     </div>
-   <button className="w-full px-6 py-2.5 bg-teal-800 text-white font-medium rounded-xl shadow-md hover:cursor-pointer hover:bg-teal-700 hover:shadow-lg transition-all duration-300 active:scale-95" onClick={SendInvoice}>
-  Send E-Mail
+   <button
+  type="button"
+  className="w-full px-6 py-2.5 bg-teal-800 text-white font-medium rounded-xl shadow-md hover:cursor-pointer hover:bg-teal-700 hover:shadow-lg transition-all duration-300 active:scale-95"
+  onClick={SendInvoice}
+  disabled={isSending}
+>
+  {isSending ? "Sending..." : "Send E-Mail"}
 </button>
     </div>
 }
