@@ -8237,114 +8237,131 @@ export const UpdateClientStatusinCallEnquiry = async (
 
 
   export const UpdateHCAnstatus = async (
-    UserId: any,
+    ImpUserId: any,
     AvailableStatus: string
   ) => {
     try {
-      const Cluster = await clientPromise;
-      const Db = Cluster.db("CurateInformation");
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
 
-      const RegistrationCollection = Db.collection("Registration");
-      const CompliteCollection = Db.collection("CompliteRegistrationInformation");
+    const RegistrationCollection = Db.collection("Registration");
+    const CompliteCollection = Db.collection("CompliteRegistrationInformation");
+
+   
+    const updateRegistration = await RegistrationCollection.updateOne(
+      { userId: ImpUserId },
+      {
+        $set: {
+          CurrentStatus: AvailableStatus,
+          UpdatedAt: new Date(),
+        },
+      }
+    );
+
+    if (updateRegistration.matchedCount === 0) {
+      return {
+        success: false,
+        message: "User not found in Registration collection",
+      };
+    }
 
 
-      const updateRegistration = await RegistrationCollection.updateOne(
-        { userId: UserId },
-        {
-          $set: {
-            Status: AvailableStatus||"Bench",
-            CurrentStatus: AvailableStatus||"Bench",
-          },
-        }
-      );
-    
-    
-    const removeStatusFromComplite = await CompliteCollection.updateOne(
-    { "HCAComplitInformation.UserId": UserId },
-    {
-      $set: {
-        "HCAComplitInformation.CurrentStatus": AvailableStatus||"Bench",
-      },
+    const updateComplite = await CompliteCollection.updateOne(
+  { "HCAComplitInformation.UserId": ImpUserId },
+  {
+    $set: {
+      "HCAComplitInformation.CurrentStatus": AvailableStatus,
+      "HCAComplitInformation.UpdatedAt": new Date(),
+    },
+    ...(AvailableStatus !== "Active" && {
       $unset: {
         "HCAComplitInformation.Status": "",
       },
-    }
-  );
+    }),
+  },
+  {
+    upsert: true,
+  }
+);
 
-
-
-
-      if (
-        updateRegistration.modifiedCount === 0 &&
-        removeStatusFromComplite.modifiedCount === 0
-      ) {
-        return { success: false, message: "No records were updated." };
-      }
-
-      return {
-        success: true,
-        message: "Status updated and removed Successfully.",
-      };
-    } catch (err: any) {
-      console.error("UpdateHCAnstatus Error:", err);
-      return { success: false, message: "Internal server error." };
-    }
+    return {
+      success: true,
+      message:
+        updateComplite.upsertedCount === 1
+          ? "User status created and updated Successfully"
+          : "User status updated Successfully",
+    };
+  } catch (err: any) {
+    console.error("UpdateUserCurrentstatus Error:", err);
+    return {
+      success: false,
+      message: "Failed to update user current status",
+    };
+  }
   };
 
     export const UpdateHCAnstatusInDeplyoment = async (
     UserId: any,
     AvailableStatus: string
   ) => {
-    try {
-      const Cluster = await clientPromise;
-      const Db = Cluster.db("CurateInformation");
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
 
-      const RegistrationCollection = Db.collection("Registration");
-      const CompliteCollection = Db.collection("CompliteRegistrationInformation");
+    const RegistrationCollection = Db.collection("Registration");
+    const CompliteCollection = Db.collection("CompliteRegistrationInformation");
+
+   
+    const updateRegistration = await RegistrationCollection.updateOne(
+      { userId: UserId },
+      {
+        $set: {
+          CurrentStatus: AvailableStatus,
+          UpdatedAt: new Date(),
+        },
+      }
+    );
+
+    if (updateRegistration.matchedCount === 0) {
+      return {
+        success: false,
+        message: "User not found in Registration collection",
+      };
+    }
 
 
-      const updateRegistration = await RegistrationCollection.updateOne(
-        { userId: UserId },
-        {
-          $set: {
-            Status: AvailableStatus,
-            CurrentStatus: AvailableStatus,
-          },
-        }
-      );
-    
-const Try = "Assigned";
-
-const removeStatusFromComplite = await CompliteCollection.updateOne(
+    const updateComplite = await CompliteCollection.updateOne(
   { "HCAComplitInformation.UserId": UserId },
   {
     $set: {
       "HCAComplitInformation.CurrentStatus": AvailableStatus,
+      "HCAComplitInformation.UpdatedAt": new Date(),
     },
-    $push: {
-      "HCAComplitInformation.Status": Try,
-    }as any,
+    ...(AvailableStatus !== "Active" && {
+      $unset: {
+        "HCAComplitInformation.Status": "",
+      },
+    }),
+  },
+  {
+    upsert: true,
   }
 );
 
-
-
-
-      if (
-        updateRegistration.modifiedCount === 0 &&
-        removeStatusFromComplite.modifiedCount === 0
-      ) {
-        return { success: false, message: "No records were updated." };
-      }
-
-      return {
-        success: true,
-        message: "Status updated and removed Successfully.",
-      };
-    } catch (err: any) {
-      console.error("UpdateHCAnstatus Error:", err);
-      return { success: false, message: "Internal server error." };
-    }
+    return {
+      success: true,
+      message:
+        updateComplite.upsertedCount === 1
+          ? "User status created and updated Successfully"
+          : "User status updated Successfully",
+    };
+  } catch (err: any) {
+    console.error("UpdateUserCurrentstatus Error:", err);
+    return {
+      success: false,
+      message: "Failed to update user current status",
+    };
+  }
   };
 
 
