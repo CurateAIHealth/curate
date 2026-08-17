@@ -1179,7 +1179,7 @@ const confirmDelete = async (selectedReason: string) => {
     SetActionStatusMessage("Please wait, deleting placement...");
 
     
-    await UpdateHCAnstatus(HCA_Id, finalCareTakerStatus);
+    await UpdateHCAnstatus(HCA_Id, finalCareTakerStatus||"Bench");
 
     await UpdateUserContactVerificationstatus(Client_Id, "Lost");
 
@@ -1384,8 +1384,9 @@ const UpdateReplacement = async (
         Exsting_HCP.HCA_Id,
           UpdatedCareTakerStatus?.trim() || "Bench"
       ),
+     
       UpdateHCAnstatusInDeplyoment(
-        Available_HCP.HCA_Id,
+        Available_HCP.userId,
         "Active"
       ),
       // UpdateHCAnstatusInFullInformation(
