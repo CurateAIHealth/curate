@@ -446,6 +446,12 @@ useEffect(() => {
         icon: BellRing,
         bg: "bg-sky-500",
       },
+      {
+  name: "Quality",
+  count: stats.Quality,
+  icon: ClipboardCheck,
+  bg: "bg-emerald-500",
+},
       // {
       //   name: "Hostel Attendance",
       //   count: stats.hostelAttendanceCount,
@@ -879,6 +885,7 @@ const pageRoutes: Record<string, string> = {
   "Document Compliance": "/Documents",
   "Hostel Attendance": "/HostelAttendence",
   Employees: "/Employes",
+  Quality:"/Quality"
 };
 
 const Switching = (tab: string) => {
@@ -1013,7 +1020,7 @@ const Switching = (tab: string) => {
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
             </span>
 
           </div>

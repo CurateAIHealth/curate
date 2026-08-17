@@ -994,7 +994,7 @@ export const UpdateInvoiceData = async (
 
     // Add HCAId only if available
     if (invoiceInfo.HCAId) {
-      filter.HCAId = invoiceInfo.HCAId;
+      filter.HCA_Id = invoiceInfo.HCAId;
     }
   console.log("Filter for update:", filter);
     const result = await collection.updateOne(
@@ -2478,7 +2478,7 @@ const Collection=Db.collection("Invoices")
 
     // Add HCAId only if available
     if (invoiceInfo.HCAId) {
-      filter.HCAId = invoiceInfo.HCAId;
+      filter.HCA_Id = invoiceInfo.HCAId;
     }
   
 const UpdateStatus=await Collection.updateOne(
@@ -2489,7 +2489,7 @@ const UpdateStatus=await Collection.updateOne(
 )
  return {
       success: true,
-      message: "PDR Status updated Successfully.",
+      message: "Invoice Status updated Successfully.",
     };
   }catch(err:any){
 
