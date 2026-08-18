@@ -483,7 +483,10 @@ return
 //   }
 // }
 const SendInvoice = async () => {
+  if (isSending) return;
+
   setIsSending(true);
+  setMailstatus(true);
 
   try {
     const element = document.getElementById("invoice-pdf-area");
@@ -497,7 +500,7 @@ const SendInvoice = async () => {
       throw new Error("Missing invoice data");
     }
   console.log("Check for Arguments-----",InvoiceData)
-    // ✅ Save invoice before generating PDF
+  
     const saveResponse = await UpdateInvoiceData(InvoiceData, {
       invoice: invoiceProps.invoice,
       billTo: invoiceProps.billTo,
@@ -506,7 +509,11 @@ const SendInvoice = async () => {
     });
 
     console.log("Save Response:", saveResponse);
-
+    if (saveResponse?.success === false) {
+      throw new Error(
+        saveResponse?.message || "Failed to save invoice"
+      );
+    }
     // ✅ Dynamic import
     const { default: html2pdf } = await import("html2pdf.js");
 
@@ -682,7 +689,7 @@ const SendInvoice = async () => {
     }
 
     // Show success screen
-    setMailstatus(false);
+      setMailstatus(false);
   } catch (error: any) {
     console.error("SendInvoice Error:", error);
 
@@ -692,6 +699,11 @@ const SendInvoice = async () => {
       "Something went wrong while sending invoice.";
 
     alert(errorMessage);
+  } finally {
+
+    // IMPORTANT
+    setIsSending(false);
+
   }
 };
 
@@ -785,53 +797,52 @@ const addOtherService = () => {
 
 
    
-   <>{isSending && (
+   <>{isSending && Mailstatus && (
   <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-    {Mailstatus?
     <div className="bg-white shadow-xl rounded-2xl px-8 py-6 text-center w-[90%] max-w-sm">
-      <div className="animate-spin h-10 w-10 border-4 border-slate-300 border-t-slate-900 rounded-full mx-auto mb-4"></div>
+
+      <div className="animate-spin h-10 w-10 border-4 border-slate-300 border-t-slate-900 rounded-full mx-auto mb-4" />
 
       <h2 className="text-lg font-semibold text-slate-800">
         Please Wait…
       </h2>
+
       <p className="text-sm text-slate-500 mt-1">
         Sending Invoice Email
       </p>
-    </div>:<div className="bg-white shadow-xl rounded-2xl px-4 py-6 text-center w-[90%] ">
 
-
-  <div className="flex items-center justify-center mb-4">
-    <svg
-      className="h-14 w-14 text-green-600 animate-[tick_0.5s_ease-out_forwards]"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 6L9 17l-5-5" />
-    </svg>
+    </div>
   </div>
+)}
 
-  <h2 className="text-lg font-semibold text-slate-800">
-    Invoice Sent Successfully
-  </h2>
+{!Mailstatus && (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="bg-white shadow-xl rounded-2xl px-8 py-6 text-center w-[90%] max-w-md">
 
-  <p className="text-sm text-slate-500 mt-1">
-    The invoice email has been delivered.
-  </p>
+      <div className="flex items-center justify-center mb-4">
+        <svg
+          className="h-14 w-14 text-green-600"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M20 6L9 17l-5-5" />
+        </svg>
+      </div>
 
- <button 
-        className="w-full cursor-pointer sm:w-auto bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white px-3 py-1 rounded"
-        onClick={() => Router.push("/Invoices")}
-      >
-        Invoice
-      </button>
+      <h2 className="text-lg font-semibold text-slate-800">
+        Invoice Sent Successfully
+      </h2>
 
-</div>}
+      <p className="text-sm text-slate-500 mt-1">
+        The invoice email has been delivered.
+      </p>
+
+    </div>
   </div>
-  
 )}
 {ShowMailTemplate?  
   <div className="min-h-screen bg-slate-50 py-8 px-4">

@@ -1219,8 +1219,7 @@ const formatCurrency = (
     // Calculate daily salary
     // --------------------------------------------------
 
-    const dailySalary = salary / daysInMonth;
-
+const dailySalary = Math.round(salary / daysInMonth);
     // --------------------------------------------------
     // Attendance status
     // --------------------------------------------------
