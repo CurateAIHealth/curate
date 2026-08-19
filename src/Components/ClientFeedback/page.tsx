@@ -16,6 +16,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import { useSelector } from "react-redux";
 
 /* =========================================================
    TYPES
@@ -85,32 +86,32 @@ interface QualityCall {
    TEST CLIENT DATA
 ========================================================= */
 
-const testClients: Client[] = [
-  {
-    id: "client-001",
-    name: "Sunrise Care",
-    hcaId: "hca-001",
-    hcaName: "Anjali Kale",
-  },
-  {
-    id: "client-002",
-    name: "Green Valley Care",
-    hcaId: "hca-002",
-    hcaName: "Priya Sharma",
-  },
-  {
-    id: "client-003",
-    name: "Care Plus Services",
-    hcaId: "hca-003",
-    hcaName: "Kavya Reddy",
-  },
-  {
-    id: "client-004",
-    name: "Happy Hearts Care",
-    hcaId: "hca-004",
-    hcaName: "Sakshi Ghatwade",
-  },
-];
+// const testClients: Client[] = [
+//   {
+//     id: "client-001",
+//     name: "Sunrise Care",
+//     hcaId: "hca-001",
+//     hcaName: "Anjali Kale",
+//   },
+//   {
+//     id: "client-002",
+//     name: "Green Valley Care",
+//     hcaId: "hca-002",
+//     hcaName: "Priya Sharma",
+//   },
+//   {
+//     id: "client-003",
+//     name: "Care Plus Services",
+//     hcaId: "hca-003",
+//     hcaName: "Kavya Reddy",
+//   },
+//   {
+//     id: "client-004",
+//     name: "Happy Hearts Care",
+//     hcaId: "hca-004",
+//     hcaName: "Sakshi Ghatwade",
+//   },
+// ];
 
 /* =========================================================
    QUESTIONS FROM YOUR EXAMPLE FILE
@@ -467,9 +468,22 @@ const welfareQuestions: QualityQuestion[] = [
   },
 ];
 
-/* =========================================================
-   COMPONENT
-========================================================= */
+interface Client {
+  id: string;
+  name: string;
+  hcaName: string;
+  hcaId: string;
+
+  patientName: string;
+  enrollmentDate: string;
+  terminated: string;
+  team: string;
+  note: string;
+  status: string;
+
+  // This should come from your feedback data
+  feedbackStatus: "Pending" | "Completed";
+}
 
 const ClientFeedback: React.FC = () => {
   const [selectedClient, setSelectedClient] =
@@ -504,11 +518,11 @@ const ClientFeedback: React.FC = () => {
 
   const [saved, setSaved] =
     useState<boolean>(false);
-
-  /*
-   * Combine Role 2 + Role 3.
-   * Role 1 from the document is not part of the call questionnaire.
-   */
+const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
+ console.log("Info-----",DeploymentInfo)
+ const [feedbackFilter, setFeedbackFilter] = useState<
+  "Pending" | "Completed"
+>("Pending");
   const allSections = useMemo(
     () => [
       ...qualitySections,
@@ -529,11 +543,64 @@ const ClientFeedback: React.FC = () => {
   const progress =
     ((currentSectionIndex + 1) / totalSections) * 100;
 
-  const filteredClients = testClients.filter((client) =>
-    client.name
-      .toLowerCase()
-      .includes(searchClient.toLowerCase())
-  );
+const clients: Client[] = useMemo(() => {
+  if (!Array.isArray(DeploymentInfo)) {
+    return [];
+  }
+
+  return DeploymentInfo.map((item: any) => ({
+    id: item.ClientId,
+    name: item.ClientName?.trim() || "Unknown Client",
+    hcaName: item.HCAName?.trim() || "Not Assigned",
+    hcaId: item.HCAId || "",
+
+    patientName: item.patientName?.trim() || "Not Available",
+
+    enrollmentDate: item.StartDate || "N/A",
+
+    terminated:
+      item.Status === "Terminated"
+        ? item.EndDate || "N/A"
+        : "NA",
+
+    team: item.Team || 1,
+
+    note: item.Note || "",
+
+    status: item.Status || "Active",
+
+    /*
+     * IMPORTANT:
+     * This field must come from your feedback data.
+     *
+     * If no feedback exists, it is Pending.
+     */
+    feedbackStatus:
+      item.FeedbackStatus === "Completed"
+        ? "Completed"
+        : "Pending",
+  }));
+}, [DeploymentInfo]);
+
+const filteredClients = useMemo(() => {
+  return clients.filter((client) => {
+    const matchesSearch =
+      client.name
+        .toLowerCase()
+        .includes(searchClient.toLowerCase()) ||
+      client.patientName
+        .toLowerCase()
+        .includes(searchClient.toLowerCase()) ||
+      client.hcaName
+        .toLowerCase()
+        .includes(searchClient.toLowerCase());
+
+    const matchesStatus =
+      client.feedbackStatus === feedbackFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+}, [clients, searchClient, feedbackFilter]);
 
   /* =========================================================
      ANSWER HANDLING
@@ -683,139 +750,351 @@ const ClientFeedback: React.FC = () => {
         {/* Client Selection */}
         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-          <div className="border-b border-slate-200 p-5">
-
-            <h3 className="font-bold text-slate-800">
-              Select Client
-            </h3>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Select the client before starting the quality call.
-            </p>
-
-          </div>
+       
 
           <div className="p-5">
 
-            {/* Search */}
-            <div className="relative mb-4 max-w-md">
+        <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              />
+  {/* Left: Search */}
+  <div className="relative w-full max-w-md">
+    <Search
+      size={18}
+      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+    />
 
-              <input
-                value={searchClient}
-                onChange={(e) =>
-                  setSearchClient(e.target.value)
-                }
-                placeholder="Search client..."
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none focus:border-[#1392d3] focus:bg-white"
-              />
+    <input
+      value={searchClient}
+      onChange={(e) => setSearchClient(e.target.value)}
+      placeholder="Search client..."
+      className="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none focus:border-[#1392d3] focus:bg-white"
+    />
+  </div>
 
-            </div>
+  {/* Right: Feedback Filters */}
+  <div className="flex flex-wrap items-center gap-3">
 
-            {/* Clients */}
-            <div className="grid gap-3 md:grid-cols-2">
+    {/* Pending */}
+    <button
+      type="button"
+      onClick={() => setFeedbackFilter("Pending")}
+      className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition ${
+        feedbackFilter === "Pending"
+          ? "bg-[#1392d3] text-white shadow-sm"
+          : "border border-slate-200 bg-white text-slate-600 hover:border-[#1392d3]"
+      }`}
+    >
+      <Clock3 size={17} />
 
-              {filteredClients.map((client) => {
+      Pending
 
-                const isSelected =
-                  selectedClient?.id === client.id;
+      <span
+        className={`rounded-full px-2 py-0.5 text-xs ${
+          feedbackFilter === "Pending"
+            ? "bg-white/20 text-white"
+            : "bg-slate-100 text-slate-600"
+        }`}
+      >
+        {
+          clients.filter(
+            (client) => client.feedbackStatus === "Pending"
+          ).length
+        }
+      </span>
+    </button>
 
-                return (
-                  <button
-                    key={client.id}
-                    type="button"
-                    onClick={() =>
-                      setSelectedClient(client)
-                    }
-                    className={`rounded-xl border p-4 text-left transition ${
-                      isSelected
-                        ? "border-[#1392d3] bg-sky-50"
-                        : "border-slate-200 hover:border-[#1392d3] hover:bg-slate-50"
-                    }`}
-                  >
+    {/* Completed */}
+    <button
+      type="button"
+      onClick={() => setFeedbackFilter("Completed")}
+      className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition ${
+        feedbackFilter === "Completed"
+          ? "bg-[#50c896] text-white shadow-sm"
+          : "border border-slate-200 bg-white text-slate-600 hover:border-[#50c896]"
+      }`}
+    >
+      <CheckCircle2 size={17} />
 
-                    <div className="flex items-center gap-3">
+      Completed
 
-                      <div className="rounded-xl bg-sky-50 p-3 text-[#1392d3]">
-                        <UserRound size={20} />
-                      </div>
+      <span
+        className={`rounded-full px-2 py-0.5 text-xs ${
+          feedbackFilter === "Completed"
+            ? "bg-white/20 text-white"
+            : "bg-slate-100 text-slate-600"
+        }`}
+      >
+        {
+          clients.filter(
+            (client) => client.feedbackStatus === "Completed"
+          ).length
+        }
+      </span>
+    </button>
 
-                      <div className="flex-1">
+  </div>
+</div>
+       
 
-                        <p className="font-semibold text-slate-800">
-                          {client.name}
-                        </p>
+{/* Feedback Table */}
+<div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <div className="overflow-x-auto">
+    <table className="w-full min-w-[1200px] border-collapse text-sm">
+      <thead>
+        <tr className="border-b border-slate-200 bg-slate-50">
+          <th className="px-4 py-3 text-left font-semibold text-slate-600">
+            S.no
+          </th>
 
-                        <p className="mt-1 text-xs text-slate-500">
-                          Assigned HCA:{" "}
-                          <span className="font-medium">
-                            {client.hcaName}
-                          </span>
-                        </p>
+          <th className="px-4 py-3 text-left font-semibold text-slate-600">
+            Client name
+          </th>
 
-                      </div>
+          <th className="px-4 py-3 text-left font-semibold text-slate-600">
+            Pt name
+          </th>
 
-                      {isSelected && (
-                        <CheckCircle2
-                          size={20}
-                          className="text-[#1392d3]"
-                        />
-                      )}
+          <th className="px-4 py-3 text-left font-semibold text-slate-600">
+            Enrollment date
+          </th>
 
+          <th className="px-4 py-3 text-left font-semibold text-slate-600">
+            Terminated
+          </th>
+
+          <th className="px-4 py-3 text-left font-semibold text-slate-600">
+            Team
+          </th>
+
+          <th className="px-4 py-3 text-left font-semibold text-slate-600">
+            Note
+          </th>
+
+          <th className="px-4 py-3 text-left font-semibold text-slate-600">
+            Status
+          </th>
+
+          <th className="px-4 py-3 text-left font-semibold text-slate-600">
+            Feedback
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {filteredClients.length > 0 ? (
+          filteredClients.map((client, index) => {
+            const isSelected =
+              selectedClient?.id === client.id;
+
+            return (
+              <tr
+                key={index}
+                onClick={() => setSelectedClient(client)}
+                className={`cursor-pointer border-b border-slate-100 transition last:border-b-0 ${
+                  isSelected
+                    ? "bg-sky-50"
+                    : "hover:bg-slate-50"
+                }`}
+              >
+                {/* S.no */}
+                <td className="px-4 py-4 font-medium text-slate-600">
+                  {index + 1}
+                </td>
+
+                {/* Client */}
+                <td className="px-4 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#1392d3]">
+                      <UserRound size={17} />
                     </div>
 
-                  </button>
-                );
-              })}
+                    <div>
+                      <p className="font-semibold text-slate-800">
+                        {client.name}
+                      </p>
 
-            </div>
+                      <p className="mt-0.5 text-xs text-slate-400">
+                        HCA: {client.hcaName}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+
+                {/* Patient */}
+                <td className="px-4 py-4 text-slate-700">
+                  {client.patientName}
+                </td>
+
+                {/* Enrollment */}
+                <td className="px-4 py-4 text-slate-600">
+                  {client.enrollmentDate}
+                </td>
+
+                {/* Terminated */}
+                <td className="px-4 py-4 text-slate-600">
+                  {client.terminated}
+                </td>
+
+                {/* Team */}
+                <td className="px-4 py-4">
+  <span className="inline-flex items-center rounded-lg border border-[#1392d3]/20 bg-[#1392d3]/10 px-3 py-1.5 text-xs font-semibold text-[#1392d3]">
+    {client.team}
+  </span>
+</td>
+
+                {/* Note */}
+              <td className="max-w-[220px] px-4 py-4">
+  {client.note ? (
+    <span className="text-sm text-slate-600">
+      {client.note}
+    </span>
+  ) : (
+    <button
+      type="button"
+      onClick={() => {
+        // Add your note handler here
+        console.log("Add note for:", client);
+      }}
+      className="inline-flex items-center gap-2 rounded-lg border border-[#1392d3]/30 bg-[#1392d3]/10 px-3 py-2 text-xs font-semibold text-[#1392d3] transition hover:bg-[#1392d3] hover:text-white"
+    >
+      + Add Note
+    </button>
+  )}
+</td>
+
+                {/* Status */}
+                <td className="px-4 py-4">
+                  <span
+                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                      client.status === "Active"
+                        ? "bg-emerald-50 text-[#50c896]"
+                        : client.status === "Terminated"
+                        ? "bg-pink-50 text-[#ff1493]"
+                        : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {client.status}
+                  </span>
+                </td>
+
+                {/* Feedback */}
+                <td className="px-4 py-4">
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setSelectedClient(client);
+                    }}
+                    className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition ${
+                      client.feedbackStatus === "Completed"
+                        ? "bg-emerald-50 text-[#50c896] hover:bg-emerald-100"
+                        : "bg-sky-50 text-[#1392d3] hover:bg-sky-100"
+                    }`}
+                  >
+                    {client.feedbackStatus === "Completed" ? (
+                      <>
+                        <CheckCircle2 size={15} />
+                        Completed
+                      </>
+                    ) : (
+                      <>
+                        <Mic size={15} />
+                        Start FeedBack
+                      </>
+                    )}
+                  </button>
+                </td>
+              </tr>
+            );
+          })
+        ) : (
+          <tr>
+            <td
+              colSpan={9}
+              className="px-6 py-12 text-center"
+            >
+              <div className="flex flex-col items-center">
+                <div className="rounded-full bg-slate-100 p-4 text-slate-400">
+                  <Search size={24} />
+                </div>
+
+                <p className="mt-3 font-semibold text-slate-700">
+                  No {feedbackFilter.toLowerCase()} feedback
+                </p>
+
+                <p className="mt-1 text-sm text-slate-400">
+                  No clients match your current search or filter.
+                </p>
+              </div>
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>
 
           </div>
 
         </div>
 
         {/* Selected Client */}
-        {selectedClient && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    {selectedClient && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
 
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      {/* Close Button */}
+      <button
+        type="button"
+        onClick={() => setSelectedClient(null)}
+        className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
+      >
+        ×
+      </button>
 
-              <div>
+      {/* Header */}
+      <div className="mb-6">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          Selected Client
+        </p>
 
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  Selected Client
-                </p>
+        <h3 className="mt-2 text-xl font-bold text-slate-800">
+          {selectedClient.name}
+        </h3>
 
-                <h3 className="mt-1 text-lg font-bold text-slate-800">
-                  {selectedClient.name}
-                </h3>
+        <p className="mt-2 text-sm text-slate-500">
+          Assigned HCA:{" "}
+          <span className="font-semibold text-slate-700">
+            {selectedClient.hcaName}
+          </span>
+        </p>
+      </div>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  Assigned HCA:{" "}
-                  <span className="font-semibold">
-                    {selectedClient.hcaName}
-                  </span>
-                </p>
+      {/* Divider */}
+      <div className="mb-5 h-px bg-slate-100" />
 
-              </div>
+      {/* Action */}
+      <button
+        type="button"
+        onClick={startCall}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1392d3] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+      >
+        <Mic size={18} />
+        Start Quality Call
+      </button>
 
-              <button
-                type="button"
-                onClick={startCall}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1392d3] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-              >
-                <Mic size={18} />
-                Start Quality Call
-              </button>
+      {/* Cancel */}
+      <button
+        type="button"
+        onClick={() => setSelectedClient(null)}
+        className="mt-3 w-full rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+      >
+        Cancel
+      </button>
 
-            </div>
-
-          </div>
-        )}
+    </div>
+  </div>
+)}
 
       </div>
     );

@@ -1,12 +1,13 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { Stethoscope, Shirt, CircleX, Search, X, ChevronsRight, Info, Minimize2 } from "lucide-react";
-import { GetReasonsInfoInfo, GetRegidterdUsers, GetTerminationInfo, GetUserInformation, GetUsersFullInfo, InsertDeployment, PostInvoiceFromDeployment, updateServicePrice } from "@/Lib/user.action";
+import { GetReasonsInfoInfo, GetRegidterdUsers, GetTerminationInfo, GetTerminationInfoForTerminationPage, GetUserInformation, GetUsersFullInfo, InsertDeployment, PostInvoiceFromDeployment, updateServicePrice } from "@/Lib/user.action";
 import { LoadingData } from "../Loading/page";
 import { Placements_Filters, filterColors, months, years } from "@/Lib/Content";
 import { AssignSuitableIcon, getDaysBetween, getDaysInMonth, rupeeToNumber } from "@/Lib/Actions";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
+import { useRouter } from "next/navigation";
 let terminationCache: any[] | null = null;
 let ReplacementReasonsCache: any[] | null = null;
 let RegisredUsersCache: any[] | null = null;
@@ -22,9 +23,9 @@ interface TerminationData {
 
 const TerminationTable: React.FC = () => {
   const [placements, setPlacements] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
+
   const [showWarning, setShowWarning] = useState(false);
-  const [RegisterdUsers, setRegisterdUsers] = useState<any[]>([])
+  
   const [ReplacementReasons, setReplacementReasons] = useState<any[]>([]);
   const [updateServiceCharge, setUpdateServiceCharge] = useState(false);
   const [rawData, setRawData] = useState<any[]>([]);
@@ -49,33 +50,35 @@ const TerminationTable: React.FC = () => {
   const year = useSelector((state: any) => state.FilterYear)
   const Impusers=useSelector((state:any)=>state.AdminFullInfo)
   const dispatch = useDispatch()
+const router=useRouter()
+const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
+
+const users=useSelector((state:any)=>state.AdminFullInfo)
+
+const hasData = users?.length > 0 && RegisterdUsers?.length > 0;
 
   useEffect(() => {
     const Fetch = async () => {
       try {
+        if (!hasData) {
+          router.replace("/");
+        }
         if (terminationCache) {
           setPlacements(terminationCache);
-          setRegisterdUsers(RegisredUsersCache ?? [])
-          setUsers(CompliteInfoCache ?? []);
+          
           setReplacementReasons(ReplacementReasonsCache ?? [])
           setIsChecking(false);
           return;
         }
 
-        const [RegisterdUsers,
-          usersResult, FetchData, ReplacementReasons] = await Promise.all([
-            GetRegidterdUsers(),
-            GetUsersFullInfo(),
-            GetTerminationInfo(),
-            GetReasonsInfoInfo()
-
-          ])
-
+    const [FetchData, ReplacementReasons] = await Promise.all([
+  GetTerminationInfoForTerminationPage(month, year),
+  GetReasonsInfoInfo()
+]);
+console.log("Done-----",FetchData)
         ReplacementReasonsCache = ReplacementReasons ?? []
-        RegisredUsersCache = RegisterdUsers ?? []
-        CompliteInfoCache = usersResult ?? []
-        setRegisterdUsers(RegisredUsersCache ?? [])
-        setUsers(CompliteInfoCache ?? [])
+      
+        
         const Result = FetchData?.map((each: any) => ({
           ClientId: each.ClientId,
           HCA_Id: each.HCAid,
@@ -98,7 +101,7 @@ const TerminationTable: React.FC = () => {
     };
 
     Fetch();
-  }, []);
+  }, [month, year, hasData]);
   const NumberOfDaysInMonth = getDaysInMonth(
     Number(month),
     Number(year)

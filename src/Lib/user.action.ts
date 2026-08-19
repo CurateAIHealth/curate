@@ -982,7 +982,9 @@ export const UpdateInvoiceData = async (
       ...updatedProps.totals,
       items: updatedProps.items,
   Invoice: updatedProps.invoice?.number,
-      updatedAt: new Date().toISOString()
+  status:"Sent",
+      updatedAt: new Date().toISOString(),
+      
     };
 
 
@@ -4739,6 +4741,78 @@ return safeUsers
 
   }
 }
+export const GetInvoiceInfoforInvoicePage = async (
+  month: string | number,
+  year: string | number
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Invoices");
+
+    let query: any = {};
+
+    if (month !== "All" && year !== "All") {
+      const monthNumber = Number(month);
+      const yearNumber = Number(year);
+
+      query = {
+        $or: [
+          {
+            SeriviceStartDate: {
+              $regex: `^([1-9]|[12][0-9]|3[01])\\/${monthNumber}\\/${yearNumber}$`,
+            },
+          },
+          {
+            ServiceStartDate: {
+              $regex: `^([1-9]|[12][0-9]|3[01])\\/${monthNumber}\\/${yearNumber}$`,
+            },
+          },
+          {
+            StartDate: {
+              $regex: `^([1-9]|[12][0-9]|3[01])\\/${monthNumber}\\/${yearNumber}$`,
+            },
+          },
+          {
+            DeployDate: {
+              $regex: `^([1-9]|[12][0-9]|3[01])\\/${monthNumber}\\/${yearNumber}$`,
+            },
+          },
+        ],
+      };
+    } else if (month === "All" && year !== "All") {
+      const yearNumber = Number(year);
+
+      query = {
+        $or: [
+          { SeriviceStartDate: { $regex: `\\/\\d{1,2}\\/${yearNumber}$` } },
+          { ServiceStartDate: { $regex: `\\/\\d{1,2}\\/${yearNumber}$` } },
+          { StartDate: { $regex: `\\/\\d{1,2}\\/${yearNumber}$` } },
+          { DeployDate: { $regex: `\\/\\d{1,2}\\/${yearNumber}$` } },
+        ],
+      };
+    }
+
+    console.log("Mongo Invoice Query:", query);
+
+    const invoiceData = await collection
+      .find(query)
+      .toArray();
+
+    const safeUsers = invoiceData.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+
+    console.log("Invoices fetched:", safeUsers.length);
+
+    return safeUsers;
+
+  } catch (e) {
+    console.error("GetInvoiceInfoforInvoicePage error:", e);
+    return [];
+  }
+};
 export const GetTerminationInfo=async()=>{
   try{
 const cluster=await clientPromise
@@ -4755,6 +4829,69 @@ return safeUsers
 
   }
 }
+
+
+export const GetTerminationInfoForTerminationPage = async (
+  month: string | number,
+  year: string | number
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Termination");
+
+    let query: any = {};
+
+    // Month + Year
+    if (month !== "" && year !== "") {
+      const monthNumber = Number(month);
+      const yearNumber = Number(year);
+
+      query = {
+        StartDate: {
+          $regex: `^([1-9]|[12][0-9]|3[01])\\/${monthNumber}\\/${yearNumber}$`,
+        },
+      };
+    }
+
+    // All Months + specific Year
+    else if (month === "" && year !== "") {
+      const yearNumber = Number(year);
+
+      query = {
+        StartDate: {
+          $regex: `\\/\\d{1,2}\\/${yearNumber}$`,
+        },
+      };
+    }
+
+    // All Months + All Years
+    else {
+      query = {};
+    }
+
+    console.log("Termination Mongo Query:", query);
+
+    const TimeSheetInfoData = await collection
+      .find(query)
+      .toArray();
+
+    const safeUsers = TimeSheetInfoData.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+
+    console.log(
+      "Termination records fetched:",
+      safeUsers.length
+    );
+
+    return safeUsers;
+  } catch (e) {
+    console.error("GetTerminationInfo error:", e);
+    return [];
+  }
+};
 export const GetUserInformation = async (UserIdFromLocal: any) => {
   try {
     const cluster = await clientPromise;

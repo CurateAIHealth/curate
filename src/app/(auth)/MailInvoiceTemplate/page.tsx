@@ -677,18 +677,18 @@ const SendInvoice = async () => {
     // ✅ Update invoice status
 
   
-    const updateInvoiceStatus = await UpdateInvoice(InvoiceData);
+    // const updateInvoiceStatus = await UpdateInvoice(InvoiceData);
 
-    console.log(
-      "Update Invoice Status:",
-      updateInvoiceStatus
-    );
+    // console.log(
+    //   "Update Invoice Status:",
+    //   updateInvoiceStatus
+    // );
 
-        if (!updateInvoiceStatus?.success) {
-      throw new Error("Invoice email sent, but invoice status update failed.");
-    }
+    //     if (!updateInvoiceStatus?.success) {
+    //   throw new Error("Invoice email sent, but invoice status update failed.");
+    // }
 
-    // Show success screen
+   
       setMailstatus(false);
   } catch (error: any) {
     console.error("SendInvoice Error:", error);

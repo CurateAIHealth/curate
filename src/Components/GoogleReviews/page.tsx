@@ -1,254 +1,272 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Search,
-  Star,
-  CheckCircle2,
   Clock3,
-  AlertCircle,
-  Image as ImageIcon,
+  CheckCircle2,
   ExternalLink,
   MessageCircle,
-  UserCheck,
+  Mail,
+  Eye,
+  FileText,
+  CalendarDays,
 } from "lucide-react";
 
-type GoogleReviewStatus =
-  | "Given"
-  | "Waiting"
-  | "Follow Up"
-  | "Not Asked";
+/* =========================================================
+   TYPES
+========================================================= */
+
+type ReviewStatus = "Pending" | "Completed";
 
 interface GoogleReviewData {
   id: number;
-  client: string;
-  hca: string;
-  status: GoogleReviewStatus;
-  requestedDate: string | null;
-  reviewDate: string | null;
-  rating: number | null;
-  review: string | null;
-  image: boolean;
-  followUp: boolean;
-  lastFollowUp: string | null;
-  collectedBy: string | null;
+
+  clientName: string;
+  ptName: string;
+
+  enrollmentDate: string;
+  terminated: string;
+
+  team: string;
+  note: string;
+
+  status: ReviewStatus;
+
+  // Pending
+  reviewRequested: boolean;
+  reviewRequestMethod?: "Email" | "WhatsApp" | "Both" | null;
+
+  // Completed
+  review?: string | null;
+  suggestions?: string | null;
+  reviewDate?: string | null;
 }
+
+/* =========================================================
+   TEST DATA
+========================================================= */
 
 const testGoogleReviews: GoogleReviewData[] = [
   {
     id: 1,
-    client: "Sunrise Care",
-    hca: "Anjali Kale",
-    status: "Given",
-    requestedDate: "08 Aug 2026",
-    reviewDate: "12 Aug 2026",
-    rating: 5,
-    review:
-      "Excellent service. The staff member is very professional and caring.",
-    image: true,
-    followUp: false,
-    lastFollowUp: null,
-    collectedBy: "Kiran",
+    clientName: "Srinivas",
+    ptName: "XXXX",
+    enrollmentDate: "05/06/2024",
+    terminated: "NA",
+    team: "Team 1",
+    note: "like to fill follow up info",
+    status: "Pending",
+    reviewRequested: false,
+    reviewRequestMethod: null,
   },
+
   {
     id: 2,
-    client: "Green Valley Care",
-    hca: "Priya Sharma",
-    status: "Follow Up",
-    requestedDate: "10 Aug 2026",
-    reviewDate: null,
-    rating: null,
-    review: null,
-    image: false,
-    followUp: true,
-    lastFollowUp: "16 Aug 2026",
-    collectedBy: null,
+    clientName: "Srivani",
+    ptName: "XXXX",
+    enrollmentDate: "05/06/2024",
+    terminated: "07/08/2026",
+    team: "Team 2",
+    note: "",
+    status: "Pending",
+    reviewRequested: true,
+    reviewRequestMethod: "WhatsApp",
   },
+
   {
     id: 3,
-    client: "Care Plus Services",
-    hca: "Kavya Reddy",
-    status: "Waiting",
-    requestedDate: "15 Aug 2026",
-    reviewDate: null,
-    rating: null,
-    review: null,
-    image: false,
-    followUp: false,
-    lastFollowUp: null,
-    collectedBy: null,
+    clientName: "Client name",
+    ptName: "XXXX",
+    enrollmentDate: "05/06/2024",
+    terminated: "07/08/2026",
+    team: "Team 3",
+    note: "",
+    status: "Pending",
+    reviewRequested: false,
+    reviewRequestMethod: null,
   },
+
   {
     id: 4,
-    client: "Happy Hearts Care",
-    hca: "Sakshi Ghatwade",
-    status: "Not Asked",
-    requestedDate: null,
-    reviewDate: null,
-    rating: null,
-    review: null,
-    image: false,
-    followUp: false,
-    lastFollowUp: null,
-    collectedBy: null,
+    clientName: "Srinivas",
+    ptName: "XXXX",
+    enrollmentDate: "05/06/2024",
+    terminated: "NA",
+    team: "Team 1",
+    note: "",
+    status: "Completed",
+    reviewRequested: true,
+    reviewRequestMethod: "Both",
+    review:
+      "The service was very good and the staff was supportive.",
+    suggestions:
+      "Everything was good. Continue the same service.",
+    reviewDate: "15/08/2026",
   },
+
   {
     id: 5,
-    client: "Helping Hands Care",
-    hca: "Mayuri Randaye",
-    status: "Given",
-    requestedDate: "05 Aug 2026",
-    reviewDate: "08 Aug 2026",
-    rating: 5,
+    clientName: "Srivani",
+    ptName: "XXXX",
+    enrollmentDate: "05/06/2024",
+    terminated: "NA",
+    team: "Team 2",
+    note: "",
+    status: "Completed",
+    reviewRequested: true,
+    reviewRequestMethod: "Email",
     review:
-      "Wonderful service and very supportive staff.",
-    image: true,
-    followUp: false,
-    lastFollowUp: null,
-    collectedBy: "Srinivas",
+      "Very happy with the service provided.",
+    suggestions:
+      "Good communication and support.",
+    reviewDate: "14/08/2026",
   },
+
   {
     id: 6,
-    client: "Royal Care Services",
-    hca: "Samiksha Kurekar",
-    status: "Follow Up",
-    requestedDate: "07 Aug 2026",
-    reviewDate: null,
-    rating: null,
-    review: null,
-    image: false,
-    followUp: true,
-    lastFollowUp: "15 Aug 2026",
-    collectedBy: null,
+    clientName: "Client name",
+    ptName: "XXXX",
+    enrollmentDate: "05/06/2024",
+    terminated: "NA",
+    team: "Team 3",
+    note: "",
+    status: "Completed",
+    reviewRequested: true,
+    reviewRequestMethod: "WhatsApp",
+    review:
+      "Excellent service.",
+    suggestions:
+      "No suggestions.",
+    reviewDate: "12/08/2026",
   },
 ];
 
-const GoogleReviews: React.FC = () => {
+/* =========================================================
+   MAIN COMPONENT
+========================================================= */
 
-  const [search, setSearch] = useState<string>("");
-  const [statusFilter, setStatusFilter] =
-    useState<"All" | GoogleReviewStatus>("All");
+const GoogleReviews: React.FC = () => {
+  const [search, setSearch] = useState("");
+
+  const [reviewFilter, setReviewFilter] =
+    useState<ReviewStatus>("Pending");
 
   const [selectedReview, setSelectedReview] =
     useState<GoogleReviewData | null>(null);
 
-  const filteredData = testGoogleReviews.filter((item) => {
+  /* -------------------------------------------------------
+     COUNTS
+  ------------------------------------------------------- */
 
-    const matchesSearch =
-      `${item.client} ${item.hca}`
-        .toLowerCase()
-        .includes(search.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "All" ||
-      item.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  const totalClients = 76;
-
-  const reviewsGiven = testGoogleReviews.filter(
-    (item) => item.status === "Given"
+  const pendingCount = testGoogleReviews.filter(
+    (item) => item.status === "Pending"
   ).length;
 
-  const waiting = testGoogleReviews.filter(
-    (item) => item.status === "Waiting"
+  const completedCount = testGoogleReviews.filter(
+    (item) => item.status === "Completed"
   ).length;
 
-  const followUp = testGoogleReviews.filter(
-    (item) => item.status === "Follow Up"
-  ).length;
+  /* -------------------------------------------------------
+     FILTER
+  ------------------------------------------------------- */
 
-  const notAsked = testGoogleReviews.filter(
-    (item) => item.status === "Not Asked"
-  ).length;
+  const filteredData = useMemo(() => {
+    const searchText = search.toLowerCase().trim();
+
+    return testGoogleReviews.filter((item) => {
+      const matchesStatus =
+        item.status === reviewFilter;
+
+      const matchesSearch =
+        !searchText ||
+        item.clientName.toLowerCase().includes(searchText) ||
+        item.ptName.toLowerCase().includes(searchText) ||
+        item.team.toLowerCase().includes(searchText);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [search, reviewFilter]);
 
   return (
     <div className="space-y-6">
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      {/* =================================================
+          SUMMARY CARDS
+      ================================================= */}
 
-        <ReviewCard
-          title="Total Clients"
-          value={totalClients}
-          icon={<UserCheck size={20} />}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+        <SummaryCard
+          title="Total Reviews"
+          value={testGoogleReviews.length}
           color="#1392d3"
         />
 
-        <ReviewCard
-          title="Reviews Given"
-          value={reviewsGiven}
-          icon={<CheckCircle2 size={20} />}
+        <SummaryCard
+          title="Pending Review"
+          value={pendingCount}
+          color="#ff1493"
+        />
+
+        <SummaryCard
+          title="Completed Review"
+          value={completedCount}
           color="#50c896"
         />
 
-        <ReviewCard
-          title="Waiting"
-          value={waiting}
-          icon={<Clock3 size={20} />}
+        <SummaryCard
+          title="Review Rate"
+          value={
+            testGoogleReviews.length
+              ? `${Math.round(
+                  (completedCount /
+                    testGoogleReviews.length) *
+                    100
+                )}%`
+              : "0%"
+          }
           color="#1392d3"
-        />
-
-        <ReviewCard
-          title="Follow Up"
-          value={followUp}
-          icon={<AlertCircle size={20} />}
-          color="#ff1493"
-        />
-
-        <ReviewCard
-          title="Not Asked"
-          value={notAsked}
-          icon={<MessageCircle size={20} />}
-          color="#ff1493"
         />
 
       </div>
 
-      {/* Main Card */}
+      {/* =================================================
+          MAIN CARD
+      ================================================= */}
+
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-        {/* Header */}
+        {/* =================================================
+            HEADER
+        ================================================= */}
+
         <div className="border-b border-slate-200 p-5">
 
-          <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
+            {/* Left */}
             <div>
+
               <h2 className="flex items-center gap-2 text-lg font-bold text-slate-800">
-                <Star
+
+                <MessageCircle
                   size={20}
                   className="text-[#ff1493]"
-                  fill="#ff1493"
                 />
-                Google Review Collection
+
+                Google Reviews
+
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                Track Google reviews, requests and client follow-ups
+                Track pending and completed Google reviews
               </p>
+
             </div>
 
-            <div className="rounded-xl bg-pink-50 px-4 py-2">
-              <span className="text-xs text-slate-500">
-                Collection Rate
-              </span>
-
-              <p className="text-lg font-bold text-[#ff1493]">
-                {Math.round(
-                  (reviewsGiven / totalClients) * 100
-                )}
-                %
-              </p>
-            </div>
-
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-col gap-3 lg:flex-row">
-
-            <div className="relative flex-1">
+            {/* Search */}
+            <div className="relative w-full lg:w-80">
 
               <Search
                 size={18}
@@ -258,227 +276,117 @@ const GoogleReviews: React.FC = () => {
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search Client or HCA..."
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-[#ff1493] focus:bg-white"
+                onChange={(e) =>
+                  setSearch(e.target.value)
+                }
+                placeholder="Search client, PT or team..."
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-[#1392d3] focus:bg-white"
               />
 
             </div>
 
-            <select
-              value={statusFilter}
-              onChange={(e) =>
-                setStatusFilter(
-                  e.target.value as
-                    | "All"
-                    | GoogleReviewStatus
-                )
+          </div>
+
+          {/* =================================================
+              PENDING / COMPLETED BUTTONS
+          ================================================= */}
+
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+
+            {/* Pending */}
+            <button
+              type="button"
+              onClick={() =>
+                setReviewFilter("Pending")
               }
-              className="rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-[#ff1493]"
+              className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition ${
+                reviewFilter === "Pending"
+                  ? "bg-[#1392d3] text-white shadow-sm"
+                  : "border border-slate-200 bg-white text-slate-600 hover:border-[#1392d3]"
+              }`}
             >
-              <option value="All">All Status</option>
-              <option value="Given">Review Given</option>
-              <option value="Waiting">Waiting</option>
-              <option value="Follow Up">Follow Up</option>
-              <option value="Not Asked">Not Asked</option>
-            </select>
+
+              <Clock3 size={17} />
+
+              Pending Review
+
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs ${
+                  reviewFilter === "Pending"
+                    ? "bg-white/20 text-white"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                {pendingCount}
+              </span>
+
+            </button>
+
+            {/* Completed */}
+            <button
+              type="button"
+              onClick={() =>
+                setReviewFilter("Completed")
+              }
+              className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition ${
+                reviewFilter === "Completed"
+                  ? "bg-[#50c896] text-white shadow-sm"
+                  : "border border-slate-200 bg-white text-slate-600 hover:border-[#50c896]"
+              }`}
+            >
+
+              <CheckCircle2 size={17} />
+
+              Completed Review
+
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs ${
+                  reviewFilter === "Completed"
+                    ? "bg-white/20 text-white"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                {completedCount}
+              </span>
+
+            </button>
 
           </div>
 
         </div>
 
-        {/* Table */}
+        {/* =================================================
+            TABLE
+        ================================================= */}
+
         <div className="overflow-x-auto">
 
-          <table className="w-full min-w-[1200px]">
-
-            <thead>
-              <tr className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-
-                <th className="px-5 py-4">Client</th>
-                <th className="px-5 py-4">Assigned HCA</th>
-                <th className="px-5 py-4">Review Status</th>
-                <th className="px-5 py-4">Requested</th>
-                <th className="px-5 py-4">Review Date</th>
-                <th className="px-5 py-4">Follow Up</th>
-                <th className="px-5 py-4">Collected By</th>
-                <th className="px-5 py-4">Action</th>
-
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-slate-100">
-
-              {filteredData.map((item) => (
-                <tr
-                  key={item.id}
-                  className="transition hover:bg-slate-50"
-                >
-
-                  {/* Client */}
-                  <td className="px-5 py-4">
-
-                    <p className="font-semibold text-slate-800">
-                      {item.client}
-                    </p>
-
-                  </td>
-
-                  {/* HCA */}
-                  <td className="px-5 py-4">
-
-                    <span className="text-sm text-slate-600">
-                      {item.hca}
-                    </span>
-
-                  </td>
-
-                  {/* Status */}
-                  <td className="px-5 py-4">
-
-                    <ReviewStatus
-                      status={item.status}
-                    />
-
-                    {item.rating && (
-                      <div className="mt-1 flex items-center gap-1">
-
-                        <Star
-                          size={13}
-                          fill="#ff1493"
-                          className="text-[#ff1493]"
-                        />
-
-                        <span className="text-xs font-semibold text-slate-600">
-                          {item.rating}/5
-                        </span>
-
-                      </div>
-                    )}
-
-                  </td>
-
-                  {/* Requested */}
-                  <td className="px-5 py-4 text-sm text-slate-500">
-                    {item.requestedDate || "—"}
-                  </td>
-
-                  {/* Review Date */}
-                  <td className="px-5 py-4 text-sm text-slate-500">
-                    {item.reviewDate || "—"}
-                  </td>
-
-                  {/* Follow Up */}
-                  <td className="px-5 py-4">
-
-                    {item.followUp ? (
-                      <div>
-
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-pink-50 px-3 py-1 text-xs font-semibold text-[#ff1493]">
-                          <AlertCircle size={13} />
-                          Required
-                        </span>
-
-                        {item.lastFollowUp && (
-                          <p className="mt-1 text-[11px] text-slate-400">
-                            Last: {item.lastFollowUp}
-                          </p>
-                        )}
-
-                      </div>
-                    ) : item.status === "Given" ? (
-                      <span className="text-xs text-slate-400">
-                        —
-                      </span>
-                    ) : (
-                      <span className="text-xs text-slate-400">
-                        Not required yet
-                      </span>
-                    )}
-
-                  </td>
-
-                  {/* Collected By */}
-                  <td className="px-5 py-4">
-
-                    {item.collectedBy ? (
-                      <span className="text-sm font-medium text-slate-600">
-                        {item.collectedBy}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-slate-400">
-                        —
-                      </span>
-                    )}
-
-                  </td>
-
-                  {/* Action */}
-                  <td className="px-5 py-4">
-
-                    <div className="flex items-center gap-2">
-
-                      {item.status === "Given" ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSelectedReview(item)
-                            }
-                            className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-[#1392d3] hover:text-[#1392d3]"
-                            title="View Review"
-                          >
-                            <ExternalLink size={16} />
-                          </button>
-
-                          {item.image && (
-                            <button
-                              type="button"
-                              className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-[#ff1493] hover:text-[#ff1493]"
-                              title="View Screenshot"
-                            >
-                              <ImageIcon size={16} />
-                            </button>
-                          )}
-                        </>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelectedReview(item)
-                          }
-                          className={`rounded-lg px-3 py-2 text-xs font-semibold text-white ${
-                            item.status === "Follow Up"
-                              ? "bg-[#ff1493]"
-                              : "bg-[#1392d3]"
-                          }`}
-                        >
-                          {item.status === "Follow Up"
-                            ? "Follow Up"
-                            : "Request Review"}
-                        </button>
-                      )}
-
-                    </div>
-
-                  </td>
-
-                </tr>
-              ))}
-
-            </tbody>
-
-          </table>
+          {reviewFilter === "Pending" ? (
+            <PendingReviewTable
+              data={filteredData}
+              onSelect={setSelectedReview}
+            />
+          ) : (
+            <CompletedReviewTable
+              data={filteredData}
+              onSelect={setSelectedReview}
+            />
+          )}
 
         </div>
 
       </div>
 
-      {/* Review Modal */}
+      {/* =================================================
+          REVIEW POPUP
+      ================================================= */}
+
       {selectedReview && (
-        <GoogleReviewModal
+        <ReviewModal
           data={selectedReview}
-          onClose={() => setSelectedReview(null)}
+          onClose={() =>
+            setSelectedReview(null)
+          }
         />
       )}
 
@@ -486,278 +394,690 @@ const GoogleReviews: React.FC = () => {
   );
 };
 
-interface ReviewCardProps {
-  title: string;
-  value: number;
-  icon: React.ReactNode;
-  color: string;
+/* =========================================================
+   PENDING REVIEW TABLE
+========================================================= */
+
+interface ReviewTableProps {
+  data: GoogleReviewData[];
+  onSelect: (item: GoogleReviewData) => void;
 }
 
-const ReviewCard: React.FC<ReviewCardProps> = ({
-  title,
-  value,
-  icon,
-  color,
-}) => (
-  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-    <div className="flex items-center justify-between">
-
-      <div>
-        <p className="text-sm text-slate-500">
-          {title}
-        </p>
-
-        <p className="mt-1 text-2xl font-bold text-slate-800">
-          {value}
-        </p>
-      </div>
-
-      <div
-        className="rounded-xl p-3 text-white"
-        style={{ backgroundColor: color }}
-      >
-        {icon}
-      </div>
-
-    </div>
-
-  </div>
-);
-
-interface ReviewStatusProps {
-  status: GoogleReviewStatus;
-}
-
-const ReviewStatus: React.FC<ReviewStatusProps> = ({
-  status,
+const PendingReviewTable: React.FC<ReviewTableProps> = ({
+  data,
+  onSelect,
 }) => {
-
-  const config: Record<
-    GoogleReviewStatus,
-    {
-      label: string;
-      className: string;
-      icon: React.ReactNode;
-    }
-  > = {
-    Given: {
-      label: "Review Given",
-      className: "bg-emerald-50 text-[#50c896]",
-      icon: <CheckCircle2 size={13} />,
-    },
-
-    Waiting: {
-      label: "Waiting",
-      className: "bg-sky-50 text-[#1392d3]",
-      icon: <Clock3 size={13} />,
-    },
-
-    "Follow Up": {
-      label: "Follow Up",
-      className: "bg-pink-50 text-[#ff1493]",
-      icon: <AlertCircle size={13} />,
-    },
-
-    "Not Asked": {
-      label: "Not Asked",
-      className: "bg-slate-100 text-slate-500",
-      icon: <MessageCircle size={13} />,
-    },
-  };
-
-  const item = config[status];
-
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${item.className}`}
-    >
-      {item.icon}
-      {item.label}
-    </span>
+    <table className="w-full min-w-[1250px]">
+
+      <thead>
+
+        <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+
+          <th className="px-5 py-4">
+            S.No
+          </th>
+
+          <th className="px-5 py-4">
+            Client Name
+          </th>
+
+          <th className="px-5 py-4">
+            PT Name
+          </th>
+
+          <th className="px-5 py-4">
+            Enrollment Date
+          </th>
+
+          <th className="px-5 py-4">
+            Terminated
+          </th>
+
+          <th className="px-5 py-4">
+            Team
+          </th>
+
+          <th className="px-5 py-4">
+            Note
+          </th>
+
+          <th className="px-5 py-4">
+            Status
+          </th>
+
+          <th className="px-5 py-4">
+            Request Review
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody className="divide-y divide-slate-100">
+
+        {data.length > 0 ? (
+
+          data.map((item, index) => (
+
+            <tr
+              key={item.id}
+              className="transition hover:bg-slate-50"
+            >
+
+              {/* S.No */}
+              <td className="px-5 py-4 text-sm font-semibold text-slate-500">
+                {index + 1}
+              </td>
+
+              {/* Client */}
+              <td className="px-5 py-4">
+
+                <span className="font-semibold text-slate-800">
+                  {item.clientName}
+                </span>
+
+              </td>
+
+              {/* PT */}
+              <td className="px-5 py-4 text-sm text-slate-600">
+                {item.ptName}
+              </td>
+
+              {/* Enrollment */}
+              <td className="px-5 py-4">
+
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+
+                  <CalendarDays
+                    size={14}
+                    className="text-[#1392d3]"
+                  />
+
+                  {item.enrollmentDate}
+
+                </div>
+
+              </td>
+
+              {/* Terminated */}
+              <td className="px-5 py-4">
+
+                {item.terminated === "NA" ? (
+
+                  <span className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-[#50c896]">
+                    Active
+                  </span>
+
+                ) : (
+
+                  <span className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-500">
+                    {item.terminated}
+                  </span>
+
+                )}
+
+              </td>
+
+              {/* Team */}
+              <td className="px-5 py-4">
+
+                <span className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+
+                  <span className="h-2 w-2 rounded-full bg-[#1392d3]" />
+
+                  <span className="text-sm font-semibold text-slate-700">
+                    {item.team}
+                  </span>
+
+                </span>
+
+              </td>
+
+              {/* Note */}
+              <td className="max-w-[240px] px-5 py-4">
+
+                {item.note ? (
+
+                  <span className="text-sm text-slate-600">
+                    {item.note}
+                  </span>
+
+                ) : (
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onSelect(item)
+                    }
+                    className="inline-flex items-center rounded-lg border border-[#1392d3]/30 bg-[#1392d3]/10 px-3 py-2 text-xs font-semibold text-[#1392d3] transition hover:bg-[#1392d3] hover:text-white"
+                  >
+                    + Add Note
+                  </button>
+
+                )}
+
+              </td>
+
+              {/* Status */}
+              <td className="px-5 py-4">
+
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-pink-50 px-3 py-1.5 text-xs font-semibold text-[#ff1493]">
+
+                  <Clock3 size={13} />
+
+                  Pending
+
+                </span>
+
+              </td>
+
+              {/* Request Review */}
+              <td className="px-5 py-4">
+
+                <div className="flex items-center gap-2">
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onSelect(item)
+                    }
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#1392d3] px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90"
+                  >
+
+                    <ExternalLink size={14} />
+
+                    Request Review
+
+                  </button>
+
+                  {/* Email */}
+                  <button
+                    type="button"
+                    className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-[#1392d3] hover:text-[#1392d3]"
+                    title="Send Email"
+                  >
+                    <Mail size={15} />
+                  </button>
+
+                  {/* WhatsApp */}
+                  <button
+                    type="button"
+                    className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-[#50c896] hover:text-[#50c896]"
+                    title="Send WhatsApp"
+                  >
+                    <MessageCircle size={15} />
+                  </button>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+          ))
+
+        ) : (
+
+          <EmptyRow colSpan={9} />
+
+        )}
+
+      </tbody>
+
+    </table>
   );
 };
 
-interface GoogleReviewModalProps {
+/* =========================================================
+   COMPLETED REVIEW TABLE
+========================================================= */
+
+const CompletedReviewTable: React.FC<ReviewTableProps> = ({
+  data,
+  onSelect,
+}) => {
+  return (
+    <table className="w-full min-w-[1050px]">
+
+      <thead>
+
+        <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+
+          <th className="px-5 py-4">
+            S.No
+          </th>
+
+          <th className="px-5 py-4">
+            Client Name
+          </th>
+
+          <th className="px-5 py-4">
+            PT Name
+          </th>
+
+          <th className="px-5 py-4">
+            Enrollment Date
+          </th>
+
+          <th className="px-5 py-4">
+            Terminated
+          </th>
+
+          <th className="px-5 py-4">
+            Review
+          </th>
+
+          <th className="px-5 py-4">
+            Suggestions
+          </th>
+
+          <th className="px-5 py-4">
+            Action
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody className="divide-y divide-slate-100">
+
+        {data.length > 0 ? (
+
+          data.map((item, index) => (
+
+            <tr
+              key={item.id}
+              className="transition hover:bg-slate-50"
+            >
+
+              {/* S.No */}
+              <td className="px-5 py-4 text-sm font-semibold text-slate-500">
+                {index + 1}
+              </td>
+
+              {/* Client */}
+              <td className="px-5 py-4">
+
+                <span className="font-semibold text-slate-800">
+                  {item.clientName}
+                </span>
+
+              </td>
+
+              {/* PT */}
+              <td className="px-5 py-4 text-sm text-slate-600">
+                {item.ptName}
+              </td>
+
+              {/* Enrollment */}
+              <td className="px-5 py-4">
+
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+
+                  <CalendarDays
+                    size={14}
+                    className="text-[#1392d3]"
+                  />
+
+                  {item.enrollmentDate}
+
+                </div>
+
+              </td>
+
+              {/* Terminated */}
+              <td className="px-5 py-4">
+
+                {item.terminated === "NA" ? (
+
+                  <span className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-[#50c896]">
+                    Active
+                  </span>
+
+                ) : (
+
+                  <span className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-500">
+                    {item.terminated}
+                  </span>
+
+                )}
+
+              </td>
+
+              {/* Review */}
+              <td className="max-w-[300px] px-5 py-4">
+
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+
+                  <p className="line-clamp-3 text-sm leading-5 text-slate-600">
+                    {item.review || "No review available"}
+                  </p>
+
+                </div>
+
+              </td>
+
+              {/* Suggestions */}
+              <td className="max-w-[280px] px-5 py-4">
+
+                <div className="rounded-xl border border-pink-100 bg-pink-50/50 p-3">
+
+                  <p className="line-clamp-3 text-sm leading-5 text-slate-600">
+                    {item.suggestions || "No suggestions"}
+                  </p>
+
+                </div>
+
+              </td>
+
+              {/* Action */}
+              <td className="px-5 py-4">
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    onSelect(item)
+                  }
+                  className="inline-flex items-center gap-2 rounded-lg border border-[#1392d3]/30 bg-[#1392d3]/10 px-3 py-2 text-xs font-semibold text-[#1392d3] transition hover:bg-[#1392d3] hover:text-white"
+                >
+
+                  <Eye size={14} />
+
+                  View Review
+
+                </button>
+
+              </td>
+
+            </tr>
+
+          ))
+
+        ) : (
+
+          <EmptyRow colSpan={8} />
+
+        )}
+
+      </tbody>
+
+    </table>
+  );
+};
+
+/* =========================================================
+   EMPTY ROW
+========================================================= */
+
+interface EmptyRowProps {
+  colSpan: number;
+}
+
+const EmptyRow: React.FC<EmptyRowProps> = ({
+  colSpan,
+}) => {
+  return (
+    <tr>
+
+      <td
+        colSpan={colSpan}
+        className="px-5 py-14 text-center"
+      >
+
+        <div className="flex flex-col items-center">
+
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+
+            <FileText
+              size={22}
+              className="text-slate-400"
+            />
+
+          </div>
+
+          <p className="font-semibold text-slate-600">
+            No reviews found
+          </p>
+
+          <p className="mt-1 text-sm text-slate-400">
+            Try changing your search or filter.
+          </p>
+
+        </div>
+
+      </td>
+
+    </tr>
+  );
+};
+
+/* =========================================================
+   SUMMARY CARD
+========================================================= */
+
+interface SummaryCardProps {
+  title: string;
+  value: number | string;
+  color: string;
+}
+
+const SummaryCard: React.FC<SummaryCardProps> = ({
+  title,
+  value,
+  color,
+}) => {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+
+      <p className="text-sm text-slate-500">
+        {title}
+      </p>
+
+      <div className="mt-2 flex items-center gap-3">
+
+        <div
+          className="h-2.5 w-2.5 rounded-full"
+          style={{
+            backgroundColor: color,
+          }}
+        />
+
+        <p className="text-2xl font-bold text-slate-800">
+          {value}
+        </p>
+
+      </div>
+
+    </div>
+  );
+};
+
+/* =========================================================
+   REVIEW MODAL
+========================================================= */
+
+interface ReviewModalProps {
   data: GoogleReviewData;
   onClose: () => void;
 }
 
-const GoogleReviewModal: React.FC<GoogleReviewModalProps> = ({
+const ReviewModal: React.FC<ReviewModalProps> = ({
   data,
   onClose,
-}) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+}) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
 
-    <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-xl">
+      <div className="relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
 
-      {/* Header */}
-      <div className="flex items-center justify-between border-b p-5">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-slate-200 p-5">
 
-        <div>
-          <h3 className="font-bold text-slate-800">
-            Google Review
-          </h3>
-
-          <p className="text-sm text-slate-500">
-            {data.client}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-2xl text-slate-400 hover:text-slate-700"
-        >
-          ×
-        </button>
-
-      </div>
-
-      <div className="space-y-5 p-5">
-
-        {/* Client / HCA */}
-        <div className="grid grid-cols-2 gap-4">
-
-          <div className="rounded-xl bg-slate-50 p-4">
-            <p className="text-xs text-slate-400">
-              Client
-            </p>
-
-            <p className="mt-1 font-semibold text-slate-800">
-              {data.client}
-            </p>
-          </div>
-
-          <div className="rounded-xl bg-slate-50 p-4">
-            <p className="text-xs text-slate-400">
-              Assigned HCA
-            </p>
-
-            <p className="mt-1 font-semibold text-slate-800">
-              {data.hca}
-            </p>
-          </div>
-
-        </div>
-
-        {/* Status */}
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase text-slate-400">
-            Status
-          </p>
-
-          <ReviewStatus status={data.status} />
-        </div>
-
-        {/* Review */}
-        {data.review ? (
           <div>
 
-            <p className="mb-2 text-xs font-semibold uppercase text-slate-400">
-              Review
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#1392d3]">
+              Google Review
             </p>
 
-            {data.rating && (
-              <div className="mb-2 flex gap-1">
+            <h3 className="mt-1 text-xl font-bold text-slate-800">
+              {data.clientName}
+            </h3>
 
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <Star
-                    key={index}
-                    size={18}
-                    fill={
-                      index < data.rating!
-                        ? "#ff1493"
-                        : "none"
-                    }
-                    className={
-                      index < data.rating!
-                        ? "text-[#ff1493]"
-                        : "text-slate-300"
-                    }
-                  />
-                ))}
+            <p className="mt-1 text-sm text-slate-500">
+              PT: {data.ptName}
+            </p>
 
-              </div>
-            )}
+          </div>
 
-            <div className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-              {data.review}
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-500 transition hover:bg-slate-200"
+          >
+            ×
+          </button>
+
+        </div>
+
+        {/* Content */}
+        <div className="space-y-5 p-5">
+
+          {/* Basic Information */}
+          <div className="grid grid-cols-2 gap-4">
+
+            <div className="rounded-xl bg-slate-50 p-4">
+
+              <p className="text-xs text-slate-400">
+                Enrollment Date
+              </p>
+
+              <p className="mt-1 font-semibold text-slate-800">
+                {data.enrollmentDate}
+              </p>
+
+            </div>
+
+            <div className="rounded-xl bg-slate-50 p-4">
+
+              <p className="text-xs text-slate-400">
+                Team
+              </p>
+
+              <p className="mt-1 font-semibold text-slate-800">
+                {data.team}
+              </p>
+
             </div>
 
           </div>
-        ) : (
-          <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center">
 
-            <MessageCircle
-              size={30}
-              className="mx-auto text-slate-300"
-            />
-
-            <p className="mt-2 font-semibold text-slate-600">
-              No Google Review Yet
-            </p>
-
-            <p className="mt-1 text-sm text-slate-400">
-              This client still needs to provide a review.
-            </p>
-
-          </div>
-        )}
-
-        {/* Dates */}
-        <div className="grid grid-cols-2 gap-4">
-
+          {/* Status */}
           <div>
-            <p className="text-xs text-slate-400">
-              Requested Date
+
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Status
             </p>
 
-            <p className="mt-1 text-sm font-semibold text-slate-700">
-              {data.requestedDate || "Not requested"}
-            </p>
+            <span
+              className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                data.status === "Completed"
+                  ? "bg-emerald-50 text-[#50c896]"
+                  : "bg-pink-50 text-[#ff1493]"
+              }`}
+            >
+
+              {data.status === "Completed" ? (
+                <CheckCircle2 size={14} />
+              ) : (
+                <Clock3 size={14} />
+              )}
+
+              {data.status}
+
+            </span>
+
           </div>
 
-          <div>
-            <p className="text-xs text-slate-400">
-              Review Date
-            </p>
+          {/* Pending */}
+          {data.status === "Pending" && (
+            <div className="space-y-4">
 
-            <p className="mt-1 text-sm font-semibold text-slate-700">
-              {data.reviewDate || "Not received"}
-            </p>
-          </div>
+              <div className="rounded-xl border border-pink-100 bg-pink-50/50 p-4">
+
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#ff1493]">
+                  Note
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {data.note || "No note added."}
+                </p>
+
+              </div>
+
+              <button
+                type="button"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1392d3] py-3 text-sm font-semibold text-white transition hover:opacity-90"
+              >
+                <MessageCircle size={17} />
+                Request Google Review
+              </button>
+
+            </div>
+          )}
+
+          {/* Completed */}
+          {data.status === "Completed" && (
+            <>
+
+              <div>
+
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Review
+                </p>
+
+                <div className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                  {data.review || "No review available."}
+                </div>
+
+              </div>
+
+              <div>
+
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Suggestions
+                </p>
+
+                <div className="rounded-xl bg-pink-50/50 p-4 text-sm leading-6 text-slate-600">
+                  {data.suggestions || "No suggestions available."}
+                </div>
+
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+
+                <CalendarDays
+                  size={16}
+                  className="text-[#1392d3]"
+                />
+
+                Review Date:
+
+                <span className="font-semibold text-slate-700">
+                  {data.reviewDate || "—"}
+                </span>
+
+              </div>
+
+            </>
+          )}
 
         </div>
-
-        {/* Attachment */}
-        {data.image && (
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-3 text-sm font-semibold text-[#1392d3] hover:bg-sky-50"
-          >
-            <ImageIcon size={18} />
-            View Review Screenshot
-          </button>
-        )}
-
-        {/* Action */}
-        {data.status !== "Given" && (
-          <button
-            type="button"
-            className="w-full rounded-xl bg-[#ff1493] py-3 text-sm font-semibold text-white transition hover:opacity-90"
-          >
-            {data.status === "Follow Up"
-              ? "Record Follow Up"
-              : "Mark Review as Requested"}
-          </button>
-        )}
 
       </div>
 
     </div>
-
-  </div>
-);
+  );
+};
 
 export default GoogleReviews;
