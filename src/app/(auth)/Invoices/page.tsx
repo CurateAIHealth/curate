@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List, PencilOff, Info, PrinterCheck, ListFilterPlus, ChevronDown } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { GetInvoiceInfo, GetRegidterdUsers, GetSentInvoiceData, UpdateStatusPayment } from "@/Lib/user.action";
+import { GetInvoiceInfo, GetInvoiceInfoforInvoicePage, GetRegidterdUsers, GetSentInvoiceData, UpdateStatusPayment } from "@/Lib/user.action";
 import { GeneratePDF, getDaysBetween, parseFlexibleDate } from "@/Lib/Actions";
 import { LoadingData } from "@/Components/Loading/page";
 
@@ -63,25 +63,31 @@ const invoiceEditStatus = useSelector((s: any) => s.InvoiceEditStatus);
 const ShowMailTemplate=useSelector((A:any)=>A.RevertInvoices)
 const refreshInvoices = async () => {
   try {
-    setisChecking(true)
-    const data = await GetInvoiceInfo()
- 
-    setFetchedInfo(data)
+    setisChecking(true);
+
+    const data = await GetInvoiceInfoforInvoicePage(
+      monthFilter,
+      yearFilter
+    );
+console.log("Check importedData----",data)
+    setFetchedInfo(data);
   } catch (err) {
-    console.error("Error fetching invoices:", err)
+    console.error("Error fetching invoices:", err);
   } finally {
-    setisChecking(false)
+    setisChecking(false);
   }
-}
+};
 
 useEffect(() => {
-
-  if (RegUserInfo?.length === 0 ) {
+  if (RegUserInfo?.length === 0) {
     Router.push("/");
+    return;
   }
-  refreshInvoices()
-}, [status])
 
+  refreshInvoices();
+}, [status, monthFilter, yearFilter]);
+
+console
   const downloadExcel = () => {
     const exportData = filteredInvoices.map((inv) => {
       const totalAmount =

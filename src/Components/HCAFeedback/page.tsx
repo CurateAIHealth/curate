@@ -1,73 +1,110 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Search,
-  Star,
+  Clock3,
   CheckCircle2,
-  AlertCircle,
-  Image as ImageIcon,
+  FileText,
+  CalendarDays,
+  Eye,
 } from "lucide-react";
+
+type FeedbackStatus = "Pending" | "Completed";
 
 interface HCAFeedbackData {
   id: number;
-  hca: string;
-  client: string;
-  rating: number;
-  type: "Positive" | "Neutral" | "Negative";
-  feedback: string;
-  date: string;
-  followUp: boolean;
-  image: boolean;
+  enrollment: string;
+  location: string;
+  source: string;
+
+  familyBackground?: string;
+  hcaQuestions?: string;
+  placementFeedback?: string;
+
+  viewFile?: boolean;
+  fileDate?: string;
+  lastCallDate?: string;
+  dueCallDate?: string;
+
+  status: FeedbackStatus;
 }
 
 const testHCAFeedback: HCAFeedbackData[] = [
   {
     id: 1,
-    hca: "Anjali Kale",
-    client: "Sunrise Care",
-    rating: 5,
-    type: "Positive",
-    feedback:
-      "Client is very happy with the support and communication from our team.",
-    date: "15 Aug 2026",
-    followUp: false,
-    image: true,
+    enrollment: "Srinivas",
+    location: "Odisha",
+    source: "Pradeep sahu",
+    familyBackground:
+      "Family background and HCA questions are pending.",
+    placementFeedback:
+      "Placement feedback pending. Monthly follow-up required.",
+    status: "Pending",
   },
   {
     id: 2,
-    hca: "Priya Sharma",
-    client: "Green Valley Care",
-    rating: 3,
-    type: "Neutral",
-    feedback:
-      "Client requested better communication regarding schedule changes.",
-    date: "14 Aug 2026",
-    followUp: true,
-    image: false,
+    enrollment: "Siddu",
+    location: "Telangana",
+    source: "Urmila",
+    familyBackground:
+      "Need to discuss family background during the call.",
+    placementFeedback:
+      "Placement feedback is pending.",
+    status: "Pending",
   },
   {
     id: 3,
-    hca: "Kavya Reddy",
-    client: "Care Plus Services",
-    rating: 5,
-    type: "Positive",
-    feedback:
-      "Excellent relationship with the client. No issues reported.",
-    date: "12 Aug 2026",
-    followUp: false,
-    image: false,
+    enrollment: "Srinivas",
+    location: "Odisha",
+    source: "Pradeep sahu",
+    viewFile: true,
+    fileDate: "15 Aug 2026",
+    lastCallDate: "15 Aug 2026",
+    dueCallDate: "15 Sep 2026",
+    status: "Completed",
+  },
+  {
+    id: 4,
+    enrollment: "Siddu",
+    location: "Telangana",
+    source: "Urmila",
+    viewFile: true,
+    fileDate: "12 Aug 2026",
+    lastCallDate: "12 Aug 2026",
+    dueCallDate: "12 Sep 2026",
+    status: "Completed",
   },
 ];
 
 const HCAFeedback: React.FC = () => {
-  const [search, setSearch] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [feedbackFilter, setFeedbackFilter] =
+    useState<FeedbackStatus>("Pending");
 
-  const filteredData = testHCAFeedback.filter(
-    (item: HCAFeedbackData) =>
-      item.hca.toLowerCase().includes(search.toLowerCase()) ||
-      item.client.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredData = useMemo(() => {
+    const searchText = search.toLowerCase().trim();
+
+    return testHCAFeedback.filter((item) => {
+      const matchesSearch =
+        !searchText ||
+        item.enrollment.toLowerCase().includes(searchText) ||
+        item.location.toLowerCase().includes(searchText) ||
+        item.source.toLowerCase().includes(searchText);
+
+      const matchesStatus = item.status === feedbackFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [search, feedbackFilter]);
+
+  const pendingCount = testHCAFeedback.filter(
+    (item) => item.status === "Pending"
+  ).length;
+
+  const completedCount = testHCAFeedback.filter(
+    (item) => item.status === "Completed"
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -77,25 +114,25 @@ const HCAFeedback: React.FC = () => {
 
         <SummaryCard
           title="Total Feedback"
-          value="42"
+          value={testHCAFeedback.length}
           color="#1392d3"
         />
 
         <SummaryCard
-          title="Positive"
-          value="34"
-          color="#50c896"
-        />
-
-        <SummaryCard
-          title="Follow Up"
-          value="6"
+          title="Pending"
+          value={pendingCount}
           color="#ff1493"
         />
 
         <SummaryCard
-          title="With Images"
-          value="18"
+          title="Completed"
+          value={completedCount}
+          color="#50c896"
+        />
+
+        <SummaryCard
+          title="Due Calls"
+          value={pendingCount}
           color="#1392d3"
         />
 
@@ -105,34 +142,93 @@ const HCAFeedback: React.FC = () => {
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
         {/* Header */}
-        <div className="flex flex-col gap-4 border-b border-slate-200 p-5 md:flex-row md:items-center md:justify-between">
+        <div className="border-b border-slate-200 p-5">
 
-          <div>
-            <h2 className="text-lg font-bold text-slate-800">
-              HCA Feedback
-            </h2>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
-            <p className="text-sm text-slate-500">
-              Feedback received from HCAs
-            </p>
+            {/* Left */}
+            <div>
+              <h2 className="text-lg font-bold text-slate-800">
+                HCA Feedback
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Placement and monthly feedback tracking
+              </p>
+            </div>
+
+            {/* Right */}
+            <div className="relative w-full lg:w-80">
+
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search enrollment, location..."
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-[#1392d3] focus:bg-white"
+              />
+
+            </div>
+
           </div>
 
-          <div className="relative w-full md:w-72">
+          {/* Filters */}
+          <div className="mt-5 flex flex-wrap items-center gap-3">
 
-            <Search
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
+            {/* Pending */}
+            <button
+              type="button"
+              onClick={() => setFeedbackFilter("Pending")}
+              className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition ${
+                feedbackFilter === "Pending"
+                  ? "bg-[#1392d3] text-white shadow-sm"
+                  : "border border-slate-200 bg-white text-slate-600 hover:border-[#1392d3]"
+              }`}
+            >
+              <Clock3 size={17} />
 
-            <input
-              type="text"
-              value={search}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setSearch(e.target.value)
-              }
-              placeholder="Search HCA or Client..."
-              className="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-[#1392d3] focus:bg-white"
-            />
+              Pending
+
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs ${
+                  feedbackFilter === "Pending"
+                    ? "bg-white/20 text-white"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                {pendingCount}
+              </span>
+            </button>
+
+            {/* Completed */}
+            <button
+              type="button"
+              onClick={() => setFeedbackFilter("Completed")}
+              className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition ${
+                feedbackFilter === "Completed"
+                  ? "bg-[#50c896] text-white shadow-sm"
+                  : "border border-slate-200 bg-white text-slate-600 hover:border-[#50c896]"
+              }`}
+            >
+              <CheckCircle2 size={17} />
+
+              Completed
+
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs ${
+                  feedbackFilter === "Completed"
+                    ? "bg-white/20 text-white"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                {completedCount}
+              </span>
+            </button>
 
           </div>
 
@@ -141,113 +237,15 @@ const HCAFeedback: React.FC = () => {
         {/* Table */}
         <div className="overflow-x-auto">
 
-          <table className="w-full min-w-[900px]">
-
-            <thead>
-              <tr className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-                <th className="px-5 py-4">HCA</th>
-                <th className="px-5 py-4">Client</th>
-                <th className="px-5 py-4">Rating</th>
-                <th className="px-5 py-4">Feedback</th>
-                <th className="px-5 py-4">Date</th>
-                <th className="px-5 py-4">Status</th>
-                <th className="px-5 py-4">Attachment</th>
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-slate-100">
-
-              {filteredData.map((item: HCAFeedbackData) => (
-                <tr
-                  key={item.id}
-                  className="transition hover:bg-slate-50"
-                >
-
-                  <td className="px-5 py-4">
-                    <span className="font-semibold text-slate-800">
-                      {item.hca}
-                    </span>
-                  </td>
-
-                  <td className="px-5 py-4 text-sm text-slate-600">
-                    {item.client}
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <div className="flex gap-0.5">
-
-                      {Array.from({ length: 5 }).map((_, index) => {
-                        const starNumber = index + 1;
-
-                        return (
-                          <Star
-                            key={starNumber}
-                            size={15}
-                            fill={
-                              starNumber <= item.rating
-                                ? "#ff1493"
-                                : "none"
-                            }
-                            className={
-                              starNumber <= item.rating
-                                ? "text-[#ff1493]"
-                                : "text-slate-300"
-                            }
-                          />
-                        );
-                      })}
-
-                    </div>
-                  </td>
-
-                  <td className="max-w-md px-5 py-4 text-sm text-slate-600">
-                    {item.feedback}
-                  </td>
-
-                  <td className="px-5 py-4 text-sm text-slate-500">
-                    {item.date}
-                  </td>
-
-                  <td className="px-5 py-4">
-
-                    {item.followUp ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-pink-50 px-3 py-1 text-xs font-semibold text-[#ff1493]">
-                        <AlertCircle size={13} />
-                        Follow Up
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-[#50c896]">
-                        <CheckCircle2 size={13} />
-                        Completed
-                      </span>
-                    )}
-
-                  </td>
-
-                  <td className="px-5 py-4">
-
-                    {item.image ? (
-                      <button
-                        type="button"
-                        className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-[#1392d3] hover:text-[#1392d3]"
-                      >
-                        <ImageIcon size={14} />
-                        View
-                      </button>
-                    ) : (
-                      <span className="text-xs text-slate-400">
-                        No file
-                      </span>
-                    )}
-
-                  </td>
-
-                </tr>
-              ))}
-
-            </tbody>
-
-          </table>
+          {feedbackFilter === "Pending" ? (
+            <PendingTable
+              data={filteredData}
+            />
+          ) : (
+            <CompletedTable
+              data={filteredData}
+            />
+          )}
 
         </div>
 
@@ -256,9 +254,322 @@ const HCAFeedback: React.FC = () => {
   );
 };
 
+/* =========================================================
+   PENDING TABLE
+========================================================= */
+
+interface TableProps {
+  data: HCAFeedbackData[];
+}
+
+const PendingTable: React.FC<TableProps> = ({ data }) => {
+  return (
+    <table className="w-full min-w-[1100px]">
+
+      <thead>
+        <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+
+          <th className="px-5 py-4">
+            S.No
+          </th>
+
+          <th className="px-5 py-4">
+            Enrollment
+          </th>
+
+          <th className="px-5 py-4">
+            Location / Coming State
+          </th>
+
+          <th className="px-5 py-4">
+            Source
+          </th>
+
+          <th className="w-[280px] px-5 py-4">
+            Family Background / HCA Questions
+          </th>
+
+          <th className="w-[320px] px-5 py-4">
+            Placement Feedback
+          </th>
+
+        </tr>
+      </thead>
+
+      <tbody className="divide-y divide-slate-100">
+
+        {data.length > 0 ? (
+          data.map((item, index) => (
+
+            <tr
+              key={item.id}
+              className="transition hover:bg-slate-50"
+            >
+
+              <td className="px-5 py-4 text-sm font-semibold text-slate-500">
+                {index + 1}
+              </td>
+
+              <td className="px-5 py-4">
+                <span className="font-semibold text-slate-800">
+                  {item.enrollment}
+                </span>
+              </td>
+
+              <td className="px-5 py-4">
+                <span className="inline-flex rounded-lg bg-[#1392d3]/10 px-3 py-1.5 text-xs font-semibold text-[#1392d3]">
+                  {item.location}
+                </span>
+              </td>
+
+              <td className="px-5 py-4 text-sm text-slate-600">
+                {item.source}
+              </td>
+
+              <td className="px-5 py-4">
+
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+
+                  <p className="text-sm leading-5 text-slate-600">
+                    {item.familyBackground || "Pending"}
+                  </p>
+
+                </div>
+
+              </td>
+
+              <td className="px-5 py-4">
+
+                <div className="rounded-xl border border-pink-100 bg-pink-50/50 p-3">
+
+                  <p className="text-sm leading-5 text-slate-600">
+                    {item.placementFeedback || "Pending"}
+                  </p>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+          ))
+        ) : (
+          <EmptyTable />
+        )}
+
+      </tbody>
+
+    </table>
+  );
+};
+
+/* =========================================================
+   COMPLETED TABLE
+========================================================= */
+
+const CompletedTable: React.FC<TableProps> = ({ data }) => {
+  return (
+    <table className="w-full min-w-[1100px]">
+
+      <thead>
+        <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+
+          <th className="px-5 py-4">
+            S.No
+          </th>
+
+          <th className="px-5 py-4">
+            Enrollment
+          </th>
+
+          <th className="px-5 py-4">
+            Location / Coming State
+          </th>
+
+          <th className="px-5 py-4">
+            Source
+          </th>
+
+          <th className="px-5 py-4">
+            View File / Date
+          </th>
+
+          <th className="px-5 py-4">
+            View File
+          </th>
+
+          <th className="px-5 py-4">
+            Last Date of Call
+          </th>
+
+          <th className="px-5 py-4">
+            Due Date of Call
+          </th>
+
+        </tr>
+      </thead>
+
+      <tbody className="divide-y divide-slate-100">
+
+        {data.length > 0 ? (
+          data.map((item, index) => (
+
+            <tr
+              key={item.id}
+              className="transition hover:bg-slate-50"
+            >
+
+              <td className="px-5 py-4 text-sm font-semibold text-slate-500">
+                {index + 1}
+              </td>
+
+              <td className="px-5 py-4">
+                <span className="font-semibold text-slate-800">
+                  {item.enrollment}
+                </span>
+              </td>
+
+              <td className="px-5 py-4">
+
+                <span className="inline-flex rounded-lg bg-[#1392d3]/10 px-3 py-1.5 text-xs font-semibold text-[#1392d3]">
+                  {item.location}
+                </span>
+
+              </td>
+
+              <td className="px-5 py-4 text-sm text-slate-600">
+                {item.source}
+              </td>
+
+              {/* View File + Date */}
+              <td className="px-5 py-4">
+
+                <div className="flex flex-col gap-1.5">
+
+                  <button
+                    type="button"
+                    className="inline-flex w-fit items-center gap-2 rounded-lg border border-[#1392d3]/20 bg-[#1392d3]/10 px-3 py-2 text-xs font-semibold text-[#1392d3] transition hover:bg-[#1392d3] hover:text-white"
+                  >
+                    <FileText size={14} />
+                    View File
+                  </button>
+
+                  {item.fileDate && (
+                    <span className="flex items-center gap-1 text-xs text-slate-400">
+                      <CalendarDays size={13} />
+                      {item.fileDate}
+                    </span>
+                  )}
+
+                </div>
+
+              </td>
+
+              {/* View File */}
+              <td className="px-5 py-4">
+
+                {item.viewFile ? (
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-[#1392d3] hover:text-[#1392d3]"
+                  >
+                    <Eye size={14} />
+                    View
+                  </button>
+                ) : (
+                  <span className="text-xs text-slate-400">
+                    No file
+                  </span>
+                )}
+
+              </td>
+
+              {/* Last Call */}
+              <td className="px-5 py-4">
+
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <CalendarDays
+                    size={15}
+                    className="text-[#1392d3]"
+                  />
+
+                  {item.lastCallDate || "—"}
+                </div>
+
+              </td>
+
+              {/* Due Call */}
+              <td className="px-5 py-4">
+
+                <div className="flex items-center gap-2">
+
+                  <CalendarDays
+                    size={15}
+                    className="text-[#ff1493]"
+                  />
+
+                  <span className="rounded-lg bg-pink-50 px-3 py-1.5 text-xs font-semibold text-[#ff1493]">
+                    {item.dueCallDate || "—"}
+                  </span>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+          ))
+        ) : (
+          <EmptyTable />
+        )}
+
+      </tbody>
+
+    </table>
+  );
+};
+
+/* =========================================================
+   EMPTY TABLE
+========================================================= */
+
+const EmptyTable = () => {
+  return (
+    <tr>
+      <td
+        colSpan={8}
+        className="px-5 py-12 text-center"
+      >
+        <div className="flex flex-col items-center justify-center">
+
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+            <FileText
+              size={22}
+              className="text-slate-400"
+            />
+          </div>
+
+          <p className="font-semibold text-slate-600">
+            No feedback found
+          </p>
+
+          <p className="mt-1 text-sm text-slate-400">
+            There are no records matching your search.
+          </p>
+
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+/* =========================================================
+   SUMMARY CARD
+========================================================= */
+
 interface SummaryCardProps {
   title: string;
-  value: string;
+  value: number;
   color: string;
 }
 
@@ -278,7 +589,9 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
 
         <div
           className="h-2.5 w-2.5 rounded-full"
-          style={{ backgroundColor: color }}
+          style={{
+            backgroundColor: color,
+          }}
         />
 
         <p className="text-2xl font-bold text-slate-800">
