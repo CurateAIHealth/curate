@@ -139,7 +139,7 @@ useEffect(() => {
     setLoadingMessage(
       `${loadingSteps[index].icon} ${loadingSteps[index].text}`
     );
-  }, 180);
+  }, 100);
 
   (async () => {
     try {

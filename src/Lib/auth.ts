@@ -1447,3 +1447,515 @@ export const UpdateClientTeam = async (
 //     };
 //   }
 // };
+
+
+
+type QualityRole =
+  | "Role 1"
+  | "Role 2"
+  | "Role 3"
+  | "Random HCA Call"
+  | "Termination";
+
+interface QualityFeedback {
+  UserId: string;
+  Role: QualityRole;
+  SectionId: string;
+  Type?: string;
+
+  Month?: string;
+
+  answers?: Record<string, string>;
+  recordings?: Record<string, any>;
+  Recording?: string | null;
+
+  completedAt?: string;
+}
+
+const MONTHLY_ROLES: QualityRole[] = [
+  "Role 1",
+  "Role 3",
+  "Random HCA Call",
+];
+
+const LIFETIME_ROLES: QualityRole[] = [
+  "Role 2",
+  "Termination",
+];
+
+export const InsertQualityInfo = async (
+  ImportedInfo: QualityFeedback
+) => {
+  try {
+    if (!ImportedInfo) {
+      return {
+        success: false,
+        error: "Quality information is required",
+      };
+    }
+
+    const UserId = String(
+      ImportedInfo.UserId || ""
+    ).trim();
+
+    const Role = ImportedInfo.Role;
+
+    const SectionId = String(
+      ImportedInfo.SectionId || ""
+    ).trim();
+
+    if (!UserId) {
+      return {
+        success: false,
+        error: "UserId is required",
+      };
+    }
+
+    if (!Role) {
+      return {
+        success: false,
+        error: "Role is required",
+      };
+    }
+
+    if (!SectionId) {
+      return {
+        success: false,
+        error: "SectionId is required",
+      };
+    }
+
+    if (!ImportedInfo.answers) {
+      return {
+        success: false,
+        error: "Answers are required",
+      };
+    }
+
+    const client = await clientPromise;
+
+    const db = client.db("CurateInformation");
+
+    const Qualitycollection =
+      db.collection("Quality");
+
+    const completedAt =
+      ImportedInfo.completedAt
+        ? new Date(ImportedInfo.completedAt)
+        : new Date();
+
+    if (Number.isNaN(completedAt.getTime())) {
+      return {
+        success: false,
+        error: "Invalid completedAt date",
+      };
+    }
+
+    /*
+     * =====================================================
+     * ROLE 2
+     *
+     * ONCE IN LIFETIME
+     *
+     * UserId + Role
+     * =====================================================
+     */
+
+    if (LIFETIME_ROLES.includes(Role)) {
+      const existing =
+        await Qualitycollection.findOne({
+          UserId,
+          Role,
+        });
+
+      if (existing) {
+        return {
+          success: false,
+          alreadyCompleted: true,
+          error:
+            "This feedback has already been completed.",
+          data: existing,
+        };
+      }
+    }
+
+    /*
+     * =====================================================
+     * MONTHLY ROLES
+     *
+     * Role 1
+     * Role 3
+     * Random HCA Call
+     *
+     * 30 DAYS FROM completedAt
+     * =====================================================
+     */
+
+    if (MONTHLY_ROLES.includes(Role)) {
+      const existing =
+        await Qualitycollection
+          .find({
+            UserId,
+            Role,
+          })
+          .sort({
+            completedAt: -1,
+          })
+          .limit(1)
+          .next();
+
+      if (existing?.completedAt) {
+        const lastCompletedAt =
+          new Date(existing.completedAt);
+
+        const nextAvailableDate =
+          new Date(lastCompletedAt);
+
+        nextAvailableDate.setDate(
+          nextAvailableDate.getDate() + 30
+        );
+
+        const now = new Date();
+
+        if (
+          now < nextAvailableDate
+        ) {
+          const millisecondsRemaining =
+            nextAvailableDate.getTime() -
+            now.getTime();
+
+          const daysRemaining = Math.ceil(
+            millisecondsRemaining /
+              (1000 * 60 * 60 * 24)
+          );
+
+          return {
+            success: false,
+            alreadyCompleted: true,
+            locked: true,
+            error:
+              "This feedback is not available yet.",
+            lastCompletedAt,
+            nextAvailableDate,
+            daysRemaining,
+            data: existing,
+          };
+        }
+      }
+    }
+
+    /*
+     * =====================================================
+     * PREPARE DOCUMENT
+     * =====================================================
+     */
+
+    const QualityDocument = {
+      ...ImportedInfo,
+
+      UserId,
+
+      Role,
+
+      SectionId,
+
+      Type:
+        ImportedInfo.Type || "HCA",
+
+      completedAt,
+
+      createdAt: new Date(),
+
+      updatedAt: new Date(),
+    };
+
+    /*
+     * =====================================================
+     * INSERT
+     * =====================================================
+     */
+
+    const PostData =
+      await Qualitycollection.insertOne(
+        QualityDocument
+      );
+
+    if (!PostData.acknowledged) {
+      return {
+        success: false,
+        error:
+          "Failed to insert Quality information",
+      };
+    }
+
+    return {
+      success: true,
+
+      insertedId:
+        PostData.insertedId,
+
+      Role,
+
+      SectionId,
+
+      completedAt,
+
+      message:
+        "Quality information saved successfully.",
+    };
+
+  } catch (error: any) {
+
+    console.error(
+      "InsertQualityInfo Error:",
+      error
+    );
+
+    return {
+      success: false,
+      error:
+        "Unable to insert Quality information",
+    };
+  }
+};
+
+
+export const GetQualityInfo = async () => {
+  try {
+    const client = await clientPromise;
+
+    const db =
+      client.db("CurateInformation");
+
+    const Qualitycollection =
+      db.collection("Quality");
+
+    const QualityData =
+      await Qualitycollection
+        .find(
+          {},
+          {
+            projection: {
+              _id: 1,
+
+              UserId: 1,
+
+              Role: 1,
+
+              SectionId: 1,
+
+              Type: 1,
+
+              Month: 1,
+
+              completedAt: 1,
+
+              createdAt: 1,
+
+              updatedAt: 1,
+
+              answers: 1,
+
+              recordings: 1,
+
+              Recording: 1,
+            },
+          }
+        )
+        .sort({
+          completedAt: -1,
+        })
+        .toArray();
+
+    return {
+      success: true,
+      data: QualityData,
+    };
+
+  } catch (error) {
+
+    console.error(
+      "GetQualityInfo Error:",
+      error
+    );
+
+    return {
+      success: false,
+      data: [],
+      error:
+        "Unable to get Quality information",
+    };
+  }
+};
+
+
+export const GetQualityStatus = async (
+  UserId: string
+) => {
+  try {
+    if (!UserId) {
+      return {
+        success: false,
+        error: "UserId is required",
+      };
+    }
+
+    const client = await clientPromise;
+
+    const db =
+      client.db("CurateInformation");
+
+    const Qualitycollection =
+      db.collection("Quality");
+
+    const records =
+      await Qualitycollection
+        .find({
+          UserId: String(UserId),
+        })
+        .sort({
+          completedAt: -1,
+        })
+        .toArray();
+
+    const now = new Date();
+
+    /*
+     * =====================================================
+     * ROLE 2
+     * LIFETIME
+     * =====================================================
+     */
+
+    const role2 =
+      records.find(
+        (item: any) =>
+          item.Role === "Role 2"
+      );
+
+    const role2Status = role2
+      ? {
+          status: "Completed",
+          lastCompletedAt:
+            role2.completedAt,
+          data: role2,
+        }
+      : {
+          status: "Available",
+          lastCompletedAt: null,
+          data: null,
+        };
+
+    /*
+     * =====================================================
+     * MONTHLY ROLES
+     * =====================================================
+     */
+
+    const getMonthlyStatus = (
+      role: string
+    ) => {
+
+      const latest =
+        records.find(
+          (item: any) =>
+            item.Role === role
+        );
+
+      if (!latest) {
+        return {
+          status: "Available",
+          lastCompletedAt: null,
+          nextAvailableDate: null,
+          daysRemaining: 0,
+          data: null,
+        };
+      }
+
+      const lastCompletedAt =
+        new Date(
+          latest.completedAt
+        );
+
+      const nextAvailableDate =
+        new Date(lastCompletedAt);
+
+      nextAvailableDate.setDate(
+        nextAvailableDate.getDate() +
+          30
+      );
+
+      if (
+        now >=
+        nextAvailableDate
+      ) {
+        return {
+          status: "Available",
+          lastCompletedAt,
+          nextAvailableDate,
+          daysRemaining: 0,
+          data: latest,
+        };
+      }
+
+      const remaining =
+        Math.ceil(
+          (
+            nextAvailableDate.getTime() -
+            now.getTime()
+          ) /
+            (1000 * 60 * 60 * 24)
+        );
+
+      return {
+        status: "Locked",
+        lastCompletedAt,
+        nextAvailableDate,
+        daysRemaining: remaining,
+        data: latest,
+      };
+    };
+
+    return {
+      success: true,
+
+      UserId: String(UserId),
+
+      Role1:
+        getMonthlyStatus("Role 1"),
+
+      Role2:
+        role2Status,
+
+      Role3:
+        getMonthlyStatus("Role 3"),
+
+      RandomHCA:
+        getMonthlyStatus(
+          "Random HCA Call"
+        ),
+
+      Termination:
+        records.find(
+          (item: any) =>
+            item.Role ===
+            "Termination"
+        ) || null,
+
+      records,
+    };
+
+  } catch (error) {
+
+    console.error(
+      "GetQualityStatus Error:",
+      error
+    );
+
+    return {
+      success: false,
+      error:
+        "Unable to get Quality status",
+    };
+  }
+};
