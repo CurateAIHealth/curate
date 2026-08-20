@@ -3208,46 +3208,70 @@ const EditDate =
 
 
 
+<td className="px-3 py-3 text-center">
+  <div className="relative inline-block">
+    <select
 
-  <td className="px-3 py-3 text-center">
-{/* <button  className="
-    px-1 py-1
-    text-[9px] font-semibold
-   text-emerald-600
-border border-emerald-500
-    rounded-lg
+      onChange={(e) => {
+        const action = e.target.value;
+if (action === "preview") {
 
-    transition-all duration-300
-  shadow-[0_0_0_0_rgba(16,185,129,0.5)]
-hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
-    bg-gray-150
-    active:scale-95 
-    cursor-pointer
-  "
-  onClick={()=>CreateInvoice(c)}
-  >
-  Create
-</button> */}
-<button  className="
-    px-1 py-1
-    text-[9px] font-semibold
-   text-emerald-600
-border border-emerald-500
-    rounded-lg
-text-white
-    transition-all duration-300
-  shadow-[0_0_0_0_rgba(16,185,129,0.5)]
-hover:shadow-[0_0_12px_2px_rgba(16,185,129,0.6)]
-   bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e]
-    active:scale-95 
-    cursor-pointer
-  "
-  onClick={()=>ShowProfileInformation(c.Client_Id,c.name)}
-  >
-  Preview
-</button>
-{/* 
-<img src="Icons/CreateInovoice.png" onClick={()=>CreateInvoice(c)} className="h-7 ml-3"/> */}
+          ShowProfileInformation(c.Client_Id, c.name);
+        }
+        if (action === "create") {
+          CreateInvoice(c);
+        }
+
+       
+      }}
+      className="
+        appearance-none text-center
+        px-2 pr-5 py-1
+        text-[10px] font-semibold
+        text-white
+        border border-emerald-500
+        rounded-lg
+       
+        hover:from-[#01cfc7]
+        hover:to-[#00403e]
+        transition-all duration-300
+        active:scale-95
+        cursor-pointer
+        outline-none
+      "
+    >
+            <option
+        value="See preview"
+        className="bg-[#007B7F] text-white"
+      >
+        See Preview
+      </option>
+      <option
+        value="preview"
+        className="bg-[#007B7F] text-white"
+      >
+        Preview
+      </option>
+
+      <option
+        value="create"
+        className="bg-[#007B7F] text-white"
+      >
+        Create Invoice
+      </option>
+    </select>
+
+    <span
+      className="
+        pointer-events-none
+        absolute right-1.5 top-1/2
+        -translate-y-1/2
+        text-white text-[8px]
+      "
+    >
+      ▼
+    </span>
+  </div>
 </td>
 
 

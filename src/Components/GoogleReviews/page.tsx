@@ -12,6 +12,7 @@ import {
   FileText,
   CalendarDays,
 } from "lucide-react";
+import { useSelector } from "react-redux";
 
 /* =========================================================
    TYPES
@@ -146,8 +147,13 @@ const testGoogleReviews: GoogleReviewData[] = [
    MAIN COMPONENT
 ========================================================= */
 
-const GoogleReviews: React.FC = () => {
+
+  const GoogleReviews: React.FC = () => {
   const [search, setSearch] = useState("");
+
+  const DeploymentInfo = useSelector(
+    (state: any) => state.AdminDeployment
+  );
 
   const [reviewFilter, setReviewFilter] =
     useState<ReviewStatus>("Pending");
@@ -155,38 +161,89 @@ const GoogleReviews: React.FC = () => {
   const [selectedReview, setSelectedReview] =
     useState<GoogleReviewData | null>(null);
 
-  /* -------------------------------------------------------
-     COUNTS
-  ------------------------------------------------------- */
+  /*
+   * Convert DeploymentInfo into Google Review data
+   */
+  const googleReviews = useMemo<GoogleReviewData[]>(() => {
+    if (!Array.isArray(DeploymentInfo)) {
+      return [];
+    }
 
-  const pendingCount = testGoogleReviews.filter(
-    (item) => item.status === "Pending"
-  ).length;
+    return DeploymentInfo
+      .filter(
+        (item: any) =>
+          item?.hcpSource?.toLowerCase() === "google"
+      )
+      .map((item: any, index: number) => {
+        const endDate = item?.EndDate || "";
 
-  const completedCount = testGoogleReviews.filter(
-    (item) => item.status === "Completed"
-  ).length;
+        return {
+          id:
+            item?._id?.toString() ||
+            item?.ClientId ||
+            `google-review-${index}`,
+
+          clientName: item?.ClientName?.trim() || "—",
+
+          ptName: item?.patientName?.trim() || "—",
+
+          enrollmentDate: item?.StartDate || "—",
+
+          terminated: endDate || "NA",
+
+          // DeploymentInfo does not contain Team
+          team: "—",
+
+          // DeploymentInfo does not contain review note
+          note: "",
+
+          /*
+           * Until your Google Review collection contains
+           * review status, all new deployment records are Pending.
+           */
+          status: "Pending",
+
+          reviewRequested: false,
+
+          reviewRequestMethod: null,
+
+          review: null,
+
+          suggestions: null,
+
+          reviewDate: null,
+        };
+      });
+  }, [DeploymentInfo]);
+
+const pendingCount = googleReviews.filter(
+  (item) => item.status === "Pending"
+).length;
+
+const completedCount = googleReviews.filter(
+  (item) => item.status === "Completed"
+).length;
 
   /* -------------------------------------------------------
      FILTER
   ------------------------------------------------------- */
 
-  const filteredData = useMemo(() => {
-    const searchText = search.toLowerCase().trim();
+const filteredData = useMemo(() => {
+  const searchText = search.toLowerCase().trim();
 
-    return testGoogleReviews.filter((item) => {
-      const matchesStatus =
-        item.status === reviewFilter;
+  return googleReviews.filter((item) => {
+    const matchesStatus =
+      item.status === reviewFilter;
 
-      const matchesSearch =
-        !searchText ||
-        item.clientName.toLowerCase().includes(searchText) ||
-        item.ptName.toLowerCase().includes(searchText) ||
-        item.team.toLowerCase().includes(searchText);
+    const matchesSearch =
+      !searchText ||
+      item.clientName.toLowerCase().includes(searchText) ||
+      item.ptName.toLowerCase().includes(searchText) ||
+      item.team.toLowerCase().includes(searchText);
 
-      return matchesStatus && matchesSearch;
-    });
-  }, [search, reviewFilter]);
+    return matchesStatus && matchesSearch;
+  });
+}, [googleReviews, search, reviewFilter]);
 
   return (
     <div className="space-y-6">
@@ -199,7 +256,7 @@ const GoogleReviews: React.FC = () => {
 
         <SummaryCard
           title="Total Reviews"
-          value={testGoogleReviews.length}
+        value={googleReviews.length}
           color="#1392d3"
         />
 
@@ -217,15 +274,13 @@ const GoogleReviews: React.FC = () => {
 
         <SummaryCard
           title="Review Rate"
-          value={
-            testGoogleReviews.length
-              ? `${Math.round(
-                  (completedCount /
-                    testGoogleReviews.length) *
-                    100
-                )}%`
-              : "0%"
-          }
+        value={
+  googleReviews.length
+    ? `${Math.round(
+        (completedCount / googleReviews.length) * 100
+      )}%`
+    : "0%"
+}
           color="#1392d3"
         />
 

@@ -519,7 +519,7 @@ const ClientFeedback: React.FC = () => {
   const [saved, setSaved] =
     useState<boolean>(false);
 const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
- console.log("Info-----",DeploymentInfo)
+ 
  const [feedbackFilter, setFeedbackFilter] = useState<
   "Pending" | "Completed"
 >("Pending");
