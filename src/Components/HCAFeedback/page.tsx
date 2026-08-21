@@ -795,7 +795,13 @@ const [qualityStatus, setQualityStatus] =
     useState<
       Record<string, SavedFeedback>
     >({});
+const currentDate = new Date();
 
+const [selectedMonth, setSelectedMonth] =
+  useState<number>(currentDate.getMonth() + 1);
+
+const [selectedYear, setSelectedYear] =
+  useState<number>(currentDate.getFullYear());
   /* =======================================================
      HCA DATA
   ======================================================= */
@@ -810,7 +816,32 @@ const [qualityStatus, setQualityStatus] =
       : [];
   }, [users]);
 
+const monthOptions = [
+  { value: 1, label: "January" },
+  { value: 2, label: "February" },
+  { value: 3, label: "March" },
+  { value: 4, label: "April" },
+  { value: 5, label: "May" },
+  { value: 6, label: "June" },
+  { value: 7, label: "July" },
+  { value: 8, label: "August" },
+  { value: 9, label: "September" },
+  { value: 10, label: "October" },
+  { value: 11, label: "November" },
+  { value: 12, label: "December" },
+];
 
+const yearOptions = useMemo(() => {
+  const currentYear = new Date().getFullYear();
+
+  const startYear = 2020;
+  const endYear = currentYear + 1;
+
+  return Array.from(
+    { length: endYear - startYear + 1 },
+    (_, index) => endYear - index
+  );
+}, []);
 
 useEffect(() => {
   if (!hcaData.length) return;
@@ -945,9 +976,7 @@ console.log ("Find-----",qualityStatus)
      CURRENT MONTH
   ======================================================= */
 
-  const getCurrentMonth = () => {
-    return `${new Date().getMonth() + 1}-${new Date().getFullYear()}`;
-  };
+
 
   /* =======================================================
      USER ID
@@ -970,59 +999,190 @@ const getCompletedSectionIds = (
   userId: string
 ): string[] => {
 
+  const normalizedUserId =
+    String(userId);
+
   const quality =
-    qualityStatus?.[String(userId)];
+    qualityStatus?.[normalizedUserId];
 
-  console.log(
-    "========== COMPLETED CHECK =========="
-  );
+  if (!quality) {
+    return [];
+  }
 
-  console.log("USER ID:", userId);
+  const selectedMonthValue =
+    `${selectedMonth}-${selectedYear}`;
 
-  console.log(
-    "QUALITY STATUS:",
-    quality
-  );
+  /*
+   * IMPORTANT:
+   * Use the records belonging to this
+   * particular HCA from qualityStatus.
+   */
+  const records = Array.isArray(
+    quality?.records
+  )
+    ? quality.records
+    : [];
 
-  console.log(
-    "TERMINATION DATA:",
-    quality?.Termination
-  );
+  /*
+   * Records for selected Month/Year only.
+   */
+  const monthlyRecords =
+    records.filter(
+      (item: any) =>
+        String(item?.Month) ===
+        selectedMonthValue
+    );
 
   const completedIds: string[] = [];
 
-  // ROLE 1
-  if (quality?.Role1?.data) {
+  /*
+   * =====================================================
+   * FAMILY BACKGROUND
+   *
+   * LIFETIME
+   *
+   * Month is intentionally NOT checked.
+   * =====================================================
+   */
+
+  const familyBackgroundCompleted =
+    records.some(
+      (item: any) => {
+
+        if (
+          item?.Role !== "Role 2"
+        ) {
+          return false;
+        }
+
+        const answers =
+          item?.answers;
+
+        if (
+          !answers ||
+          typeof answers !== "object"
+        ) {
+          return false;
+        }
+
+        return Object.keys(
+          answers
+        ).some(
+          (key) =>
+            key.startsWith(
+              "role2-stability-"
+            ) &&
+            String(
+              answers[key] || ""
+            ).trim()
+        );
+      }
+    );
+
+  if (
+    familyBackgroundCompleted
+  ) {
+    completedIds.push(
+      "role-2-stability"
+    );
+  }
+
+  /*
+   * =====================================================
+   * ROLE 1
+   *
+   * MONTHLY
+   * =====================================================
+   */
+
+  const role1Completed =
+    monthlyRecords.some(
+      (item: any) =>
+        item?.Role === "Role 1" &&
+        item?.SectionId ===
+          "role-1-24-hours"
+    );
+
+  if (role1Completed) {
     completedIds.push(
       "role-1-24-hours"
     );
   }
 
-  // ROLE 2
-  if (quality?.Role2?.data) {
+  /*
+   * =====================================================
+   * ROLE 2
+   *
+   * FAMILY BACKGROUND = LIFETIME
+   * OTHER ROLE 2 QUESTIONS = MONTHLY
+   * =====================================================
+   */
+
+  const role2MonthlyCompleted =
+    monthlyRecords.some(
+      (item: any) =>
+        item?.Role === "Role 2"
+    );
+
+  if (
+    role2MonthlyCompleted
+  ) {
     feedbackSections
       .filter(
         (section) =>
-          section.role === "Role 2"
+          section.role ===
+            "Role 2" &&
+          section.id !==
+            "role-2-stability"
       )
-      .forEach((section) => {
-        completedIds.push(
-          section.id
-        );
-      });
+      .forEach(
+        (section) => {
+          completedIds.push(
+            section.id
+          );
+        }
+      );
   }
 
-  // ROLE 3
-  if (quality?.Role3?.data) {
+  /*
+   * =====================================================
+   * ROLE 3
+   *
+   * MONTHLY
+   * =====================================================
+   */
+
+  const role3Completed =
+    monthlyRecords.some(
+      (item: any) =>
+        item?.Role === "Role 3" &&
+        item?.SectionId ===
+          "role-3-welfare"
+    );
+
+  if (role3Completed) {
     completedIds.push(
       "role-3-welfare"
     );
   }
 
-  // RANDOM HCA
+  /*
+   * =====================================================
+   * RANDOM HCA CALL
+   *
+   * MONTHLY
+   * =====================================================
+   */
+
+  const randomCallCompleted =
+    monthlyRecords.some(
+      (item: any) =>
+        item?.Role ===
+        "Random HCA Call"
+    );
+
   if (
-    quality?.RandomHCACall?.data ||
-    quality?.RandomHCA?.data
+    randomCallCompleted
   ) {
     feedbackSections
       .filter(
@@ -1030,24 +1190,39 @@ const getCompletedSectionIds = (
           section.role ===
           "Random HCA Call"
       )
-      .forEach((section) => {
-        completedIds.push(
-          section.id
-        );
-      });
+      .forEach(
+        (section) => {
+          completedIds.push(
+            section.id
+          );
+        }
+      );
   }
 
-  // TERMINATION - LIFETIME
-  if (quality?.Termination) {
+  /*
+   * =====================================================
+   * TERMINATION
+   *
+   * MONTHLY
+   * =====================================================
+   */
+
+  const terminationCompleted =
+    monthlyRecords.some(
+      (item: any) =>
+        item?.Role ===
+          "Termination" ||
+        item?.SectionId ===
+          "termination"
+    );
+
+  if (
+    terminationCompleted
+  ) {
     completedIds.push(
       "termination"
     );
   }
-
-  console.log(
-    "FINAL COMPLETED IDS:",
-    completedIds
-  );
 
   return Array.from(
     new Set(completedIds)
@@ -1246,12 +1421,10 @@ const completedCount = hcaData.filter(
         }
       );
     }, [
-      hcaData,
-      search,
-      statusFilter,
-      feedbackFilter,
       ImportedData,
-      savedFeedback,
+savedFeedback,
+selectedMonth,
+selectedYear,
     ]);
 
   /* =======================================================
@@ -1333,6 +1506,8 @@ console.log("Next Step----",userId)
   hca={selectedHCA}
   mode={feedbackMode}
   sections={selectedSections}
+  selectedMonth={selectedMonth}
+  selectedYear={selectedYear}
 existingFeedback={
   feedbackMode === "view"
     ? qualityStatus?.[
@@ -1484,31 +1659,7 @@ existingFeedback={
             </div>
 
             {/* SEARCH */}
-
-            <div className="relative w-full lg:w-80">
-
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-
-              <input
-                type="text"
-                value={
-                  search
-                }
-                onChange={(
-                  e
-                ) =>
-                  setSearch(
-                    e.target.value
-                  )
-                }
-                placeholder="Search HCA, location..."
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-[#1392d3] focus:bg-white"
-              />
-
-            </div>
+{/* MONTH FILTER */}
 
           </div>
 
@@ -1584,7 +1735,58 @@ existingFeedback={
 
               </div>
             </div>
+<div className="mt-5 w-full lg:w-auto">
 
+  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+    Feedback Month 
+  </p> 
+
+  <div className="flex flex-wrap gap-2">
+
+    <select
+      value={selectedMonth}
+      onChange={(e) =>
+        setSelectedMonth(
+          Number(e.target.value)
+        )
+      }
+      className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#1392d3]"
+    >
+      {monthOptions.map(
+        (month) => (
+          <option
+            key={month.value}
+            value={month.value}
+          >
+            {month.label}
+          </option>
+        )
+      )}
+    </select>
+
+    <select
+      value={selectedYear}
+      onChange={(e) =>
+        setSelectedYear(
+          Number(e.target.value)
+        )
+      }
+      className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#1392d3]"
+    >
+      {yearOptions.map(
+        (year) => (
+          <option
+            key={year}
+            value={year}
+          >
+            {year}
+          </option>
+        )
+      )}
+    </select>
+
+  </div>
+</div>
             {/* HCA STATUS */}
 
             <div className="mt-5 w-full lg:w-auto">
@@ -1782,7 +1984,9 @@ const HCATable: React.FC<HCATableProps> = ({
               item,
               index
             ) => {
-
+console.log(
+"Check Current Information-----",
+)
               const status =
                 item?.CurrentStatus as HCAStatus;
 
@@ -1945,7 +2149,10 @@ const completedCount =
     <button
       type="button"
       onClick={() =>
+      {
         onViewFeedback(item)
+        console.log("Check View Information----",)
+      }
       }
       className="inline-flex items-center gap-2 rounded-xl border border-[#50c896]/30 bg-[#50c896]/10 px-4 py-2.5 text-sm font-semibold text-[#278f69] transition hover:bg-[#50c896] hover:text-white"
     >
@@ -1997,7 +2204,9 @@ interface FeedbackScreenProps {
   hca: any;
   mode: "create" | "view";
   sections: FeedbackSection[];
-existingFeedback?: any;
+  selectedMonth: number;
+  selectedYear: number;
+  existingFeedback?: any;
   onBack: () => void;
   onSave: (
     feedback: SavedFeedback
@@ -2010,6 +2219,8 @@ const FeedbackScreen: React.FC<
   hca,
   mode,
   sections,
+  selectedMonth,
+  selectedYear,
   existingFeedback,
   onBack,
   onSave,
@@ -2311,7 +2522,7 @@ useEffect(() => {
           new Date().toISOString(),
 
         Month:
-          `${new Date().getMonth() + 1}-${new Date().getFullYear()}`,
+          `${selectedMonth}-${selectedYear}`,
 
         Type:
           "HCA",
@@ -2427,8 +2638,7 @@ const handleSaveRole2 = async (
       completedAt:
         new Date().toISOString(),
 
-      Month:
-        `${new Date().getMonth() + 1}-${new Date().getFullYear()}`,
+      Month:`${selectedMonth}-${selectedYear}`,
 
       Type: "HCA",
     };
@@ -2534,8 +2744,7 @@ const handleSaveRole3 = async (
       completedAt:
         new Date().toISOString(),
 
-      Month:
-        `${new Date().getMonth() + 1}-${new Date().getFullYear()}`,
+      Month:`${selectedMonth}-${selectedYear}`,
 
       Type: "HCA",
     };
@@ -2643,8 +2852,7 @@ const handleSaveRandomCall = async (
       completedAt:
         new Date().toISOString(),
 
-      Month:
-        `${new Date().getMonth() + 1}-${new Date().getFullYear()}`,
+      Month:`${selectedMonth}-${selectedYear}`,
 
       Type: "HCA",
     };
