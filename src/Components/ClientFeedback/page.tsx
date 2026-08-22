@@ -39,6 +39,7 @@ interface QualityQuestion {
   number: string;
   question: string;
   answerType: AnswerType;
+  subHeading?: string;
 }
 
 interface QualitySection {
@@ -119,352 +120,450 @@ interface QualityCall {
 
 const qualitySections: QualitySection[] = [
   {
-    id: "family",
-    title: "Family Background Analysis",
+    id: "placement",
+    title: "Placement call/ first time call to Client",
     questions: [
+      // A. Healthcare Assistant (HCA) / Caregiver Performance
       {
-        id: "family-a",
-        sectionId: "family",
-        number: "A",
+        id: "placement-1",
+        sectionId: "placement",
+        number: "1",
+        subHeading:
+          "A. Healthcare Assistant (HCA) / Caregiver Performance",
         question:
-          "Can you tell me about your family (parents, spouse, children, and dependents)?",
+          "Is the Healthcare Assistant punctual and regular? (Only Stay Out)",
         answerType: "textarea",
       },
       {
-        id: "family-b",
-        sectionId: "family",
-        number: "B",
-        question: "Who do you live with right now?",
+        id: "placement-2",
+        sectionId: "placement",
+        number: "2",
+        question:
+          "Does the HCA follow proper hygiene practices (hand wash, cleanliness)?",
         answerType: "textarea",
       },
       {
-        id: "family-c",
-        sectionId: "family",
-        number: "C",
+        id: "placement-3",
+        sectionId: "placement",
+        number: "3",
         question:
-          "Are there any family members who depend on you financially or for care?",
-        answerType: "yesNo",
+          "Is the HCA polite and respectful to the patient and family?",
+        answerType: "textarea",
       },
       {
-        id: "family-d",
-        sectionId: "family",
-        number: "D",
+        id: "placement-4",
+        sectionId: "placement",
+        number: "4",
         question:
-          "Does your family happy about your working in Hyderabad, and who will take care of your family in your absence?",
+          "Does the HCA understand the patient’s daily care needs?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-5",
+        sectionId: "placement",
+        number: "5",
+        question:
+          "Is the HCA attentive and alert during duty hours?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-6",
+        sectionId: "placement",
+        number: "6",
+        question:
+          "Does the HCA provide proper support for feeding, bathing, and toileting?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-7",
+        sectionId: "placement",
+        number: "7",
+        question:
+          "Does the HCA handle the patient carefully and safely?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-8",
+        sectionId: "placement",
+        number: "8",
+        question:
+          "Is the HCA emotionally supportive to the patient?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-9",
+        sectionId: "placement",
+        number: "9",
+        question:
+          "Does the HCA communicate clearly with the family?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-10",
+        sectionId: "placement",
+        number: "10",
+        question:
+          "Have you faced any issues with the HCA’s behavior or attitude?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-11",
+        sectionId: "placement",
+        number: "11",
+        question:
+          "Are nursing procedures done correctly and professionally?(Only Nurse)",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-12",
+        sectionId: "placement",
+        number: "12",
+        question:
+          "Is medication given on time as prescribed?(Only Nurse)",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-13",
+        sectionId: "placement",
+        number: "13",
+        question:
+          "Is wound care / injection / catheter care done properly? (Only Nurse)",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-14",
+        sectionId: "placement",
+        number: "14",
+        question:
+          "Are you confident in the nurse’s clinical skills?(Only Nurse)",
+        answerType: "textarea",
+      },
+
+      // B. Operations & Coordination Team
+      {
+        id: "placement-15",
+        sectionId: "placement",
+        number: "15",
+        subHeading: "B. Operations & Coordination Team",
+        question:
+          "Is the operations team reachable when you need help?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-16",
+        sectionId: "placement",
+        number: "16",
+        question:
+          "Do they respond to calls or messages on time?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-17",
+        sectionId: "placement",
+        number: "17",
+        question:
+          "Are issues resolved quickly by the operations team?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-18",
+        sectionId: "placement",
+        number: "18",
+        question:
+          "Is replacement provided promptly if staff is absent?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-19",
+        sectionId: "placement",
+        number: "19",
+        question:
+          "Does the operations team communicate clearly and politely?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-20",
+        sectionId: "placement",
+        number: "20",
+        question:
+          "Are you informed in advance about any changes in service or leaves of the HCA/Nurse?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-21",
+        sectionId: "placement",
+        number: "21",
+        question:
+          "How well does the team handle emergencies?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-22",
+        sectionId: "placement",
+        number: "22",
+        question:
+          "Are you satisfied with response time during urgent situations?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-23",
+        sectionId: "placement",
+        number: "23",
+        question:
+          "Has any serious issue been ignored or delayed?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-24",
+        sectionId: "placement",
+        number: "24",
+        question:
+          "Do you feel supported during critical situations?",
+        answerType: "textarea",
+      },
+
+      // C. Professionalism & Trust
+      {
+        id: "placement-25",
+        sectionId: "placement",
+        number: "25",
+        subHeading: "C. Professionalism & Trust",
+        question:
+          "Do you feel your patient is safe under our care?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-26",
+        sectionId: "placement",
+        number: "26",
+        question:
+          "Do you trust the caregiver/nurse assigned to you?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-27",
+        sectionId: "placement",
+        number: "27",
+        question:
+          "Are patient privacy and dignity maintained?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-28",
+        sectionId: "placement",
+        number: "28",
+        question:
+          "Has there been any misconduct or inappropriate behavior?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-29",
+        sectionId: "placement",
+        number: "29",
+        question:
+          "Are company rules and commitments followed?",
+        answerType: "textarea",
+      },
+
+      // D. Payment & Transparency
+      {
+        id: "placement-30",
+        sectionId: "placement",
+        number: "30",
+        subHeading: "D. Payment & Transparency",
+        question:
+          "Are service charges explained clearly to you?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-31",
+        sectionId: "placement",
+        number: "31",
+        question:
+          "Are bills and payment timelines communicated properly?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-32",
+        sectionId: "placement",
+        number: "32",
+        question:
+          "Do you feel the payment process is transparent?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-33",
+        sectionId: "placement",
+        number: "33",
+        question:
+          "Have you faced any confusion regarding billing?",
+        answerType: "textarea",
+      },
+
+      // E. Overall Service Experience
+      {
+        id: "placement-34",
+        sectionId: "placement",
+        number: "34",
+        subHeading: "E. Overall Service Experience",
+        question:
+          "How long have you been using our home care services?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-35",
+        sectionId: "placement",
+        number: "35",
+        question:
+          "Would you recommend our services to others? Why or why not?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-36",
+        sectionId: "placement",
+        number: "36",
+        question:
+          "Do you feel the services provided match what was promised initially?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-37",
+        sectionId: "placement",
+        number: "37",
+        question:
+          "Are you satisfied with the value for money of our services?",
+        answerType: "textarea",
+      },
+
+      // F. Improvement & Feedback
+      {
+        id: "placement-38",
+        sectionId: "placement",
+        number: "38",
+        subHeading: "F. Improvement & Feedback",
+        question:
+          "What do you like most about our service?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-39",
+        sectionId: "placement",
+        number: "39",
+        question:
+          "What do you dislike or feel needs improvement?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-40",
+        sectionId: "placement",
+        number: "40",
+        question:
+          "Is there anything you feel we failed to provide?",
+        answerType: "textarea",
+      },
+      {
+        id: "placement-41",
+        sectionId: "placement",
+        number: "41",
+        question:
+          "What changes would you suggest to improve our service?",
         answerType: "textarea",
       },
     ],
   },
 
   {
-    id: "job-income",
-    title: "Assess if the Person Needs the Job and Income",
+    id: "random-checkin",
+    title: "Random Client Check-in Call",
     questions: [
       {
-        id: "job-income-a",
-        sectionId: "job-income",
-        number: "A",
-        question: "What are your main sources of income at home?",
+        id: "random-checkin-1",
+        sectionId: "random-checkin",
+        number: "1",
+        question:
+          "Hello Sir/Madam, we are just calling to check in and see how everything is going with the care service. Is everything going well so far?",
         answerType: "textarea",
       },
       {
-        id: "job-income-b",
-        sectionId: "job-income",
-        number: "B",
+        id: "random-checkin-2",
+        sectionId: "random-checkin",
+        number: "2",
         question:
-          "What are your main monthly expenses or financial responsibilities?",
+          "How is the caregiver/nurse doing with the patient? Are you comfortable with the service?",
         answerType: "textarea",
       },
       {
-        id: "job-income-c",
-        sectionId: "job-income",
-        number: "C",
+        id: "random-checkin-3",
+        sectionId: "random-checkin",
+        number: "3",
         question:
-          "If you did not get this job, how would you manage your finances?",
+          "Is the caregiver/nurse punctual and regular as expected?",
         answerType: "textarea",
       },
       {
-        id: "job-income-d",
-        sectionId: "job-income",
-        number: "D",
+        id: "random-checkin-4",
+        sectionId: "random-checkin",
+        number: "4",
         question:
-          "Are you currently supporting anyone’s education, healthcare, or debts?",
-        answerType: "yesNo",
-      },
-    ],
-  },
-
-  {
-    id: "passion",
-    title: 'Identify Genuine Passion vs. "Just a Job" Mindset',
-    questions: [
-      {
-        id: "passion-a",
-        sectionId: "passion",
-        number: "A",
-        question:
-          "Why did you choose to apply for a care giving role?",
+          "Is the caregiver/nurse taking proper care of the patient and following the daily care requirements?",
         answerType: "textarea",
       },
       {
-        id: "passion-b",
-        sectionId: "passion",
-        number: "B",
+        id: "random-checkin-5",
+        sectionId: "random-checkin",
+        number: "5",
         question:
-          "Have you cared for elderly or dependent people before? Tell me about your experience.",
+          "Is the patient comfortable with the caregiver/nurse?",
         answerType: "textarea",
       },
       {
-        id: "passion-c",
-        sectionId: "passion",
-        number: "C",
+        id: "random-checkin-6",
+        sectionId: "random-checkin",
+        number: "6",
         question:
-          "What do you enjoy most about this type of work?",
+          "Are you happy with the caregiver/nurse's behaviour, communication, and attitude towards the patient and family?",
         answerType: "textarea",
       },
       {
-        id: "passion-d",
-        sectionId: "passion",
-        number: "D",
+        id: "random-checkin-7",
+        sectionId: "random-checkin",
+        number: "7",
         question:
-          "What challenges do you find most difficult in care giving?",
-        answerType: "textarea",
-      },
-    ],
-  },
-
-  {
-    id: "retention",
-    title: "Clarify How Long They Realistically Plan to Stay",
-    questions: [
-      {
-        id: "retention-a",
-        sectionId: "retention",
-        number: "A",
-        question:
-          "How long do you see yourself working in this position?",
+          "Is there anything you feel the caregiver/nurse should improve or do differently?",
         answerType: "textarea",
       },
       {
-        id: "retention-b",
-        sectionId: "retention",
-        number: "B",
+        id: "random-checkin-8",
+        sectionId: "random-checkin",
+        number: "8",
         question:
-          "Do you see care giving as a long-term career or a temporary step?",
+          "Have you faced any issue recently regarding the care service or the staff?",
         answerType: "textarea",
       },
       {
-        id: "retention-c",
-        sectionId: "retention",
-        number: "C",
+        id: "random-checkin-9",
+        sectionId: "random-checkin",
+        number: "9",
         question:
-          "Where do you see yourself in 2–3 years?",
+          "Is our operations team supporting you properly whenever you need assistance?",
         answerType: "textarea",
       },
       {
-        id: "retention-d",
-        sectionId: "retention",
-        number: "D",
+        id: "random-checkin-10",
+        sectionId: "random-checkin",
+        number: "10",
         question:
-          "If we offered training for skill development, would you stay longer?",
-        answerType: "yesNo",
-      },
-    ],
-  },
-
-  {
-    id: "job-demands",
-    title: "Check Willingness to Meet the Job's Demands",
-    questions: [
-      {
-        id: "job-demands-a",
-        sectionId: "job-demands",
-        number: "A",
-        question:
-          "Are you comfortable working 24-hour shifts / live-in arrangements?",
+          "Is there anything else you would like us to know or anything you would like our team to help you with?",
         answerType: "textarea",
       },
       {
-        id: "job-demands-b",
-        sectionId: "job-demands",
-        number: "B",
-        question: "Holidays if required?",
-        answerType: "textarea",
-      },
-      {
-        id: "job-demands-d",
-        sectionId: "job-demands",
-        number: "D",
-        question:
-          "Do you have any commitments that might require frequent leave?",
-        answerType: "yesNo",
-      },
-    ],
-  },
-
-  {
-    id: "decision",
-    title: "Ensure the Decision to Work Here Is Their Own",
-    questions: [
-      {
-        id: "decision-a",
-        sectionId: "decision",
-        number: "A",
-        question:
-          "Who encouraged you to apply for this job?",
-        answerType: "textarea",
-      },
-      {
-        id: "decision-b",
-        sectionId: "decision",
-        number: "B",
-        question:
-          "Did anyone pressure or force you to take this role?",
-        answerType: "yesNo",
-      },
-      {
-        id: "decision-c",
-        sectionId: "decision",
-        number: "C",
-        question:
-          "Is this job your personal choice, or mainly for family reasons?",
+        id: "random-checkin-11",
+        sectionId: "random-checkin",
+        number: "11",
+        question: "Note:",
         answerType: "textarea",
       },
     ],
-  },
-
-  {
-    id: "short-term",
-    title: "Spot Early Signs of Short-Term Mindset",
-    questions: [
-      {
-        id: "short-term-a",
-        sectionId: "short-term",
-        number: "A",
-        question:
-          "What would make you leave this job early?",
-        answerType: "textarea",
-      },
-      {
-        id: "short-term-b",
-        sectionId: "short-term",
-        number: "B",
-        question:
-          "What keeps you happy in a workplace?",
-        answerType: "textarea",
-      },
-      {
-        id: "short-term-c",
-        sectionId: "short-term",
-        number: "C",
-        question:
-          "Have you left any job suddenly before? Why?",
-        answerType: "textarea",
-      },
-      {
-        id: "short-term-d",
-        sectionId: "short-term",
-        number: "D",
-        question:
-          "If there is a conflict at work, how do you handle it?",
-        answerType: "textarea",
-      },
-    ],
-  },
-];
-
-/* =========================================================
-   WELFARE QUESTIONS
-========================================================= */
-
-const welfareQuestions: QualityQuestion[] = [
-  {
-    id: "welfare-1",
-    sectionId: "welfare",
-    number: "1",
-    question:
-      "Is the food quantity, taste, and timing satisfactory? Is clean water always available?",
-    answerType: "textarea",
-  },
-  {
-    id: "welfare-2",
-    sectionId: "welfare",
-    number: "2",
-    question:
-      "Do you have a proper, safe, and private place to sleep?",
-    answerType: "textarea",
-  },
-  {
-    id: "welfare-3",
-    sectionId: "welfare",
-    number: "3",
-    question:
-      "Is there a clean bathroom with necessary facilities available for your use?",
-    answerType: "textarea",
-  },
-  {
-    id: "welfare-4",
-    sectionId: "welfare",
-    number: "4",
-    question:
-      "Do you get enough rest and breaks during your 24-hour duty?",
-    answerType: "yesNo",
-  },
-  {
-    id: "welfare-5",
-    sectionId: "welfare",
-    number: "5",
-    question:
-      "Are you asked to do work unrelated to care giving duties?",
-    answerType: "yesNo",
-  },
-  {
-    id: "welfare-6",
-    sectionId: "welfare",
-    number: "6",
-    question:
-      "Do you feel physically safe in the client's home?",
-    answerType: "yesNo",
-  },
-  {
-    id: "welfare-7",
-    sectionId: "welfare",
-    number: "7",
-    question:
-      "Have you faced any verbal, physical, or emotional harassment?",
-    answerType: "yesNo",
-  },
-  {
-    id: "welfare-8",
-    sectionId: "welfare",
-    number: "8",
-    question:
-      "Do you know how to report problems and does the company respond quickly?",
-    answerType: "textarea",
-  },
-  {
-    id: "welfare-9",
-    sectionId: "welfare",
-    number: "9",
-    question:
-      "Do you have personal space for rest and private phone calls?",
-    answerType: "yesNo",
-  },
-  {
-    id: "welfare-10",
-    sectionId: "welfare",
-    number: "10",
-    question:
-      "Are you treated with respect by the client's family?",
-    answerType: "yesNo",
-  },
-  {
-    id: "welfare-11",
-    sectionId: "welfare",
-    number: "11",
-    question:
-      "Have you received enough training and feel supported by your supervisor?",
-    answerType: "yesNo",
   },
 ];
 
@@ -523,17 +622,7 @@ const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
  const [feedbackFilter, setFeedbackFilter] = useState<
   "Pending" | "Completed"
 >("Pending");
-  const allSections = useMemo(
-    () => [
-      ...qualitySections,
-      {
-        id: "welfare",
-        title: "Welfare Parameters Analysis",
-        questions: welfareQuestions,
-      },
-    ],
-    []
-  );
+ const allSections = useMemo(() => qualitySections, []);
 
   const currentSection =
     allSections[currentSectionIndex];
@@ -1361,116 +1450,63 @@ const filteredClients = useMemo(() => {
 
         <div className="border-b border-slate-200 p-5">
 
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#1392d3]">
-            {currentSection.id === "welfare"
-              ? "Role 3"
-              : "Role 2"}
-          </p>
+          
 
-          <h2 className="mt-1 text-xl font-bold text-slate-800">
-            {currentSection.title}
-          </h2>
+    
 
-          {currentSection.id === "welfare" && (
-            <p className="mt-1 text-sm text-slate-500">
-              Welfare Parameters Analysis
-            </p>
-          )}
+     <p className="text-xs font-semibold uppercase tracking-wide text-[#1392d3]">
+  Client Feedback
+</p>
+
+<h2 className="mt-1 text-xl font-bold text-slate-800">
+  {currentSection.title}
+</h2>
 
         </div>
 
         <div className="space-y-6 p-5">
 
-          {currentSection.questions.map(
-            (question, index) => {
+         {currentSection.questions.map((question) => {
+  const answer = getAnswer(question.id);
 
-              const answer =
-                getAnswer(question.id);
+  return (
+    <React.Fragment key={question.id}>
+      {question.subHeading && (
+        <div className="pt-2">
+          <h3 className="text-base font-bold text-slate-800">
+            {question.subHeading}
+          </h3>
+        </div>
+      )}
 
-              return (
-                <div
-                  key={question.id}
-                  className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5"
-                >
+      <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
+        <div className="flex gap-4">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1392d3] text-sm font-bold text-white">
+            {question.number}
+          </div>
 
-                  <div className="flex gap-4">
+          <div className="flex-1">
+            <p className="text-sm font-semibold leading-6 text-slate-800">
+              {question.question}
+            </p>
 
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1392d3] text-sm font-bold text-white">
-                      {question.number}
-                    </div>
-
-                    <div className="flex-1">
-
-                      <p className="text-sm font-semibold leading-6 text-slate-800">
-                        {question.question}
-                      </p>
-
-                      <div className="mt-4">
-
-                        {question.answerType ===
-                        "yesNo" ? (
-                          <div className="flex flex-wrap gap-3">
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateAnswer(
-                                  question.id,
-                                  "Yes"
-                                )
-                              }
-                              className={`rounded-xl border px-6 py-3 text-sm font-semibold transition ${
-                                answer === "Yes"
-                                  ? "border-[#50c896] bg-emerald-50 text-[#50c896]"
-                                  : "border-slate-200 bg-white text-slate-600 hover:border-[#50c896]"
-                              }`}
-                            >
-                              Yes
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateAnswer(
-                                  question.id,
-                                  "No"
-                                )
-                              }
-                              className={`rounded-xl border px-6 py-3 text-sm font-semibold transition ${
-                                answer === "No"
-                                  ? "border-[#ff1493] bg-pink-50 text-[#ff1493]"
-                                  : "border-slate-200 bg-white text-slate-600 hover:border-[#ff1493]"
-                              }`}
-                            >
-                              No
-                            </button>
-
-                          </div>
-                        ) : (
-                          <textarea
-                            value={answer}
-                            onChange={(e) =>
-                              updateAnswer(
-                                question.id,
-                                e.target.value
-                              )
-                            }
-                            rows={4}
-                            placeholder="Enter the answer given during the call..."
-                            className="w-full resize-none rounded-xl border border-slate-300 bg-white p-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/10"
-                          />
-                        )}
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                </div>
-              );
-            }
-          )}
+            <div className="mt-4">
+              <textarea
+                value={answer}
+                onChange={(e) =>
+                  updateAnswer(question.id, e.target.value)
+                }
+                rows={4}
+                placeholder="Enter the answer given during the call..."
+                className="w-full resize-none rounded-xl border border-slate-300 bg-white p-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/10"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </React.Fragment>
+  );
+})}
 
         </div>
 

@@ -1959,3 +1959,111 @@ export const GetQualityStatus = async (
     };
   }
 };
+
+export const InsertGoogleReview = async (
+  ImportedInfo: any
+) => {
+  try {
+    // Validate input
+    if (
+      !ImportedInfo ||
+      typeof ImportedInfo !== "object" ||
+      Array.isArray(ImportedInfo)
+    ) {
+      return {
+        success: false,
+        error: "Valid Google Review information is required",
+      };
+    }
+
+    const client = await clientPromise;
+
+    const db = client.db("CurateInformation");
+
+    const GoogleReviewCollection =
+      db.collection("GoogleReview");
+
+    const result =
+      await GoogleReviewCollection.insertOne(ImportedInfo);
+
+    if (!result.acknowledged) {
+      console.error(
+        "InsertGoogleReview: MongoDB insert was not acknowledged"
+      );
+
+      return {
+        success: false,
+        error: "Unable to save Google Review information",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Google Review inserted successfully",
+      insertedId: result.insertedId.toString(),
+    };
+  } catch (error) {
+    console.error(
+      "InsertGoogleReview Error:",
+      error
+    );
+
+    return {
+      success: false,
+      error: "Unable to insert Google Review information",
+    };
+  }
+};
+
+export const GetGoogleReview = async (
+  ImportedMonth: string
+) => {
+  try {
+    // Validate month
+    if (
+      !ImportedMonth ||
+      typeof ImportedMonth !== "string"
+    ) {
+      return {
+        success: false,
+        error: "Valid month is required",
+        data: [],
+      };
+    }
+
+    const client = await clientPromise;
+
+    const db = client.db("CurateInformation");
+
+    const GoogleReviewCollection =
+      db.collection("GoogleReview");
+
+    const result =
+      await GoogleReviewCollection
+        .find({
+          Month: ImportedMonth.trim(),
+        })
+        .sort({
+          CreatedAt: -1,
+        })
+        .toArray();
+
+    return {
+      success: true,
+      message: "Google Reviews fetched successfully",
+      data: result,
+      count: result.length,
+    };
+  } catch (error) {
+    console.error(
+      "GetGoogleReview Error:",
+      error
+    );
+
+    return {
+      success: false,
+      error: "Unable to fetch Google Review information",
+      data: [],
+    };
+  }
+};
