@@ -751,3 +751,14 @@ export const parseFlexibleDate = (value: any): Date | null => {
 
   return isNaN(date.getTime()) ? null : date;
 };
+
+export const GetEmail = (
+  users: any[],
+  userId: string
+): string => {
+  return (
+    users.find(
+      (each: any) => each?.userId === userId
+    )?.Email || ""
+  );
+};
