@@ -2067,3 +2067,97 @@ export const GetGoogleReview = async (
     };
   }
 };
+
+
+;
+
+export const InsertClietFeedBackInfo = async (
+  ImportedInfo: Record<string, unknown>
+) => {
+  try {
+  
+    if (
+      !ImportedInfo ||
+      typeof ImportedInfo !== "object" ||
+      Array.isArray(ImportedInfo)
+    ) {
+      return {
+        success: false,
+        error: "Valid client feedback information is required",
+      };
+    }
+
+    const client = await clientPromise;
+
+    const db = client.db("CurateInformation");
+
+    const ClientFeedBackCollection =
+      db.collection("ClientFeedBack");
+
+    const feedbackDocument = {
+      ...ImportedInfo,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const result = await ClientFeedBackCollection.insertOne(
+      feedbackDocument
+    );
+
+    if (!result.acknowledged) {
+      return {
+        success: false,
+        error: "Client feedback could not be inserted",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Client feedback inserted successfully",
+      insertedId: result.insertedId.toString(),
+    };
+  } catch (error: unknown) {
+    console.error("InsertClietFeedBackInfo Error:", error);
+
+    return {
+      success: false,
+      error: "Unable to insert client feedback information",
+    };
+  }
+};
+
+
+export const GetClietFeedBackInfo = async (ImpMonth: string) => {
+  try {
+    const client = await clientPromise;
+
+    const db = client.db("CurateInformation");
+
+    const ClientFeedBackCollection =
+      db.collection("ClientFeedBack");
+
+    const result = await ClientFeedBackCollection
+      .find(
+        {
+          Month: ImpMonth,
+        }
+      )
+      .toArray();
+
+    return {
+      success: true,
+      message: "Client feedback information fetched successfully",
+      data: result,
+      count: result.length,
+    };
+  } catch (error: unknown) {
+    console.error("GetClietFeedBackInfo Error:", error);
+
+    return {
+      success: false,
+      error: "Unable to fetch client feedback information",
+      data: [],
+      count: 0,
+    };
+  }
+};
