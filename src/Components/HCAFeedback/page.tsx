@@ -1421,10 +1421,14 @@ const completedCount = hcaData.filter(
         }
       );
     }, [
-      ImportedData,
-savedFeedback,
-selectedMonth,
-selectedYear,
+   hcaData,
+  search,
+  statusFilter,
+  feedbackFilter,
+  qualityStatus,
+  selectedMonth,
+  selectedYear,
+  savedFeedback,
     ]);
 
   /* =======================================================
@@ -1667,206 +1671,174 @@ existingFeedback={
               FILTERS
           ================================================= */}
 
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <div className="grid w-full grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
 
-            {/* FEEDBACK STATUS */}
+  {/* FEEDBACK STATUS */}
+  <div className="w-full min-w-0">
+    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+      Feedback Status
+    </p>
 
-            <div className="mt-5 w-full lg:w-auto">
+    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+      <button
+        type="button"
+        onClick={() => setFeedbackFilter("Pending")}
+        className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-semibold transition sm:gap-2 sm:px-4 sm:text-sm ${
+          feedbackFilter === "Pending"
+            ? "bg-[#1392d3] text-white shadow-sm"
+            : "border border-slate-200 bg-white text-slate-600 hover:border-[#1392d3] hover:bg-sky-50"
+        }`}
+      >
+        <Clock3 size={15} className="shrink-0" />
 
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Feedback Status
-              </p>
+        <span className="truncate">
+          Pending
+        </span>
 
-              <div className="flex flex-wrap gap-2 sm:gap-3">
+        <span className="shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[11px] sm:text-xs">
+          {pendingCount}
+        </span>
+      </button>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFeedbackFilter(
-                      "Pending"
-                    )
-                  }
-                  className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm ${
-                    feedbackFilter ===
-                    "Pending"
-                      ? "bg-[#1392d3] text-white shadow-sm"
-                      : "border border-slate-200 bg-white text-slate-600 hover:border-[#1392d3]"
-                  }`}
-                >
-                  <Clock3
-                    size={15}
-                  />
+      <button
+        type="button"
+        onClick={() => setFeedbackFilter("Completed")}
+        className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-semibold transition sm:gap-2 sm:px-4 sm:text-sm ${
+          feedbackFilter === "Completed"
+            ? "bg-[#50c896] text-white shadow-sm"
+            : "border border-slate-200 bg-white text-slate-600 hover:border-[#50c896] hover:bg-emerald-50"
+        }`}
+      >
+        <CheckCircle2 size={15} className="shrink-0" />
 
-                  <span>
-                    Pending
-                  </span>
+        <span className="truncate">
+          Completed
+        </span>
 
-                  <span className="rounded-full bg-white/20 px-2 py-0.5">
-                    {pendingCount}
-                  </span>
-                </button>
+        <span className="shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[11px] sm:text-xs">
+          {completedCount}
+        </span>
+      </button>
+    </div>
+  </div>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFeedbackFilter(
-                      "Completed"
-                    )
-                  }
-                  className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm ${
-                    feedbackFilter ===
-                    "Completed"
-                      ? "bg-[#50c896] text-white shadow-sm"
-                      : "border border-slate-200 bg-white text-slate-600 hover:border-[#50c896]"
-                  }`}
-                >
-                  <CheckCircle2
-                    size={15}
-                  />
+  {/* FEEDBACK MONTH */}
+  <div className="w-full min-w-0">
+    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+      Feedback Month
+    </p>
 
-                  <span>
-                    Completed
-                  </span>
-
-                  <span className="rounded-full bg-white/20 px-2 py-0.5">
-                    {completedCount}
-                  </span>
-                </button>
-
-              </div>
-            </div>
-<div className="mt-5 w-full lg:w-auto">
-
-  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-    Feedback Month 
-  </p> 
-
-  <div className="flex flex-wrap gap-2">
-
-    <select
-      value={selectedMonth}
-      onChange={(e) =>
-        setSelectedMonth(
-          Number(e.target.value)
-        )
-      }
-      className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#1392d3]"
-    >
-      {monthOptions.map(
-        (month) => (
+    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+      <select
+        value={selectedMonth}
+        onChange={(e) => setSelectedMonth(Number(e.target.value))}
+        className="
+          min-w-0 w-full rounded-xl
+          border border-slate-200
+          bg-white px-3 py-2.5
+          text-sm font-semibold text-slate-700
+          outline-none transition
+          focus:border-[#1392d3]
+          focus:ring-2 focus:ring-[#1392d3]/10
+          sm:w-[140px] sm:px-4
+        "
+      >
+        {monthOptions.map((month) => (
           <option
             key={month.value}
             value={month.value}
           >
             {month.label}
           </option>
-        )
-      )}
-    </select>
+        ))}
+      </select>
 
-    <select
-      value={selectedYear}
-      onChange={(e) =>
-        setSelectedYear(
-          Number(e.target.value)
-        )
-      }
-      className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#1392d3]"
-    >
-      {yearOptions.map(
-        (year) => (
+      <select
+        value={selectedYear}
+        onChange={(e) => setSelectedYear(Number(e.target.value))}
+        className="
+          min-w-0 w-full rounded-xl
+          border border-slate-200
+          bg-white px-3 py-2.5
+          text-sm font-semibold text-slate-700
+          outline-none transition
+          focus:border-[#1392d3]
+          focus:ring-2 focus:ring-[#1392d3]/10
+          sm:w-[120px] sm:px-4
+        "
+      >
+        {yearOptions.map((year) => (
           <option
             key={year}
             value={year}
           >
             {year}
           </option>
-        )
-      )}
-    </select>
-
+        ))}
+      </select>
+    </div>
   </div>
+
+  {/* HCA STATUS */}
+  <div className="w-full min-w-0 md:col-span-2 xl:col-span-1">
+    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+      HCA Status
+    </p>
+
+    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+      {(Object.keys(statusConfig) as HCAStatus[]).map((status) => {
+        const config = statusConfig[status];
+        const count = getStatusCount(status);
+        const selected = statusFilter === status;
+
+        return (
+          <button
+            key={status}
+            type="button"
+            onClick={() => setStatusFilter(status)}
+            className={`
+              inline-flex min-w-0
+              items-center justify-center
+              gap-1.5 rounded-xl
+              px-3 py-2.5
+              text-xs font-semibold
+              transition
+              sm:gap-2 sm:px-4 sm:text-sm
+              ${
+                selected
+                  ? config.activeClass
+                  : config.inactiveClass
+              }
+            `}
+          >
+            <span className="shrink-0">
+              {config.icon}
+            </span>
+
+            <span className="truncate">
+              {config.label}
+            </span>
+
+            <span
+              className={`
+                shrink-0 rounded-full
+                px-2 py-0.5 text-[11px] sm:text-xs
+                ${
+                  selected
+                    ? "bg-white/20 text-white"
+                    : config.badgeClass
+                }
+              `}
+            >
+              {count}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+
 </div>
-            {/* HCA STATUS */}
-
-            <div className="mt-5 w-full lg:w-auto">
-
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                HCA Status
-              </p>
-
-              <div className="flex flex-wrap gap-2 sm:gap-3">
-
-                {(
-                  Object.keys(
-                    statusConfig
-                  ) as HCAStatus[]
-                ).map(
-                  (
-                    status
-                  ) => {
-                    const config =
-                      statusConfig[
-                        status
-                      ];
-
-                    const count =
-                      getStatusCount(
-                        status
-                      );
-
-                    const selected =
-                      statusFilter ===
-                      status;
-
-                    return (
-                      <button
-                        key={
-                          status
-                        }
-                        type="button"
-                        onClick={() =>
-                          setStatusFilter(
-                            status
-                          )
-                        }
-                        className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
-                          selected
-                            ? config.activeClass
-                            : config.inactiveClass
-                        }`}
-                      >
-                        {
-                          config.icon
-                        }
-
-                        <span>
-                          {
-                            config.label
-                          }
-                        </span>
-
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs ${
-                            selected
-                              ? "bg-white/20 text-white"
-                              : config.badgeClass
-                          }`}
-                        >
-                          {
-                            count
-                          }
-                        </span>
-                      </button>
-                    );
-                  }
-                )}
-
-              </div>
-
-            </div>
-
-          </div>
 
         </div>
 

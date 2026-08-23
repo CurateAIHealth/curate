@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -16,7 +16,12 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { SetDeploymentInfo, UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
+import { years } from "@/Lib/Content";
+import axios from "axios";
+import LoadingPopup from "../SwitchMonth/page";
+import { LoadingData } from "../Loading/page";
 
 /* =========================================================
    TYPES
@@ -77,10 +82,11 @@ interface QualityCall {
 
   followUpRequired: boolean;
   followUpNotes: string;
+  recording: any
 
-  recording: CallRecording | null;
 
   status: CallStatus;
+  Month: any
 }
 
 /* =========================================================
@@ -587,7 +593,8 @@ interface Client {
 const ClientFeedback: React.FC = () => {
   const [selectedClient, setSelectedClient] =
     useState<Client | null>(null);
-
+  const [finelScreenMessage, setfinelScreenMessage] = useState("")
+  const [recordingMessage, setRecordingMessage] = useState("");
   const [searchClient, setSearchClient] =
     useState<string>("");
 
@@ -611,18 +618,78 @@ const ClientFeedback: React.FC = () => {
 
   const [followUpNotes, setFollowUpNotes] =
     useState<string>("");
-
+  const [isSwitchingMonth, setIsSwitchingMonth] = useState(false);
   const [recording, setRecording] =
     useState<CallRecording | null>(null);
 
   const [saved, setSaved] =
     useState<boolean>(false);
-const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
- 
- const [feedbackFilter, setFeedbackFilter] = useState<
-  "Pending" | "Completed"
->("Pending");
- const allSections = useMemo(() => qualitySections, []);
+  const DeploymentInfo = useSelector((state: any) => state.AdminDeployment)
+  const SearchMonth = useSelector((state: any) => state.FilterMonth)
+  const SearchYear = useSelector((state: any) => state.FilterYear)
+  const [feedbackFilter, setFeedbackFilter] = useState<
+    "Pending" | "Completed"
+  >("Pending");
+  const allSections = useMemo(() => qualitySections, []);
+  const [ClientFeedbackInfo, setClientFeedbackInfo] = useState<any[]>([]);
+  const [isChecking, setIsChecking] = useState(true);
+  const dispatch = useDispatch()
+  const month = `${SearchMonth}-${SearchYear}`;
+  useEffect(() => {
+    const GetClientData = async () => {
+      try {
+
+
+        const response = await axios.post(
+          "/api/ClientFeedBackInfo",
+          {
+            month,
+          }
+        );
+
+        console.log(
+          "Client Feedback Information -----",
+          response
+        );
+
+        if (response.data?.success) {
+          setClientFeedbackInfo(response.data.data || []);
+          setIsChecking(false)
+        } else {
+          setClientFeedbackInfo([]);
+        }
+      } catch (error) {
+        console.error(
+          "Get Client Feedback Error -----",
+          error
+        );
+
+        setClientFeedbackInfo([]);
+      }
+    };
+
+    if (SearchMonth && SearchYear) {
+      GetClientData();
+    }
+  }, [SearchMonth, SearchYear]);
+
+
+  const GetClientFeedback = (
+    month: string,
+    clientId: string,
+    hcaId: string
+  ) => {
+    return (
+      ClientFeedbackInfo.find((each: any) => {
+        return (
+          String(each.Month).trim() === String(month).trim() &&
+          String(each.clientId).trim() === String(clientId).trim() &&
+          String(each.hcaId).trim() === String(hcaId).trim()
+        );
+      }) ?? null
+    );
+  };
+
 
   const currentSection =
     allSections[currentSectionIndex];
@@ -632,64 +699,78 @@ const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
   const progress =
     ((currentSectionIndex + 1) / totalSections) * 100;
 
-const clients: Client[] = useMemo(() => {
-  if (!Array.isArray(DeploymentInfo)) {
-    return [];
-  }
+  const clients: Client[] = useMemo(() => {
+    if (!Array.isArray(DeploymentInfo)) {
+      return [];
+    }
 
-  return DeploymentInfo.map((item: any) => ({
-    id: item.ClientId,
-    name: item.ClientName?.trim() || "Unknown Client",
-    hcaName: item.HCAName?.trim() || "Not Assigned",
-    hcaId: item.HCAId || "",
+    return DeploymentInfo.map((item: any) => ({
+      id: item.ClientId,
+      name: item.ClientName?.trim() || "Unknown Client",
+      hcaName: item.HCAName?.trim() || "Not Assigned",
+      hcaId: item.HCAId || "",
 
-    patientName: item.patientName?.trim() || "Not Available",
+      patientName: item.patientName?.trim() || "Not Available",
 
-    enrollmentDate: item.StartDate || "N/A",
+      enrollmentDate: item.StartDate || "N/A",
 
-    terminated:
-      item.Status === "Terminated"
-        ? item.EndDate || "N/A"
-        : "NA",
+      terminated:
+        item.Status === "Terminated"
+          ? item.EndDate || "N/A"
+          : "NA",
 
-    team: item.Team || 1,
+      team: item.Team || 1,
 
-    note: item.Note || "",
+      note: item.Note || "",
 
-    status: item.Status || "Active",
+      status: item.Status || "Active",
 
-    /*
-     * IMPORTANT:
-     * This field must come from your feedback data.
-     *
-     * If no feedback exists, it is Pending.
-     */
-    feedbackStatus:
-      item.FeedbackStatus === "Completed"
-        ? "Completed"
-        : "Pending",
-  }));
-}, [DeploymentInfo]);
+      /*
+       * IMPORTANT:
+       * This field must come from your feedback data.
+       *
+       * If no feedback exists, it is Pending.
+       */
+      feedbackStatus: GetClientFeedback(
+        `${SearchMonth}-${SearchYear}`,
+        item.ClientId,
+        item.HCAId
 
-const filteredClients = useMemo(() => {
-  return clients.filter((client) => {
-    const matchesSearch =
-      client.name
-        .toLowerCase()
-        .includes(searchClient.toLowerCase()) ||
-      client.patientName
-        .toLowerCase()
-        .includes(searchClient.toLowerCase()) ||
-      client.hcaName
-        .toLowerCase()
-        .includes(searchClient.toLowerCase());
+      )?.status || "Pending",
+      Month: GetClientFeedback(
+        `${SearchMonth}-${SearchYear}`,
+        item.ClientId,
+        item.HCAId
 
-    const matchesStatus =
-      client.feedbackStatus === feedbackFilter;
+      )?.Month || "",
+      compliteInfo: GetClientFeedback(
+        `${SearchMonth}-${SearchYear}`,
+        item.ClientId,
+        item.HCAId
 
-    return matchesSearch && matchesStatus;
-  });
-}, [clients, searchClient, feedbackFilter]);
+      )||null
+    }));
+  }, [DeploymentInfo, ClientFeedbackInfo, SearchMonth, SearchYear]);
+
+  const filteredClients = useMemo(() => {
+    return clients.filter((client) => {
+      const matchesSearch =
+        client.name
+          .toLowerCase()
+          .includes(searchClient.toLowerCase()) ||
+        client.patientName
+          .toLowerCase()
+          .includes(searchClient.toLowerCase()) ||
+        client.hcaName
+          .toLowerCase()
+          .includes(searchClient.toLowerCase());
+
+      const matchesStatus =
+        client.feedbackStatus === feedbackFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [clients, searchClient, feedbackFilter]);
 
   /* =========================================================
      ANSWER HANDLING
@@ -737,10 +818,38 @@ const filteredClients = useMemo(() => {
   /* =========================================================
      RECORDING
   ========================================================= */
+  const GetMonthFreshData = async (r: string) => {
+    try {
 
-  const handleRecordingUpload = (
+      setIsSwitchingMonth(true);
+      dispatch(UpdateMonthFilter(r));
+
+      const userId = localStorage.getItem("UserId");
+
+      const { data } = await axios.post(
+        "/api/AdminPageInfo",
+        {
+          userId,
+          Month: `${SearchYear}-${r}`,
+        }
+      );
+
+
+
+      console.log("Check New Data", data.data.deployedLength);
+
+      dispatch(SetDeploymentInfo(data.data.deployedLength));
+      setIsSwitchingMonth(false);
+
+    } catch (error) {
+      console.error("GetMonthFreshData Error:", error);
+
+    }
+  };
+  const handleRecordingUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
+    setRecordingMessage("Please Wait....")
     const file = event.target.files?.[0];
 
     if (!file) return;
@@ -751,10 +860,23 @@ const filteredClients = useMemo(() => {
       alert("Recording must be less than 100MB.");
       return;
     }
+    const formData = new FormData();
+    formData.append('file', file);
 
+
+
+
+
+    const res = await axios.post('/api/Upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    setRecordingMessage('recording Uploded sucessfully!')
     setRecording({
       file,
-      url: URL.createObjectURL(file),
+      url: res.data.url,
       publicId: null,
       format: file.type,
       duration: null,
@@ -764,7 +886,49 @@ const filteredClients = useMemo(() => {
   /* =========================================================
      START CALL
   ========================================================= */
+const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
+  if (!client) return;
 
+  const savedFeedback = client.compliteInfo;
+
+  console.log("Opening Completed Feedback:", savedFeedback);
+
+  // Load previously saved answers
+  setAnswers(
+    Array.isArray(savedFeedback?.answers)
+      ? savedFeedback.answers
+      : []
+  );
+
+  // Load final feedback fields
+  setOverallFeedback(savedFeedback?.overallFeedback || "");
+  setConcerns(savedFeedback?.concerns || "");
+  setFollowUpRequired(
+    Boolean(savedFeedback?.followUpRequired)
+  );
+  setFollowUpNotes(
+    savedFeedback?.followUpNotes || ""
+  );
+
+  // Load recording if available
+  if (savedFeedback?.recording) {
+    setRecording({
+      file: null,
+      url: savedFeedback.recording,
+      publicId: null,
+      format: null,
+      duration: null,
+    });
+  } else {
+    setRecording(null);
+  }
+
+  // Open questionnaire
+  setSelectedClient(client);
+  setCurrentSectionIndex(0);
+  setCallStarted(true);
+  setSaved(false);
+};
   const startCall = () => {
     if (!selectedClient) return;
 
@@ -779,7 +943,7 @@ const filteredClients = useMemo(() => {
 
   const saveQualityCall = async () => {
     if (!selectedClient) return;
-
+    setfinelScreenMessage("Please Wait.......")
     const qualityCall: QualityCall = {
       clientId: selectedClient.id,
       clientName: selectedClient.name,
@@ -798,392 +962,448 @@ const filteredClients = useMemo(() => {
       followUpRequired,
       followUpNotes,
 
-      recording,
+      recording: recording?.url,
 
       status: "Completed",
+      Month: `${SearchMonth}-${SearchYear}`
     };
 
     console.log("QUALITY CALL:", qualityCall);
 
-    /*
-     * Later:
-     *
-     * 1. Upload recording to Cloudinary
-     * 2. Get secure_url + public_id
-     * 3. Save the QualityCall document to MongoDB
-     */
-
+    const PostClientFeedBack = await axios.post("/api/ClientFeedback", {
+      qualityCall
+    })
+    console.log("Check Data Post Status----", PostClientFeedBack)
     setSaved(true);
   };
 
   /* =========================================================
      CLIENT SELECTION SCREEN
   ========================================================= */
+  if (isChecking) {
+    return (
+      <LoadingData />
 
+    );
+  }
   if (!callStarted) {
     return (
       <div className="space-y-6">
 
         {/* Header */}
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800">
-            Client Quality Call
-          </h2>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          {/* Header */}
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
+              Client Quality Call
+            </h2>
 
-          <p className="mt-1 text-sm text-slate-500">
-            Conduct the standard quality and retention
-            questionnaire with the client/HCA.
-          </p>
+            <p className="mt-1 max-w-2xl text-sm leading-5 text-slate-500">
+              Conduct the standard quality and retention questionnaire
+              with the client/HCA.
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex sm:shrink-0">
+            <button
+              type="button"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-xl border border-[#1392d3]/20 bg-[#1392d3]/10 px-4 py-2.5 text-sm font-semibold text-[#1392d3] transition hover:bg-[#1392d3] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#1392d3]/30"
+            >
+              Replacements
+            </button>
+
+            <button
+              type="button"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-xl border border-[#ff1493]/20 bg-[#ff1493]/10 px-4 py-2.5 text-sm font-semibold text-[#ff1493] transition hover:bg-[#ff1493] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#ff1493]/30"
+            >
+              Terminations
+            </button>
+          </div>
         </div>
 
         {/* Client Selection */}
         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-       
+
 
           <div className="p-5">
 
-        <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
-  {/* Left: Search */}
-  <div className="relative w-full max-w-md">
-    <Search
-      size={18}
-      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-    />
+              {/* Left: Search */}
+              <div className="relative w-full max-w-md">
+                <Search
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
 
-    <input
-      value={searchClient}
-      onChange={(e) => setSearchClient(e.target.value)}
-      placeholder="Search client..."
-      className="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none focus:border-[#1392d3] focus:bg-white"
-    />
-  </div>
-
-  {/* Right: Feedback Filters */}
-  <div className="flex flex-wrap items-center gap-3">
-
-    {/* Pending */}
-    <button
-      type="button"
-      onClick={() => setFeedbackFilter("Pending")}
-      className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition ${
-        feedbackFilter === "Pending"
-          ? "bg-[#1392d3] text-white shadow-sm"
-          : "border border-slate-200 bg-white text-slate-600 hover:border-[#1392d3]"
-      }`}
-    >
-      <Clock3 size={17} />
-
-      Pending
-
-      <span
-        className={`rounded-full px-2 py-0.5 text-xs ${
-          feedbackFilter === "Pending"
-            ? "bg-white/20 text-white"
-            : "bg-slate-100 text-slate-600"
-        }`}
-      >
-        {
-          clients.filter(
-            (client) => client.feedbackStatus === "Pending"
-          ).length
-        }
-      </span>
-    </button>
-
-    {/* Completed */}
-    <button
-      type="button"
-      onClick={() => setFeedbackFilter("Completed")}
-      className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition ${
-        feedbackFilter === "Completed"
-          ? "bg-[#50c896] text-white shadow-sm"
-          : "border border-slate-200 bg-white text-slate-600 hover:border-[#50c896]"
-      }`}
-    >
-      <CheckCircle2 size={17} />
-
-      Completed
-
-      <span
-        className={`rounded-full px-2 py-0.5 text-xs ${
-          feedbackFilter === "Completed"
-            ? "bg-white/20 text-white"
-            : "bg-slate-100 text-slate-600"
-        }`}
-      >
-        {
-          clients.filter(
-            (client) => client.feedbackStatus === "Completed"
-          ).length
-        }
-      </span>
-    </button>
-
-  </div>
-</div>
-       
-
-{/* Feedback Table */}
-<div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-  <div className="overflow-x-auto">
-    <table className="w-full min-w-[1200px] border-collapse text-sm">
-      <thead>
-        <tr className="border-b border-slate-200 bg-slate-50">
-          <th className="px-4 py-3 text-left font-semibold text-slate-600">
-            S.no
-          </th>
-
-          <th className="px-4 py-3 text-left font-semibold text-slate-600">
-            Client name
-          </th>
-
-          <th className="px-4 py-3 text-left font-semibold text-slate-600">
-            Pt name
-          </th>
-
-          <th className="px-4 py-3 text-left font-semibold text-slate-600">
-            Enrollment date
-          </th>
-
-          <th className="px-4 py-3 text-left font-semibold text-slate-600">
-            Terminated
-          </th>
-
-          <th className="px-4 py-3 text-left font-semibold text-slate-600">
-            Team
-          </th>
-
-          <th className="px-4 py-3 text-left font-semibold text-slate-600">
-            Note
-          </th>
-
-          <th className="px-4 py-3 text-left font-semibold text-slate-600">
-            Status
-          </th>
-
-          <th className="px-4 py-3 text-left font-semibold text-slate-600">
-            Feedback
-          </th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {filteredClients.length > 0 ? (
-          filteredClients.map((client, index) => {
-            const isSelected =
-              selectedClient?.id === client.id;
-
-            return (
-              <tr
-                key={index}
-                onClick={() => setSelectedClient(client)}
-                className={`cursor-pointer border-b border-slate-100 transition last:border-b-0 ${
-                  isSelected
-                    ? "bg-sky-50"
-                    : "hover:bg-slate-50"
-                }`}
-              >
-                {/* S.no */}
-                <td className="px-4 py-4 font-medium text-slate-600">
-                  {index + 1}
-                </td>
-
-                {/* Client */}
-                <td className="px-4 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#1392d3]">
-                      <UserRound size={17} />
-                    </div>
-
-                    <div>
-                      <p className="font-semibold text-slate-800">
-                        {client.name}
-                      </p>
-
-                      <p className="mt-0.5 text-xs text-slate-400">
-                        HCA: {client.hcaName}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-
-                {/* Patient */}
-                <td className="px-4 py-4 text-slate-700">
-                  {client.patientName}
-                </td>
-
-                {/* Enrollment */}
-                <td className="px-4 py-4 text-slate-600">
-                  {client.enrollmentDate}
-                </td>
-
-                {/* Terminated */}
-                <td className="px-4 py-4 text-slate-600">
-                  {client.terminated}
-                </td>
-
-                {/* Team */}
-                <td className="px-4 py-4">
-  <span className="inline-flex items-center rounded-lg border border-[#1392d3]/20 bg-[#1392d3]/10 px-3 py-1.5 text-xs font-semibold text-[#1392d3]">
-    {client.team}
-  </span>
-</td>
-
-                {/* Note */}
-              <td className="max-w-[220px] px-4 py-4">
-  {client.note ? (
-    <span className="text-sm text-slate-600">
-      {client.note}
-    </span>
-  ) : (
-    <button
-      type="button"
-      onClick={() => {
-        // Add your note handler here
-        console.log("Add note for:", client);
-      }}
-      className="inline-flex items-center gap-2 rounded-lg border border-[#1392d3]/30 bg-[#1392d3]/10 px-3 py-2 text-xs font-semibold text-[#1392d3] transition hover:bg-[#1392d3] hover:text-white"
-    >
-      + Add Note
-    </button>
-  )}
-</td>
-
-                {/* Status */}
-                <td className="px-4 py-4">
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                      client.status === "Active"
-                        ? "bg-emerald-50 text-[#50c896]"
-                        : client.status === "Terminated"
-                        ? "bg-pink-50 text-[#ff1493]"
-                        : "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {client.status}
-                  </span>
-                </td>
-
-                {/* Feedback */}
-                <td className="px-4 py-4">
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setSelectedClient(client);
-                    }}
-                    className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition ${
-                      client.feedbackStatus === "Completed"
-                        ? "bg-emerald-50 text-[#50c896] hover:bg-emerald-100"
-                        : "bg-sky-50 text-[#1392d3] hover:bg-sky-100"
-                    }`}
-                  >
-                    {client.feedbackStatus === "Completed" ? (
-                      <>
-                        <CheckCircle2 size={15} />
-                        Completed
-                      </>
-                    ) : (
-                      <>
-                        <Mic size={15} />
-                        Start FeedBack
-                      </>
-                    )}
-                  </button>
-                </td>
-              </tr>
-            );
-          })
-        ) : (
-          <tr>
-            <td
-              colSpan={9}
-              className="px-6 py-12 text-center"
-            >
-              <div className="flex flex-col items-center">
-                <div className="rounded-full bg-slate-100 p-4 text-slate-400">
-                  <Search size={24} />
-                </div>
-
-                <p className="mt-3 font-semibold text-slate-700">
-                  No {feedbackFilter.toLowerCase()} feedback
-                </p>
-
-                <p className="mt-1 text-sm text-slate-400">
-                  No clients match your current search or filter.
-                </p>
+                <input
+                  value={searchClient}
+                  onChange={(e) => setSearchClient(e.target.value)}
+                  placeholder="Search client..."
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none focus:border-[#1392d3] focus:bg-white"
+                />
               </div>
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  </div>
-</div>
+
+              {/* Right: Feedback Filters */}
+              <div className="flex flex-wrap items-center gap-3">
+
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                  <select
+                    value={SearchMonth}
+                    onChange={(e) => GetMonthFreshData(e.target.value)}
+                    className="
+        w-full sm:w-[140px] h-[40px]
+        rounded-xl border border-gray-300
+        px-3 text-sm bg-white text-gray-800
+        focus:outline-none focus:ring-2 focus:ring-indigo-500
+      "
+                  >
+
+                    <option value="">All Months</option>
+                    {[...Array(12)].map((_, i) => (
+                      <option key={i} value={`${i + 1}`}>
+                        {new Date(0, i).toLocaleString("default", { month: "long" })}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Year */}
+                  <select
+                    value={SearchYear}
+                    onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
+                    className="
+        w-full sm:w-[120px] h-[40px]
+        rounded-xl border border-gray-300
+        px-3 text-sm bg-white text-gray-800
+        focus:outline-none focus:ring-2 focus:ring-indigo-500
+      "
+                  >
+                    <option value="">All Years</option>
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {/* Pending */}
+                <button
+                  type="button"
+                  onClick={() => setFeedbackFilter("Pending")}
+                  className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition ${feedbackFilter === "Pending"
+                      ? "bg-[#1392d3] text-white shadow-sm"
+                      : "border border-slate-200 bg-white text-slate-600 hover:border-[#1392d3]"
+                    }`}
+                >
+                  <Clock3 size={17} />
+
+                  Pending
+
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs ${feedbackFilter === "Pending"
+                        ? "bg-white/20 text-white"
+                        : "bg-slate-100 text-slate-600"
+                      }`}
+                  >
+                    {
+                      clients.filter(
+                        (client) => client.feedbackStatus === "Pending"
+                      ).length
+                    }
+                  </span>
+                </button>
+
+                {/* Completed */}
+                <button
+                  type="button"
+                  onClick={() => setFeedbackFilter("Completed")}
+                  className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition ${feedbackFilter === "Completed"
+                      ? "bg-[#50c896] text-white shadow-sm"
+                      : "border border-slate-200 bg-white text-slate-600 hover:border-[#50c896]"
+                    }`}
+                >
+                  <CheckCircle2 size={17} />
+
+                  Completed
+
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs ${feedbackFilter === "Completed"
+                        ? "bg-white/20 text-white"
+                        : "bg-slate-100 text-slate-600"
+                      }`}
+                  >
+                    {
+                      clients.filter(
+                        (client) => client.feedbackStatus === "Completed"
+                      ).length
+                    }
+                  </span>
+                </button>
+
+              </div>
+            </div>
+            <LoadingPopup
+              open={isSwitchingMonth}
+              title="Switching Month"
+              description="Updating dashboard data..."
+            />
+
+            {/* Feedback Table */}
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1200px] border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50">
+                      <th className="px-4 py-3 text-left font-semibold text-slate-600">
+                        S.no
+                      </th>
+
+                      <th className="px-4 py-3 text-left font-semibold text-slate-600">
+                        Client name
+                      </th>
+
+                      <th className="px-4 py-3 text-left font-semibold text-slate-600">
+                        Pt name
+                      </th>
+
+                      <th className="px-4 py-3 text-left font-semibold text-slate-600">
+                        Enrollment date
+                      </th>
+
+                      {/* <th className="px-4 py-3 text-left font-semibold text-slate-600">
+            Terminated
+          </th> */}
+
+                      <th className="px-4 py-3 text-left font-semibold text-slate-600">
+                        Team
+                      </th>
+
+
+
+                      <th className="px-4 py-3 text-left font-semibold text-slate-600">
+                        Status
+                      </th>
+
+                      <th className="px-4 py-3 text-left font-semibold text-slate-600">
+                        Feedback
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {filteredClients.length > 0 ? (
+                      filteredClients.map((client, index) => {
+                        const isSelected =
+                          selectedClient?.id === client.id;
+
+                        return (
+                          <tr
+                            key={index}
+                            onClick={() => setSelectedClient(client)}
+                            className={`cursor-pointer border-b border-slate-100 transition last:border-b-0 ${isSelected
+                                ? "bg-sky-50"
+                                : "hover:bg-slate-50"
+                              }`}
+                          >
+                            {/* S.no */}
+                            <td className="px-4 py-4 font-medium text-slate-600">
+                              {index + 1}
+                            </td>
+
+                            {/* Client */}
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-[#1392d3]">
+                                  <UserRound size={17} />
+                                </div>
+
+                                <div>
+                                  <p className="font-semibold text-slate-800">
+                                    {client.name}
+                                  </p>
+
+                                  <p className="mt-0.5 text-xs text-slate-400">
+                                    HCA: {client.hcaName}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Patient */}
+                            <td className="px-4 py-4 text-slate-700">
+                              {client.patientName}
+                            </td>
+
+                            {/* Enrollment */}
+                            <td className="px-4 py-4 text-slate-600">
+                              {client.enrollmentDate}
+                            </td>
+
+                            {/* Terminated */}
+                            {/* <td className="px-4 py-4 text-slate-600">
+                  {client.terminated}
+                </td> */}
+
+                            {/* Team */}
+                            <td className="px-4 py-4">
+                              <span className="inline-flex items-center rounded-lg border border-[#1392d3]/20 bg-[#1392d3]/10 px-3 py-1.5 text-xs font-semibold text-[#1392d3]">
+                                {client.team}
+                              </span>
+                            </td>
+
+
+                            {/* Status */}
+                            <td className="px-4 py-4">
+                              <span
+                                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${client.status === "Active"
+                                    ? "bg-emerald-50 text-[#50c896]"
+                                    : client.status === "Terminated"
+                                      ? "bg-pink-50 text-[#ff1493]"
+                                      : "bg-slate-100 text-slate-600"
+                                  }`}
+                              >
+                                {client.status}
+                              </span>
+                            </td>
+
+                            {/* Feedback */}
+                            <td className="px-4 py-4">
+                              {client.feedbackStatus === "Completed" ? (
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+  event.stopPropagation();
+
+  openCompletedFeedback(client);
+}}
+                                  className="
+        inline-flex items-center gap-2
+        rounded-lg px-4 py-2
+        text-xs font-semibold
+        bg-emerald-50
+        text-[#50c896]
+        hover:bg-emerald-100
+        transition
+      "
+                                >
+                                  <CheckCircle2 size={15} />
+                                  Completed
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedClient(client);
+                                  }}
+                                  className="
+        inline-flex items-center gap-2
+        rounded-lg px-4 py-2
+        text-xs font-semibold
+        bg-sky-50
+        text-[#1392d3]
+        hover:bg-sky-100
+        transition
+      "
+                                >
+                                  <Mic size={15} />
+                                  Start Feedback
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={9}
+                          className="px-6 py-12 text-center"
+                        >
+                          <div className="flex flex-col items-center">
+                            <div className="rounded-full bg-slate-100 p-4 text-slate-400">
+                              <Search size={24} />
+                            </div>
+
+                            <p className="mt-3 font-semibold text-slate-700">
+                              No {feedbackFilter.toLowerCase()} feedback
+                            </p>
+
+                            <p className="mt-1 text-sm text-slate-400">
+                              No clients match your current search or filter.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
           </div>
 
         </div>
 
         {/* Selected Client */}
-    {selectedClient && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-    <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        {selectedClient && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
 
-      {/* Close Button */}
-      <button
-        type="button"
-        onClick={() => setSelectedClient(null)}
-        className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
-      >
-        ×
-      </button>
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setSelectedClient(null)}
+                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
+              >
+                ×
+              </button>
 
-      {/* Header */}
-      <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Selected Client
-        </p>
+              {/* Header */}
+              <div className="mb-6">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Selected Client
+                </p>
 
-        <h3 className="mt-2 text-xl font-bold text-slate-800">
-          {selectedClient.name}
-        </h3>
+                <h3 className="mt-2 text-xl font-bold text-slate-800">
+                  {selectedClient.name}
+                </h3>
 
-        <p className="mt-2 text-sm text-slate-500">
-          Assigned HCA:{" "}
-          <span className="font-semibold text-slate-700">
-            {selectedClient.hcaName}
-          </span>
-        </p>
-      </div>
+                <p className="mt-2 text-sm text-slate-500">
+                  Assigned HCA:{" "}
+                  <span className="font-semibold text-slate-700">
+                    {selectedClient.hcaName}
+                  </span>
+                </p>
+              </div>
 
-      {/* Divider */}
-      <div className="mb-5 h-px bg-slate-100" />
+              {/* Divider */}
+              <div className="mb-5 h-px bg-slate-100" />
 
-      {/* Action */}
-      <button
-        type="button"
-        onClick={startCall}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1392d3] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-      >
-        <Mic size={18} />
-        Start Quality Call
-      </button>
+              {/* Action */}
+              <button
+                type="button"
+                onClick={startCall}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1392d3] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+              >
+                <Mic size={18} />
+                Start Quality Call
+              </button>
 
-      {/* Cancel */}
-      <button
-        type="button"
-        onClick={() => setSelectedClient(null)}
-        className="mt-3 w-full rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
-      >
-        Cancel
-      </button>
+              {/* Cancel */}
+              <button
+                type="button"
+                onClick={() => setSelectedClient(null)}
+                className="mt-3 w-full rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Cancel
+              </button>
 
-    </div>
-  </div>
-)}
+            </div>
+          </div>
+        )}
 
       </div>
     );
@@ -1293,6 +1513,8 @@ const filteredClients = useMemo(() => {
         followUpNotes={followUpNotes}
         setFollowUpNotes={setFollowUpNotes}
         recording={recording}
+        recordingMessage={recordingMessage}
+        finelScreenMessage={finelScreenMessage}
         onRecordingUpload={handleRecordingUpload}
         onBack={() =>
           setCurrentSectionIndex(totalSections - 1)
@@ -1408,13 +1630,12 @@ const filteredClients = useMemo(() => {
                 onClick={() =>
                   setCurrentSectionIndex(index)
                 }
-                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition ${
-                  isActive
+                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition ${isActive
                     ? "bg-[#1392d3] text-white"
                     : isCompleted
-                    ? "bg-emerald-50 text-[#50c896]"
-                    : "bg-slate-50 text-slate-500 hover:bg-slate-100"
-                }`}
+                      ? "bg-emerald-50 text-[#50c896]"
+                      : "bg-slate-50 text-slate-500 hover:bg-slate-100"
+                  }`}
               >
 
                 {isCompleted ? (
@@ -1450,63 +1671,63 @@ const filteredClients = useMemo(() => {
 
         <div className="border-b border-slate-200 p-5">
 
-          
 
-    
 
-     <p className="text-xs font-semibold uppercase tracking-wide text-[#1392d3]">
-  Client Feedback
-</p>
 
-<h2 className="mt-1 text-xl font-bold text-slate-800">
-  {currentSection.title}
-</h2>
+
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#1392d3]">
+            Client Feedback
+          </p>
+
+          <h2 className="mt-1 text-xl font-bold text-slate-800">
+            {currentSection.title}
+          </h2>
 
         </div>
 
         <div className="space-y-6 p-5">
 
-         {currentSection.questions.map((question) => {
-  const answer = getAnswer(question.id);
+          {currentSection.questions.map((question) => {
+            const answer = getAnswer(question.id);
 
-  return (
-    <React.Fragment key={question.id}>
-      {question.subHeading && (
-        <div className="pt-2">
-          <h3 className="text-base font-bold text-slate-800">
-            {question.subHeading}
-          </h3>
-        </div>
-      )}
+            return (
+              <React.Fragment key={question.id}>
+                {question.subHeading && (
+                  <div className="pt-2">
+                    <h3 className="text-base font-bold text-slate-800">
+                      {question.subHeading}
+                    </h3>
+                  </div>
+                )}
 
-      <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
-        <div className="flex gap-4">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1392d3] text-sm font-bold text-white">
-            {question.number}
-          </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
+                  <div className="flex gap-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1392d3] text-sm font-bold text-white">
+                      {question.number}
+                    </div>
 
-          <div className="flex-1">
-            <p className="text-sm font-semibold leading-6 text-slate-800">
-              {question.question}
-            </p>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold leading-6 text-slate-800">
+                        {question.question}
+                      </p>
 
-            <div className="mt-4">
-              <textarea
-                value={answer}
-                onChange={(e) =>
-                  updateAnswer(question.id, e.target.value)
-                }
-                rows={4}
-                placeholder="Enter the answer given during the call..."
-                className="w-full resize-none rounded-xl border border-slate-300 bg-white p-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/10"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </React.Fragment>
-  );
-})}
+                      <div className="mt-4">
+                        <textarea
+                          value={answer}
+                          onChange={(e) =>
+                            updateAnswer(question.id, e.target.value)
+                          }
+                          rows={4}
+                          placeholder="Enter the answer given during the call..."
+                          className="w-full resize-none rounded-xl border border-slate-300 bg-white p-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/10"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </React.Fragment>
+            );
+          })}
 
         </div>
 
@@ -1537,7 +1758,7 @@ const filteredClients = useMemo(() => {
             className="inline-flex items-center gap-2 rounded-xl bg-[#1392d3] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
           >
             {currentSectionIndex ===
-            totalSections - 1
+              totalSections - 1
               ? "Final Summary"
               : "Next"}
 
@@ -1575,6 +1796,8 @@ interface FinalCallScreenProps {
     React.SetStateAction<string>
   >;
   recording: CallRecording | null;
+  recordingMessage: string;
+  finelScreenMessage: string;
   onRecordingUpload: (
     event: React.ChangeEvent<HTMLInputElement>
   ) => void;
@@ -1595,268 +1818,283 @@ const FinalCallScreen: React.FC<
   followUpNotes,
   setFollowUpNotes,
   recording,
+  recordingMessage,
+  finelScreenMessage,
   onRecordingUpload,
   onBack,
   onSave,
 }) => {
-  return (
-    <div className="space-y-6">
 
-      {/* Header */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    return (
+      <div className="space-y-6">
 
-        <div className="flex items-center gap-3">
+        {/* Header */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 
-          <div className="rounded-xl bg-emerald-50 p-3 text-[#50c896]">
-            <CheckCircle2 size={22} />
-          </div>
+          <div className="flex items-center gap-3">
 
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">
-              Quality Call Summary
-            </h2>
+            <div className="rounded-xl bg-emerald-50 p-3 text-[#50c896]">
+              <CheckCircle2 size={22} />
+            </div>
 
-            <p className="text-sm text-slate-500">
-              Complete the final details before saving the call.
-            </p>
-          </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">
+                Quality Call Summary
+              </h2>
 
-        </div>
-
-      </div>
-
-      {/* Client */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-        <div className="grid gap-4 md:grid-cols-3">
-
-          <InfoBox
-            label="Client"
-            value={selectedClient.name}
-          />
-
-          <InfoBox
-            label="Assigned HCA"
-            value={selectedClient.hcaName}
-          />
-
-          <InfoBox
-            label="Call Date"
-            value={new Date().toLocaleDateString("en-IN")}
-          />
-
-        </div>
-
-      </div>
-
-      {/* Overall Feedback */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-        <label className="text-sm font-bold text-slate-800">
-          Overall Feedback
-        </label>
-
-        <p className="mt-1 text-xs text-slate-400">
-          Add the overall outcome of the quality call.
-        </p>
-
-        <textarea
-          value={overallFeedback}
-          onChange={(e) =>
-            setOverallFeedback(e.target.value)
-          }
-          rows={5}
-          placeholder="Enter overall feedback..."
-          className="mt-4 w-full resize-none rounded-xl border border-slate-300 p-4 text-sm outline-none focus:border-[#1392d3]"
-        />
-
-      </div>
-
-      {/* Concerns */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-        <label className="text-sm font-bold text-slate-800">
-          Concerns / Issues
-        </label>
-
-        <textarea
-          value={concerns}
-          onChange={(e) =>
-            setConcerns(e.target.value)
-          }
-          rows={4}
-          placeholder="Enter any concerns or issues..."
-          className="mt-4 w-full resize-none rounded-xl border border-slate-300 p-4 text-sm outline-none focus:border-[#ff1493]"
-        />
-
-      </div>
-
-      {/* Follow Up */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-        <p className="text-sm font-bold text-slate-800">
-          Follow-up Required?
-        </p>
-
-        <div className="mt-4 flex gap-3">
-
-          <button
-            type="button"
-            onClick={() =>
-              setFollowUpRequired(true)
-            }
-            className={`rounded-xl border px-6 py-3 text-sm font-semibold ${
-              followUpRequired
-                ? "border-[#ff1493] bg-pink-50 text-[#ff1493]"
-                : "border-slate-200 text-slate-600"
-            }`}
-          >
-            Yes
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              setFollowUpRequired(false)
-            }
-            className={`rounded-xl border px-6 py-3 text-sm font-semibold ${
-              !followUpRequired
-                ? "border-[#50c896] bg-emerald-50 text-[#50c896]"
-                : "border-slate-200 text-slate-600"
-            }`}
-          >
-            No
-          </button>
-
-        </div>
-
-        {followUpRequired && (
-          <textarea
-            value={followUpNotes}
-            onChange={(e) =>
-              setFollowUpNotes(e.target.value)
-            }
-            rows={4}
-            placeholder="What follow-up is required?"
-            className="mt-4 w-full resize-none rounded-xl border border-slate-300 p-4 text-sm outline-none focus:border-[#ff1493]"
-          />
-        )}
-
-      </div>
-
-      {/* Recording */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-        <div className="mb-4">
-
-          <h3 className="flex items-center gap-2 text-sm font-bold text-slate-800">
-            <FileAudio
-              size={18}
-              className="text-[#ff1493]"
-            />
-            Call Recording
-          </h3>
-
-          <p className="mt-1 text-xs text-slate-400">
-            Upload the recording of the completed quality call.
-          </p>
-
-        </div>
-
-        {!recording ? (
-          <>
-            <input
-              type="file"
-              id="call-recording"
-              accept="audio/*"
-              onChange={onRecordingUpload}
-              className="hidden"
-            />
-
-            <label
-              htmlFor="call-recording"
-              className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center transition hover:border-[#ff1493] hover:bg-pink-50"
-            >
-
-              <div className="rounded-2xl bg-pink-50 p-4 text-[#ff1493]">
-                <Upload size={24} />
-              </div>
-
-              <p className="mt-3 font-semibold text-slate-700">
-                Upload Call Recording
+              <p className="text-sm text-slate-500">
+                Complete the final details before saving the call.
               </p>
-
-              <p className="mt-1 text-xs text-slate-400">
-                MP3, WAV, M4A, WEBM
-              </p>
-
-            </label>
-          </>
-        ) : (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-
-            <div className="flex items-center gap-3">
-
-              <div className="rounded-xl bg-white p-3 text-[#50c896]">
-                <FileAudio size={22} />
-              </div>
-
-              <div className="min-w-0 flex-1">
-
-                <p className="truncate text-sm font-semibold text-slate-800">
-                  {recording.file?.name}
-                </p>
-
-                <p className="mt-1 text-xs text-slate-500">
-                  Recording attached
-                </p>
-
-              </div>
-
-              {recording.url && (
-                <a
-                  href={recording.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg bg-white p-2 text-[#1392d3]"
-                >
-                  <Play size={16} />
-                </a>
-              )}
-
             </div>
 
           </div>
-        )}
+
+        </div>
+
+        {/* Client */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+
+          <div className="grid gap-4 md:grid-cols-3">
+
+            <InfoBox
+              label="Client"
+              value={selectedClient.name}
+            />
+
+            <InfoBox
+              label="Assigned HCA"
+              value={selectedClient.hcaName}
+            />
+
+            <InfoBox
+              label="Call Date"
+              value={new Date().toLocaleDateString("en-IN")}
+            />
+
+          </div>
+
+        </div>
+
+        {/* Overall Feedback */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+
+          <label className="text-sm font-bold text-slate-800">
+            Overall Feedback
+          </label>
+
+          <p className="mt-1 text-xs text-slate-400">
+            Add the overall outcome of the quality call.
+          </p>
+
+          <textarea
+            value={overallFeedback}
+            onChange={(e) =>
+              setOverallFeedback(e.target.value)
+            }
+            rows={5}
+            placeholder="Enter overall feedback..."
+            className="mt-4 w-full resize-none rounded-xl border border-slate-300 p-4 text-sm outline-none focus:border-[#1392d3]"
+          />
+
+        </div>
+
+        {/* Concerns */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+
+          <label className="text-sm font-bold text-slate-800">
+            Concerns / Issues
+          </label>
+
+          <textarea
+            value={concerns}
+            onChange={(e) =>
+              setConcerns(e.target.value)
+            }
+            rows={4}
+            placeholder="Enter any concerns or issues..."
+            className="mt-4 w-full resize-none rounded-xl border border-slate-300 p-4 text-sm outline-none focus:border-[#ff1493]"
+          />
+
+        </div>
+
+        {/* Follow Up */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+
+          <p className="text-sm font-bold text-slate-800">
+            Follow-up Required?
+          </p>
+
+          <div className="mt-4 flex gap-3">
+
+            <button
+              type="button"
+              onClick={() =>
+                setFollowUpRequired(true)
+              }
+              className={`rounded-xl border px-6 py-3 text-sm font-semibold ${followUpRequired
+                  ? "border-[#ff1493] bg-pink-50 text-[#ff1493]"
+                  : "border-slate-200 text-slate-600"
+                }`}
+            >
+              Yes
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setFollowUpRequired(false)
+              }
+              className={`rounded-xl border px-6 py-3 text-sm font-semibold ${!followUpRequired
+                  ? "border-[#50c896] bg-emerald-50 text-[#50c896]"
+                  : "border-slate-200 text-slate-600"
+                }`}
+            >
+              No
+            </button>
+
+          </div>
+
+          {followUpRequired && (
+            <textarea
+              value={followUpNotes}
+              onChange={(e) =>
+                setFollowUpNotes(e.target.value)
+              }
+              rows={4}
+              placeholder="What follow-up is required?"
+              className="mt-4 w-full resize-none rounded-xl border border-slate-300 p-4 text-sm outline-none focus:border-[#ff1493]"
+            />
+          )}
+
+        </div>
+
+        {/* Recording */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+
+          <div className="mb-4">
+
+            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-800">
+              <FileAudio
+                size={18}
+                className="text-[#ff1493]"
+              />
+              Call Recording
+            </h3>
+
+            <p className="mt-1 text-xs text-slate-400">
+              Upload the recording of the completed quality call.
+            </p>
+
+          </div>
+
+          {!recording ? (
+            <>
+              <input
+                type="file"
+                id="call-recording"
+                accept="audio/*"
+                onChange={onRecordingUpload}
+                className="hidden"
+              />
+
+              <label
+                htmlFor="call-recording"
+                className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center transition hover:border-[#ff1493] hover:bg-pink-50"
+              >
+
+                <div className="rounded-2xl bg-pink-50 p-4 text-[#ff1493]">
+                  <Upload size={24} />
+                </div>
+
+                <p className="mt-3 font-semibold text-slate-700">
+                  Upload Call Recording
+                </p>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  MP3, WAV, M4A, WEBM
+                </p>
+
+              </label>
+            </>
+          ) : (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+
+              <div className="flex items-center gap-3">
+
+                <div className="rounded-xl bg-white p-3 text-[#50c896]">
+                  <FileAudio size={22} />
+                </div>
+
+                <div className="min-w-0 flex-1">
+
+                  <p className="truncate text-sm font-semibold text-slate-800">
+                    {recording.file?.name}
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    Recording attached
+                  </p>
+
+                </div>
+
+                {recording.url && (
+                  <a
+                    href={recording.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-lg bg-white p-2 text-[#1392d3]"
+                  >
+                    <Play size={16} />
+                  </a>
+                )}
+
+              </div>
+
+            </div>
+          )}
+          {recordingMessage && (
+            <div className="mt-4 flex items-center gap-3 rounded-xl border border-pink-100 bg-pink-50 px-4 py-3 shadow-sm">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-pink-100">
+                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-pink-500" />
+              </div>
+
+              <p className="text-sm font-medium leading-6 text-pink-700">
+                {recordingMessage}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Actions */}
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-600"
+          >
+            <ArrowLeft size={17} />
+            Back to Questions
+          </button>
+          {finelScreenMessage ? <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 shadow-sm">
+            <p className="text-sm font-medium leading-6 text-blue-700">
+              {finelScreenMessage}
+            </p>
+          </div> :
+            <button
+              type="button"
+              onClick={onSave}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#50c896] px-7 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+            >
+              <Check size={18} />
+              Save Quality Call
+            </button>
+          }
+        </div>
 
       </div>
-
-      {/* Bottom Actions */}
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-600"
-        >
-          <ArrowLeft size={17} />
-          Back to Questions
-        </button>
-
-        <button
-          type="button"
-          onClick={onSave}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#50c896] px-7 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-        >
-          <Check size={18} />
-          Save Quality Call
-        </button>
-
-      </div>
-
-    </div>
-  );
-};
+    );
+  };
 
 /* =========================================================
    INFO BOX
