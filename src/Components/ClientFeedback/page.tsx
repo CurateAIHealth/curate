@@ -16,12 +16,14 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+let terminationCache: any[] | null = null;
 import { useDispatch, useSelector } from "react-redux";
 import { SetDeploymentInfo, UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import { years } from "@/Lib/Content";
 import axios from "axios";
 import LoadingPopup from "../SwitchMonth/page";
 import { LoadingData } from "../Loading/page";
+import { GetTerminationInfoForTerminationPage } from "@/Lib/user.action";
 
 /* =========================================================
    TYPES
@@ -84,7 +86,7 @@ interface QualityCall {
   followUpNotes: string;
   recording: any
 
-
+feedbackType:any
   status: CallStatus;
   Month: any
 }
@@ -572,6 +574,78 @@ const qualitySections: QualitySection[] = [
     ],
   },
 ];
+const terminationSections: QualitySection[] = [
+  {
+    id: "termination",
+    title: "Termination Feedback",
+    questions: [
+      {
+        id: "termination-1",
+        sectionId: "termination",
+        number: "1",
+        question: "Termination Reason",
+        answerType: "textarea",
+      },
+      {
+        id: "termination-2",
+        sectionId: "termination",
+        number: "2",
+        question: "Specific Issue",
+        answerType: "textarea",
+      },
+      {
+        id: "termination-3",
+        sectionId: "termination",
+        number: "3",
+        question: "Operations Issue",
+        answerType: "textarea",
+      },
+      {
+        id: "termination-4",
+        sectionId: "termination",
+        number: "4",
+        question: "Price Issue",
+        answerType: "textarea",
+      },
+      {
+        id: "termination-5",
+        sectionId: "termination",
+        number: "5",
+        question: "Patient condition improved",
+        answerType: "textarea",
+      },
+      {
+        id: "termination-6",
+        sectionId: "termination",
+        number: "6",
+        question: "Alternative provider",
+        answerType: "textarea",
+      },
+      {
+        id: "termination-7",
+        sectionId: "termination",
+        number: "7",
+        question: "Would consider returning",
+        answerType: "textarea",
+      },
+      {
+        id: "termination-8",
+        sectionId: "termination",
+        number: "8",
+        question: "Action required",
+        answerType: "textarea",
+      },
+      {
+        id: "termination-9",
+        sectionId: "termination",
+        number: "9",
+        question: "Note",
+        answerType: "textarea",
+      },
+   
+    ],
+  },
+];
 
 interface Client {
   id: string;
@@ -621,16 +695,23 @@ const ClientFeedback: React.FC = () => {
   const [isSwitchingMonth, setIsSwitchingMonth] = useState(false);
   const [recording, setRecording] =
     useState<CallRecording | null>(null);
-
+const [TerminationInfo,setTerminationInfo]=useState([])
   const [saved, setSaved] =
     useState<boolean>(false);
   const DeploymentInfo = useSelector((state: any) => state.AdminDeployment)
   const SearchMonth = useSelector((state: any) => state.FilterMonth)
   const SearchYear = useSelector((state: any) => state.FilterYear)
+const [PreviewType, setPreviewType] = useState<
+  "Deployment" | "Replacement" | "Termination"
+>("Deployment");
   const [feedbackFilter, setFeedbackFilter] = useState<
     "Pending" | "Completed"
   >("Pending");
-  const allSections = useMemo(() => qualitySections, []);
+const allSections = useMemo(() => {
+  return PreviewType === "Termination"
+    ? terminationSections
+    : qualitySections;
+}, [PreviewType]);
   const [ClientFeedbackInfo, setClientFeedbackInfo] = useState<any[]>([]);
   const [isChecking, setIsChecking] = useState(true);
   const dispatch = useDispatch()
@@ -698,13 +779,87 @@ const ClientFeedback: React.FC = () => {
 
   const progress =
     ((currentSectionIndex + 1) / totalSections) * 100;
+const FetchTerminationData = async () => {
+      try {
+           setIsChecking(true);
+        if (terminationCache) {
+          setTerminationInfo(terminationCache);
+          
+   setPreviewType("Termination")
+          setIsChecking(false);
+          return;
+        }
 
+    const FetchData = await GetTerminationInfoForTerminationPage(SearchMonth, SearchYear)
+
+
+      
+      
+        
+        const Result:any = FetchData?.map((each: any) => ({
+          id: each.ClientId,
+           name: each.ClientName,
+          hcaId: each.HCAid,
+           hcaName: each.HCAName,
+           patientName: each.patientName?.trim() || "Not Available",
+
+         
+         
+    
+          enrollmentDate: each.StartDate,
+            terminated:"Terminated",
+          status: "Terminated",
+    team: each.Team || 1,
+
+      note: each.Note || "",
+  feedbackStatus: GetClientFeedback(
+        `${SearchMonth}-${SearchYear}`,
+        each.ClientId,
+       each.HCAid
+
+      )?.status || "Pending",
+      Month: GetClientFeedback(
+        `${SearchMonth}-${SearchYear}`,
+       each.ClientId,
+       each.HCAid
+
+      )?.Month || "",
+      compliteInfo: GetClientFeedback(
+        `${SearchMonth}-${SearchYear}`,
+      each.ClientId,
+       each.HCAid
+
+      )||null
+
+
+
+  
+
+     
+
+      /*
+       * IMPORTANT:
+       * This field must come from your feedback data.
+       *
+       * If no feedback exists, it is Pending.
+       */
+    
+        })) ?? [];
+
+
+        setTerminationInfo(Result);
+     setPreviewType("Termination")
+        setIsChecking(false);
+      } catch (err) {
+        setIsChecking(false);
+      }
+    };
   const clients: Client[] = useMemo(() => {
-    if (!Array.isArray(DeploymentInfo)) {
+    if (!Array.isArray(DeploymentInfo)||!Array.isArray(TerminationInfo)) {
       return [];
     }
 
-    return DeploymentInfo.map((item: any) => ({
+  return PreviewType==="Termination"?TerminationInfo:  DeploymentInfo.map((item: any) => ({
       id: item.ClientId,
       name: item.ClientName?.trim() || "Unknown Client",
       hcaName: item.HCAName?.trim() || "Not Assigned",
@@ -750,7 +905,7 @@ const ClientFeedback: React.FC = () => {
 
       )||null
     }));
-  }, [DeploymentInfo, ClientFeedbackInfo, SearchMonth, SearchYear]);
+  }, [DeploymentInfo, ClientFeedbackInfo, SearchMonth, SearchYear,TerminationInfo,PreviewType]);
 
   const filteredClients = useMemo(() => {
     return clients.filter((client) => {
@@ -963,7 +1118,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
       followUpNotes,
 
       recording: recording?.url,
-
+feedbackType: PreviewType,
       status: "Completed",
       Month: `${SearchMonth}-${SearchYear}`
     };
@@ -1005,21 +1160,51 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
           </div>
 
           {/* Actions */}
-          <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex sm:shrink-0">
-            <button
-              type="button"
-              className="inline-flex min-h-[42px] items-center justify-center rounded-xl border border-[#1392d3]/20 bg-[#1392d3]/10 px-4 py-2.5 text-sm font-semibold text-[#1392d3] transition hover:bg-[#1392d3] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#1392d3]/30"
-            >
-              Replacements
-            </button>
+     <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex sm:shrink-0">
 
-            <button
-              type="button"
-              className="inline-flex min-h-[42px] items-center justify-center rounded-xl border border-[#ff1493]/20 bg-[#ff1493]/10 px-4 py-2.5 text-sm font-semibold text-[#ff1493] transition hover:bg-[#ff1493] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#ff1493]/30"
-            >
-              Terminations
-            </button>
-          </div>
+  {/* ACTIVE / DEPLOYMENTS */}
+  <button
+    type="button"
+    onClick={() => setPreviewType("Deployment")}
+    className={`inline-flex min-h-[42px] items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#1392d3]/30 ${
+      PreviewType === "Deployment"
+        ? "bg-[#1392d3] text-white shadow-sm"
+        : "border border-[#1392d3]/20 bg-[#1392d3]/10 text-[#1392d3] hover:bg-[#1392d3] hover:text-white"
+    }`}
+  >
+    Deployments
+  </button>
+
+  {/* REPLACEMENTS */}
+  <button
+    type="button"
+    onClick={() => setPreviewType("Replacement")}
+    className={`inline-flex min-h-[42px] items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#1392d3]/30 ${
+      PreviewType === "Replacement"
+        ? "bg-[#1392d3] text-white shadow-sm"
+        : "border border-[#1392d3]/20 bg-[#1392d3]/10 text-[#1392d3] hover:bg-[#1392d3] hover:text-white"
+    }`}
+  >
+    Replacements
+  </button>
+
+  {/* TERMINATIONS */}
+  <button
+    type="button"
+    onClick={() => {
+      setPreviewType("Termination");
+      FetchTerminationData();
+    }}
+    className={`inline-flex min-h-[42px] items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#ff1493]/30 ${
+      PreviewType === "Termination"
+        ? "bg-[#ff1493] text-white shadow-sm"
+        : "border border-[#ff1493]/20 bg-[#ff1493]/10 text-[#ff1493] hover:bg-[#ff1493] hover:text-white"
+    }`}
+  >
+    Terminations
+  </button>
+
+</div>
         </div>
 
         {/* Client Selection */}
