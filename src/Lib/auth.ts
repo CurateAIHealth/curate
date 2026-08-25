@@ -2161,3 +2161,59 @@ export const GetClietFeedBackInfo = async (ImpMonth: string) => {
     };
   }
 };
+
+
+export const GetReplacementInfo = async (
+  month?: string | number,
+  year?: string | number
+) => {
+  try {
+    console.log(
+      "Check for imp Data from backend-----",
+      `${month}-${year}`
+    );
+
+    const cluster = await clientPromise;
+
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Replacement");
+
+    const query: any = {};
+
+    if (month && year) {
+      const monthNumber = Number(month);
+      const yearNumber = Number(year);
+
+      query.StartDate = {
+        $regex: `^\\d{1,2}/0?${monthNumber}/${yearNumber}$`,
+      };
+    } else if (month) {
+      const monthNumber = Number(month);
+
+      query.StartDate = {
+        $regex: `^\\d{1,2}/0?${monthNumber}/`,
+      };
+    } else if (year) {
+      query.StartDate = {
+        $regex: `^\\d{1,2}/\\d{1,2}/${Number(year)}$`,
+      };
+    }
+
+    console.log("Mongo Query-----", query);
+
+    const replacementData = await collection.find(query).toArray();
+
+    console.log(
+      "Replacement DB Count-----",
+      replacementData.length
+    );
+
+    return replacementData.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+  } catch (e) {
+    console.error("GetReplacementInfo Error:", e);
+    throw e;
+  }
+};

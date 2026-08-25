@@ -3,10 +3,10 @@
 import { LoadingData } from "@/Components/Loading/page";
 import { GetRegidterdUsers, GetUsersFullInfo, UpdateDocumentFollowUpStatus, UpdateDocumentFollowUpStatusInFullInfo } from "@/Lib/user.action";
 import { Update_Main_Filter_Status } from "@/Redux/action";
-import { Eye, Search, FileUser, LogOut, Clock, Calendar, X } from "lucide-react";
+import { Eye, Search, FileUser, LogOut, Clock, Calendar, X, Filter, LayoutDashboard } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 interface PreviewRow {
   FirstName: string;
@@ -39,22 +39,50 @@ export default function MedicalGlassDashboardTable() {
   const dispatch = useDispatch();
   const router = useRouter();
   const [fullInfo, setFullInfo] = useState<any>([]);
-  const [RegisterdInfo, setRegisterdInfo] = useState<any>([]);
+  const [selectedFilter, setSelectedFilter] = useState("Active");
+
   const [CurrentIndexNumber, setCurrentIndexNumber] = useState<any>()
    const [selectedRecord, setSelectedRecord] = useState<any>(false);
 
+const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
+const RegisterdInfo=useSelector((state:any)=>state.AdminUsers)
+const GetCurrentStatus=(A:any)=>{
+   if (!RegisterdInfo?.length || !A) return "";
+     const info = RegisterdInfo?.find((info: any) => info?.userId === A);
 
+   return info
 
+}
 
+console.log("Look For Contact-----",RegisterdInfo)
+const GetHCPFullName = (A: any) => {
+  if (!UserFullInfo?.length || !A) return "";
+
+  const info = UserFullInfo
+    ?.map((each: any) => each?.HCAComplitInformation)
+    ?.find((info: any) => info?.UserId === A);
+
+  if (!info) return "";
+console.log("HCP Info:", info);
+  const fullName = [
+    info.HCPSurName,
+    info.HCPFirstName,
+    info.LastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return fullName;
+};
  useEffect(() => {
   const Fetch = async () => {
-    const [Registerd, Full] = await Promise.all([
-      GetRegidterdUsers(),
+    const [ Full] = await Promise.all([
+   
       GetUsersFullInfo(),
     ]);
 
     setFullInfo(Full);
-    setRegisterdInfo(Registerd);
+  
     setisChecking(false);
   };
 
@@ -116,28 +144,35 @@ setSelectedRecord(true)
     .map((each: any) => {
       const doc = each?.HCAComplitInformation?.Documents || {};
 
-      const missingDocs = Object.keys(doc).filter((key) => {
-        const value = doc[key];
-        return value === "" || value === null || value === undefined;
-      });
+   const missingDocs = Object.keys(doc).filter((key) => {
+  const value = doc[key];
+  return value === "" || value === null || value === undefined;
+});
+
+const availableDocs = Object.keys(doc).filter((key) => {
+  const value = doc[key];
+  return value !== "" && value !== null && value !== undefined;
+});
 
       return {
-        FirstName: each?.HCAComplitInformation?.HCPFirstName || "Not Provided",
-        LastName: each?.HCAComplitInformation?.HCPSurName || "Not Provided",
+        FirstName: GetHCPFullName(each?.HCAComplitInformation?.UserId) || "Not Provided",
         DocumentSkipReason: each?.HCAComplitInformation?.DocumentSkipReason || "",
         followTime: each?.HCAComplitInformation?.followTime || "",
         followDate: each?.HCAComplitInformation?.followDate || "",
         ContactNumber:
-          each?.HCAComplitInformation?.HCPContactNumber ||
-          each?.HCAComplitInformation?.["Phone No 1"] ||
+         GetCurrentStatus(each?.HCAComplitInformation?.UserId)?.
+ContactNumber
+||
           "+91**********",
         UserId: each?.HCAComplitInformation?.UserId || "",
         missingDocs,
+        availableDocs,
         userType: each?.HCAComplitInformation?.userType || "",
+        CurrentStatus:GetCurrentStatus(each?.HCAComplitInformation?.UserId)?.CurrentStatus || "Sick",
       };
     })
-    .filter((item:any) => item.missingDocs.length > 0); 
-}, [fullInfo]);
+    .filter((item:any) => item.missingDocs.length > 0&&item.CurrentStatus===selectedFilter); 
+}, [fullInfo,selectedFilter]);
 
 
   const Valueresult: any = useMemo(() => {
@@ -191,7 +226,7 @@ const FinelPreviewData = useMemo(() => {
       responsible: p.responsible || "",
       DocumentSkipReason: p.DocumentSkipReason || "",
     }));
-
+console.log("Check for Task-----",cleaned)
     setPreviwData(cleaned);
   }, [FinelPreviewData]);
 
@@ -207,50 +242,228 @@ const FinelPreviewData = useMemo(() => {
     <div className="min-h-screen bg-gradient-to-b from-[#e8fdf9] via-[#eefcfb] to-[#f4fefd] p-4">
 
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-5">
+      {/* ================= DOCUMENT COMPLIANCE HEADER ================= */}
+<div className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-        <div className="flex items-center gap-3">
-          <FileUser size={36} className="text-[#0EA5A3]" />
-          <h1 className="text-2xl md:text-3xl font-bold text-[#ff1493]">
-            Document Compliance
-          </h1>
-        </div>
+  {/* Top Header */}
+  <div className="flex flex-col gap-5 p-5 lg:flex-row lg:items-center lg:justify-between">
 
+    {/* Company Logo + Title */}
+    <div className="flex items-center gap-4 shrink-0">
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-3 bg-white/60 border border-[#cceeea] shadow px-4 py-3 rounded-xl w-full sm:w-[360px]">
-            <Search size={20} className="text-[#50c896]" />
-            <input
-              type="text"
-              placeholder="Search by name..."
-              className="bg-transparent flex-1 outline-none text-[#073e3b]"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
-
- <div className='flex items-center'>
-          <button
-            onClick={handleLogout}
-            className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
-          >
-          DashBoard
-          </button>
-          <button
-                onClick={handleMainLogout}
-                className="
-                  w-full px-4 py-2.5
-                  text-sm flex items-center gap-2
-                  text-red-600
-                  hover:bg-red-50
-                  font-medium
-                "
-              >
-                <LogOut size={16} /> Logout
-              </button>
-              </div>
-        </div>
+      {/* Company Logo */}
+      <div className="
+        flex h-12 w-12 items-center justify-center
+        overflow-hidden rounded-xl
+        border border-slate-200
+        bg-white
+        shadow-sm
+      ">
+        <img
+          src="/Icons/Curate-logoq.png"
+          alt="Company Logo"
+          className="h-full w-full object-contain p-1.5"
+        />
       </div>
+
+      <div>
+        <h1 className="text-xl font-bold tracking-tight text-slate-800 md:text-2xl">
+          Document Compliance
+        </h1>
+
+        <p className="mt-0.5 text-xs font-medium text-slate-400">
+          Document verification & compliance
+        </p>
+      </div>
+    </div>
+
+
+    {/* Search + Actions */}
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+
+      {/* Search */}
+      <div className="
+        flex h-11 w-full items-center gap-2.5
+        rounded-xl border border-slate-200
+        bg-slate-50 px-3.5
+        transition-all
+        focus-within:border-[#0EA5A3]
+        focus-within:bg-white
+        focus-within:ring-2
+        focus-within:ring-[#0EA5A3]/10
+        sm:w-[300px]
+      ">
+        <Search size={18} className="shrink-0 text-slate-400" />
+
+        <input
+          type="text"
+          placeholder="Search by name..."
+          className="
+            w-full bg-transparent
+            text-sm text-slate-700
+            outline-none
+            placeholder:text-slate-400
+          "
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+
+
+      {/* Dashboard */}
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="
+          inline-flex h-11 items-center justify-center
+          gap-2 rounded-xl
+          bg-[#0EA5A3]
+          px-5
+          text-sm font-semibold text-white
+          shadow-sm
+          transition-all duration-200
+          hover:bg-[#088b89]
+          hover:shadow-md
+          active:scale-[0.98]
+        "
+      >
+        <LayoutDashboard size={17} />
+        Dashboard
+      </button>
+
+
+      {/* Logout */}
+      <button
+        type="button"
+        onClick={handleMainLogout}
+        className="
+          inline-flex h-11 items-center justify-center
+          gap-2 rounded-xl
+          border border-red-100
+          bg-red-50
+          px-4
+          text-sm font-semibold text-red-600
+          transition-all duration-200
+          hover:bg-red-100
+          active:scale-[0.98]
+        "
+      >
+        <LogOut size={16} />
+        Logout
+      </button>
+
+    </div>
+  </div>
+
+
+  {/* Uploaded Filters */}
+  <div className="
+    flex flex-col gap-3
+    border-t border-slate-100
+    bg-slate-50/60
+    px-5 py-3.5
+    lg:flex-row lg:items-center
+  ">
+
+    {/* Filter Label */}
+    <div className="flex items-center gap-2 shrink-0">
+      <Filter size={16} className="text-slate-500" />
+
+    
+    </div>
+
+
+ {/* Status Filters */}
+<div className="flex flex-wrap items-center justify-center gap-2">
+
+  {/* Active */}
+  <button
+    type="button"
+    onClick={() => setSelectedFilter("Active")}
+    className={`inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md ${
+      selectedFilter === "Active"
+        ? "ring-2 ring-green-400/40"
+        : ""
+    }`}
+  >
+    <span className="h-3 w-3 rounded-full bg-gradient-to-br from-green-400 to-emerald-500" />
+    Active
+  </button>
+
+  {/* Bench */}
+  <button
+    type="button"
+    onClick={() => setSelectedFilter("Bench")}
+    className={`inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md ${
+      selectedFilter === "Bench"
+        ? "ring-2 ring-purple-400/40"
+        : ""
+    }`}
+  >
+    <span className="h-3 w-3 rounded-full bg-gradient-to-br from-purple-400 to-purple-600" />
+    Bench
+  </button>
+
+  {/* Training */}
+  <button
+    type="button"
+    onClick={() => setSelectedFilter("Training")}
+    className={`inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md ${
+      selectedFilter === "Training"
+        ? "ring-2 ring-orange-400/40"
+        : ""
+    }`}
+  >
+    <span className="h-3 w-3 rounded-full bg-gradient-to-br from-orange-400 to-red-500" />
+    Training
+  </button>
+
+  {/* Sick */}
+  <button
+    type="button"
+    onClick={() => setSelectedFilter("Sick")}
+    className={`inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md ${
+      selectedFilter === "Sick"
+        ? "ring-2 ring-yellow-400/40"
+        : ""
+    }`}
+  >
+    <span className="h-3 w-3 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500" />
+    Sick
+  </button>
+
+  {/* Leave */}
+  <button
+    type="button"
+    onClick={() => setSelectedFilter("Leave")}
+    className={`inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md ${
+      selectedFilter === "Leave"
+        ? "ring-2 ring-blue-400/40"
+        : ""
+    }`}
+  >
+    <span className="h-3 w-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600" />
+    Leave
+  </button>
+
+  {/* Terminated */}
+  <button
+    type="button"
+    onClick={() => setSelectedFilter("Terminated")}
+    className={`inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md ${
+      selectedFilter === "Terminated"
+        ? "ring-2 ring-red-400/40"
+        : ""
+    }`}
+  >
+    <span className="h-3 w-3 rounded-full bg-gradient-to-br from-red-400 to-rose-600" />
+    Terminated
+  </button>
+
+</div>
+  </div>
+
+</div>
 {selectedRecord && (
        <div
   className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
@@ -301,214 +514,201 @@ const FinelPreviewData = useMemo(() => {
 
       )}
 
-      <div className="rounded-2xl bg-white/50 backdrop-blur-xl border border-white/30 shadow overflow-hidden">
+   <div className="rounded-2xl bg-white/70 backdrop-blur-xl border border-gray-200 shadow-lg overflow-hidden">
 
-        <div className="hidden md:grid grid-cols-9 bg-[#dff9f7]/70 border-b border-white/40">
-          {[
-            "View",
-            "Name",
-            "Missing Documents",
-            "Status",
-            "Contact",
-            "Follow Up",
-            "Responsible",
-            "Reason",
-            "Update",
-          ].map((h) => (
-            <div
-              key={h}
-              className="py-4 px-4 text-sm font-semibold text-[#093c3a] text-center"
-            >
-              {h}
-            </div>
-          ))}
-        </div>
-
-
-        {PreviwData.map((p: any, i: any) => (
-          <div key={p.UserId} className="grid grid-cols-1 md:grid-cols-9 items-center">
-
-
-            <div className="hidden md:flex justify-center items-center py-6">
-              <Eye size={22} className="text-[#083634]" />
-            </div>
-
-            <div className="py-4 md:py-6 text-center">{p.FirstName}</div>
-
-
-
-            <div className="py-4 md:py-6 flex flex-col items-center gap-2">
-              <div className="flex flex-wrap gap-2 justify-center max-w-[200px]">
-                {(showAll ? p.missingDocs : p.missingDocs.slice(0, 2)).map((d: any, idx: number) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1 bg-red-200/40 text-red-700 text-xs rounded-full whitespace-nowrap"
-                  >
-                    {d}
-                  </span>
-                ))}
-              </div>
-
-              {p.missingDocs.length > 2 && (
-                <button
-                  onClick={() => setShowAll(!showAll)}
-                  className="text-[10px] text-[#00A9A5] hover:underline cursor-pointer"
-                >
-                  {showAll ? "Show Less" : "Show More"}
-                </button>
-              )}
-            </div>
-
-
-
-            <div className="py-4 md:py-6 flex justify-center">
-              <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">
-                Pending
-              </span>
-            </div>
-
-
-            <div className="py-4 md:py-6 text-center text-[#0EA5A3]">
-              {p.ContactNumber}
-            </div>
-
-           <div className="py-4 md:py-6 flex items-center justify-center gap-6">
-
-
-  <div className="flex flex-col items-center">
-    <div className="relative">
-    
-      <button
-        onClick={() => document.getElementById(`time_${i}`)?.click()}
-        className="h-10 w-10 flex items-center justify-center rounded-full border border-[#00A9A5] text-[#00A9A5] bg-white shadow hover:bg-[#e8fdf9] transition"
+  {/* Header */}
+  <div
+    className="
+      hidden md:grid
+      grid-cols-[70px_180px_repeat(6,minmax(140px,1fr))]
+      bg-[#dff9f7]/80
+      border-b border-gray-200
+      min-w-[1100px]
+    "
+  >
+    {[
+      "S No",
+      "Names",
+      "Aadhar",
+      "PAN",
+      "BVR",
+      "Bank",
+      "Primary education certificate",
+      "Primary experience certificate",
+    ].map((h) => (
+      <div
+        key={h}
+        className="
+          py-4 px-3
+          text-sm
+          font-semibold
+          text-[#093c3a]
+          text-center
+          border-r border-gray-200
+        "
       >
-        <Clock size={18} strokeWidth={2} />
-      </button>
-
-      <input
-        id={`time_${i}`}
-        type="time"
-        className="absolute inset-0 opacity-0 cursor-pointer"
-        value={p.followTime || ""}
-        onChange={(e) => handleChange(i, "followTime", e.target.value)}
-      />
-    </div>
-
-  
-    {p.followTime && (
-      <p className="text-xs mt-1 text-[#036b68] font-medium">
-        {p.followTime}
-      </p>
-    )}
+        {h}
+      </div>
+    ))}
   </div>
 
-  <div className="flex flex-col items-center">
-    <div className="relative">
-      <button
-        onClick={() => document.getElementById(`date_${i}`)?.click()}
-        className="h-10 w-10 flex items-center justify-center rounded-full border border-[#00A9A5] text-[#00A9A5] bg-white shadow hover:bg-[#e8fdf9] transition"
-      >
-        <Calendar size={18} strokeWidth={2} />
-      </button>
+  {/* Rows */}
+  <div className="overflow-x-auto">
+    <div className="min-w-[1100px]">
 
-      <input
-        id={`date_${i}`}
-        type="date"
-        className="absolute inset-0 opacity-0 cursor-pointer"
-        value={p.followDate || ""}
-        onChange={(e) => handleChange(i, "followDate", e.target.value)}
-      />
+      {PreviwData.map((p: any, i: number) => {
+
+        const availableDocs = (p.availableDocs || []).map((doc: string) =>
+          doc.toLowerCase().trim()
+        );
+
+        const missingDocs = (p.missingDocs || []).map((doc: string) =>
+          doc.toLowerCase().trim()
+        );
+
+        // Checks whether document is available
+        const hasDocument = (...names: string[]) => {
+          return names.some((name) => {
+            const normalized = name.toLowerCase().trim();
+
+            return (
+              availableDocs.includes(normalized) ||
+              availableDocs.some((doc: string) =>
+                doc.includes(normalized) || normalized.includes(doc)
+              )
+            );
+          });
+        };
+
+        const documents = [
+          {
+            label: "Aadhar",
+            available: hasDocument(
+              "aadhar",
+              "aadhaar",
+              "aadhar card",
+              "aadhaar card"
+            ),
+          },
+          {
+            label: "PAN",
+            available: hasDocument(
+              "pan",
+              "pan card"
+            ),
+          },
+          {
+            label: "BVR",
+            available: hasDocument(
+              "bvr",
+              "bvr document",
+              "bvr certificate"
+            ),
+          },
+          {
+            label: "Bank",
+            available: hasDocument(
+              "bank",
+              "bank document",
+              "bank passbook",
+              "bank account"
+            ),
+          },
+          {
+            label: "Primary education certificate",
+            available: hasDocument(
+              "primary education certificate",
+              "education certificate",
+              "primary education"
+            ),
+          },
+          {
+            label: "Primary experience certificate",
+            available: hasDocument(
+              "primary experience certificate",
+              "experience certificate",
+              "primary experience"
+            ),
+          },
+        ];
+
+        return (
+          <div
+            key={p.UserId || i}
+            className="
+              grid
+              grid-cols-[70px_180px_repeat(6,minmax(140px,1fr))]
+              items-center
+              border-b border-gray-200
+              hover:bg-[#f4fffe]
+              transition-colors
+            "
+          >
+
+            {/* S No */}
+            <div
+              className="
+                py-5 px-3
+                text-center
+                text-sm
+                font-medium
+                text-gray-700
+                border-r border-gray-200
+              "
+            >
+              {i + 1}
+            </div>
+
+            {/* Name */}
+            <div
+              className="
+                py-5 px-3
+                text-center
+                text-sm
+                font-semibold
+                text-[#093c3a]
+                border-r border-gray-200
+              "
+            >
+              {p.FirstName || p.Name || "Unknown"}
+            </div>
+
+            {/* Documents */}
+            {documents.map((doc) => (
+              <div
+                key={doc.label}
+                className="
+                  py-5 px-3
+                  flex
+                  items-center
+                  justify-center
+                  border-r border-gray-200
+                "
+              >
+                <span
+                  className={`
+                    text-sm
+                    font-semibold
+                    ${
+                      doc.available
+                        ? "text-green-600"
+                        : "text-red-500"
+                    }
+                  `}
+                >
+                  {doc.available ? "Yes" : "No"}
+                </span>
+              </div>
+            ))}
+
+          </div>
+        );
+      })}
+
     </div>
-
-
-    {p.followDate && (
-      <p className="text-xs mt-1 text-[#036b68] font-medium">
-        {new Date(p.followDate).toLocaleDateString('En-in')}
-      </p>
-    )}
   </div>
 
 </div>
-
-
-            <input
-              type="text"
-              value={p.responsible}
-              placeholder="Enter Responsible..."
-              className="w-[150px] px-3 py-1.5 text-sm text-center bg-white/70 border border-[#cceeea] rounded-lg"
-              onChange={(e) => handleChange(i, "responsible", e.target.value)}
-            />
-
-            <div className="py-4 md:py-6 flex justify-center">
-              {CurrentIndexNumber === i ? (
-
-                <div className="flex flex-col ml-4 items-center gap-2">
-                  <input
-                    type="text"
-                    value={p.DocumentSkipReason || ""}
-                    placeholder="Enter reason..."
-                    className="w-[180px] px-3 py-2 text-sm text-center bg-white/80 border border-[#b4e1ff] rounded-lg shadow-sm"
-                    onChange={(e) => {
-                      setCurrentIndexNumber(i);
-                      handleChange(i , "DocumentSkipReason", e.target.value);
-                    }}
-                  />
-
-                  <button
-                    onClick={() => setCurrentIndexNumber(-1)}
-                    className="px-3 py-2 bg-green-600 text-white rounded-lg"
-                  >
-                    Save
-                  </button>
-                </div>
-              ) : p.DocumentSkipReason && p.DocumentSkipReason.trim() !== "" ? (
-          
-                <button
-                  onClick={() => setCurrentIndexNumber(i)}
-                  className="px-4 py-2 bg-[#1392d3] text-white rounded-lg"
-                >
-                  Update Reason
-                </button>
-              ) : (
-       
-                <div className="flex flex-col ml-4 items-center gap-2">
-                  <input
-                    type="text"
-                    value={p.DocumentSkipReason || ""}
-                    placeholder="Enter reason..."
-                    className="w-[180px] px-3 py-2 text-sm text-center bg-white/80 border border-[#b4e1ff] rounded-lg"
-                    onChange={(e) => {
-                      setCurrentIndexNumber(i);  
-                      handleChange(i, "DocumentSkipReason", e.target.value);
-                    }}
-                  />
-
-                  <button
-                    onClick={() => setCurrentIndexNumber(-1)}
-                    className="px-3 py-2 bg-green-600 text-white rounded-lg"
-                  >
-                    Save
-                  </button>
-                </div>
-              )}
-            </div>
-
-
-
-
-            <div className="py-4 md:py-6 flex justify-center">
-              <button
-                onClick={() => handleSave(p)}
-                className="px-4 py-1.5 text-xs cursor-pointer font-semibold bg-[#00A9A5] text-white rounded-full shadow-md hover:bg-[#008f8b] transition"
-              >
-                Save
-              </button>
-            </div>
-
-          </div>
-        ))}
-        
-      </div>
     </div>
   );
 }

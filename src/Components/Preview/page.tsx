@@ -13,7 +13,7 @@ import {
   UpdatePdrStatus,
   UpdateUserContactVerificationstatus,
 } from "@/Lib/user.action";
-import { UpdatePreviewStatus } from "@/Redux/action";
+import { SetDeploymentInfo, UpdatePreviewStatus } from "@/Redux/action";
 import axios from "axios";
 import { SquarePen } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -110,6 +110,8 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
   const [UpdatingStatus, setUpdatingStatus] = useState(
     "Finalizing PDR update…"
   );
+  const SearchMonth=useSelector((state:any)=>state.FilterMonth) 
+  const SearchYear=useSelector((state:any)=>state.FilterYear) 
 
   useEffect(() => {
     setFormData(reduxData);
@@ -554,7 +556,21 @@ const ClientName=data.FirstName
 // `
 // });
 
-      setUpdatingStatus("PDR created successfully. Redirecting...");
+      setUpdatingStatus("PDR created successfully. Redirecting With Updated Data...");
+   const userId = localStorage.getItem("UserId");
+
+   const  ResultData:any  = await axios.post(
+  "/api/AdminPageInfo",
+  {
+    userId,
+    Month: `${SearchYear}-${SearchYear}`,
+  }
+);
+
+
+
+
+    dispatch(SetDeploymentInfo(ResultData.data.deployedLength));
       setTimeout(() => router.push("/Invoices"), 1500);
       return;
     }
