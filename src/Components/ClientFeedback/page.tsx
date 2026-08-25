@@ -646,6 +646,228 @@ const terminationSections: QualitySection[] = [
     ],
   },
 ];
+const replacementSections: QualitySection[] = [
+  {
+    id: "replacement",
+    title: "Replacement Call – Client Feedback",
+    questions: [
+      // A. Reason for Replacement
+      {
+        id: "replacement-1",
+        sectionId: "replacement",
+        number: "1",
+        subHeading: "A. Reason for Replacement",
+        question:
+          "May I confirm the reason for the previous caregiver/nurse replacement?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-2",
+        sectionId: "replacement",
+        number: "2",
+        question:
+          "Was the replacement due to the caregiver/nurse going on leave, performance concerns, compatibility issues, or another reason?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-3",
+        sectionId: "replacement",
+        number: "3",
+        question:
+          "Was there anything specific about the previous caregiver/nurse that you were unhappy with?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-4",
+        sectionId: "replacement",
+        number: "4",
+        question:
+          "Was the reason for replacement explained and handled properly by our team?",
+        answerType: "textarea",
+      },
+
+      // B. New HCA / Nurse – Initial Feedback
+      {
+        id: "replacement-5",
+        sectionId: "replacement",
+        number: "5",
+        subHeading: "B. New HCA / Nurse – Initial Feedback",
+        question:
+          "How has the new caregiver/nurse been performing so far?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-6",
+        sectionId: "replacement",
+        number: "6",
+        question:
+          "Is the new caregiver/nurse punctual and regular?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-7",
+        sectionId: "replacement",
+        number: "7",
+        question:
+          "Is the caregiver/nurse polite, respectful, and comfortable with the patient and family?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-8",
+        sectionId: "replacement",
+        number: "8",
+        question:
+          "Does the caregiver/nurse understand and follow the patient's daily care requirements?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-9",
+        sectionId: "replacement",
+        number: "9",
+        question:
+          "Is the caregiver/nurse attentive and careful while providing care?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-10",
+        sectionId: "replacement",
+        number: "10",
+        question:
+          "Are you satisfied with the way feeding, bathing, toileting, mobility, and other required care are being handled?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-11",
+        sectionId: "replacement",
+        number: "11",
+        question:
+          "For Nurse: Are nursing procedures and medication being handled correctly and on time?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-12",
+        sectionId: "replacement",
+        number: "12",
+        question:
+          "Do you feel the new caregiver/nurse is a better fit for the patient?",
+        answerType: "textarea",
+      },
+
+      // C. Patient & Family Comfort
+      {
+        id: "replacement-13",
+        sectionId: "replacement",
+        number: "13",
+        subHeading: "C. Patient & Family Comfort",
+        question:
+          "Is the patient comfortable with the new caregiver/nurse?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-14",
+        sectionId: "replacement",
+        number: "14",
+        question:
+          "Have you noticed any improvement after the replacement?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-15",
+        sectionId: "replacement",
+        number: "15",
+        question:
+          "Do you have any concerns about the caregiver/nurse's behaviour, attitude, or way of working?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-16",
+        sectionId: "replacement",
+        number: "16",
+        question:
+          "Do you feel your patient is safe and properly cared for under the new staff?",
+        answerType: "textarea",
+      },
+
+      // D. Replacement & Operations Team
+      {
+        id: "replacement-17",
+        sectionId: "replacement",
+        number: "17",
+        subHeading: "D. Replacement & Operations Team",
+        question:
+          "Were you informed properly about the replacement?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-18",
+        sectionId: "replacement",
+        number: "18",
+        question:
+          "Was the replacement arranged within a reasonable time?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-19",
+        sectionId: "replacement",
+        number: "19",
+        question:
+          "Did our operations team respond promptly to your calls or messages during the replacement?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-20",
+        sectionId: "replacement",
+        number: "20",
+        question:
+          "Was the handover from the previous caregiver/nurse to the new caregiver/nurse handled properly?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-21",
+        sectionId: "replacement",
+        number: "21",
+        question:
+          "Is there anything you expected from our team during the replacement that was not provided?",
+        answerType: "textarea",
+      },
+
+      // E. Final Check
+      {
+        id: "replacement-22",
+        sectionId: "replacement",
+        number: "22",
+        subHeading: "E. Final Check",
+        question:
+          "Overall, are you satisfied with the new caregiver/nurse?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-23",
+        sectionId: "replacement",
+        number: "23",
+        question:
+          "Is there anything you would like the new caregiver/nurse to improve?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-24",
+        sectionId: "replacement",
+        number: "24",
+        question:
+          "Is there anything you would like our operations team to follow up on?",
+        answerType: "textarea",
+      },
+      {
+        id: "replacement-25",
+        sectionId: "replacement",
+        number: "25",
+        question:
+          "Do you have any immediate concern that you would like us to address today?",
+        answerType: "textarea",
+      },
+    ],
+  },
+];
 
 interface Client {
   id: string;
@@ -696,6 +918,7 @@ const ClientFeedback: React.FC = () => {
   const [recording, setRecording] =
     useState<CallRecording | null>(null);
 const [TerminationInfo,setTerminationInfo]=useState([])
+const [ReplacementInfo,setReplacementInfo]=useState([])
   const [saved, setSaved] =
     useState<boolean>(false);
   const DeploymentInfo = useSelector((state: any) => state.AdminDeployment)
@@ -708,9 +931,17 @@ const [PreviewType, setPreviewType] = useState<
     "Pending" | "Completed"
   >("Pending");
 const allSections = useMemo(() => {
-  return PreviewType === "Termination"
-    ? terminationSections
-    : qualitySections;
+  switch (PreviewType) {
+    case "Termination":
+      return terminationSections;
+
+    case "Replacement":
+      return replacementSections;
+
+    case "Deployment":
+    default:
+      return qualitySections;
+  }
 }, [PreviewType]);
   const [ClientFeedbackInfo, setClientFeedbackInfo] = useState<any[]>([]);
   const [isChecking, setIsChecking] = useState(true);
@@ -770,7 +1001,7 @@ const allSections = useMemo(() => {
       }) ?? null
     );
   };
-
+console.log ("Check for Current Task----",GetClientFeedback(month,"fb9832ee-c4fd-4632-be73-67dd0b539db6","391a2c83-3ef3-4029-a215-7539cbc66707"))
 
   const currentSection =
     allSections[currentSectionIndex];
@@ -796,57 +1027,57 @@ const FetchTerminationData = async () => {
       
       
         
-        const Result:any = FetchData?.map((each: any) => ({
+        const Result: any = FetchData?.map((each: any) => ({
           id: each.ClientId,
-           name: each.ClientName,
+          name: each.ClientName,
           hcaId: each.HCAid,
-           hcaName: each.HCAName,
-           patientName: each.patientName?.trim() || "Not Available",
+          hcaName: each.HCAName,
+          patientName: each.patientName?.trim() || "Not Available",
 
-         
-         
-    
+
+
+
           enrollmentDate: each.StartDate,
-            terminated:"Terminated",
+          terminated: "Terminated",
           status: "Terminated",
-    team: each.Team || 1,
+          team: each.Team || 1,
 
-      note: each.Note || "",
-  feedbackStatus: GetClientFeedback(
-        `${SearchMonth}-${SearchYear}`,
-        each.ClientId,
-       each.HCAid
+          note: each.Note || "",
+          feedbackStatus: GetClientFeedback(
+            `${SearchMonth}-${SearchYear}`,
+            each.ClientId,
+            each.HCAid
 
-      )?.status || "Pending",
-      Month: GetClientFeedback(
-        `${SearchMonth}-${SearchYear}`,
-       each.ClientId,
-       each.HCAid
+          )?.status || "Pending",
+          Month: GetClientFeedback(
+            `${SearchMonth}-${SearchYear}`,
+            each.ClientId,
+            each.HCAid
 
-      )?.Month || "",
-      compliteInfo: GetClientFeedback(
-        `${SearchMonth}-${SearchYear}`,
-      each.ClientId,
-       each.HCAid
+          )?.Month || "",
+          compliteInfo: GetClientFeedback(
+            `${SearchMonth}-${SearchYear}`,
+            each.ClientId,
+            each.HCAid
 
-      )||null
+          ) || null
 
 
 
-  
 
-     
 
-      /*
-       * IMPORTANT:
-       * This field must come from your feedback data.
-       *
-       * If no feedback exists, it is Pending.
-       */
-    
+
+
+          /*
+           * IMPORTANT:
+           * This field must come from your feedback data.
+           *
+           * If no feedback exists, it is Pending.
+           */
+
         })) ?? [];
 
-
+console.log ("Check for Current Task----",Result)
         setTerminationInfo(Result);
      setPreviewType("Termination")
         setIsChecking(false);
@@ -854,12 +1085,81 @@ const FetchTerminationData = async () => {
         setIsChecking(false);
       }
     };
+
+
+    const GetReplasementData=async()=>{
+      try{
+   setIsChecking(true)
+     const response = await axios.post("/api/qualityreplasement", {
+      month: SearchMonth,
+      year: SearchYear,
+    });
+const FetchDataReplasementData=response.data.data||[]
+   console.log("ReplasmentData------",response.data.data) 
+
+    const Result: any = FetchDataReplasementData?.map((each: any) => ({
+          id: each.ClientId,
+          name: each.ClientName,
+          hcaId: each.HCAId,
+          hcaName: each.HCAName,
+          patientName: each.patientName?.trim() || "Not Available",
+
+
+
+
+          enrollmentDate: each.StartDate,
+          Replacement: "Replacement",
+          status: "Replacement",
+          team: each.Team || 1,
+
+          note: each.Note || "",
+          feedbackStatus: GetClientFeedback(
+            `${SearchMonth}-${SearchYear}`,
+            each.ClientId,
+            each.HCAId
+
+          )?.status || "Pending",
+          Month: GetClientFeedback(
+            `${SearchMonth}-${SearchYear}`,
+            each.ClientId,
+            each.HCAId
+
+          )?.Month || "",
+          compliteInfo: GetClientFeedback(
+            `${SearchMonth}-${SearchYear}`,
+            each.ClientId,
+            each.HCAId
+
+          ) || null
+
+
+
+
+
+
+
+          /*
+           * IMPORTANT:
+           * This field must come from your feedback data.
+           *
+           * If no feedback exists, it is Pending.
+           */
+
+        })) ?? [];
+
+             setReplacementInfo(Result);
+             setIsChecking(false)
+      }catch(err:any){
+
+      }
+
+    }
   const clients: Client[] = useMemo(() => {
-    if (!Array.isArray(DeploymentInfo)||!Array.isArray(TerminationInfo)) {
+    if (!Array.isArray(DeploymentInfo)||!Array.isArray(TerminationInfo)|| !Array.isArray(ReplacementInfo)) {
       return [];
     }
 
-  return PreviewType==="Termination"?TerminationInfo:  DeploymentInfo.map((item: any) => ({
+  return PreviewType==="Replacement"?ReplacementInfo:  PreviewType==="Termination"?TerminationInfo:  DeploymentInfo.map((item: any) => ({
       id: item.ClientId,
       name: item.ClientName?.trim() || "Unknown Client",
       hcaName: item.HCAName?.trim() || "Not Assigned",
@@ -1086,7 +1386,12 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
 };
   const startCall = () => {
     if (!selectedClient) return;
-
+  setAnswers([]);
+  setOverallFeedback("");
+  setConcerns("");
+  setFollowUpRequired(false);
+  setFollowUpNotes("");
+  setRecording(null);
     setCallStarted(true);
     setCurrentSectionIndex(0);
     setSaved(false);
@@ -1097,40 +1402,78 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
   ========================================================= */
 
   const saveQualityCall = async () => {
-    if (!selectedClient) return;
-    setfinelScreenMessage("Please Wait.......")
-    const qualityCall: QualityCall = {
-      clientId: selectedClient.id,
-      clientName: selectedClient.name,
+  if (!selectedClient) return;
 
-      hcaId: selectedClient.hcaId,
-      hcaName: selectedClient.hcaName,
+  setfinelScreenMessage("Please Wait.......");
 
-      callDate: new Date().toISOString(),
-      calledBy: "Current Admin",
+  // Get the correct question sections for the selected PreviewType
+  let activeSections: QualitySection[];
 
-      answers,
+  if (PreviewType === "Replacement") {
+    activeSections = replacementSections;
+  } else if (PreviewType === "Termination") {
+    activeSections = terminationSections;
+  } else {
+    activeSections = qualitySections;
+  }
 
-      overallFeedback,
-      concerns,
+  // Get only the questions belonging to the selected section type
+  const activeQuestionIds = activeSections.flatMap((section) =>
+    section.questions.map((question) => question.id)
+  );
 
-      followUpRequired,
-      followUpNotes,
+  // Save only answers belonging to the current PreviewType
+  const filteredAnswers: QualityAnswer[] = answers.filter((answer) =>
+    activeQuestionIds.includes(answer.questionId)
+  );
 
-      recording: recording?.url,
-feedbackType: PreviewType,
-      status: "Completed",
-      Month: `${SearchMonth}-${SearchYear}`
-    };
+  const qualityCall: QualityCall = {
+    clientId: selectedClient.id,
+    clientName: selectedClient.name,
 
-    console.log("QUALITY CALL:", qualityCall);
+    hcaId: selectedClient.hcaId,
+    hcaName: selectedClient.hcaName,
 
-    const PostClientFeedBack = await axios.post("/api/ClientFeedback", {
-      qualityCall
-    })
-    console.log("Check Data Post Status----", PostClientFeedBack)
-    setSaved(true);
+    callDate: new Date().toISOString(),
+    calledBy: "Current Admin",
+
+    answers: filteredAnswers,
+
+    overallFeedback,
+    concerns,
+
+    followUpRequired,
+    followUpNotes,
+
+    recording: recording?.url,
+
+    // Deployment / Replacement / Termination
+    feedbackType: PreviewType,
+
+    status: "Completed",
+    Month: `${SearchMonth}-${SearchYear}`,
   };
+
+  console.log("QUALITY CALL:", qualityCall);
+
+  try {
+    const PostClientFeedBack = await axios.post(
+      "/api/ClientFeedback",
+      {
+        qualityCall,
+      }
+    );
+
+    console.log(
+      "Check Data Post Status----",
+      PostClientFeedBack
+    );
+
+    setSaved(true);
+  } catch (error) {
+    console.error("Save Quality Call Error:", error);
+  }
+};
 
   /* =========================================================
      CLIENT SELECTION SCREEN
@@ -1160,32 +1503,53 @@ feedbackType: PreviewType,
           </div>
 
           {/* Actions */}
-     <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex sm:shrink-0">
+  <div className="inline-flex w-full max-w-full flex-wrap items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-100 p-1.5 shadow-sm sm:w-auto sm:flex-nowrap">
 
-  {/* ACTIVE / DEPLOYMENTS */}
+  {/* DEPLOYMENTS / ACTIVE */}
   <button
     type="button"
     onClick={() => setPreviewType("Deployment")}
-    className={`inline-flex min-h-[42px] items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#1392d3]/30 ${
+    className={`group relative flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 sm:flex-none ${
       PreviewType === "Deployment"
-        ? "bg-[#1392d3] text-white shadow-sm"
-        : "border border-[#1392d3]/20 bg-[#1392d3]/10 text-[#1392d3] hover:bg-[#1392d3] hover:text-white"
+        ? "bg-white text-[#1392d3] shadow-md ring-1 ring-slate-200"
+        : "text-slate-500 hover:bg-white/70 hover:text-slate-700"
     }`}
   >
-    Deployments
+    {PreviewType === "Deployment" && (
+      <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]" />
+    )}
+
+
+    <span
+      className={`text-xs font-medium ${
+        PreviewType === "Deployment"
+          ? "text-[#1392d3]"
+          : "text-slate-400"
+      }`}
+    >
+      Deployments
+    </span>
   </button>
 
   {/* REPLACEMENTS */}
   <button
     type="button"
-    onClick={() => setPreviewType("Replacement")}
-    className={`inline-flex min-h-[42px] items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#1392d3]/30 ${
+    onClick={() => {
+      setPreviewType("Replacement")
+      GetReplasementData()
+    }
+    }
+    className={`flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 sm:flex-none ${
       PreviewType === "Replacement"
-        ? "bg-[#1392d3] text-white shadow-sm"
-        : "border border-[#1392d3]/20 bg-[#1392d3]/10 text-[#1392d3] hover:bg-[#1392d3] hover:text-white"
+        ? "bg-white text-[#1392d3] shadow-md ring-1 ring-slate-200"
+        : "text-slate-500 hover:bg-white/70 hover:text-slate-700"
     }`}
   >
-    Replacements
+    {PreviewType === "Replacement" && (
+      <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]" />
+    )}
+
+    <span>Replacements</span>
   </button>
 
   {/* TERMINATIONS */}
@@ -1195,13 +1559,17 @@ feedbackType: PreviewType,
       setPreviewType("Termination");
       FetchTerminationData();
     }}
-    className={`inline-flex min-h-[42px] items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#ff1493]/30 ${
+    className={`flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 sm:flex-none ${
       PreviewType === "Termination"
-        ? "bg-[#ff1493] text-white shadow-sm"
-        : "border border-[#ff1493]/20 bg-[#ff1493]/10 text-[#ff1493] hover:bg-[#ff1493] hover:text-white"
+        ? "bg-white text-[#ff1493] shadow-md ring-1 ring-slate-200"
+        : "text-slate-500 hover:bg-white/70 hover:text-slate-700"
     }`}
   >
-    Terminations
+    {PreviewType === "Termination" && (
+      <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]" />
+    )}
+
+    <span>Terminations</span>
   </button>
 
 </div>
@@ -1479,10 +1847,18 @@ feedbackType: PreviewType,
                               ) : (
                                 <button
                                   type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    setSelectedClient(client);
-                                  }}
+                                 onClick={(e) => {
+  e.stopPropagation();
+
+  setAnswers([]);
+  setOverallFeedback("");
+  setConcerns("");
+  setFollowUpRequired(false);
+  setFollowUpNotes("");
+  setRecording(null);
+
+  setSelectedClient(client);
+}}
                                   className="
         inline-flex items-center gap-2
         rounded-lg px-4 py-2
@@ -2009,7 +2385,7 @@ const FinalCallScreen: React.FC<
   onBack,
   onSave,
 }) => {
-
+console.log("Check d---",selectedClient)
     return (
       <div className="space-y-6">
 
@@ -2266,6 +2642,8 @@ const FinalCallScreen: React.FC<
               {finelScreenMessage}
             </p>
           </div> :
+          <div>
+          {selectedClient.feedbackStatus!=="Completed"&&
             <button
               type="button"
               onClick={onSave}
@@ -2273,7 +2651,8 @@ const FinalCallScreen: React.FC<
             >
               <Check size={18} />
               Save Quality Call
-            </button>
+            </button>}
+             </div>
           }
         </div>
 
