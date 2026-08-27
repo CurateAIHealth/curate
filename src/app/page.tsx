@@ -212,19 +212,27 @@ useEffect(() => {
 
         clearInterval(progressTimer);
 
-        flushSync(() => {
-          setLoadingProgress(100);
-          setLoadingMessage("Redirecting...");
-        });
+        // flushSync(() => {
+        //   setLoadingProgress(100);
+        //   setLoadingMessage("Redirecting...");
+        // });
 
        
-        router.replace("/DashBoard");
+        // router.replace("/DashBoard");
        
-          if ( window.location.pathname !== "/DashBoard") {
-            router.replace("/DashBoard");
-          }
+        //   if ( window.location.pathname !== "/DashBoard") {
+        //     router.replace("/DashBoard");
+        //   }
  
+setLoadingProgress(100);
+setLoadingMessage("Redirecting...");
 
+if (!mounted) return;
+
+// Navigate immediately after 100%
+if (window.location.pathname !== "/DashBoard") {
+  router.replace("/DashBoard");
+}
         return;
       }
 
