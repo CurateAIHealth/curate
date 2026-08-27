@@ -22,7 +22,7 @@ import {
   Save,
 } from "lucide-react";
 import { useSelector } from "react-redux";
-import { GetHCPFullName } from "@/Lib/Actions";
+import { GetClientId, GetClientName, GetHCPFullName } from "@/Lib/Actions";
 import axios from "axios";
 import { LoadingData } from "../Loading/page";
 
@@ -72,6 +72,7 @@ interface AudioRecording {
 
 interface SavedFeedback {
   UserId: string;
+  ClientId:any
   SectionId: string;
   Role: FeedbackRole;
   answers: Record<string, string>;
@@ -805,7 +806,7 @@ const [selectedYear, setSelectedYear] =
   /* =======================================================
      HCA DATA
   ======================================================= */
-
+console.log("Check selectedHCA------",)
   const hcaData = useMemo(() => {
     return Array.isArray(users)
       ? users.filter(
@@ -1603,7 +1604,7 @@ existingFeedback={
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
         <SummaryCard
-          title="Total HCA"
+          title="Total HCP"
           value={
             totalHCACount
           }
@@ -1648,199 +1649,250 @@ existingFeedback={
             HEADER
         =================================================== */}
 
-        <div className="border-b border-slate-200 p-5">
+       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+  {/* =====================================================
+      HEADER
+  ===================================================== */}
+  <div className="px-4 py-4 sm:px-5">
 
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    {/* TITLE */}
+    {/* <div className="mb-4">
+      <h2 className="text-lg font-bold leading-tight text-slate-800">
+        HCA Feedback
+      </h2>
 
-            <div>
-              <h2 className="text-lg font-bold text-slate-800">
-                HCA Feedback
-              </h2>
+      <p className="mt-1 text-xs text-slate-500 sm:text-sm">
+        Placement and monthly feedback tracking
+      </p>
+    </div> */}
 
-              <p className="mt-1 text-sm text-slate-500">
-                Placement and monthly feedback tracking
-              </p>
-            </div>
+    {/* =================================================
+        FILTERS
+    ================================================= */}
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
 
-            {/* SEARCH */}
-{/* MONTH FILTER */}
+      {/* =================================================
+          FEEDBACK STATUS
+      ================================================= */}
+      <div className="min-w-0">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+          Feedback Status
+        </p>
 
-          </div>
+        <div className="grid grid-cols-2 gap-2">
 
-          {/* =================================================
-              FILTERS
-          ================================================= */}
-
-        <div className="grid w-full grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-
-  {/* FEEDBACK STATUS */}
-  <div className="w-full min-w-0">
-    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-      Feedback Status
-    </p>
-
-    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-      <button
-        type="button"
-        onClick={() => setFeedbackFilter("Pending")}
-        className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-semibold transition sm:gap-2 sm:px-4 sm:text-sm ${
-          feedbackFilter === "Pending"
-            ? "bg-[#1392d3] text-white shadow-sm"
-            : "border border-slate-200 bg-white text-slate-600 hover:border-[#1392d3] hover:bg-sky-50"
-        }`}
-      >
-        <Clock3 size={15} className="shrink-0" />
-
-        <span className="truncate">
-          Pending
-        </span>
-
-        <span className="shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[11px] sm:text-xs">
-          {pendingCount}
-        </span>
-      </button>
-
-      <button
-        type="button"
-        onClick={() => setFeedbackFilter("Completed")}
-        className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-semibold transition sm:gap-2 sm:px-4 sm:text-sm ${
-          feedbackFilter === "Completed"
-            ? "bg-[#50c896] text-white shadow-sm"
-            : "border border-slate-200 bg-white text-slate-600 hover:border-[#50c896] hover:bg-emerald-50"
-        }`}
-      >
-        <CheckCircle2 size={15} className="shrink-0" />
-
-        <span className="truncate">
-          Completed
-        </span>
-
-        <span className="shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[11px] sm:text-xs">
-          {completedCount}
-        </span>
-      </button>
-    </div>
-  </div>
-
-  {/* FEEDBACK MONTH */}
-  <div className="w-full min-w-0">
-    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-      Feedback Month
-    </p>
-
-    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-      <select
-        value={selectedMonth}
-        onChange={(e) => setSelectedMonth(Number(e.target.value))}
-        className="
-          min-w-0 w-full rounded-xl
-          border border-slate-200
-          bg-white px-3 py-2.5
-          text-sm font-semibold text-slate-700
-          outline-none transition
-          focus:border-[#1392d3]
-          focus:ring-2 focus:ring-[#1392d3]/10
-          sm:w-[140px] sm:px-4
-        "
-      >
-        {monthOptions.map((month) => (
-          <option
-            key={month.value}
-            value={month.value}
-          >
-            {month.label}
-          </option>
-        ))}
-      </select>
-
-      <select
-        value={selectedYear}
-        onChange={(e) => setSelectedYear(Number(e.target.value))}
-        className="
-          min-w-0 w-full rounded-xl
-          border border-slate-200
-          bg-white px-3 py-2.5
-          text-sm font-semibold text-slate-700
-          outline-none transition
-          focus:border-[#1392d3]
-          focus:ring-2 focus:ring-[#1392d3]/10
-          sm:w-[120px] sm:px-4
-        "
-      >
-        {yearOptions.map((year) => (
-          <option
-            key={year}
-            value={year}
-          >
-            {year}
-          </option>
-        ))}
-      </select>
-    </div>
-  </div>
-
-  {/* HCA STATUS */}
-  <div className="w-full min-w-0 md:col-span-2 xl:col-span-1">
-    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-      HCA Status
-    </p>
-
-    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-      {(Object.keys(statusConfig) as HCAStatus[]).map((status) => {
-        const config = statusConfig[status];
-        const count = getStatusCount(status);
-        const selected = statusFilter === status;
-
-        return (
+          {/* Pending */}
           <button
-            key={status}
             type="button"
-            onClick={() => setStatusFilter(status)}
+            onClick={() => setFeedbackFilter("Pending")}
             className={`
-              inline-flex min-w-0
-              items-center justify-center
-              gap-1.5 rounded-xl
-              px-3 py-2.5
+              flex h-10 min-w-0 items-center justify-between
+              rounded-xl border px-3
               text-xs font-semibold
-              transition
-              sm:gap-2 sm:px-4 sm:text-sm
+              transition-all duration-200
+              sm:text-sm
               ${
-                selected
-                  ? config.activeClass
-                  : config.inactiveClass
+                feedbackFilter === "Pending"
+                  ? "border-[#f2c94c] bg-[#fff8dc] text-[#b7791f]"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-[#f2c94c]"
               }
             `}
           >
-            <span className="shrink-0">
-              {config.icon}
+            <span className="flex min-w-0 items-center gap-1.5">
+              <Clock3
+                size={14}
+                className="shrink-0 text-[#b7791f]"
+              />
+              <span className="truncate">Pending</span>
             </span>
 
-            <span className="truncate">
-              {config.label}
-            </span>
-
-            <span
-              className={`
-                shrink-0 rounded-full
-                px-2 py-0.5 text-[11px] sm:text-xs
-                ${
-                  selected
-                    ? "bg-white/20 text-white"
-                    : config.badgeClass
-                }
-              `}
-            >
-              {count}
+            <span className="ml-1 flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#fff1b8] px-1.5 text-[10px] font-bold text-[#b7791f]">
+              {pendingCount}
             </span>
           </button>
-        );
-      })}
-    </div>
-  </div>
 
-</div>
+          {/* Completed */}
+          <button
+            type="button"
+            onClick={() => setFeedbackFilter("Completed")}
+            className={`
+              flex h-10 min-w-0 items-center justify-between
+              rounded-xl border px-3
+              text-xs font-semibold
+              transition-all duration-200
+              sm:text-sm
+              ${
+                feedbackFilter === "Completed"
+                  ? "border-[#50c896] bg-[#eafaf4] text-[#278f69]"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-[#50c896]"
+              }
+            `}
+          >
+            <span className="flex min-w-0 items-center gap-1.5">
+              <CheckCircle2
+                size={14}
+                className="shrink-0 text-[#278f69]"
+              />
+              <span className="truncate">Completed</span>
+            </span>
+
+            <span className="ml-1 flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#d9f5e9] px-1.5 text-[10px] font-bold text-[#278f69]">
+              {completedCount}
+            </span>
+          </button>
 
         </div>
+      </div>
+
+      {/* =================================================
+          FEEDBACK MONTH
+      ================================================= */}
+      <div className="min-w-0">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+          Feedback Month
+        </p>
+
+        <div className="grid grid-cols-2 gap-2">
+
+          <select
+            value={selectedMonth}
+            onChange={(e) =>
+              setSelectedMonth(Number(e.target.value))
+            }
+            className="
+              h-10 w-full min-w-0
+              rounded-xl
+              border border-slate-200
+              bg-white
+              px-3
+              text-xs font-semibold text-slate-700
+              outline-none
+              focus:border-[#1392d3]
+              focus:ring-2 focus:ring-[#1392d3]/10
+              sm:text-sm
+            "
+          >
+            {monthOptions.map((month) => (
+              <option
+                key={month.value}
+                value={month.value}
+              >
+                {month.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={selectedYear}
+            onChange={(e) =>
+              setSelectedYear(Number(e.target.value))
+            }
+            className="
+              h-10 w-full min-w-0
+              rounded-xl
+              border border-slate-200
+              bg-white
+              px-3
+              text-xs font-semibold text-slate-700
+              outline-none
+              focus:border-[#1392d3]
+              focus:ring-2 focus:ring-[#1392d3]/10
+              sm:text-sm
+            "
+          >
+            {yearOptions.map((year) => (
+              <option
+                key={year}
+                value={year}
+              >
+                {year}
+              </option>
+            ))}
+          </select>
+
+        </div>
+      </div>
+
+      {/* =================================================
+          HCA STATUS
+      ================================================= */}
+      <div className="min-w-0">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+          HCA Status
+        </p>
+
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+
+          {(Object.keys(statusConfig) as HCAStatus[]).map(
+            (status) => {
+              const config = statusConfig[status];
+              const count = getStatusCount(status);
+              const selected = statusFilter === status;
+
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() =>
+                    setStatusFilter(status)
+                  }
+                  className={`
+                    flex h-10 min-w-0
+                    items-center justify-between
+                    gap-1
+                    rounded-xl
+                    border
+                    px-2.5
+                    text-[11px]
+                    font-semibold
+                    transition-all duration-200
+                    sm:px-3
+                    sm:text-xs
+                    ${
+                      selected
+                        ? config.activeClass
+                        : config.inactiveClass
+                    }
+                  `}
+                >
+                  <span className="flex min-w-0 items-center gap-1">
+                    <span className="shrink-0">
+                      {config.icon}
+                    </span>
+
+                    <span className="truncate">
+                      {config.label}
+                    </span>
+                  </span>
+
+                  <span
+                    className={`
+                      flex h-5 min-w-5 shrink-0
+                      items-center justify-center
+                      rounded-full
+                      px-1
+                      text-[9px]
+                      font-bold
+                      ${
+                        selected
+                          ? "bg-white/20 text-white"
+                          : config.badgeClass
+                      }
+                    `}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            }
+          )}
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
         {/* ===================================================
             TABLE
@@ -1907,8 +1959,12 @@ const HCATable: React.FC<HCATableProps> = ({
   getCompletedSectionsCount,
   hasSavedFeedback,
 }) => {
+  const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
+    const users = useSelector(
+    (state: any) => state.AdminUsers
+  );
   return (
-    <table className="w-full min-w-[1250px]">
+   <table className="w-full min-w-[1250px] table-fixed">
 
       <thead>
         <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
@@ -1922,7 +1978,7 @@ const HCATable: React.FC<HCATableProps> = ({
           </th>
 
           <th className="px-5 py-4">
-            HCA Status
+           Client Name
           </th>
 
           <th className="px-5 py-4">
@@ -1957,7 +2013,7 @@ const HCATable: React.FC<HCATableProps> = ({
               index
             ) => {
 console.log(
-"Check Current Information-----",
+"Check Current Information-----",item
 )
               const status =
                 item?.CurrentStatus as HCAStatus;
@@ -1974,7 +2030,7 @@ const availableSections =
 
 const hasAvailableFeedback =
   availableSections.length > 0;
-
+const ClientId=GetClientId(DeploymentInfo,item?.userId)
 const feedbackStatus =
   getFeedbackStatus(item);
 const applicableCount =
@@ -2006,16 +2062,11 @@ const completedCount =
 
                   <td className="px-5 py-4">
 
-                    <span className="font-semibold text-slate-800">
+                    <span className=" text-slate-800">
                       {GetHCPFullName(
                         UserFullInfo,
                         item?.userId
-                      ) ||
-                        `${item?.HCPFirstName || ""} ${
-                          item?.HCPSurName ||
-                          item?.LastName ||
-                          ""
-                        }`}
+                      )}
                     </span>
 
                   </td>
@@ -2023,22 +2074,7 @@ const completedCount =
                   {/* STATUS */}
 
                   <td className="px-5 py-4">
-
-                    <span
-                      className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                        config?.badgeClass ||
-                        "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {
-                        config?.icon
-                      }
-
-                      {
-                        item?.CurrentStatus ||
-                        "Unknown"
-                      }
-                    </span>
+{GetClientName(users,ClientId)}
 
                   </td>
 
@@ -2126,7 +2162,7 @@ const completedCount =
         console.log("Check View Information----",)
       }
       }
-      className="inline-flex items-center gap-2 rounded-xl border border-[#50c896]/30 bg-[#50c896]/10 px-4 py-2.5 text-sm font-semibold text-[#278f69] transition hover:bg-[#50c896] hover:text-white"
+      className="inline-flex items-center gap-2 rounded-xl border border-[#50c896]/30 bg-[#50c896]/10 px-2 py-2.5 text-xs font-semibold text-[#278f69] transition hover:bg-[#50c896] hover:text-white"
     >
       <Eye size={16} />
       View Feedback
@@ -2137,9 +2173,9 @@ const completedCount =
     <button
       type="button"
       onClick={() =>
-        onStartFeedback(item)
+        onStartFeedback({ClientId,...item})
       }
-      className="inline-flex items-center gap-2 rounded-xl bg-[#1392d3] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#107eaf]"
+      className="inline-flex items-center gap-2 rounded-xl bg-[#1392d3] px-2 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#107eaf]"
     >
       <FileText size={16} />
       Start Feedback
@@ -2245,6 +2281,10 @@ const FeedbackScreen: React.FC<
     isSaving,
     setIsSaving,
   ] = useState(false);
+
+  /* UI ONLY: role-level slide navigation. Existing save/API logic is unchanged. */
+  const [currentSlide, setCurrentSlide] = useState(0);
+
 useEffect(() => {
   if (
     mode !== "view" ||
@@ -2463,6 +2503,12 @@ useEffect(() => {
             ""
         );
 
+
+        const ImpClientId=  String(
+          hca?.ClientId 
+         
+        );
+
       if (!userId) {
         alert(
           "HCA UserId is missing."
@@ -2474,6 +2520,11 @@ useEffect(() => {
         SavedFeedback = {
         UserId:
           userId,
+
+          
+ClientId:ImpClientId,
+
+
 
         SectionId:
           section.id,
@@ -2588,6 +2639,11 @@ const handleSaveRole2 = async (
         ""
     );
 
+        const ImpClientId=  String(
+          hca?.ClientId ||
+          ""
+        );
+        
     if (!userId) {
       alert("HCA UserId is missing.");
       return;
@@ -2595,7 +2651,7 @@ const handleSaveRole2 = async (
 
     const feedback: SavedFeedback = {
       UserId: userId,
-
+ClientId:ImpClientId,
       // ONE SECTION ID FOR ENTIRE ROLE 2
       SectionId: "role-2",
 
@@ -2693,7 +2749,11 @@ const handleSaveRole3 = async (
         hca?.id ||
         ""
     );
-
+    const ImpClientId=  String(
+          hca?.ClientId ||
+          ""
+        );
+        
     if (!userId) {
       alert("HCA UserId is missing.");
       return;
@@ -2701,7 +2761,7 @@ const handleSaveRole3 = async (
 
     const feedback: SavedFeedback = {
       UserId: userId,
-
+ClientId:ImpClientId,
       // ONE RECORD FOR ENTIRE ROLE 3
       SectionId: "role-3-welfare",
 
@@ -2754,6 +2814,51 @@ const handleSaveRole3 = async (
     setIsSaving(false);
   }
 };
+
+
+ const downloadPDF = async (ImpFileName:any) => {
+     try {
+   
+       const element = document.getElementById("DownloadSection");
+ 
+       if (!element) {
+         throw new Error("Transaction history HTML not found");
+       }
+ 
+       const { default: html2pdf } = await import("html2pdf.js");
+ 
+      const options: any = {
+        margin: 5,
+      
+      pagebreak: {
+  mode: ["css", "legacy"],
+},
+        filename: `${ImpFileName}-Feedback.pdf`,
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          backgroundColor: "#ffffff",
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
+        },
+      } as any;
+
+      await html2pdf().from(element).set(options).save();
+
+     } catch (error: any) {
+       console.error("Download PDF Error:", error);
+ 
+       alert(
+         error?.message ||
+           "Failed to download transaction history."
+       );
+     }
+   };
   /* =======================================================
      AUDIO UPLOAD
   ======================================================= */
@@ -2801,7 +2906,11 @@ const handleSaveRandomCall = async (
         hca?.id ||
         ""
     );
-
+   const ImpClientId=  String(
+          hca?.ClientId ||
+          ""
+        );
+        
     if (!userId) {
       alert("HCA UserId is missing.");
       return;
@@ -2809,7 +2918,7 @@ const handleSaveRandomCall = async (
 
     const feedback: SavedFeedback = {
       UserId: userId,
-
+ClientId:ImpClientId,
       // ONE ID FOR THE ENTIRE RANDOM CALL
       SectionId: "random-hca-call",
 
@@ -3060,7 +3169,33 @@ const handleSaveRandomCall = async (
             </div>
 
           </div>
+  <button
+  type="button"
+  onClick={onBack}
+  className="
+    inline-flex h-10 items-center justify-center gap-2
+    rounded-xl
+    border border-slate-200
+    bg-white
+    px-3
+    text-sm font-medium text-slate-600
+    shadow-sm
+    transition-all duration-200
+    hover:-translate-x-0.5
+    hover:border-[#1392d3]
+    hover:bg-[#1392d3]/5
+    hover:text-[#1392d3]
+    hover:shadow-md
+    active:scale-95
+  "
+  aria-label="Back"
+>
+  <ArrowLeft size={18} strokeWidth={2} />
 
+  <span className="hidden sm:inline">
+    Back
+  </span>
+</button>
         </div>
 
       </div>
@@ -3124,300 +3259,459 @@ const handleSaveRandomCall = async (
       </div>
 
       {/* =====================================================
-          SECTIONS
+          ROLE SLIDES — UI ONLY
+          One slide per role. All sections/questions for the
+          active role are displayed together.
       ===================================================== */}
+      {(() => {
+        const slideRoles: FeedbackRole[] = [
+          "Role 1",
+          "Role 2",
+          "Role 3",
+          "Random HCA Call",
+          "Termination",
+        ];
 
-<div className="space-y-4">
+        const availableRoles = slideRoles.filter((role) =>
+          sections.some((section) => section.role === role)
+        );
 
-  {/* =====================================================
-      1. ROLE 1
-  ===================================================== */}
+        const activeRole = availableRoles[currentSlide];
+        const activeSections = sections.filter(
+          (section) => section.role === activeRole
+        );
 
-  {sections
-    .filter(
-      (section) => section.role === "Role 1"
-    )
-    .map((section, sectionIndex) => (
-      <FeedbackSectionCard
-        key={section.id}
-        section={section}
-        sectionIndex={sectionIndex}
-        answers={answers}
-        open={
-          openSections[section.id] ?? false
-        }
-        readOnly={mode === "view"}
-        isSaving={isSaving}
-        onToggle={() =>
-          setOpenSections((previous) => ({
-            ...previous,
-            [section.id]:
-              !previous[section.id],
-          }))
-        }
-        onAnswerChange={updateAnswer}
-        onSaveSection={handleSaveSection}
-        showSaveButton={true}
-      />
-    ))}
+        const isFirstSlide = currentSlide === 0;
+        const isLastSlide = currentSlide === availableRoles.length - 1;
 
+        const goToPreviousSlide = () => {
+          if (!isFirstSlide) {
+            setCurrentSlide((previous) => previous - 1);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        };
 
-  {/* =====================================================
-      2. ROLE 2
-      ONE SAVE BUTTON
-  ===================================================== */}
+        const goToNextSlide = () => {
+          if (!isLastSlide) {
+            setCurrentSlide((previous) => previous + 1);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        };
 
-  {sections.some(
-    (section) => section.role === "Role 2"
-  ) && (
-    <div className="space-y-4">
+        if (!activeRole) return null;
 
-      {sections
-        .filter(
-          (section) => section.role === "Role 2"
-        )
-        .map((section, sectionIndex) => (
-          <FeedbackSectionCard
-            key={section.id}
-            section={section}
-            sectionIndex={sectionIndex}
-            answers={answers}
-            open={
-              openSections[section.id] ?? false
-            }
-            readOnly={mode === "view"}
-            isSaving={isSaving}
-            showSaveButton={false}
-            onToggle={() =>
-              setOpenSections((previous) => ({
-                ...previous,
-                [section.id]:
-                  !previous[section.id],
-              }))
-            }
-            onAnswerChange={updateAnswer}
-          />
-        ))}
+        const roleTitle: Record<FeedbackRole, string> = {
+          "Role 1": "Role 1 — Complete Feedback",
+          "Role 2": "Role 2 — Complete All Questions",
+          "Role 3": "Role 3 — Welfare Parameters Analysis",
+          "Random HCA Call": "Random HCA Call — Complete All Questions",
+          "Termination": "Termination — Complete All Questions",
+        };
 
-      {mode === "create" && (
-        <div className="flex justify-end rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        return (
+          <div className="space-y-5">
+            {/* =================================================
+                SLIDE PROGRESS
+            ================================================= */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#1392d3]">
+                    Feedback Progress
+                  </p>
+                  <h3 className="mt-1 text-base font-bold text-slate-800 sm:text-lg">
+                    {activeRole}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Slide {currentSlide + 1} of {availableRoles.length} · All questions for this role are on one slide.
+                  </p>
+                </div>
+<div className="flex flex-wrap items-center gap-2">
+  {availableRoles.map((role, index) => (
+    <div
+      key={role}
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
+        index === currentSlide
+          ? "border-[#1392d3] bg-[#1392d3] text-white shadow-sm"
+          : index < currentSlide
+            ? "border-[#50c896] bg-[#50c896]/10 text-[#278f69]"
+            : "border-[#f2c94c] bg-[#fff8dc] text-[#b7791f]"
+      }`}
+    >
+      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-[10px]">
+        {index + 1}
+      </span>
 
-          <button
-            type="button"
-            disabled={isSaving}
-            onClick={() =>
-              handleSaveRole2(
-                sections.filter(
-                  (section) =>
-                    section.role === "Role 2"
-                )
-              )
-            }
-            className="inline-flex items-center gap-2 rounded-xl bg-[#50c896] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#43b889] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSaving ? (
-              <>
-                <Save size={17} />
-                Saving Role 2...
-              </>
-            ) : (
-              <>
-                <Check size={17} />
-                Complete Role 2
-              </>
-            )}
-          </button>
-
-        </div>
-      )}
-
+      <span className="hidden sm:inline">
+        {role}
+      </span>
     </div>
-  )}
-
-
-  {/* =====================================================
-      3. ROLE 3
-      ONE SAVE BUTTON
-  ===================================================== */}
-
-  {sections.some(
-    (section) => section.role === "Role 3"
-  ) && (
-    <div className="space-y-4">
-
-      {sections
-        .filter(
-          (section) => section.role === "Role 3"
-        )
-        .map((section, sectionIndex) => (
-          <FeedbackSectionCard
-            key={section.id}
-            section={section}
-            sectionIndex={sectionIndex}
-            answers={answers}
-            open={
-              openSections[section.id] ?? false
-            }
-            readOnly={mode === "view"}
-            isSaving={isSaving}
-            showSaveButton={false}
-            onToggle={() =>
-              setOpenSections((previous) => ({
-                ...previous,
-                [section.id]:
-                  !previous[section.id],
-              }))
-            }
-            onAnswerChange={updateAnswer}
-          />
-        ))}
-
-      {mode === "create" && (
-        <div className="flex justify-end rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-          <button
-            type="button"
-            disabled={isSaving}
-           onClick={() =>
-  handleSaveRole3(
-    sections.filter(
-      (section) =>
-        section.role === "Role 3"
-    )
-  )
-}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#50c896] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#43b889] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSaving ? (
-              <>
-                <Save size={17} />
-                Saving Role 3...
-              </>
-            ) : (
-              <>
-                <Check size={17} />
-                Complete Role 3
-              </>
-            )}
-          </button>
-
-        </div>
-      )}
-
-    </div>
-  )}
-
-
-  {/* =====================================================
-      4. RANDOM HCA CALL
-      ONE SAVE BUTTON
-  ===================================================== */}
-
-  {sections.some(
-    (section) =>
-      section.role === "Random HCA Call"
-  ) && (
-    <div className="space-y-4">
-
-      {sections
-        .filter(
-          (section) =>
-            section.role === "Random HCA Call"
-        )
-        .map((section, sectionIndex) => (
-          <FeedbackSectionCard
-            key={section.id}
-            section={section}
-            sectionIndex={sectionIndex}
-            answers={answers}
-            open={
-              openSections[section.id] ?? false
-            }
-            readOnly={mode === "view"}
-            isSaving={isSaving}
-            showSaveButton={false}
-            onToggle={() =>
-              setOpenSections((previous) => ({
-                ...previous,
-                [section.id]:
-                  !previous[section.id],
-              }))
-            }
-            onAnswerChange={updateAnswer}
-          />
-        ))}
-
-      {mode === "create" && (
-        <div className="flex justify-end rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-          <button
-            type="button"
-            disabled={isSaving}
-            onClick={() =>
-              handleSaveRandomCall(
-                sections.filter(
-                  (section) =>
-                    section.role ===
-                    "Random HCA Call"
-                )
-              )
-            }
-            className="inline-flex items-center gap-2 rounded-xl bg-[#50c896] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#43b889] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSaving ? (
-              <>
-                <Save size={17} />
-                Saving Random HCA Call...
-              </>
-            ) : (
-              <>
-                <Check size={17} />
-                Complete Random HCA Call
-              </>
-            )}
-          </button>
-
-        </div>
-      )}
-
-    </div>
-  )}
-
-
-  {/* =====================================================
-      5. TERMINATION
-  ===================================================== */}
-
-  {sections
-    .filter(
-      (section) =>
-        section.role === "Termination"
-    )
-    .map((section, sectionIndex) => (
-      <FeedbackSectionCard
-        key={section.id}
-        section={section}
-        sectionIndex={sectionIndex}
-        answers={answers}
-        open={
-          openSections[section.id] ?? false
-        }
-        readOnly={mode === "view"}
-        isSaving={isSaving}
-        onToggle={() =>
-          setOpenSections((previous) => ({
-            ...previous,
-            [section.id]:
-              !previous[section.id],
-          }))
-        }
-        onAnswerChange={updateAnswer}
-        onSaveSection={handleSaveSection}
-        showSaveButton={true}
-      />
-    ))}
-
+  ))}
 </div>
+              </div>
+            </div>
+
+            {/* =================================================
+                ONE OUTER CARD FOR THE ENTIRE ROLE
+            ================================================= */}
+<div
+  className="overflow-hidden rounded-2xl border border-[#e2e8f0] bg-[#ffffff] shadow-sm"
+  id="DownloadSection"
+>
+  <div
+    className="border-b border-[#e2e8f0] px-5 py-5 sm:px-7"
+    style={{
+      background:
+        "linear-gradient(to right, rgba(19,146,211,0.05), #ffffff, rgba(80,200,150,0.05))",
+    }}
+  >
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <span
+          className="inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
+          style={{
+            backgroundColor: "rgba(19,146,211,0.10)",
+            color: "#1392d3",
+          }}
+        >
+          {activeRole}
+        </span>
+
+        <h3 className="mt-2 text-lg font-bold text-[#1e293b] sm:text-xl">
+          {roleTitle[activeRole]}
+        </h3>
+
+        <p className="mt-1 text-sm leading-6 text-[#64748b]">
+          Complete all questions below. There is no section-to-section Next button.
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => downloadPDF(hca?.HCPFirstName)}
+          type="button"
+          className="inline-flex min-h-8 cursor-pointer items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-semibold shadow-sm transition-all"
+          style={{
+            borderColor: "#1392d3",
+            backgroundColor: "#ffffff",
+            color: "#1392d3",
+          }}
+        >
+          <FileText size={17} />
+          Download
+        </button>
+
+        <div
+          className="shrink-0 rounded-xl px-4 py-3 text-center"
+          style={{
+            border: "1px solid rgba(19,146,211,0.15)",
+            backgroundColor: "rgba(19,146,211,0.05)",
+          }}
+        >
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
+            Sections in this slide
+          </p>
+
+          <p className="mt-0.5 text-xl font-bold text-[#1392d3]">
+            {activeSections.length}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div className="space-y-6 p-4 sm:p-6 lg:p-7">
+    {activeSections.map((section, sectionIndex) => (
+      <div
+        key={section.id}
+        className="overflow-hidden rounded-2xl border bg-[#f8fafc]"
+        style={{
+          borderColor: "#e2e8f0",
+          backgroundColor: "rgba(248,250,252,0.60)",
+        }}
+      >
+        <div className="border-b border-[#e2e8f0] bg-[#ffffff] px-4 py-4 sm:px-5">
+          <div className="flex items-start gap-3">
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold"
+              style={{
+                backgroundColor: "rgba(19,146,211,0.10)",
+                color: "#1392d3",
+              }}
+            >
+              {sectionIndex + 1}
+            </div>
+
+            <div className="min-w-0">
+              <span
+                className="inline-flex rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-wide"
+                style={{
+                  backgroundColor: "rgba(19,146,211,0.10)",
+                  color: "#1392d3",
+                }}
+              >
+                {activeRole}
+              </span>
+
+              <h4 className="mt-1 text-sm font-bold leading-6 text-[#1e293b] sm:text-base">
+                {section.title}
+              </h4>
+
+              {section.description && (
+                <p className="mt-1 text-xs leading-5 text-[#64748b] sm:text-sm">
+                  {section.description}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6 p-4 sm:p-5">
+          {section.questions.map((question, questionIndex) => (
+            <div
+              key={question.id}
+              className={`space-y-2.5 ${
+                question.question.startsWith("MANDATORY")
+                  ? "rounded-xl p-4"
+                  : ""
+              }`}
+              style={
+                question.question.startsWith("MANDATORY")
+                  ? {
+                      border: "1px solid #fecaca",
+                      backgroundColor: "rgba(254,242,242,0.60)",
+                    }
+                  : undefined
+              }
+            >
+              <label className="block whitespace-pre-line text-sm font-semibold leading-6 text-[#334155]">
+                {question.subLabel ? (
+                  <span className="mr-2 font-bold text-[#1392d3]">
+                    {question.subLabel}.
+                  </span>
+                ) : (
+                  !question.question.startsWith("MANDATORY") && (
+                    <span className="mr-2 text-[#94a3b8]">
+                      Q{questionIndex + 1}.
+                    </span>
+                  )
+                )}
+
+                {question.question}
+
+                {question.required && (
+                  <span className="ml-1 text-[#ef4444]">*</span>
+                )}
+              </label>
+
+              {question.type === "select" ? (
+                <select
+                  value={answers[question.id] || ""}
+                  disabled={mode === "view"}
+                  onChange={(e) =>
+                    updateAnswer(question.id, e.target.value)
+                  }
+                  className="w-full rounded-xl border border-[#cbd5e1] px-4 py-3 text-sm outline-none transition"
+                  style={
+                    mode === "view"
+                      ? {
+                          backgroundColor: "#f1f5f9",
+                          color: "#475569",
+                        }
+                      : {
+                          backgroundColor: "#ffffff",
+                          color: "#334155",
+                        }
+                  }
+                >
+                  <option value="">Select Answer</option>
+
+                  {question.options?.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <textarea
+                  value={answers[question.id] || ""}
+                  onChange={(e) =>
+                    updateAnswer(question.id, e.target.value)
+                  }
+                  readOnly={mode === "view"}
+                  rows={
+                    question.question.startsWith("MANDATORY") ? 3 : 4
+                  }
+                  placeholder={
+                    mode === "view"
+                      ? "No answer recorded"
+                      : "Enter feedback..."
+                  }
+                  className="w-full resize-none rounded-xl border border-[#cbd5e1] px-4 py-3 text-sm leading-6 text-[#334155] outline-none transition"
+                  style={{
+                    backgroundColor:
+                      mode === "view" ? "#f1f5f9" : "#ffffff",
+                  }}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {/* =================================================
+      ROLE-LEVEL ACTIONS
+  ================================================= */}
+  <div
+    className="border-t border-[#e2e8f0] px-4 py-4 sm:px-6 sm:py-5"
+    style={{
+      backgroundColor: "rgba(248,250,252,0.70)",
+    }}
+  >
+    <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <button
+        type="button"
+        onClick={goToPreviousSlide}
+        disabled={isFirstSlide}
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#e2e8f0] bg-[#ffffff] px-5 py-3 text-sm font-semibold text-[#475569] shadow-sm transition-all disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        <ArrowLeft size={17} />
+        Previous Role
+      </button>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        {mode === "create" && activeRole === "Role 2" && (
+          <button
+            type="button"
+            disabled={isSaving}
+            onClick={() => {
+              handleSaveRole2(activeSections);
+              if (!isSaving && !isLastSlide) goToNextSlide();
+            }}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
+            style={{
+              backgroundColor: "#50c896",
+              color: "#ffffff",
+            }}
+          >
+            {isSaving ? <Save size={17} /> : <Check size={17} />}
+            {isSaving
+              ? "Saving Role 2..."
+              : isLastSlide
+              ? "Complete Role 2"
+              : "Complete Role 2 & Next"}
+          </button>
+        )}
+
+        {mode === "create" && activeRole === "Role 3" && (
+          <button
+            type="button"
+            disabled={isSaving}
+            onClick={() => {
+              handleSaveRole3(activeSections);
+              if (!isSaving && !isLastSlide) goToNextSlide();
+            }}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
+            style={{
+              backgroundColor: "#50c896",
+              color: "#ffffff",
+            }}
+          >
+            {isSaving ? <Save size={17} /> : <Check size={17} />}
+            {isSaving
+              ? "Saving Role 3..."
+              : isLastSlide
+              ? "Complete Role 3"
+              : "Complete Role 3 & Next"}
+          </button>
+        )}
+
+        {mode === "create" && activeRole === "Random HCA Call" && (
+          <button
+            type="button"
+            disabled={isSaving}
+            onClick={() => {
+              handleSaveRandomCall(activeSections);
+              if (!isSaving && !isLastSlide) goToNextSlide();
+            }}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
+            style={{
+              backgroundColor: "#50c896",
+              color: "#ffffff",
+            }}
+          >
+            {isSaving ? <Save size={17} /> : <Check size={17} />}
+            {isSaving
+              ? "Saving Random HCA Call..."
+              : isLastSlide
+              ? "Complete Random HCA Call"
+              : "Complete Random HCA Call & Next"}
+          </button>
+        )}
+
+        {mode === "create" && activeRole === "Role 1" && (
+          <button
+            type="button"
+            disabled={isSaving}
+            onClick={() => {
+              activeSections.forEach((section) => {
+                handleSaveSection(section);
+              });
+
+              if (!isSaving && !isLastSlide) goToNextSlide();
+            }}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
+            style={{
+              backgroundColor: "#50c896",
+              color: "#ffffff",
+            }}
+          >
+            <Check size={17} />
+            Complete Role 1 & Next
+          </button>
+        )}
+
+        {mode === "create" &&
+          activeRole === "Termination" &&
+          activeSections[0] && (
+            <button
+              type="button"
+              disabled={isSaving}
+              onClick={() => handleSaveSection(activeSections[0])}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
+              style={{
+                backgroundColor: "#50c896",
+                color: "#ffffff",
+              }}
+            >
+              <Check size={17} />
+              Complete Termination
+            </button>
+          )}
+
+        {mode === "view" && !isLastSlide && (
+          <button
+            type="button"
+            onClick={goToNextSlide}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition"
+            style={{
+              backgroundColor: "#1392d3",
+              color: "#ffffff",
+            }}
+          >
+            Next Role
+            <ChevronDown size={17} className="-rotate-90" />
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+          </div>
+        );
+      })()}
 
       {/* =====================================================
           AUDIO UPLOAD
