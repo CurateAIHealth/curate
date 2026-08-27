@@ -20,6 +20,7 @@ import {
   Check,
   Upload,
   Save,
+  Download,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { GetClientId, GetClientName, GetHCPFullName } from "@/Lib/Actions";
@@ -781,7 +782,7 @@ const [qualityStatus, setQualityStatus] =
 
   const [selectedHCA, setSelectedHCA] =
     useState<any | null>(null);
-
+console.log("Check for HCA NAME---",selectedHCA)
   const [selectedSections, setSelectedSections] =
     useState<FeedbackSection[]>([]);
 
@@ -2237,7 +2238,7 @@ const FeedbackScreen: React.FC<
     useState<
       Record<string, string>
     >({});
-
+const [DownloadMessage, setDownloadMessage] = useState("");
   const [recordings, setRecordings] =
     useState<
       Record<
@@ -2818,7 +2819,8 @@ ClientId:ImpClientId,
 
  const downloadPDF = async (ImpFileName:any) => {
      try {
-   
+     
+   setDownloadMessage(`Please Wait Preparing ${ImpFileName} Feedback.......`)
        const element = document.getElementById("DownloadSection");
  
        if (!element) {
@@ -2849,7 +2851,12 @@ ClientId:ImpClientId,
       } as any;
 
       await html2pdf().from(element).set(options).save();
+   setDownloadMessage(`Downloaded ${ImpFileName} Feedback`)
 
+
+setTimeout(() => {
+  setDownloadMessage("");
+}, 5000);
      } catch (error: any) {
        console.error("Download PDF Error:", error);
  
@@ -3325,6 +3332,42 @@ ClientId:ImpClientId,
                   <p className="mt-1 text-sm text-slate-500">
                     Slide {currentSlide + 1} of {availableRoles.length} · All questions for this role are on one slide.
                   </p>
+               
+{DownloadMessage && (
+  <div className="fixed right-5 top-5 z-[9999] w-[340px] max-w-[calc(100vw-2rem)]">
+    <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-xl ring-1 ring-slate-900/5">
+      
+      <div
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+          DownloadMessage.includes("Downloaded")
+            ? "bg-emerald-50 text-emerald-600"
+            : "bg-blue-50 text-[#1392d3]"
+        }`}
+      >
+        {DownloadMessage.includes("Downloaded") ? (
+          <CheckCircle2 size={20} strokeWidth={2.5} />
+        ) : (
+          <Download size={20} strokeWidth={2.5} />
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold text-slate-800">
+          {DownloadMessage.includes("Downloaded")
+            ? "Download Complete"
+            : "Preparing Download"}
+        </p>
+
+        <p className="mt-1 text-xs leading-5 text-slate-500">
+          {DownloadMessage.includes("Downloaded")
+            ? DownloadMessage
+            : DownloadMessage}
+        </p>
+      </div>
+
+    </div>
+  </div>
+)}
                 </div>
 <div className="flex flex-wrap items-center gap-2">
   {availableRoles.map((role, index) => (
@@ -3388,7 +3431,11 @@ ClientId:ImpClientId,
 
       <div className="flex items-center gap-2">
         <button
-          onClick={() => downloadPDF(hca?.HCPFirstName)}
+         onClick={() =>
+  downloadPDF(
+    `${hca?.FirstName || ""} ${hca?.Surname || ""}`.trim()
+  )
+}
           type="button"
           className="inline-flex min-h-8 cursor-pointer items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-semibold shadow-sm transition-all"
           style={{
@@ -3398,6 +3445,7 @@ ClientId:ImpClientId,
           }}
         >
           <FileText size={17} />
+          {hca?.HCPFirstName}
           Download
         </button>
 
@@ -4210,3 +4258,4 @@ const EmptyTable = ({
 };
 
 export default HCAFeedback;
+
