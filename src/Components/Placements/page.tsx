@@ -1378,23 +1378,32 @@ const UpdateReplacement = async (
       return;
     }
 
-    // Status updates
-    await Promise.all([
-      UpdateHCAnstatus(
+      const ExistingHCPStatusUpdate=await UpdateHCAnstatus(
         Exsting_HCP.HCA_Id,
           UpdatedCareTakerStatus?.trim() || "Bench"
-      ),
+      )
+
+          if (!ExistingHCPStatusUpdate?.success) {
+      SetActionStatusMessage(
+        ExistingHCPStatusUpdate?.message ||
+          "Replacement was created, but existing HCP status could not be updated."
+      );
+      return;
+    }
+
      
-      UpdateHCAnstatusInDeplyoment(
+        const AvailableHCPStatusUpdate=await UpdateHCAnstatusInDeplyoment(
         Available_HCP.userId,
         "Active"
-      ),
-      // UpdateHCAnstatusInFullInformation(
-      //   Available_HCP.userId
-      // ),
-      // DeleteHCAStatus(Exsting_HCP.HCA_Id),
-    ]);
+      )
 
+    if (!AvailableHCPStatusUpdate?.success) {
+      SetActionStatusMessage(
+        AvailableHCPStatusUpdate?.message ||
+          "Replacement was updated, but available HCP status could not be updated."
+      );
+      return;
+    }
     SetActionStatusMessage(
       "Replacement Updated, Please Wait Fetching Updated Data..."
     );
@@ -1406,7 +1415,10 @@ const UpdateReplacement = async (
         "/api/AdminPageInfo",
         {
           userId,
-          refreshType: "deployment",
+          refreshType:  [
+            "registeredUsers",
+            "deployment",
+          ],
         }
       );
 
