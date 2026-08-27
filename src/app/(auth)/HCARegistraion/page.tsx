@@ -182,17 +182,27 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
   const RegisterfromAdmin=useSelector((state:any)=>state.AdminRegister)
   const [heightInCm, setHeightInCm] = useState("");
 
-  const [Docs, setDocs] = useState({
-    ProfilePic: DEFAULT_PROFILE_PIC,
-    PanCard: '',
-    AdharCard: '',
-    AccountPassBook: '',
-    CertificatOne: '',
-    CertificatTwo: '',
-    VideoFile: '',
-    BVR: '',
-    HCPform:""
-  });
+ const [Docs, setDocs] = useState({
+  ProfilePic: DEFAULT_PROFILE_PIC,
+
+  PanCard: '',
+  AdharCard: '',
+  AccountPassBook: '',
+
+  CertificatOne: '',
+  CertificatTwo: '',
+
+  VideoFile: '',
+  BVR: '',
+  HCPform: '',
+
+  // NEW DOCUMENTS
+  ReferenceCertificate: '',
+  HealthCertificate: '',
+  Other: '',
+});
+
+console.log("Check Docs-----",Docs)
   const [form, setForm] = useState<FormState>({
     firstName: '',
     lastName:'',
@@ -4463,95 +4473,127 @@ form.HusbendContact!=="Not Available"&&
          
         </section>
 
-       <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
-          <h3 className="text-lg md:text-xl font-semibold text-[#ff1493] mb-4 border-b border-blue-300 pb-2">
-              Your Documents
-            </h3>
+     <section className="w-full p-4 mt-2 rounded-xl shadow-md border border-gray-300 bg-white">
+  <h3 className="text-lg md:text-xl font-semibold text-[#ff1493] mb-4 border-b border-blue-300 pb-2">
+    Your Documents
+  </h3>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 justify-items-center">
-              {['AadharCard', 'PanCard', 'Certificate One', 'Certificate Two', 'Account Pass Book', 'BVR','HCP form'].map((docKey) => (
-                <div
-                  key={docKey}
-                  className="flex flex-col items-center justify-between p-2 border border-blue-300 rounded-lg bg-gray-50 shadow-sm w-36 sm:w-40 h-40"
-                >
+  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 justify-items-center">
 
-                  {Docs[docKey as keyof typeof Docs] ? (
-                    docKey === 'BVR' ? (
-                      <div className="w-24 h-24 flex items-center justify-center bg-gray-100 rounded-md shadow-sm mb-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                          className="w-12 h-12 text-red-500"
-                        >
-                          <path d="M12 0C8.686 0 6 2.686 6 6v12c0 3.314 2.686 6 6 6s6-2.686 6-6V6c0-3.314-2.686-6-6-6zm3 18h-6v-2h6v2zm0-4h-6v-2h6v2zm0-4h-6V8h6v2z" />
-                        </svg>
-                      </div>
-                    ) : (
-                      <img
-                        src={Docs[docKey as keyof typeof Docs]}
-                        alt={docKey}
-                        className="w-24 h-24 object-cover rounded-md shadow-sm mb-2"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = DEFAULT_DOCUMENT_ICON;
-                        }}
-                      />
-                    )
-                  ) : (
-                    <div className="w-24 h-24 bg-gray-100 rounded-md flex items-center justify-center text-gray-500 mb-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-10 w-10"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                        />
-                      </svg>
-                    </div>
-                  )}
+    {[
+      "AadharCard",
+      "PanCard",
+      "Certificate One",
+      "Certificate Two",
+      "Account Pass Book",
+      "BVR",
+      "HCP form",
 
+      // NEW DOCUMENTS
+      "ReferenceCertificate",
+      "HealthCertificate",
+      "Other",
+    ].map((docKey) => (
 
-                  <label
-                    htmlFor={docKey}
-                    className="cursor-pointer text-center text-[10px] sm:text-[11px] text-white bg-teal-600 hover:bg-teal-500 px-3 py-1 rounded-full transition-colors duration-300"
-                  >
-                    {Docs[docKey as keyof typeof Docs] ? 'Update' : 'Upload'}{' '}
-                    {docKey.replace('Card', ' Card').replace('Book', ' Book').trim() }
-                  </label>
+      <div
+        key={docKey}
+        className="flex flex-col items-center justify-between p-2 border border-blue-300 rounded-lg bg-gray-50 shadow-sm w-36 sm:w-40 h-40"
+      >
 
-                  <input
-                    id={docKey}
-                    name={docKey}
-                    type="file"
-                    accept={docKey === 'BVR' ? 'application/pdf' : 'image/*'}
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                </div>
-              ))}
+        {Docs[docKey as keyof typeof Docs] ? (
+          docKey === "BVR" ? (
 
-
-              <div className="flex flex-col justify-between border border-gray-300 rounded-lg p-2 w-36 sm:w-40 h-40">
-                <textarea
-                  placeholder="Don’t have documents? Please explain."
-                  name="field_message"
-                  value={ReasonValue || ''}
-                  onChange={(e: any) => dispatch(UpdateDocmentSkipReason(e.target.value))}
-                  rows={4}
-                  className="w-full text-xs p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none"
-                />
-                <button className="text-center text-[10px] sm:text-[11px] text-white bg-teal-600 hover:bg-teal-500 px-2 py-1 rounded-full transition-colors duration-300">
-                  Submit Explanation
-                </button>
-              </div>
+            /* BVR PDF ICON */
+            <div className="w-24 h-24 flex items-center justify-center bg-gray-100 rounded-md shadow-sm mb-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                className="w-12 h-12 text-red-500"
+              >
+                <path d="M12 0C8.686 0 6 2.686 6 6v12c0 3.314 2.686 6 6 6s6-2.686 6-6V6c0-3.314-2.686-6-6-6zm3 18h-6v-2h6v2zm0-4h-6v-2h6v2zm0-4h-6V8h6v2z" />
+              </svg>
             </div>
-        </section>
+
+          ) : (
+
+            /* IMAGE */
+            <img
+              src={Docs[docKey as keyof typeof Docs]}
+              alt={docKey}
+              className="w-24 h-24 object-cover rounded-md shadow-sm mb-2"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  DEFAULT_DOCUMENT_ICON;
+              }}
+            />
+
+          )
+        ) : (
+
+          /* EMPTY DOCUMENT */
+          <div className="w-24 h-24 bg-gray-100 rounded-md flex items-center justify-center text-gray-500 mb-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-10 w-10"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+          </div>
+        )}
+
+        {/* UPLOAD / UPDATE BUTTON */}
+        <label
+          htmlFor={docKey}
+          className="cursor-pointer text-center text-[10px] sm:text-[11px] text-white bg-teal-600 hover:bg-teal-500 px-3 py-1 rounded-full transition-colors duration-300"
+        >
+          {Docs[docKey as keyof typeof Docs] ? "Update" : "Upload"}{" "}
+          {docKey
+            .replace("Card", " Card")
+            .replace("Book", " Book")
+            .replace("Certificate", " Certificate")
+            .trim()}
+        </label>
+
+        <input
+          id={docKey}
+          name={docKey}
+          type="file"
+          accept={docKey === "BVR" ? "application/pdf" : "image/*"}
+          onChange={handleImageChange}
+          className="hidden"
+        />
+      </div>
+    ))}
+
+    {/* EXPLANATION BOX */}
+    <div className="flex flex-col justify-between border border-gray-300 rounded-lg p-2 w-36 sm:w-40 h-40">
+      <textarea
+        placeholder="Don’t have documents? Please explain."
+        name="field_message"
+        value={ReasonValue || ""}
+        onChange={(e: any) =>
+          dispatch(UpdateDocmentSkipReason(e.target.value))
+        }
+        rows={4}
+        className="w-full text-xs p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none"
+      />
+
+      <button className="text-center text-[10px] sm:text-[11px] text-white bg-teal-600 hover:bg-teal-500 px-2 py-1 rounded-full transition-colors duration-300">
+        Submit Explanation
+      </button>
+    </div>
+
+  </div>
+</section>
 
 
         {/* <div className="md:flex justify-center gap-2">

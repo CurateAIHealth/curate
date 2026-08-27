@@ -1,6 +1,7 @@
 "use client";
 
 import { LoadingData } from "@/Components/Loading/page";
+import { statusFilters } from "@/Lib/Content";
 import { GetRegidterdUsers, GetUsersFullInfo, UpdateDocumentFollowUpStatus, UpdateDocumentFollowUpStatusInFullInfo } from "@/Lib/user.action";
 import { Update_Main_Filter_Status } from "@/Redux/action";
 import { Eye, Search, FileUser, LogOut, Clock, Calendar, X, Filter, LayoutDashboard } from "lucide-react";
@@ -39,7 +40,7 @@ export default function MedicalGlassDashboardTable() {
   const dispatch = useDispatch();
   const router = useRouter();
   const [fullInfo, setFullInfo] = useState<any>([]);
-  const [selectedFilter, setSelectedFilter] = useState("Active");
+  const [selectedFilter, setSelectedFilter] = useState("All");
 
   const [CurrentIndexNumber, setCurrentIndexNumber] = useState<any>()
    const [selectedRecord, setSelectedRecord] = useState<any>(false);
@@ -90,39 +91,28 @@ console.log("HCP Info:", info);
 }, []);
 
 
-  const handleChange = useCallback(
-    (index: number, field: keyof PreviewRow, value: string) => {
-      setPreviwData(prev => {
-        const updated = [...prev];
-        updated[index] = {
-          ...updated[index],
-          [field]: value
-        };
-        return updated;
-      });
+const statusCounts = useMemo(() => {
+  const counts: Record<string, number> = {
+    Active: 0,
+    Bench: 0,
+    Training: 0,
+    Sick: 0,
+    Leave: 0,
+    Terminated: 0,
+  };
 
-    },
-    []
-  );
+  RegisterdInfo
+    ?.filter((item: any) => item?.userType === "healthcare-assistant")
+    ?.forEach((item: any) => {
+      const status = item?.CurrentStatus || "Sick";
 
+      if (counts[status] !== undefined) {
+        counts[status]++;
+      }
+    });
 
-
-  const handleSave = useCallback(async(info: any) => {
-setSelectedRecord(true)
-    if (info.userType === "Vendor") {
-     const Post_Update:any=await UpdateDocumentFollowUpStatus(info.UserId,info)
-     if(Post_Update.success===true){
-      setUpdatingStatus("✅ Updated Successfully")
-     }
-    } else {
-      const NewNotificationTriger=await UpdateDocumentFollowUpStatus(info.UserId,info)
-      const Post_Update:any=await UpdateDocumentFollowUpStatusInFullInfo(info.UserId,info)
-     if(Post_Update.success===true){
-      setUpdatingStatus("✅ Updated Successfully")
-     }
-    }
-
-  }, []);
+  return counts;
+}, [RegisterdInfo]);
 
   const handleLogout = useCallback(() => {
     dispatch(Update_Main_Filter_Status(""));
@@ -137,12 +127,19 @@ setSelectedRecord(true)
       router.push("/");
     };
   
+const getDocumentsByUserId = (userId: string) => {
+  const userInfo = fullInfo.find(
+    (each: any) =>
+      each?.HCAComplitInformation?.UserId === userId
+  );
 
+  return userInfo?.HCAComplitInformation?.Documents || {};
+};
 
  const result = useMemo(() => {
-  return fullInfo
+  return RegisterdInfo
     .map((each: any) => {
-      const doc = each?.HCAComplitInformation?.Documents || {};
+      const doc = getDocumentsByUserId(each.userId) || {};
 
    const missingDocs = Object.keys(doc).filter((key) => {
   const value = doc[key];
@@ -155,26 +152,25 @@ const availableDocs = Object.keys(doc).filter((key) => {
 });
 
       return {
-        FirstName: GetHCPFullName(each?.HCAComplitInformation?.UserId) || "Not Provided",
-        DocumentSkipReason: each?.HCAComplitInformation?.DocumentSkipReason || "",
-        followTime: each?.HCAComplitInformation?.followTime || "",
-        followDate: each?.HCAComplitInformation?.followDate || "",
+        FirstName: GetHCPFullName(each?.userId) || "Not Provided",
         ContactNumber:
-         GetCurrentStatus(each?.HCAComplitInformation?.UserId)?.
+         GetCurrentStatus(each?.userId)?.
 ContactNumber
 ||
           "+91**********",
-        UserId: each?.HCAComplitInformation?.UserId || "",
+        UserId:each?.userId|| "",
         missingDocs,
         availableDocs,
-        userType: each?.HCAComplitInformation?.userType || "",
-        CurrentStatus:GetCurrentStatus(each?.HCAComplitInformation?.UserId)?.CurrentStatus || "Sick",
+        userType: each?.userType || "",
+        CurrentStatus:each.CurrentStatus || "Sick",
       };
     })
-    .filter((item:any) => item.missingDocs.length > 0&&item.CurrentStatus===selectedFilter); 
+    .filter((item:any) =>(selectedFilter === "All" ||
+      item.CurrentStatus === selectedFilter)&&item.userType===
+"healthcare-assistant"); 
 }, [fullInfo,selectedFilter]);
 
-
+console.log ("Get Current Values-------",result)
   const Valueresult: any = useMemo(() => {
     return RegisterdInfo.filter((obj: any) => obj.userType === "Vendor").map(
       (obj: any) => {
@@ -207,7 +203,7 @@ ContactNumber
 const FinelPreviewData = useMemo(() => {
   const map = new Map();
 
-  [...result, ...Valueresult].forEach((item: any) => {
+  [...result, ].forEach((item: any) => {
     if (!map.has(item.UserId)) {
       map.set(item.UserId, item);
     }
@@ -374,91 +370,54 @@ console.log("Check for Task-----",cleaned)
 
 
  {/* Status Filters */}
+{/* Status Filters */}
 <div className="flex flex-wrap items-center justify-center gap-2">
 
-  {/* Active */}
+  {/* All */}
   <button
     type="button"
-    onClick={() => setSelectedFilter("Active")}
+    onClick={() => setSelectedFilter("All")}
     className={`inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md ${
-      selectedFilter === "Active"
-        ? "ring-2 ring-green-400/40"
+      selectedFilter === "All"
+        ? "ring-2 ring-slate-400/40"
         : ""
     }`}
   >
-    <span className="h-3 w-3 rounded-full bg-gradient-to-br from-green-400 to-emerald-500" />
-    Active
+    <span className="h-3 w-3 rounded-full bg-gradient-to-br from-slate-500 to-slate-700" />
+
+    <span>All</span>
+
+    <span className="min-w-[22px] rounded-full bg-slate-100 px-1.5 py-0.5 text-center text-xs font-bold text-slate-600">
+      {Object.values(statusCounts).reduce((a, b) => a + b, 0)}
+    </span>
   </button>
 
-  {/* Bench */}
-  <button
-    type="button"
-    onClick={() => setSelectedFilter("Bench")}
-    className={`inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md ${
-      selectedFilter === "Bench"
-        ? "ring-2 ring-purple-400/40"
-        : ""
-    }`}
-  >
-    <span className="h-3 w-3 rounded-full bg-gradient-to-br from-purple-400 to-purple-600" />
-    Bench
-  </button>
 
-  {/* Training */}
-  <button
-    type="button"
-    onClick={() => setSelectedFilter("Training")}
-    className={`inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md ${
-      selectedFilter === "Training"
-        ? "ring-2 ring-orange-400/40"
-        : ""
-    }`}
-  >
-    <span className="h-3 w-3 rounded-full bg-gradient-to-br from-orange-400 to-red-500" />
-    Training
-  </button>
+  {/* Status Buttons */}
+  {statusFilters.map((status) => (
+    <button
+      key={status.label}
+      type="button"
+      onClick={() => setSelectedFilter(status.label)}
+      className={`inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md ${
+        selectedFilter === status.label
+          ? `ring-2 ${status.ring}`
+          : ""
+      }`}
+    >
+      <span
+        className={`h-3 w-3 rounded-full ${status.dot}`}
+      />
 
-  {/* Sick */}
-  <button
-    type="button"
-    onClick={() => setSelectedFilter("Sick")}
-    className={`inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md ${
-      selectedFilter === "Sick"
-        ? "ring-2 ring-yellow-400/40"
-        : ""
-    }`}
-  >
-    <span className="h-3 w-3 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500" />
-    Sick
-  </button>
+      <span>{status.label}</span>
 
-  {/* Leave */}
-  <button
-    type="button"
-    onClick={() => setSelectedFilter("Leave")}
-    className={`inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md ${
-      selectedFilter === "Leave"
-        ? "ring-2 ring-blue-400/40"
-        : ""
-    }`}
-  >
-    <span className="h-3 w-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600" />
-    Leave
-  </button>
-
-  {/* Terminated */}
-  <button
-    type="button"
-    onClick={() => setSelectedFilter("Terminated")}
-    className={`inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm border border-slate-100 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md ${
-      selectedFilter === "Terminated"
-        ? "ring-2 ring-red-400/40"
-        : ""
-    }`}
-  >
-    <span className="h-3 w-3 rounded-full bg-gradient-to-br from-red-400 to-rose-600" />
-    Terminated
-  </button>
+      <span
+        className={`min-w-[22px] rounded-full bg-${status.color}-50 px-1.5 py-0.5 text-center text-xs font-bold text-${status.color}-600`}
+      >
+        {statusCounts[status.label] || 0}
+      </span>
+    </button>
+  ))}
 
 </div>
   </div>
@@ -517,40 +476,52 @@ console.log("Check for Task-----",cleaned)
    <div className="rounded-2xl bg-white/70 backdrop-blur-xl border border-gray-200 shadow-lg overflow-hidden">
 
   {/* Header */}
-  <div
-    className="
-      hidden md:grid
-      grid-cols-[70px_180px_repeat(6,minmax(140px,1fr))]
-      bg-[#dff9f7]/80
-      border-b border-gray-200
-      min-w-[1100px]
-    "
-  >
-    {[
-      "S No",
-      "Names",
-      "Aadhar",
-      "PAN",
-      "BVR",
-      "Bank",
-      "Primary education certificate",
-      "Primary experience certificate",
-    ].map((h) => (
-      <div
-        key={h}
-        className="
-          py-4 px-3
-          text-sm
-          font-semibold
-          text-[#093c3a]
-          text-center
-          border-r border-gray-200
-        "
-      >
-        {h}
-      </div>
-    ))}
-  </div>
+<div
+  className="
+    grid
+    grid-cols-[60px_160px_repeat(9,minmax(130px,1fr))]
+    bg-[#dff9f7]/80
+    border-b border-gray-200
+    min-w-[1390px]
+  "
+>
+  {[
+    "S No",
+    "Names",
+    "Aadhar",
+    "PAN",
+    "BVR",
+    "Bank",
+    "Primary education certificate",
+    "Primary experience certificate",
+    "Reference Certificate",
+    "Health Certificate",
+    "Other",
+  ].map((h) => (
+    <div
+      key={h}
+      className="
+        min-h-[56px]
+        flex
+        items-center
+        justify-center
+        px-3
+        py-3
+        text-xs
+        sm:text-sm
+        font-semibold
+        text-[#093c3a]
+        text-center
+        border-r
+        border-gray-200
+        whitespace-normal
+        leading-tight
+      "
+    >
+      {h}
+    </div>
+  ))}
+</div>
 
   {/* Rows */}
   <div className="overflow-x-auto">
@@ -580,64 +551,89 @@ console.log("Check for Task-----",cleaned)
           });
         };
 
-        const documents = [
-          {
-            label: "Aadhar",
-            available: hasDocument(
-              "aadhar",
-              "aadhaar",
-              "aadhar card",
-              "aadhaar card"
-            ),
-          },
-          {
-            label: "PAN",
-            available: hasDocument(
-              "pan",
-              "pan card"
-            ),
-          },
-          {
-            label: "BVR",
-            available: hasDocument(
-              "bvr",
-              "bvr document",
-              "bvr certificate"
-            ),
-          },
-          {
-            label: "Bank",
-            available: hasDocument(
-              "bank",
-              "bank document",
-              "bank passbook",
-              "bank account"
-            ),
-          },
-          {
-            label: "Primary education certificate",
-            available: hasDocument(
-              "primary education certificate",
-              "education certificate",
-              "primary education"
-            ),
-          },
-          {
-            label: "Primary experience certificate",
-            available: hasDocument(
-              "primary experience certificate",
-              "experience certificate",
-              "primary experience"
-            ),
-          },
-        ];
+      const documents = [
+  {
+    label: "Aadhar",
+    available: hasDocument(
+      "aadhar",
+      "aadhaar",
+      "aadhar card",
+      "aadhaar card"
+    ),
+  },
+  {
+    label: "PAN",
+    available: hasDocument(
+      "pan",
+      "pan card"
+    ),
+  },
+  {
+    label: "BVR",
+    available: hasDocument(
+      "bvr",
+      "bvr document",
+      "bvr certificate"
+    ),
+  },
+  {
+    label: "Bank",
+    available: hasDocument(
+      "bank",
+      "bank document",
+      "bank passbook",
+      "bank account"
+    ),
+  },
+  {
+    label: "Primary education certificate",
+    available: hasDocument(
+      "primary education certificate",
+      "education certificate",
+      "primary education"
+    ),
+  },
+  {
+    label: "Primary experience certificate",
+    available: hasDocument(
+      "primary experience certificate",
+      "experience certificate",
+      "primary experience"
+    ),
+  },
+  {
+    label: "Reference Reference",
+    available: hasDocument(
+      "reference",
+      "reference document",
+      "reference certificate"
+    ),
+  },
+  {
+    label: "Health Certificate",
+    available: hasDocument(
+      "health certificate",
+      "health certificate document",
+      "medical certificate",
+      "medical"
+    ),
+  },
+  {
+    label: "Other",
+    available: hasDocument(
+      "other",
+      "other document",
+      "other certificate"
+    ),
+  },
+];
 
         return (
           <div
             key={p.UserId || i}
             className="
               grid
-              grid-cols-[70px_180px_repeat(6,minmax(140px,1fr))]
+              grid-cols-[70px_180px_repeat(9,minmax(140px,1fr))]
               items-center
               border-b border-gray-200
               hover:bg-[#f4fffe]

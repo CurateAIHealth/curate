@@ -669,6 +669,36 @@ export const GetHCPFullName = (users: any[], userId: any): string => {
   return fullName;
 };
 
+export const GetClientName = (users: any[], userId: any): string => {
+  if (!Array.isArray(users) || !users.length || !userId) {
+    return "";
+  }
+
+  const info = users.find((info: any) => info?.userId === userId);
+
+  if (!info) {
+    return "";
+  }
+
+  return info.FirstName;
+};
+
+export const GetClientId = (users: any[], userId: any): string => {
+  if (!Array.isArray(users) || !users.length || !userId) {
+    return "";
+  }
+
+  const info = users.find((info: any) => info?.HCAId === userId);
+
+  if (!info) {
+    return "not Found";
+  }
+
+
+  return info.
+ClientId;
+};
+
 export const GetPreviewUserType = (Regusers: any[], ImpUserid: string) => {
   const Task = Regusers?.find(
     (each: any) => each?.userId === ImpUserid

@@ -2927,4 +2927,42 @@ export  const ImportedinvoiceData = {
 
 
 
-    
+    export 
+    const statusFilters = [
+      {
+        label: "Active",
+        color: "green",
+        dot: "bg-gradient-to-br from-green-400 to-emerald-500",
+        ring: "ring-green-400/40",
+      },
+      {
+        label: "Bench",
+        color: "purple",
+        dot: "bg-gradient-to-br from-purple-400 to-purple-600",
+        ring: "ring-purple-400/40",
+      },
+      {
+        label: "Training",
+        color: "orange",
+        dot: "bg-gradient-to-br from-orange-400 to-red-500",
+        ring: "ring-orange-400/40",
+      },
+      {
+        label: "Sick",
+        color: "yellow",
+        dot: "bg-gradient-to-br from-yellow-400 to-amber-500",
+        ring: "ring-yellow-400/40",
+      },
+      {
+        label: "Leave",
+        color: "blue",
+        dot: "bg-gradient-to-br from-blue-400 to-blue-600",
+        ring: "ring-blue-400/40",
+      },
+      {
+        label: "Terminated",
+        color: "red",
+        dot: "bg-gradient-to-br from-red-400 to-rose-600",
+        ring: "ring-red-400/40",
+      },
+    ];
