@@ -13,7 +13,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useDispatch, useSelector } from 'react-redux';
 
 import { LoadingData } from '@/Components/Loading/page';
-import { EyeOff, Eye, CheckCircle, XCircle } from 'lucide-react';
+import { EyeOff, Eye, CheckCircle, XCircle, LogOut } from 'lucide-react';
 import { getDaysInMonth } from '@/Lib/Actions';
 
 
@@ -985,10 +985,10 @@ await UpdateFinelVerification(generatedUserId);
     }
   }
 
-  const handleLogout = async () => {
-    localStorage.removeItem("UserId");
+  const handleLogout =  () => {
 
-    router.push("/");
+
+    router.replace("/DashBoard");
   };
   const handleHeightFromCm = (cmValue: string) => {
     setHeightInCm(cmValue);
@@ -1104,14 +1104,12 @@ if (CurrentUserType === null) {
                 Kindly fill out the complete information below to register your profile.
                 Ensure that all details are accurate to facilitate faster verification and onboarding.
               </p>
-
-              {/* <button
+    <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-lg sm:rounded-xl font-semibold shadow-lg transition-all duration-150 text-sm sm:text-base"
+              className="flex cursor-pointer w-[100px] items-center ml-auto gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
             >
-              <LogOut size={18} className="flex-shrink-0" />
-              <span className="hidden xs:inline">Logout</span>
-            </button> */}
+              DashBoard
+            </button>
 
               {UpdatedStatusMessage && (
                 <div
