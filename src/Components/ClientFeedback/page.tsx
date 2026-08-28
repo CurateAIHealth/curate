@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock3,
+  Download,
   FileAudio,
   Mic,
   Play,
@@ -34,6 +35,7 @@ type AnswerType = "textarea" | "yesNo" | "text";
 type CallStatus = "Not Started" | "In Progress" | "Completed";
 
 interface Client {
+  LastUpdate: any;
   id: string;
   name: string;
   hcaName: string;
@@ -985,7 +987,25 @@ const allSections = useMemo(() => {
     }
   }, [SearchMonth, SearchYear]);
 
-
+const GetPlacementFeedback = (
+  clientId: string,
+  hcaId: string
+) => {
+  return (
+    ClientFeedbackInfo
+      .filter((each: any) =>
+        String(each.clientId).trim() === String(clientId).trim() &&
+        String(each.hcaId).trim() === String(hcaId).trim() &&
+        String(each.feedbackType).trim() === "Deployment" &&
+        String(each.status).trim() === "Completed"
+      )
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.callDate).getTime() -
+          new Date(a.callDate).getTime()
+      )[0] ?? null
+  );
+};
   const GetClientFeedback = (
     month: string,
     clientId: string,
@@ -1060,7 +1080,16 @@ const FetchTerminationData = async () => {
             each.ClientId,
             each.HCAid
 
-          ) || null
+          ) || null,
+
+          LastUpdate:GetClientFeedback(
+          `${SearchMonth}-${SearchYear}`,
+            each.ClientId,
+            each.HCAid
+
+
+
+      )?.updatedAt||null,
 
 
 
@@ -1130,8 +1159,14 @@ const FetchDataReplasementData=response.data.data||[]
             each.ClientId,
             each.HCAId
 
-          ) || null
+          ) || null,
+ LastUpdate:GetClientFeedback(
+          `${SearchMonth}-${SearchYear}`,
+            each.ClientId,
+            each.HCAId
 
+
+      )?.updatedAt||null,
 
 
 
@@ -1203,8 +1238,15 @@ const FetchDataReplasementData=response.data.data||[]
         item.ClientId,
         item.HCAId
 
-      )||null
+      )||null,
+     LastUpdate:
+  GetClientFeedback(
+    `${SearchMonth}-${SearchYear}`,
+    item.ClientId,
+    item.HCAId
+  )?.updatedAt || null,
     }));
+    
   }, [DeploymentInfo, ClientFeedbackInfo, SearchMonth, SearchYear,TerminationInfo,PreviewType]);
 
   const filteredClients = useMemo(() => {
@@ -1489,91 +1531,164 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
       <div className="space-y-6">
 
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          {/* Header */}
-          <div className="min-w-0">
-            <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
-              Client Quality Call
-            </h2>
+       <div className="w-full space-y-6">
+  {/* =========================================================
+      HEADER + ACTIONS
+  ========================================================= */}
+  <div className="flex w-full flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+    
+    {/* Header */}
+    <div className="min-w-0 flex-1">
+      <h2 className="break-words text-xl font-bold text-slate-800 sm:text-2xl lg:text-3xl">
+        Client Quality Call
+      </h2>
 
-            <p className="mt-1 max-w-2xl text-sm leading-5 text-slate-500">
-              Conduct the standard quality and retention questionnaire
-              with the client/HCA.
-            </p>
-          </div>
+      <p className="mt-1 max-w-2xl text-sm leading-5 text-slate-500 sm:text-base">
+        Conduct the standard quality and retention questionnaire
+        with the client/HCA.
+      </p>
+    </div>
 
-          {/* Actions */}
-  <div className="inline-flex w-full max-w-full flex-wrap items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-100 p-1.5 shadow-sm sm:w-auto sm:flex-nowrap">
+    {/* =========================================================
+        ACTIONS
+    ========================================================= */}
+    <div className="flex w-full shrink-0 rounded-2xl border border-slate-200 bg-slate-100 p-1.5 shadow-sm sm:w-fit">
+      
+      <div className="grid w-full grid-cols-3 gap-1 sm:flex sm:w-auto">
+        
+        {/* DEPLOYMENTS */}
+        <button
+          type="button"
+          onClick={() => setPreviewType("Deployment")}
+          className={`flex min-h-[44px] min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition-all duration-200 sm:gap-2 sm:px-4 sm:text-sm ${
+            PreviewType === "Deployment"
+              ? "bg-white text-[#1392d3] shadow-md ring-1 ring-slate-200"
+              : "text-slate-500 hover:bg-white/70 hover:text-slate-700"
+          }`}
+        >
+          {PreviewType === "Deployment" && (
+            <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]" />
+          )}
 
-  {/* DEPLOYMENTS / ACTIVE */}
-  <button
-    type="button"
-    onClick={() => setPreviewType("Deployment")}
-    className={`group relative flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 sm:flex-none ${
-      PreviewType === "Deployment"
-        ? "bg-white text-[#1392d3] shadow-md ring-1 ring-slate-200"
-        : "text-slate-500 hover:bg-white/70 hover:text-slate-700"
-    }`}
-  >
-    {PreviewType === "Deployment" && (
-      <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]" />
-    )}
+          <span className="truncate">
+            Deployments
+          </span>
+        </button>
 
+        {/* REPLACEMENTS */}
+        <button
+          type="button"
+          onClick={() => {
+            setPreviewType("Replacement");
+            GetReplasementData();
+          }}
+          className={`flex min-h-[44px] min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition-all duration-200 sm:gap-2 sm:px-4 sm:text-sm ${
+            PreviewType === "Replacement"
+              ? "bg-white text-[#1392d3] shadow-md ring-1 ring-slate-200"
+              : "text-slate-500 hover:bg-white/70 hover:text-slate-700"
+          }`}
+        >
+          {PreviewType === "Replacement" && (
+            <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]" />
+          )}
 
-    <span
-      className={`text-xs font-medium ${
-        PreviewType === "Deployment"
-          ? "text-[#1392d3]"
-          : "text-slate-400"
-      }`}
-    >
-      Deployments
-    </span>
-  </button>
+          <span className="truncate">
+            Replacements
+          </span>
+        </button>
 
-  {/* REPLACEMENTS */}
-  <button
-    type="button"
-    onClick={() => {
-      setPreviewType("Replacement")
-      GetReplasementData()
-    }
-    }
-    className={`flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 sm:flex-none ${
-      PreviewType === "Replacement"
-        ? "bg-white text-[#1392d3] shadow-md ring-1 ring-slate-200"
-        : "text-slate-500 hover:bg-white/70 hover:text-slate-700"
-    }`}
-  >
-    {PreviewType === "Replacement" && (
-      <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]" />
-    )}
+        {/* TERMINATIONS */}
+        <button
+          type="button"
+          onClick={() => {
+            setPreviewType("Termination");
+            FetchTerminationData();
+          }}
+          className={`flex min-h-[44px] min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition-all duration-200 sm:gap-2 sm:px-4 sm:text-sm ${
+            PreviewType === "Termination"
+              ? "bg-white text-[#ff1493] shadow-md ring-1 ring-slate-200"
+              : "text-slate-500 hover:bg-white/70 hover:text-slate-700"
+          }`}
+        >
+          {PreviewType === "Termination" && (
+            <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]" />
+          )}
 
-    <span>Replacements</span>
-  </button>
+          <span className="truncate">
+            Terminations
+          </span>
+        </button>
 
-  {/* TERMINATIONS */}
-  <button
-    type="button"
-    onClick={() => {
-      setPreviewType("Termination");
-      FetchTerminationData();
-    }}
-    className={`flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 sm:flex-none ${
-      PreviewType === "Termination"
-        ? "bg-white text-[#ff1493] shadow-md ring-1 ring-slate-200"
-        : "text-slate-500 hover:bg-white/70 hover:text-slate-700"
-    }`}
-  >
-    {PreviewType === "Termination" && (
-      <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.15)]" />
-    )}
+      </div>
+    </div>
+  </div>
 
-    <span>Terminations</span>
-  </button>
+  {/* =========================================================
+      CLIENT SUMMARY CARDS
+  ========================================================= */}
+  <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    
+    {/* TOTAL CLIENTS */}
+    <div className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="min-w-0 truncate text-sm font-medium text-[#58708f]">
+          Total Clients
+        </p>
 
+        <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#1392d3]" />
+      </div>
+
+      <div className="mt-3">
+        <span className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
+          {clients.length}
+        </span>
+      </div>
+    </div>
+
+    {/* PENDING FEEDBACK */}
+    <div className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="min-w-0 truncate text-sm font-medium text-[#58708f]">
+          Pending Feedback
+        </p>
+
+        <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#ff1493]" />
+      </div>
+
+      <div className="mt-3">
+        <span className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
+          {
+            clients.filter(
+              (client) => client.feedbackStatus === "Pending"
+            ).length
+          }
+        </span>
+      </div>
+    </div>
+
+    {/* COMPLETED FEEDBACK */}
+    <div className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="min-w-0 truncate text-sm font-medium text-[#58708f]">
+          Completed Feedback
+        </p>
+
+        <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#50c896]" />
+      </div>
+
+      <div className="mt-3">
+        <span className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
+          {
+            clients.filter(
+              (client) => client.feedbackStatus === "Completed"
+            ).length
+          }
+        </span>
+      </div>
+    </div>
+
+  </div>
 </div>
-        </div>
 
         {/* Client Selection */}
         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -1582,121 +1697,187 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
 
           <div className="p-5">
 
-            <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="mb-5 w-full">
+  <div className="flex flex-col gap-4">
 
-              {/* Left: Search */}
-              <div className="relative w-full max-w-md">
-                <Search
-                  size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                />
+    {/* Top Row: Search + Filters */}
+    <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center">
 
-                <input
-                  value={searchClient}
-                  onChange={(e) => setSearchClient(e.target.value)}
-                  placeholder="Search client..."
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none focus:border-[#1392d3] focus:bg-white"
-                />
-              </div>
+      {/* Search */}
+      <div className="relative w-full lg:flex-1 lg:max-w-md">
+        <Search
+          size={18}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+        />
 
-              {/* Right: Feedback Filters */}
-              <div className="flex flex-wrap items-center gap-3">
+        <input
+          value={searchClient}
+          onChange={(e) => setSearchClient(e.target.value)}
+          placeholder="Search client..."
+          className="
+            h-11 w-full rounded-xl
+            border border-slate-300
+            bg-slate-50
+            py-2.5 pl-10 pr-4
+            text-sm text-slate-700
+            outline-none
+            transition
+            focus:border-[#1392d3]
+            focus:bg-white
+            focus:ring-2
+            focus:ring-[#1392d3]/20
+          "
+        />
+      </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                  <select
-                    value={SearchMonth}
-                    onChange={(e) => GetMonthFreshData(e.target.value)}
-                    className="
-        w-full sm:w-[140px] h-[40px]
-        rounded-xl border border-gray-300
-        px-3 text-sm bg-white text-gray-800
-        focus:outline-none focus:ring-2 focus:ring-indigo-500
-      "
-                  >
+      {/* Month + Year */}
+      <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto">
+        <select
+          value={SearchMonth}
+          onChange={(e) => GetMonthFreshData(e.target.value)}
+          className="
+            h-11 w-full
+            min-w-0 sm:w-[140px]
+            rounded-xl
+            border border-slate-300
+            bg-white
+            px-3
+            text-sm text-slate-700
+            outline-none
+            transition
+            focus:border-[#1392d3]
+            focus:ring-2
+            focus:ring-[#1392d3]/20
+          "
+        >
+          <option value="">All Months</option>
 
-                    <option value="">All Months</option>
-                    {[...Array(12)].map((_, i) => (
-                      <option key={i} value={`${i + 1}`}>
-                        {new Date(0, i).toLocaleString("default", { month: "long" })}
-                      </option>
-                    ))}
-                  </select>
+          {[...Array(12)].map((_, i) => (
+            <option key={i} value={`${i + 1}`}>
+              {new Date(0, i).toLocaleString("default", {
+                month: "long",
+              })}
+            </option>
+          ))}
+        </select>
 
-                  {/* Year */}
-                  <select
-                    value={SearchYear}
-                    onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
-                    className="
-        w-full sm:w-[120px] h-[40px]
-        rounded-xl border border-gray-300
-        px-3 text-sm bg-white text-gray-800
-        focus:outline-none focus:ring-2 focus:ring-indigo-500
-      "
-                  >
-                    <option value="">All Years</option>
-                    {years.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {/* Pending */}
-                <button
-                  type="button"
-                  onClick={() => setFeedbackFilter("Pending")}
-                  className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition ${feedbackFilter === "Pending"
-                      ? "bg-[#1392d3] text-white shadow-sm"
-                      : "border border-slate-200 bg-white text-slate-600 hover:border-[#1392d3]"
-                    }`}
-                >
-                  <Clock3 size={17} />
+        <select
+          value={SearchYear}
+          onChange={(e) =>
+            dispatch(UpdateYearFilter(e.target.value))
+          }
+          className="
+            h-11 w-full
+            min-w-0 sm:w-[120px]
+            rounded-xl
+            border border-slate-300
+            bg-white
+            px-3
+            text-sm text-slate-700
+            outline-none
+            transition
+            focus:border-[#1392d3]
+            focus:ring-2
+            focus:ring-[#1392d3]/20
+          "
+        >
+          <option value="">All Years</option>
 
-                  Pending
+          {years.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
 
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs ${feedbackFilter === "Pending"
-                        ? "bg-white/20 text-white"
-                        : "bg-slate-100 text-slate-600"
-                      }`}
-                  >
-                    {
-                      clients.filter(
-                        (client) => client.feedbackStatus === "Pending"
-                      ).length
-                    }
-                  </span>
-                </button>
+    {/* Feedback Filters */}
+    <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
 
-                {/* Completed */}
-                <button
-                  type="button"
-                  onClick={() => setFeedbackFilter("Completed")}
-                  className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition ${feedbackFilter === "Completed"
-                      ? "bg-[#50c896] text-white shadow-sm"
-                      : "border border-slate-200 bg-white text-slate-600 hover:border-[#50c896]"
-                    }`}
-                >
-                  <CheckCircle2 size={17} />
+      {/* Pending */}
+      <button
+        type="button"
+        onClick={() => setFeedbackFilter("Pending")}
+        className={`
+          flex min-h-[44px] w-full
+          items-center justify-center
+          gap-2 rounded-xl
+          px-4 py-2.5
+          text-sm font-semibold
+          transition-all duration-200
+          ${
+            feedbackFilter === "Pending"
+              ? "bg-[#1392d3] text-white shadow-sm"
+              : "border border-slate-200 bg-white text-slate-600 hover:border-[#1392d3] hover:text-[#1392d3]"
+          }
+        `}
+      >
+        <Clock3 size={17} className="shrink-0" />
 
-                  Completed
+        <span>Pending</span>
 
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs ${feedbackFilter === "Completed"
-                        ? "bg-white/20 text-white"
-                        : "bg-slate-100 text-slate-600"
-                      }`}
-                  >
-                    {
-                      clients.filter(
-                        (client) => client.feedbackStatus === "Completed"
-                      ).length
-                    }
-                  </span>
-                </button>
+        <span
+          className={`
+            rounded-full px-2 py-0.5 text-xs
+            ${
+              feedbackFilter === "Pending"
+                ? "bg-white/20 text-white"
+                : "bg-slate-100 text-slate-600"
+            }
+          `}
+        >
+          {
+            clients.filter(
+              (client) => client.feedbackStatus === "Pending"
+            ).length
+          }
+        </span>
+      </button>
 
-              </div>
-            </div>
+      {/* Completed */}
+      <button
+        type="button"
+        onClick={() => setFeedbackFilter("Completed")}
+        className={`
+          flex min-h-[44px] w-full
+          items-center justify-center
+          gap-2 rounded-xl
+          px-4 py-2.5
+          text-sm font-semibold
+          transition-all duration-200
+          ${
+            feedbackFilter === "Completed"
+              ? "bg-[#50c896] text-white shadow-sm"
+              : "border border-slate-200 bg-white text-slate-600 hover:border-[#50c896] hover:text-[#50c896]"
+          }
+        `}
+      >
+        <CheckCircle2 size={17} className="shrink-0" />
+
+        <span>Completed</span>
+
+        <span
+          className={`
+            rounded-full px-2 py-0.5 text-xs
+            ${
+              feedbackFilter === "Completed"
+                ? "bg-white/20 text-white"
+                : "bg-slate-100 text-slate-600"
+            }
+          `}
+        >
+          {
+            clients.filter(
+              (client) => client.feedbackStatus === "Completed"
+            ).length
+          }
+        </span>
+      </button>
+
+    </div>
+  </div>
+</div>
             <LoadingPopup
               open={isSwitchingMonth}
               title="Switching Month"
@@ -1720,7 +1901,9 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
                       <th className="px-4 py-3 text-left font-semibold text-slate-600">
                         Pt name
                       </th>
-
+    <th className="px-4 py-3 text-left font-semibold text-slate-600">
+                    Last Update
+                      </th>
                       <th className="px-4 py-3 text-left font-semibold text-slate-600">
                         Enrollment date
                       </th>
@@ -1788,6 +1971,18 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
                             <td className="px-4 py-4 text-slate-700">
                               {client.patientName}
                             </td>
+                              <td className="px-4 py-4 text-slate-700">
+  {client.LastUpdate
+    ? new Date(client.LastUpdate).toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : "Yet Not Updated"}
+</td>
 
                             {/* Enrollment */}
                             <td className="px-4 py-4 text-slate-600">
@@ -1858,6 +2053,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
   setRecording(null);
 
   setSelectedClient(client);
+  startCall()
 }}
                                   className="
         inline-flex items-center gap-2
@@ -1909,62 +2105,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
         </div>
 
         {/* Selected Client */}
-        {selectedClient && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-            <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setSelectedClient(null)}
-                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
-              >
-                ×
-              </button>
-
-              {/* Header */}
-              <div className="mb-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  Selected Client
-                </p>
-
-                <h3 className="mt-2 text-xl font-bold text-slate-800">
-                  {selectedClient.name}
-                </h3>
-
-                <p className="mt-2 text-sm text-slate-500">
-                  Assigned HCA:{" "}
-                  <span className="font-semibold text-slate-700">
-                    {selectedClient.hcaName}
-                  </span>
-                </p>
-              </div>
-
-              {/* Divider */}
-              <div className="mb-5 h-px bg-slate-100" />
-
-              {/* Action */}
-              <button
-                type="button"
-                onClick={startCall}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1392d3] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-              >
-                <Mic size={18} />
-                Start Quality Call
-              </button>
-
-              {/* Cancel */}
-              <button
-                type="button"
-                onClick={() => setSelectedClient(null)}
-                className="mt-3 w-full rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-
-            </div>
-          </div>
-        )}
+  
 
       </div>
     );
@@ -2088,7 +2229,60 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
   /* =========================================================
      QUESTIONNAIRE
   ========================================================= */
+  const downloadPDF = async (ImpClientName:any) => {
+     try {
+       setfinelScreenMessage(
+      `Preparing ${ImpClientName.name}'s PDF... Please wait.`
+    );
 
+  
+       const element = document.getElementById("DownloadPortion");
+ 
+       if (!element) {
+         throw new Error("Transaction history HTML not found");
+       }
+ 
+       const { default: html2pdf } = await import("html2pdf.js");
+ 
+      const options: any = {
+        margin: 5,
+      
+      pagebreak: {
+  mode: ["css", "legacy"],
+},
+        filename: `${ImpClientName.name}_Feedback.pdf`,
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          backgroundColor: "#ffffff",
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
+        },
+      } as any;
+
+      await html2pdf().from(element).set(options).save();
+         setfinelScreenMessage(
+      `${ImpClientName.name}'s PDF has been downloaded successfully.`
+    );
+
+    // Automatically hide message after 3 seconds
+    setTimeout(() => {
+      setfinelScreenMessage("");
+    }, 3000);
+     } catch (error: any) {
+       console.error("Download PDF Error:", error);
+ 
+       alert(
+         error?.message ||
+           "Failed to download transaction history."
+       );
+     }
+   };
   return (
     <div className="space-y-5">
 
@@ -2101,14 +2295,40 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
 
             <div className="flex items-center gap-2">
 
-              <button
-                type="button"
-                onClick={() => setCallStarted(false)}
-                className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-              >
-                <ArrowLeft size={18} />
-              </button>
+            <button
+  type="button"
+  onClick={() => {setCallStarted(false),setSelectedClient(null)}}
+   
+  className="
+    inline-flex items-center justify-center gap-2
+    rounded-xl
+    border border-slate-200
+    bg-teal-800
+    text-white
+    px-4 py-2.5
+    text-sm font-semibold
+   cursor-pointer
+    shadow-sm
+    transition-all duration-200
+    hover:border-slate-300
+    hover:bg-slate-50
+    hover:text-slate-800
+    hover:shadow
+    active:scale-[0.98]
+    focus:outline-none
+    focus:ring-2
+    focus:ring-slate-300
+    focus:ring-offset-2
+  "
+>
+  <ArrowLeft
+    size={17}
+    strokeWidth={2.2}
+    className="shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5"
+  />
 
+  <span>Back</span>
+</button>
               <div>
                 <h2 className="text-lg font-bold text-slate-800">
                   Quality Call
@@ -2230,67 +2450,141 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
       {/* Current Section */}
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-        <div className="border-b border-slate-200 p-5">
+       <div className="border-b border-slate-200 p-5">
+  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
+    {/* Section Title */}
+      <div className="min-w-0">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[#1392d3]">
+        Client Feedback
+      </p>
 
+      <h2 className="mt-1 break-words text-xl font-bold text-slate-800">
+        {currentSection.title}
+      </h2>
+    </div>
+  {finelScreenMessage && (
+    <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-700">
+      <span className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
+      <span>{finelScreenMessage}</span>
+    </div>
+  )}
+    {/* Download - Completed Only */}
+    {selectedClient?.feedbackStatus === "Completed" && (
+      <button
+        type="button"
+   onClick={()=>downloadPDF(selectedClient)}
+        className="
+          inline-flex min-h-[42px] shrink-0
+          items-center justify-center gap-2
+          rounded-xl
+          border border-emerald-200
+          bg-emerald-50
+          px-4 py-2.5
+          text-sm font-semibold
+          text-[#50c896]
+          transition-all duration-200
+          hover:bg-emerald-100
+          hover:border-emerald-300
+          active:scale-[0.98]
+          focus:outline-none cursor-pointer
+          focus:ring-2
+          focus:ring-emerald-200
+          sm:w-auto
+        "
+      >
+        <Download size={16} />
+        <span>Download</span>
+      </button>
+    )}
 
+  </div>
+</div>
 
+        <div
+  className="space-y-6 p-5"
+  id="DownloadPortion"
+  style={{
+    color: "#1e293b",
+    backgroundColor: "#ffffff",
+  }}
+>
+  {currentSection.questions.map((question) => {
+    const answer = getAnswer(question.id);
 
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#1392d3]">
-            Client Feedback
-          </p>
+    return (
+      <React.Fragment key={question.id}>
+        {question.subHeading && (
+          <div className="pt-2">
+            <h3
+              className="text-base font-bold"
+              style={{ color: "#1e293b" }}
+            >
+              {question.subHeading}
+            </h3>
+          </div>
+        )}
 
-          <h2 className="mt-1 text-xl font-bold text-slate-800">
-            {currentSection.title}
-          </h2>
+        <div
+          className="rounded-2xl border p-5"
+          style={{
+            borderColor: "#e2e8f0",
+            backgroundColor: "#f8fafc",
+          }}
+        >
+          <div className="flex gap-4">
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold"
+              style={{
+                backgroundColor: "#1392d3",
+                color: "#ffffff",
+              }}
+            >
+              {question.number}
+            </div>
 
+            <div className="flex-1">
+              <p
+                className="text-sm font-semibold leading-6"
+                style={{
+                  color: "#1e293b",
+                }}
+              >
+                {question.question}
+              </p>
+
+              <div className="mt-4">
+                <textarea
+                  value={answer}
+                  onChange={(e) =>
+                    updateAnswer(question.id, e.target.value)
+                  }
+                  rows={4}
+                  placeholder="Enter the answer given during the call..."
+                  className="w-full resize-none rounded-xl border p-4 text-sm outline-none transition"
+                  style={{
+                    borderColor: "#cbd5e1",
+                    backgroundColor: "#ffffff",
+                    color: "#334155",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "#1392d3";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 0 2px rgba(19, 146, 211, 0.10)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "#cbd5e1";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div className="space-y-6 p-5">
-
-          {currentSection.questions.map((question) => {
-            const answer = getAnswer(question.id);
-
-            return (
-              <React.Fragment key={question.id}>
-                {question.subHeading && (
-                  <div className="pt-2">
-                    <h3 className="text-base font-bold text-slate-800">
-                      {question.subHeading}
-                    </h3>
-                  </div>
-                )}
-
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
-                  <div className="flex gap-4">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1392d3] text-sm font-bold text-white">
-                      {question.number}
-                    </div>
-
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold leading-6 text-slate-800">
-                        {question.question}
-                      </p>
-
-                      <div className="mt-4">
-                        <textarea
-                          value={answer}
-                          onChange={(e) =>
-                            updateAnswer(question.id, e.target.value)
-                          }
-                          rows={4}
-                          placeholder="Enter the answer given during the call..."
-                          className="w-full resize-none rounded-xl border border-slate-300 bg-white p-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/10"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </React.Fragment>
-            );
-          })}
-
-        </div>
+      </React.Fragment>
+    );
+  })}
+</div>
 
         {/* Navigation */}
         <div className="flex items-center justify-between border-t border-slate-200 p-5">
@@ -2392,23 +2686,56 @@ console.log("Check d---",selectedClient)
         {/* Header */}
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 
-          <div className="flex items-center gap-3">
+        <div className="flex w-full flex-col gap-4 sm:gap-5 lg:flex-row lg:items-center lg:justify-between">
+  
+  {/* Left: Icon + Heading */}
+  <div className="flex min-w-0 items-start gap-3">
+    
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-[#50c896] sm:h-12 sm:w-12">
+      <CheckCircle2 size={21} strokeWidth={2.2} />
+    </div>
 
-            <div className="rounded-xl bg-emerald-50 p-3 text-[#50c896]">
-              <CheckCircle2 size={22} />
-            </div>
+    <div className="min-w-0">
+      <h2 className="break-words text-lg font-bold leading-tight text-slate-800 sm:text-xl">
+        Quality Call Summary
+      </h2>
 
-            <div>
-              <h2 className="text-xl font-bold text-slate-800">
-                Quality Call Summary
-              </h2>
+      <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500 sm:text-sm">
+        Complete the final details before saving the call.
+      </p>
+    </div>
+  </div>
 
-              <p className="text-sm text-slate-500">
-                Complete the final details before saving the call.
-              </p>
-            </div>
+  {/* Right: Back Button */}
+  <button
+    type="button"
+    onClick={onBack}
+    className="
+      inline-flex min-h-[44px] w-full shrink-0
+      items-center justify-center gap-2
+      rounded-xl
+      border border-slate-200
+      bg-white
+      px-4 py-2.5
+      text-sm font-semibold text-slate-600
+      shadow-sm
+      transition-all duration-200
+      hover:border-slate-300
+      hover:bg-slate-50
+      hover:text-slate-800
+      hover:shadow-md
+      active:scale-[0.98]
+      focus:outline-none
+      focus:ring-2
+      focus:ring-[#1392d3]/20
+      sm:w-auto sm:px-5
+    "
+  >
+    <ArrowLeft size={17} strokeWidth={2.2} />
+    <span>Back to Questions</span>
+  </button>
 
-          </div>
+</div>
 
         </div>
 
