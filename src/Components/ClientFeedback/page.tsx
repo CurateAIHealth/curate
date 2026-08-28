@@ -1971,17 +1971,54 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
                             <td className="px-4 py-4 text-slate-700">
                               {client.patientName}
                             </td>
-                              <td className="px-4 py-4 text-slate-700">
-  {client.LastUpdate
-    ? new Date(client.LastUpdate).toLocaleString("en-IN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })
-    : "Yet Not Updated"}
+ <td className="px-4 py-4 text-slate-700">
+  {client.LastUpdate ? (
+    new Date(client.LastUpdate).toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
+  ) : (
+    <div className="group relative inline-block">
+      <button
+        type="button"
+        className="cursor-pointer text-blue-600 underline"
+      >
+        View
+      </button>
+
+      {/* Tooltip Popup */}
+      <div
+        className="
+          pointer-events-none absolute
+          bottom-full left-1/2 z-50
+          mb-2 -translate-x-1/2
+          whitespace-nowrap
+          rounded-lg bg-slate-800
+          px-3 py-2
+          text-xs font-medium text-white
+          opacity-0 shadow-lg
+          transition-opacity duration-200
+          group-hover:opacity-100
+        "
+      >
+        Not Updated in Previous Month
+
+        {/* Arrow */}
+        <div
+          className="
+            absolute left-1/2 top-full
+            -translate-x-1/2
+            border-x-4 border-t-4
+            border-x-transparent border-t-slate-800
+          "
+        />
+      </div>
+    </div>
+  )}
 </td>
 
                             {/* Enrollment */}
