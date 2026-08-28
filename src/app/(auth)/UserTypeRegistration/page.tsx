@@ -280,6 +280,12 @@ const UpdateView = () => {
     <p className="text-gray-500 text-base md:text-lg leading-relaxed">
       Choose the category that best describes your role to continue the setup process.
     </p>
+      <button
+              onClick={()=>router.replace("/DashBoard")}
+              className="flex cursor-pointer items-center gap-2 w-full ml-auto sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+            >
+              DashBoard
+            </button>
   </div>
 
 
@@ -336,14 +342,62 @@ const UpdateView = () => {
 
 <div className="flex justify-center mt-8">  
     
-    <button
-  onClick={()=>SetUpdateStatus(!UpdateStatus)}
-  className="px-12 py-3 rounded-full text-white font-semibold text-lg 
-    bg-[#50c896] cursor-pointer shadow-lg hover:shadow-xl transition-all 
-    duration-500 hover:scale-105 focus:outline-none"
->
-  Register
-</button>
+<div className="relative inline-flex group">
+  <button
+    disabled={!selected}
+    onClick={() => SetUpdateStatus(!UpdateStatus)}
+    className={`
+      px-12 py-3 rounded-full font-semibold text-lg
+      transition-all duration-300 focus:outline-none
+      ${
+        selected
+          ? `
+            bg-teal-800
+            cursor-pointer text-white
+            shadow-lg
+            
+            hover:shadow-xl
+            hover:scale-105
+            active:scale-95
+          `
+          : `
+            bg-gray-300 text-gray-400
+            cursor-not-allowed
+            opacity-60
+            shadow-none
+          `
+      }
+    `}
+  >
+    {UpdateStatus ? "Active" : "Register"}
+  </button>
+
+  {/* Tooltip for inactive state */}
+  {!selected && (
+    <div
+      className="
+        absolute bottom-full left-1/2 -translate-x-1/2 mb-3
+        w-max max-w-xs
+        rounded-lg bg-gray-900 px-4 py-2
+        text-sm font-medium text-white
+        shadow-lg
+        opacity-0 invisible
+        group-hover:opacity-100 group-hover:visible
+        transition-all duration-200
+        pointer-events-none
+        z-50
+      "
+    >
+      Please select a Care Taker Type to proceed
+      <div
+        className="
+          absolute top-full left-1/2 -translate-x-1/2
+          border-4 border-transparent border-t-gray-900
+        "
+      />
+    </div>
+  )}
+</div>
 </div>
 
 </div>:UpdateView()}
