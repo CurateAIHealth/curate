@@ -1350,7 +1350,14 @@ const UpdateReplacement = async (
       );
       return;
     }
-
+  const ExistingHCPStatusUpdate=await UpdateHCAnstatus(
+        Exsting_HCP.HCA_Id,
+          UpdatedCareTakerStatus?.trim() || "Bench"
+      )
+  const AvailableHCPStatusUpdate=await UpdateHCAnstatusInDeplyoment(
+        Available_HCP.userId,
+        "Active"
+      )
     const TimeStampData = `${Sign_in_UserInfo?.FirstName || ""} ${
       Sign_in_UserInfo?.LastName || ""
     }, Email: ${Sign_in_UserInfo?.Email || ""}`;
@@ -1378,11 +1385,7 @@ const UpdateReplacement = async (
       return;
     }
 
-      const ExistingHCPStatusUpdate=await UpdateHCAnstatus(
-        Exsting_HCP.HCA_Id,
-          UpdatedCareTakerStatus?.trim() || "Bench"
-      )
-
+    
           if (!ExistingHCPStatusUpdate?.success) {
       SetActionStatusMessage(
         ExistingHCPStatusUpdate?.message ||
@@ -1392,10 +1395,7 @@ const UpdateReplacement = async (
     }
 
      
-        const AvailableHCPStatusUpdate=await UpdateHCAnstatusInDeplyoment(
-        Available_HCP.userId,
-        "Active"
-      )
+      
 
     if (!AvailableHCPStatusUpdate?.success) {
       SetActionStatusMessage(

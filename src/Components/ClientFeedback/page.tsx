@@ -2266,60 +2266,167 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
   /* =========================================================
      QUESTIONNAIRE
   ========================================================= */
-  const downloadPDF = async (ImpClientName:any) => {
-     try {
-       setfinelScreenMessage(
-      `Preparing ${ImpClientName.name}'s PDF... Please wait.`
+const downloadPDF = async (client: any) => {
+  try {
+    setfinelScreenMessage(
+      `Preparing ${client.name}'s PDF... Please wait.`
     );
 
-  
-       const element = document.getElementById("DownloadPortion");
- 
-       if (!element) {
-         throw new Error("Transaction history HTML not found");
-       }
- 
-       const { default: html2pdf } = await import("html2pdf.js");
- 
-      const options: any = {
-        margin: 5,
-      
-      pagebreak: {
-  mode: ["css", "legacy"],
-},
-        filename: `${ImpClientName.name}_Feedback.pdf`,
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          allowTaint: false,
-          logging: false,
-          backgroundColor: "#ffffff",
-        },
-        jsPDF: {
-          unit: "mm",
-          format: "a4",
-          orientation: "portrait",
-        },
-      } as any;
+    const { jsPDF } = await import("jspdf");
 
-      await html2pdf().from(element).set(options).save();
-         setfinelScreenMessage(
-      `${ImpClientName.name}'s PDF has been downloaded successfully.`
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    const margin = 15;
+    const contentWidth = pageWidth - margin * 2;
+
+    let y = 18;
+
+    const addPageIfNeeded = (heightNeeded = 10) => {
+      if (y + heightNeeded > pageHeight - 15) {
+        doc.addPage();
+        y = 18;
+      }
+    };
+
+    // ==========================================
+    // TITLE
+    // ==========================================
+
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+
+    doc.text(
+      `${client.name} - Feedback`,
+      margin,
+      y
     );
 
-    // Automatically hide message after 3 seconds
+    y += 10;
+
+    // ==========================================
+    // QUESTIONS + ANSWERS
+    // ==========================================
+
+    allSections.forEach((section) => {
+      addPageIfNeeded(15);
+
+      // Section title
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+
+      const sectionTitle = doc.splitTextToSize(
+        section.title,
+        contentWidth
+      );
+
+      doc.text(
+        sectionTitle,
+        margin,
+        y
+      );
+
+      y += sectionTitle.length * 6 + 5;
+
+      // Questions
+      section.questions.forEach((question, index) => {
+        const answer =
+          String(getAnswer(question.id) || "").trim() ||
+          "No answer provided";
+
+        // ==========================================
+        // QUESTION
+        // ==========================================
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+
+        const questionNumber =
+          question.number || `${index + 1}`;
+
+        const questionText =
+          `Q${questionNumber}. ${question.question}`;
+
+        const questionLines =
+          doc.splitTextToSize(
+            questionText,
+            contentWidth
+          );
+
+        addPageIfNeeded(
+          questionLines.length * 5 + 8
+        );
+
+        doc.text(
+          questionLines,
+          margin,
+          y
+        );
+
+        y += questionLines.length * 5 + 3;
+
+        // ==========================================
+        // ANSWER
+        // ==========================================
+
+        doc.setFont("helvetica", "normal");
+
+        const answerLines =
+          doc.splitTextToSize(
+            `Answer: ${answer}`,
+            contentWidth
+          );
+
+        addPageIfNeeded(
+          answerLines.length * 5 + 8
+        );
+
+        doc.text(
+          answerLines,
+          margin,
+          y
+        );
+
+        y += answerLines.length * 5 + 7;
+      });
+
+      y += 4;
+    });
+
+    // ==========================================
+    // DOWNLOAD
+    // ==========================================
+
+    doc.save(
+      `${client.name}_Feedback.pdf`
+    );
+
+    setfinelScreenMessage(
+      `${client.name}'s PDF has been downloaded successfully.`
+    );
+
     setTimeout(() => {
       setfinelScreenMessage("");
     }, 3000);
-     } catch (error: any) {
-       console.error("Download PDF Error:", error);
- 
-       alert(
-         error?.message ||
-           "Failed to download transaction history."
-       );
-     }
-   };
+
+  } catch (error: any) {
+    console.error(
+      "Download PDF Error:",
+      error
+    );
+
+    alert(
+      error?.message ||
+        "Failed to download feedback PDF."
+    );
+  }
+};
   return (
     <div className="space-y-5">
 
@@ -2506,6 +2613,8 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
       <span>{finelScreenMessage}</span>
     </div>
   )}
+  {/* PDF ONLY CONTENT */}
+
     {/* Download - Completed Only */}
     {selectedClient?.feedbackStatus === "Completed" && (
       <button

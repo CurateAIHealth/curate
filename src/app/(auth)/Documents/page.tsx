@@ -473,60 +473,62 @@ console.log("Check for Task-----",cleaned)
 
       )}
 
-   <div className="rounded-2xl bg-white/70 backdrop-blur-xl border border-gray-200 shadow-lg overflow-hidden">
+  <div className="rounded-2xl bg-white/70 backdrop-blur-xl border border-gray-200 shadow-lg overflow-hidden">
 
-  {/* Header */}
-<div
-  className="
-    grid
-    grid-cols-[60px_160px_repeat(9,minmax(130px,1fr))]
-    bg-[#dff9f7]/80
-    border-b border-gray-200
-    min-w-[1390px]
-  "
->
-  {[
-    "S No",
-    "Names",
-    "Aadhar",
-    "PAN",
-    "BVR",
-    "Bank",
-    "Primary education certificate",
-    "Primary experience certificate",
-    "Reference Certificate",
-    "Health Certificate",
-    "Other",
-  ].map((h) => (
-    <div
-      key={h}
-      className="
-        min-h-[56px]
-        flex
-        items-center
-        justify-center
-        px-3
-        py-3
-        text-xs
-        sm:text-sm
-        font-semibold
-        text-[#093c3a]
-        text-center
-        border-r
-        border-gray-200
-        whitespace-normal
-        leading-tight
-      "
-    >
-      {h}
-    </div>
-  ))}
-</div>
-
-  {/* Rows */}
+  {/* Horizontal Scroll Container */}
   <div className="overflow-x-auto">
-    <div className="min-w-[1100px]">
 
+    {/* Header + Rows use the SAME grid */}
+    <div className="min-w-[1450px]">
+
+      {/* ================= TABLE HEADER ================= */}
+      <div
+        className="
+          grid
+          grid-cols-[70px_180px_repeat(9,minmax(140px,1fr))]
+          bg-[#dff9f7]/80
+          border-b border-gray-200
+        "
+      >
+        {[
+          "S No",
+          "Names",
+          "Aadhar",
+          "PAN",
+          "BVR",
+          "Bank",
+          "Education",
+          "Experience",
+          "Reference",
+          "Health",
+          "Other",
+        ].map((h) => (
+          <div
+            key={h}
+            className="
+              min-h-[56px]
+              flex
+              items-center
+              justify-center
+              px-3
+              py-3
+              text-xs
+              sm:text-sm
+              font-semibold
+              text-[#093c3a]
+              text-center
+              border-r
+              border-gray-200
+              whitespace-normal
+              leading-tight
+            "
+          >
+            {h}
+          </div>
+        ))}
+      </div>
+
+      {/* ================= TABLE ROWS ================= */}
       {PreviwData.map((p: any, i: number) => {
 
         const availableDocs = (p.availableDocs || []).map((doc: string) =>
@@ -537,7 +539,6 @@ console.log("Check for Task-----",cleaned)
           doc.toLowerCase().trim()
         );
 
-        // Checks whether document is available
         const hasDocument = (...names: string[]) => {
           return names.some((name) => {
             const normalized = name.toLowerCase().trim();
@@ -545,88 +546,89 @@ console.log("Check for Task-----",cleaned)
             return (
               availableDocs.includes(normalized) ||
               availableDocs.some((doc: string) =>
-                doc.includes(normalized) || normalized.includes(doc)
+                doc.includes(normalized) ||
+                normalized.includes(doc)
               )
             );
           });
         };
 
-      const documents = [
-  {
-    label: "Aadhar",
-    available: hasDocument(
-      "aadhar",
-      "aadhaar",
-      "aadhar card",
-      "aadhaar card"
-    ),
-  },
-  {
-    label: "PAN",
-    available: hasDocument(
-      "pan",
-      "pan card"
-    ),
-  },
-  {
-    label: "BVR",
-    available: hasDocument(
-      "bvr",
-      "bvr document",
-      "bvr certificate"
-    ),
-  },
-  {
-    label: "Bank",
-    available: hasDocument(
-      "bank",
-      "bank document",
-      "bank passbook",
-      "bank account"
-    ),
-  },
-  {
-    label: "Primary education certificate",
-    available: hasDocument(
-      "primary education certificate",
-      "education certificate",
-      "primary education"
-    ),
-  },
-  {
-    label: "Primary experience certificate",
-    available: hasDocument(
-      "primary experience certificate",
-      "experience certificate",
-      "primary experience"
-    ),
-  },
-  {
-    label: "Reference Reference",
-    available: hasDocument(
-      "reference",
-      "reference document",
-      "reference certificate"
-    ),
-  },
-  {
-    label: "Health Certificate",
-    available: hasDocument(
-      "health certificate",
-      "health certificate document",
-      "medical certificate",
-      "medical"
-    ),
-  },
-  {
-    label: "Other",
-    available: hasDocument(
-      "other",
-      "other document",
-      "other certificate"
-    ),
-  },
-];
+        const documents = [
+          {
+            label: "Aadhar",
+            available: hasDocument(
+              "aadhar",
+              "aadhaar",
+              "aadhar card",
+              "aadhaar card"
+            ),
+          },
+          {
+            label: "PAN",
+            available: hasDocument(
+              "pan",
+              "pan card"
+            ),
+          },
+          {
+            label: "BVR",
+            available: hasDocument(
+              "bvr",
+              "bvr document",
+              "bvr certificate"
+            ),
+          },
+          {
+            label: "Bank",
+            available: hasDocument(
+              "bank",
+              "bank document",
+              "bank passbook",
+              "bank account"
+            ),
+          },
+          {
+            label: "Primary education certificate",
+            available: hasDocument(
+              "primary education certificate",
+              "education certificate",
+              "primary education"
+            ),
+          },
+          {
+            label: "Primary experience certificate",
+            available: hasDocument(
+              "primary experience certificate",
+              "experience certificate",
+              "primary experience"
+            ),
+          },
+          {
+            label: "Reference Reference",
+            available: hasDocument(
+              "reference",
+              "reference document",
+              "reference certificate"
+            ),
+          },
+          {
+            label: "Health Certificate",
+            available: hasDocument(
+              "health certificate",
+              "health certificate document",
+              "medical certificate",
+              "medical"
+            ),
+          },
+          {
+            label: "Other",
+            available: hasDocument(
+              "other",
+              "other document",
+              "other certificate"
+            ),
+          },
+        ];
 
         return (
           <div
@@ -635,7 +637,8 @@ console.log("Check for Task-----",cleaned)
               grid
               grid-cols-[70px_180px_repeat(9,minmax(140px,1fr))]
               items-center
-              border-b border-gray-200
+              border-b
+              border-gray-200
               hover:bg-[#f4fffe]
               transition-colors
             "
@@ -644,12 +647,14 @@ console.log("Check for Task-----",cleaned)
             {/* S No */}
             <div
               className="
-                py-5 px-3
+                py-5
+                px-3
                 text-center
                 text-sm
                 font-medium
                 text-gray-700
-                border-r border-gray-200
+                border-r
+                border-gray-200
               "
             >
               {i + 1}
@@ -658,12 +663,14 @@ console.log("Check for Task-----",cleaned)
             {/* Name */}
             <div
               className="
-                py-5 px-3
+                py-5
+                px-3
                 text-center
                 text-sm
                 font-semibold
                 text-[#093c3a]
-                border-r border-gray-200
+                border-r
+                border-gray-200
               "
             >
               {p.FirstName || p.Name || "Unknown"}
@@ -674,11 +681,13 @@ console.log("Check for Task-----",cleaned)
               <div
                 key={doc.label}
                 className="
-                  py-5 px-3
+                  py-5
+                  px-3
                   flex
                   items-center
                   justify-center
-                  border-r border-gray-200
+                  border-r
+                  border-gray-200
                 "
               >
                 <span
@@ -703,7 +712,6 @@ console.log("Check for Task-----",cleaned)
 
     </div>
   </div>
-
 </div>
     </div>
   );
