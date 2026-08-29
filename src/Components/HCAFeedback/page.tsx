@@ -601,7 +601,7 @@ const terminationQuestions = [
 /* =========================================================
    BUILD FEEDBACK SECTIONS
 ========================================================= */
-
+let role2QuestionNumber = 0;
 const feedbackSections: FeedbackSection[] = [
   /* =======================================================
      ROLE 1
@@ -640,7 +640,6 @@ question:
     description:
       "Family Background Analysis and job need.",
 
-    // ROLE 2 → ALL STATUS EXCEPT TERMINATED
     visibleFor: [
       "Active",
       "Bench",
@@ -650,18 +649,21 @@ question:
     ],
 
     questions: group.questions.map(
-      (question, index) => ({
-        id: `role2-${group.id}-${index + 1}`,
+      (question) => {
+        role2QuestionNumber++;
 
-        question,
+        return {
+          id: `role2-${group.id}-${role2QuestionNumber}`,
 
-        type: "textarea" as const,
+          question,
 
-        required: true,
+          type: "textarea" as const,
 
-        subLabel:
-          String.fromCharCode(65 + index),
-      })
+          required: true,
+
+          subLabel: `${role2QuestionNumber}`,
+        };
+      }
     ),
   })
 ),
@@ -1295,7 +1297,73 @@ console.log ('Found-----',completedIds)
         )
     ).length;
   };
+const getCompletedMainSectionsCount = (
+  item: any
+): number => {
+  const userId = getUserId(item);
 
+  const quality = qualityStatus?.[userId];
+
+  if (!quality) {
+    return 0;
+  }
+
+  const records = Array.isArray(quality?.records)
+    ? quality.records
+    : [];
+
+  const selectedMonthValue =
+    `${selectedMonth}-${selectedYear}`;
+
+  const status =
+    item?.CurrentStatus as HCAStatus;
+
+  const mainRoles: FeedbackRole[] = [
+    "Role 1",
+    "Role 2",
+    "Role 3",
+    "Random HCA Call",
+  ];
+
+  const applicableRoles = mainRoles.filter((role) =>
+    feedbackSections.some(
+      (section) =>
+        section.role === role &&
+        section.visibleFor.includes(status)
+    )
+  );
+
+  const completedRoles = applicableRoles.filter(
+    (role) => {
+
+      /* ==========================================
+         ROLE 2
+         Lifetime completion
+      ========================================== */
+
+      if (role === "Role 2") {
+        return records.some(
+          (record: any) =>
+            record?.Role === "Role 2"
+        );
+      }
+
+      /* ==========================================
+         OTHER ROLES
+         Monthly completion
+      ========================================== */
+
+      return records.some(
+        (record: any) =>
+          record?.Role === role &&
+          String(record?.Month) ===
+            selectedMonthValue
+      );
+    }
+  );
+
+  return completedRoles.length;
+};
   /* =======================================================
      STATUS COUNT
   ======================================================= */
@@ -1514,6 +1582,7 @@ console.log("Next Step----",userId)
   sections={selectedSections}
   selectedMonth={selectedMonth}
   selectedYear={selectedYear}
+  UserFullInfo={UserFullInfo}
 existingFeedback={
   feedbackMode === "view"
     ? qualityStatus?.[
@@ -1901,15 +1970,20 @@ existingFeedback={
 
         <div className="overflow-x-auto">
 
-         <HCATable
+<HCATable
   data={filteredHCAData}
   RequiredFilterData={ImportedData}
   UserFullInfo={UserFullInfo}
+
+  getUserId={getUserId}
+  getCompletedSectionIds={getCompletedSectionIds}
+
   onStartFeedback={handleStartFeedback}
   onViewFeedback={handleViewFeedback}
   getFeedbackStatus={getHCAFeedbackStatus}
   getAvailableSections={getAvailableSections}
   getCompletedSectionsCount={getCompletedSectionsCount}
+  getCompletedMainSectionsCount={getCompletedMainSectionsCount}
   hasSavedFeedback={hasSavedFeedback}
 />
 
@@ -1929,6 +2003,12 @@ interface HCATableProps {
   RequiredFilterData: any[];
   UserFullInfo: any[];
 
+  getUserId: (item: any) => string;
+
+  getCompletedSectionIds: (
+    userId: string
+  ) => string[];
+
   onStartFeedback: (item: any) => void;
 
   onViewFeedback: (item: any) => void;
@@ -1945,6 +2025,10 @@ interface HCATableProps {
     item: any
   ) => number;
 
+  getCompletedMainSectionsCount: (
+    item: any
+  ) => number;
+
   hasSavedFeedback: (
     item: any
   ) => boolean;
@@ -1953,6 +2037,8 @@ interface HCATableProps {
 const HCATable: React.FC<HCATableProps> = ({
   data,
   UserFullInfo,
+  getUserId,
+  getCompletedSectionIds,
   onStartFeedback,
   onViewFeedback,
   getFeedbackStatus,
@@ -2034,13 +2120,38 @@ const hasAvailableFeedback =
 const ClientId=GetClientId(DeploymentInfo,item?.userId)
 const feedbackStatus =
   getFeedbackStatus(item);
-const applicableCount =
-  feedbackSections.filter(
+const mainRoles: FeedbackRole[] = [
+  "Role 1",
+  "Role 2",
+  "Role 3",
+  "Random HCA Call",
+];
+
+const applicableRoles = mainRoles.filter((role) =>
+  feedbackSections.some(
     (section) =>
+      section.role === role &&
       section.visibleFor.includes(status)
-  ).length;
-const completedCount =
-  getCompletedSectionsCount(item);
+  )
+);
+
+const completedSectionIds =
+  getCompletedSectionIds(getUserId(item));
+
+const completedRoles = applicableRoles.filter((role) => {
+  const roleSections = feedbackSections.filter(
+    (section) =>
+      section.role === role &&
+      section.visibleFor.includes(status)
+  );
+
+  return roleSections.some((section) =>
+    completedSectionIds.includes(section.id)
+  );
+});
+
+const applicableCount = applicableRoles.length;
+const completedCount = completedRoles.length;
               return (
                 <tr
                   key={
@@ -2215,6 +2326,7 @@ interface FeedbackScreenProps {
   sections: FeedbackSection[];
   selectedMonth: number;
   selectedYear: number;
+  UserFullInfo: any;
   existingFeedback?: any;
   onBack: () => void;
   onSave: (
@@ -2230,6 +2342,7 @@ const FeedbackScreen: React.FC<
   sections,
   selectedMonth,
   selectedYear,
+  UserFullInfo,
   existingFeedback,
   onBack,
   onSave,
@@ -2460,6 +2573,9 @@ useEffect(() => {
       return;
     }
 
+  const UserFullInfo = useSelector(
+    (state: any) => state.AdminFullInfo
+  );
     const missingQuestion =
       section.questions.find(
         (question) =>
@@ -2816,56 +2932,151 @@ ClientId:ImpClientId,
   }
 };
 
+const downloadPDF = async (ImpFileName: string) => {
+  try {
+    setDownloadMessage(`Please Wait Preparing ${ImpFileName} Feedback.......`);
 
- const downloadPDF = async (ImpFileName:any) => {
-     try {
-     
-   setDownloadMessage(`Please Wait Preparing ${ImpFileName} Feedback.......`)
-       const element = document.getElementById("DownloadSection");
- 
-       if (!element) {
-         throw new Error("Transaction history HTML not found");
-       }
- 
-       const { default: html2pdf } = await import("html2pdf.js");
- 
-      const options: any = {
-        margin: 5,
-      
-      pagebreak: {
-  mode: ["css", "legacy"],
-},
-        filename: `${ImpFileName}-Feedback.pdf`,
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          allowTaint: false,
-          logging: false,
-          backgroundColor: "#ffffff",
-        },
-        jsPDF: {
-          unit: "mm",
-          format: "a4",
-          orientation: "portrait",
-        },
-      } as any;
+    const { jsPDF } = await import("jspdf");
 
-      await html2pdf().from(element).set(options).save();
-   setDownloadMessage(`Downloaded ${ImpFileName} Feedback`)
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
 
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
-setTimeout(() => {
-  setDownloadMessage("");
-}, 5000);
-     } catch (error: any) {
-       console.error("Download PDF Error:", error);
- 
-       alert(
-         error?.message ||
-           "Failed to download transaction history."
-       );
-     }
-   };
+    const margin = 15;
+    const contentWidth = pageWidth - margin * 2;
+
+    let y = 18;
+
+    const addPageIfNeeded = (heightNeeded = 10) => {
+      if (y + heightNeeded > pageHeight - 15) {
+        doc.addPage();
+        y = 18;
+      }
+    };
+
+    // Title
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${ImpFileName} - HCA Feedback`, margin, y);
+
+    y += 10;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      `Month: ${selectedMonth}-${selectedYear}`,
+      margin,
+      y
+    );
+
+    y += 10;
+
+    /*
+     * =====================================================
+     * QUESTIONS + ANSWERS ONLY
+     * =====================================================
+     */
+
+    sections.forEach((section) => {
+      addPageIfNeeded(15);
+
+      // Role / Section heading
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+
+      const sectionTitle = doc.splitTextToSize(
+        section.title,
+        contentWidth
+      );
+
+      doc.text(sectionTitle, margin, y);
+
+      y += sectionTitle.length * 6 + 5;
+
+      section.questions.forEach((question, index) => {
+        const answer =
+          String(answers?.[question.id] || "").trim() ||
+          "No answer recorded";
+
+        /*
+         * QUESTION
+         */
+        addPageIfNeeded(20);
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+
+        const questionText =
+          `${index + 1}. ${question.question}`;
+
+        const questionLines =
+          doc.splitTextToSize(
+            questionText,
+            contentWidth
+          );
+
+        doc.text(
+          questionLines,
+          margin,
+          y
+        );
+
+        y += questionLines.length * 5 + 3;
+
+        /*
+         * ANSWER
+         */
+        doc.setFont("helvetica", "normal");
+
+        const answerLines =
+          doc.splitTextToSize(
+            `Answer: ${answer}`,
+            contentWidth
+          );
+
+        addPageIfNeeded(
+          answerLines.length * 5 + 8
+        );
+
+        doc.text(
+          answerLines,
+          margin,
+          y
+        );
+
+        y += answerLines.length * 5 + 7;
+      });
+
+      y += 4;
+    });
+
+    doc.save(`${ImpFileName}-Feedback.pdf`);
+
+    setDownloadMessage(
+      `Downloaded ${ImpFileName} Feedback`
+    );
+
+    setTimeout(() => {
+      setDownloadMessage("");
+    }, 5000);
+
+  } catch (error: any) {
+    console.error(
+      "Download PDF Error:",
+      error
+    );
+
+    alert(
+      error?.message ||
+        "Failed to download feedback."
+    );
+  }
+};
   /* =======================================================
      AUDIO UPLOAD
   ======================================================= */
@@ -3227,14 +3438,10 @@ ClientId:ImpClientId,
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-          <InfoBox
-            label="HCA Name"
-            value={`${hca?.HCPFirstName || ""} ${
-              hca?.HCPSurName ||
-              hca?.LastName ||
-              ""
-            }`}
-          />
+        <InfoBox
+  label="HCA Name"
+  value={GetHCPFullName(UserFullInfo, hca?.userId) || "Not Provided"}
+/>
 
           <InfoBox
             label="Status"
@@ -3371,14 +3578,22 @@ ClientId:ImpClientId,
                 </div>
 <div className="flex flex-wrap items-center gap-2">
   {availableRoles.map((role, index) => (
-    <div
+    <button
       key={role}
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
+      type="button"
+      onClick={() => {
+        setCurrentSlide(index);
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      }}
+      className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
         index === currentSlide
           ? "border-[#1392d3] bg-[#1392d3] text-white shadow-sm"
           : index < currentSlide
-            ? "border-[#50c896] bg-[#50c896]/10 text-[#278f69]"
-            : "border-[#f2c94c] bg-[#fff8dc] text-[#b7791f]"
+            ? "border-[#50c896] bg-[#50c896]/10 text-[#278f69] hover:border-[#50c896] hover:bg-[#50c896]/20"
+            : "border-[#f2c94c] bg-[#fff8dc] text-[#b7791f] hover:border-[#f2c94c] hover:bg-[#fff1b8]"
       }`}
     >
       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-[10px]">
@@ -3388,7 +3603,7 @@ ClientId:ImpClientId,
       <span className="hidden sm:inline">
         {role}
       </span>
-    </div>
+    </button>
   ))}
 </div>
               </div>
@@ -3430,24 +3645,25 @@ ClientId:ImpClientId,
       </div>
 
       <div className="flex items-center gap-2">
-        <button
-         onClick={() =>
-  downloadPDF(
-    `${hca?.FirstName || ""} ${hca?.Surname || ""}`.trim()
-  )
-}
-          type="button"
-          className="inline-flex min-h-8 cursor-pointer items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-semibold shadow-sm transition-all"
-          style={{
-            borderColor: "#1392d3",
-            backgroundColor: "#ffffff",
-            color: "#1392d3",
-          }}
-        >
-          <FileText size={17} />
-          {hca?.HCPFirstName}
-          Download
-        </button>
+    {mode === "view" && (
+  <button
+    onClick={() =>
+      downloadPDF(
+        `${hca?.FirstName || ""} ${hca?.Surname || ""}`.trim()
+      )
+    }
+    type="button"
+    className="inline-flex min-h-8 cursor-pointer items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-semibold shadow-sm transition-all"
+    style={{
+      borderColor: "#1392d3",
+      backgroundColor: "#ffffff",
+      color: "#1392d3",
+    }}
+  >
+    <Download size={17} />
+    Download
+  </button>
+)}
 
         <div
           className="shrink-0 rounded-xl px-4 py-3 text-center"
@@ -3539,9 +3755,21 @@ ClientId:ImpClientId,
                   </span>
                 ) : (
                   !question.question.startsWith("MANDATORY") && (
-                    <span className="mr-2 text-[#94a3b8]">
-                      Q{questionIndex + 1}.
-                    </span>
+                  <span
+  className="
+    mr-2 inline-flex items-center justify-center
+    rounded-md
+    bg-gradient-to-r from-[#e8f4fb] to-[#dff1fa]
+    px-2 py-0.5
+    text-xs font-extrabold
+    text-[#1392d3]
+    shadow-sm
+    ring-1 ring-[#1392d3]/10
+    align-middle
+  "
+>
+  Q{questionIndex + 1}.
+</span>
                   )
                 )}
 

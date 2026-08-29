@@ -1,5 +1,6 @@
 "use client";
 
+
 import { IndianStates } from "@/Lib/Content";
 import { Update_Main_Filter_Status } from "@/Redux/action";
 import axios from "axios";
@@ -23,8 +24,11 @@ useState<"email" | "whatsapp" | "both">("email");
 const [otherNumbers, setOtherNumbers] = useState<string[]>([]);
 const [search, setSearch] = useState("");
  const [SelectedServiceStates, setSelectedServiceStates] = useState("Telangana");
+ const [leadFilters, setLeadFilters] = useState<string[]>([]);
 const users=useSelector((state:any)=>state.AdminUsers)
 const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
+
+const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
 const [OtherEMail,setOtherEMail]=useState<any>([])
 const [emailInput, setEmailInput] = useState("");
   const [subject, setSubject] = useState("");
@@ -52,26 +56,23 @@ const hca=users.filter((each:any)=>
 each.userType
 ===
 "healthcare-assistant")
-console.log ("Check for Comunicate Usres----",hca)
+
 const hcas = users
   .filter((each: any) => each.userType === "healthcare-assistant")
   .map((each: any) => ({
     _id: each._id,
+    UserId: each.UserId || each.userId,
     name: `${each.FirstName} ${each.Surname || ""}`.trim(),
     location: each.Location,
     email: each.Email,
        Phone:each.ContactNumber,
     currentStatus: each.CurrentStatus,
     userType: each.PreviewUserType || "HCA",
-    PreferdWorkingStates:each.PreferdWorkingStates||[],
+    PreferdWorkingStates:each.PreferdWorkingStates||["Telangana"],
   }));
 
- 
-const clients = Array.from(
-  new Map(
-    DeploymentInfo.map((each: any) => [each.ClientId, each])
-  ).values()
-).map((each: any) => ({
+
+const clients = DeploymentInfo.map((each: any) => ({
   _id: each.ClientId,
   patientName: each.ClientName,
   Adress: each.Address,
@@ -79,24 +80,40 @@ const clients = Array.from(
   clientStatus: each.Status,
   Phone: each.ClientContact,
   leadSource: each.referralName || "",
-  ServiceState: each.ServiceState || "Not Provided",
+  ServiceState: each.ServiceState || "Telangana",
 }));
-   console.log ("Check for DeploymentInfo:", DeploymentInfo.filter((each: any) => each.ClientName === "Riya Gupta"))
-console.log ("Check Contact.....",users
-  .filter((each: any) => each.userType === "patient"))
+ 
 const Leads = users
-  .filter((each: any) => each.userType === "CallEnquiry")
+  .filter((each: any) => (each.ClientStatus === "Waiting List"||each.ClientStatus === "Lost"))
   .map((each: any) => ({
     _id: each._id,
-    name: each.FirstName,
+    name: each.FirstName||"Not Provided",
     location: each.Location,
     email: each.Email || "",
     phone: each.ContactNumber,
-    currentStatus: each.CurrentStatus,
+    ClientStatus: each.ClientStatus,
     userType: "Lead",
-    ServiceState: each.ServiceState || "Not Provided",
+    ServiceState: each.ServiceState || "Telangana",
   }));
- 
+ const GetHCPFullName = (A: any) => {
+  if (!UserFullInfo?.length || !A) return "";
+
+  const info = UserFullInfo
+    ?.map((each: any) => each?.HCAComplitInformation)
+    ?.find((info: any) => info?.UserId=== A);
+console.log("HCP Info:", UserFullInfo);
+  if (!info) return "";
+
+  const fullName = [
+    info.HCPSurName,
+    info.HCPFirstName,
+    info.LastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return fullName;
+};
 const Employs = [
    {
     _id: "1",
@@ -171,7 +188,13 @@ const toggleClientFilter = (value: string) => {
       : [...prev, updatedValue]
   );
 };
-
+const toggleLeadFilter = (value: string) => {
+  setLeadFilters((prev) =>
+    prev.includes(value)
+      ? prev.filter((x) => x !== value)
+      : [...prev, value]
+  );
+};
   const toggleHcaFilter = (value: string) => {
     setHcaFilters((prev) =>
       prev.includes(value)
@@ -217,12 +240,12 @@ const filteredClients = useMemo(() => {
 
     const matchesState =
       !SelectedServiceStates ||
-      normalize(client.ServiceState) === normalize(SelectedServiceStates);
+      normalize(client.ServiceState||"Telangana") === normalize(SelectedServiceStates);
 
-    return matchesFilter && matchesSearch && matchesState;
+    return matchesFilter && matchesSearch&&matchesState ;
   });
 }, [clients, clientFilters, search, SelectedServiceStates]);
-
+ console.log ("Check fro Clients-----",filteredClients)
 const filteredHCAs = useMemo(() => {
   const keyword = normalize(search);
 
@@ -252,6 +275,10 @@ const filteredLeads = useMemo(() => {
   const keyword = normalize(search);
 
   return Leads.filter((lead: any) => {
+    const matchesLeadFilter =
+      !leadFilters.length ||
+      leadFilters.includes(lead.ClientStatus);
+
     const matchesState =
       !SelectedServiceStates ||
       normalize(lead.ServiceState) === normalize(SelectedServiceStates);
@@ -261,10 +288,19 @@ const filteredLeads = useMemo(() => {
       normalize(lead.email).includes(keyword) ||
       normalize(lead.phone).includes(keyword);
 
-    return matchesState && matchesSearch;
+    return (
+      matchesLeadFilter &&
+      matchesState &&
+      matchesSearch
+    );
   });
-}, [Leads, search, SelectedServiceStates]);
-
+}, [
+  Leads,
+  leadFilters,
+  search,
+  SelectedServiceStates
+]);
+ console.log ("Check HCA",filteredLeads)
 const selectedCount =
   tab === "clients"
     ? filteredClients.length
@@ -698,7 +734,9 @@ Please do not reply directly to this email.
           {[
           "On going service"
 ,"Hold client"
-,"Terminated client"
+
+
+// ,"Terminated client"
 
           
    
@@ -772,7 +810,7 @@ Please do not reply directly to this email.
                 type="checkbox"
                 className="accent-[#50c896]"
                 onChange={() =>
-                  toggleHcaFilter(item)
+               toggleLeadFilter(item)
                 }
               />
               {item}
@@ -843,56 +881,50 @@ Please do not reply directly to this email.
   </div>
 
   {/* Clients */}
-  {tab === "clients" &&
-    filteredClients.map((client:any) => (
-      <div
-        key={client._id}
-        className="grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-3 hover:bg-slate-50 transition"
-      >
-        <div className="flex items-center gap-3">
-
-          <div className="h-11 w-11 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-sm shrink-0">
-            {client.patientName?.charAt(0)?.toUpperCase()}
-          </div>
-
-          <div className="min-w-0">
-
-            <h4 className="font-semibold text-slate-800 truncate">
-              {client.patientName}
-            </h4>
-
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-slate-500">
-
-  {communicationType === "email" ? (
-    <span className="flex items-center gap-1 truncate">
-      📧 {client.email}
-    </span>
-  ) : (
-    <span className="flex items-center gap-1 truncate">
-      <img
-        src="/Icons/whatsapp.png"
-        alt="WhatsApp"
-        className="w-4 h-4 object-contain"
-      />
-      <span>{client.Phone}</span>
-    </span>
-  )}
-
-  <span className="flex items-center gap-1 truncate">
-    📍 {client.Adress||"Not Privided"}
-  </span>
-
+ {tab === "clients" &&
+  filteredClients.map((client: any, index: number) => (
+    <div
+      key={`${client._id || "client"}-${index}`}
+      className="grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-3 hover:bg-slate-50 transition"
+    >
+      <div className="flex items-center gap-3 min-w-0">
+     <div className="h-11 w-11 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-sm shrink-0">
+  {client.patientName?.trim()?.charAt(0)?.toUpperCase() || client.patientName?.trim()?.charAt(1)?.toUpperCase()}
 </div>
 
+        <div className="min-w-0">
+          <h4 className="font-semibold text-slate-800 truncate">
+            {client.patientName}
+          </h4>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-slate-500">
+            {communicationType === "email" ? (
+              <span className="flex items-center gap-1 truncate">
+                📧 {client.email || "No Email"}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 truncate">
+                <img
+                  src="/Icons/whatsapp.png"
+                  alt="WhatsApp"
+                  className="w-4 h-4 object-contain"
+                />
+                <span>{client.Phone || "No Contact"}</span>
+              </span>
+            )}
+
+            <span className="flex items-center gap-1 truncate">
+              📍 {client.Adress || "Not Provided"}
+            </span>
           </div>
-
         </div>
-
-        <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-200">
-          Client
-        </span>
       </div>
-    ))}
+
+      <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-200">
+        Client
+      </span>
+    </div>
+  ))}
 
   {/* HCAs */}
   {tab === "hcas" &&
@@ -910,7 +942,7 @@ Please do not reply directly to this email.
           <div className="min-w-0">
 
             <h4 className="font-semibold text-slate-800 truncate">
-              {hcp.name}
+            {GetHCPFullName(hcp.UserId)}
             </h4>
 
                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-slate-500">

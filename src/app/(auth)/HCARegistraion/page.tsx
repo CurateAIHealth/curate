@@ -58,7 +58,18 @@ const [ImportedVendors, setImportedVendors] = useState<any>([])
     { relation: "Younger Sister", count: 0 },
     { relation: "Twin Sibling", count: 0 },
   ]);
-
+const documentLabels: Record<string, string> = {
+  AadharCard: "Aadhar",
+  PanCard: "PAN",
+  "Certificate One": "Education",
+  "Certificate Two": "Experiance",
+  "Account Pass Book": "Bank",
+  BVR: "BVR",
+  "HCP form": "HCP Form",
+  ReferenceCertificate: "Reference",
+  HealthCertificate: "Health",
+  Other: "Other",
+};
 
   const userId = useSelector((state: any) => state?.UserDetails);
   const CurrentUserType = useSelector((state: any) => state.RegisteredUserType)
@@ -4554,11 +4565,7 @@ form.HusbendContact!=="Not Available"&&
           className="cursor-pointer text-center text-[10px] sm:text-[11px] text-white bg-teal-600 hover:bg-teal-500 px-3 py-1 rounded-full transition-colors duration-300"
         >
           {Docs[docKey as keyof typeof Docs] ? "Update" : "Upload"}{" "}
-          {docKey
-            .replace("Card", " Card")
-            .replace("Book", " Book")
-            .replace("Certificate", " Certificate")
-            .trim()}
+          {documentLabels[docKey] || docKey}
         </label>
 
         <input
