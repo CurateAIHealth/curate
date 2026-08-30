@@ -456,9 +456,7 @@ const getNextYearDate = (dateString: string): string => {
             <p className="text-sm" style={{ color: "#6b7280" }}>Updated By</p>
             <p className="text-sm font-semibold text-gray-900">
   {GetStaffName(item.ApprovedBy)}
-  <span className="ml-2 text-xs font-normal text-gray-500">
-    ({item.ApprovedBy})
-  </span>
+ 
 </p>
           </div>
 

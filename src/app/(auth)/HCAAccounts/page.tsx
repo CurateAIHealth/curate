@@ -134,7 +134,7 @@ useEffect(() => {
     try {
       // ✅ Use Memory Cache
       if (!forceRefresh && replacementTerminationCache.data) {
-        console.log("📦 Using Cached Replacement/Termination Data");
+   
 
         applyData(replacementTerminationCache.data);
         return;
@@ -142,7 +142,7 @@ useEffect(() => {
 
       // ✅ Wait for Existing Request
       if (!forceRefresh && replacementTerminationCache.promise) {
-        console.log("⏳ Waiting for existing request...");
+     
 
         const data = await replacementTerminationCache.promise;
 
@@ -152,7 +152,7 @@ useEffect(() => {
         return;
       }
 
-      console.log("🌐 Fetching Fresh Replacement/Termination Data...");
+
 
       // if (mounted) {
       //   setIsChecking(true);
@@ -171,7 +171,6 @@ useEffect(() => {
 
         applyData(data);
 
-        console.log("✅ Replacement/Termination Cache Updated");
       } finally {
         replacementTerminationCache.promise = null;
       }
@@ -197,18 +196,15 @@ useEffect(() => {
 
   const eventSource = new EventSource("/api/payable-events");
 
-  eventSource.onopen = () => {
-    console.log("✅ SSE Connected");
-  };
-
+ 
   eventSource.onmessage = (event) => {
-    console.log("📩 Mongo Event:", event.data);
+
 
     try {
       const message = JSON.parse(event.data);
 
       if (message.refresh) {
-        console.log("🔄 MongoDB Changed - Refreshing Cache");
+      
 
         // Clear Memory Cache
         replacementTerminationCache.data = null;
@@ -217,7 +213,7 @@ useEffect(() => {
         fetchData(true);
       }
     } catch {
-      console.log("Received:", event.data);
+   
     }
   };
 
@@ -230,7 +226,7 @@ useEffect(() => {
 
     eventSource.close();
 
-    console.log("🔌 SSE Disconnected");
+  
   };
 }, []);
 useEffect(() => {
@@ -833,7 +829,7 @@ useEffect(() => {
 
       return acc;
     }, {})
-  );console.log("Merged Data", mergedData);
+  );
 
   setData(mergedData);
 }, [filtered]);
@@ -930,13 +926,14 @@ const GetMonthFreshData = async (r: string) => {
   "/api/AdminPageInfo",
   {
     userId,
+refreshType: "deployment",
     Month: `${SearchYear}-${r}`,
   }
 );
 
 
 
-    console.log("Check New Data", data.data.deployedLength);
+    
 setClientsInformation(data.data.deployedLength)
  setIsSwitchingMonth(false);
     dispatch(SetDeploymentInfo(data.data.deployedLength));
@@ -954,68 +951,229 @@ const NumberOfDaysInMonth = getDaysInMonth(
 );
 
 
-const UpdatePaymentStatus=async(HCAId:any,ClientId:any,status:any,Info:any)=>{
-  setPopup({
-      isOpen: true,
-      message: "Please Wait Updating Payment Status...",
-      type: "loading",
-    });
-  const value = status
-   
-   const MonthInfo=`${SearchYear}-${SearchMonth}`
-   console.log("Check first---",Info)
-    const UpdatedinDB:any=await UpdatePaymentVerificationStatusInDb(HCAId,ClientId,value,MonthInfo,Info.StartDate,Info.MergedPreviewInfos,Info.MergedClienid)
- console.log("PaymentInfo to be posted:",UpdatedinDB)
-    if(UpdatedinDB.success){
-        const userId = localStorage.getItem("UserId");
-      
-      
-          
-               const { data:result } = await axios.post("/api/AdminPageInfo", {
-          userId,
-          Month:MonthInfo,
-          refreshType: "deployment",
-        });
-   const {
-      profile,
-      registeredUsers,
-      fullInfo,
-      deployedLength,
-    } = result.data;
-      dispatch(SetDeploymentInfo(deployedLength));
-      console.log("TaSk One---",deployedLength)
-              console.log("Deployment Info Updated Successfully",deployedLength.filter((each:any)=>each.ClientId==="fb9832ee-c4fd-4632-be73-67dd0b539db6"));
-      setData((prev) =>
-      prev.map((item) =>
-        item.HCAId === HCAId    ? { ...item, PaymentVerficationStatus: value }
-        : item
-      )
-    ); 
+const UpdatePaymentStatus = async (
+  HCAId: any,
+  ClientId: any,
+  status: any,
+  Info: any
+) => {
+  const value = status;
+  const MonthInfo = `${SearchYear}-${SearchMonth}`;
 
-     setPopup({
-        isOpen: true,
-        message: "Payment Status Updated successfully!",
-        type: "success",
-      });
-     }else{
-        setPopup({
+  // Show loading immediately
+  setPopup({
+    isOpen: true,
+    message: "Updating Payment Status...",
+    type: "loading",
+  });
+
+  // Optimistic UI update
+  setData((prev) =>
+    prev.map((item) =>
+      item.HCAId === HCAId
+        ? {
+            ...item,
+            PaymentVerficationStatus: value,
+          }
+        : item
+    )
+  );
+
+  try {
+    const UpdatedinDB =
+      await UpdatePaymentVerificationStatusInDb(
+        HCAId,
+        ClientId,
+        value,
+        MonthInfo,
+        Info?.StartDate,
+        Info?.MergedPreviewInfos,
+        Info?.MergedClienid
+      );
+
+    if (!UpdatedinDB?.success) {
+      // Rollback if DB update fails
+      setData((prev) =>
+        prev.map((item) =>
+          item.HCAId === HCAId
+            ? {
+                ...item,
+                PaymentVerficationStatus:
+                  Info?.PaymentVerficationStatus || "Process",
+              }
+            : item
+        )
+      );
+
+      setPopup({
         isOpen: true,
         message: "Failed to update payment status",
         type: "error",
       });
+
+      return;
     }
 
- return
- 
-    
+    setPopup({
+      isOpen: true,
+      message: "Payment Status Updated successfully!",
+      type: "success",
+    });
+  } catch (error) {
+    console.error("UpdatePaymentStatus Error:", error);
 
-  
+    // Rollback UI
+    setData((prev) =>
+      prev.map((item) =>
+        item.HCAId === HCAId
+          ? {
+              ...item,
+              PaymentVerficationStatus:
+                Info?.PaymentVerficationStatus || "Process",
+            }
+          : item
+      )
+    );
+
+    setPopup({
+      isOpen: true,
+      message: "Failed to update payment status",
+      type: "error",
+    });
   }
+};
 
   
 
-const UpdatePayablePage = async (row: any, totalAmount: any,DailyPay:any) => {
+// const UpdatePayablePage = async (row: any, totalAmount: any,DailyPay:any) => {
 
+//   try {
+//     setPopup({
+//       isOpen: true,
+//       message: "Generating payable page details...",
+//       type: "loading",
+//     });
+
+//     const MonthInfo = `${SearchYear}-${SearchMonth}`;
+
+//     const paymentTypes = Array.isArray(row.MergedPreviewInfos)
+//       ? row.MergedPreviewInfos
+//       : [row.MergedPreviewInfos];
+
+
+//     const payableResult = await PostINPayblePage(
+//       row.HCAId,
+//       row.Clientid,
+//       MonthInfo,
+//       row,
+//       totalAmount,
+//       DailyPay,
+//       row.MergedClienid
+
+//     );
+
+//     if (!payableResult.success) {
+//       setPopup({
+//         isOpen: true,
+//         message:
+//           payableResult.message ||
+//           "Failed to create payable record",
+//         type: "error",
+//       });
+
+//       return;
+//     }
+
+
+//     if (paymentTypes.includes("OnService Payments")) {
+//       await UpdateDeploymentPreviewStatus(
+//         row.HCAId,
+//         row.Clientid,
+//         MonthInfo
+//       );
+//     }
+
+//     if (paymentTypes.includes("Replacement Payments")) {
+//       await PostINPayblePageforRepleasments(
+//         row.HCAId,
+//         row.Clientid,
+//         MonthInfo
+//       );
+//     }
+
+//     if (paymentTypes.includes("Termination Payments")) {
+//       await PostINPayblePageforTermination(
+//         row.HCAId,
+//         row.Clientid,
+//         MonthInfo,
+//         row.StartDate
+//       );
+//     }
+
+//     // --------------------------------------------------
+//     // STEP 3 : Refresh Deployment
+//     // --------------------------------------------------
+
+//     const userId = localStorage.getItem("UserId");
+
+//     const { data } = await axios.post("/api/AdminPageInfo", {
+//       userId,
+//           Month: MonthInfo,
+//       refreshType: "deployment",
+//     });
+
+//     dispatch(
+//       SetDeploymentInfo(
+//         data?.data?.deployedLength || 0
+//       )
+//     );
+
+//     // --------------------------------------------------
+//     // STEP 4 : Update Local UI
+//     // --------------------------------------------------
+
+//     setData((prev: any[]) =>
+//       prev.map((item) =>
+//         item.HCAId === row.HCAId
+//           ? {
+//               ...item,
+//               PreviewINPaymentPage: "Disabled",
+
+//               SourceRows: Array.isArray(item.SourceRows)
+//                 ? item.SourceRows.map((source: any) => ({
+//                     ...source,
+//                     PreviewINPaymentPage: "Disabled",
+//                   }))
+//                 : item.SourceRows,
+//             }
+//           : item
+//       )
+//     );
+
+//     setPopup({
+//       isOpen: true,
+//       message:
+//         payableResult.message ||
+//         "Moved to Payable Page successfully!",
+//       type: "success",
+//     });
+//   } catch (err) {
+//     console.error(err);
+
+//     setPopup({
+//       isOpen: true,
+//       message: "Something went wrong",
+//       type: "error",
+//     });
+//   }
+// };
+  
+
+const UpdatePayablePage = async (
+  row: any,
+  totalAmount: any,
+  DailyPay: any
+) => {
   try {
     setPopup({
       isOpen: true,
@@ -1029,7 +1187,7 @@ const UpdatePayablePage = async (row: any, totalAmount: any,DailyPay:any) => {
       ? row.MergedPreviewInfos
       : [row.MergedPreviewInfos];
 
-
+    // STEP 1: Main payable record
     const payableResult = await PostINPayblePage(
       row.HCAId,
       row.Clientid,
@@ -1038,14 +1196,13 @@ const UpdatePayablePage = async (row: any, totalAmount: any,DailyPay:any) => {
       totalAmount,
       DailyPay,
       row.MergedClienid
-
     );
 
-    if (!payableResult.success) {
+    if (!payableResult?.success) {
       setPopup({
         isOpen: true,
         message:
-          payableResult.message ||
+          payableResult?.message ||
           "Failed to create payable record",
         type: "error",
       });
@@ -1053,41 +1210,48 @@ const UpdatePayablePage = async (row: any, totalAmount: any,DailyPay:any) => {
       return;
     }
 
+    // STEP 2: Run payment-type updates in parallel
+    const paymentUpdates: Promise<any>[] = [];
 
     if (paymentTypes.includes("OnService Payments")) {
-      await UpdateDeploymentPreviewStatus(
-        row.HCAId,
-        row.Clientid,
-        MonthInfo
+      paymentUpdates.push(
+        UpdateDeploymentPreviewStatus(
+          row.HCAId,
+          row.Clientid,
+          MonthInfo
+        )
       );
     }
 
     if (paymentTypes.includes("Replacement Payments")) {
-      await PostINPayblePageforRepleasments(
-        row.HCAId,
-        row.Clientid,
-        MonthInfo
+      paymentUpdates.push(
+        PostINPayblePageforRepleasments(
+          row.HCAId,
+          row.Clientid,
+          MonthInfo
+        )
       );
     }
 
     if (paymentTypes.includes("Termination Payments")) {
-      await PostINPayblePageforTermination(
-        row.HCAId,
-        row.Clientid,
-        MonthInfo,
-        row.StartDate
+      paymentUpdates.push(
+        PostINPayblePageforTermination(
+          row.HCAId,
+          row.Clientid,
+          MonthInfo,
+          row.StartDate
+        )
       );
     }
 
-    // --------------------------------------------------
-    // STEP 3 : Refresh Deployment
-    // --------------------------------------------------
+    await Promise.all(paymentUpdates);
 
+    // STEP 3: Refresh deployment
     const userId = localStorage.getItem("UserId");
 
     const { data } = await axios.post("/api/AdminPageInfo", {
       userId,
-          Month: MonthInfo,
+      Month: MonthInfo,
       refreshType: "deployment",
     });
 
@@ -1097,10 +1261,7 @@ const UpdatePayablePage = async (row: any, totalAmount: any,DailyPay:any) => {
       )
     );
 
-    // --------------------------------------------------
-    // STEP 4 : Update Local UI
-    // --------------------------------------------------
-
+    // STEP 4: Update local UI immediately
     setData((prev: any[]) =>
       prev.map((item) =>
         item.HCAId === row.HCAId
@@ -1122,12 +1283,13 @@ const UpdatePayablePage = async (row: any, totalAmount: any,DailyPay:any) => {
     setPopup({
       isOpen: true,
       message:
-        payableResult.message ||
+        payableResult?.message ||
         "Moved to Payable Page successfully!",
       type: "success",
     });
+
   } catch (err) {
-    console.error(err);
+    console.error("UpdatePayablePage Error:", err);
 
     setPopup({
       isOpen: true,
@@ -1136,7 +1298,7 @@ const UpdatePayablePage = async (row: any, totalAmount: any,DailyPay:any) => {
     });
   }
 };
-  const getTotal = (row: PayrollRow) =>
+const getTotal = (row: PayrollRow) =>
     row.payment -
     row.advance -
     row.hostel -
@@ -1252,18 +1414,7 @@ const dailySalary = Math.round(salary / daysInMonth);
 
     total += paymentForDay;
 
-    // Debug
-    console.log("HCA SALARY CALCULATION", {
-      attendanceDate: attendance.AttendenceDate,
-      salary,
-      daysInMonth,
-      dailySalary,
-      hcpPresent,
-      adminPresent,
-      attendanceValue,
-      paymentForDay,
-      runningTotal: total,
-    });
+
   });
 
   // Round only final amount
@@ -1346,10 +1497,7 @@ const handleSave = async (row: any) => {
         }
       );
 
-      console.log (
-"Current Task------",data
-      )
-
+    
       dispatch(setUsers(
         data.data.registeredUsers
       ))
@@ -1951,7 +2099,6 @@ const handleChange = (
           <tbody>
             {data.filter((row) => row.PreviewINPaymentPage !== "Disabled")
   .map((row:any,Ind:any) => {
-console.log ("Check for Row Expences-------",row.Expences)
 const PresentDays=row?.CompliteAttendeceSummery.present
 const HalfDays=row?.CompliteAttendeceSummery.halfDay
 const HCPPayment:any=GetHCPPayment(row.HCAId)||0
