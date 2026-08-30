@@ -28,7 +28,18 @@ const payment = {
   NeftTransactionNumber: "123456",
   Bank: "SBI",
 };
-
+const documentLabels: Record<string, string> = {
+  AadharCard: "Aadhar",
+  PanCard: "PAN",
+  "CertificatOne": "Education",
+  "CertificatTwo": "Experiance",
+  "Account Pass Book": "Bank",
+  BVR: "BVR",
+  "HCP form": "HCP Form",
+  ReferenceCertificate: "Reference",
+  HealthCertificate: "Health",
+  Other: "Other",
+};
 const transactions: { title: string; amount: number; type: 'credit' | 'debit' }[] = [
   { title: "Monthly Salary", amount: payment.total, type: "credit" as const },
   { title: "Advance Deduction", amount: payment.advance, type: "debit" as const },
@@ -40,7 +51,9 @@ const transactions: { title: string; amount: number; type: 'credit' | 'debit' }[
 
 const TABS = ['Personal Info', 'Bank Details', 'Documents', 'Work Experience', 'Identifiers' ,"Payment"];
 
-type DocumentKeys = 'ProfilePic' | 'AdharCard' | 'PanCard' | 'AccountPassBook' | 'CertificatOne' | 'CertificatTwo';
+type DocumentKeys = 'ProfilePic' | 'AdharCard' | 'PanCard' | 'AccountPassBook' | 'CertificatOne' | 'CertificatTwo' | 'ReferenceCertificate' |
+  'HealthCertificate' |
+  'Other'
 
 type UserData = {
   HikeHistory: [];
@@ -147,8 +160,11 @@ preferredService:"",
       AccountPassBook: "https://res.cloudinary.com/dxhf9ysx4/image/upload/v1754297505/uploads/tqqhys7yomtvpv1ad168.jpg",
       CertificatOne: "https://res.cloudinary.com/dxhf9ysx4/image/upload/v1754297478/uploads/vq7q55n84va0zxrcnziz.jpg",
       CertificatTwo: "https://res.cloudinary.com/dxhf9ysx4/image/upload/v1754297494/uploads/xjjh4r1xqnugpjbtxj7v.jpg",
-     
-      
+      ReferenceCertificate: '',
+      HealthCertificate: '',
+      Other: '',
+
+
     },
     experience: "3",
     professionalWork1: "Lab Technician ( Tata Steel company) Odisha",
@@ -233,6 +249,11 @@ HikeHistory:FilterValue.SalaryHistory,
       CertificatTwo: FilterValue.Documents.CertificatTwo||FilterValue.Documents["Certificate Two"]||'/Icons/PatientDefault.png',
       BVR:FilterValue.BVR||'',
       HCPform:FilterValue.HCPform||FilterValue.Documents["HCP form"]||'/Icons/PatientDefault.png',
+      
+HealthCertificate:FilterValue.HealthCertificate||FilterValue.Documents["HealthCertificate"]||'/Icons/PatientDefault.png',
+ReferenceCertificate:FilterValue.ReferenceCertificate||FilterValue.Documents["ReferenceCertificate"]||'/Icons/PatientDefault.png',
+Other:FilterValue.Other||FilterValue.Documents["Other"]||'/Icons/PatientDefault.png',
+
       
 
 
@@ -411,7 +432,7 @@ case "HikeHistory":
     );
   }
 
-  console.log ("Check for Documets-----",user.Documents)
+  console.log ("Check for Documets-----",user.PaymentHistory)
   const handleprofessionalSkillChange = (skill:any) => {
     setUser((prev:any) => {
       const skills:any = prev.ProfetionSkill || [];
@@ -546,7 +567,7 @@ case "HikeHistory":
                 htmlFor={key}
                 className="flex items-center justify-center bg-blue-500 mt-4 h-10 text-[12px] w-38 text-white text-center p-2 rounded-md cursor-pointer"
               >
-                Update {key}
+                Update  {documentLabels[key] || key}
               </label>
               <input
                 id={key}

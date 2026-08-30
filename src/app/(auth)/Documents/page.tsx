@@ -2,7 +2,7 @@
 
 import { LoadingData } from "@/Components/Loading/page";
 import { statusFilters } from "@/Lib/Content";
-import { GetRegidterdUsers, GetUsersFullInfo, UpdateDocumentFollowUpStatus, UpdateDocumentFollowUpStatusInFullInfo } from "@/Lib/user.action";
+import { GetRegidterdUsers, GetUsersFullInfo, GetUsersFullInfoForMissingDocuments, UpdateDocumentFollowUpStatus, UpdateDocumentFollowUpStatusInFullInfo } from "@/Lib/user.action";
 import { Update_Main_Filter_Status } from "@/Redux/action";
 import { Eye, Search, FileUser, LogOut, Clock, Calendar, X, Filter, LayoutDashboard } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -55,7 +55,7 @@ const GetCurrentStatus=(A:any)=>{
 
 }
 
-console.log("Look For Contact-----",RegisterdInfo)
+
 const GetHCPFullName = (A: any) => {
   if (!UserFullInfo?.length || !A) return "";
 
@@ -64,7 +64,7 @@ const GetHCPFullName = (A: any) => {
     ?.find((info: any) => info?.UserId === A);
 
   if (!info) return "";
-console.log("HCP Info:", info);
+
   const fullName = [
     info.HCPSurName,
     info.HCPFirstName,
@@ -75,16 +75,29 @@ console.log("HCP Info:", info);
 
   return fullName;
 };
- useEffect(() => {
+useEffect(() => {
   const Fetch = async () => {
-    const [ Full] = await Promise.all([
-   
-      GetUsersFullInfo(),
-    ]);
+    try {
+      setisChecking(true);
 
-    setFullInfo(Full);
-  
-    setisChecking(false);
+      const cachedData = sessionStorage.getItem("FullInfo");
+
+      if (cachedData) {
+        setFullInfo(JSON.parse(cachedData));
+        return;
+      }
+
+      const Full: any = await GetUsersFullInfoForMissingDocuments();
+
+      setFullInfo(Full);
+
+      sessionStorage.setItem("FullInfo", JSON.stringify(Full));
+    } catch (error) {
+      console.error("Error fetching full info:", error);
+      setFullInfo([]);
+    } finally {
+      setisChecking(false);
+    }
   };
 
   Fetch();
@@ -135,7 +148,7 @@ const getDocumentsByUserId = (userId: string) => {
 
   return userInfo?.HCAComplitInformation?.Documents || {};
 };
-
+console.log ("Check Priti Docs-----",getDocumentsByUserId("778af4ef-5a87-426a-bd27-2d2257480038"))
  const result = useMemo(() => {
   return RegisterdInfo
     .map((each: any) => {
@@ -146,10 +159,15 @@ const getDocumentsByUserId = (userId: string) => {
   return value === "" || value === null || value === undefined;
 });
 
-const availableDocs = Object.keys(doc).filter((key) => {
-  const value = doc[key];
-  return value !== "" && value !== null && value !== undefined;
-});
+const availableDocs = Object.entries(doc)
+  .filter(([_, value]) => {
+    return (
+      typeof value === "string" &&
+      value.trim() !== "" &&
+      value.toLowerCase().includes("cloudinary.com")
+    );
+  })
+  .map(([key]) => key);
 
       return {
         FirstName: GetHCPFullName(each?.userId) || "Not Provided",
@@ -170,7 +188,7 @@ ContactNumber
 "healthcare-assistant"); 
 }, [fullInfo,selectedFilter]);
 
-console.log ("Get Current Values-------",result)
+
   const Valueresult: any = useMemo(() => {
     return RegisterdInfo.filter((obj: any) => obj.userType === "Vendor").map(
       (obj: any) => {
@@ -211,7 +229,25 @@ const FinelPreviewData = useMemo(() => {
 
   return Array.from(map.values());
 }, [result, Valueresult]);
+const filteredPreviewData = useMemo(() => {
+  const search = query.trim().toLowerCase();
 
+  if (!search) {
+    return PreviwData;
+  }
+
+  return PreviwData.filter((item: any) => {
+    const name = item.FirstName?.toLowerCase() || "";
+    const contact = item.ContactNumber?.toLowerCase() || "";
+    const userId = item.UserId?.toLowerCase() || "";
+
+    return (
+      name.includes(search) ||
+      contact.includes(search) ||
+      userId.includes(search)
+    );
+  });
+}, [PreviwData, query]);
   useEffect(() => {
     if (FinelPreviewData.length === 0) return;
 
@@ -222,7 +258,7 @@ const FinelPreviewData = useMemo(() => {
       responsible: p.responsible || "",
       DocumentSkipReason: p.DocumentSkipReason || "",
     }));
-console.log("Check for Task-----",cleaned)
+
     setPreviwData(cleaned);
   }, [FinelPreviewData]);
 
@@ -473,26 +509,72 @@ console.log("Check for Task-----",cleaned)
 
       )}
 
-  <div className="rounded-2xl bg-white/70 backdrop-blur-xl border border-gray-200 shadow-lg overflow-hidden">
+<div className="rounded-2xl bg-white/70 backdrop-blur-xl border border-gray-200 shadow-lg overflow-hidden">
 
-  {/* Horizontal Scroll Container */}
-  <div className="overflow-x-auto">
+  {/* ================= SCROLLABLE TABLE ================= */}
+<div
+  className="
+    relative
+    max-h-[calc(100vh-205px)]
+    w-full
+    overflow-x-auto
+    overflow-y-auto
+    overscroll-contain
+    scrollbar-hide
+  "
+>
 
-    {/* Header + Rows use the SAME grid */}
-    <div className="min-w-[1450px]">
+    {/* ================= TABLE ================= */}
+    <div className="min-w-[1510px] w-max">
 
       {/* ================= TABLE HEADER ================= */}
       <div
         className="
+          sticky top-0 z-30
           grid
-          grid-cols-[70px_180px_repeat(9,minmax(140px,1fr))]
-          bg-[#dff9f7]/80
+          grid-cols-[70px_180px_repeat(9,140px)]
+          min-h-[56px]
+          bg-[#dff9f7]
           border-b border-gray-200
+          shadow-sm
         "
       >
+
+        {/* S No */}
+        <div
+          className="
+            sticky left-0 z-40
+            flex items-center justify-center
+            px-3 py-3
+            text-xs sm:text-sm
+            font-semibold
+            text-[#093c3a]
+            text-center
+            border-r border-gray-200
+            bg-[#dff9f7]
+          "
+        >
+          S No
+        </div>
+
+        {/* Names */}
+        <div
+          className="
+            sticky left-[70px] z-40
+            flex items-center justify-center
+            px-3 py-3
+            text-xs sm:text-sm
+            font-semibold
+            text-[#093c3a]
+            text-center
+            border-r border-gray-200
+            bg-[#dff9f7]
+          "
+        >
+          Names
+        </div>
+
         {[
-          "S No",
-          "Names",
           "Aadhar",
           "PAN",
           "BVR",
@@ -506,19 +588,13 @@ console.log("Check for Task-----",cleaned)
           <div
             key={h}
             className="
-              min-h-[56px]
-              flex
-              items-center
-              justify-center
-              px-3
-              py-3
-              text-xs
-              sm:text-sm
+              flex items-center justify-center
+              px-3 py-3
+              text-xs sm:text-sm
               font-semibold
               text-[#093c3a]
               text-center
-              border-r
-              border-gray-200
+              border-r border-gray-200
               whitespace-normal
               leading-tight
             "
@@ -529,116 +605,126 @@ console.log("Check for Task-----",cleaned)
       </div>
 
       {/* ================= TABLE ROWS ================= */}
-      {PreviwData.map((p: any, i: number) => {
+      {filteredPreviewData.map((p: any, i: number) => {
 
-        const availableDocs = (p.availableDocs || []).map((doc: string) =>
-          doc.toLowerCase().trim()
+        const availableDocs = (p.availableDocs || []).map(
+          (doc: string) =>
+            doc.toLowerCase().replace(/[^a-z0-9]/g, "")
         );
 
-        const missingDocs = (p.missingDocs || []).map((doc: string) =>
-          doc.toLowerCase().trim()
-        );
+const hasDocument = (...names: string[]) => {
+  return names.some((name) => {
+    const normalizedName = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
 
-        const hasDocument = (...names: string[]) => {
-          return names.some((name) => {
-            const normalized = name.toLowerCase().trim();
+    return availableDocs.some((doc: string) => {
+      const normalizedDoc = doc
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
 
-            return (
-              availableDocs.includes(normalized) ||
-              availableDocs.some((doc: string) =>
-                doc.includes(normalized) ||
-                normalized.includes(doc)
-              )
-            );
-          });
-        };
+      return (
+        normalizedDoc === normalizedName ||
+        normalizedDoc.includes(normalizedName) ||
+        normalizedName.includes(normalizedDoc)
+      );
+    });
+  });
+};
 
-        const documents = [
-          {
-            label: "Aadhar",
-            available: hasDocument(
-              "aadhar",
-              "aadhaar",
-              "aadhar card",
-              "aadhaar card"
-            ),
-          },
-          {
-            label: "PAN",
-            available: hasDocument(
-              "pan",
-              "pan card"
-            ),
-          },
-          {
-            label: "BVR",
-            available: hasDocument(
-              "bvr",
-              "bvr document",
-              "bvr certificate"
-            ),
-          },
-          {
-            label: "Bank",
-            available: hasDocument(
-              "bank",
-              "bank document",
-              "bank passbook",
-              "bank account"
-            ),
-          },
-          {
-            label: "Primary education certificate",
-            available: hasDocument(
-              "primary education certificate",
-              "education certificate",
-              "primary education"
-            ),
-          },
-          {
-            label: "Primary experience certificate",
-            available: hasDocument(
-              "primary experience certificate",
-              "experience certificate",
-              "primary experience"
-            ),
-          },
-          {
-            label: "Reference Reference",
-            available: hasDocument(
-              "reference",
-              "reference document",
-              "reference certificate"
-            ),
-          },
-          {
-            label: "Health Certificate",
-            available: hasDocument(
-              "health certificate",
-              "health certificate document",
-              "medical certificate",
-              "medical"
-            ),
-          },
-          {
-            label: "Other",
-            available: hasDocument(
-              "other",
-              "other document",
-              "other certificate"
-            ),
-          },
-        ];
-
+      const documents = [
+  {
+    label: "Aadhar",
+    available: hasDocument(
+      "AadharAttachmentURL",
+      "AadharCard",
+      "Aadhar",
+      "Aadhaar",
+      "Adhar"
+    ),
+  },
+  {
+    label: "PAN",
+    available: hasDocument(
+      "PanCard",
+      "PANAttachmentURL",
+      "PAN",
+      "Pancard"
+    ),
+  },
+  {
+    label: "BVR",
+    available: hasDocument(
+      "BVR",
+      "BVRDocument",
+      "BVRCertificate"
+    ),
+  },
+  {
+    label: "Bank",
+    available: hasDocument(
+      "AccountPassBook",
+      "BankProofURL",
+      "Bank",
+      "BankProof",
+      "BankPassBook"
+    ),
+  },
+  {
+    label: "Education",
+    available: hasDocument(
+      "CertificateOne",
+   
+      "Education",
+      "EducationCertificate",
+      "PrimaryEducation",
+      "CertificatOne"
+    ),
+  },
+  {
+    label: "Experience",
+    available: hasDocument(
+      "Experience",
+      "ExperienceCertificate",
+      "PrimaryExperience",
+         "CertificateTwo",
+      "CertificatTwo"
+    ),
+  },
+  {
+    label: "Reference",
+    available: hasDocument(
+      "ReferenceCertificate",
+      "Reference",
+      "ReferenceDocument"
+    ),
+  },
+  {
+    label: "Health",
+    available: hasDocument(
+      "HealthCertificate",
+      "Health",
+      "MedicalCertificate",
+      "Medical"
+    ),
+  },
+  {
+    label: "Other",
+    available: hasDocument(
+      "Other",
+      "OtherDocument",
+      "OtherCertificate"
+    ),
+  },
+];
         return (
           <div
             key={p.UserId || i}
             className="
               grid
-              grid-cols-[70px_180px_repeat(9,minmax(140px,1fr))]
+              grid-cols-[70px_180px_repeat(9,140px)]
               items-center
-              border-b
-              border-gray-200
+              border-b border-gray-200
               hover:bg-[#f4fffe]
               transition-colors
             "
@@ -647,14 +733,15 @@ console.log("Check for Task-----",cleaned)
             {/* S No */}
             <div
               className="
-                py-5
-                px-3
+                sticky left-0 z-20
+                py-5 px-3
+                flex items-center justify-center
                 text-center
                 text-sm
                 font-medium
                 text-gray-700
-                border-r
-                border-gray-200
+                border-r border-gray-200
+                bg-white
               "
             >
               {i + 1}
@@ -663,14 +750,17 @@ console.log("Check for Task-----",cleaned)
             {/* Name */}
             <div
               className="
-                py-5
-                px-3
+                sticky left-[70px] z-20
+                py-5 px-3
+                flex items-center justify-center
                 text-center
                 text-sm
                 font-semibold
                 text-[#093c3a]
-                border-r
-                border-gray-200
+                border-r border-gray-200
+                bg-white
+                whitespace-normal
+                break-words
               "
             >
               {p.FirstName || p.Name || "Unknown"}
@@ -681,13 +771,10 @@ console.log("Check for Task-----",cleaned)
               <div
                 key={doc.label}
                 className="
-                  py-5
-                  px-3
-                  flex
-                  items-center
-                  justify-center
-                  border-r
-                  border-gray-200
+                  py-5 px-3
+                  flex items-center justify-center
+                  border-r border-gray-200
+                  bg-white
                 "
               >
                 <span
@@ -713,6 +800,8 @@ console.log("Check for Task-----",cleaned)
     </div>
   </div>
 </div>
+
+
     </div>
   );
 }

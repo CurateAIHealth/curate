@@ -87,50 +87,160 @@ useEffect(() => {
   refreshInvoices();
 }, [status, monthFilter, yearFilter]);
 
-console
+
   const downloadExcel = () => {
-    const exportData = filteredInvoices.map((inv) => {
-      const totalAmount =
-        getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
-        Number(inv.CareTakeCharge) +
-        Number(inv.RegistrationFee);
+  const exportData = filteredInvoices.map((inv: any, index: number) => {
+    // Same Due Date logic used in the table
+    const dueInfo = getDueStatus(inv.StartDate);
 
-      const balance =
-        totalAmount - Number(inv.AdvanceReceived);
+    // Same Total calculation used in the table
+    const total =
+      getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
+        Number(String(inv.CareTakeCharge || "0").replace("₹", "")) +
+      Number(inv.RegistrationFee || 0);
 
-      return {
-        InvoiceID: inv.id,
-        ClientName: inv.ClientName,
-        Address: inv.Adress,
-        PatientName: inv.name,
-        Contact: inv.contact,
-        Email: inv.Email,
-        Status: inv.status,
-        StartDate: inv.StartDate,
-        EndDate: inv.ServiceEndDate,
-        RegistrationFee: inv.RegistrationFee,
-        CareTakerCharge: inv.CareTakeCharge,
-        AdvanceReceived: inv.AdvanceReceived,
-        TotalAmount: totalAmount,
-        Balance: balance,
-      };
-    });
+    // Same Balance calculation used in the table
+    const balance = inv.balanceDue
+      ? Number(inv.balanceDue)
+      : Number(total) - Number(inv.AdvanceReceived || 0);
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices Preview");
+    // Actions column
+    const actions =
+      inv.status === "Draft"
+        ? "Edit & Send"
+        : "Sent";
 
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
+    // Edit column
+    const editStatus =
+      inv.status === "Draft"
+        ? "Editing Disabled - Send Invoice First"
+        : "Edit";
 
-    const fileData = new Blob([excelBuffer], {
-      type: "application/octet-stream",
-    });
+    // Payment column
+    const paymentStatus =
+      inv.status === "Draft"
+        ? "Not Available"
+        : inv.PaymentStatus
+        ? "Received"
+        : "Due";
 
-    saveAs(fileData, "Invoice_Preview.xlsx");
-  };
+    // Payment History
+    const paymentHistory = Array.isArray(inv.Trasaction)
+      ? inv.Trasaction.length > 0
+        ? `${inv.Trasaction.length} Transaction(s)`
+        : "No Transactions"
+      : "No Transactions";
+
+    // Download column
+    const downloadStatus =
+      inv.status !== "Draft"
+        ? "Available"
+        : "Not Available - Send Invoice First";
+
+    return {
+      "S No.": index + 1,
+
+      "Invoice ID": inv.id ?? "",
+
+      "Client": inv.ClientName ?? "",
+
+      "Patient": inv.name ?? "",
+
+      "Contact": inv.contact ? `+91${inv.contact}` : "",
+
+      "Email": inv.Email ?? "",
+
+      "Status": inv.status ?? "",
+
+      "Due Date": dueInfo.label ?? "",
+
+      "Start Date": inv.StartDate ?? "",
+
+      "End Date": inv.ServiceEndDate ?? "",
+
+      "Registration Fee": Number(inv.RegistrationFee || 0),
+
+      "Care Taker Charge": inv.CareTakeCharge ?? "",
+
+      "Total": Number(total).toFixed(2),
+
+      "Advance": Number(inv.AdvanceReceived || 0),
+
+      "Balance": Number(balance).toFixed(2),
+
+      "Actions": actions,
+
+      "Edit": editStatus,
+
+      "Payment": paymentStatus,
+
+      "Team": inv.Team ?? "1",
+
+      "Payment History": paymentHistory,
+
+      "Payment History Details": Array.isArray(inv.Trasaction)
+        ? inv.Trasaction.length > 0
+          ? JSON.stringify(inv.Trasaction)
+          : ""
+        : "",
+
+      "Download": downloadStatus,
+    };
+  });
+
+  // Create worksheet
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+  // Set column widths
+  worksheet["!cols"] = [
+    { wch: 8 },   // S No.
+    { wch: 18 },  // Invoice ID
+    { wch: 25 },  // Client
+    { wch: 25 },  // Patient
+    { wch: 16 },  // Contact
+    { wch: 30 },  // Email
+    { wch: 12 },  // Status
+    { wch: 18 },  // Due Date
+    { wch: 15 },  // Start Date
+    { wch: 15 },  // End Date
+    { wch: 18 },  // Registration Fee
+    { wch: 20 },  // Care Taker Charge
+    { wch: 15 },  // Total
+    { wch: 15 },  // Advance
+    { wch: 15 },  // Balance
+    { wch: 18 },  // Actions
+    { wch: 35 },  // Edit
+    { wch: 18 },  // Payment
+    { wch: 10 },  // Team
+    { wch: 20 },  // Payment History
+    { wch: 50 },  // Payment History Details
+    { wch: 35 },  // Download
+  ];
+
+  // Create workbook
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    "Invoices"
+  );
+
+  // Generate Excel file
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+  });
+
+  const fileData = new Blob([excelBuffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  saveAs(
+    fileData,
+    `Invoice_Report_${new Date().toISOString().split("T")[0]}.xlsx`
+  );
+};
 
 const GetTeamNumber = (A: any) => {
     if (!RegUserInfo?.length || !A) return "Not Entered";

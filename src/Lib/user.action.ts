@@ -5676,7 +5676,7 @@ const now = `${date.toLocaleDateString("en-GB", {
     const payload = {
       ...PaymentInfo,
       NeftTransactionNumber: String(NeftTransactionNumber).trim(),
-      Bank:ImpBank,
+      Bank:String(ImpBank || "").trim(),
       Month: String(MonthInfo).trim(),
       CreatedAt: now,
       UpdatedAt: now,
@@ -5694,7 +5694,7 @@ const HCPPaymentInfo = {
   neft: PaymentInfo.neft,
   amount: PaymentInfo.amount,
   NeftTransactionNumber: String(NeftTransactionNumber).trim(),
-  Bank: ImpBank,
+  Bank: String(ImpBank || "").trim(),
   Month: String(MonthInfo).trim(),
   CreatedAt: now,
   TotalHcaPayment:PaymentInfo.TotalHcaPayment
@@ -7302,6 +7302,29 @@ export const GetUsersFullInfo = async () => {
 
 
     return safeUsers;
+  } catch (err: any) {
+    console.error("Error fetching users:", err);
+    return [];
+  }
+};
+export const GetUsersFullInfoForMissingDocuments = async () => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("CompliteRegistrationInformation");
+
+    const RegistrationResult = await Collection.find(
+      {},
+      {
+        projection: {
+          _id: 0,
+          "HCAComplitInformation.UserId": 1,
+          "HCAComplitInformation.Documents": 1,
+        },
+      }
+    ).toArray();
+
+    return RegistrationResult;
   } catch (err: any) {
     console.error("Error fetching users:", err);
     return [];
