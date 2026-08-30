@@ -438,8 +438,8 @@ setPopup({
     });
      const MonthInfo=`${SearchYear}-${SearchMonth}`
      const ExportNeftNumber=NeftTransactionNumber||selectedUser?.neft
-     console.log("PaymentInfo to be posted:", selectedBank)
-    const PostinDb=await PostINSuccesfulPaymentsDb(selectedUser,ExportNeftNumber,MonthInfo,ImpId,selectedBank)
+    const BankName = selectedBank[selectedUser?.HCAId] || ""
+    const PostinDb=await PostINSuccesfulPaymentsDb(selectedUser,ExportNeftNumber,MonthInfo,ImpId,BankName)
     if(PostinDb.success){
    
       setPopup({

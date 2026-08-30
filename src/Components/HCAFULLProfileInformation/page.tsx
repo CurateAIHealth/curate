@@ -432,7 +432,7 @@ case "HikeHistory":
     );
   }
 
-  console.log ("Check for Documets-----",user.PaymentHistory)
+  console.log ("Check for Documets-----",ImportedUserId)
   const handleprofessionalSkillChange = (skill:any) => {
     setUser((prev:any) => {
       const skills:any = prev.ProfetionSkill || [];
