@@ -996,8 +996,11 @@ export const UpdateInvoiceData = async (
 
     // Add HCAId only if available
     if (invoiceInfo.HCAId) {
-      filter.HCA_Id = invoiceInfo.HCAId;
-    }
+  filter.$or = [
+    { HCAId: invoiceInfo.HCAId },
+    { HCA_Id: invoiceInfo.HCAId },
+  ];
+}
   console.log("Filter for update:", filter);
     const result = await collection.updateOne(
      filter,   
