@@ -140,7 +140,9 @@ const [formData, setFormData] = useState<any>({
 
  
   
-  const perDay = Number(InvoiceData?.CareTakeCharge?.replace("₹", "") || 0);
+const perDay = Number(
+  String(InvoiceData?.CareTakeCharge ?? 0).replace(/[₹,\s]/g, "")
+);
 
   const regFee = Number(InvoiceData?.RegistrationFee || 0);
   const advance = Number(InvoiceData?.AdvanceReceived || 0);
@@ -840,7 +842,7 @@ const addOtherService = () => {
       <p className="text-sm text-slate-500 mt-1">
         The invoice email has been delivered.
       </p>
-
+<p onClick={()=>Router.push("/Invoices")} className="bg-teal-800 p-2 text-white mt-2 rounded-md cursor-pointer">Back to Invoices</p>
     </div>
   </div>
 )}
