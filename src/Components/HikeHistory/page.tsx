@@ -414,7 +414,7 @@ const getNextYearDate = (dateString: string): string => {
 
       <div className="p-8">
      <div className="relative ml-4" style={{ borderLeft: "4px solid #ec4899" }}>
-  {history.map((item, index) => (
+  {history?.map((item, index) => (
     <div key={index} className="relative mb-8 ml-8">
       {/* Timeline Dot */}
       <span
