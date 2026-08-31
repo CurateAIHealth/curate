@@ -1736,7 +1736,7 @@ const handleChange = (
       <button
         key={item.title}
         onClick={() => {
-          router.push(item.route);
+          router.replace(item.route);
           setMenuOpen(false);
         }}
         className={`

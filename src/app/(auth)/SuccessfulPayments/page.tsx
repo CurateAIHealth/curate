@@ -196,7 +196,7 @@ const PaymentInformation = useMemo(
       neft: each.NeftNumber||each.NeftTransactionNumber,
       dateTime: each.CreatedAt,
       Month:each.Month,
-      ServiceState:each.ServiceState
+      ServiceState:each.ServiceState||"Telangana"
     })) || [],
   [PreviewData]
 );
@@ -464,7 +464,7 @@ console.log("search", search);
 
         <button
           onClick={() => router.push("/SubAccountings")}
-          className="flex h-11 w-full items-center justify-center rounded-xl bg-gradient-to-br from-[#00A9A5] to-[#005f61] px-4 font-semibold text-white transition hover:from-[#01cfc7] hover:to-[#00403e] sm:w-auto"
+          className="flex h-11 w-full items-center justify-center rounded-xl bg-gradient-to-br from-[#00A9A5] to-[#005f61] text-xs cursor-pointer px-4 font-semibold text-white transition hover:from-[#01cfc7] hover:to-[#00403e] sm:w-auto"
         >
           Accounts Dashboard
         </button>
