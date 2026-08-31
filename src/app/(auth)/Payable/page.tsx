@@ -250,7 +250,7 @@ const filteredPayableData = useMemo(() => {
 
     const matchesYear =
       !SearchYear || itemYear === Number(SearchYear);
-      const State=item.ServiceState===SelectedServiceState
+const State = (item.ServiceState || "Telangana") === SelectedServiceState;
 
     return (
    State&&

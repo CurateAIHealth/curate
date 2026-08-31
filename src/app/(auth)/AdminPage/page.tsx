@@ -1929,7 +1929,7 @@ Awaiting Conversion
     
  
       router.replace('/DashBoard');
-    dispatch(Update_Main_Filter_Status(""))
+  
  
   };
 
