@@ -834,7 +834,7 @@ useEffect(() => {
   setData(mergedData);
 }, [filtered]);
 
-
+console.log ("Look at Veer Info------",mergedPayments.filter((each:any)=>each.HCAId==="d88f2e78-2e66-4792-8c4c-3d0d1f384924"))
 const grouped = Object.values(
   mergedPayments.reduce((acc: any, item: any) => {
     if (!acc[item.HCAId]) {
@@ -911,9 +911,9 @@ const grouped = Object.values(
 
 //   };
 // });
-// console.log("Check Replacementinformation----",ReplacementAttendenceinformation)
 
 
+console.log("Check Replacementinformation----",ReplasementAttendece)
 const GetMonthFreshData = async (r: string) => {
   try {
   
@@ -951,6 +951,7 @@ const NumberOfDaysInMonth = getDaysInMonth(
 );
 
 
+
 const UpdatePaymentStatus = async (
   HCAId: any,
   ClientId: any,
@@ -960,26 +961,14 @@ const UpdatePaymentStatus = async (
   const value = status;
   const MonthInfo = `${SearchYear}-${SearchMonth}`;
 
-  // Show loading immediately
   setPopup({
     isOpen: true,
     message: "Updating Payment Status...",
     type: "loading",
   });
 
-  // Optimistic UI update
-  setData((prev) =>
-    prev.map((item) =>
-      item.HCAId === HCAId
-        ? {
-            ...item,
-            PaymentVerficationStatus: value,
-          }
-        : item
-    )
-  );
-
   try {
+    // 1. Update DB
     const UpdatedinDB =
       await UpdatePaymentVerificationStatusInDb(
         HCAId,
@@ -992,19 +981,6 @@ const UpdatePaymentStatus = async (
       );
 
     if (!UpdatedinDB?.success) {
-      // Rollback if DB update fails
-      setData((prev) =>
-        prev.map((item) =>
-          item.HCAId === HCAId
-            ? {
-                ...item,
-                PaymentVerficationStatus:
-                  Info?.PaymentVerficationStatus || "Process",
-              }
-            : item
-        )
-      );
-
       setPopup({
         isOpen: true,
         message: "Failed to update payment status",
@@ -1014,26 +990,70 @@ const UpdatePaymentStatus = async (
       return;
     }
 
+    // 2. Update LOCAL source data immediately
+    const paymentTypes = Array.isArray(Info?.MergedPreviewInfos)
+      ? Info.MergedPreviewInfos
+      : [Info?.MergedPreviewInfos];
+
+    if (paymentTypes.includes("OnService Payments")) {
+      setClientsInformation((prev: any[]) =>
+        prev.map((item: any) =>
+          item.HCAId === HCAId && item.ClientId === ClientId
+            ? {
+                ...item,
+                PaymentVerificationStatus: value,
+              }
+            : item
+        )
+      );
+    }
+
+    if (paymentTypes.includes("Replacement Payments")) {
+      setReplacementInformation((prev: any[]) =>
+        prev.map((item: any) =>
+          item.HCAId === HCAId && item.ClientId === ClientId
+            ? {
+                ...item,
+                PaymentVerificationStatus: value,
+              }
+            : item
+        )
+      );
+    }
+
+    if (paymentTypes.includes("Termination Payments")) {
+      setTerminationInformation((prev: any[]) =>
+        prev.map((item: any) =>
+          item.HCAid === HCAId && item.ClientId === ClientId
+            ? {
+                ...item,
+                PaymentVerificationStatus: value,
+              }
+            : item
+        )
+      );
+    }
+
+    // 3. Also update merged row immediately
+    setData((prev: any[]) =>
+      prev.map((item: any) =>
+        item.HCAId === HCAId
+          ? {
+              ...item,
+              PaymentVerficationStatus: value,
+            }
+          : item
+      )
+    );
+
     setPopup({
       isOpen: true,
       message: "Payment Status Updated successfully!",
       type: "success",
     });
+
   } catch (error) {
     console.error("UpdatePaymentStatus Error:", error);
-
-    // Rollback UI
-    setData((prev) =>
-      prev.map((item) =>
-        item.HCAId === HCAId
-          ? {
-              ...item,
-              PaymentVerficationStatus:
-                Info?.PaymentVerficationStatus || "Process",
-            }
-          : item
-      )
-    );
 
     setPopup({
       isOpen: true,
@@ -1042,6 +1062,7 @@ const UpdatePaymentStatus = async (
     });
   }
 };
+
 
   
 
