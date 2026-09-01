@@ -545,8 +545,9 @@ const monthNames = [
       matchesType &&
       matchesStatus &&
       matchesSearchResult &&
-      matchesCurrentStatus &&each.ServiceState===SelectedServiceStates&&
-      matchesDate &&!GetUserCurrentStatus(each.userId)
+      matchesCurrentStatus &&each.ServiceState===SelectedServiceStates
+      // &&
+      // matchesDate &&!GetUserCurrentStatus(each.userId)
       // &&notAdmin
     );
   })
