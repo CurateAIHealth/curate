@@ -18,13 +18,15 @@ import {
   MessageSquareText,
   Star,
   Lightbulb,
+  ChevronDown,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
-import { years } from "@/Lib/Content";
-import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
+import { IndianStates, years } from "@/Lib/Content";
+import { SetDeploymentInfo, UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import { GetEmail } from "@/Lib/Actions";
 import { LoadingData } from "../Loading/page";
+import LoadingPopup from "../SwitchMonth/page";
 
 /* =========================================================
    TYPES
@@ -34,7 +36,7 @@ type ReviewStatus = "Pending" | "Completed";
 
 interface GoogleReviewData {
   id: number;
-
+  Status: "Active" | "Freeze";
   clientName: string;
   ptName: string;
 
@@ -74,12 +76,14 @@ const SearchYear=useSelector((state:any)=>state.FilterYear)
   const DeploymentInfo = useSelector(
     (state: any) => state.AdminDeployment
   );
-
+console.log("Check Deployment Info---",DeploymentInfo)
 const [reviewFilter, setReviewFilter] =
   useState<ReviewStatus>("Pending");
-
+const [StatusFilter,setStatusFilter] = useState<"Active" | "Freeze">("Active");
 const [showTerminated, setShowTerminated] = useState(false);
+const [SelectedServiceStates, setSelectedServiceStates] = useState("Telangana");
 const [ImportedInfo,setImportedInfo]=useState([])
+  const [isSwitchingMonth, setIsSwitchingMonth] = useState(false);
 const [selectedReview, setSelectedReview] = useState<{
   popupType: string;
   Info: any;
@@ -88,7 +92,23 @@ const [selectedReview, setSelectedReview] = useState<{
 
 const users=useSelector((state:any)=>state.AdminUsers)
  const [isChecking, setisChecking] = useState(true)
+ console.log ("Check Deployment Info---",users)
+
+const formatIndianDate = (date:any) => {
+  const [year, month, day] = date.split("-");
+  return `${day}/${month}/${year}`;
+};
+
+
  
+
+ const GetEnrolmentDate=(A:any)=>{
+  const ResultsDate=users.find((each:any)=>each.
+userId===A
+)
+
+return formatIndianDate(ResultsDate.LeadDate)||"Missing"
+ }
 const dispatch=useDispatch()
   /*
    * Convert DeploymentInfo into Google Review data
@@ -151,15 +171,40 @@ const TerminatedUsers = useMemo(() => {
 
 console.log ("Check Terminate Users---",TerminatedUsers)
 
-const TerminationInformation = useMemo(() => {
-  return TerminatedUsers.map((user: any, index: number) => ({
-    id: user?.userId || user?._id || `terminated-${index}`,
+const FilteredDeploymentInfo = useMemo(() => {
+  if (!Array.isArray(DeploymentInfo)) {
+    return [];
+  }
+
+  return DeploymentInfo.filter(
+    (item: any) =>
+      item?.hcpSource?.toLowerCase() === "google" &&
+      item?.Status === StatusFilter
+  );
+}, [DeploymentInfo, StatusFilter,SearchMonth,SearchYear]);
+
+console.log(
+  "Filtered DeploymentInfo---",
+  FilteredDeploymentInfo
+);
+   const TerminatedgoogleReviews = useMemo<any[]>(() => {
+    if (!Array.isArray(TerminatedUsers)) {
+      return [];
+    }
+
+    return TerminatedUsers
+  
+      .map((user: any, index: number) => {
+        const endDate = user?.EndDate || "";
+
+        return {
+        id: user?.userId || user?._id || `terminated-${index}`,
 
     clientName: user?.FirstName?.trim() || "—",
 
     ptName: user?.patientName?.trim() || "—",
 
-    enrollmentDate: user?.LeadDate || "—",
+    enrollmentDate:formatIndianDate(user?.LeadDate) || "—",
 
     terminated: "Terminated",
 
@@ -192,62 +237,88 @@ const TerminationInformation = useMemo(() => {
 
           reviewDate:GetStatus(ImportedInfo, ImpMonth, user?.userId || user?._id)?.reviewDate|| null,
           ReviewImage:GetStatus(ImportedInfo, ImpMonth, user?.userId || user?._id)?.reviewImage|| null,
-  }));
-}, [TerminatedUsers]);
-  const googleReviews = useMemo<GoogleReviewData[]>(() => {
-    if (!Array.isArray(DeploymentInfo)) {
-      return [];
-    }
-
-    return DeploymentInfo
-      .filter(
-        (item: any) =>
-          item?.hcpSource?.toLowerCase() === "google"
-      )
-      .map((item: any, index: number) => {
-        const endDate = item?.EndDate || "";
-
-        return {
-          id:
-            item?._id?.toString() ||
-            item?.ClientId ||
-            `google-review-${index}`,
-
-          clientName: item?.ClientName?.trim() || "—",
-
-          ptName: item?.patientName?.trim() || "—",
-
-          enrollmentDate: item?.StartDate || "—",
-
-          terminated: endDate || "NA",
-
-          // DeploymentInfo does not contain Team
-          team: "—",
-
-          // DeploymentInfo does not contain review note
-          note: "",
-
-          /*
-           * Until your Google Review collection contains
-           * review status, all new deployment records are Pending.
-           */
-          status:GetStatus(ImportedInfo, ImpMonth, item?.ClientId)?.status === "Completed"
-              ? "Completed"
-              : "Pending",
-
-          reviewRequested: false,
-
-          reviewRequestMethod: null,
-
-          review:GetStatus(ImportedInfo, ImpMonth, item?.ClientId)?.review|| null,
-
-          suggestions:GetStatus(ImportedInfo, ImpMonth, item?.ClientId)?.suggestions|| null,
-
-          reviewDate:GetStatus(ImportedInfo, ImpMonth, item?.ClientId)?.reviewDate|| null,
-          ReviewImage:GetStatus(ImportedInfo, ImpMonth, item?.ClientId)?.reviewImage|| null,
         };
       });
   }, [DeploymentInfo, ImportedInfo, ImpMonth]);
+const googleReviews = useMemo<GoogleReviewData[]>(() => {
+  if (!Array.isArray(DeploymentInfo)) {
+    return [];
+  }
+
+  return  FilteredDeploymentInfo.map((item: any, index: number) => {
+      const endDate = item?.EndDate || "";
+
+      return {
+        id:
+          item?._id?.toString() ||
+          item?.ClientId ||
+          `google-review-${index}`,
+
+        clientName: item?.ClientName?.trim() || "—",
+        ptName: item?.patientName?.trim() || "—",
+
+        enrollmentDate:
+          GetEnrolmentDate(item?.ClientId) || "—",
+
+        terminated: endDate || "NA",
+
+        // IMPORTANT
+        Status: item?.Status,
+
+        team: "—",
+        note: "",
+
+        status:
+          GetStatus(
+            ImportedInfo,
+            ImpMonth,
+            item?.ClientId
+          )?.status === "Completed"
+            ? "Completed"
+            : "Pending",
+
+        reviewRequested: false,
+        reviewRequestMethod: null,
+
+        review:
+          GetStatus(
+            ImportedInfo,
+            ImpMonth,
+            item?.ClientId
+          )?.review || null,
+
+        suggestions:
+          GetStatus(
+            ImportedInfo,
+            ImpMonth,
+            item?.ClientId
+          )?.suggestions || null,
+
+        reviewDate:
+          GetStatus(
+            ImportedInfo,
+            ImpMonth,
+            item?.ClientId
+          )?.reviewDate || null,
+
+        ReviewImage:
+          GetStatus(
+            ImportedInfo,
+            ImpMonth,
+            item?.ClientId
+          )?.reviewImage || null,
+      };
+    });
+
+}, [DeploymentInfo, ImportedInfo, ImpMonth, StatusFilter]);
+console.log("Check Current Task",FilteredDeploymentInfo)
+
+// IMPORTANT:
+// This controls which data is displayed.
+const displayedReviews = showTerminated
+  ? TerminatedgoogleReviews
+  : googleReviews;
+
 
  
 const ReviewFilterpopups=()=>{
@@ -283,14 +354,19 @@ case "Update Review":
 
   }
 }
-const pendingCount = googleReviews.filter(
+const pendingCount = displayedReviews.filter(
   (item) => item.status === "Pending"
 ).length;
 
-const completedCount = googleReviews.filter(
-  (item) => item.status === "Completed"
+const activeCount = displayedReviews.filter(
+  (item) => item.terminated === "NA"
 ).length;
 
+const freezeCount = "";
+
+const completedCount = displayedReviews.filter(
+  (item) => item.status === "Completed"
+).length;
   /* -------------------------------------------------------
      FILTER
   ------------------------------------------------------- */
@@ -298,7 +374,7 @@ console.log ("Current Check----",selectedReview)
 const filteredData = useMemo(() => {
   const searchText = search.toLowerCase().trim();
 
-  return googleReviews.filter((item) => {
+  return displayedReviews.filter((item) => {
     const matchesStatus =
       item.status === reviewFilter;
 
@@ -310,7 +386,35 @@ const filteredData = useMemo(() => {
 
     return matchesStatus && matchesSearch;
   });
-}, [googleReviews, search, reviewFilter]);
+}, [displayedReviews, search, reviewFilter]);
+const GetMonthFreshData = async (r: string) => {
+  try {
+  
+    setIsSwitchingMonth(true);
+    dispatch(UpdateMonthFilter(r));
+
+    const userId = localStorage.getItem("UserId");
+
+   const { data } = await axios.post(
+  "/api/AdminPageInfo",
+  {
+    userId,
+    Month: `${SearchYear}-${r}`,
+  }
+);
+
+
+
+    console.log("Check New Data", data.data.deployedLength);
+
+    dispatch(SetDeploymentInfo(data.data.deployedLength));
+ setIsSwitchingMonth(false);
+    
+  } catch (error) {
+    console.error("GetMonthFreshData Error:", error);
+ 
+  }
+};
   if (isChecking) {
     return (
       <LoadingData />
@@ -390,12 +494,37 @@ const filteredData = useMemo(() => {
               </p>
 
             </div>
+            <LoadingPopup
+              open={isSwitchingMonth}
+              title="Switching Month"
+              description="Updating dashboard data..."
+            />
             <div className="flex gap-2">
+               <div className="relative">
+                  <select
+                    value={SelectedServiceStates}
+                    onChange={(e) => setSelectedServiceStates(e.target.value)}
+                    className="w-full text-center h-10 appearance-none rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
+                  >
+                  
+              
+                    {IndianStates.map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
+              
+                  <ChevronDown
+                    size={16}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                </div>
               {!showTerminated&&
  <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
              <select
       value={SearchMonth}
-      onChange={(e) => dispatch(UpdateMonthFilter(e.target.value))}
+   onChange={(e) =>GetMonthFreshData(e.target.value)}
       className="
         w-full sm:w-[140px] h-[40px]
         rounded-xl border border-gray-300
@@ -458,24 +587,7 @@ const filteredData = useMemo(() => {
           ================================================= */}
 <div className="mt-5 flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
   {/* Review Filters */}
-  {showTerminated?<button
-  type="button"
-  onClick={() => setShowTerminated(!showTerminated)}
-  className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200
-    ${
-      !showTerminated
-        ? "border border-[#1392d3] bg-[#1392d3] text-white shadow-[#1392d3]/20 hover:bg-[#1183bd] hover:shadow-md"
-        : "border border-slate-200 bg-white text-slate-600 hover:border-[#1392d3] hover:bg-slate-50 hover:text-[#1392d3]"
-    }`}
->
-  <span
-    className={`h-2 w-2 rounded-full ${
-      !showTerminated ? "bg-white" : "bg-[#1392d3]"
-    }`}
-  />
-
-  {showTerminated ? "View Active Deployments" : "Active Deployments"}
-</button>:
+ 
 
   <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
     {/* Pending */}
@@ -527,35 +639,60 @@ const filteredData = useMemo(() => {
         {completedCount}
       </span>
     </button>
-  </div>}
+    {/* Active */}
+
+    {!showTerminated&&
+<div>
+  <button
+  type="button"
+  onClick={() => setStatusFilter("Active")}
+  className={`inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition sm:flex-none sm:px-5 ${
+    StatusFilter === "Active"
+      ? "bg-emerald-500 text-white shadow-sm"
+      : "border border-slate-200 bg-white text-slate-600 hover:border-emerald-500 hover:text-emerald-500"
+  }`}
+>
+  <span className="truncate">Active</span>
+
+
+</button>
+
+{/* Freeze */}
+<button
+  type="button"
+  onClick={() => setStatusFilter("Freeze")}
+  className={`inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition sm:flex-none sm:px-5 ${
+    StatusFilter === "Freeze"
+      ? "bg-slate-600 text-white shadow-sm"
+      : "border border-slate-200 bg-white text-slate-600 hover:border-slate-600 hover:text-slate-600"
+  }`}
+>
+  <span className="truncate">Freeze</span>
+
+</button>
+  </div>
+  }
+  </div>
 
   {/* Terminated */}
 <button
   type="button"
-  onClick={() => setShowTerminated(true)}
-  className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 sm:w-auto ${
-    showTerminated
+  onClick={() => setShowTerminated((prev) => !prev)}
+  className={`inline-flex w-full items-center justify-center gap-2 cursor-pointer  rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 sm:w-auto ${
+    !showTerminated
       ? "border border-red-500 bg-red-500 text-white"
-      : "border border-red-200 bg-red-50 text-red-600 hover:border-red-300 hover:bg-red-100 hover:shadow-md"
+      : "border border-emerald-500 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:shadow-md"
   }`}
 >
   <span
     className={`h-2 w-2 shrink-0 rounded-full ${
-      showTerminated ? "bg-white" : "bg-red-500"
+      !showTerminated ? "bg-white" : "bg-emerald-500"
     }`}
   />
 
-  Terminated
+  {showTerminated ?  "Deployments":"Terminated" }
 
-  <span
-    className={`rounded-full px-2 py-0.5 text-xs ${
-      showTerminated
-        ? "bg-white/20 text-white"
-        : "bg-red-100 text-red-600"
-    }`}
-  >
-    {TerminationInformation.length}
-  </span>
+
 </button>
 </div>
 
@@ -567,11 +704,7 @@ const filteredData = useMemo(() => {
 
         <div className="overflow-x-auto">
 
-     {showTerminated ? (
-  <TerminationTable
-    data={TerminationInformation}
-  />
-) : reviewFilter === "Pending" ? (
+    {reviewFilter === "Pending" ? (
   <PendingReviewTable
     data={filteredData}
     onSelect={(review, popupType) => {
@@ -980,103 +1113,7 @@ interface TerminationTableProps {
   data: any[];
 }
 
-const TerminationTable: React.FC<TerminationTableProps> = ({
-  data,
-}) => {
-  return (
-    <table className="w-full min-w-[1100px]">
-      <thead>
-        <tr className="border-b border-red-100 bg-red-50 text-left text-xs font-semibold uppercase tracking-wide text-red-500">
-          <th className="px-5 py-4">S.No</th>
-          <th className="px-5 py-4">Client Name</th>
-          <th className="px-5 py-4">PT Name</th>
-          <th className="px-5 py-4">Enrollment Date</th>
-          <th className="px-5 py-4">Contact</th>
-          <th className="px-5 py-4">Location</th>
-          <th className="px-5 py-4">Team</th>
-          <th className="px-5 py-4">Status</th>
-        </tr>
-      </thead>
 
-      <tbody className="divide-y divide-slate-100">
-        {data.length > 0 ? (
-          data.map((item: any, index: number) => (
-            <tr
-              key={item.id}
-              className="transition hover:bg-red-50/40"
-            >
-              {/* S.No */}
-              <td className="px-5 py-4 text-sm font-semibold text-slate-500">
-                {index + 1}
-              </td>
-
-              {/* Client */}
-              <td className="px-5 py-4">
-                <span className="font-semibold text-slate-800">
-                  {item.clientName}
-                </span>
-
-                <p className="mt-1 text-xs text-slate-400">
-                  {item.email}
-                </p>
-              </td>
-
-              {/* PT */}
-              <td className="px-5 py-4 text-sm text-slate-600">
-                {item.ptName}
-              </td>
-
-              {/* Enrollment */}
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <CalendarDays
-                    size={14}
-                    className="text-[#1392d3]"
-                  />
-
-                  {item.enrollmentDate}
-                </div>
-              </td>
-
-              {/* Contact */}
-              <td className="px-5 py-4 text-sm text-slate-600">
-                {item.contactNumber}
-              </td>
-
-              {/* Location */}
-              <td className="px-5 py-4">
-                <div className="text-sm font-medium text-slate-700">
-                  {item.location}
-                </div>
-
-                <div className="text-xs text-slate-400">
-                  {item.serviceArea}
-                </div>
-              </td>
-
-              {/* Team */}
-              <td className="px-5 py-4">
-                <span className="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
-                  {item.team}
-                </span>
-              </td>
-
-              {/* Status */}
-              <td className="px-5 py-4">
-                <span className="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600">
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                  Terminated
-                </span>
-              </td>
-            </tr>
-          ))
-        ) : (
-          <EmptyRow colSpan={8} />
-        )}
-      </tbody>
-    </table>
-  );
-};
 /* =========================================================
    EMPTY ROW
 ========================================================= */

@@ -139,7 +139,7 @@ const SentTestEmail=async()=> {
               <h2 className="text-lg font-semibold text-gray-800">
                 Expense Submission
               </h2>
-              <button onClick={SentTestEmail}>Send Test Email</button>
+        
               <p className="text-xs text-gray-500">
                 {employeeName} • {employeeId}
               </p>
