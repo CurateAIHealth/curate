@@ -67,7 +67,7 @@ const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
 const UserFirstName=useSelector((state:any)=>state.LogUserName)
 
 console.log ("Check Deployment Info-----",UserFullInfo)
-  const [HCPCurrentStatus,setHCPCurrentStatus]=useState("")
+  const [HCPCurrentStatus,setHCPCurrentStatus]=useState("Active")
   const [SearchDate, SetSearchDate] = useState<any>(null)
   const now = new Date();
   const [showClients, setShowClients] = useState(false);
@@ -463,7 +463,7 @@ const monthNames = [
     PreviewUserType: each.PreviewUserType||"HCA",
     PDRStatus:each.PDRStatus||"No Available",
     Type:each.Type,
-    ServiceState:each.ServiceState||"Not Provided"
+    ServiceState:each.ServiceState||"Telangana"
   }));
 
   const UpdatedFilterUserType = Finel
@@ -545,7 +545,7 @@ const monthNames = [
       matchesType &&
       matchesStatus &&
       matchesSearchResult &&
-      matchesCurrentStatus &&
+      matchesCurrentStatus &&each.ServiceState===SelectedServiceStates&&
       matchesDate &&!GetUserCurrentStatus(each.userId)
       // &&notAdmin
     );
@@ -2094,7 +2094,22 @@ console.log("Check for Imp Salary Data----",data
 
   
 
+const GetHCPStatusCount = (status: string) => {
+  return Finel.filter(
+    (each: any) =>
+      each.userType === "healthcare-assistant" &&
+      !GetUserCurrentStatus(each.userId) &&
+      each.CurrentStatus === status
+  ).length;
+};
 
+const GetAllHCPCount = () => {
+  return Finel.filter(
+    (each: any) =>
+      each.userType === "healthcare-assistant" &&
+      !GetUserCurrentStatus(each.userId)
+  ).length;
+};
 
 
   return (
@@ -2337,7 +2352,7 @@ console.log("Check for Imp Salary Data----",data
             </div>}
 
 
-          {UpdateduserType === "healthcare-assistant" && 
+          {/* {UpdateduserType === "healthcare-assistant" && 
           <div className="flex gap-3 flex-wrap items-center">
   {["HCA", "HCP", "HCN"].map((each, index) => {
     const isActive = HCPPreviewtype === each;
@@ -2369,7 +2384,7 @@ console.log("Check for Imp Salary Data----",data
   })}
 </div>
 
-          }
+          } */}
           {/* <button
 onClick={()=>UpdateNavigattosuggetions()}
             className="flex mt-7 cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-2 py-2 bg-gradient-to-br from-[#10b981] to-[#065f46] hover:from-[#34d399] hover:to-[#064e3b]
@@ -2378,31 +2393,54 @@ onClick={()=>UpdateNavigattosuggetions()}
             Show Placement Suggetions
             
           </button> */}
-    {UpdateduserType === "healthcare-assistant" &&
-     <div className="w-[360px] flex flex-wrap items-center justify-center gap-1">
-  {HCPFilters.map((status) => (
+ {UpdateduserType === "healthcare-assistant" && (
+  <div className=" flex flex-wrap items-center justify-center gap-1">
+
+    {/* All Button */}
     <button
-      key={status.value}
       type="button"
-      onClick={() => {setHCPCurrentStatus(status.value);dispatch(UpdateAdminMonthFilter("")),dispatch(UpdateAdminYearFilter(""))}}
-      className={`px-2 py-1 rounded-md text-[10px] font-medium border transition whitespace-nowrap cursor-pointer
+      onClick={() => {
+        setHCPCurrentStatus("");
+        dispatch(UpdateAdminMonthFilter(""));
+        dispatch(UpdateAdminYearFilter(""));
+      }}
+      className={`px-4 py-1 rounded-md text-[15px] font-medium border transition whitespace-nowrap cursor-pointer
         ${
-          HCPCurrentStatus === status.value
+          HCPCurrentStatus === ""
             ? "bg-teal-600 text-white border-teal-600 shadow-sm"
             : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
         }`}
     >
-      {status.label}
+      All ({GetAllHCPCount()})
     </button>
-  ))}
-  
-</div>
 
-}
+    {/* Existing Status Buttons */}
+    {HCPFilters.map((status) => (
+      <button
+        key={status.value}
+        type="button"
+        onClick={() => {
+          setHCPCurrentStatus(status.value);
+          dispatch(UpdateAdminMonthFilter(""));
+          dispatch(UpdateAdminYearFilter(""));
+        }}
+        className={`px-4 py-1 rounded-md text-[15px] font-medium border transition whitespace-nowrap cursor-pointer
+          ${
+            HCPCurrentStatus === status.value
+              ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+          }`}
+      >
+        {status.label} ({GetHCPStatusCount(status.value)})
+      </button>
+    ))}
+
+  </div>
+)}
 
 
 
-          {((UpdateMainFilter !== "Timesheet") && (UpdateMainFilter !== 'Deployment')) &&
+          {((UpdateMainFilter !== "Timesheet") && (UpdateMainFilter !== 'Deployment'))&&(UpdateduserType !== "healthcare-assistant") &&
             <div className="flex justify-between gap-3 md:w-[330px]">
 
 

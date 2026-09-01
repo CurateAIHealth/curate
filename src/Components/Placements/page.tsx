@@ -113,6 +113,9 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const [HCPName,setHCPName]=useState("")
   const [ShowReassignmentPopUp,setShowReassignmentPopUp]=useState(false)
   const [showAssignPopup, setShowAssignPopup] = useState(false);
+  const [isClientPriceUpdate, setIsClientPriceUpdate] = useState(false);
+const [clientPrice, setClientPrice] = useState("");
+  const [Popuptype,setPopuptype]=useState("")
  const [updatedAttendance, setUpdatedAttendance] = useState<AttendanceState>({});
  const [SaveButton,setSaveButton]=useState(false)
  const [TerminationInfo,SetTerminationInfo]=useState<any>()
@@ -824,7 +827,7 @@ const LastDate = lastDateOfMonthCurrent.toLocaleDateString("en-IN");
         }
       ]
   const GetInfo=await  GetUserInformation(selectedClient.Client_Id)
-const SelectedCareTakerCharges=GetInfo.serviceCharges
+const SelectedCareTakerCharges=clientPrice?clientPrice:Math.ceil(GetInfo.serviceCharges)
    
      const deploymentRes = await InsertDeployment(
         StarteDate,
@@ -2082,7 +2085,7 @@ onClick={() => setShowAttendanceModal(true)}
 <div className="text-center">
  
   <label className="mb-1.5 block text-xs font-semibold text-gray-700">
-    Service Work State , 
+    Service Work State {Popuptype} , 
   </label>
 
   <div className="relative">
@@ -2261,7 +2264,7 @@ setShowCareTakerPriceUpdate(false)
 <RepleasementHCPPopup
   open={showHCAList}
   ClientInformation={selectedCase}
-  onClose={() => {setShowHCAList(false);setShowReassignmentPopUp(true)}}
+  onClose={() => {setShowHCAList(false);      Popuptype==="Repleasment"?setShowReassignmentPopUp(true):setShowAssignPopup(true)}}
   filteredHcps={filterProfilePic}
   onAssign={(hcp) => {
 
@@ -2269,7 +2272,9 @@ setShowCareTakerPriceUpdate(false)
         (hca:any) => hca.userId ===  hcp.UserId
       );
       setselectedHCP(selected);
-      setShowHCAList(false);setShowReassignmentPopUp(true)
+      setselectedAssignHCP(selected)
+      setShowHCAList(false);
+      Popuptype==="Repleasment"?setShowReassignmentPopUp(true):setShowAssignPopup(true)
     
       
   }}
@@ -2779,7 +2784,7 @@ const EditDate =
   Reassignment
 </button> */}
 
-<img src="Icons/Repleasement.png" alt="Repleasement Icons"  className="h-6 ml-4 cursor-pointer "   onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),SetCareTakerName(GetHCPFullName(c.HCA_Id)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA(""),console.log("Check Test Data-----",)}}/>
+<img src="Icons/Repleasement.png" alt="Repleasement Icons"  className="h-6 ml-4 cursor-pointer "   onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),setPopuptype("Repleasment"),SetCareTakerName(GetHCPFullName(c.HCA_Id)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA(""),console.log("Check Test Data-----",)}}/>
 
 {ShowReassignmentPopUp && (
   <div
@@ -3291,7 +3296,7 @@ if (action === "preview") {
  <td     className="inline-block px-1 ml-4 cursor-pointer py-2 text-[10px] mt-4 hover:bg-gray-100 hover:rounded-full font-medium cursor-pointer ">
             <button
             className="cursor-pointer"
-             onClick={() => {setShowAssignPopup(true),setselectedClient(c),setselectedAssignHCP(null),setselectedHCP(null),SetActionStatusMessage("")}}
+             onClick={() => {setShowAssignPopup(true),setPopuptype("AddHcp"),setselectedClient(c),setselectedAssignHCP(null),setselectedHCP(null),SetActionStatusMessage("")}}
             >
        <Plus size={19} className="h-5 w-5 text-center text-teal-600"/>
             </button>
@@ -3441,7 +3446,7 @@ if (action === "preview") {
       </div>
 
     
-      <div className="px-6 py-5 space-y-3">
+      {/* <div className="px-6 py-5 space-y-3">
         <label className="block text-sm font-medium text-gray-700">
           HCA Name
         </label>
@@ -3476,8 +3481,87 @@ if (action === "preview") {
             </span>
           </div>
         )}
+      </div> */}
+
+      <div className="flex items-center justify-between bg-white shadow-md rounded-2xl p-4 border border-gray-200">
+  
+  <div>
+    <p className="text-sm text-gray-500 mb-1">New HCA Status</p>
+
+    <p className="text-base font-semibold text-gray-800">
+      {selectedHCP
+        ? `Selected: ${selectedHCP.FirstName}`
+        : "No HCA selected"}
+    </p>
+  </div>
+
+  <button
+    onClick={() => {
+      setShowHCAList(!showHCAList);
+     setShowAssignPopup(false);
+    }}
+    className={`px-2 py-2 rounded-xl text-[10px] cursor-pointer transition-all duration-300 shadow-sm
+      ${
+        showHCAList
+          ? "bg-red-500 hover:bg-red-600 text-white"
+          : "bg-teal-600 hover:bg-teal-700 text-white"
+      }`}
+  >
+    {selectedHCP ? "Replace HCP" : "Show Available List"}
+  </button>
+
+</div>
+<div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+  {/* Header */}
+  <div className="flex items-center justify-between">
+    <div>
+      <p className="text-sm font-semibold text-gray-800">
+        Client Price Update
+      </p>
+      <p className="mt-1 text-xs text-gray-500">
+        Enable this to update the client price
+      </p>
+    </div>
+
+    {/* Toggle */}
+    <label className="relative inline-flex cursor-pointer items-center">
+      <input
+        type="checkbox"
+        className="peer sr-only"
+        checked={isClientPriceUpdate}
+        onChange={(e) => setIsClientPriceUpdate(e.target.checked)}
+      />
+
+      <div className="h-6 w-11 rounded-full bg-gray-300 transition-colors duration-200 peer-checked:bg-blue-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300">
+        <div className="absolute left-[3px] top-[3px] h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 peer-checked:translate-x-5" />
       </div>
-    
+    </label>
+  </div>
+
+  {/* Price Input */}
+  {isClientPriceUpdate && (
+    <div className="mt-4 border-t border-gray-100 pt-4">
+      <label className="mb-2 block text-xs font-medium text-gray-600">
+        Client Price
+      </label>
+
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-500">
+          ₹
+        </span>
+
+        <input
+          type="number"
+          placeholder="Enter client price"
+          value={clientPrice}
+          onChange={(e) => setClientPrice(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 bg-gray-50 py-2.5 pl-8 pr-3 text-sm text-gray-800 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+        />
+      </div>
+    </div>
+  )}
+</div>
+
 {ActionStatusMessage && (
   <p
     className={`mt-3 text-center text-sm font-medium ${

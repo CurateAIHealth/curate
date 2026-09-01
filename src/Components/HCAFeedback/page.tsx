@@ -22,10 +22,13 @@ import {
   Save,
   Download,
 } from "lucide-react";
-import { useSelector } from "react-redux";
-import { GetClientId, GetClientName, GetHCPFullName } from "@/Lib/Actions";
+import { useDispatch, useSelector } from "react-redux";
+import { GetClientId, GetClientName, GetHCPFullName, GetPermanentState } from "@/Lib/Actions";
 import axios from "axios";
 import { LoadingData } from "../Loading/page";
+import { IndianStates } from "@/Lib/Content";
+import { SetDeploymentInfo, UpdateMonthFilter } from "@/Redux/action";
+import LoadingPopup from "../SwitchMonth/page";
 
 /* =========================================================
    TYPES
@@ -44,6 +47,7 @@ type HCAStatus =
 type FeedbackRole =
   | "Role 1"
   | "Role 2"
+  | "HCA Status Review"
   | "Role 3"
   | "Random HCA Call"
   | "Termination";
@@ -601,7 +605,857 @@ const terminationQuestions = [
 /* =========================================================
    BUILD FEEDBACK SECTIONS
 ========================================================= */
-let role2QuestionNumber = 0;
+let role2QuestionNumber = 0;const benchQuestions: Question[] = [
+  {
+    id: "availability",
+    question: "Are you currently available for shift?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "availability-date-time",
+    question:
+      "If not available now, when will you be available? (Date and time)",
+    type: "textarea",
+    required: true,
+  },
+  {
+    id: "other-company",
+    question: "Are you currently working with any other company?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "join-time",
+    question:
+      "If you are offered a suitable assignment today, how soon can you join?",
+    type: "select",
+    required: true,
+    options: [
+      "Immediately",
+      "1–2 days",
+      "3–7 days",
+      "More than 1 week",
+    ],
+  },
+  {
+    id: "looking-new-job",
+    question: "Are you actively looking for a new job?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "planned-leave",
+    question:
+      "Do you have any planned leave, travel, or personal commitments in the next 30 days?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "current-locality",
+    question:
+      "Which area/locality are you currently staying in?",
+    type: "textarea",
+    required: true,
+  },
+  {
+    id: "travel-distance",
+    question:
+      "How far are you willing to travel for a client assignment?",
+    type: "select",
+    required: true,
+    options: [
+      "Same locality",
+      "Within 5 km",
+      "10 km",
+      "15+ km",
+    ],
+  },
+  {
+    id: "outside-preferred-area",
+    question:
+      "Are you willing to work outside your preferred area if the assignment is suitable?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "transport",
+    question:
+      "Do you have reliable transport to reach the client's home?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "assignment-type",
+    question:
+      "What type of assignment are you looking for?",
+    type: "select",
+    required: true,
+    options: [
+      "L.D",
+      "L.N",
+      "Stay In",
+      "Hourly",
+    ],
+  },
+  {
+    id: "male-patient",
+    question:
+      "Are you willing to work with a male patient?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "female-patient",
+    question:
+      "Are you willing to work with a female patient?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "hospital",
+    question:
+      "Are you comfortable working in a Hospital if the patient is admitted in hospital, where family members are also present, may not present?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "experience",
+    question:
+      "How many years of caregiving experience do you have?",
+    type: "textarea",
+    required: true,
+  },
+  {
+    id: "patient-types",
+    question:
+      "What type of patients have you cared for previously?",
+    type: "select",
+    required: true,
+    options: [
+      "Elderly",
+      "Bedridden",
+      "Stroke",
+      "Dementia",
+      "Parkinson's",
+      "Post-operative",
+      "Palliative",
+      "Other",
+    ],
+  },
+  {
+    id: "bedridden-experience",
+    question:
+      "Do you have experience caring for completely bedridden patients?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "nursing-skills",
+    question:
+      "Do you have experience Nursing Skills? PEG/Ryle's/NG tube feeding, urinary catheter care, pressure sore/bed sore prevention and basic wound care?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "personal-hygiene",
+    question:
+      "Are you comfortable assisting with bathing, toileting, changing clothes and personal hygiene?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "mobility",
+    question:
+      "Are you comfortable assisting with mobility, transfers and positioning of patients?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "dementia",
+    question:
+      "Do you have experience caring for patients with dementia or confusion?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+  {
+    id: "family-communication",
+    question:
+      "Are you comfortable communicating with the patient's family and providing daily updates about the patient's condition?",
+    type: "select",
+    required: true,
+    options: ["Yes", "No"],
+  },
+];
+const trainingQuestionGroups = [
+  {
+    id: "personal-joining",
+    title: "A. Personal & Joining Information",
+    questions: [
+      {
+        id: "joining-date",
+        question: "When did you join the company?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "original-place",
+        question: "Where are you originally from?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "training-stay",
+        question:
+          "Where are you currently staying during the training?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Hostel",
+          "Own accommodation",
+          "Other",
+        ],
+      },
+      {
+        id: "job-source",
+        question:
+          "How did you come to know about this job/company?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Referral",
+          "Agent",
+          "Advertisement",
+          "Social media",
+          "Friend",
+          "Other",
+        ],
+      },
+      {
+        id: "previous-work",
+        question:
+          "Before joining this company, what work were you doing?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "first-hcp-job",
+        question:
+          "Is this your first HCP (Health care assistant) job?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+    ],
+  },
+
+  {
+    id: "training-progress",
+    title: "B. Training Progress",
+    questions: [
+      {
+        id: "attending-training",
+        question:
+          "Are you currently attending the company's training programme?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "training-start",
+        question: "When did your training start?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "training-completion",
+        question:
+          "When is your expected training completion date?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "training-sessions",
+        question:
+          "Have you completed all the required training sessions?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Yes",
+          "No",
+          "Still in progress",
+        ],
+      },
+      {
+        id: "training-exam",
+        question:
+          "Have you completed the training examination/assessment?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Yes",
+          "No",
+          "Not yet scheduled",
+        ],
+      },
+      {
+        id: "exam-result",
+        question:
+          "If you completed the exam, did you pass?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Yes",
+          "No",
+          "Result pending",
+        ],
+      },
+      {
+        id: "exam-date",
+        question:
+          "If you have not completed the exam, do you know when it will take place?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "training-confidence",
+        question:
+          "Do you feel confident about the knowledge and skills taught during the training?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Very confident",
+          "Confident",
+          "Need more training",
+          "Not confident",
+        ],
+      },
+      {
+        id: "difficult-topic",
+        question:
+          "Is there any topic or skill in the training that you are finding difficult?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "additional-training",
+        question:
+          "Do you feel you need additional practical training before starting with a patient?",
+        type: "textarea" as const,
+        required: true,
+      },
+    ],
+  },
+
+  {
+    id: "job-understanding",
+    title: "C. Understanding of the Job",
+    questions: [
+      {
+        id: "role-responsibility",
+        question:
+          "Do you clearly understand what your role and responsibilities will be as an HCA?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No", "Partially"],
+      },
+      {
+        id: "patient-type-understanding",
+        question:
+          "Do you understand the type of patients you may be required to care for?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No", "Partially"],
+      },
+      {
+        id: "patient-care-duties",
+        question:
+          "Do you understand that patient care may include personal care, feeding assistance, mobility support, hygiene and other assigned duties?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "company-rules",
+        question:
+          "Do you understand the company's rules and procedures for patient care?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Yes",
+          "No",
+          "Need explanation",
+        ],
+      },
+      {
+        id: "problem-contact",
+        question:
+          "Do you understand whom you should contact if you have a problem during a patient assignment?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "attendance",
+        question:
+          "Do you understand the importance of attendance and reporting to duty on time?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "leaving-assignment",
+        question:
+          "Do you understand that you should not leave a patient assignment without informing the company?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+    ],
+  },
+
+  {
+    id: "salary-employment",
+    title: "D. Salary & Employment Understanding",
+    questions: [
+      {
+        id: "expected-pay",
+        question:
+          "Do you know your expected pay after completing your training?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "payment",
+        question:
+          "Do you understand how and when your pay will be paid?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Yes",
+          "No",
+          "Need explanation",
+        ],
+      },
+      {
+        id: "working-conditions",
+        question:
+          "Have the pay, duty hours and working conditions been explained to you clearly?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Yes",
+          "No",
+          "Partially",
+        ],
+      },
+      {
+        id: "client-requirements",
+        question:
+          "Do you understand that the actual duty/assignment may depend on client requirements and availability?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "salary-concern",
+        question:
+          "Do you have any questions or concerns regarding your salary or employment terms?",
+        type: "textarea" as const,
+        required: true,
+      },
+    ],
+  },
+
+  {
+    id: "documents-compliance",
+    title: "E. Documents & Compliance",
+    questions: [
+      {
+        id: "documents",
+        question:
+          "Have you submitted all the documents required by the company?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Yes",
+          "No",
+          "Some pending",
+        ],
+      },
+      {
+        id: "pending-documents",
+        question:
+          "If any documents are pending, which documents are still required?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "valid-documents",
+        question:
+          "Has the company explained the importance of maintaining valid identification and other required documents?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "registration",
+        question:
+          "Have you completed all required company registration/formalities?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Yes",
+          "No",
+          "In progress",
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "hostel-welfare",
+    title: "F. Hostel, Food & Welfare",
+    questions: [
+      {
+        id: "accommodation-satisfaction",
+        question:
+          "Are you satisfied with the hostel/accommodation provided by the company?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Very satisfied",
+          "Satisfied",
+          "Not satisfied",
+        ],
+      },
+      {
+        id: "hostel-problems",
+        question:
+          "Are there any problems with the hostel, such as cleanliness, water, electricity, sleeping arrangements or safety?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "food",
+        question:
+          "Are you satisfied with the food arrangements?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Yes",
+          "No",
+          "Not applicable",
+        ],
+      },
+      {
+        id: "safe",
+        question:
+          "Are you comfortable and safe in the hostel/accommodation?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "personal-problem",
+        question:
+          "Do you have any personal, financial or other problem that is affecting your training or work?",
+        type: "textarea" as const,
+        required: true,
+      },
+    ],
+  },
+
+  {
+    id: "relationship-job-satisfaction",
+    title: "G. Relationship & Job Satisfaction",
+    questions: [
+      {
+        id: "staff-relationship",
+        question:
+          "Are you comfortable with the trainers, supervisors, Sir/Madam and other company staff?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "training-happiness",
+        question:
+          "Overall, are you happy with the training and interested in continuing the job after completing your training?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "leave-company",
+        question:
+          "Do you have any plan to leave the company after completing your training?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No", "Not sure"],
+      },
+      {
+        id: "leave-travel",
+        question:
+          "Do you have any leave or travel plans during or immediately after your training?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "family-aware",
+        question:
+          "Are your family members aware that you have joined this company and are staying here for training/work?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "family-support",
+        question:
+          "Is your family supportive of you continuing this job?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Yes",
+          "No",
+          "Some concerns",
+        ],
+      },
+      {
+        id: "other-offer",
+        question:
+          "Have you received any offer from another company or employer recently?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "considering-job",
+        question:
+          "Are you considering another job at the moment?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "unhappy",
+        question:
+          "Is there anything about the job, training, hostel, salary or company that you are unhappy about?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "expected-company",
+        question:
+          "Is there anything you expected from the company that has not been provided yet?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "concern",
+        question:
+          "Do you have any question or concern that you would like the company to address?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "recommend",
+        question:
+          "Would you recommend this training/job opportunity to someone you know?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No", "Maybe"],
+      },
+    ],
+  },
+];
+const sickQuestionGroups = [
+  {
+    id: "own-accommodation",
+    title: "HCP Sick — Own Accommodation",
+    questions: [
+      {
+        id: "feeling",
+        question:
+          "How are you feeling now? Are you feeling better compared with yesterday?",
+        type: "select" as const,
+        required: true,
+        options: ["Better", "Same", "Worse"],
+      },
+      {
+        id: "unwell-date",
+        question:
+          "When did you start feeling unwell?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "doctor-treatment",
+        question:
+          "Have you seen a doctor or taken any treatment?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "treatment-type",
+        question:
+          "If yes, what treatment was taken?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Doctor consultation",
+          "Medication",
+          "Other",
+        ],
+      },
+      {
+        id: "doctor-rest",
+        question:
+          "Has the doctor advised you to take rest or avoid work?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "rest-until",
+        question:
+          "If yes, until when?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "return-duty",
+        question:
+          "When do you expect to be well enough and ready to return to duty?",
+        type: "textarea" as const,
+        required: true,
+      },
+    ],
+  },
+
+  {
+    id: "company-hostel",
+    title: "HCP Sick — Staying in Company Hostel",
+    questions: [
+      {
+        id: "sick-start-date",
+        question:
+          "When did you first start feeling unwell?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "sick-start-time",
+        question:
+          "What time did you first start feeling unwell?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "current-condition",
+        question:
+          "What is your current condition?",
+        type: "select" as const,
+        required: true,
+        options: ["Better", "Same", "Worse"],
+      },
+      {
+        id: "doctor-hospital",
+        question:
+          "Have you been seen by a doctor or taken to a hospital/clinic?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "hospital-clinic",
+        question:
+          "Hospital/Clinic:",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "hospital-date",
+        question:
+          "Date of hospital/clinic visit:",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "company-staff",
+        question:
+          "Was company staff involved in taking or accompanying you?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "consultation",
+        question:
+          "Did you complete the doctor consultation?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "tests",
+        question:
+          "Were any tests or investigations advised?",
+        type: "select" as const,
+        required: true,
+        options: [
+          "Yes",
+          "No",
+          "Not required",
+        ],
+      },
+      {
+        id: "medication",
+        question:
+          "Did the doctor prescribe any medication?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "rest-advised",
+        question:
+          "Did the doctor advise you to take rest?",
+        type: "select" as const,
+        required: true,
+        options: ["Yes", "No"],
+      },
+      {
+        id: "rest-date",
+        question:
+          "If rest was advised, until what date?",
+        type: "textarea" as const,
+        required: true,
+      },
+      {
+        id: "return-support",
+        question:
+          "How are you feeling now, and when do you think you will be ready to return to duty? Do you need any support from the company while staying in the hostel?",
+        type: "textarea" as const,
+        required: true,
+      },
+    ],
+  },
+];
 const feedbackSections: FeedbackSection[] = [
   /* =======================================================
      ROLE 1
@@ -667,7 +1521,67 @@ question:
     ),
   })
 ),
+/* =======================================================
+   BENCH
+======================================================= */
 
+{
+  id: "hca-bench-questionnaire",
+  role: "HCA Status Review",
+  title: "HCP Bench Calling Questionnaire",
+  description:
+    "Check availability, placement readiness, preferences and caregiving experience.",
+  visibleFor: ["Bench"],
+  questions: benchQuestions,
+},
+
+/* =======================================================
+   TRAINING
+======================================================= */
+
+...trainingQuestionGroups.map(
+  (group): FeedbackSection => ({
+    id: `hca-training-${group.id}`,
+    role: "HCA Status Review",
+    title: `HCA Training & Welfare — ${group.title}`,
+    description:
+      "Training, employment, welfare and job-satisfaction follow-up.",
+    visibleFor: ["Training"],
+    questions: group.questions.map(
+      (question) => ({
+        id: `training-${group.id}-${question.id}`,
+        question: question.question,
+        type: question.type,
+        required: question.required,
+        options: question.options,
+      })
+    ),
+  })
+),
+
+/* =======================================================
+   SICK
+======================================================= */
+
+...sickQuestionGroups.map(
+  (group): FeedbackSection => ({
+    id: `hca-sick-${group.id}`,
+    role: "HCA Status Review",
+    title: group.title,
+    description:
+      "Sick status welfare and return-to-duty follow-up.",
+    visibleFor: ["Sick"],
+    questions: group.questions.map(
+      (question) => ({
+        id: `sick-${group.id}-${question.id}`,
+        question: question.question,
+        type: question.type,
+        required: question.required,
+        options: question.options,
+      })
+    ),
+  })
+),
   /* =======================================================
      ROLE 3
   ======================================================= */
@@ -765,7 +1679,7 @@ const HCAFeedback: React.FC = () => {
   const UserFullInfo = useSelector(
     (state: any) => state.AdminFullInfo
   );
-
+console.log("Check for UserFullInfo---",UserFullInfo)
   const [isChecking, setIsChecking] =
     useState(true);
 const [qualityStatus, setQualityStatus] =
@@ -800,7 +1714,9 @@ console.log("Check for HCA NAME---",selectedHCA)
       Record<string, SavedFeedback>
     >({});
 const currentDate = new Date();
-
+const [SelectedServiceStates, setSelectedServiceStates] = useState("Telangana");
+const dispatch = useDispatch();
+  const [isSwitchingMonth, setIsSwitchingMonth] = useState(false);
 const [selectedMonth, setSelectedMonth] =
   useState<number>(currentDate.getMonth() + 1);
 
@@ -1147,6 +2063,34 @@ const getCompletedSectionIds = (
         }
       );
   }
+/* =====================================================
+   HCA STATUS REVIEW
+   MONTHLY
+===================================================== */
+
+const hcaStatusReviewCompleted =
+  monthlyRecords.some(
+    (item: any) =>
+      item?.Role === "HCA Status Review"
+  );
+
+if (hcaStatusReviewCompleted) {
+  feedbackSections
+    .filter(
+      (section) =>
+        section.role === "HCA Status Review"
+    )
+    .forEach((section) => {
+      completedIds.push(section.id);
+    });
+}
+
+/* =====================================================
+   HCA STATUS REVIEW
+   MONTHLY
+===================================================== */
+
+
 
   /*
    * =====================================================
@@ -1318,12 +2262,13 @@ const getCompletedMainSectionsCount = (
   const status =
     item?.CurrentStatus as HCAStatus;
 
-  const mainRoles: FeedbackRole[] = [
-    "Role 1",
-    "Role 2",
-    "Role 3",
-    "Random HCA Call",
-  ];
+const mainRoles: FeedbackRole[] = [
+  "Role 1",
+  "Role 2",
+  "HCA Status Review",
+  "Role 3",
+  "Random HCA Call",
+];
 
   const applicableRoles = mainRoles.filter((role) =>
     feedbackSections.some(
@@ -1347,7 +2292,18 @@ const getCompletedMainSectionsCount = (
             record?.Role === "Role 2"
         );
       }
+/* ==========================================
+   HCA STATUS REVIEW
+   Monthly completion
+========================================== */
 
+if (role === "HCA Status Review") {
+  return records.some(
+    (record: any) =>
+      record?.Role === "HCA Status Review" &&
+      String(record?.Month) === selectedMonthValue
+  );
+}
       /* ==========================================
          OTHER ROLES
          Monthly completion
@@ -1482,10 +2438,10 @@ const completedCount = hcaData.filter(
           const matchesFeedbackStatus =
             feedbackStatus ===
             feedbackFilter;
-
+const PreferdWorkingStatus=item?.PreferdWorkingStatus||"Telangana"===SelectedServiceStates;
           return (
             matchesSearch &&
-            matchesHCAStatus &&
+            matchesHCAStatus &&PreferdWorkingStatus&&
             matchesFeedbackStatus
           );
         }
@@ -1499,6 +2455,7 @@ const completedCount = hcaData.filter(
   selectedMonth,
   selectedYear,
   savedFeedback,
+  SelectedServiceStates
     ]);
 
   /* =======================================================
@@ -1544,7 +2501,7 @@ console.log("Next Step----",userId)
     (section) =>
       section.visibleFor.includes(status)
   );
-
+const dispatch = useDispatch();
   const userQualityStatus = qualityStatus?.[userId];
 
   
@@ -1655,7 +2612,35 @@ existingFeedback={
   /* =======================================================
      LOADING
   ======================================================= */
+// const GetMonthFreshData = async (r: string) => {
+//   try {
+  
+//     setIsSwitchingMonth(true);
+//     dispatch(UpdateMonthFilter(r));
 
+//     const userId = localStorage.getItem("UserId");
+
+//    const { data } = await axios.post(
+//   "/api/AdminPageInfo",
+//   {
+//     userId,
+//     Month: `${selectedYear}-${r}`,
+//   }
+// );
+
+
+
+//     console.log("Check New Data", data.data.deployedLength);
+
+//     dispatch(SetDeploymentInfo(data.data.deployedLength));
+//     setSelectedMonth(parseInt(r));
+//  setIsSwitchingMonth(false);
+    
+//   } catch (error) {
+//     console.error("GetMonthFreshData Error:", error);
+ 
+//   }
+// };
   if (isChecking) {
     return <LoadingData />;
   }
@@ -1817,7 +2802,29 @@ existingFeedback={
       {/* =================================================
           FEEDBACK MONTH
       ================================================= */}
+
+       
       <div className="min-w-0">
+        <div className="relative">
+                        <select
+                          value={SelectedServiceStates}
+                          onChange={(e) => setSelectedServiceStates(e.target.value)}
+                          className="w-full text-center h-10 appearance-none rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
+                        >
+                        
+                    
+                          {IndianStates.map((state) => (
+                            <option key={state} value={state}>
+                              {state}
+                            </option>
+                          ))}
+                        </select>
+                    
+                        <ChevronDown
+                          size={16}
+                          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        />
+                      </div>
         <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">
           Feedback Month
         </p>
@@ -1826,8 +2833,11 @@ existingFeedback={
 
           <select
             value={selectedMonth}
-            onChange={(e) =>
-              setSelectedMonth(Number(e.target.value))
+            onChange={
+              
+              // (e)=>GetMonthFreshData(e.target.value)
+       (e) => {       setSelectedMonth(Number(e.target.value))}
+              
             }
             className="
               h-10 w-full min-w-0
@@ -1851,7 +2861,11 @@ existingFeedback={
               </option>
             ))}
           </select>
-
+    <LoadingPopup
+              open={isSwitchingMonth}
+              title="Switching Month"
+              description="Updating dashboard data..."
+            />
           <select
             value={selectedYear}
             onChange={(e) =>
@@ -2123,6 +3137,7 @@ const feedbackStatus =
 const mainRoles: FeedbackRole[] = [
   "Role 1",
   "Role 2",
+  "HCA Status Review",
   "Role 3",
   "Random HCA Call",
 ];
@@ -2178,7 +3193,7 @@ const completedCount = completedRoles.length;
                       {GetHCPFullName(
                         UserFullInfo,
                         item?.userId
-                      )}
+                      )||item.FirstName}
                     </span>
 
                   </td>
@@ -2219,7 +3234,7 @@ const completedCount = completedRoles.length;
 
                     <span className="inline-flex rounded-lg bg-[#1392d3]/10 px-3 py-1.5 text-xs font-semibold text-[#1392d3]">
                       {
-                        item?.PermanentState ||
+                        GetPermanentState(UserFullInfo, item?.userId) ||
                         "Telangana"
                       }
                     </span>
@@ -3478,13 +4493,14 @@ ClientId:ImpClientId,
           active role are displayed together.
       ===================================================== */}
       {(() => {
-        const slideRoles: FeedbackRole[] = [
-          "Role 1",
-          "Role 2",
-          "Role 3",
-          "Random HCA Call",
-          "Termination",
-        ];
+       const slideRoles: FeedbackRole[] = [
+  "Role 1",
+  "Role 2",
+  "HCA Status Review",
+  "Role 3",
+  "Random HCA Call",
+  "Termination",
+];
 
         const availableRoles = slideRoles.filter((role) =>
           sections.some((section) => section.role === role)
@@ -3518,6 +4534,7 @@ ClientId:ImpClientId,
           "Role 1": "Role 1 — Complete Feedback",
           "Role 2": "Role 2 — Complete All Questions",
           "Role 3": "Role 3 — Welfare Parameters Analysis",
+          "HCA Status Review":"HCA Status Review — Complete All Questions",
           "Random HCA Call": "Random HCA Call — Complete All Questions",
           "Termination": "Termination — Complete All Questions",
         };
