@@ -2298,6 +2298,35 @@ setShowCareTakerPriceUpdate(false)
       <p className="text-sm text-gray-600 mb-4">
         This Deployment will not be able to access the system until reactivated.
       </p>
+          <select
+                className={`
+                  w-full p-2 text-sm border rounded-lg cursor-pointer text-center m-2
+                  ${
+                    UpdatedCareTakerStatus === "Available"
+                      ? "bg-green-100 border-green-300 text-green-800"
+                      : UpdatedCareTakerStatus === "Sick"
+                      ? "bg-yellow-100 border-yellow-300 text-yellow-800"
+                      : UpdatedCareTakerStatus === "Leave"
+                      ? "bg-blue-100 border-blue-300 text-blue-800"
+                      : UpdatedCareTakerStatus === "Terminated"
+                      ? "bg-red-100 border-red-300 text-red-800"
+                      : "bg-gray-100 border-gray-300 text-gray-800"
+                  }
+                `}
+                value={UpdatedCareTakerStatus || ""}
+                onChange={(e) => setUpdatedCareTakerStatus(e.target.value)}
+              >
+                <option className="text-[10px]">
+            Manage {CareTakerName} Status
+                </option>
+                
+               
+                <option value="Sick">🟡 Sick</option>
+                <option value="Leave">🔵 Leave</option>
+                <option value="Bench">🟣 Bench</option>
+            
+                <option value="Terminated">🔴 Terminated</option>
+              </select>
 <p>{ActionStatusMessage}</p>
       <div className="flex justify-center gap-3">
         <button
@@ -2755,6 +2784,7 @@ const EditDate =
         ;setFreezeInformation(c);
         SetActionStatusMessage('')
         setShowFreezPopUp(true)
+        SetCareTakerName(GetHCPFullName(c.HCA_Id))
         
       
       }}
