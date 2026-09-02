@@ -61,20 +61,26 @@ const [toDate, setToDate] = useState("");
   const pageSize = 4;
 const invoiceEditStatus = useSelector((s: any) => s.InvoiceEditStatus);
 const ShowMailTemplate=useSelector((A:any)=>A.RevertInvoices)
-const refreshInvoices = async () => {
+const refreshInvoices = async (showLoader = true) => {
   try {
-    setisChecking(true);
+    if (showLoader) {
+      setisChecking(true);
+    }
 
     const data = await GetInvoiceInfoforInvoicePage(
       monthFilter,
       yearFilter
     );
-console.log("Check importedData----",data)
+
+    console.log("Fresh Invoice Data ----", data);
+
     setFetchedInfo(data);
   } catch (err) {
     console.error("Error fetching invoices:", err);
   } finally {
-    setisChecking(false);
+    if (showLoader) {
+      setisChecking(false);
+    }
   }
 };
 
@@ -84,8 +90,8 @@ useEffect(() => {
     return;
   }
 
-  refreshInvoices();
-}, [status, monthFilter, yearFilter]);
+  refreshInvoices(true);
+}, [monthFilter, yearFilter]);
 
 
   const downloadExcel = () => {
@@ -464,18 +470,43 @@ console.log("Check info-----",filteredInvoices)
   .map((each: any) => Number(each?.balanceDue) || 0)
   .reduce((total: number, value: number) => total + value, 0);
   
-const BalancePaid = filteredInvoices
-  ?.filter((each: any) => each?.PaymentStatus === true)
-  .reduce((total: number, each: any) => {
-    const balance = Number(each?.balanceDue) || 0;
+// const BalancePaid = filteredInvoices
+//   ?.filter((each: any) => each?.PaymentStatus === true)
+//   .reduce((total: number, each: any) => {
+//     const balance = Number(each?.balanceDue) || 0;
+//     const advance =
+//       Number(each?.AdvanceReceived) ||
+//       Number(each?.AdvancePaid) ||
+//       0;
+
+//     return total + balance + advance;
+//   }, 0);
+
+const BalancePaid = filteredInvoices.reduce(
+  (total: number, invoice: any) => {
+    // Advance payment
     const advance =
-      Number(each?.AdvanceReceived) ||
-      Number(each?.AdvancePaid) ||
+      Number(invoice?.AdvanceReceived) ||
+      Number(invoice?.AdvancePaid) ||
       0;
 
-    return total + balance + advance;
-  }, 0);
+    // All transaction payments
+    const transactionsTotal = Array.isArray(invoice?.Trasaction)
+      ? invoice.Trasaction.reduce(
+          (transactionTotal: number, transaction: any) => {
+            return transactionTotal + Number(transaction?.amount || 0);
+          },
+          0
+        )
+      : 0;
 
+    return total + advance + transactionsTotal;
+  },
+  0
+);
+
+
+const TotalRoundedAmount = filteredInvoices.reduce((total: number, invoice: any) => total + (Number(invoice?.RoundedTotal) || 0), 0);
 
 const RefundAmount = filteredInvoices
   ?.filter((each: any) => 
@@ -486,23 +517,28 @@ const RefundAmount = filteredInvoices
   .reduce((total: number, value: number) => total + value, 0);
 
 
-const UpdatePaymentStatus=async(A:any)=>{
-  setStatus("Updating Payment Status...")
+const UpdatePaymentStatus = async (A: any) => {
+  setOpenPaymentMethods(false)
+  setStatus("Updating Payment Status...");
 
-  
+  try {
+    const UpdatePayment: any = await UpdateStatusPayment(
+      PaymentInformation,
+      A
+    );
 
+    if (UpdatePayment.success === true) {
+ 
 
-try{
-const UpdatePayment:any= await UpdateStatusPayment(PaymentInformation,A)
-if(UpdatePayment.success===true){
-  
-setStatus("Payment Status Updated Successfully")
-setOpenPaymentMethods(false)
-}
-}catch(err:any){
+      // Get fresh data WITHOUT showing full-page LoadingData
+      await refreshInvoices(false);
 
-}
-}
+      setStatus("Payment Status Updated Successfully");
+    }
+  } catch (err: any) {
+    console.error("Payment Status Update Error:", err);
+  }
+};
   const resetToFirstPage = () => setPage(1);
   function convertToISO(dateString: any) {
   if (!dateString || typeof dateString !== "string" || !dateString.includes("/")) {
@@ -828,6 +864,13 @@ CheckPaymentStatus:CurrentPaymentStatus
                 </div>
               </div>
 <div className="flex flex-col md:flex-row items-center justify-between gap-3 border border-gray-300 shadow-lg p-3 rounded-md w-full">
+    <div className="flex items-center gap-2 bg-blue-50 border-l-4 border-blue-600 text-blue-700 p-2 rounded w-full md:w-auto">
+    <p className="text-xs font-semibold whitespace-nowrap">● Total Amount</p>
+    <h3 className="text-sm md:text-base font-bold">
+      {Math.round(TotalRoundedAmount)}
+    </h3>
+  </div>
+
 
   <div className="flex items-center gap-2 bg-green-50 border-l-4 border-green-600 text-green-700 p-2 rounded w-full md:w-auto">
     <p className="text-xs font-semibold whitespace-nowrap">✔ Total Received</p>
