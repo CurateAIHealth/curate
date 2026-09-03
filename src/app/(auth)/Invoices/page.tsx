@@ -500,7 +500,7 @@ const BalancePaid = filteredInvoices.reduce(
         )
       : 0;
 
-    return total + advance + transactionsTotal;
+    return Math.round(total + advance + transactionsTotal);
   },
   0
 );
