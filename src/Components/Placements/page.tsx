@@ -9,7 +9,7 @@ let terminationCache: any[] | null = null;
 
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Minimize2, Info, ChevronDown } from "lucide-react";
-import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId, UpdateClientAttendanceStatus, GetApplicationData, UpdateHCAnstatusInDeplyoment,  } from "@/Lib/user.action";
+import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId, UpdateClientAttendanceStatus, GetApplicationData, UpdateHCAnstatusInDeplyoment, UpdateUserCurrentstatusInHCPView,  } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { SetDeploymentInfo, setUsers, UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
 import TerminationTable from "../Terminations/page";
@@ -112,6 +112,7 @@ const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const [CareTakerName,SetCareTakerName]=useState('')
   const [HCPName,setHCPName]=useState("")
   const [ShowReassignmentPopUp,setShowReassignmentPopUp]=useState(false)
+  const [FreezeOperation,setFreezeOperation]=useState(false)
   const [showAssignPopup, setShowAssignPopup] = useState(false);
   const [isClientPriceUpdate, setIsClientPriceUpdate] = useState(false);
 const [clientPrice, setClientPrice] = useState("");
@@ -393,54 +394,91 @@ const matchesSearchAndMonth = (
 
     return Number(ImpTeamNumber.Team) ?? "Not Entered";
   };
-  const UpdateFreezeInformation = async() => {
+ const UpdateFreezeInformation = async () => {
+  try {
+    // Prevent invalid request
+    if (!FreezeInformation?.Client_Id || !FreezeInformation?.HCA_Id) {
+      SetActionStatusMessage("Invalid freeze information.");
+      return;
+    }
 
-    try {
-      SetActionStatusMessage(`Please Wait  Updating Status to ${status}.....`)
+    if (!status) {
+      SetActionStatusMessage("Please select a valid status.");
+      return;
+    }
 
-const { data: UpdateFreezeStatus } = await axios.post(
-  "/api/DeploymentStatus",
-  {
-    ClientId: FreezeInformation.Client_Id,
-    HCAId: FreezeInformation.HCA_Id,
-    Month: FreezeInformation.Month,
-    Status: status,
-  }
-);
+    const currentHCAStatus = UpdatedCareTakerStatus || "Bench";
 
-  
-      if (UpdateFreezeStatus.success) {
-       
-      setClientsInformation((prev: any[]) =>
-        prev.map((item: any) => {
-          const clientId = item.ClientId || item.Client_Id;
+    SetActionStatusMessage(
+      `Please Wait... Updating Status to ${status}.....`
+    );
 
-          if (
-            String(clientId) === String(FreezeInformation.Client_Id) &&
-            String(item.HCAId || item.HCA_Id) ===
-              String(FreezeInformation.HCA_Id)
-          ) {
-            return {
-              ...item,
-              Status: status,
-            };
-          }
+    // 1. Update HCP/HCA current status
+    await UpdateUserCurrentstatusInHCPView(
+      CareTakerName,
+      currentHCAStatus
+    );
 
-          return item;
-        })
+    // 2. Update deployment freeze status
+    const response = await axios.post("/api/DeploymentStatus", {
+      ClientId: FreezeInformation.Client_Id,
+      HCAId: FreezeInformation.HCA_Id,
+      Month: FreezeInformation.Month,
+      Status: status,
+    });
+
+    const updateFreezeStatus = response?.data;
+
+    // 3. Validate API response
+    if (!updateFreezeStatus?.success) {
+      throw new Error(
+        updateFreezeStatus?.message ||
+          "Failed to update deployment status."
       );
-
-      SetActionStatusMessage(UpdateFreezeStatus.message);
-
-      setTimeout(() => {
-        setShowFreezPopUp(false);
-      }, 3000);
     }
-    
-    } catch (err: any) {
 
-    }
+    // 4. Update UI only after backend update succeeds
+    setClientsInformation((prev: any[]) =>
+      prev.map((item: any) => {
+        const clientId = item.ClientId || item.Client_Id;
+        const hcaId = item.HCAId || item.HCA_Id;
+
+        const isMatchingRecord =
+          String(clientId) === String(FreezeInformation.Client_Id) &&
+          String(hcaId) === String(FreezeInformation.HCA_Id);
+
+        if (!isMatchingRecord) {
+          return item;
+        }
+
+        return {
+          ...item,
+          Status: status,
+        };
+      })
+    );
+
+    // 5. Show success message
+    SetActionStatusMessage(
+      updateFreezeStatus.message || "Status updated successfully."
+    );
+
+    // 6. Close popup after success
+    setTimeout(() => {
+      setShowFreezPopUp(false);
+    }, 1500);
+
+  } catch (err: any) {
+    console.error("UpdateFreezeInformation Error:", err);
+
+    const errorMessage =
+      err?.response?.data?.message ||
+      err?.message ||
+      "Failed to update status. Please try again.";
+
+    SetActionStatusMessage(errorMessage);
   }
+};
 const GetHCPPayment = (A: any) => {
     if (!users?.length || !A) return "Not Entered";
 
@@ -1353,14 +1391,29 @@ const UpdateReplacement = async (
       );
       return;
     }
-  const ExistingHCPStatusUpdate=await UpdateHCAnstatus(
+ if(FreezeOperation===false){
+const ExistingHCPStatusUpdate=await UpdateUserCurrentstatusInHCPView(
         Exsting_HCP.HCA_Id,
           UpdatedCareTakerStatus?.trim() || "Bench"
       )
-  const AvailableHCPStatusUpdate=await UpdateHCAnstatusInDeplyoment(
+            if (!ExistingHCPStatusUpdate?.success) {
+      SetActionStatusMessage(
+        ExistingHCPStatusUpdate?.message ||
+          "Replacement was created, but existing HCP status could not be updated."
+      );
+      return;
+    }
+ }
+    
+  
+
+
+  const AvailableHCPStatusUpdate=await UpdateUserCurrentstatusInHCPView(
         Available_HCP.userId,
         "Active"
       )
+
+
     const TimeStampData = `${Sign_in_UserInfo?.FirstName || ""} ${
       Sign_in_UserInfo?.LastName || ""
     }, Email: ${Sign_in_UserInfo?.Email || ""}`;
@@ -1389,13 +1442,7 @@ const UpdateReplacement = async (
     }
 
     
-          if (!ExistingHCPStatusUpdate?.success) {
-      SetActionStatusMessage(
-        ExistingHCPStatusUpdate?.message ||
-          "Replacement was created, but existing HCP status could not be updated."
-      );
-      return;
-    }
+    
 
      
       
@@ -2317,7 +2364,7 @@ setShowCareTakerPriceUpdate(false)
                 onChange={(e) => setUpdatedCareTakerStatus(e.target.value)}
               >
                 <option className="text-[10px]">
-            Manage {CareTakerName} Status
+            Manage {GetHCPFullName(CareTakerName)} Status
                 </option>
                 
                
@@ -2779,12 +2826,24 @@ const EditDate =
       className="bg-transparent text-xs font-medium outline-none cursor-pointer appearance-none"
       value={c.Status}
       onChange={(e) => {
+
+
         const UpdatedStatus=e.target.value
+
+
+        if(UpdatedStatus === "Freeze") {
         setStatus(UpdatedStatus)
         ;setFreezeInformation(c);
         SetActionStatusMessage('')
         setShowFreezPopUp(true)
-        SetCareTakerName(GetHCPFullName(c.HCA_Id))
+        SetCareTakerName(c.HCA_Id)}
+
+        if(UpdatedStatus === "Active") {
+          setFreezeOperation(true)
+setShowReassignmentPopUp(!ShowReassignmentPopUp),setPopuptype("Repleasment"),SetCareTakerName(GetHCPFullName(c.HCA_Id)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA(""),console.log("Check Test Data-----",)
+
+
+        }
         
       
       }}
@@ -2814,7 +2873,7 @@ const EditDate =
   Reassignment
 </button> */}
 
-<img src="Icons/Repleasement.png" alt="Repleasement Icons"  className="h-6 ml-4 cursor-pointer "   onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),setPopuptype("Repleasment"),SetCareTakerName(GetHCPFullName(c.HCA_Id)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA(""),console.log("Check Test Data-----",)}}/>
+<img src="Icons/Repleasement.png" alt="Repleasement Icons"  className="h-6 ml-4 cursor-pointer "   onClick={()=>{setShowReassignmentPopUp(!ShowReassignmentPopUp),setFreezeOperation(false),setPopuptype("Repleasment"),SetCareTakerName(GetHCPFullName(c.HCA_Id)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA(""),console.log("Check Test Data-----",)}}/>
 
 {ShowReassignmentPopUp && (
   <div
@@ -3021,7 +3080,7 @@ const EditDate =
 
 </div>
 
-
+{FreezeOperation===false&&
 
               <select
                 className={`
@@ -3051,7 +3110,7 @@ const EditDate =
                 <option value="Bench">🟣 Bench</option>
             
                 <option value="Terminated">🔴 Terminated</option>
-              </select>
+              </select>}
             </div>
           )}
 
