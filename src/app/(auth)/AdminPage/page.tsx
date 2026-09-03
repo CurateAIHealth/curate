@@ -67,7 +67,7 @@ const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
 const UserFirstName=useSelector((state:any)=>state.LogUserName)
 
 console.log ("Check Deployment Info-----",UserFullInfo)
-  const [HCPCurrentStatus,setHCPCurrentStatus]=useState("Active")
+  const [HCPCurrentStatus,setHCPCurrentStatus]=useState("")
   const [SearchDate, SetSearchDate] = useState<any>(null)
   const now = new Date();
   const [showClients, setShowClients] = useState(false);
@@ -546,8 +546,8 @@ const monthNames = [
       matchesStatus &&
       matchesSearchResult &&
       matchesCurrentStatus &&each.ServiceState===SelectedServiceStates
-      // &&
-      // matchesDate &&!GetUserCurrentStatus(each.userId)
+      &&
+      matchesDate &&!GetUserCurrentStatus(each.userId)
       // &&notAdmin
     );
   })

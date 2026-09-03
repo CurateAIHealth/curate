@@ -227,7 +227,7 @@ useEffect(() => {
 setLoadingProgress(100);
 setLoadingMessage("Redirecting...");
 
-if (!mounted) return;
+// if (!mounted) return;
 
 // Navigate immediately after 100%
 if (window.location.pathname !== "/DashBoard") {
