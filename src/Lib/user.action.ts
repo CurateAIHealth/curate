@@ -3347,6 +3347,7 @@ const updatedAttendance = Array.isArray(existingInfo.Attendance)
           ReplacementDate: new Date(ReplacementDate).toISOString().split("T")[0],
           // CareTakerPrice:Available_HCP.CareTakerPrice,
           Replacement:true,
+          Status:"Active",
           Attendance:[newHCAAttendance],
           // ClientAttendance:[ClientattendanceEntry]
         // },$push: {
