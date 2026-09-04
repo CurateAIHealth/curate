@@ -134,7 +134,12 @@ useEffect(() => {
       Math.floor((value / 95) * loadingSteps.length),
       loadingSteps.length - 1
     );
+  const userId = localStorage.getItem("UserId");
 
+      if (!userId) {
+      setIsChecking(false);
+        return;
+      }
     setLoadingProgress(value);
     setLoadingMessage(
       `${loadingSteps[index].icon} ${loadingSteps[index].text}`
