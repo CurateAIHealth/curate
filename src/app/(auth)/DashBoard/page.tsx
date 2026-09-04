@@ -452,6 +452,12 @@ useEffect(() => {
   icon: ClipboardCheck,
   bg: "bg-emerald-500",
 },
+{
+  name: "Company Policy",
+  count: stats.CompanyPolicy,
+  icon: FileText,
+    bg: "bg-teal-800",
+}
       // {
       //   name: "Hostel Attendance",
       //   count: stats.hostelAttendanceCount,
@@ -886,7 +892,8 @@ const pageRoutes: Record<string, string> = {
   "Hostel Attendance": "/HostelAttendence",
   Employees: "/Employes",
   Quality:"/Quality",
-  "HCP Missing Document":"/Documents"
+  "HCP Missing Document":"/Documents",
+  "Company Policy": "/CompanyPolicy",
 };
 
 const Switching = (tab: string) => {
@@ -1021,7 +1028,7 @@ const Switching = (tab: string) => {
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <span className="text-[15px] uppercase truncate">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
             </span>
 
           </div>
@@ -1201,9 +1208,10 @@ const Switching = (tab: string) => {
                   <button
                     type="button"
                     onClick={() => {
+                      router.replace("/sign-in");
                       localStorage.removeItem("UserId");
                     
-                        router.replace("/sign-in");
+                        
                       setShowProfileOptions(false);
                     }}
                     className="

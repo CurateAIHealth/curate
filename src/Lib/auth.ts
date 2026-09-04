@@ -1718,8 +1718,126 @@ export const InsertQualityInfo = async (
     };
   }
 };
+export const PostCompanyPolicy = async (ImportedInfo: any) => {
+  try {
+    if (!ImportedInfo) {
+      return {
+        success: false,
+        error: "Imported policy information is required",
+      };
+    }
+
+    const client = await clientPromise;
+    const db = client.db("CurateInformation");
+
+    const CompanyPolicyCollection =
+      db.collection("CompanyPolicy");
+
+    const PostData =
+      await CompanyPolicyCollection.insertOne(ImportedInfo);
+
+    if (!PostData.acknowledged) {
+      return {
+        success: false,
+        error: "Failed to post company policy",
+      };
+    }
+
+    // IMPORTANT: return success response
+    return {
+      success: true,
+      message: "Company policy posted successfully",
+      data: {
+        insertedId: PostData.insertedId,
+      },
+    };
+  } catch (error) {
+    console.error("PostCompanyPolicy Error:", error);
+
+    return {
+      success: false,
+      error: "Unable to post company policy",
+    };
+  }
+};
+export const GetCompanyPolicies = async () => {
+  try {
+    const client = await clientPromise;
+    const db = client.db("CurateInformation");
+
+    const CompanyPolicyCollection =
+      db.collection("CompanyPolicy");
+
+    const policies = await CompanyPolicyCollection
+      .find({})
+      .sort({ _id: -1 })
+      .toArray();
+
+    return {
+      success: true,
+      data: policies,
+    };
+  } catch (error) {
+    console.error(
+      "GetCompanyPolicies Error:",
+      error
+    );
+
+    return {
+      success: false,
+      error: "Unable to fetch company policies",
+    };
+  }
+};
 
 
+export const DeleteCompanyPolicy = async (
+  Impid: string
+) => {
+  try {
+    if (!Impid) {
+      return {
+        success: false,
+        error: "Company policy ID is required",
+      };
+    }
+
+
+
+    const client = await clientPromise;
+    const db = client.db("CurateInformation");
+
+    const CompanyPolicyCollection =
+      db.collection("CompanyPolicy");
+
+    const result =
+      await CompanyPolicyCollection.deleteOne({
+        id:Impid,
+      });
+
+    if (result.deletedCount === 0) {
+      return {
+        success: false,
+        error: "Company policy not found",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Company policy deleted successfully",
+    };
+  } catch (error) {
+    console.error(
+      "DeleteCompanyPolicy Error:",
+      error
+    );
+
+    return {
+      success: false,
+      error: "Unable to delete company policy",
+    };
+  }
+};
 export const GetQualityInfo = async () => {
   try {
     const client = await clientPromise;
