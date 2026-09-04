@@ -23,13 +23,13 @@ export default function AuthGuard({
     }
 
     const checkAuth = () => {
-      if (redirecting.current) return;
+   
 
       const userId = localStorage.getItem("UserId");
 
       if (!userId) {
-        redirecting.current = true;
-        router.replace("/sign-in");
+    
+        router.replace("/");
       }
     };
 
