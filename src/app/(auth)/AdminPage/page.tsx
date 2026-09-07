@@ -538,18 +538,22 @@ const monthNames = [
   checkDate(each.LeadDate);
 
 
-  
+  const matchesHCAConditions =
+  UpdateduserType !== "healthcare-assistant" ||
+  (
+    matchesDate &&
+    !GetUserCurrentStatus(each.userId)
+  );
 
-    return (
-      HCPUserType&&
-      matchesType &&
-      matchesStatus &&
-      matchesSearchResult &&
-      matchesCurrentStatus &&each.ServiceState===SelectedServiceStates
-      &&
-      matchesDate &&!GetUserCurrentStatus(each.userId)
-      // &&notAdmin
-    );
+  return (
+  HCPUserType &&
+  matchesType &&
+  matchesStatus &&
+  matchesSearchResult &&
+  matchesCurrentStatus &&
+  each.ServiceState === SelectedServiceStates &&
+  matchesHCAConditions
+);
   })
   .slice()
   .reverse();
@@ -1065,7 +1069,8 @@ const UpdatePopup = async (a: any) => {
                           {/* <th className="px-2 py-2 w-[10%]">Role</th>
                     <th className="px-2 py-2 w-[12%]">Aadhar</th> */}
                           <th className="px-2 py-2 w-[12%]">Location</th>
-                          <th className="px-2 py-2 w-[14%]">Email Verification</th>
+                          {UpdateduserType === "healthcare-assistant"?  <th className="px-2 py-2 w-[14%]">Status Due Days</th>:  <th className="px-2 py-2 w-[14%]">Email Verification</th>}
+                        
                           {UpdateduserType === "healthcare-assistant" && (
                             <th className="px-4 py-2 w-[14%]">Working Status</th>
                           )}
@@ -1398,7 +1403,59 @@ const UpdatePopup = async (a: any) => {
                                 </div>
                               )}
                             </td>
+{UpdateduserType === "patient" ?  <td className="px-2 py-2">
+                              {/* <select
+                                className="w-full text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200 cursor-pointer text-xs sm:text-sm"
+                                defaultValue={user.EmailVerification ? "Verified" : "Pending"}
+                                onChange={(e) =>
+                                  UpdateEmailVerificationStatus(user.FirstName, e.target.value, user.userId)
+                                }
+                              >
+                                {EmailVerificationStatus.map((status) => (
+                                  <option key={status} value={status}>
+                                    {status==="Verified"?<BadgeCheck />:<Hourglass />}
+                                  </option>
+                                ))}
+                              </select> */}
 
+                               {user.EmailVerification ? (
+  
+
+<div className="relative group inline-block ml-10">
+  <BadgeCheck
+    size={30}
+    className="text-green-600 cursor-pointer hover:bg-gray-300 p-1 rounded-full"
+    onClick={(e:any) =>
+     UpdateEmailVerificationStatus(user.FirstName, "Pending", user.userId)
+    }
+  />
+
+ <div className="absolute top-0 right-full -translate-y-1/2 mr-2
+                opacity-0 group-hover:opacity-100
+                transition-opacity duration-200
+                bg-black text-white text-xs px-3 py-1 rounded-md whitespace-nowrap">
+  Email Verified,Click to Update
+</div>
+
+</div>
+
+  ) : (
+    <div className="relative group inline-block ">
+    <Hourglass className="text-yellow-500 cursor-pointer hover:bg-gray-300 p-1 rounded-full ml-10" size={30} onClick={(e:any) =>
+                                  UpdateEmailVerificationStatus(user.FirstName, "Verified", user.userId)
+                                }/>
+                                 <div     className="absolute top-0 right-full -translate-y-1/2 mr-2
+               opacity-0 group-hover:opacity-100
+               transition-opacity duration-200
+               bg-black text-white text-xs px-3 py-1 rounded-md whitespace-nowrap"
+  >
+  Email Verification Pending,Click to Update
+</div>
+</div>
+  )}
+                            </td>:  <td className="px-2 py-2 text-center ">
+                         2 Days
+                            </td>}
                             <td className="px-2 py-2">
                               {/* <select
                                 className="w-full text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200 cursor-pointer text-xs sm:text-sm"
@@ -2255,7 +2312,7 @@ const GetAllHCPCount = () => {
             >
               DashBoard
             </button>
-            <button
+            {/* <button
               onClick={handleMainLogout}
               className="
                    px-4 py-2.5
@@ -2266,7 +2323,7 @@ const GetAllHCPCount = () => {
                 "
             >
               <LogOut size={16} /> Logout
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -2394,47 +2451,93 @@ onClick={()=>UpdateNavigattosuggetions()}
             Show Placement Suggetions
             
           </button> */}
- {UpdateduserType === "healthcare-assistant" && (
-  <div className=" flex flex-wrap items-center justify-center gap-1">
+{UpdateduserType === "healthcare-assistant" && (
+  <div className="w-full flex items-center justify-between gap-4">
 
-    {/* All Button */}
-    <button
-      type="button"
-      onClick={() => {
-        setHCPCurrentStatus("");
-        dispatch(UpdateAdminMonthFilter(""));
-        dispatch(UpdateAdminYearFilter(""));
-      }}
-      className={`px-4 py-1 rounded-md text-[15px] font-medium border transition whitespace-nowrap cursor-pointer
-        ${
-          HCPCurrentStatus === ""
-            ? "bg-teal-600 text-white border-teal-600 shadow-sm"
-            : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-        }`}
-    >
-      All ({GetAllHCPCount()})
-    </button>
+    {/* ===================================================== */}
+    {/* LEFT SIDE - Preview User Type Filter */}
+    {/* ===================================================== */}
+    <div className="flex flex-wrap items-center justify-start gap-1">
 
-    {/* Existing Status Buttons */}
-    {HCPFilters.map((status) => (
+      {/* All Types */}
       <button
-        key={status.value}
         type="button"
         onClick={() => {
-          setHCPCurrentStatus(status.value);
-          dispatch(UpdateAdminMonthFilter(""));
-          dispatch(UpdateAdminYearFilter(""));
+          setHCPPreviewtype("");
         }}
         className={`px-4 py-1 rounded-md text-[15px] font-medium border transition whitespace-nowrap cursor-pointer
           ${
-            HCPCurrentStatus === status.value
+            HCPPreviewtype === ""
               ? "bg-teal-600 text-white border-teal-600 shadow-sm"
               : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
           }`}
       >
-        {status.label} ({GetHCPStatusCount(status.value)})
+        All ({GetAllHCPCount()})
       </button>
-    ))}
+
+      {/* HCA / HCP / HCN */}
+      {["HCA", "HCP", "HCN"].map((type) => (
+        <button
+          key={type}
+          type="button"
+          onClick={() => {
+            setHCPPreviewtype(type);
+          }}
+          className={`px-4 py-1 rounded-md text-[15px] font-medium border transition whitespace-nowrap cursor-pointer
+            ${
+              HCPPreviewtype === type
+                ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+        >
+          {type} ({GetHCPTypeCount(type)})
+        </button>
+      ))}
+
+    </div>
+
+
+    {/* ===================================================== */}
+    {/* RIGHT SIDE - Current Status Filter */}
+    {/* ===================================================== */}
+    <div className="flex flex-wrap items-center justify-end gap-1">
+
+      {/* All Status */}
+      <button
+        type="button"
+        onClick={() => {
+          setHCPCurrentStatus("");
+        }}
+        className={`px-4 py-1 rounded-md text-[15px] font-medium border transition whitespace-nowrap cursor-pointer
+          ${
+            HCPCurrentStatus === ""
+              ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+          }`}
+      >
+        All ({GetAllHCPCount()})
+      </button>
+
+      {/* Active / Bench / Training / Sick / Leave / Terminated */}
+      {HCPFilters.map((status) => (
+        <button
+          key={status.value}
+          type="button"
+          onClick={() => {
+            setHCPCurrentStatus(status.value);
+          }}
+          className={`px-4 py-1 rounded-md text-[15px] font-medium border transition whitespace-nowrap cursor-pointer
+            ${
+              HCPCurrentStatus === status.value
+                ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+        >
+          {status.label} ({GetHCPStatusCount(status.value)})
+        </button>
+      ))}
+
+    </div>
 
   </div>
 )}

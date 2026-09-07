@@ -248,7 +248,7 @@ HikeHistory:FilterValue.SalaryHistory,
       CertificatOne:FilterValue.Documents.CertificatOne||FilterValue.Documents["Certificate One"]||'/Icons/PatientDefault.png',
       CertificatTwo: FilterValue.Documents.CertificatTwo||FilterValue.Documents["Certificate Two"]||'/Icons/PatientDefault.png',
       BVR:FilterValue.BVR||'',
-      HCPform:FilterValue.HCPform||FilterValue.Documents["HCP form"]||'/Icons/PatientDefault.png',
+      HCPform:FilterValue.HCPform||FilterValue.Documents["HCP form"]||FilterValue.Documents["HCPform"]||'/Icons/PatientDefault.png',
       
 HealthCertificate:FilterValue.HealthCertificate||FilterValue.Documents["HealthCertificate"]||'/Icons/PatientDefault.png',
 ReferenceCertificate:FilterValue.ReferenceCertificate||FilterValue.Documents["ReferenceCertificate"]||'/Icons/PatientDefault.png',

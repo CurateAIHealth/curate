@@ -46,7 +46,7 @@ export default function ReduxGuard({ children }: Props) {
     // Authentication check
     if (!userId) {
       console.log("User not logged in.");
-      router.replace("/sign-in");
+      router.replace("/");
       return;
     }
   }, [pathname, hasReduxData, router]);
