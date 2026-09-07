@@ -87,7 +87,7 @@ const [attendanceInfo,setAttendenceInfo]=useState<any>()
 const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
 const users=useSelector((state:any)=>state.AdminFullInfo)
 const ReduxClientsInformation=useSelector((state:any)=>state.AdminDeployment)
-
+console.log("Check ReduxClientsInformation----",users)
      const [activeStatus, setActiveStatus] = useState("Process");
 const [menuOpen, setMenuOpen] = useState(false);
 const statuses = ["Process", "Save", "Hold", "Reject"];
@@ -332,7 +332,7 @@ const getExpenseList = (userId: string) => {
   )?.HCAComplitInformation.MonthlyExpenses
 ;
 };
-
+console.log("Check Expences----",getExpenseList("41165e4d-108f-4209-aff7-7a0b7edf671e"))
 const getTransactions = (userId: string) => {
   if (!users?.length || !userId) return null;
 
@@ -2201,7 +2201,7 @@ const totalExpenses =
                       setShowFullMonth(true)
                       setAttendenceInfo(row)
                     }}>
-                    View  
+                    View  {row.HCAId}
                   </button></td>
                   
 

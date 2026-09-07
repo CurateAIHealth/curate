@@ -1402,110 +1402,63 @@ const UpdatePopup = async (a: any) => {
                                 </div>
                               )}
                             </td>
-{UpdateduserType === "patient" ?  <td className="px-2 py-2">
-                              {/* <select
-                                className="w-full text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200 cursor-pointer text-xs sm:text-sm"
-                                defaultValue={user.EmailVerification ? "Verified" : "Pending"}
-                                onChange={(e) =>
-                                  UpdateEmailVerificationStatus(user.FirstName, e.target.value, user.userId)
-                                }
-                              >
-                                {EmailVerificationStatus.map((status) => (
-                                  <option key={status} value={status}>
-                                    {status==="Verified"?<BadgeCheck />:<Hourglass />}
-                                  </option>
-                                ))}
-                              </select> */}
+{UpdateduserType === "patient" ? (
+  <td className="px-2 py-2">
+    {user.EmailVerification ? (
+      <div className="relative group inline-block ml-10">
+        <BadgeCheck
+          size={30}
+          className="text-green-600 cursor-pointer hover:bg-gray-300 p-1 rounded-full"
+          onClick={() =>
+            UpdateEmailVerificationStatus(
+              user.FirstName,
+              "Pending",
+              user.userId
+            )
+          }
+        />
 
-                               {user.EmailVerification ? (
-  
+        <div
+          className="absolute top-0 right-full -translate-y-1/2 mr-2
+                     opacity-0 group-hover:opacity-100
+                     transition-opacity duration-200
+                     bg-black text-white text-xs px-3 py-1 rounded-md
+                     whitespace-nowrap"
+        >
+          Email Verified, Click to Update
+        </div>
+      </div>
+    ) : (
+      <div className="relative group inline-block ml-10">
+        <Hourglass
+          size={30}
+          className="text-yellow-500 cursor-pointer hover:bg-gray-300 p-1 rounded-full"
+          onClick={() =>
+            UpdateEmailVerificationStatus(
+              user.FirstName,
+              "Verified",
+              user.userId
+            )
+          }
+        />
 
-<div className="relative group inline-block ml-10">
-  <BadgeCheck
-    size={30}
-    className="text-green-600 cursor-pointer hover:bg-gray-300 p-1 rounded-full"
-    onClick={(e:any) =>
-     UpdateEmailVerificationStatus(user.FirstName, "Pending", user.userId)
-    }
-  />
-
- <div className="absolute top-0 right-full -translate-y-1/2 mr-2
-                opacity-0 group-hover:opacity-100
-                transition-opacity duration-200
-                bg-black text-white text-xs px-3 py-1 rounded-md whitespace-nowrap">
-  Email Verified,Click to Update
-</div>
-
-</div>
-
-  ) : (
-    <div className="relative group inline-block ">
-    <Hourglass className="text-yellow-500 cursor-pointer hover:bg-gray-300 p-1 rounded-full ml-10" size={30} onClick={(e:any) =>
-                                  UpdateEmailVerificationStatus(user.FirstName, "Verified", user.userId)
-                                }/>
-                                 <div     className="absolute top-0 right-full -translate-y-1/2 mr-2
-               opacity-0 group-hover:opacity-100
-               transition-opacity duration-200
-               bg-black text-white text-xs px-3 py-1 rounded-md whitespace-nowrap"
-  >
-  Email Verification Pending,Click to Update
-</div>
-</div>
-  )}
-                            </td>:  <td className="px-2 py-2 text-center ">
-                         2 Days
-                            </td>}
-                            <td className="px-2 py-2">
-                              {/* <select
-                                className="w-full text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200 cursor-pointer text-xs sm:text-sm"
-                                defaultValue={user.EmailVerification ? "Verified" : "Pending"}
-                                onChange={(e) =>
-                                  UpdateEmailVerificationStatus(user.FirstName, e.target.value, user.userId)
-                                }
-                              >
-                                {EmailVerificationStatus.map((status) => (
-                                  <option key={status} value={status}>
-                                    {status==="Verified"?<BadgeCheck />:<Hourglass />}
-                                  </option>
-                                ))}
-                              </select> */}
-
-                               {user.EmailVerification ? (
-  
-
-<div className="relative group inline-block ml-10">
-  <BadgeCheck
-    size={30}
-    className="text-green-600 cursor-pointer hover:bg-gray-300 p-1 rounded-full"
-    onClick={(e:any) =>
-     UpdateEmailVerificationStatus(user.FirstName, "Pending", user.userId)
-    }
-  />
-
- <div className="absolute top-0 right-full -translate-y-1/2 mr-2
-                opacity-0 group-hover:opacity-100
-                transition-opacity duration-200
-                bg-black text-white text-xs px-3 py-1 rounded-md whitespace-nowrap">
-  Email Verified,Click to Update
-</div>
-
-</div>
-
-  ) : (
-    <div className="relative group inline-block ">
-    <Hourglass className="text-yellow-500 cursor-pointer hover:bg-gray-300 p-1 rounded-full ml-10" size={30} onClick={(e:any) =>
-                                  UpdateEmailVerificationStatus(user.FirstName, "Verified", user.userId)
-                                }/>
-                                 <div     className="absolute top-0 right-full -translate-y-1/2 mr-2
-               opacity-0 group-hover:opacity-100
-               transition-opacity duration-200
-               bg-black text-white text-xs px-3 py-1 rounded-md whitespace-nowrap"
-  >
-  Email Verification Pending,Click to Update
-</div>
-</div>
-  )}
-                            </td>
+        <div
+          className="absolute top-0 right-full -translate-y-1/2 mr-2
+                     opacity-0 group-hover:opacity-100
+                     transition-opacity duration-200
+                     bg-black text-white text-xs px-3 py-1 rounded-md
+                     whitespace-nowrap"
+        >
+          Email Verification Pending, Click to Update
+        </div>
+      </div>
+    )}
+  </td>
+) : (
+  <td className="px-2 py-2 text-center">
+    2 Days
+  </td>
+)}
                             
                             {user.userType === "patient" && (
                             
