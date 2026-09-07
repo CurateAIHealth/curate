@@ -905,24 +905,24 @@ const Switching = (tab: string) => {
   setIsNavigating(true);
   setLoadingMessage(`Preparing ${tab} page...`);
 
-  console.time("Checking Navigation Way");
+  
 
   if (adminTabs[tab]) {
     dispatch(Update_Main_Filter_Status(tab));
     dispatch(UpdateUserType(adminTabs[tab]));
 
-    console.timeEnd("Checking Navigation Way");
+   
 
     return router.replace("/AdminPage");
   }
 
   if (pageRoutes[tab]) {
-    console.timeEnd("Checking Navigation Way");
+   
 
     return router.replace(pageRoutes[tab]);
   }
 
-  console.timeEnd("Checking Navigation Way");
+ 
 };
 
   const PostNotificationInfo = async (Emails: string[]) => {
