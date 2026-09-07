@@ -369,7 +369,7 @@ const UpdateView = () => {
       }
     `}
   >
-    {UpdateStatus ? "Active" : "Register"}
+    {UpdateStatus ? "Intiate" : "Register"}
   </button>
 
   {/* Tooltip for inactive state */}
