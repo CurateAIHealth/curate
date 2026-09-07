@@ -551,8 +551,7 @@ const monthNames = [
   matchesStatus &&
   matchesSearchResult &&
   matchesCurrentStatus &&
-  each.ServiceState === SelectedServiceStates &&
-  matchesHCAConditions
+  each.ServiceState === SelectedServiceStates 
 );
   })
   .slice()
