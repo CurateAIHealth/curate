@@ -21,11 +21,13 @@ import {
   Upload,
   Save,
   Download,
+  Settings2,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { GetClientId, GetClientName, GetHCPFullName, GetPermanentState } from "@/Lib/Actions";
 import axios from "axios";
 import { LoadingData } from "../Loading/page";
+import QualityQuestionManager from "@/Components/QualityQuestionManager/page";
 import { IndianStates } from "@/Lib/Content";
 import { SetDeploymentInfo, UpdateMonthFilter } from "@/Redux/action";
 import LoadingPopup from "../SwitchMonth/page";
@@ -1695,7 +1697,8 @@ const [qualityStatus, setQualityStatus] =
 
   const [search, setSearch] =
     useState("");
-
+const [showQuestionManager, setShowQuestionManager] =
+  useState(false);
   const [selectedHCA, setSelectedHCA] =
     useState<any | null>(null);
 console.log("Check for HCA NAME---",selectedHCA)
@@ -2644,7 +2647,12 @@ existingFeedback={
   if (isChecking) {
     return <LoadingData />;
   }
-
+if (showQuestionManager) {
+  return (
+    <QualityQuestionManager
+      onBack={() => setShowQuestionManager(false)}       sections={feedbackSections}   />
+  );
+}
   /* =======================================================
      MAIN UI
   ======================================================= */
@@ -2693,7 +2701,37 @@ existingFeedback={
         />
 
       </div>
+{/* =====================================================
+    QUESTION MANAGEMENT
+===================================================== */}
 
+<div className="flex justify-end">
+
+  <button
+    type="button"
+    onClick={() =>
+      setShowQuestionManager(true)
+    }
+    className="
+      inline-flex items-center gap-2
+      rounded-xl
+      border border-[#1392d3]/20
+      bg-[#1392d3]/10
+      px-4 py-2.5
+      text-sm font-semibold
+      text-[#1392d3]
+      transition
+      hover:bg-[#1392d3]/15
+    "
+  >
+
+    <Settings2 size={18} />
+
+    Manage Questions
+
+  </button>
+
+</div>
       {/* =====================================================
           MAIN CARD
       ===================================================== */}
