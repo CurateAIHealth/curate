@@ -8,7 +8,7 @@ let terminationCache: any[] | null = null;
 
 
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Minimize2, Info, ChevronDown } from "lucide-react";
+import { CalendarCheck2, CircleCheckBig,ChevronsRight , FilePenLine, MapPin, Trash, CircleX,Plus , X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Minimize2, Info, ChevronDown, Sparkles } from "lucide-react";
 import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId, UpdateClientAttendanceStatus, GetApplicationData, UpdateHCAnstatusInDeplyoment, UpdateUserCurrentstatusInHCPView,  } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { SetDeploymentInfo, setUsers, UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
@@ -73,6 +73,10 @@ const [ClientsInformation,setClientsInformation]=useState(ImpClientsInformation|
     const [EditDate,setEditDate]=useState<any>()
     const [ImpReplasmentInfo,setImpReplasmentInfo]=useState<any>([])
   const [selectedAssignHCP,setselectedAssignHCP]=useState<any>()
+  const [aiQuestion, setAiQuestion] = useState("");
+const [aiAnswer, setAiAnswer] = useState("");
+const [isAiLoading, setIsAiLoading] = useState(false);
+const [showAiPanel, setShowAiPanel] = useState(false);
   const [activeTeam, setActiveTeam] = useState(1);
    const Timenow = new Date();
    const [Loading,setLoading]=useState(true)
@@ -1969,6 +1973,648 @@ if (dateResponse?.success) {
     SetActionStatusMessage(message);
   }
 };
+const AskAI = async () => {
+  const question = aiQuestion.trim();
+
+  if (!question) {
+    setAiAnswer("Please enter a question.");
+    return;
+  }
+
+  try {
+    setIsAiLoading(true);
+    setAiAnswer("");
+
+    // ---------------------------------------------------------
+    // LOCAL DASHBOARD DATA
+    // No OpenAI
+    // No API call
+    // No credits required
+    // ---------------------------------------------------------
+
+    const data = processedData || [];
+
+    if (!data.length) {
+      setAiAnswer(
+        "No dashboard data is available for the current filters."
+      );
+      return;
+    }
+
+    const q = question.toLowerCase().trim();
+
+    // ---------------------------------------------------------
+    // BASIC COUNTS
+    // ---------------------------------------------------------
+
+    const totalRecords = data.length;
+
+    const uniqueClientIds = new Set(
+      data
+        .map((item: any) => item.Client_Id)
+        .filter(Boolean)
+    );
+
+    const uniqueClients = uniqueClientIds.size;
+
+    const activeRecords = data.filter(
+      (item: any) =>
+        String(item.Status || "").toLowerCase() === "active"
+    );
+
+    const terminatedRecords = data.filter(
+      (item: any) =>
+        String(item.Status || "").toLowerCase() === "terminated"
+    );
+
+    const freezeRecords = data.filter(
+      (item: any) =>
+        String(item.Status || "").toLowerCase() === "freeze" ||
+        String(item.Status || "").toLowerCase() === "frozen"
+    );
+
+    // ---------------------------------------------------------
+    // HCA COUNT
+    // ---------------------------------------------------------
+
+    const uniqueHCAIds = new Set(
+      data
+        .map((item: any) => item.HCA_Id)
+        .filter(Boolean)
+    );
+
+    const uniqueHCAs = uniqueHCAIds.size;
+
+    // ---------------------------------------------------------
+    // ATTENDANCE
+    // ---------------------------------------------------------
+
+    const totalPresent = data.reduce(
+      (sum: number, item: any) => sum + (Number(item.pd) || 0),
+      0
+    );
+
+    const totalAbsent = data.reduce(
+      (sum: number, item: any) => sum + (Number(item.ad) || 0),
+      0
+    );
+
+    const totalHalfDays = data.reduce(
+      (sum: number, item: any) => sum + (Number(item.hpd) || 0),
+      0
+    );
+
+    const totalAttendanceDays =
+      totalPresent +
+      totalAbsent +
+      totalHalfDays;
+
+    // ---------------------------------------------------------
+    // ATTENDANCE PERCENTAGE
+    // Half Day = 0.5 attendance
+    // ---------------------------------------------------------
+
+    const attendancePercentage =
+      totalAttendanceDays > 0
+        ? (
+            ((totalPresent + totalHalfDays * 0.5) /
+              totalAttendanceDays) *
+            100
+          ).toFixed(1)
+        : "0.0";
+
+    // ---------------------------------------------------------
+    // LOW ATTENDANCE PEOPLE
+    // ---------------------------------------------------------
+
+    const attendanceDetails = data.map((item: any) => {
+      const present = Number(item.pd) || 0;
+      const absent = Number(item.ad) || 0;
+      const halfDay = Number(item.hpd) || 0;
+
+      const totalDays =
+        present + absent + halfDay;
+
+      const percentage =
+        totalDays > 0
+          ? ((present + halfDay * 0.5) / totalDays) * 100
+          : 0;
+
+      return {
+        name:
+          item.name ||
+          item.PatientName ||
+          "Unknown",
+
+        hca:
+          item.HCA_Name ||
+          "Not Assigned",
+
+        present,
+        absent,
+        halfDay,
+
+        totalDays,
+
+        percentage,
+      };
+    });
+
+    const sortedAttendance =
+      [...attendanceDetails].sort(
+        (a, b) => a.percentage - b.percentage
+      );
+
+    // ---------------------------------------------------------
+    // REVENUE / PAYMENT / MARGIN
+    // ---------------------------------------------------------
+
+    const totalServiceCharge = data.reduce(
+      (sum: number, item: any) =>
+        sum + (Number(item.ServiceCharge) || 0),
+      0
+    );
+
+    const totalClientRevenue = data.reduce(
+      (sum: number, item: any) =>
+        sum + (Number(item.cTotal) || 0),
+      0
+    );
+
+    const totalHCPPayment = data.reduce(
+      (sum: number, item: any) => {
+        const payment =
+          Number(
+            GetHCPPayment(item.HCA_Id)
+          ) || 0;
+
+        const daysInMonth =
+          getDaysInMonthForMonthName(
+            SearchMonth,
+            SearchYear
+          );
+
+        return (
+          sum +
+          Math.round(payment / daysInMonth)
+        );
+      },
+      0
+    );
+
+    const totalMargin =
+      calculateMargin(
+        totalServiceCharge,
+        totalHCPPayment
+      );
+
+    // ---------------------------------------------------------
+    // SERVICE STATE
+    // ---------------------------------------------------------
+
+    const stateCounts: Record<string, number> = {};
+
+    data.forEach((item: any) => {
+      const state =
+        item.ServiceState ||
+        "Unknown";
+
+      stateCounts[state] =
+        (stateCounts[state] || 0) + 1;
+    });
+
+    // ---------------------------------------------------------
+    // HCA COUNTS
+    // ---------------------------------------------------------
+
+    const hcaCounts: Record<string, number> = {};
+
+    data.forEach((item: any) => {
+      const hca =
+        item.HCA_Name ||
+        "Not Assigned";
+
+      hcaCounts[hca] =
+        (hcaCounts[hca] || 0) + 1;
+    });
+
+    // ---------------------------------------------------------
+    // QUESTION: ACTIVE CLIENTS
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("active client") ||
+      q.includes("how many active")
+    ) {
+      setAiAnswer(
+        `There are ${activeRecords.length} active deployment records for ${SearchMonth} ${SearchYear}.`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: TOTAL CLIENTS
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("how many clients") ||
+      q.includes("total clients") ||
+      q.includes("number of clients")
+    ) {
+      setAiAnswer(
+        `There are ${uniqueClients} unique clients in the current dashboard data for ${SearchMonth} ${SearchYear}.`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: HCA COUNT
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("how many hca") ||
+      q.includes("total hca") ||
+      q.includes("number of hca")
+    ) {
+      setAiAnswer(
+        `There are ${uniqueHCAs} unique HCAs assigned in the current dashboard data.`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: ABSENT
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("how many absent") ||
+      q.includes("total absent") ||
+      q.includes("absence")
+    ) {
+      setAiAnswer(
+        `There are ${totalAbsent} absent attendance days across the current dashboard data.`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: PRESENT
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("how many present") ||
+      q.includes("total present")
+    ) {
+      setAiAnswer(
+        `There are ${totalPresent} present attendance days across the current dashboard data.`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: HALF DAY
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("half day") ||
+      q.includes("half-day")
+    ) {
+      setAiAnswer(
+        `There are ${totalHalfDays} half-day attendance records.`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: ATTENDANCE %
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("attendance percentage") ||
+      q.includes("attendance rate") ||
+      q.includes("overall attendance")
+    ) {
+      setAiAnswer(
+        `Overall attendance is ${attendancePercentage}% for the current dashboard data.`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: LOWEST ATTENDANCE
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("lowest attendance") ||
+      q.includes("low attendance") ||
+      q.includes("worst attendance")
+    ) {
+      const lowest = sortedAttendance
+        .slice(0, 5)
+        .filter((item) => item.totalDays > 0);
+
+      if (!lowest.length) {
+        setAiAnswer(
+          "There is not enough attendance data to determine the lowest attendance."
+        );
+        return;
+      }
+
+      const answer = lowest
+        .map(
+          (item, index) =>
+            `${index + 1}. ${item.name} — ${item.percentage.toFixed(
+              1
+            )}% attendance (${item.present} present, ${item.halfDay} half day, ${item.absent} absent)`
+        )
+        .join("\n");
+
+      setAiAnswer(
+        `Lowest attendance:\n\n${answer}`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: BELOW X%
+    // ---------------------------------------------------------
+
+    const percentageMatch =
+      q.match(/below\s+(\d+(?:\.\d+)?)\s*%/);
+
+    if (percentageMatch) {
+      const threshold =
+        Number(percentageMatch[1]);
+
+      const people = attendanceDetails.filter(
+        (item) =>
+          item.totalDays > 0 &&
+          item.percentage < threshold
+      );
+
+      if (!people.length) {
+        setAiAnswer(
+          `No people are below ${threshold}% attendance.`
+        );
+        return;
+      }
+
+      const answer = people
+        .sort(
+          (a, b) =>
+            a.percentage - b.percentage
+        )
+        .map(
+          (item, index) =>
+            `${index + 1}. ${item.name} — ${item.percentage.toFixed(
+              1
+            )}% (${item.present} present, ${item.halfDay} half day, ${item.absent} absent)`
+        )
+        .join("\n");
+
+      setAiAnswer(
+        `People below ${threshold}% attendance:\n\n${answer}`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: REVENUE
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("revenue") ||
+      q.includes("client revenue") ||
+      q.includes("total service charge")
+    ) {
+      setAiAnswer(
+        `Total client/service revenue for the current dashboard data is ₹${totalClientRevenue.toLocaleString("en-IN")}.`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: HCP PAYMENT
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("hcp payment") ||
+      q.includes("hcp payments") ||
+      q.includes("pay hcp")
+    ) {
+      setAiAnswer(
+        `Total HCP payment for the current dashboard data is ₹${totalHCPPayment.toLocaleString("en-IN")}.`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: MARGIN
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("margin") ||
+      q.includes("profit")
+    ) {
+      setAiAnswer(
+        `The calculated margin is ₹${Number(totalMargin || 0).toLocaleString("en-IN")}.`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: TERMINATED
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("terminated") ||
+      q.includes("termination")
+    ) {
+      setAiAnswer(
+        `There are ${terminatedRecords.length} terminated deployment records in the current dashboard data.`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: FREEZE
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("freeze") ||
+      q.includes("frozen")
+    ) {
+      setAiAnswer(
+        `There are ${freezeRecords.length} freeze/frozen deployment records in the current dashboard data.`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: STATE
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("state") ||
+      q.includes("service state")
+    ) {
+      const answer =
+        Object.entries(stateCounts)
+          .sort(
+            (a, b) => b[1] - a[1]
+          )
+          .map(
+            ([state, count]) =>
+              `${state}: ${count}`
+          )
+          .join("\n");
+
+      setAiAnswer(
+        `Service-state breakdown:\n\n${answer}`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: HCA ASSIGNMENTS
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("hca assignment") ||
+      q.includes("hca assigned") ||
+      q.includes("hca count")
+    ) {
+      const answer =
+        Object.entries(hcaCounts)
+          .sort(
+            (a, b) => b[1] - a[1]
+          )
+          .map(
+            ([hca, count]) =>
+              `${hca}: ${count} deployment(s)`
+          )
+          .join("\n");
+
+      setAiAnswer(
+        `HCA assignment breakdown:\n\n${answer}`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // QUESTION: CLIENT / HCA NAME SEARCH
+    // ---------------------------------------------------------
+
+    const matchedRecords =
+      data.filter((item: any) => {
+        const clientName =
+          String(item.name || "").toLowerCase();
+
+        const hcaName =
+          String(item.HCA_Name || "").toLowerCase();
+
+        const patientName =
+          String(item.PatientName || "").toLowerCase();
+
+        const searchQuestion =
+          q.replace(
+            /who|is|the|assigned|to|client|hca|patient|for|show|me|find/gi,
+            " "
+          ).trim();
+
+        if (!searchQuestion) {
+          return false;
+        }
+
+        return (
+          clientName.includes(searchQuestion) ||
+          hcaName.includes(searchQuestion) ||
+          patientName.includes(searchQuestion)
+        );
+      });
+
+    if (matchedRecords.length > 0) {
+      const answer =
+        matchedRecords
+          .slice(0, 10)
+          .map(
+            (item: any) =>
+              `Client: ${item.name || "Unknown"}\nHCA: ${
+                item.HCA_Name || "Not Assigned"
+              }\nPatient: ${
+                item.PatientName || "Not Provided"
+              }\nStatus: ${
+                item.Status || "Unknown"
+              }`
+          )
+          .join("\n\n");
+
+      setAiAnswer(answer);
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // GENERAL DASHBOARD SUMMARY
+    // ---------------------------------------------------------
+
+    if (
+      q.includes("summary") ||
+      q.includes("dashboard") ||
+      q.includes("overview") ||
+      q.includes("report")
+    ) {
+      setAiAnswer(
+        `Dashboard Summary — ${SearchMonth} ${SearchYear}
+
+Unique Clients: ${uniqueClients}
+Deployment Records: ${totalRecords}
+Active: ${activeRecords.length}
+Terminated: ${terminatedRecords.length}
+Freeze/Frozen: ${freezeRecords.length}
+Unique HCAs: ${uniqueHCAs}
+
+Present Days: ${totalPresent}
+Absent Days: ${totalAbsent}
+Half Days: ${totalHalfDays}
+Attendance: ${attendancePercentage}%
+
+Client Revenue: ₹${totalClientRevenue.toLocaleString("en-IN")}
+HCP Payment: ₹${totalHCPPayment.toLocaleString("en-IN")}
+Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
+      );
+      return;
+    }
+
+    // ---------------------------------------------------------
+    // UNKNOWN QUESTION
+    // ---------------------------------------------------------
+
+    setAiAnswer(
+      `I can answer questions about the current dashboard data, such as:
+
+• How many clients are active?
+• How many HCAs are there?
+• How many people are absent?
+• What is the overall attendance?
+• Who has the lowest attendance?
+• Show people below 70% attendance
+• What is the total revenue?
+• What is the HCP payment?
+• What is the margin?
+• How many terminated deployments?
+• How many frozen deployments?
+• Give me a dashboard summary`
+    );
+  } catch (error: any) {
+    console.error("Local AskAI Error:", error);
+
+    setAiAnswer(
+      "Unable to process the question. Please try asking about clients, HCAs, attendance, revenue, payments, margin, or deployment status."
+    );
+  } finally {
+    setIsAiLoading(false);
+  }
+};
 const GetMonthFreshData = async (r: string) => {
   try {
   
@@ -2070,7 +2716,14 @@ const OmServiceView = () => {
     </p>
   </div>
 )}
-  {/* Filters */}
+  {/* Filters */}  <button
+                type="button"
+                onClick={() => setShowAiPanel((prev) => !prev)}
+                className="inline-flex h-[40px] items-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-md hover:bg-slate-800"
+              >
+                <Sparkles size={17} />
+                Ask AI
+              </button>
 <div className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white px-2 py-3 shadow-sm">
   <div className="flex flex-col items-center text-center">
     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -2097,6 +2750,295 @@ const OmServiceView = () => {
 
  
   </div>
+  {showAiPanel && (
+  <div
+    className="
+      absolute right-0 top-12 z-50
+      w-[min(460px,calc(100vw-32px))]
+      overflow-hidden rounded-3xl
+      border border-slate-200/80
+      bg-white
+      shadow-[0_20px_60px_-15px_rgba(15,23,42,0.25)]
+      ring-1 ring-black/[0.03]
+    "
+  >
+    {/* Header */}
+    <div className="relative overflow-hidden border-b border-slate-100 px-5 py-4">
+      {/* Premium background glow */}
+      <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-indigo-100/60 blur-2xl" />
+      <div className="absolute -left-10 -bottom-10 h-24 w-24 rounded-full bg-violet-100/50 blur-2xl" />
+
+      <div className="relative flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            className="
+              flex h-10 w-10 items-center justify-center
+              rounded-2xl
+              bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600
+              shadow-lg shadow-indigo-200
+            "
+          >
+            <Sparkles size={19} className="text-white" />
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold tracking-tight text-slate-900">
+                Dashboard Assistant
+              </h3>
+
+              <span
+                className="
+                  rounded-full border border-emerald-200
+                  bg-emerald-50 px-2 py-0.5
+                  text-[9px] font-semibold uppercase tracking-wider
+                  text-emerald-600
+                "
+              >
+                AI Ready
+              </span>
+            </div>
+
+            <p className="mt-0.5 text-[11px] text-slate-500">
+              Ask anything about your current dashboard
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowAiPanel((prev) => !prev)}
+          className="
+            flex h-8 w-8 items-center justify-center
+            rounded-xl
+            text-slate-400
+            transition-all
+            hover:bg-slate-100
+            hover:text-slate-700
+          "
+        >
+          <Minimize2 size={16} />
+        </button>
+      </div>
+    </div>
+
+    {/* Body */}
+    <div className="p-5">
+      {/* Question input */}
+      <div
+        className="
+          relative rounded-2xl
+          border border-slate-200
+          bg-slate-50/80
+          p-1
+          transition-all
+          focus-within:border-indigo-300
+          focus-within:bg-white
+          focus-within:ring-4
+          focus-within:ring-indigo-50
+        "
+      >
+        <textarea
+          value={aiQuestion}
+          onChange={(e) => setAiQuestion(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              AskAI();
+            }
+          }}
+          rows={3}
+          placeholder="Ask about clients, attendance, revenue..."
+          className="
+            w-full resize-none
+            border-0 bg-transparent
+            px-3 py-2
+            text-sm text-slate-800
+            placeholder:text-slate-400
+            outline-none
+          "
+        />
+
+        <div className="flex items-center justify-between px-2 pb-1.5">
+          <span className="text-[9px] text-slate-400">
+            Press Enter to ask
+          </span>
+
+          <span className="flex items-center gap-1 text-[9px] text-slate-400">
+            <Sparkles size={11} />
+            Dashboard AI
+          </span>
+        </div>
+      </div>
+
+      {/* Suggested Questions */}
+      <div className="mt-4">
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+            Quick questions
+          </span>
+
+          <div className="h-px flex-1 bg-slate-100" />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {[
+            "Give me a dashboard summary",
+            "How many active clients?",
+            "Who has the lowest attendance?",
+            "Show people below 70% attendance",
+            "What is the total revenue?",
+            "What is the HCP payment?",
+          ].map((suggestion) => (
+            <button
+              key={suggestion}
+              type="button"
+              onClick={() => setAiQuestion(suggestion)}
+              className="
+                rounded-full
+                border border-slate-200
+                bg-white
+                px-3 py-1.5
+                text-[10px] font-medium
+                text-slate-600
+                shadow-sm
+                transition-all
+                hover:-translate-y-[1px]
+                hover:border-indigo-200
+                hover:bg-indigo-50
+                hover:text-indigo-600
+                hover:shadow-indigo-100
+              "
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Ask button */}
+      <button
+        type="button"
+        disabled={isAiLoading}
+        onClick={AskAI}
+        className="
+          group mt-4 flex w-full
+          items-center justify-center gap-2
+          rounded-2xl
+          bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600
+          px-4 py-3
+          text-sm font-semibold text-white
+          shadow-lg shadow-indigo-200/60
+          transition-all
+          hover:-translate-y-[1px]
+          hover:shadow-xl hover:shadow-indigo-200
+          disabled:cursor-not-allowed
+          disabled:opacity-60
+        "
+      >
+        {isAiLoading ? (
+          <>
+            <div
+              className="
+                h-4 w-4 animate-spin rounded-full
+                border-2 border-white/30
+                border-t-white
+              "
+            />
+            Analyzing dashboard...
+          </>
+        ) : (
+          <>
+            <Sparkles
+              size={16}
+              className="transition-transform group-hover:rotate-12"
+            />
+            Ask Assistant
+          </>
+        )}
+      </button>
+
+      {/* AI Answer */}
+      {aiAnswer && (
+        <div className="mt-5">
+          <div className="mb-2 flex items-center gap-2">
+            <div
+              className="
+                flex h-6 w-6 items-center justify-center
+                rounded-lg
+                bg-indigo-50
+              "
+            >
+              <Sparkles size={12} className="text-indigo-600" />
+            </div>
+
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              Assistant response
+            </span>
+
+            <div className="h-px flex-1 bg-slate-100" />
+          </div>
+
+          <div
+            className="
+              relative overflow-hidden
+              rounded-2xl
+              border border-indigo-100/80
+              bg-gradient-to-br
+              from-indigo-50/70
+              via-white
+              to-violet-50/60
+              p-4
+              shadow-sm
+            "
+          >
+            {/* Top accent */}
+            <div
+              className="
+                absolute left-0 top-0 h-1 w-full
+                bg-gradient-to-r
+                from-indigo-500
+                via-violet-500
+                to-purple-500
+              "
+            />
+
+            <div
+              className="
+                max-h-64
+                overflow-y-auto
+                whitespace-pre-wrap
+                pr-1
+                text-[13px]
+                leading-6
+                text-slate-700
+                scrollbar-thin
+                scrollbar-thumb-indigo-200
+                scrollbar-track-transparent
+              "
+            >
+              {aiAnswer}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+
+    {/* Footer */}
+    <div
+      className="
+        border-t border-slate-100
+        bg-slate-50/60
+        px-5 py-2.5
+        text-center
+      "
+    >
+      <p className="text-[9px] font-medium text-slate-400">
+        Responses are based on the data currently visible on your dashboard
+      </p>
+    </div>
+  </div>
+)}
 </div>
   <div className="flex flex-col items-center sm:flex-row gap-3 w-full sm:w-auto">
     

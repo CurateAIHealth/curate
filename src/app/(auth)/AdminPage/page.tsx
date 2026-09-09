@@ -66,7 +66,7 @@ const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
 const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
 const UserFirstName=useSelector((state:any)=>state.LogUserName)
 
-console.log ("Check Deployment Info-----",UserFullInfo)
+console.log ("Check Deployment Info-----",DeploymentInfo)
   const [HCPCurrentStatus,setHCPCurrentStatus]=useState("")
   const [SearchDate, SetSearchDate] = useState<any>(null)
   const now = new Date();
