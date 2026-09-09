@@ -1790,7 +1790,99 @@ export const GetCompanyPolicies = async () => {
   }
 };
 
+export const GetAIDashboardData = async (
+  monthKey?: string
+) => {
+  try {
+    const cluster = await clientPromise;
 
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const query: any = {};
+
+    if (monthKey) {
+      query.Month = monthKey;
+    }
+
+    const deploymentData = await collection
+      .find(query)
+      .project({
+        _id: 1,
+
+        ClientId: 1,
+        ClientName: 1,
+        patientName: 1,
+
+        HCAId: 1,
+        HCAName: 1,
+
+        Status: 1,
+        ServiceState: 1,
+        Month: 1,
+
+        StartDate: 1,
+        EndDate: 1,
+
+        cPay: 1,
+        cTotal: 1,
+
+        hcpPay: 1,
+        hcpTotal: 1,
+
+        invoice: 1,
+
+        Attendance: 1,
+        ClientAttendance: 1,
+
+        CareTakerPrice: 1,
+        payTerms: 1,
+        provider: 1,
+        referralName: 1,
+        hcpSource: 1,
+      })
+      .toArray();
+
+    return deploymentData.map((item: any) => ({
+      id: item._id?.toString(),
+
+      clientId: item.ClientId || "",
+      clientName: item.ClientName || "",
+      patientName: item.patientName || "",
+
+      hcaId: item.HCAId || "",
+      hcaName: item.HCAName || "",
+
+      status: item.Status || "",
+      serviceState: item.ServiceState || "",
+      month: item.Month || "",
+
+      startDate: item.StartDate || "",
+      endDate: item.EndDate || "",
+
+      clientPay: Number(item.cPay) || 0,
+      clientTotal: Number(item.cTotal) || 0,
+
+      hcpPay: Number(item.hcpPay) || 0,
+      hcpTotal: Number(item.hcpTotal) || 0,
+
+      invoice: item.invoice || "",
+
+      attendance: item.Attendance || [],
+      clientAttendance: item.ClientAttendance || [],
+
+      careTakerPrice: item.CareTakerPrice || "",
+      payTerms: item.payTerms || "",
+      provider: item.provider || "",
+      referralName: item.referralName || "",
+      hcpSource: item.hcpSource || "",
+    }));
+
+  } catch (error) {
+    console.error("GetAIDashboardData Error:", error);
+    return [];
+  }
+};
 export const DeleteCompanyPolicy = async (
   Impid: string
 ) => {
