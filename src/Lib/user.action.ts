@@ -2152,6 +2152,1924 @@ const FinelResult = await collection.insertOne({
 };
 
 
+// ============================================================
+// UPDATE PRIMARY HCA REGISTRATION
+// Collection: Registration
+// This follows the same structure as HCARegistration()
+// ============================================================
+
+export const UpdateHCARegistration = async (
+  userId: string,
+  HCA: any
+) => {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        message: "User ID is required",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const collection =
+      db.collection("Registration");
+
+    // --------------------------------------------------------
+    // Make sure the existing HCA actually exists
+    // --------------------------------------------------------
+
+    const existingHCA =
+      await collection.findOne({ userId });
+
+    if (!existingHCA) {
+      return {
+        success: false,
+        message: "HCA account not found",
+      };
+    }
+
+    // --------------------------------------------------------
+    // Clean values coming from frontend
+    // --------------------------------------------------------
+
+    const firstName =
+      typeof HCA.FirstName === "string"
+        ? HCA.FirstName.trim()
+        : "";
+
+    const surname =
+      typeof HCA.SurName === "string"
+        ? HCA.SurName.trim()
+        : "";
+
+    const lastName =
+      typeof HCA.LastName === "string"
+        ? HCA.LastName.trim()
+        : "";
+
+    const gender =
+      typeof HCA.Gender === "string"
+        ? HCA.Gender.trim()
+        : "";
+
+    const dateOfBirth =
+      typeof HCA.DateOfBirth === "string"
+        ? HCA.DateOfBirth.trim()
+        : "";
+
+    const maritalStatus =
+      typeof HCA.MaritalStatus === "string"
+        ? HCA.MaritalStatus.trim()
+        : "";
+
+    const aadharNumber =
+      typeof HCA.AadharNumber === "string"
+        ? HCA.AadharNumber
+            .replace(/\s/g, "")
+            .trim()
+        : "";
+
+    const contactNumber =
+      typeof HCA.ContactNumber === "string"
+        ? HCA.ContactNumber.trim()
+        : "";
+
+    const email =
+      typeof HCA.Email === "string"
+        ? HCA.Email.trim()
+        : "";
+
+    const location =
+      typeof HCA.Location === "string"
+        ? HCA.Location.trim()
+        : "";
+
+    // --------------------------------------------------------
+    // Update object
+    //
+    // IMPORTANT:
+    // Password / PreviewPassword are intentionally NOT updated
+    // here. Editing an HCA profile must not reset the login
+    // password.
+    // --------------------------------------------------------
+
+    const updateData: any = {
+      userType:
+        HCA.userType ||
+        existingHCA.userType ||
+        "healthcare-assistant",
+
+      Surname: surname
+        ? encrypt(surname)
+        : "",
+
+      FirstName: firstName
+        ? encrypt(firstName)
+        : "",
+
+      LastName: lastName
+        ? encrypt(lastName)
+        : "",
+
+      Gender: gender
+        ? encrypt(gender)
+        : "",
+
+      DateOfBirth: dateOfBirth
+        ? encrypt(dateOfBirth)
+        : "",
+
+      MaritalStatus:
+        maritalStatus,
+
+      Nationality:
+        HCA.Nationality ||
+        existingHCA.Nationality ||
+        "Indian",
+
+      AadharNumber:
+        aadharNumber
+          ? encrypt(aadharNumber)
+          : "",
+
+      Age:
+        HCA.Age ??
+        existingHCA.Age ??
+        "",
+
+      ContactNumber:
+        contactNumber
+          ? encrypt(contactNumber)
+          : "",
+
+      Email:
+        email
+          ? encrypt(email)
+          : "",
+
+      Location:
+        location,
+
+      /*
+       * IMPORTANT:
+       * Do not reset CurrentStatus to "Training".
+       *
+       * A registered HCA may already be Active,
+       * Assigned, etc.
+       */
+   
+
+      StaffType:
+        HCA.StaffType ??
+        existingHCA.StaffType ??
+        "",
+
+      ReferdVedorId:
+        HCA.ReferdVedorId ??
+        existingHCA.ReferdVedorId ??
+        "",
+
+      VerificationStatus:
+        HCA.VerificationStatus ??
+        existingHCA.VerificationStatus ??
+        "Pending",
+
+      TermsAndConditions:
+        HCA.TermsAndConditions ??
+        existingHCA.TermsAndConditions ??
+        true,
+
+      FinelVerification:
+        HCA.FinelVerification ??
+        existingHCA.FinelVerification ??
+        true,
+
+      EmailVerification:
+        HCA.EmailVerification ??
+        existingHCA.EmailVerification ??
+        true,
+
+      PreviewUserType:
+        HCA.PreviewUserType ??
+        existingHCA.PreviewUserType ??
+        "HCP",
+
+      ClientNote:
+        HCA.ClientNote ??
+        existingHCA.ClientNote ??
+        "",
+
+      /*
+       * These fields are already being sent in your
+       * original HCARegistration payload.
+       */
+      PreferdWorkingStates:
+        Array.isArray(
+          HCA.PreferdWorkingStates
+        )
+          ? HCA.PreferdWorkingStates
+          : Array.isArray(
+              existingHCA.PreferdWorkingStates
+            )
+          ? existingHCA.PreferdWorkingStates
+          : [],
+
+      /*
+       * These family/contact fields are also part of
+       * your existing Registration payload.
+       */
+      fatherNameContact:
+        HCA.fatherNameContact ??
+        existingHCA.fatherNameContact ??
+        "",
+
+      motherContact:
+        HCA.motherContact ??
+        existingHCA.motherContact ??
+        "",
+
+      Husbend:
+        HCA.Husbend ??
+        existingHCA.Husbend ??
+        "",
+
+      HusbendContact:
+        HCA.HusbendContact ??
+        existingHCA.HusbendContact ??
+        "",
+
+      referralSourceType:
+        HCA.referralSourceType ??
+        existingHCA.referralSourceType ??
+        "",
+
+      PermanentHouseNo:
+        HCA.PermanentHouseNo ??
+        existingHCA.PermanentHouseNo ??
+        "",
+
+      PermanentCity:
+        HCA.PermanentCity ??
+        existingHCA.PermanentCity ??
+        "",
+
+      /*
+       * Recalculate hashes whenever these fields change.
+       */
+      emailHash: email
+        ? hashValue(email.toLowerCase())
+        : existingHCA.emailHash || "",
+
+      phoneHash: contactNumber
+        ? hashValue(contactNumber)
+        : existingHCA.phoneHash || "",
+
+      aadharHash: aadharNumber
+        ? hashValue(aadharNumber)
+        : existingHCA.aadharHash || "",
+     Password: hashValue(HCA.Password),
+      PreviewPassword:encrypt(HCA.Password),
+
+      updatedAt: new Date(),
+    };
+
+
+
+    // --------------------------------------------------------
+    // Update
+    // --------------------------------------------------------
+
+    const result =
+      await collection.updateOne(
+        { userId },
+        {
+          $set: updateData,
+        }
+      );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "HCA account not found",
+      };
+    }
+
+    return {
+      success: true,
+      message:
+        "HCA account updated successfully",
+    };
+  } catch (error: any) {
+    console.error(
+      "UpdateHCARegistration:",
+      error
+    );
+
+    return {
+      success: false,
+      message:
+        error?.message ||
+        "Unable to update HCA account",
+    };
+  }
+};
+
+
+// ============================================================
+// UPDATE COMPLETE HCA REGISTRATION
+// Collection: CompliteRegistrationInformation
+//
+// This follows the exact field structure of
+// PostHCAFullRegistration()
+// ============================================================
+
+export const UpdateHCAFullRegistration = async (
+  userId: string,
+  Info: any
+) => {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        message: "User ID is required",
+      };
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const collection =
+      db.collection(
+        "CompliteRegistrationInformation"
+      );
+
+    // --------------------------------------------------------
+    // Check existing complete profile
+    // --------------------------------------------------------
+
+    const existing =
+      await collection.findOne({
+        "HCAComplitInformation.UserId":
+          userId,
+      });
+
+    if (!existing) {
+      return {
+        success: false,
+        message:
+          "Complete HCA profile not found",
+      };
+    }
+
+    // --------------------------------------------------------
+    // Normalize frontend values
+    // --------------------------------------------------------
+
+    const stringValue = (
+      value: any
+    ): string => {
+      if (
+        value === null ||
+        value === undefined
+      ) {
+        return "";
+      }
+
+      return String(value);
+    };
+
+    const arrayValue = (
+      value: any
+    ): any[] => {
+      if (!Array.isArray(value)) {
+        return [];
+      }
+
+      return value.filter(
+        (item: any) =>
+          item !== "Select All"
+      );
+    };
+
+    // --------------------------------------------------------
+    // Documents
+    //
+    // IMPORTANT:
+    // These names now exactly follow your
+    // PostHCAFullRegistration() function.
+    // --------------------------------------------------------
+
+    const Documents = {
+      ProfilePic:
+        Info.Documents?.ProfilePic ||
+        null,
+
+      AadharCard:
+        Info.Documents?.AadharCard ||
+        Info.Documents?.AdharCard ||
+        null,
+
+      PanCard:
+        Info.Documents?.PanCard ||
+        null,
+
+      AccountPassBook:
+        Info.Documents?.AccountPassBook ||
+        null,
+
+      CertificateOne:
+        Info.Documents?.CertificateOne ||
+        Info.Documents?.CertificatOne ||
+        null,
+
+      CertificateTwo:
+        Info.Documents?.CertificateTwo ||
+        Info.Documents?.CertificatTwo ||
+        null,
+
+      BVR:
+        Info.Documents?.BVR ||
+        null,
+
+      HCPForm:
+        Info.Documents?.HCPForm ||
+        Info.Documents?.HCPform ||
+        null,
+
+      HealthCertificate:
+        Info.Documents?.HealthCertificate ||
+        null,
+
+      ReferenceCertificate:
+        Info.Documents?.ReferenceCertificate ||
+        null,
+
+      Other:
+        Info.Documents?.Other ||
+        null,
+
+      VideoFile:
+        Info.Documents?.VideoFile ||
+        null,
+    };
+
+    // --------------------------------------------------------
+    // Build EXACT SAME structure as PostHCAFullRegistration
+    // --------------------------------------------------------
+
+    const encryptedInfo: any = {
+      Title:
+        Info.title || "",
+
+      "First Name":
+        Info.firstName
+          ? encrypt(
+              stringValue(
+                Info.firstName
+              )
+            )
+          : null,
+
+      Surname:
+        Info.surname
+          ? encrypt(
+              stringValue(
+                Info.surname
+              )
+            )
+          : null,
+
+      LastName:
+        Info.lastName || "",
+
+      "Father Name":
+        Info.fatherName
+          ? encrypt(
+              stringValue(
+                Info.fatherName
+              )
+            )
+          : null,
+
+      FatherContact:
+        Info.fatherNameContact ||
+        null,
+
+      MotherContact:
+        Info.motherContact ||
+        null,
+
+      Husbend:
+        Info.Husbend ||
+        null,
+
+      HusbendContact:
+        Info.HusbendContact ||
+        null,
+
+      "Mother Name":
+        Info.motherName
+          ? encrypt(
+              stringValue(
+                Info.motherName
+              )
+            )
+          : null,
+
+      "Husband Name":
+        Info.husbandName
+          ? encrypt(
+              stringValue(
+                Info.husbandName
+              )
+            )
+          : null,
+
+      Guardian:
+        Info.Guardian || "",
+
+      GuardianContact:
+        Info.GuardianContact || "",
+
+      Gender:
+        Info.gender || "",
+
+      "Date of Birth":
+        Info.dateOfBirth || "",
+
+      "Marital Status":
+        Info.maritalStatus || "",
+
+      referralSourceType:
+        Info.referralSourceType || "",
+
+      SiblingsInfo:
+        Array.isArray(
+          Info.SiblingsInfo
+        )
+          ? Info.SiblingsInfo
+          : [],
+
+      earningSource:
+        Info.earningSource || "",
+
+      // ------------------------------------------------------
+      // CONTACT / IDENTITY
+      // ------------------------------------------------------
+
+      EmailId:
+        Info.emailId
+          ? encrypt(
+              stringValue(
+                Info.emailId
+              )
+            )
+          : null,
+
+      "Mobile Number":
+        Info.mobileNumber
+          ? encrypt(
+              stringValue(
+                Info.mobileNumber
+              )
+            )
+          : null,
+
+      "Aadhar Card No":
+        Info.aadharCardNo
+          ? encrypt(
+              stringValue(
+                Info.aadharCardNo
+              ).replace(/\s/g, "")
+            )
+          : null,
+
+      "PAN Number":
+        Info.panNumber
+          ? encrypt(
+              stringValue(
+                Info.panNumber
+              )
+            )
+          : null,
+
+      PermanentHouseNo:
+        Info.PermanentHouseNo ||
+        "Not Provided",
+
+      PermanentCity:
+        Info.PermanentCity || "",
+
+      PermanentState:
+        Info.PermanentState || "",
+
+      "Voter ID No":
+        Info.voterIdNo
+          ? encrypt(
+              stringValue(
+                Info.voterIdNo
+              )
+            )
+          : null,
+
+      "Ration Card No":
+        Info.rationCardNo
+          ? encrypt(
+              stringValue(
+                Info.rationCardNo
+              )
+            )
+          : null,
+
+      // ------------------------------------------------------
+      // ADDRESS
+      // ------------------------------------------------------
+
+      CurrentCity:
+        Info.CurrentCity || "",
+
+      CurrentState:
+        Info.CurrentState || "",
+
+      "Permanent Address":
+        Info.permanentAddress || "",
+
+      CurrentHouseNo:
+        Info.CurrentHouseNo || "",
+
+      "Current Address":
+        Info.currentAddress || "",
+
+      "City/Postcode Permanent":
+        Info.cityPostcodePermanent ||
+        "",
+
+      "City/Postcode Current":
+        Info.cityPostcodeCurrent ||
+        "",
+
+      // ------------------------------------------------------
+      // EDUCATION
+      // ------------------------------------------------------
+
+      "Higher Education":
+        Info.higherEducation || "",
+
+      "Higher Education Year Start":
+        Info.higherEducationYearStart ||
+        "",
+
+      "Higher Education Year End":
+        Info.higherEducationYearEnd ||
+        "",
+
+      "Professional Education":
+        Info.professionalEducation ||
+        "",
+
+      "Professional Education Year Start":
+        Info.professionalEducationYearStart ||
+        "",
+
+      "Professional Education Year End":
+        Info.professionalEducationYearEnd ||
+        "",
+
+      "Registration Council":
+        Info.registrationCouncil ||
+        "",
+
+      "Registration No":
+        Info.registrationNo ||
+        "",
+
+      // ------------------------------------------------------
+      // SKILLS
+      // ------------------------------------------------------
+
+      HomeAssistance:
+        arrayValue(
+          Info.HomeAssistance
+        ),
+
+      ProfessionalSkills:
+        arrayValue(
+          Info.professionalSkill
+        ),
+
+      HandledSkills:
+        arrayValue(
+          Info.HandledSkills
+        ),
+
+      // ------------------------------------------------------
+      // PROFESSIONAL
+      // ------------------------------------------------------
+
+      "Certified By":
+        Info.certifiedBy || "",
+
+      "Professional Work 1":
+        Info.professionalWork1 || "",
+
+      "Professional Work 2":
+        Info.professionalWork2 || "",
+
+      Experience:
+        Info.experience || "",
+
+      // ------------------------------------------------------
+      // PHYSICAL
+      // ------------------------------------------------------
+
+      Height:
+        Info.height || "",
+
+      Weight:
+        Info.weight || "",
+
+      "Hair Colour":
+        Info.hairColour || "",
+
+      "Eye Colour":
+        Info.eyeColour || "",
+
+      Complexion:
+        Info.complexion || "",
+
+      "Any Deformity":
+        Info.anyDeformity || "",
+
+      "Mole/Body Mark 1":
+        Info.moleBodyMark1 || "",
+
+      "Mole/Body Mark 2":
+        Info.moleBodyMark2 || "",
+
+      // ------------------------------------------------------
+      // HEALTH
+      // ------------------------------------------------------
+
+      "Report Previous Health Problems":
+        Info.reportPreviousHealthProblems ||
+        "",
+
+      "Report Current Health Problems":
+        Info.reportCurrentHealthProblems ||
+        "",
+
+      // ------------------------------------------------------
+      // REFERRAL
+      // ------------------------------------------------------
+
+      "Source of Referral":
+        Info.sourceOfReferral || "",
+
+      "Date of Referral":
+        Info.dateOfReferral || "",
+
+      // ------------------------------------------------------
+      // REFERENCE 1
+      // ------------------------------------------------------
+
+      "Reference 1 Name":
+        Info.reference1Name || "",
+
+      "Reference 1 Aadhar":
+        Info.reference1Aadhar
+          ? encrypt(
+              stringValue(
+                Info.reference1Aadhar
+              ).replace(/\s/g, "")
+            )
+          : null,
+
+      "Reference 1 Mobile":
+        Info.reference1Mobile
+          ? encrypt(
+              stringValue(
+                Info.reference1Mobile
+              )
+            )
+          : null,
+
+      "Reference 1 Address":
+        Info.reference1Address || "",
+
+      "Reference 1 Relationship":
+        Info.reference1Relationship ||
+        "",
+
+      // ------------------------------------------------------
+      // REFERENCE 2
+      // ------------------------------------------------------
+
+      "Reference 2 Name":
+        Info.reference2Name || "",
+
+      "Reference 2 Aadhar":
+        Info.reference2Aadhar
+          ? encrypt(
+              stringValue(
+                Info.reference2Aadhar
+              ).replace(/\s/g, "")
+            )
+          : null,
+
+      "Reference 2 Mobile":
+        Info.reference2Mobile
+          ? encrypt(
+              stringValue(
+                Info.reference2Mobile
+              )
+            )
+          : null,
+
+      "Reference 2 Address":
+        Info.reference2Address || "",
+
+      // ------------------------------------------------------
+      // SERVICE
+      // ------------------------------------------------------
+
+      "Service Hours 12hrs":
+        Boolean(
+          Info.serviceHours12hrs
+        ),
+
+      "Service Hours 24hrs":
+        Boolean(
+          Info.serviceHours24hrs
+        ),
+
+      "Preferred Service":
+        Info.preferredService ||
+        "",
+
+      PreferdWorkingStates:
+        Array.isArray(
+          Info.preferredWorkStates
+        )
+          ? Info.preferredWorkStates
+          : Array.isArray(
+              Info.PreferdWorkingStates
+            )
+          ? Info.PreferdWorkingStates
+          : [],
+
+      // ------------------------------------------------------
+      // PAYMENT
+      // ------------------------------------------------------
+
+      PaymentforStaff:
+        Info.PaymentforStaff || "",
+
+      NotedDtaeForHike:
+        Info.NotedDtaeForHike || "",
+
+      BankAccountHolderName:
+        Info.BankAccountHolderName
+          ? encrypt(
+              stringValue(
+                Info.BankAccountHolderName
+              )
+            )
+          : null,
+
+      BankName:
+        Info.BankName || "",
+
+      PaymentService:
+        Info.PaymentService || "",
+
+      "Payment Bank Account Number":
+        Info.paymentBankAccountNumber
+          ? encrypt(
+              stringValue(
+                Info.paymentBankAccountNumber
+              )
+            )
+          : null,
+
+      "IFSC Code":
+        Info.ifscCode
+          ? encrypt(
+              stringValue(
+                Info.ifscCode
+              ).replace(/\s/g, "")
+            )
+          : null,
+
+      "Bank Branch Address":
+        Info.bankBranchAddress ||
+        "",
+
+      "Bank Branch Name":
+        Info.Bankbranchname || "",
+
+      "Branch City":
+        Info.Branchcity || "",
+
+      "Branch State":
+        Info.Branchstate || "",
+
+      "Branch Pincode":
+        Info.Branchpincode || "",
+
+      // ------------------------------------------------------
+      // OTHER
+      // ------------------------------------------------------
+
+      Languages:
+        Info.languages || "",
+
+      Type:
+        Info.type || "",
+
+      Specialties:
+        Info.specialties || "",
+
+      userType:
+        Info.userType ||
+        "healthcare-assistant",
+
+      UserId:
+        userId,
+
+      DocumentSkipReason:
+        Info.DocumentSkipReason ||
+        "",
+
+      ProfilePic:
+        Documents.ProfilePic,
+
+      // ------------------------------------------------------
+      // DOCUMENTS
+      // EXACT CURRENT STRUCTURE
+      // ------------------------------------------------------
+
+      Documents,
+
+      Remarks:
+        Info.Remarks || "",
+
+      /*
+       * UpdatedAt is inside HCAComplitInformation,
+       * just like your current insert structure.
+       */
+      UpdatedAt:
+        new Date(),
+    };
+
+    // --------------------------------------------------------
+    // UPDATE EXISTING DOCUMENT
+    // --------------------------------------------------------
+
+    const result =
+      await collection.updateOne(
+        {
+          "HCAComplitInformation.UserId":
+            userId,
+        },
+        {
+          $set: {
+            HCAComplitInformation:
+              encryptedInfo,
+          },
+        }
+      );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message:
+          "Complete HCA profile not found",
+      };
+    }
+
+    return {
+      success: true,
+      message:
+        "Complete HCA information updated successfully",
+    };
+  } catch (error: any) {
+    console.error(
+      "UpdateHCAFullRegistration:",
+      error
+    );
+
+    return {
+      success: false,
+      message:
+        error?.message ||
+        "Unable to update complete HCA information",
+    };
+  }
+};
+
+
+const isEncryptedValue = (value: any): boolean => {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    typeof value.iv === "string" &&
+    typeof value.content === "string"
+  );
+};
+
+const safeDecryptHCA = (value: any): string => {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+
+  /*
+   * Your encrypt() function stores values like:
+   *
+   * {
+   *   iv: "...",
+   *   content: "..."
+   * }
+   *
+   * MongoDB returns that object directly.
+   */
+  if (isEncryptedValue(value)) {
+    try {
+      const decrypted = decrypt(value);
+
+      if (
+        decrypted === null ||
+        decrypted === undefined
+      ) {
+        return "";
+      }
+
+      return String(decrypted);
+    } catch (error) {
+      console.error(
+        "Encrypted object decryption failed:",
+        error
+      );
+
+      return "";
+    }
+  }
+
+  /*
+   * Some old records may contain the encrypted object
+   * as a JSON string.
+   */
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+
+      if (isEncryptedValue(parsed)) {
+        const decrypted = decrypt(parsed);
+
+        if (
+          decrypted === null ||
+          decrypted === undefined
+        ) {
+          return "";
+        }
+
+        return String(decrypted);
+      }
+
+      // Normal plain string
+      return value;
+    } catch {
+      // Normal plain string
+      return value;
+    }
+  }
+
+  /*
+   * Keep numeric / boolean values usable by the form.
+   */
+  if (
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return String(value);
+  }
+
+  return "";
+};
+
+const safePlainString = (value: any): string => {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return String(value);
+  }
+
+  return "";
+};
+
+const decryptHCAArray = (value: any): string[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => {
+      /*
+       * Arrays are normally plain strings in your
+       * PostHCAFullRegistration function.
+       *
+       * This also supports encrypted array items
+       * if any old record contains them.
+       */
+      return safeDecryptHCA(item);
+    })
+    .filter(
+      (item) => item !== ""
+    );
+};
+
+export const GetHCACompleteInformation = async (
+  userId: string
+) => {
+  try {
+    if (!userId) {
+      return null;
+    }
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    // =====================================================
+    // PRIMARY REGISTRATION
+    // Collection: Registration
+    // =====================================================
+
+    const registration = await db
+      .collection("Registration")
+      .findOne({
+        userId,
+      });
+
+    // =====================================================
+    // COMPLETE REGISTRATION
+    // Collection: CompliteRegistrationInformation
+    // =====================================================
+
+    const complete = await db
+      .collection(
+        "CompliteRegistrationInformation"
+      )
+      .findOne({
+        "HCAComplitInformation.UserId": userId,
+      });
+
+    if (!registration && !complete) {
+      console.log(
+        "No HCA registration found for:",
+        userId
+      );
+
+      return null;
+    }
+
+    const primary: any = registration || {};
+
+    const full: any =
+      complete?.HCAComplitInformation || {};
+
+    const docs: any =
+      full.Documents || {};
+
+    console.log(
+      "Fetched PRIMARY HCA:",
+      primary
+    );
+
+    console.log(
+      "Fetched COMPLETE HCA:",
+      full
+    );
+
+    // =====================================================
+    // SUPPORT CURRENT + OLD FIELD NAMES
+    // =====================================================
+
+    const professionalSkills =
+      full.ProfessionalSkills ??
+      full["Professional Skill"] ??
+      [];
+
+    const homeAssistance =
+      full.HomeAssistance ??
+      full["Home Assistance"] ??
+      [];
+
+    const handledSkills =
+      full.HandledSkills ??
+      full["Handled Skills"] ??
+      [];
+
+    // Current version:
+    // Documents.CertificateOne
+    //
+    // Older version:
+    // Documents.CertificatOne
+    const certificateOne =
+      docs.CertificateOne ??
+      docs.CertificatOne ??
+      "";
+
+    const certificateTwo =
+      docs.CertificateTwo ??
+      docs.CertificatTwo ??
+      "";
+
+    const hcpForm =
+      docs.HCPForm ??
+      docs.HCPform ??
+      "";
+
+    const aadharDocument =
+      docs.AadharCard ??
+      docs.AdharCard ??
+      "";
+
+    // =====================================================
+    // FINAL NORMALIZED OBJECT
+    // =====================================================
+
+    const result = {
+      userId,
+
+      // ===================================================
+      // PRIMARY ACCOUNT INFORMATION
+      // ===================================================
+
+      firstName: safeDecryptHCA(
+        primary.FirstName ??
+          full["First Name"]
+      ),
+
+      surname: safeDecryptHCA(
+        primary.Surname ??
+          full.Surname
+      ),
+
+      lastName: safeDecryptHCA(
+        primary.LastName ??
+          full.LastName
+      ),
+
+      gender:
+        primary.Gender !== undefined
+          ? safeDecryptHCA(primary.Gender)
+          : safePlainString(full.Gender),
+
+      dateOfBirth:
+        primary.DateOfBirth !== undefined
+          ? safeDecryptHCA(
+              primary.DateOfBirth
+            )
+          : safePlainString(
+              full["Date of Birth"]
+            ),
+
+      maritalStatus:
+        primary.MaritalStatus !== undefined
+          ? safeDecryptHCA(
+              primary.MaritalStatus
+            )
+          : safePlainString(
+              full["Marital Status"]
+            ),
+
+      emailId: safeDecryptHCA(
+        primary.Email ??
+          full.EmailId
+      ),
+
+      mobileNumber: safeDecryptHCA(
+        primary.ContactNumber ??
+          full["Mobile Number"]
+      ),
+
+      aadharCardNo: safeDecryptHCA(
+        primary.AadharNumber ??
+          full["Aadhar Card No"]
+      ).replace(/\s/g, ""),
+
+      VerificationStatus:
+        safePlainString(
+          primary.VerificationStatus
+        ) || "Pending",
+
+      PreviewUserType:
+        safePlainString(
+          primary.PreviewUserType
+        ) ||
+        safePlainString(full.PreviewUserType) ||
+        "HCA",
+
+      CurrentStatus:
+        safePlainString(
+          primary.CurrentStatus
+        ) ||
+        safePlainString(full.CurrentStatus) ||
+        "Training",
+
+      preferredWorkStates:
+        Array.isArray(
+          primary.PreferdWorkingStates
+        )
+          ? primary.PreferdWorkingStates
+          : Array.isArray(
+              full.PreferdWorkingStates
+            )
+          ? full.PreferdWorkingStates
+          : [],
+
+      // ===================================================
+      // FAMILY INFORMATION
+      // ===================================================
+
+      fatherName: safeDecryptHCA(
+        full["Father Name"]
+      ),
+
+      fatherNameContact:
+        safePlainString(
+          full.FatherContact
+        ),
+
+      motherName: safeDecryptHCA(
+        full["Mother Name"]
+      ),
+
+      motherContact:
+        safePlainString(
+          full.MotherContact
+        ),
+
+      /*
+       * Your CURRENT Post function stores:
+       *
+       * Husbend: Info.Husbend
+       *
+       * so this is preferred.
+       *
+       * Old records may contain:
+       * Husband Name
+       */
+      Husbend: safeDecryptHCA(
+        full.Husbend ??
+          full["Husband Name"]
+      ),
+
+      HusbendContact:
+        safePlainString(
+          full.HusbendContact
+        ),
+
+      Guardian:
+        safePlainString(
+          full.Guardian
+        ),
+
+      GuardianContact:
+        safePlainString(
+          full.GuardianContact
+        ),
+
+      earningSource:
+        safePlainString(
+          full.earningSource
+        ),
+
+      // ===================================================
+      // IDENTITY
+      // ===================================================
+
+      panNumber: safeDecryptHCA(
+        full["PAN Number"]
+      ),
+
+      // ===================================================
+      // ADDRESS
+      // ===================================================
+
+      PermanentHouseNo:
+        safePlainString(
+          full.PermanentHouseNo
+        ),
+
+      PermanentCity:
+        safePlainString(
+          full.PermanentCity
+        ),
+
+      PermanentState:
+        safePlainString(
+          full.PermanentState
+        ),
+
+      permanentAddress:
+        safePlainString(
+          full["Permanent Address"]
+        ),
+
+      CurrentHouseNo:
+        safePlainString(
+          full.CurrentHouseNo
+        ),
+
+      CurrentCity:
+        safePlainString(
+          full.CurrentCity
+        ),
+
+      CurrentState:
+        safePlainString(
+          full.CurrentState
+        ),
+
+      currentAddress:
+        safePlainString(
+          full["Current Address"]
+        ),
+
+      cityPostcodePermanent:
+        safePlainString(
+          full["City/Postcode Permanent"]
+        ),
+
+      cityPostcodeCurrent:
+        safePlainString(
+          full["City/Postcode Current"]
+        ),
+PaymentHistory: full.PaymentHistory || [],
+HikeHistory: full.SalaryHistory || [],
+      // ===================================================
+      // EDUCATION
+      // ===================================================
+Reviews: full.Reviews,
+      higherEducation:
+        safePlainString(
+          full["Higher Education"]
+        ),
+
+      higherEducationYearStart:
+        safePlainString(
+          full[
+            "Higher Education Year Start"
+          ]
+        ),
+
+      higherEducationYearEnd:
+        safePlainString(
+          full[
+            "Higher Education Year End"
+          ]
+        ),
+
+      professionalEducation:
+        safePlainString(
+          full["Professional Education"]
+        ),
+
+      professionalEducationYearStart:
+        safePlainString(
+          full[
+            "Professional Education Year Start"
+          ]
+        ),
+
+      professionalEducationYearEnd:
+        safePlainString(
+          full[
+            "Professional Education Year End"
+          ]
+        ),
+
+      registrationCouncil:
+        safePlainString(
+          full["Registration Council"]
+        ),
+
+      registrationNo:
+        safePlainString(
+          full["Registration No"]
+        ),
+
+      OngoingStudy:
+        safePlainString(
+          full.OngoingStudy
+        ),
+
+      // ===================================================
+      // SKILLS
+      // ===================================================
+
+      HomeAssistance:
+        decryptHCAArray(
+          homeAssistance
+        ),
+
+      professionalSkill:
+        decryptHCAArray(
+          professionalSkills
+        ),
+
+      HandledSkills:
+        decryptHCAArray(
+          handledSkills
+        ),
+
+      // ===================================================
+      // PROFESSIONAL
+      // ===================================================
+
+      certifiedBy:
+        safePlainString(
+          full["Certified By"]
+        ),
+
+      professionalWork1:
+        safePlainString(
+          full["Professional Work 1"]
+        ),
+
+      professionalWork2:
+        safePlainString(
+          full["Professional Work 2"]
+        ),
+
+      experience:
+        safePlainString(
+          full.Experience
+        ),
+
+      // ===================================================
+      // PHYSICAL INFORMATION
+      // ===================================================
+
+      height:
+        safePlainString(full.Height),
+
+      weight:
+        safePlainString(full.Weight),
+
+      hairColour:
+        safePlainString(
+          full["Hair Colour"]
+        ),
+
+      eyeColour:
+        safePlainString(
+          full["Eye Colour"]
+        ),
+
+      complexion:
+        safePlainString(
+          full.Complexion
+        ),
+
+      anyDeformity:
+        safePlainString(
+          full["Any Deformity"]
+        ),
+
+      moleBodyMark1:
+        safePlainString(
+          full["Mole/Body Mark 1"]
+        ),
+
+      moleBodyMark2:
+        safePlainString(
+          full["Mole/Body Mark 2"]
+        ),
+
+      // ===================================================
+      // SIBLINGS
+      // ===================================================
+
+      SiblingsInfo:
+        Array.isArray(full.SiblingsInfo)
+          ? full.SiblingsInfo
+          : [],
+
+      // ===================================================
+      // HEALTH
+      // ===================================================
+
+      reportPreviousHealthProblems:
+        safePlainString(
+          full[
+            "Report Previous Health Problems"
+          ]
+        ),
+
+      reportCurrentHealthProblems:
+        safePlainString(
+          full[
+            "Report Current Health Problems"
+          ]
+        ),
+
+      // ===================================================
+      // REFERRAL
+      // ===================================================
+
+      referralSourceType:
+        safePlainString(
+          full.referralSourceType
+        ),
+
+      sourceOfReferral:
+        safePlainString(
+          full["Source of Referral"]
+        ),
+
+      dateOfReferral:
+        safePlainString(
+          full["Date of Referral"]
+        ),
+
+      // ===================================================
+      // REFERENCE 1
+      // ===================================================
+
+      reference1Name:
+        safePlainString(
+          full["Reference 1 Name"]
+        ),
+
+      reference1Aadhar:
+        safeDecryptHCA(
+          full["Reference 1 Aadhar"]
+        ),
+
+      reference1Mobile:
+        safeDecryptHCA(
+          full["Reference 1 Mobile"]
+        ),
+
+      reference1Address:
+        safePlainString(
+          full["Reference 1 Address"]
+        ),
+
+      reference1Relationship:
+        safePlainString(
+          full[
+            "Reference 1 Relationship"
+          ]
+        ),
+
+      // ===================================================
+      // REFERENCE 2
+      // ===================================================
+
+      reference2Name:
+        safePlainString(
+          full["Reference 2 Name"]
+        ),
+
+      reference2Aadhar:
+        safeDecryptHCA(
+          full["Reference 2 Aadhar"]
+        ),
+
+      reference2Mobile:
+        safeDecryptHCA(
+          full["Reference 2 Mobile"]
+        ),
+
+      reference2Address:
+        safePlainString(
+          full["Reference 2 Address"]
+        ),
+
+      // ===================================================
+      // SERVICE
+      // ===================================================
+
+      serviceHours12hrs:
+        Boolean(
+          full["Service Hours 12hrs"]
+        ),
+
+      serviceHours24hrs:
+        Boolean(
+          full["Service Hours 24hrs"]
+        ),
+
+      preferredService:
+        safePlainString(
+          full["Preferred Service"]
+        ),
+
+      // ===================================================
+      // PAYMENT
+      // ===================================================
+
+      PaymentforStaff:
+        safePlainString(
+          full.PaymentforStaff
+        ),
+
+      NotedDtaeForHike:
+        safePlainString(
+          full.NotedDtaeForHike
+        ),
+
+      BankAccountHolderName:
+        safeDecryptHCA(
+          full.BankAccountHolderName
+        ),
+
+      BankName:
+        safePlainString(
+          full.BankName
+        ),
+
+      PaymentService:
+        safePlainString(
+          full.PaymentService
+        ),
+
+      paymentBankAccountNumber:
+        safeDecryptHCA(
+          full[
+            "Payment Bank Account Number"
+          ]
+        ),
+
+      ifscCode:
+        safeDecryptHCA(
+          full["IFSC Code"]
+        ).toUpperCase(),
+
+      bankBranchAddress:
+        safePlainString(
+          full["Bank Branch Address"]
+        ),
+
+      Bankbranchname:
+        safePlainString(
+          full["Bank Branch Name"]
+        ),
+
+      Branchcity:
+        safePlainString(
+          full["Branch City"]
+        ),
+
+      Branchstate:
+        safePlainString(
+          full["Branch State"]
+        ),
+
+      Branchpincode:
+        safePlainString(
+          full["Branch Pincode"]
+        ),
+
+      // ===================================================
+      // OTHER
+      // ===================================================
+
+      languages:
+        safePlainString(
+          full.Languages
+        ),
+
+      type:
+        safePlainString(
+          full.Type
+        ),
+
+      specialties:
+        safePlainString(
+          full.Specialties
+        ),
+
+      Remarks:
+        safePlainString(
+          full.Remarks
+        ),
+
+      DocumentSkipReason:
+        safePlainString(
+          full.DocumentSkipReason
+        ),
+
+      // ===================================================
+      // DOCUMENTS
+      //
+      // CURRENT PostHCAFullRegistration SAVES:
+      // AadharCard
+      // PanCard
+      // AccountPassBook
+      // CertificateOne
+      // CertificateTwo
+      // BVR
+      // HCPForm
+      //
+      // OLD DATA MAY CONTAIN:
+      // AdharCard
+      // CertificatOne
+      // CertificatTwo
+      // HCPform
+      // =====================================================
+
+      Documents: {
+        ProfilePic:
+          docs.ProfilePic ||
+          full.ProfilePic ||
+          "",
+
+        AadharCard:
+          aadharDocument,
+
+        PanCard:
+          docs.PanCard || "",
+
+        AccountPassBook:
+          docs.AccountPassBook || "",
+
+        CertificateOne:
+          certificateOne,
+
+        CertificateTwo:
+          certificateTwo,
+
+        /*
+         * Keep your frontend's old key too.
+         * This makes both versions usable.
+         */
+        CertificatOne:
+          certificateOne,
+
+        CertificatTwo:
+          certificateTwo,
+
+        BVR:
+          docs.BVR || "",
+
+        HCPForm:
+          hcpForm,
+
+        HCPform:
+          hcpForm,
+
+        HealthCertificate:
+          docs.HealthCertificate || "",
+
+        ReferenceCertificate:
+          docs.ReferenceCertificate || "",
+
+        Other:
+          docs.Other || "",
+
+        VideoFile:
+          docs.VideoFile || "",
+      },
+    };
+
+    console.log(
+      "FINAL NORMALIZED HCA INFORMATION:",
+      result
+    );
+
+    return result;
+  } catch (error: any) {
+    console.error(
+      "GetHCACompleteInformation:",
+      error
+    );
+
+    throw new Error(
+      error?.message ||
+        "Unable to load HCA information"
+    );
+  }
+};
+
+
 export const InserTimeSheet=async(ClientUserId:any,HCAUserId:any,Name:any,Email:any,Contact:any,ClientAdress:any,NameHCA:any,Contacthca:any,TimeSheetArray:any)=>{
   try{
        
