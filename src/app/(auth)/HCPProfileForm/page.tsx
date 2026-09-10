@@ -4655,7 +4655,7 @@ form.HusbendContact!=="Not Available"&&
                   onChange={handleChange}
                   placeholder="Enter Password"
                   className="w-full border border-gray-300 p-3 pr-10 rounded-lg text-sm focus:ring-2 focus:ring-blue-300 focus:border-transparent"
-                  required
+                  
                 />
                 <button
                   type="button"
@@ -4680,7 +4680,7 @@ form.HusbendContact!=="Not Available"&&
                       ? "border-red-400 focus:ring-red-300"
                       : "border-gray-300 focus:ring-blue-300"
                     }`}
-                  required
+                  
                 />
                 <button
                   type="button"
