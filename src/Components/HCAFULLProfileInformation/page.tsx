@@ -105,7 +105,7 @@ ProfetionSkill:any,
 Reviews:any
 };
 
-const UserDetail = () => {
+const   UserDetail = () => {
   const [activeTab, setActiveTab] = useState<string>('Personal Info');
 const [loadingDocs, setLoadingDocs] = useState<Record<string, boolean>>({});
 const [SubmitstatusMessage,setSubmitstatusMessage]=useState("")

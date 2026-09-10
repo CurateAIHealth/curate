@@ -1776,7 +1776,16 @@ const UpdatePopup = async (a: any) => {
  :
                                 <button
                                   className="w-full text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition cursor-pointer text-xs sm:text-sm"
-                                  onClick={() => ShowDompleteInformation(user.userId, user.FirstName)}
+                                  
+                  onClick={() => {
+  if (UpdateduserType === "healthcare-assistant") {
+    router.push(
+      `/HCPProfileForm?previewUserId=${encodeURIComponent(user.userId)}`
+    );
+  } else {
+    ShowDompleteInformation(user.userId, user.FirstName);
+  }
+}}
                                 >
                                   {user.DetailedVerification ? "View" : "Preview"}
                                 </button>}

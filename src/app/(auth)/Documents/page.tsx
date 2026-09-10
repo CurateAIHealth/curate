@@ -148,7 +148,7 @@ const getDocumentsByUserId = (userId: string) => {
 
   return userInfo?.HCAComplitInformation?.Documents || {};
 };
-console.log ("Check Priti Docs-----",getDocumentsByUserId("778af4ef-5a87-426a-bd27-2d2257480038"))
+
  const result = useMemo(() => {
   return RegisterdInfo
     .map((each: any) => {
@@ -578,6 +578,7 @@ const filteredPreviewData = useMemo(() => {
           "Aadhar",
           "PAN",
           "BVR",
+          
           "Bank",
           "Education",
           "Experience",
