@@ -340,88 +340,88 @@ console.log("Check Docs-----",Docs)
   const isExistingHCAMode = Boolean(previewUserId || isuserIdAvailable);
   const EffectiveUserType = CurrentUserType || (previewUserId ? 'HCA' : null);
 
-const hasRedirected = useRef(false);
+// const hasRedirected = useRef(false);
 
-useEffect(() => {
-  if (
-    !hasRedirected.current &&
-    isChecking === false &&
-    CurrentUserType === null &&
-    !previewUserId
-  ) {
-    hasRedirected.current = true;
-    router.replace("/UserTypeRegistration");
-  }
-}, [CurrentUserType, isChecking, router, previewUserId]);
-
-
+// useEffect(() => {
+//   if (
+//     !hasRedirected.current &&
+//     isChecking === false &&
+//     CurrentUserType === null &&
+//     !previewUserId
+//   ) {
+//     hasRedirected.current = true;
+//     router.replace("/UserTypeRegistration");
+//   }
+// }, [CurrentUserType, isChecking, router, previewUserId]);
 
 
 
- useEffect(()=>{
-  const GetInfo=async()=>{
-    try{
 
-     const RegisterdUsers = await GetRegidterdUsers()
-         setImportedVendors(RegisterdUsers.filter((each: any) => each.userType === "Vendor"))
 
-    }catch(err:any){
+//  useEffect(()=>{
+//   const GetInfo=async()=>{
+//     try{
 
-    }
-  }
-  GetInfo()
- },[])
+//      const RegisterdUsers = await GetRegidterdUsers()
+//          setImportedVendors(RegisterdUsers.filter((each: any) => each.userType === "Vendor"))
 
-useEffect(() => {
+//     }catch(err:any){
+
+//     }
+//   }
+//   GetInfo()
+//  },[])
+
+// useEffect(() => {
  
-  if (RegisterfromAdmin === undefined) return;
-  if (previewUserId) return;
+//   if (RegisterfromAdmin === undefined) return;
+//   if (previewUserId) return;
 
 
-  if (RegisterfromAdmin === true) {
-    setisuserIdAvailable(null);
-    setForm((prev) => ({
-      ...prev,
-      emailId: "",
-      mobileNumber: "",
-      firstName: "",
-      surname: "",
-    }));
-    setIsChecking(false);
-    return;
-  }
+//   if (RegisterfromAdmin === true) {
+//     setisuserIdAvailable(null);
+//     setForm((prev) => ({
+//       ...prev,
+//       emailId: "",
+//       mobileNumber: "",
+//       firstName: "",
+//       surname: "",
+//     }));
+//     setIsChecking(false);
+//     return;
+//   }
 
  
-  const fetchProfile = async () => {
-    const localValue = localStorage.getItem("UserId");
-    if (!localValue) {
-      setIsChecking(false);
-      return;
-    }
+//   const fetchProfile = async () => {
+//     const localValue = localStorage.getItem("UserId");
+//     if (!localValue) {
+//       setIsChecking(false);
+//       return;
+//     }
 
-    setisuserIdAvailable(localValue);
+//     setisuserIdAvailable(localValue);
 
-     const profile = await GetUserInformation(localValue)
+//      const profile = await GetUserInformation(localValue)
           
   
-    if (!profile) {
-      setIsChecking(false);
-      return;
-    }
+//     if (!profile) {
+//       setIsChecking(false);
+//       return;
+//     }
 
-    setForm((prev) => ({
-      ...prev,
-      firstName: profile.FirstName ?? "",
-      surname: profile.LastName ?? "",
-      emailId: profile.Email ?? "",
-      mobileNumber: profile.ContactNumber ?? "",
-    }));
+//     setForm((prev) => ({
+//       ...prev,
+//       firstName: profile.FirstName ?? "",
+//       surname: profile.LastName ?? "",
+//       emailId: profile.Email ?? "",
+//       mobileNumber: profile.ContactNumber ?? "",
+//     }));
 
-    setIsChecking(false);
-  };
+//     setIsChecking(false);
+//   };
 
-  fetchProfile();
-}, [RegisterfromAdmin, previewUserId]);
+//   fetchProfile();
+// }, [RegisterfromAdmin, previewUserId]);
 
 
 
@@ -444,8 +444,7 @@ useEffect(() => {
 
         const info = await GetHCACompleteInformation(previewUserId);
         const BasicInfo:any=await GetUserInformation(previewUserId)
-        console.log('Loaded HCA info:', BasicInfo);
-        console.log('Loaded HCA complete info:', info);
+        
 
         if (!info || cancelled) return;
 
@@ -990,19 +989,19 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
                 return;
               }
 
-              await UpdateFinelVerification(generatedUserId);
-              await UpdateFinelVerification(generatedUserId);
+              // await UpdateFinelVerification(generatedUserId);
+              // await UpdateFinelVerification(generatedUserId);
 
-              await axios.post("/api/MailSend", {
-                to: form.emailId || "tsiddu805@gmail.com",
-                subject: "Welcome to Curate Health Care – Your Login Credentials",
-                html: `<div style="font-family:Arial,sans-serif;padding:30px"><h2>Welcome to Curate Health Care</h2><p>Your account has been created successfully.</p><p><strong>Email:</strong> ${form?.emailId}</p><p><strong>Password:</strong> ${form?.Password}</p></div>`,
-              });
+              // await axios.post("/api/MailSend", {
+              //   to: form.emailId || "tsiddu805@gmail.com",
+              //   subject: "Welcome to Curate Health Care – Your Login Credentials",
+              //   html: `<div style="font-family:Arial,sans-serif;padding:30px"><h2>Welcome to Curate Health Care</h2><p>Your account has been created successfully.</p><p><strong>Email:</strong> ${form?.emailId}</p><p><strong>Password:</strong> ${form?.Password}</p></div>`,
+              // });
             }
 
-            dispatch(UpdateRefresh(1));
-            dispatch(Update_Main_Filter_Status("HCP List"));
-            dispatch(UpdateUserType("healthcare-assistant"));
+            // dispatch(UpdateRefresh(1));
+            // dispatch(Update_Main_Filter_Status("HCP List"));
+            // dispatch(UpdateUserType("healthcare-assistant"));
 
             setUpdatedStatusMessage(
               isExistingHCAMode
@@ -1243,7 +1242,7 @@ if (CurrentUserType === null && !previewUserId) {
               </p>
               {previewUserId && (
                 <p className="text-xs text-slate-500">
-                  Existing HCA information loaded from your database
+                  Existing HCA information loaded from your database.
                 </p>
               )}
             </div>
