@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from "react";
 import HCAMobileView from '@/Components/HCAMobileView/page';
 import { EducationLevels, Home_Assistance_Needs, IndianCapitalCities, IndianLanguages, IndianStates, NURSE_SPECIALTIES, NURSE_TYPES, PatientTypes, popularBanksInIndia, PROFESSIONAL_SKILL_OPTIONS, REFERRAL_SOURCE_TYPES, Relations } from '@/Lib/Content';
 import { v4 as uuidv4 } from 'uuid';
@@ -24,7 +25,7 @@ import PaymentPassbook from '@/Components/HCAStatastics/page';
 const DEFAULT_PROFILE_PIC = '/Icons/DefaultProfileIcon.png';
 const DEFAULT_DOCUMENT_ICON = '/Icons/DefaultDocumentIcon.png';
 
-export default function DoctorProfileForm() {
+ function HCPProfileContent() {
   const [ProfileName, SetProfileName] = useState('');
   const [isOther, setIsOther] = useState(false);
   const [IsOtherReferal, setIsOtherReferal] = useState(false);
@@ -4946,5 +4947,14 @@ form.HusbendContact!=="Not Available"&&
 
     </div>
 
+  );
+}
+
+
+export default function HCPProfileForm() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HCPProfileContent />
+    </Suspense>
   );
 }
