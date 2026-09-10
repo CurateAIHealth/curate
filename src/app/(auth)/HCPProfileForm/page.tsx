@@ -1242,7 +1242,7 @@ if (CurrentUserType === null && !previewUserId) {
               </p>
               {previewUserId && (
                 <p className="text-xs text-slate-500">
-                  Existing HCA information loaded from your database
+                  Existing HCA information loaded from your database.
                 </p>
               )}
             </div>
