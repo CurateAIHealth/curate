@@ -16,6 +16,12 @@ import {
   Upload,
   UserRound,
   X,
+  Plus,
+  Pencil,
+  Trash2,
+  Settings2,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
 let terminationCache: any[] | null = null;
 import { useDispatch, useSelector } from "react-redux";
@@ -55,6 +61,12 @@ interface QualitySection {
   id: string;
   title: string;
   questions: QualityQuestion[];
+}
+
+interface ManagedClientQuestion extends QualityQuestion {
+  active: boolean;
+  feedbackType: "Deployment" | "Replacement" | "Termination" | "Random Check-in";
+  order: number;
 }
 
 interface QualityAnswer {
@@ -888,6 +900,506 @@ interface Client {
   feedbackStatus: "Pending" | "Completed";
 }
 
+const ClientQuestionManager: React.FC<{
+  sections: QualitySection[];
+  onBack: () => void;
+  onQuestionsUpdated: (sections: QualitySection[]) => void;
+}> = ({ sections, onBack, onQuestionsUpdated }) => {
+  const [questions, setQuestions] = useState<ManagedClientQuestion[]>([]);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("All");
+  const [sectionFilter, setSectionFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState<ManagedClientQuestion | null>(null);
+  const [deleting, setDeleting] = useState<ManagedClientQuestion | null>(null);
+  const [form, setForm] = useState({
+    question: "",
+    feedbackType: "Deployment" as ManagedClientQuestion["feedbackType"],
+    sectionId: "placement",
+    answerType: "textarea" as AnswerType,
+    subHeading: "",
+  });
+
+  useEffect(() => {
+    setQuestions(
+      sections.flatMap((section) =>
+        section.questions.map((question, index) => ({
+          ...question,
+          active: true,
+          feedbackType:
+            section.id === "termination"
+              ? "Termination"
+              : section.id === "replacement"
+                ? "Replacement"
+                : section.id === "random-checkin"
+                  ? "Random Check-in"
+                  : "Deployment",
+          order: index + 1,
+        }))
+      )
+    );
+  }, [sections]);
+
+  const availableTypes = [
+    "All",
+    "Deployment",
+    "Replacement",
+    "Termination",
+    "Random Check-in",
+  ];
+
+  const availableSections = Array.from(
+    new Map(sections.map((section) => [section.id, section])).values()
+  );
+
+  const filtered = useMemo(
+    () =>
+      questions.filter((question) => {
+        const text = `${question.question} ${question.subHeading || ""}`.toLowerCase();
+        return (
+          text.includes(search.toLowerCase()) &&
+          (typeFilter === "All" || question.feedbackType === typeFilter) &&
+          (sectionFilter === "All" || question.sectionId === sectionFilter) &&
+          (statusFilter === "All" ||
+            (statusFilter === "Active" ? question.active : !question.active))
+        );
+      }),
+    [questions, search, typeFilter, sectionFilter, statusFilter]
+  );
+
+  const syncSections = (nextQuestions: ManagedClientQuestion[]) => {
+    const nextSections = sections.map((section) => ({
+      ...section,
+      questions: nextQuestions
+        .filter((question) => question.sectionId === section.id && question.active)
+        .sort((a, b) => a.order - b.order)
+        .map(({ active, feedbackType, order, ...question }) => ({
+          ...question,
+          number: String(order),
+        })),
+    }));
+
+    onQuestionsUpdated(nextSections);
+  };
+
+  const openAdd = () => {
+    setEditing(null);
+    setForm({
+      question: "",
+      feedbackType: "Deployment",
+      sectionId: availableSections[0]?.id || "",
+      answerType: "textarea",
+      subHeading: "",
+    });
+    setShowModal(true);
+  };
+
+  const openEdit = (question: ManagedClientQuestion) => {
+    setEditing(question);
+    setForm({
+      question: question.question,
+      feedbackType: question.feedbackType,
+      sectionId: question.sectionId,
+      answerType: question.answerType,
+      subHeading: question.subHeading || "",
+    });
+    setShowModal(true);
+  };
+
+  const saveQuestion = () => {
+    if (!form.question.trim() || !form.sectionId) return;
+
+    const sectionQuestions = questions.filter(
+      (question) => question.sectionId === form.sectionId
+    );
+
+    const nextQuestion: ManagedClientQuestion = {
+      id: editing?.id || `client-${Date.now()}`,
+      sectionId: form.sectionId,
+      number: editing?.number || String(sectionQuestions.length + 1),
+      question: form.question.trim(),
+      answerType: form.answerType,
+      ...(form.subHeading.trim()
+        ? { subHeading: form.subHeading.trim() }
+        : {}),
+      active: editing?.active ?? true,
+      feedbackType: form.feedbackType,
+      order: editing?.order ?? sectionQuestions.length + 1,
+    };
+
+    const nextQuestions = editing
+      ? questions.map((question) =>
+          question.id === editing.id ? nextQuestion : question
+        )
+      : [...questions, nextQuestion];
+
+    setQuestions(nextQuestions);
+    syncSections(nextQuestions);
+    setShowModal(false);
+    setEditing(null);
+  };
+
+  const toggleQuestion = (question: ManagedClientQuestion) => {
+    const nextQuestions = questions.map((item) =>
+      item.id === question.id ? { ...item, active: !item.active } : item
+    );
+
+    setQuestions(nextQuestions);
+    syncSections(nextQuestions);
+  };
+
+  const removeQuestion = () => {
+    if (!deleting) return;
+
+    const nextQuestions = questions
+      .filter((question) => question.id !== deleting.id)
+      .map((question, index) => ({
+        ...question,
+        order: question.sectionId === deleting.sectionId ? index + 1 : question.order,
+      }));
+
+    setQuestions(nextQuestions);
+    syncSections(nextQuestions);
+    setDeleting(null);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">
+              Client Question Management
+            </h2>
+            <p className="text-sm text-slate-500">
+              Manage the available Client Quality Call questions.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={openAdd}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1392d3] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1083bd]"
+        >
+          <Plus size={18} />
+          Add Question
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <p className="text-sm text-slate-500">Total Questions</p>
+          <p className="mt-2 text-3xl font-bold text-slate-800">{questions.length}</p>
+        </div>
+        <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
+          <p className="text-sm text-emerald-700">Active Questions</p>
+          <p className="mt-2 text-3xl font-bold text-emerald-700">
+            {questions.filter((question) => question.active).length}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <p className="text-sm text-slate-500">Inactive Questions</p>
+          <p className="mt-2 text-3xl font-bold text-slate-800">
+            {questions.filter((question) => !question.active).length}
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <div className="md:col-span-2">
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search question..."
+              className="h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 text-sm outline-none focus:border-[#1392d3]"
+            />
+          </div>
+
+          <select
+            value={typeFilter}
+            onChange={(event) => setTypeFilter(event.target.value)}
+            className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm"
+          >
+            {availableTypes.map((type) => (
+              <option key={type}>{type}</option>
+            ))}
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm"
+          >
+            <option>All</option>
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+        </div>
+
+        <div className="mt-3">
+          <select
+            value={sectionFilter}
+            onChange={(event) => setSectionFilter(event.target.value)}
+            className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm"
+          >
+            <option value="All">All Sections</option>
+            {availableSections.map((section) => (
+              <option key={section.id} value={section.id}>
+                {section.title}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1100px] text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <th className="px-5 py-4 text-left">#</th>
+                <th className="px-5 py-4 text-left">Question</th>
+                <th className="px-5 py-4 text-left">Type</th>
+                <th className="px-5 py-4 text-left">Section</th>
+                <th className="px-5 py-4 text-left">Status</th>
+                <th className="px-5 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filtered.map((question, index) => (
+                <tr key={question.id} className="hover:bg-slate-50">
+                  <td className="px-5 py-4 font-semibold text-slate-500">
+                    {index + 1}
+                  </td>
+                  <td className="max-w-[520px] px-5 py-4">
+                    <p className="font-semibold text-slate-800">
+                      {question.question}
+                    </p>
+                    {question.subHeading && (
+                      <p className="mt-1 text-xs text-slate-400">
+                        {question.subHeading}
+                      </p>
+                    )}
+                  </td>
+                  <td className="px-5 py-4">
+                    <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                      {question.answerType}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="text-xs font-semibold text-[#1392d3]">
+                      {question.feedbackType}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-500">
+                      {sections.find((section) => section.id === question.sectionId)?.title ||
+                        question.sectionId}
+                    </div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        question.active
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {question.active ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => toggleQuestion(question)}
+                        title={question.active ? "Deactivate" : "Activate"}
+                        className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50"
+                      >
+                        {question.active ? (
+                          <ToggleRight size={18} />
+                        ) : (
+                          <ToggleLeft size={18} />
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openEdit(question)}
+                        className="rounded-lg border border-blue-100 bg-blue-50 p-2 text-blue-600 hover:bg-blue-100"
+                      >
+                        <Pencil size={17} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleting(question)}
+                        className="rounded-lg border border-red-100 bg-red-50 p-2 text-red-600 hover:bg-red-100"
+                      >
+                        <Trash2 size={17} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">
+                  {editing ? "Edit Question" : "Add Question"}
+                </h3>
+                <p className="text-sm text-slate-500">
+                  Changes are applied to the current session only.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="rounded-lg p-2 hover:bg-slate-100"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <textarea
+                value={form.question}
+                onChange={(event) =>
+                  setForm((previous) => ({
+                    ...previous,
+                    question: event.target.value,
+                  }))
+                }
+                rows={5}
+                placeholder="Enter question..."
+                className="w-full rounded-xl border border-slate-300 p-4 text-sm outline-none focus:border-[#1392d3]"
+              />
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <select
+                  value={form.feedbackType}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      feedbackType: event.target.value as ManagedClientQuestion["feedbackType"],
+                    }))
+                  }
+                  className="h-11 rounded-xl border border-slate-300 px-3 text-sm"
+                >
+                  {availableTypes.slice(1).map((type) => (
+                    <option key={type}>{type}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={form.sectionId}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      sectionId: event.target.value,
+                    }))
+                  }
+                  className="h-11 rounded-xl border border-slate-300 px-3 text-sm"
+                >
+                  {availableSections.map((section) => (
+                    <option key={section.id} value={section.id}>
+                      {section.title}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={form.answerType}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      answerType: event.target.value as AnswerType,
+                    }))
+                  }
+                  className="h-11 rounded-xl border border-slate-300 px-3 text-sm"
+                >
+                  <option value="textarea">Textarea</option>
+                  <option value="yesNo">Yes / No</option>
+                  <option value="text">Text</option>
+                </select>
+
+                <input
+                  value={form.subHeading}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      subHeading: event.target.value,
+                    }))
+                  }
+                  placeholder="Sub heading (optional)"
+                  className="h-11 rounded-xl border border-slate-300 px-3 text-sm outline-none focus:border-[#1392d3]"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveQuestion}
+                className="rounded-xl bg-[#1392d3] px-5 py-2.5 text-sm font-semibold text-white"
+              >
+                Save Question
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleting && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-slate-800">Delete Question?</h3>
+            <p className="mt-2 text-sm text-slate-500">
+              This removes the question from the current Client Feedback session.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleting(null)}
+                className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={removeQuestion}
+                className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ClientFeedback: React.FC = () => {
   const [selectedClient, setSelectedClient] =
     useState<Client | null>(null);
@@ -932,21 +1444,35 @@ const [PreviewType, setPreviewType] = useState<
   const [feedbackFilter, setFeedbackFilter] = useState<
     "Pending" | "Completed"
   >("Pending");
-const allSections = useMemo(() => {
-  switch (PreviewType) {
-    case "Termination":
-      return terminationSections;
-
-    case "Replacement":
-      return replacementSections;
-
-    case "Deployment":
-    default:
-      return qualitySections;
-  }
-}, [PreviewType]);
+const [clientQuestionSections, setClientQuestionSections] = useState<QualitySection[]>([
+    ...qualitySections,
+    ...replacementSections,
+    ...terminationSections,
+  ]);
   const [ClientFeedbackInfo, setClientFeedbackInfo] = useState<any[]>([]);
+  const allSections = useMemo(() => {
+    const sectionMap = new Map(
+      clientQuestionSections.map((section) => [section.id, section])
+    );
+
+    if (PreviewType === "Termination") {
+      return Array.from(sectionMap.values()).filter(
+        (section) => section.id === "termination"
+      );
+    }
+
+    if (PreviewType === "Replacement") {
+      return Array.from(sectionMap.values()).filter(
+        (section) => section.id === "replacement"
+      );
+    }
+
+    return Array.from(sectionMap.values()).filter(
+      (section) => section.id !== "termination" && section.id !== "replacement"
+    );
+  }, [clientQuestionSections, PreviewType]);
   const [isChecking, setIsChecking] = useState(true);
+  const [showQuestionManager, setShowQuestionManager] = useState(false)
   const dispatch = useDispatch()
   const month = `${SearchMonth}-${SearchYear}`;
   useEffect(() => {
@@ -1526,6 +2052,17 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
 
     );
   }
+
+  if (showQuestionManager) {
+    return (
+      <ClientQuestionManager
+        sections={clientQuestionSections}
+        onBack={() => setShowQuestionManager(false)}
+        onQuestionsUpdated={setClientQuestionSections}
+      />
+    );
+  }
+
   if (!callStarted) {
     return (
       <div className="space-y-6">
@@ -1621,6 +2158,17 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
 
       </div>
     </div>
+  </div>
+
+  <div className="flex justify-end">
+    <button
+      type="button"
+      onClick={() => setShowQuestionManager(true)}
+      className="inline-flex items-center gap-2 rounded-xl border border-[#1392d3]/20 bg-[#1392d3]/10 px-4 py-2.5 text-sm font-semibold text-[#1392d3] hover:bg-[#1392d3]/15"
+    >
+      <Settings2 size={17} />
+      Manage Questions
+    </button>
   </div>
 
   {/* =========================================================
