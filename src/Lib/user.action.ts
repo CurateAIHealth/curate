@@ -10197,7 +10197,8 @@ export const UpdatePaymentForStaff = async (
 
 export const UpdateUserCurrentstatusInHCPView = async (
   UserId: string,
-  UpdatedStatus: string
+  UpdatedStatus: string,
+  ImpValue: any
 ) => {
   try {
     const Cluster = await clientPromise;
@@ -10207,15 +10208,21 @@ export const UpdateUserCurrentstatusInHCPView = async (
     const CompliteCollection = Db.collection("CompliteRegistrationInformation");
 
    
-    const updateRegistration = await RegistrationCollection.updateOne(
-      { userId: UserId },
-      {
-        $set: {
-          CurrentStatus: UpdatedStatus,
-          UpdatedAt: new Date(),
-        },
-      }
-    );
+ const updateRegistration = await RegistrationCollection.updateOne(
+  { userId: UserId },
+  {
+    $set: {
+      CurrentStatus: UpdatedStatus,
+      UpdatedAt: new Date(),
+    },
+    $push: {
+      StatusHistory: {
+        Date: new Date().toLocaleDateString("en-IN"),
+        UpdatedBy: ImpValue,
+      },
+    }as any,
+  }
+);
 
     if (updateRegistration.matchedCount === 0) {
       return {

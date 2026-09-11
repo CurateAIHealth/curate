@@ -42,7 +42,7 @@ import { HCAList } from '@/Redux/reducer';
 import WorkingOn from '@/Components/CurrentlyWoring/page';
 import axios from 'axios';
 
-import { AssignSuitableIcon, decrypt, encrypt, getDaysInMonth, getDaysInMonthForMonthName, getPopularArea, normalizeDate, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
+import { AssignSuitableIcon, decrypt, encrypt, getDaysBetween, getDaysInMonth, getDaysInMonthForMonthName, getPopularArea, normalizeDate, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
 import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
 import { LoadingData } from '@/Components/Loading/page';
 import ReplacementsTable from '@/Components/ReplacementsTable/page';
@@ -66,7 +66,7 @@ const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
 const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
 const UserFirstName=useSelector((state:any)=>state.LogUserName)
 
-console.log ("Check Deployment Info-----",DeploymentInfo)
+console.log ("Check Deployment Info-----",users.filter((each:any)=>each.userId==="40b25c4d-24dd-47fe-b96c-5e6af5b76808"))
   const [HCPCurrentStatus,setHCPCurrentStatus]=useState("")
   const [SearchDate, SetSearchDate] = useState<any>(null)
   const now = new Date();
@@ -365,7 +365,8 @@ console.log("HCP Info:", info);
     const res =
       await UpdateUserCurrentstatusInHCPView(
         UserId,
-        e
+        e,
+        loggedInEmail
       );
 console.log (
 "Current------",res
@@ -463,7 +464,10 @@ const monthNames = [
     PreviewUserType: each.PreviewUserType||"HCA",
     PDRStatus:each.PDRStatus||"No Available",
     Type:each.Type,
-    ServiceState:each.ServiceState||"Telangana"
+    ServiceState:each.ServiceState||"Telangana",
+    StatusHistory:each.StatusHistory
+
+
   }));
 
   const UpdatedFilterUserType = Finel
@@ -1456,7 +1460,10 @@ const UpdatePopup = async (a: any) => {
   </td>
 ) : (
   <td className="px-2 py-2 text-center">
-    2 Days
+{user?.StatusHistory?.[0]?.Date
+  ?
+    `${getDaysBetween(user.StatusHistory[user.StatusHistory.length - 1].Date,new Date().toLocaleDateString("en-IN"))} ${[1,2].includes(getDaysBetween(user.StatusHistory[user.StatusHistory.length - 1].Date,new Date().toLocaleDateString("en-IN")))?"Day":"Days"}`
+  : "0 Days"}
   </td>
 )}
                             
