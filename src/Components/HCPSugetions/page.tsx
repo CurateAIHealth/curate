@@ -71,7 +71,7 @@ const SuitableHcpList: React.FC<Props> = ({ clients, hcps ,usersInfo}) => {
   const [showAssignedOnly, setShowAssignedOnly] = useState(true);
   const [showAssignConfirm,setShowAssignConfirm]=useState(false)
   const [TimeSheetData,setTimeSheetData]=useState<any>([])
-
+const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const dispatch = useDispatch();
   const router = useRouter();
 const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -153,7 +153,7 @@ if(availability.length > 0){
   setStatusMessage("Please Wait Clearing Previous PDR Information...");
   
   const UpdateInfo= await ClearClientTimeSheetInfo(availability[0].ClientId,availability[0]. HCAId)
-  const res = await UpdateUserCurrentstatusInHCPView(availability[0]. HCAId, "Bench");
+  const res = await UpdateUserCurrentstatusInHCPView(availability[0]. HCAId, "Bench",loggedInEmail);
   if(UpdateInfo?.success){
 setStatusMessage("Client Prviouse Information deleted Successfully, Assigneing New HCP.....")
   }
@@ -208,7 +208,7 @@ setStatusMessage("Client Prviouse Information deleted Successfully, Assigneing N
     if (PostTimeSheet.success === true) {
 
       setStatusMessage(PostTimeSheet.message);
-const res = await UpdateUserCurrentstatusInHCPView(UserIdHCA, "Active");
+const res = await UpdateUserCurrentstatusInHCPView(UserIdHCA, "Active", loggedInEmail);
       setTimeout(() => {
         dispatch(UpdateRefresh(1));
         router.push("/PDRView");

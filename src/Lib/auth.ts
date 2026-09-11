@@ -934,6 +934,7 @@ const needsDeployment =
           PDRStatus: 1,
           Type: 1,
           Team: 1,
+          StatusHistory: 1,
         },
       }
     ).toArray()

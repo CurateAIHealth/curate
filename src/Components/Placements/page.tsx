@@ -420,7 +420,8 @@ const matchesSearchAndMonth = (
     // 1. Update HCP/HCA current status
     await UpdateUserCurrentstatusInHCPView(
       CareTakerName,
-      currentHCAStatus
+      currentHCAStatus,
+      loggedInEmail
     );
 
     // 2. Update deployment freeze status
@@ -1398,7 +1399,8 @@ const UpdateReplacement = async (
  if(FreezeOperation===false){
 const ExistingHCPStatusUpdate=await UpdateUserCurrentstatusInHCPView(
         Exsting_HCP.HCA_Id,
-          UpdatedCareTakerStatus?.trim() || "Bench"
+          UpdatedCareTakerStatus?.trim() || "Bench",
+          loggedInEmail
       )
             if (!ExistingHCPStatusUpdate?.success) {
       SetActionStatusMessage(
@@ -1414,7 +1416,8 @@ const ExistingHCPStatusUpdate=await UpdateUserCurrentstatusInHCPView(
 
   const AvailableHCPStatusUpdate=await UpdateUserCurrentstatusInHCPView(
         Available_HCP.userId,
-        "Active"
+        "Active",
+        loggedInEmail
       )
 
 
