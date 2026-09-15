@@ -30,6 +30,7 @@ import {
   Share2,
   Info,
   MessageSquare,
+  BookOpen,
 } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -457,7 +458,14 @@ useEffect(() => {
   count: stats.CompanyPolicy,
   icon: FileText,
     bg: "bg-teal-800",
-}
+},
+  {
+      name: "TrainingAndKnowledge",
+      count: stats.trainingCount,
+      icon: GraduationCap,
+      bg: "bg-emerald-500",
+    },
+   
       // {
       //   name: "Hostel Attendance",
       //   count: stats.hostelAttendanceCount,
@@ -894,6 +902,8 @@ const pageRoutes: Record<string, string> = {
   Quality:"/Quality",
   "HCP Missing Document":"/Documents",
   "Company Policy": "/CompanyPolicy",
+  TrainingAndKnowledge: "/Training",
+ 
 };
 
 const Switching = (tab: string) => {

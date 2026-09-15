@@ -831,139 +831,139 @@ setUpdatedStatusMessage(
   "Full registration saved successfully."
 );
 
-await UpdateFinelVerification(generatedUserId);
+// await UpdateFinelVerification(generatedUserId);
 
    
 
         
-          await UpdateFinelVerification(generatedUserId);
+//           await UpdateFinelVerification(generatedUserId);
 
 
-          await axios.post("/api/MailSend", {
-  to: form.emailId || "tsiddu805@gmail.com",
-  subject: "Welcome to Curate Health Care – Your Login Credentials",
-  html: `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Welcome to Curate Health Care</title>
-    </head>
+//           await axios.post("/api/MailSend", {
+//   to: form.emailId || "tsiddu805@gmail.com",
+//   subject: "Welcome to Curate Health Care – Your Login Credentials",
+//   html: `
+//   <!DOCTYPE html>
+//   <html>
+//     <head>
+//       <meta charset="UTF-8" />
+//       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+//       <title>Welcome to Curate Health Care</title>
+//     </head>
 
-    <body style="margin:0; padding:0; background-color:#f4f6f8; font-family: Arial, Helvetica, sans-serif;">
-      <table width="100%" cellpadding="0" cellspacing="0">
-        <tr>
-          <td align="center" style="padding:30px 10px;">
+//     <body style="margin:0; padding:0; background-color:#f4f6f8; font-family: Arial, Helvetica, sans-serif;">
+//       <table width="100%" cellpadding="0" cellspacing="0">
+//         <tr>
+//           <td align="center" style="padding:30px 10px;">
             
-            <!-- Main Card -->
-            <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.08); overflow:hidden;">
+//             <!-- Main Card -->
+//             <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.08); overflow:hidden;">
               
-              <!-- Header -->
-              <tr>
-                <td style="background:#1392d3; padding:20px; text-align:center;">
-                  <h1 style="margin:0; color:#ffffff; font-size:24px;">
-                    Curate Health Care
-                  </h1>
-                  <p style="margin:6px 0 0; color:#e3f2fd; font-size:14px;">
-                    Caring Beyond Boundaries
-                  </p>
-                </td>
-              </tr>
+//               <!-- Header -->
+//               <tr>
+//                 <td style="background:#1392d3; padding:20px; text-align:center;">
+//                   <h1 style="margin:0; color:#ffffff; font-size:24px;">
+//                     Curate Health Care
+//                   </h1>
+//                   <p style="margin:6px 0 0; color:#e3f2fd; font-size:14px;">
+//                     Caring Beyond Boundaries
+//                   </p>
+//                 </td>
+//               </tr>
 
-              <!-- Body -->
-              <tr>
-                <td style="padding:30px;">
-                  <h2 style="margin-top:0; color:#333333; font-size:20px;">
-                    Welcome 👋
-                  </h2>
+//               <!-- Body -->
+//               <tr>
+//                 <td style="padding:30px;">
+//                   <h2 style="margin-top:0; color:#333333; font-size:20px;">
+//                     Welcome 👋
+//                   </h2>
 
-                  <p style="color:#555555; font-size:14px; line-height:1.6;">
-                    We are delighted to have you onboard with 
-                    <strong>Curate Health Care Services</strong>.
-                  </p>
+//                   <p style="color:#555555; font-size:14px; line-height:1.6;">
+//                     We are delighted to have you onboard with 
+//                     <strong>Curate Health Care Services</strong>.
+//                   </p>
 
-                  <p style="color:#555555; font-size:14px; line-height:1.6;">
-                    Below are your login credentials. Please keep them safe and
-                    do not share them with anyone.
-                  </p>
+//                   <p style="color:#555555; font-size:14px; line-height:1.6;">
+//                     Below are your login credentials. Please keep them safe and
+//                     do not share them with anyone.
+//                   </p>
 
-                  <!-- Credentials Box -->
-                  <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0; background:#f8fbff; border:1px solid #dbeafe; border-radius:8px;">
-                    <tr>
-                      <td style="padding:16px;">
-                        <p style="margin:0 0 8px; font-size:14px; color:#333;">
-                          <strong>Email:</strong> ${form?.emailId}
-                        </p>
-                        <p style="margin:0; font-size:14px; color:#333;">
-                          <strong>Password:</strong> ${form?.Password}
-                        </p>
-                      </td>
-                    </tr>
-                  </table>
+//                   <!-- Credentials Box -->
+//                   <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0; background:#f8fbff; border:1px solid #dbeafe; border-radius:8px;">
+//                     <tr>
+//                       <td style="padding:16px;">
+//                         <p style="margin:0 0 8px; font-size:14px; color:#333;">
+//                           <strong>Email:</strong> ${form?.emailId}
+//                         </p>
+//                         <p style="margin:0; font-size:14px; color:#333;">
+//                           <strong>Password:</strong> ${form?.Password}
+//                         </p>
+//                       </td>
+//                     </tr>
+//                   </table>
 
-                  <!-- CTA -->
-                  <div style="text-align:center; margin-top:25px;">
-                    <a
-                      href="https://curatehealthservices.com"
-                      style="
-                        display:inline-block;
-                        padding:12px 26px;
-                        background:#1392d3;
-                        color:#ffffff;
-                        text-decoration:none;
-                        border-radius:30px;
-                        font-size:14px;
-                        font-weight:bold;
-                      "
-                    >
-                      Login to Dashboard
-                    </a>
-                  </div>
+//                   <!-- CTA -->
+//                   <div style="text-align:center; margin-top:25px;">
+//                     <a
+//                       href="https://curatehealthservices.com"
+//                       style="
+//                         display:inline-block;
+//                         padding:12px 26px;
+//                         background:#1392d3;
+//                         color:#ffffff;
+//                         text-decoration:none;
+//                         border-radius:30px;
+//                         font-size:14px;
+//                         font-weight:bold;
+//                       "
+//                     >
+//                       Login to Dashboard
+//                     </a>
+//                   </div>
 
-                  <p style="margin-top:25px; color:#777777; font-size:13px; line-height:1.5;">
-                    If you face any issues while logging in, feel free to contact
-                    our support team.
-                  </p>
+//                   <p style="margin-top:25px; color:#777777; font-size:13px; line-height:1.5;">
+//                     If you face any issues while logging in, feel free to contact
+//                     our support team.
+//                   </p>
 
-                  <p style="color:#555555; font-size:14px;">
-                    Warm regards,<br />
-                    <strong>Curate Health Care Team</strong>
-                  </p>
-                </td>
-              </tr>
+//                   <p style="color:#555555; font-size:14px;">
+//                     Warm regards,<br />
+//                     <strong>Curate Health Care Team</strong>
+//                   </p>
+//                 </td>
+//               </tr>
 
-              <!-- Footer -->
-              <tr>
-                <td style="background:#f1f5f9; padding:15px; text-align:center;">
-                  <p style="margin:0; font-size:12px; color:#666666;">
-                    © ${new Date().getFullYear()} Curate Health Care Services.
-                    All rights reserved.
-                  </p>
-                </td>
-              </tr>
+//               <!-- Footer -->
+//               <tr>
+//                 <td style="background:#f1f5f9; padding:15px; text-align:center;">
+//                   <p style="margin:0; font-size:12px; color:#666666;">
+//                     © ${new Date().getFullYear()} Curate Health Care Services.
+//                     All rights reserved.
+//                   </p>
+//                 </td>
+//               </tr>
 
-            </table>
+//             </table>
 
-          </td>
-        </tr>
-      </table>
-    </body>
-  </html>
-  `,
-});
+//           </td>
+//         </tr>
+//       </table>
+//     </body>
+//   </html>
+//   `,
+// });
 
 
-          dispatch(UpdateRefresh(1));
-          dispatch(Update_Main_Filter_Status("HCP List"));
-          dispatch(UpdateUserType("healthcare-assistant"));
+//           dispatch(UpdateRefresh(1));
+//           dispatch(Update_Main_Filter_Status("HCP List"));
+//           dispatch(UpdateUserType("healthcare-assistant"));
 
-          setUpdatedStatusMessage("Successfully Updated Your Information.");
-          SetUpdateingStatus(true);
+//           setUpdatedStatusMessage("Successfully Updated Your Information.");
+//           SetUpdateingStatus(true);
 
-          setTimeout(() => {
-            router.push("/");
-          }, 1000);
+//           setTimeout(() => {
+//             router.push("/");
+//           }, 1000);
 
         } catch (error) {
           console.error("Submission Error:", error);
