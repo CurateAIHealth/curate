@@ -1954,7 +1954,7 @@ Awaiting Conversion
   const handleLogout = () => {
     
  
-      router.replace('/DashBoard');
+   router.back()
   
  
   };

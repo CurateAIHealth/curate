@@ -50,6 +50,7 @@
     "@types/nodemailer": "^7.0.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "lightningcss-win32-x64-msvc": "^1.33.0",
     "tailwindcss": "^4.1.11",
     "typescript": "^5"
   }
