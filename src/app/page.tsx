@@ -229,7 +229,7 @@ useEffect(() => {
         //     router.replace("/DashBoard");
         //   }
  
-setLoadingProgress(100);
+setLoadingProgress(99);
 setLoadingMessage("Redirecting...");
 
 // if (!mounted) return;
