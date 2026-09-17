@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BookOpen,
   FileText,
@@ -25,6 +25,8 @@ import {
   Filter,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import { LoadingData } from "@/Components/Loading/page";
 
 type MaterialType =
   | "ppt"
@@ -49,34 +51,36 @@ type Material = {
 const initialMaterials: Material[] = [
   {
     id: 1,
-    title: "React Training Presentation",
+    title: "Basic Patient Care Training",
     type: "ppt",
     category: "Training",
-    fileName: "react-training.pptx",
+    fileName: "patient-care-training.pptx",
+    url: "https://example.com/patient-care-training.pptx",
     size: "4.2 MB",
     date: "15 Sep 2026",
   },
   {
     id: 2,
-    title: "JavaScript Interview Questions",
+    title: "Patient Safety Guidelines",
     type: "pdf",
     category: "Study Material",
-    fileName: "javascript-questions.pdf",
+    fileName: "patient-safety-guidelines.pdf",
+    url: "https://res.cloudinary.com/db3dr9lf5/image/upload/v1789556938/uploads/jh9g3wdlvxlgohesffhz.pdf",
     size: "2.8 MB",
     date: "14 Sep 2026",
   },
   {
     id: 3,
-    title: "Training Guidelines",
+    title: "Hand Washing Procedure",
     type: "image",
     category: "Reference",
-    fileName: "training-guidelines.png",
-    size: "1.4 MB",
+    fileName: "hand-washing.jpg",
+    url: "https://upload.wikimedia.org/wikipedia/commons/3/3e/Hand_washing.jpg",
     date: "13 Sep 2026",
   },
   {
     id: 4,
-    title: "React Hooks Complete Training",
+    title: "Patient Care Training Video",
     type: "youtube",
     category: "Video Training",
     url: "https://youtu.be/LZapz2L6J1Q?si=Ui8usnoK2czo45r8",
@@ -84,32 +88,33 @@ const initialMaterials: Material[] = [
   },
   {
     id: 5,
-    title: "Company Training Video",
+    title: "Medical Training Video",
     type: "video",
     category: "Training",
-    fileName: "company-training.mp4",
-    size: "86 MB",
+    fileName: "medical-training.mp4",
+    url: "https://www.w3schools.com/html/mov_bbb.mp4",
+    size: "10 MB",
     date: "11 Sep 2026",
   },
   {
     id: 6,
-    title: "Previous Year Question Paper",
+    title: "Previous Year Medical Question Paper",
     type: "question-paper",
     category: "Question Papers",
     fileName: "question-paper-2025.pdf",
+    url: "https://www.africau.edu/images/default/sample.pdf",
     size: "3.1 MB",
     date: "10 Sep 2026",
   },
   {
     id: 7,
-    title: "Training Tips",
+    title: "Medical Care Training Tips",
     type: "instagram",
     category: "Social Resources",
     url: "https://www.instagram.com/reel/Dc_bUdXPPtO/?stkn=MWxpaWdiY3RjOXFtMQ==",
     date: "09 Sep 2026",
   },
 ];
-
 const typeConfig: Record<
   MaterialType,
   {
@@ -164,7 +169,8 @@ const typeConfig: Record<
 };
 
 export default function TrainingKnowledge() {
-  const [materials, setMaterials] = useState<Material[]>(initialMaterials);
+  const [materials, setMaterials] = useState<Material[]>([]);
+    const [isChecking, setisChecking] = useState(true)
   const [activeFilter, setActiveFilter] = useState<"all" | MaterialType>(
     "all"
   );
@@ -183,17 +189,58 @@ export default function TrainingKnowledge() {
   const [newCategory, setNewCategory] = useState("");
   const [newUrl, setNewUrl] = useState("");
   const [newFile, setNewFile] = useState<File | null>(null);
-
+const [UpdatedStatusMessage, setUpdatedStatusMessage] = useState('');
   const [renameValue, setRenameValue] = useState("");
 const router = useRouter();
+
+useEffect(() => {
+  const FetchData = async () => {
+    try {
+      const response = await axios.get("/api/GetTraings");
+
+      console.log("Check Data-----", response.data.data);
+
+      const apiData = response.data.data;
+
+      if (!Array.isArray(apiData)) {
+        console.error("Training API did not return an array");
+        return;
+      }
+
+      console.log("Check imported Data------", apiData);
+
+      const formattedMaterials: Material[] = apiData.map((item: any) => ({
+        id: Number(item.id),
+        title: item.title,
+        type: item.type?.toLowerCase() as MaterialType,
+        category: item.category,
+        url: item.url,
+        date: item.date,
+      }));
+
+     
+      setMaterials(formattedMaterials);
+setisChecking(false)
+    } catch (err) {
+      console.error(
+        "Failed to fetch training information:",
+        err
+      );
+    }
+  };
+
+  FetchData();
+}, []);
+
+console.log("Check full list-----",materials)
   const filteredMaterials = useMemo(() => {
     return materials.filter((item) => {
       const matchesType =
         activeFilter === "all" || item.type === activeFilter;
 
       const matchesSearch =
-        item.title.toLowerCase().includes(search.toLowerCase()) ||
-        item.category.toLowerCase().includes(search.toLowerCase());
+        item.title?.toLowerCase().includes(search.toLowerCase()) ||
+        item.category?.toLowerCase().includes(search.toLowerCase());
 
       return matchesType && matchesSearch;
     });
@@ -209,10 +256,58 @@ const router = useRouter();
     ).length,
     questions: materials.filter((x) => x.type === "question-paper").length,
   };
+const handleImageChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+        setUpdatedStatusMessage('Please Wait Uploading Document......');
+        const file = e.target.files?.[0];
+        const inputName = e.target.name;
+        if (!file) return;
 
-  const handleAdd = () => {
+    
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File too large. Max allowed is 10MB.');
+            return;
+        }
+
+const allowedTypes = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'video/mp4',
+  'video/webm',
+  'video/ogg',
+  'application/pdf',
+];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Only image or video files are allowed.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+         
+
+            const res = await axios.post('/api/Upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+   setNewUrl(res.data.url)
+            setUpdatedStatusMessage(`${inputName} Uploaded successfully!`);
+        } catch (error: any) {
+            console.error('Upload failed:', error.message);
+            setUpdatedStatusMessage('Document upload failed!');
+        }
+    },
+    []
+);
+  const handleAdd =async () => {
     if (!newTitle.trim()) return;
-
+setUpdatedStatusMessage("Please Wait Adding Material.....")
     const newMaterial: Material = {
       id: Date.now(),
       title: newTitle,
@@ -223,13 +318,15 @@ const router = useRouter();
         ? `${(newFile.size / 1024 / 1024).toFixed(1)} MB`
         : undefined,
       url:
-        newType === "youtube" || newType === "instagram"
-          ? newUrl
-          : undefined,
-      date: "15 Sep 2026",
+        newUrl,
+      date: new Date().toLocaleDateString("en-In"),
     };
+const PostinDb = await axios.post("/api/NewTrainig", {
+  feedback: newMaterial,
+});
 
     setMaterials((prev) => [newMaterial, ...prev]);
+    setUpdatedStatusMessage("New Materail Added Succesfully")
 
     setNewTitle("");
     setNewCategory("");
@@ -238,14 +335,18 @@ const router = useRouter();
     setShowAddModal(false);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async(ImpData:any) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this material?"
     );
 
     if (!confirmed) return;
-
-    setMaterials((prev) => prev.filter((item) => item.id !== id));
+console.log("Check imp delete Information------",ImpData)
+    const DeleteTraining= await axios.post("/api/DeleteTraing",{
+      DeleteInformation:ImpData
+    })
+console.log ("Check Delete Information-----",DeleteTraining)
+    setMaterials((prev) => prev.filter((item) => item.id !== ImpData.id));
   };
 
   const openRename = (material: Material) => {
@@ -254,9 +355,18 @@ const router = useRouter();
     setShowRenameModal(true);
   };
 
-  const handleRename = () => {
+  const handleRename = async() => {
     if (!selectedMaterial || !renameValue.trim()) return;
-
+console.log("Check for Rename Itesm-----",selectedMaterial)
+setUpdatedStatusMessage("Please Wait........")
+const UpdateName=await axios.post("/api/UpdateTrainingName",{
+  ImportedDetails:selectedMaterial,
+  NewName:renameValue
+})
+console.log("Check Results-----",UpdateName.data.result.message)
+if(!UpdateName.data.result.success){
+  return setUpdatedStatusMessage("Failed to Update the Name")
+}
     setMaterials((prev) =>
       prev.map((item) =>
         item.id === selectedMaterial.id
@@ -264,11 +374,16 @@ const router = useRouter();
           : item
       )
     );
-
+setUpdatedStatusMessage(UpdateName.data.result.message)
     setShowRenameModal(false);
+    setUpdatedStatusMessage("")
     setSelectedMaterial(null);
   };
-
+ if (isChecking) {
+    return (
+      <LoadingData />
+    );
+  }
   return (
     <div className="min-h-screen bg-slate-50 p-3 sm:p-5 lg:p-7">
       <div className="mx-auto max-w-[1600px]">
@@ -300,14 +415,14 @@ const router = useRouter();
           </div>
 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {setUpdatedStatusMessage(""),setShowAddModal(true)}}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:w-auto"
           >
             <Plus size={18} />
             Add New Material
           </button>
           <button
-            onClick={() => router.back()}
+            onClick={() => router.replace("/DashBoard")}
               className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
             >
               DashBoard
@@ -458,9 +573,9 @@ const router = useRouter();
           <EmptyState onAdd={() => setShowAddModal(true)} />
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {filteredMaterials.map((material) => (
+            {filteredMaterials.map((material,Index) => (
            <MaterialCard
-  key={material.id}
+  key={Index}
   material={material}
   onRename={openRename}
   onDelete={handleDelete}
@@ -555,59 +670,84 @@ const router = useRouter();
             />
 
             {/* URL */}
-            {(newType === "youtube" || newType === "instagram") && (
+        
               <Input
-                label={newType === "youtube" ? "YouTube URL" : "Instagram URL"}
+                label={ `${newType} URL`}
                 value={newUrl}
                 onChange={setNewUrl}
                 placeholder="Paste URL here..."
               />
-            )}
+            
 
             {/* FILE */}
-            {newType !== "youtube" && newType !== "instagram" && (
-              <div className="mb-5">
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Upload File
-                </label>
+            {newType !== "youtube" && newType !== "instagram" && !newUrl && (
+             <div className="mb-5">
+  <div className="mb-2 flex items-center justify-between">
+    <label className="block text-sm font-semibold text-slate-700">
+      Upload File
+    </label>
 
-                <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center transition hover:border-blue-400 hover:bg-blue-50">
-                  <Upload className="mb-2 text-slate-400" size={28} />
 
-                  {newFile ? (
-                    <>
-                      <p className="text-sm font-semibold text-slate-700">
-                        {newFile.name}
-                      </p>
+  </div>
 
-                      <p className="mt-1 text-xs text-slate-400">
-                        {(newFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm font-semibold text-slate-700">
-                        Click to upload
-                      </p>
+  <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center transition hover:border-blue-400 hover:bg-blue-50">
+    <Upload className="mb-2 text-slate-400" size={28} />
 
-                      <p className="mt-1 text-xs text-slate-400">
-                        PPT, PDF, Images or Video
-                      </p>
-                    </>
-                  )}
+    {newFile ? (
+      <>
+        <p className="text-sm font-semibold text-slate-700">
+          {newFile.name}
+        </p>
 
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={(e) =>
-                      setNewFile(e.target.files?.[0] || null)
-                    }
-                  />
-                </label>
-              </div>
+        <p className="mt-1 text-xs text-slate-400">
+          {(newFile.size / 1024 / 1024).toFixed(2)} MB
+        </p>
+
+        {UpdatedStatusMessage && (
+          <p className="mt-2 text-xs font-medium text-emerald-600">
+            {UpdatedStatusMessage}
+          </p>
+        )}
+      </>
+    ) : (
+      <>
+        <p className="text-sm font-semibold text-slate-700">
+          Click to upload
+        </p>
+
+        <p className="mt-1 text-xs text-slate-400">
+          PPT, PDF, Images or Video
+        </p>
+      </>
+    )}
+
+    <input
+      type="file"
+      className="hidden"
+      onChange={handleImageChange}
+      accept="
+        image/jpeg,
+        image/png,
+        image/webp,
+        image/gif,
+        video/mp4,
+        video/webm,
+        video/ogg,
+        application/pdf,
+        application/vnd.ms-powerpoint,
+        application/vnd.openxmlformats-officedocument.presentationml.presentation
+      "
+    />
+  </label>
+</div>
             )}
 
             {/* ACTIONS */}
+              {UpdatedStatusMessage && (
+      <span className="text-xs font-medium text-emerald-600">
+        {UpdatedStatusMessage}
+      </span>
+    )}
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
                 onClick={() => setShowAddModal(false)}
@@ -643,7 +783,13 @@ const router = useRouter();
               onChange={setRenameValue}
               placeholder="Enter new name"
             />
+{UpdatedStatusMessage && (
+  <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700 shadow-sm">
+ 
 
+    <p>{UpdatedStatusMessage}</p>
+  </div>
+)}
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
                 onClick={() => setShowRenameModal(false)}
@@ -764,38 +910,127 @@ function MaterialCard({
 }: {
   material: Material;
   onRename: (material: Material) => void;
-  onDelete: (id: number) => void;
+  onDelete: (material: Material) => void;
   onPreview: (material: Material) => void;
 }) {
   const config = typeConfig[material.type];
-  const Icon = config.icon;
+  const Icon = config?.icon
 
   return (
     <div className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
 
       {/* PREVIEW */}
-   {material.url?  <div className="aspect-video w-full">
-                  <iframe
-                    src={convertYoutubeUrl(material.url)}
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>:   <div className="relative flex h-36 items-center justify-center bg-slate-50 sm:h-40">
-        <div
-          className={`flex h-16 w-16 items-center justify-center rounded-2xl ${config.bg} ${config.color}`}
-        >
-          <Icon size={32} />
+  {/* PREVIEW */}
+<div className="relative overflow-hidden bg-slate-50">
+  {material.url ? (
+    <>
+      {/* IMAGE */}
+      {material.type === "image" && (
+        <div className="aspect-video w-full bg-black">
+          <img
+            src={material.url}
+            alt={material.title}
+            className="h-full w-full object-contain"
+          />
         </div>
+      )}
 
-        <div className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-slate-600 shadow-sm">
-          {config.label}
+      {/* VIDEO */}
+      {material.type === "video" && (
+        <div className="aspect-video w-full bg-black">
+          <video
+            src={material.url}
+            className="h-full w-full object-contain"
+            controls
+            preload="metadata"
+          />
         </div>
+      )}
 
-        <button className="absolute right-3 top-3 rounded-lg bg-white p-2 text-slate-500 opacity-100 shadow-sm transition hover:text-slate-900 sm:opacity-0 sm:group-hover:opacity-100">
-          <MoreVertical size={17} />
-        </button>
-      </div>}
+      {/* PDF */}
+      {(material.type === "pdf" ||
+        material.type === "question-paper") && (
+        <div className="aspect-video w-full bg-white">
+          <iframe
+            src={`${material.url}#toolbar=0&navpanes=0&scrollbar=0`}
+            className="h-full w-full"
+            title={material.title}
+          />
+        </div>
+      )}
+
+      {/* YOUTUBE */}
+      {material.type === "youtube" && (
+        <div className="aspect-video w-full bg-black">
+          <iframe
+            src={convertYoutubeUrl(material.url)}
+            className="h-full w-full"
+            title={material.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      )}
+
+      {/* INSTAGRAM */}
+      {material.type === "instagram" && (
+        <div className="flex aspect-video w-full items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
+          <div className="text-center">
+            <Instagram
+              size={45}
+              className="mx-auto mb-3 text-pink-600"
+            />
+
+            <p className="text-sm font-semibold text-slate-700">
+              Instagram Resource
+            </p>
+
+            <a
+              href={material.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-pink-600 px-4 py-2 text-xs font-semibold text-white hover:bg-pink-700"
+            >
+              <LinkIcon size={14} />
+              Open Instagram
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* PPT */}
+      {material.type === "ppt" && (
+        <div className="aspect-video w-full bg-slate-100">
+          <iframe
+            src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
+              material.url
+            )}`}
+            className="h-full w-full"
+            title={material.title}
+            frameBorder="0"
+          />
+        </div>
+      )}
+
+      {/* TYPE BADGE */}
+      <div className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold text-slate-600 shadow">
+        {config?.label}
+      </div>
+    </>
+  ) : (
+    <div className="relative flex h-36 items-center justify-center bg-slate-50 sm:h-40">
+      <div
+        className={`flex h-16 w-16 items-center justify-center rounded-2xl ${config?.bg} ${config?.color}`}
+      >
+        <Icon size={32} />
+      </div>
+
+      <div className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-slate-600 shadow-sm">
+        {config?.label}
+      </div>
+    </div>
+  )}
+</div>
 
       {/* DETAILS */}
       <div className="p-4">
@@ -830,12 +1065,12 @@ function MaterialCard({
   onClick={() => onPreview(material)}
 />
         
-
+{/* 
           <ActionButton
             icon={Download}
             label="Download"
             onClick={() => {}}
-          />
+          /> */}
 
           <ActionButton
             icon={Pencil}
@@ -847,8 +1082,9 @@ function MaterialCard({
             icon={Trash2}
             label="Delete"
             danger
-            onClick={() => onDelete(material.id)}
+            onClick={() => onDelete(material)}
           />
+
         </div>
       </div>
     </div>
@@ -866,7 +1102,7 @@ function MaterialListItem({
 }: {
   material: Material;
   onRename: (material: Material) => void;
-  onDelete: (id: number) => void;
+  onDelete: (material: Material) => void;
 }) {
   const config = typeConfig[material.type];
   const Icon = config.icon;
@@ -905,11 +1141,11 @@ function MaterialListItem({
       <div className="flex items-center justify-end gap-1">
         <ActionButton icon={Eye} label="View" onClick={() => {}} />
 
-        <ActionButton
+        {/* <ActionButton
           icon={Download}
           label="Download"
           onClick={() => {}}
-        />
+        /> */}
 
         <ActionButton
           icon={Pencil}
@@ -921,7 +1157,7 @@ function MaterialListItem({
           icon={Trash2}
           label="Delete"
           danger
-          onClick={() => onDelete(material.id)}
+          onClick={() => onDelete(material)}
         />
       </div>
     </div>
@@ -1066,7 +1302,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
   );
 }
 
-function convertYoutubeUrl(url: string) {
+function convertYoutubeUrl(url: any) {
   try {
     const parsed = new URL(url);
 
@@ -1107,6 +1343,9 @@ function PreviewModal({
     material.type === "question-paper";
   const isYoutube = material.type === "youtube";
   const isInstagram = material.type === "instagram";
+  const isPpt = material.type === "ppt";
+
+  const hasUrl = Boolean(material.url);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-2 backdrop-blur-sm sm:p-4">
@@ -1114,7 +1353,6 @@ function PreviewModal({
 
         {/* HEADER */}
         <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-6 sm:py-4">
-
           <div className="flex min-w-0 items-center gap-3">
             <div
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${config.bg} ${config.color}`}
@@ -1144,143 +1382,136 @@ function PreviewModal({
         {/* PREVIEW AREA */}
         <div className="min-h-0 flex-1 overflow-auto bg-slate-100 p-3 sm:p-5">
 
-          {/* IMAGE */}
-          {isImage && material.fileName && (
-            <div className="flex min-h-[400px] items-center justify-center">
-              <div className="flex flex-col items-center justify-center rounded-xl bg-white p-10 text-center shadow-sm">
-                <ImageIcon
-                  size={60}
-                  className="mb-4 text-purple-500"
-                />
+          {/* ================================================= */}
+          {/* IF URL EXISTS → SHOW ACTUAL CONTENT */}
+          {/* ================================================= */}
 
-                <h3 className="font-semibold text-slate-800">
-                  Image Preview
-                </h3>
+          {hasUrl ? (
+            <>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  {material.fileName}
-                </p>
-
-                <p className="mt-3 text-xs text-slate-400">
-                  Actual image preview will appear here once the
-                  uploaded file URL is connected.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* PDF */}
-          {isPdf && (
-            <div className="flex min-h-[500px] items-center justify-center rounded-xl bg-white shadow-sm">
-              <div className="text-center">
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-red-50 text-red-600">
-                  <FileText size={40} />
-                </div>
-
-                <h3 className="mt-5 text-lg font-bold text-slate-800">
-                  PDF Preview
-                </h3>
-
-                <p className="mt-2 text-sm text-slate-500">
-                  {material.fileName || material.title}
-                </p>
-
-                <p className="mx-auto mt-2 max-w-md text-xs text-slate-400">
-                  The PDF viewer will display the actual document
-                  after connecting the uploaded file URL.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* VIDEO */}
-          {isVideo && (
-            <div className="flex min-h-[400px] items-center justify-center rounded-xl bg-black">
-              <div className="text-center text-white">
-                <Video
-                  size={60}
-                  className="mx-auto mb-4 opacity-80"
-                />
-
-                <h3 className="font-semibold">
-                  Video Preview
-                </h3>
-
-                <p className="mt-1 text-sm opacity-60">
-                  {material.fileName || material.title}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* YOUTUBE */}
-          {isYoutube && (
-            <div className="overflow-hidden rounded-xl bg-black">
-              {material.url ? (
-                <div className="aspect-video w-full">
-                  <iframe
-                    src={convertYoutubeUrl(material.url)}
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
+              {/* IMAGE URL */}
+              {isImage && (
+                <div className="flex min-h-[500px] items-center justify-center overflow-hidden rounded-xl bg-black">
+                  <img
+                    src={material.url}
+                    alt={material.title}
+                    className="max-h-[75vh] max-w-full object-contain"
                   />
                 </div>
-              ) : (
-                <div className="flex min-h-[400px] items-center justify-center text-white">
-                  YouTube URL not available
+              )}
+
+
+              {/* VIDEO URL */}
+              {isVideo && (
+                <div className="overflow-hidden rounded-xl bg-black">
+                  <div className="aspect-video w-full">
+                    <video
+                      src={material.url}
+                      controls
+                      autoPlay
+                      playsInline
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
                 </div>
               )}
-            </div>
-          )}
 
-          {/* INSTAGRAM */}
-          {isInstagram && (
+
+              {/* PDF URL */}
+              {isPdf && (
+               <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+    <div className="aspect-video w-full">
+      <iframe
+        src={`${material.url}#toolbar=1&navpanes=0&scrollbar=1`}
+        title={material.title}
+        className="h-full w-full border-0"
+      />
+    </div>
+  </div>
+              )}
+
+
+              {/* YOUTUBE URL */}
+              {isYoutube && (
+                <div className="overflow-hidden rounded-xl bg-black">
+                  <div className="aspect-video w-full">
+                    <iframe
+                      src={convertYoutubeUrl(material.url)}
+                      title={material.title}
+                      className="h-full w-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              )}
+
+
+              {/* INSTAGRAM URL */}
+              {isInstagram && (
+                <div className="flex min-h-[500px] items-center justify-center rounded-xl bg-white">
+                  <div className="w-full max-w-md text-center">
+
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-pink-50 text-pink-600">
+                      <Instagram size={40} />
+                    </div>
+
+                    <h3 className="mt-5 text-lg font-bold text-slate-800">
+                      Instagram Resource
+                    </h3>
+
+                    <p className="mt-2 break-all px-4 text-sm text-slate-500">
+                      {material.url}
+                    </p>
+
+                    <a
+                      href={material.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-5 inline-flex items-center gap-2 rounded-xl bg-pink-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-pink-700"
+                    >
+                      <Instagram size={16} />
+                      Open Instagram
+                    </a>
+
+                  </div>
+                </div>
+              )}
+
+
+              {/* PPT URL */}
+              {isPpt && (
+                <div className="h-[70vh] w-full overflow-hidden rounded-xl bg-white shadow-sm">
+                  <iframe
+                    src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
+                      material.url ?? ""
+                    )}`}
+                    title={material.title}
+                    className="h-full w-full"
+                    frameBorder="0"
+                  />
+                </div>
+              )}
+
+            </>
+          ) : (
+
+            /* ================================================= */
+            /* NO URL → FALLBACK PREVIEW */
+            /* ================================================= */
+
             <div className="flex min-h-[500px] items-center justify-center rounded-xl bg-white">
+
               <div className="max-w-md text-center">
 
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-pink-50 text-pink-600">
-                  <Instagram size={40} />
+                <div
+                  className={`mx-auto flex h-20 w-20 items-center justify-center rounded-2xl ${config.bg} ${config.color}`}
+                >
+                  <Icon size={40} />
                 </div>
 
                 <h3 className="mt-5 text-lg font-bold text-slate-800">
-                  Instagram Resource
-                </h3>
-
-                <p className="mt-2 break-all text-sm text-slate-500">
-                  {material.url}
-                </p>
-
-                <p className="mt-3 text-xs text-slate-400">
-                  Instagram content can be opened from the
-                  original post.
-                </p>
-
-                {material.url && (
-                  <a
-                    href={material.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-5 inline-flex items-center gap-2 rounded-xl bg-pink-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-pink-700"
-                  >
-                    <LinkIcon size={16} />
-                    Open Instagram
-                  </a>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* PPT */}
-          {material.type === "ppt" && (
-            <div className="flex min-h-[500px] items-center justify-center rounded-xl bg-white">
-              <div className="max-w-md text-center">
-
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
-                  <Presentation size={40} />
-                </div>
-
-                <h3 className="mt-5 text-lg font-bold text-slate-800">
-                  PowerPoint Presentation
+                  {config.label}
                 </h3>
 
                 <p className="mt-2 text-sm text-slate-500">
@@ -1288,12 +1519,15 @@ function PreviewModal({
                 </p>
 
                 <p className="mt-3 text-xs text-slate-400">
-                  PowerPoint preview will be connected when the
-                  actual uploaded file URL is available.
+                  Preview is not available because no file URL
+                  has been provided.
                 </p>
+
               </div>
+
             </div>
           )}
+
         </div>
 
         {/* FOOTER */}
@@ -1305,7 +1539,8 @@ function PreviewModal({
 
           <div className="flex w-full gap-2 sm:w-auto">
 
-            {material.url && (
+            {/* OPEN URL */}
+            {hasUrl && (
               <a
                 href={material.url}
                 target="_blank"
@@ -1323,8 +1558,10 @@ function PreviewModal({
             >
               Close
             </button>
+
           </div>
         </div>
+
       </div>
     </div>
   );

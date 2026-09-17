@@ -1200,7 +1200,7 @@ if (CurrentUserType === null && !previewUserId) {
                 Ensure that all details are accurate to facilitate faster verification and onboarding.
               </p>
     <button
-              onClick={() => router.back()}
+              onClick={() => router.replace("/DashBoard")}
               className="flex cursor-pointer w-[100px] items-center ml-auto gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
             >
               DashBoard
@@ -1229,7 +1229,7 @@ if (CurrentUserType === null && !previewUserId) {
             {previewUserId && (
               <button
                 type="button"
-                onClick={() => router.back()}
+                onClick={() => router.replace("/DashBoard")}
                 className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
               >
                 <ArrowLeft size={16} />
