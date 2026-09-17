@@ -5287,7 +5287,7 @@ const updatedAttendance = Array.isArray(existingInfo.Attendance)
     );
 
       
-    const UpdateInvoice= await deploymentCollection.updateOne(
+    const UpdateInvoice= await InvoiceCollection.updateOne(
       { 
         HCA_Id: Exsting_HCP.HCA_Id,
         ClienId:ImpClientId,

@@ -1111,7 +1111,11 @@ if (deploymentRes.success) {
 
 
 
-  const daysInMonth = new Date(SearchYear, SearchMonth + 1, 0).getDate();
+const daysInMonth = new Date(
+  Number(SearchYear),
+  Number(SearchMonth),
+  0
+).getDate();
 
   // const handleStatusClick = (day: number) => {
   //   if (!TimeSheet_Info) return;
@@ -5429,7 +5433,7 @@ const getMiddleMonth = (item: any): number | null => {
   return single ? single.getMonth() + 1 : null;
 };
 
-const searchMonthNumber = monthMap[SearchMonth];
+const searchMonthNumber = Number(SearchMonth);
 
 const count =
   cachedDeploymentInfo?.filter(
