@@ -1,3 +1,4 @@
+import { url } from "inspector";
 import { decrypt, hashValue } from "./Actions";
 import clientPromise from "./db";
 
@@ -1719,6 +1720,142 @@ export const InsertQualityInfo = async (
     };
   }
 };
+
+
+
+
+export const InsertNewTraining=async(ImpnewMaterial:any)=>{
+  try{
+ const client = await clientPromise;
+    const db = client.db("CurateInformation");
+
+    const CompanyTraingCollection =
+      db.collection("TraingInformation");
+
+      const PostInformationData=await CompanyTraingCollection.insertOne(ImpnewMaterial)
+         if (!PostInformationData.acknowledged) {
+      return {
+        success: false,
+        error: "Failed to post company policy",
+      };
+    }
+
+    // IMPORTANT: return success response
+    return {
+      success: true,
+      message: "Company Training posted successfully",
+      data: {
+        insertedId: PostInformationData.insertedId,
+      },
+    };
+  }catch(err:any){
+
+  }
+}
+
+export const GetTrainings = async () => {
+  try {
+    const client = await clientPromise;
+
+    const db = client.db("CurateInformation");
+
+    const TrainingCollection = db.collection("TraingInformation");
+
+    const trainingData = await TrainingCollection
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    return {
+      success: true,
+      message: "Training data fetched successfully",
+      data: trainingData,
+    };
+  } catch (err: any) {
+    console.error("GetTraining Error:", err);
+
+    return {
+      success: false,
+      error: "Failed to fetch training data",
+      message: err?.message || "Database error",
+    };
+  }
+};
+
+export const UpdateFileName= async(impDetails:any,NewName:any)=>{
+  try{
+  const client = await clientPromise;
+
+    const db = client.db("CurateInformation");
+
+    const TrainingCollection = db.collection("TraingInformation");
+
+    const UpdateInformation=await TrainingCollection.updateOne({
+
+      id:impDetails.id,
+      url:impDetails.url
+    },{
+  $set: {
+          title:NewName,
+        },
+
+
+    })
+console.log (
+  "Check Test Dataaaa-",UpdateInformation
+)
+
+    if (UpdateInformation.matchedCount === 0) {
+      return {
+        success: false,
+        message: "User not found.",
+      };
+    }
+
+    
+
+    return {
+      success: true,
+      message: "Name Updated successfully.",
+    };
+  }catch(err:any){
+
+  }
+}
+
+
+export const DeleteTraing= async(impDetails:any)=>{
+  try{
+  const client = await clientPromise;
+
+    const db = client.db("CurateInformation");
+
+    const TrainingCollection = db.collection("TraingInformation");
+
+    const UpdateInformation=await TrainingCollection.deleteOne({
+
+      id:impDetails.id,
+      url:impDetails.url
+    })
+console.log (
+  "Check Test Dataaaa-",UpdateInformation
+)
+
+      if (UpdateInformation.deletedCount === 0) {
+      return {
+        success: false,
+        error: "Training not found",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Training deleted successfully",
+    };
+  }catch(err:any){
+
+  }
+}
 export const PostCompanyPolicy = async (ImportedInfo: any) => {
   try {
     if (!ImportedInfo) {

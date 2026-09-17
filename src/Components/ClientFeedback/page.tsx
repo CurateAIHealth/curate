@@ -19,6 +19,8 @@ import {
   Plus,
   Pencil,
   Trash2,
+  Trash,
+  RotateCcw,
   Settings2,
   ToggleLeft,
   ToggleRight,
@@ -906,6 +908,9 @@ const ClientQuestionManager: React.FC<{
   onQuestionsUpdated: (sections: QualitySection[]) => void;
 }> = ({ sections, onBack, onQuestionsUpdated }) => {
   const [questions, setQuestions] = useState<ManagedClientQuestion[]>([]);
+  const [trashQuestions, setTrashQuestions] =
+    useState<ManagedClientQuestion[]>([]);
+  const [showTrash, setShowTrash] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [sectionFilter, setSectionFilter] = useState("All");
@@ -1049,19 +1054,102 @@ const ClientQuestionManager: React.FC<{
     syncSections(nextQuestions);
   };
 
+  /* =========================================================
+     MOVE QUESTION TO TRASH
+  ========================================================= */
+
   const removeQuestion = () => {
     if (!deleting) return;
 
     const nextQuestions = questions
       .filter((question) => question.id !== deleting.id)
-      .map((question, index) => ({
+      .map((question) => ({
         ...question,
-        order: question.sectionId === deleting.sectionId ? index + 1 : question.order,
+        order: question.sectionId === deleting.sectionId
+          ? questions
+              .filter(
+                (item) =>
+                  item.sectionId === question.sectionId &&
+                  item.id !== deleting.id
+              )
+              .findIndex((item) => item.id === question.id) + 1
+          : question.order,
       }));
 
     setQuestions(nextQuestions);
+
+    setTrashQuestions((previous) => [
+      ...previous,
+      {
+        ...deleting,
+        active: false,
+      },
+    ]);
+
     syncSections(nextQuestions);
     setDeleting(null);
+  };
+
+  /* =========================================================
+     RESTORE QUESTION FROM TRASH
+  ========================================================= */
+
+  const restoreQuestion = (question: ManagedClientQuestion) => {
+    const sectionQuestions = questions.filter(
+      (item) => item.sectionId === question.sectionId
+    );
+
+    const restoredQuestion: ManagedClientQuestion = {
+      ...question,
+      active: true,
+      order: sectionQuestions.length + 1,
+    };
+
+    const nextQuestions = [...questions, restoredQuestion];
+
+    setQuestions(nextQuestions);
+    setTrashQuestions((previous) =>
+      previous.filter((item) => item.id !== question.id)
+    );
+
+    syncSections(nextQuestions);
+  };
+
+  /* =========================================================
+     PERMANENTLY DELETE FROM TRASH
+  ========================================================= */
+
+  const permanentlyDeleteQuestion = (
+    question: ManagedClientQuestion
+  ) => {
+    setTrashQuestions((previous) =>
+      previous.filter((item) => item.id !== question.id)
+    );
+  };
+
+  /* =========================================================
+     RESTORE ALL QUESTIONS
+  ========================================================= */
+
+  const restoreAllQuestions = () => {
+    if (trashQuestions.length === 0) return;
+
+    const restoredQuestions = trashQuestions.map(
+      (question, index) => ({
+        ...question,
+        active: true,
+        order: questions.length + index + 1,
+      })
+    );
+
+    const nextQuestions = [
+      ...questions,
+      ...restoredQuestions,
+    ];
+
+    setQuestions(nextQuestions);
+    setTrashQuestions([]);
+    syncSections(nextQuestions);
   };
 
   return (
@@ -1085,14 +1173,34 @@ const ClientQuestionManager: React.FC<{
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={openAdd}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1392d3] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1083bd]"
-        >
-          <Plus size={18} />
-          Add Question
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => setShowTrash((previous) => !previous)}
+            className={`inline-flex items-center justify-center gap-2 cursor-pointer rounded-xl border px-5 py-3 text-sm font-semibold shadow-sm transition ${
+              showTrash
+                ? "border-red-300 bg-red-50 text-red-600"
+                : "border-slate-200 bg-white text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+            }`}
+          >
+            <Trash size={18} />
+            Trash
+            {trashQuestions.length > 0 && (
+              <span className="min-w-5 rounded-full bg-red-100 px-1.5 py-0.5 text-[11px] font-bold text-red-600">
+                {trashQuestions.length}
+              </span>
+            )}
+          </button>
+
+          {!showTrash&&<button
+            type="button"
+            onClick={openAdd}
+            className="inline-flex items-center justify-center gap-2 cursor-pointer rounded-xl bg-[#1392d3] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1083bd]"
+          >
+            <Plus size={18} />
+            Add Question
+          </button>}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -1161,6 +1269,124 @@ const ClientQuestionManager: React.FC<{
           </select>
         </div>
       </div>
+
+      {showTrash ?
+        <div className="overflow-hidden rounded-2xl border border-red-100 bg-white shadow-sm">
+          <div className="flex flex-col gap-3 border-b border-red-100 bg-red-50/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600">
+                <Trash size={20} />
+              </div>
+
+              <div>
+                <h3 className="font-bold text-slate-800">
+                  Trash
+                </h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  Deleted questions are kept here until restored or permanently deleted.
+                </p>
+              </div>
+            </div>
+
+            {trashQuestions.length > 0 && (
+              <button
+                type="button"
+                onClick={restoreAllQuestions}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-50"
+              >
+                <RotateCcw size={15} />
+                Restore All
+              </button>
+            )}
+          </div>
+
+          {trashQuestions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center px-5 py-12">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+                <Trash size={24} className="text-slate-400" />
+              </div>
+
+              <p className="mt-4 font-semibold text-slate-700">
+                Trash is empty
+              </p>
+
+              <p className="mt-1 text-sm text-slate-400">
+                Deleted questions will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {trashQuestions.map((question, index) => (
+                <div key={question.id} className="p-5 transition hover:bg-slate-50">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-[#1392d3]/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#1392d3]">
+                          {question.feedbackType}
+                        </span>
+
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600">
+                          Trash #{index + 1}
+                        </span>
+
+                        <span className="rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-semibold text-red-600">
+                          Deleted
+                        </span>
+                      </div>
+
+                      <p className="font-semibold leading-6 text-slate-800">
+                        {question.question}
+                      </p>
+
+                      {question.subHeading && (
+                        <p className="mt-1 text-xs text-slate-400">
+                          {question.subHeading}
+                        </p>
+                      )}
+
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                        <span>Section:</span>
+                        <span className="font-medium text-slate-700">
+                          {sections.find(
+                            (section) => section.id === question.sectionId
+                          )?.title || question.sectionId}
+                        </span>
+
+                        <span className="text-slate-300">|</span>
+
+                        <span>Type:</span>
+                        <span className="rounded-md bg-slate-100 px-2 py-1 font-medium text-slate-600">
+                          {question.answerType}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => restoreQuestion(question)}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-100"
+                      >
+                        <RotateCcw size={15} />
+                        Restore
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => permanentlyDeleteQuestion(question)}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-600 transition hover:bg-red-100"
+                      >
+                        <Trash2 size={15} />
+                        Delete Permanently
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>:
+      
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
@@ -1251,7 +1477,7 @@ const ClientQuestionManager: React.FC<{
             </tbody>
           </table>
         </div>
-      </div>
+      </div>}
 
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4">
@@ -1373,9 +1599,9 @@ const ClientQuestionManager: React.FC<{
       {deleting && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-bold text-slate-800">Delete Question?</h3>
+            <h3 className="text-lg font-bold text-slate-800">Move Question to Trash?</h3>
             <p className="mt-2 text-sm text-slate-500">
-              This removes the question from the current Client Feedback session.
+              This will move the question to Trash. You can restore it later.
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button
@@ -1390,7 +1616,7 @@ const ClientQuestionManager: React.FC<{
                 onClick={removeQuestion}
                 className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white"
               >
-                Delete
+                Move to Trash
               </button>
             </div>
           </div>
