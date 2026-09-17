@@ -129,7 +129,23 @@ const now = new Date();
 
 const SearchMonth=useSelector((state:any)=>state.FilterMonth) 
 const SearchYear=useSelector((state:any)=>state.FilterYear) 
+const monthNamesList = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
+const SearchMonthName =
+  monthNamesList[Number(SearchMonth) - 1] || "";
 
 const [status, setStatus] = useState("Active");
 
@@ -1704,7 +1720,7 @@ const TotalServiceCharge = processedData.reduce((acc: number, record: any) => {
 }, 0);
 
 const TotalHCPPayment = processedData.reduce((acc: number, record: any) => {
-  const hcpTotal =Math.round(Number(GetHCPPayment(record.HCA_Id)) / getDaysInMonthForMonthName(SearchMonth,SearchYear)) || 0;
+  const hcpTotal =Math.round(Number(GetHCPPayment(record.HCA_Id)) / getDaysInMonthForMonthName(SearchMonthName ,SearchYear)) || 0;
   return acc + hcpTotal;
 }, 0);
 
@@ -2157,7 +2173,7 @@ const AskAI = async () => {
 
         const daysInMonth =
           getDaysInMonthForMonthName(
-            SearchMonth,
+            SearchMonthName ,
             SearchYear
           );
 
@@ -3658,7 +3674,7 @@ const EditDate =
 
 <td className="px-3 py-3 text-xs">
   {(() => {
-    const HCPAmount=Math.round(Number(GetHCPPayment(c.HCA_Id)) / getDaysInMonthForMonthName(SearchMonth,SearchYear))
+    const HCPAmount=Math.round(Number(GetHCPPayment(c.HCA_Id)) / getDaysInMonthForMonthName(SearchMonthName ,SearchYear))
     const { marginPercentage, marginAmount } = calculateMargin(
       c.ServiceCharge,
       HCPAmount
