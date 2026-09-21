@@ -1135,7 +1135,16 @@ message="Please provide the client’s email address to send the invoice."
       <InfoField label="Patient Name" value={`${formData.billTo?.Patienttitle} ${formData.billTo?.patientName}`} />
       <InfoField label="Phone Number" value={formData.billTo?.contact} />
       <InfoField label="Email" value={formData.billTo?.email} />
-      <InfoField label="Address" value={GetFulladress(RegUserInfo,InvoiceData.ClienId)||formData.billTo?.addressLines} />
+<InfoField
+  label="Address"
+  value={
+    RegUserInfo?.length && InvoiceData?.ClienId
+      ? GetFulladress(RegUserInfo, InvoiceData.ClienId) ||
+        formData.billTo?.addressLines ||
+        "--"
+      : formData.billTo?.addressLines || "--"
+  }
+/>
       <InfoField label="Client Charges" value={formData.invoice?.ServiceCharge} />
     </>
   )}
