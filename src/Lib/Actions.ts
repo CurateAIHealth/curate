@@ -809,3 +809,11 @@ export const GetEmail = (
     )?.Email || ""
   );
 };
+
+
+export const GetFulladress=(Information:any,Id:any)=>{
+const fulladress= Information.find((each:any)=>each.userId===Id)
+return fulladress.
+Location
+
+}
