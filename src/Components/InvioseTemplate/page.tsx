@@ -472,7 +472,7 @@ console.log ("Check Client Name------",billTo)
     <thead>
       <tr style={{ background: "#1392d3", color: "#fff" }}>
         <th align="left" style={{ padding: "10px 6px" }}>SL.</th>
-        <th align="left" style={{ padding: "10px 6px" }}>Item Description</th>
+        <th align="left" style={{ padding: "10px 6px" }}>Service Description</th>
         <th align="right" style={{ padding: "10px 6px" }}>Price</th>
         <th align="right" style={{ padding: "10px 6px" }}>Qty.</th>
         <th align="right" style={{ padding: "10px 6px" }}>Total</th>
@@ -579,10 +579,10 @@ console.log ("Check Client Name------",billTo)
         <table style={{ width: 260 }}>
 {display.Discount!==0&&renderRow("Discount", display.Discount, updateTotals, InvoiceStatus)}
           
-          {renderRow("AdvancePaid", display.AdvancePaid, updateTotals, InvoiceStatus)}
+          {renderRow("Advance Paid", display.AdvancePaid, updateTotals, InvoiceStatus)}
           {renderRow("Tax", display.Tax, updateTotals, InvoiceStatus)}
-          {renderRow("RegistraionFee", display.RegistraionFee, updateTotals, InvoiceStatus)}
-          {renderRow("OtherExpenses", display.OtherExpenses, updateTotals, InvoiceStatus)}
+          {renderRow("Registraion Pay", display.RegistraionFee, updateTotals, InvoiceStatus)}
+          {renderRow("Other Expenses", display.OtherExpenses, updateTotals, InvoiceStatus)}
 
           {/* TOTAL HIGHLIGHT */}
           <tr>

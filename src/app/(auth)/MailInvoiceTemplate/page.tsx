@@ -228,7 +228,7 @@ const TaxAmount:any=balanceDue.toFixed(2)*Number(selected?.tdsRate?.replace("%",
   if (index === 0) {
     
     return {
-      description: `${srv.name} for ${InvoiceData?.name}`,
+      description: `${srv.name}`,
       days,
       rate: perDay,
       amount: perDay * days,
@@ -1507,7 +1507,7 @@ message="Please provide the client’s email address to send the invoice."
                   </div>
                 </div>
 
-                <KeyRow label="Raw Total">
+                <KeyRow label="Service Total">
                   {Number(rawTotal)}
                 </KeyRow>
 
