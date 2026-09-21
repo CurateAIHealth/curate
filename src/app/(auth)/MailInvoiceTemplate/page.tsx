@@ -2,7 +2,7 @@
 
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import {  getBase64Image, getDaysBetween, getHCATypeDescription } from "@/Lib/Actions";
+import {  getBase64Image, getDaysBetween, GetFulladress, getHCATypeDescription } from "@/Lib/Actions";
 import ReusableInvoice from "@/Components/InvioseTemplate/page";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -52,7 +52,7 @@ export default function InvoiceForm() {
   const InvoiceData = useSelector((state: any) => state.InvoiceInfo);
   const [isEditing, setIsEditing] = useState(false);
 console.log("InvoiceData", InvoiceData)
-
+  const RegUserInfo=useSelector((state:any)=>state.AdminUsers)
   const [ShowServices,setShowServices]=useState(false)
   const [otherExpenses, setOtherExpenses] = useState<any>();
   const [discountType, setDiscountType] = useState<"flat" | "percent">("flat");
@@ -1135,7 +1135,16 @@ message="Please provide the client’s email address to send the invoice."
       <InfoField label="Patient Name" value={`${formData.billTo?.Patienttitle} ${formData.billTo?.patientName}`} />
       <InfoField label="Phone Number" value={formData.billTo?.contact} />
       <InfoField label="Email" value={formData.billTo?.email} />
-      <InfoField label="Address" value={formData.billTo?.addressLines} />
+<InfoField
+  label="Address"
+  value={
+    RegUserInfo?.length && InvoiceData?.ClienId
+      ? GetFulladress(RegUserInfo, InvoiceData.ClienId) ||
+        formData.billTo?.addressLines ||
+        "--"
+      : formData.billTo?.addressLines || "--"
+  }
+/>
       <InfoField label="Client Charges" value={formData.invoice?.ServiceCharge} />
     </>
   )}

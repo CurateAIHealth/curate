@@ -5,6 +5,8 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { CircleX } from "lucide-react";
 import axios from "axios";
+import { GetFulladress } from "@/Lib/Actions";
+import { useSelector } from "react-redux";
 
 interface TransactionItem {
   paymentType: string;
@@ -19,6 +21,7 @@ interface PassbookProps {
   open: boolean;
   onClose: () => void;
   data: {
+    ClienId: any;
     StartDate: any;
     name: any;
     Invoice: string;
@@ -43,7 +46,7 @@ export default function PassbookPopup({
 const [ActionMessage, setActionMessage] = useState("");
   const [TransactionView, setTransactionView] = useState(true);
   const [isSending, setIsSending] = useState(false);
-
+const RegUserInfo=useSelector((state:any)=>state.AdminUsers)
   useEffect(() => {
     if (open) {
       setTransactionView(true);
@@ -68,7 +71,7 @@ setActionMessage("Please Wait......")
         .from(element)
         .set({
           margin: 10,
-          filename: `${data.ClientName}-Transaction-History.pdf`,
+          filename: `${data.ClientName}- Payment history.pdf`,
 
           html2canvas: {
             scale: 2,
@@ -545,7 +548,7 @@ setActionMessage("Sending Transaction History via Email...");
                     </span>{" "}
 
                     <span className="font-medium text-[#1e293b]">
-                      {data.Adress}
+                      {data.Adress||  GetFulladress(RegUserInfo,data.ClienId)}
                     </span>
                   </p>
 

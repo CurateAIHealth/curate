@@ -85,6 +85,9 @@ const refreshInvoices = async (showLoader = true) => {
   }
 };
 
+
+
+
 useEffect(() => {
   if (RegUserInfo?.length === 0) {
     Router.push("/");
@@ -1156,6 +1159,7 @@ CheckPaymentStatus:CurrentPaymentStatus
         onClose={() => setOpenTransactions(false)}
         data={{
           ...invoiceTransactionData,
+          ClienId: (invoiceTransactionData as any).ClienId ?? "",
           StartDate:
             (invoiceTransactionData as any).StartDate ??
             (invoiceTransactionData as any).ServiceStartDate ??
