@@ -1069,6 +1069,45 @@ export const GetSentInvoiceData = async () => {
 };
 
 
+export const GetSentInvoiceDataforDownloadpdf = async (invoiceInfo: any) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Invoices");
+
+    const filter: any = {
+      ClienId: invoiceInfo.ClienId,
+    };
+
+    // Check both HCAId and HCA_Id
+    if (invoiceInfo.HCAId) {
+      filter.$or = [
+        { HCAId: invoiceInfo.HCAId },
+        { HCA_Id: invoiceInfo.HCAId },
+      ];
+    }
+
+    console.log("Final Filter:", filter);
+
+    const result = await collection.find(filter).toArray();
+
+    console.log("Final result count:", result.length);
+    console.log("Final result:", result);
+
+    return {
+      success: true,
+      data: result,
+    };
+
+  } catch (err: any) {
+    console.error("GetSentInvoiceDataforDownloadpdf Error:", err);
+
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
 export const UpdateInvoisefromDb = async (data: any) => {
   try {
     if (!data.clientId) {

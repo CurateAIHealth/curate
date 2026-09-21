@@ -891,13 +891,13 @@ const isAnyFieldEmpty = requiredFields.some(
 
 const isReasonEmpty = ReasonValue.trim() === "";
 
-if (!isAnyFieldEmpty && !isReasonEmpty) {
-  alert(
-    "Upload all the required documents OR provide a reason for not uploading them."
-  );
-  SetUpdateingStatus(true);
-  return;
-}
+// if (!isAnyFieldEmpty && isReasonEmpty) {
+//   alert(
+//     "Upload all the required documents OR provide a reason for not uploading them."
+//   );
+//   SetUpdateingStatus(true);
+//   return;
+// }
 
 
           setUpdatedStatusMessage("Please Wait Updating.....");

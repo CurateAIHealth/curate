@@ -19,6 +19,7 @@ interface PassbookProps {
   open: boolean;
   onClose: () => void;
   data: {
+    StartDate: any;
     name: any;
     Invoice: string;
     ClientName: string;
@@ -55,12 +56,12 @@ const [ActionMessage, setActionMessage] = useState("");
 
   const downloadPDF = async () => {
     try {
-      const element = document.getElementById("transaction-pdf-area");
+      const element = document.getElementById("PaymentTransactions");
 
       if (!element) {
         throw new Error("Transaction history HTML not found");
       }
-
+setActionMessage("Please Wait......")
       const { default: html2pdf } = await import("html2pdf.js");
 
       await html2pdf()
@@ -84,6 +85,8 @@ const [ActionMessage, setActionMessage] = useState("");
           },
         })
         .save();
+
+        setActionMessage("Downloaded Sucessfully")
     } catch (error: any) {
       console.error("Download PDF Error:", error);
 
@@ -347,6 +350,7 @@ setActionMessage("Sending Transaction History via Email...");
           </h2>
 
           <div className="flex items-center gap-2">
+              {ActionMessage&&
 <div className="relative overflow-hidden rounded-xl border border-[#1392d3]/20 bg-white px-4 py-3.5 shadow-sm">
   {/* Project color indicators */}
   <div className="absolute left-0 top-0 flex h-full w-1 flex-col">
@@ -358,16 +362,17 @@ setActionMessage("Sending Transaction History via Email...");
 
   <div className="flex items-center gap-3 pl-1">
   
-
+ 
+      
     <div className="min-w-0">
-   
+  
 
       <p className="text-sm font-semibold leading-relaxed text-gray-700">
         {ActionMessage}
       </p>
     </div>
   </div>
-</div>
+</div>}
             <button
               onClick={sharePDF}
               disabled={isSending}
@@ -432,15 +437,15 @@ setActionMessage("Sending Transaction History via Email...");
                       Invoice
                     </h2>
 
-                    <p className="text-[11px] text-[#cbd5e1]">
+                    {/* <p className="text-[11px] text-[#cbd5e1]">
                       #{data.Invoice}
-                    </p>
+                    </p> */}
                   </div>
 
                 </div>
 
 
-                <div className="rounded-xl bg-[#006d6b] px-3 py-1.5 text-right">
+                {/* <div className="rounded-xl bg-[#006d6b] px-3 py-1.5 text-right">
 
                   <p className="text-[9px] uppercase tracking-[2px] text-[#cbd5e1]">
                     Amount Due
@@ -450,7 +455,7 @@ setActionMessage("Sending Transaction History via Email...");
                     ₹{data.balanceDue}
                   </p>
 
-                </div>
+                </div> */}
 
               </div>
             </div>
@@ -518,7 +523,7 @@ setActionMessage("Sending Transaction History via Email...");
                     </span>{" "}
 
                     <span className="font-medium text-[#1e293b]">
-                      {data.ServiceStartDate}
+                      {data.StartDate}
                       {" - "}
                       {data.ServiceEndDate}
                     </span>
@@ -554,6 +559,7 @@ setActionMessage("Sending Transaction History via Email...");
 
           <table
             className="w-full border-collapse text-sm"
+            id="PaymentTransactions"
             style={{
               color: "#000000",
               backgroundColor: "#ffffff",
@@ -663,7 +669,7 @@ setActionMessage("Sending Transaction History via Email...");
                         color: "#111827",
                       }}
                     >
-                      ₹{runningBalance}
+                      ₹{Math.round(runningBalance)}
                     </td>
 
                   </tr>

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List, PencilOff, Info, PrinterCheck, ListFilterPlus, ChevronDown } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { GetInvoiceInfo, GetInvoiceInfoforInvoicePage, GetRegidterdUsers, GetSentInvoiceData, UpdateStatusPayment } from "@/Lib/user.action";
+import { GetInvoiceInfo, GetInvoiceInfoforInvoicePage, GetRegidterdUsers, GetSentInvoiceData, GetSentInvoiceDataforDownloadpdf, UpdateStatusPayment } from "@/Lib/user.action";
 import { GeneratePDF, getDaysBetween, parseFlexibleDate } from "@/Lib/Actions";
 import { LoadingData } from "@/Components/Loading/page";
 
@@ -53,7 +53,7 @@ const [toDate, setToDate] = useState("");
  const [CurrentPaymentStatus,SetCurrentPaymentStatus]=useState<any>(null)
  const [invoiceTransactionData,setinvoiceTransactionData]=useState(ImportedinvoiceData)
   const [InvoiceData, setInvoiceData] = useState<any>()
-
+const [activeTab, setActiveTab] = useState("due");
   const RegUserInfo=useSelector((state:any)=>state.AdminUsers)
   const [status, setStatus] = useState<any>(null);
   const Router = useRouter()
@@ -61,6 +61,7 @@ const [toDate, setToDate] = useState("");
   const pageSize = 4;
 const invoiceEditStatus = useSelector((s: any) => s.InvoiceEditStatus);
 const ShowMailTemplate=useSelector((A:any)=>A.RevertInvoices)
+console.log("Check users--==-",RegUserInfo)
 const refreshInvoices = async (showLoader = true) => {
   try {
     if (showLoader) {
@@ -94,158 +95,189 @@ useEffect(() => {
 }, [monthFilter, yearFilter]);
 
 
-  const downloadExcel = () => {
-  const exportData = filteredInvoices.map((inv: any, index: number) => {
-    // Same Due Date logic used in the table
-    const dueInfo = getDueStatus(inv.StartDate);
+const downloadExcel = () => {
+  try {
+    // Keep Excel order same as the table
+    const invoicesToExport = [...filteredInvoices].reverse();
 
-    // Same Total calculation used in the table
-    const total =
-      getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
-        Number(String(inv.CareTakeCharge || "0").replace("₹", "")) +
-      Number(inv.RegistrationFee || 0);
+    const exportData = invoicesToExport.map((inv: any, index: number) => {
+      const dueInfo = getDueStatus(inv.StartDate);
 
-    // Same Balance calculation used in the table
-    const balance = inv.balanceDue
-      ? Number(inv.balanceDue)
-      : Number(total) - Number(inv.AdvanceReceived || 0);
+      // Same Total calculation used in the table
+      const draftTotal =
+        Number(inv.CareTakeCharge || 0) +
+        Number(inv.RegistrationFee || 0);
 
-    // Actions column
-    const actions =
-      inv.status === "Draft"
-        ? "Edit & Send"
-        : "Sent";
+      const total =
+        inv.status === "Draft"
+          ? Number(draftTotal)
+          : Number(inv.RoundedTotal || 0);
 
-    // Edit column
-    const editStatus =
-      inv.status === "Draft"
-        ? "Editing Disabled - Send Invoice First"
-        : "Edit";
+      // Same Balance calculation used in the table
+      const balance = inv.balanceDue
+        ? Number(inv.balanceDue)
+        : Number(total) - Number(inv.AdvanceReceived || 0);
 
-    // Payment column
-    const paymentStatus =
-      inv.status === "Draft"
-        ? "Not Available"
-        : inv.PaymentStatus
-        ? "Received"
-        : "Due";
+      // Same Invoice Number shown in table
+      const invoiceNumber = String(
+        inv.InvoiceNumber ||
+        inv.id ||
+        inv.number ||
+        "-"
+      ).includes("#")
+        ? String(
+            inv.InvoiceNumber ||
+            inv.id ||
+            inv.number ||
+            "-"
+          )
+        : `#${
+            inv.InvoiceNumber ||
+            inv.id ||
+            inv.number ||
+            "-"
+          }`;
 
-    // Payment History
-    const paymentHistory = Array.isArray(inv.Trasaction)
-      ? inv.Trasaction.length > 0
-        ? `${inv.Trasaction.length} Transaction(s)`
-        : "No Transactions"
-      : "No Transactions";
+      // Same Actions information
+      const actions =
+        inv.status === "Draft"
+          ? "Edit & Send"
+          : "Sent";
 
-    // Download column
-    const downloadStatus =
-      inv.status !== "Draft"
-        ? "Available"
-        : "Not Available - Send Invoice First";
+      // Edit information
+      const edit =
+        inv.status === "Draft"
+          ? "Disabled"
+          : "Edit";
 
-    return {
-      "S No.": index + 1,
+      // Payment information
+      let payment = "";
 
-      "Invoice ID": inv.id ?? "",
+      if (inv.status === "Draft") {
+        payment = "Not Available";
+      } else if (inv.PaymentStatus) {
+        payment = "Paid";
+      } else {
+        payment = "Due - Record Payment";
+      }
 
-      "Client": inv.ClientName ?? "",
+      // Payment history
+      const transactionCount = Array.isArray(inv.Trasaction)
+        ? inv.Trasaction.length
+        : 0;
 
-      "Patient": inv.name ?? "",
+      const history =
+        transactionCount > 0
+          ? `${transactionCount} Transaction(s)`
+          : "No Transactions";
 
-      "Contact": inv.contact ? `+91${inv.contact}` : "",
+      // Download status
+      const download =
+        inv.status !== "Draft"
+          ? "Available"
+          : "Not Available";
 
-      "Email": inv.Email ?? "",
+      return {
+        "S No.": index + 1,
 
-      "Status": inv.status ?? "",
+        "Invoice No.": invoiceNumber,
 
-      "Due Date": dueInfo.label ?? "",
+        "Client": inv.ClientName || "-",
 
-      "Start Date": inv.StartDate ?? "",
+        "Patient": inv.name || "-",
 
-      "End Date": inv.ServiceEndDate ?? "",
+        "Contact": inv.contact
+          ? inv.contact
+          : "-",
 
-      "Registration Fee": Number(inv.RegistrationFee || 0),
+        "Status": inv.status || "-",
 
-      "Care Taker Charge": inv.CareTakeCharge ?? "",
+        "Due Date": dueInfo.label || "-",
 
-      "Total": Number(total).toFixed(2),
+        "Total": `₹${Number(total).toFixed(2)}`,
 
-      "Advance": Number(inv.AdvanceReceived || 0),
+        "Advance": `₹${Number(
+          inv.AdvanceReceived || 0
+        ).toFixed(2)}`,
 
-      "Balance": Number(balance).toFixed(2),
+        "Balance": `₹${Number(balance).toFixed(2)}`,
 
-      "Actions": actions,
+        "Actions": actions,
 
-      "Edit": editStatus,
+        "Edit": edit,
 
-      "Payment": paymentStatus,
+        "Payment": payment,
 
-      "Team": inv.Team ?? "1",
+        "Team": inv.Team || "-",
 
-      "Payment History": paymentHistory,
+        "History": history,
 
-      "Payment History Details": Array.isArray(inv.Trasaction)
-        ? inv.Trasaction.length > 0
-          ? JSON.stringify(inv.Trasaction)
-          : ""
-        : "",
+        "Download": download,
+      };
+    });
 
-      "Download": downloadStatus,
-    };
-  });
+    // Create Excel worksheet
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
 
-  // Create worksheet
-  const worksheet = XLSX.utils.json_to_sheet(exportData);
+    // Column widths
+    worksheet["!cols"] = [
+      { wch: 8 },   // S No.
+      { wch: 20 },  // Invoice No.
+      { wch: 25 },  // Client
+      { wch: 25 },  // Patient
+      { wch: 16 },  // Contact
+      { wch: 14 },  // Status
+      { wch: 18 },  // Due Date
+      { wch: 15 },  // Total
+      { wch: 15 },  // Advance
+      { wch: 15 },  // Balance
+      { wch: 18 },  // Actions
+      { wch: 15 },  // Edit
+      { wch: 25 },  // Payment
+      { wch: 10 },  // Team
+      { wch: 22 },  // History
+      { wch: 18 },  // Download
+    ];
 
-  // Set column widths
-  worksheet["!cols"] = [
-    { wch: 8 },   // S No.
-    { wch: 18 },  // Invoice ID
-    { wch: 25 },  // Client
-    { wch: 25 },  // Patient
-    { wch: 16 },  // Contact
-    { wch: 30 },  // Email
-    { wch: 12 },  // Status
-    { wch: 18 },  // Due Date
-    { wch: 15 },  // Start Date
-    { wch: 15 },  // End Date
-    { wch: 18 },  // Registration Fee
-    { wch: 20 },  // Care Taker Charge
-    { wch: 15 },  // Total
-    { wch: 15 },  // Advance
-    { wch: 15 },  // Balance
-    { wch: 18 },  // Actions
-    { wch: 35 },  // Edit
-    { wch: 18 },  // Payment
-    { wch: 10 },  // Team
-    { wch: 20 },  // Payment History
-    { wch: 50 },  // Payment History Details
-    { wch: 35 },  // Download
-  ];
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
 
-  // Create workbook
-  const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Invoices"
+    );
 
-  XLSX.utils.book_append_sheet(
-    workbook,
-    worksheet,
-    "Invoices"
-  );
+    // Generate Excel
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
 
-  // Generate Excel file
-  const excelBuffer = XLSX.write(workbook, {
-    bookType: "xlsx",
-    type: "array",
-  });
+    // Create file
+    const fileData = new Blob(
+      [excelBuffer],
+      {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }
+    );
 
-  const fileData = new Blob([excelBuffer], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
+    // Download
+    saveAs(
+      fileData,
+      `Invoice_Report_${new Date()
+        .toISOString()
+        .split("T")[0]}.xlsx`
+    );
 
-  saveAs(
-    fileData,
-    `Invoice_Report_${new Date().toISOString().split("T")[0]}.xlsx`
-  );
+  } catch (error) {
+    console.error(
+      "Error downloading invoice Excel:",
+      error
+    );
+
+    alert("Unable to download invoice Excel file.");
+  }
 };
 
 const GetTeamNumber = (A: any) => {
@@ -255,20 +287,22 @@ const GetTeamNumber = (A: any) => {
 
     return Number(ImpTeamNumber.Team) ?? "Not Entered";
   };
-  const DownloadInvoice = async (id: any) => {
+  const DownloadInvoice = async (InvoiceInfo:any) => {
     try {
-   
+ console.log ("Check invoice information-----",InvoiceInfo)
       setIsSending(true)
       dispatch(UpdateInvoiceIntialStatus(false))
-      const SentInvoices: any = await GetSentInvoiceData();
+      const SentInvoices: any = await GetSentInvoiceDataforDownloadpdf(InvoiceInfo);
+
+      console.log ("Check Curret Information-------",SentInvoices)
 
 
-      const FilteredResult = SentInvoices.insertedId.filter((each: any) => each.number === id);
+      const FilteredResult:any =SentInvoices.data[0]
   
-      setInvoiceData(FilteredResult[0]);
+      setInvoiceData(FilteredResult);
 
       setTimeout(async () => {
-        const Result = await GeneratePDF(FilteredResult[0]);
+        const Result = await GeneratePDF(FilteredResult);
         if (Result?.status === true) {
           setIsSending(false)
         
@@ -317,7 +351,8 @@ const GetTeamNumber = (A: any) => {
 
 
     return {
-      id: each.Invoice||each.number,
+       id: each.Invoice || each.number || each.InvoiceNumber || "",
+  InvoiceNumber: each.Invoice || each.number || each.InvoiceNumber || "",
       ClienId:each.ClienId,
       HCAId:each.HCAId||each.HCA_Id,
       ClientName: each.ClientName,
@@ -434,6 +469,14 @@ const filteredInvoices = useMemo(() => {
     );
   }
 
+
+  if(activeTab==="completed"){
+       data = data.filter((each)=>each.balanceDue===Number(0))
+  }
+  if(activeTab!=="completed"){
+       data = data.filter((each)=>each.balanceDue!==Number(0))
+  }
+
   return data;
 }, [
   computedInvoices,
@@ -442,7 +485,8 @@ const filteredInvoices = useMemo(() => {
   search,
   filter,
   SelectedServiceStates,
-  activeTeam
+  activeTeam,
+  activeTab
 ]);
 
 console.log("Check info-----",filteredInvoices)
@@ -782,6 +826,29 @@ CheckPaymentStatus:CurrentPaymentStatus
     </button>
   ))}
 </div>
+<div className="flex items-center gap-2 p-1 bg-gray-100 rounded-xl w-fit">
+  <button
+    onClick={() => setActiveTab("due")}
+    className={`px-5 py-2.5 rounded-lg text-xs cursor-pointer font-semibold transition-all duration-200 ${
+      activeTab === "due"
+        ? "bg-teal-600 text-white shadow-md"
+        : " text-gray-600 bg-white hover:text-teal-600"
+    }`}
+  >
+    Payment Due Clients
+  </button>
+
+  <button
+    onClick={() => setActiveTab("completed")}
+    className={`px-5 py-2.5 rounded-lg text-xs cursor-pointer font-semibold transition-all duration-200 ${
+      activeTab === "completed"
+        ? "bg-teal-600 text-white shadow-md"
+        : " text-gray-600 bg-white hover:text-teal-600"
+    }`}
+  >
+   Payment Completed Clients
+  </button>
+</div>
 
   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
       <div className="relative">
@@ -1087,7 +1154,13 @@ CheckPaymentStatus:CurrentPaymentStatus
  <PassbookPopup
         open={openTransactions}
         onClose={() => setOpenTransactions(false)}
-        data={invoiceTransactionData}
+        data={{
+          ...invoiceTransactionData,
+          StartDate:
+            (invoiceTransactionData as any).StartDate ??
+            (invoiceTransactionData as any).ServiceStartDate ??
+            "",
+        }}
       />
 
       <button
@@ -1105,270 +1178,872 @@ CheckPaymentStatus:CurrentPaymentStatus
         onClose={() => setOpenPaymentMethods(false)}
         onSubmit={(Data:any)=>UpdatePaymentStatus(Data)}
       />
-      {filteredInvoices.length >0?
-  <div className="w-full border rounded-md overflow-hidden">
-<div
+   
+{filteredInvoices.length > 0 ? (
+  <div className="w-full overflow-hidden rounded-xl border border-gray-200 bg-white">
+
+    {/* =========================================================
+        DESKTOP / TABLET HEADER
+    ========================================================= */}
+   <div
   className="
-  grid items-center whitespace-nowrap
-  text-xs font-semibold text-white
-  bg-teal-800 border-b px-2 py-3 gap-3
-
-  grid-cols-3
-  sm:grid-cols-5
-  md:grid-cols-9
-  lg:grid-cols-15
-"
+    hidden lg:grid
+    w-full
+    grid-cols-[45px_120px_1.1fr_1.1fr_100px_85px_95px_75px_75px_80px_120px_55px_110px_60px_70px_70px]
+    items-center
+    gap-2
+    bg-teal-800
+    px-3
+    py-3
+    text-[11px]
+    font-semibold
+    text-white
+  "
 >
+      <div>S No.</div>
+      <div>Invoice No.</div>
+      <div>Client</div>
+      <div>Patient</div>
+      <div>Contact</div>
+      <div>Status</div>
+      <div>Due Date</div>
+      <div>Total</div>
+      <div>Advance</div>
+      <div>Balance</div>
+      <div>Actions</div>
+      <div>Edit</div>
+      <div>Payment</div>
+      <div>Team</div>
+      <div>History</div>
+      <div>Download</div>
+    </div>
 
-  <div className="hidden sm:block sm:col-span-1">S No.</div>
-  <div className="hidden sm:block sm:col-span-1">
-      Client
-  </div>
-  
-  <div className="hidden sm:block sm:col-span-1">
-      Patient
-  </div>
-  <div className="hidden sm:block sm:col-span-1">Contact</div>
-  <div className="hidden sm:block sm:col-span-1">Status</div>
-  <div className="hidden sm:block sm:col-span-1">Due Date</div>
-
-  <div className="hidden md:block md:col-span-1">Total</div>
-  <div className="hidden md:block md:col-span-1">Advance</div>
-  <div className="hidden md:block md:col-span-1">Balance</div>
-
-  <div className="col-span-1">Actions</div>
-
-  <div className="hidden lg:block lg:col-span-1 ml-8">Edit</div>
-  <div className="hidden lg:block lg:col-span-1">Payment</div>
-   <div className="hidden lg:block lg:col-span-1">Team</div>
-   <div className="hidden lg:flex lg:col-span-1 flex-col   gap-1 text-[9px] font-semibold text-white">
-  <span>Payment</span>
-  <span className="ml-1">History</span>
-</div>
-  <div className="hidden lg:block lg:col-span-1">Download</div>
-</div>
-
-<div className="max-h-[600px] overflow-y-auto">
-  {filteredInvoices?.reverse().map((inv: any, index: any) => {
-    const dueInfo = getDueStatus(inv.StartDate)
-
-    const total =
-      getDaysBetween(inv.StartDate, inv.ServiceEndDate) *
-        Number(String(inv.CareTakeCharge || "0").replace("₹", "")) +
-      Number(inv.RegistrationFee)
-
-    const balance =inv.balanceDue?inv.balanceDue: Number(total) - Number(inv.AdvanceReceived || 0)
-
-    return (
-      <div
-        key={`${inv.id}-${inv.createdAt || index}`}
-          className="
-  grid items-center px-4 py-3 border-b border-gray-200 text-sm gap-3
-  hover:bg-[#f7f9fd] transition whitespace-nowrap
-
-  grid-cols-3
-  sm:grid-cols-5
-  md:grid-cols-9
-  lg:grid-cols-15
-"
-      >
-    
-            <div>{index+1}</div>
-        <div className="flex flex-col ">
-      {(() => {
-  const nameParts = inv.ClientName?.trim().split(/\s+/) || [];
-  const splitAt = Math.ceil(nameParts.length / 2);
-
-  return (
-    <span className="text-[10px] font-semibold flex flex-col leading-tight">
-      <span>
-        {nameParts.slice(0, splitAt).join(" ")}
+    {/* =========================================================
+        MOBILE / TABLET HEADER
+    ========================================================= */}
+    <div className="flex lg:hidden items-center justify-between bg-teal-800 px-4 py-3">
+      <span className="text-sm font-semibold text-white">
+        Invoices
       </span>
 
-      {nameParts.length > 1 && (
-        <span>
-          {nameParts.slice(splitAt).join(" ")}
-        </span>
-      )}
-    </span>
-  );
-})()}
-          {/* <span className="text-[8px] text-gray-500">
-            Invoice ID: {inv.id}
-          </span> */}
-        </div>
+      <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
+        {filteredInvoices.length}
+      </span>
+    </div>
 
-         <div className="flex items-center justify-between w-full gap-2">
-  <div className="flex flex-col min-w-0">
-    <span className="text-[10px] font-semibold truncate">
-      {inv.name}
+    {/* =========================================================
+        INVOICE LIST
+    ========================================================= */}
+    <div className="max-h-[600px] overflow-y-auto">
+
+      {[...filteredInvoices].reverse().map((inv: any, index: number) => {
+
+        const dueInfo = getDueStatus(inv.StartDate);
+
+        /*
+         * IMPORTANT:
+         * Your original total expression is missing an operator.
+         * Update this calculation according to your actual business logic.
+         */
+        const total =
+          Number(inv.CareTakeCharge || 0) +
+          Number(inv.RegistrationFee || 0);
+
+        const balance = inv.balanceDue
+          ? Number(inv.balanceDue)
+          : Number(total) - Number(inv.AdvanceReceived || 0);
+
+        return (
+          <div
+            key={`${inv.id}-${inv.createdAt || index}`}
+            className="
+              border-b border-gray-200
+              transition-colors
+              hover:bg-slate-50
+            "
+          >
+
+            {/* =====================================================
+                MOBILE CARD
+            ===================================================== */}
+            <div className="block lg:hidden p-4">
+
+              {/* Top section */}
+              <div className="flex items-start justify-between gap-3">
+
+                <div className="min-w-0 flex-1">
+
+                  <div className="flex items-center gap-2">
+
+                    <span
+                      className="
+                        flex h-7 w-7 shrink-0 items-center justify-center
+                        rounded-full bg-teal-100
+                        text-xs font-bold text-teal-800
+                      "
+                    >
+                      {index + 1}
+                    </span>
+
+                    <div className="min-w-0">
+
+                      <p className="truncate text-sm font-bold text-gray-800">
+                        {inv.ClientName || "Unknown Client"}
+                      </p>
+
+                      <p className="truncate text-xs text-gray-500">
+                        {inv.name || "No Patient Name"}
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* Status */}
+                <div className="shrink-0">
+
+                  {inv.status === "Sent" ? (
+                    <span
+                      className="
+                        inline-flex items-center gap-1
+                        rounded-full
+                        bg-green-50
+                        px-2.5 py-1
+                        text-[10px] font-semibold
+                        text-green-700
+                        border border-green-200
+                      "
+                    >
+                      <CheckCircle className="h-3 w-3" />
+                      Sent
+                    </span>
+                  ) : (
+                    <span
+                      className="
+                        inline-flex items-center gap-1
+                        rounded-full
+                        bg-yellow-50
+                        px-2.5 py-1
+                        text-[10px] font-semibold
+                        text-yellow-700
+                        border border-yellow-200
+                      "
+                    >
+                      <Clock className="h-3 w-3" />
+                      Draft
+                    </span>
+                  )}
+
+                </div>
+
+              </div>
+
+
+              {/* Contact */}
+              <div className="mt-4 grid grid-cols-2 gap-3">
+
+                <div>
+                  <p className="text-[10px] font-medium uppercase text-gray-400">
+                    Contact
+                  </p>
+
+                  <p className="mt-1 truncate text-xs font-medium text-gray-700">
+                    {inv.contact || "-"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-medium uppercase text-gray-400">
+                    Team
+                  </p>
+
+                  <span
+                    className="
+                      mt-1 inline-flex
+                      rounded-full
+                      bg-pink-100
+                      px-2.5 py-1
+                      text-[10px] font-bold
+                      text-pink-700
+                    "
+                  >
+                    {inv.Team || "-"}
+                  </span>
+                </div>
+
+              </div>
+
+
+              {/* Financial information */}
+              <div
+                className="
+                  mt-4
+                  grid grid-cols-3
+                  divide-x divide-gray-200
+                  rounded-lg
+                  border border-gray-200
+                  bg-gray-50
+                "
+              >
+
+                <div className="px-2 py-3 text-center">
+
+                  <p className="text-[9px] font-medium uppercase text-gray-400">
+                    Total
+                  </p>
+
+                  <p className="mt-1 text-xs font-bold text-gray-800">
+                    ₹{Number(total).toFixed(2)}
+                  </p>
+
+                </div>
+
+
+                <div className="px-2 py-3 text-center">
+
+                  <p className="text-[9px] font-medium uppercase text-gray-400">
+                    Advance
+                  </p>
+
+                  <p className="mt-1 text-xs font-bold text-blue-700">
+                    ₹{Number(inv.AdvanceReceived || 0).toFixed(2)}
+                  </p>
+
+                </div>
+
+
+                <div className="px-2 py-3 text-center">
+
+                  <p className="text-[9px] font-medium uppercase text-gray-400">
+                    Balance
+                  </p>
+
+                  <p className="mt-1 text-xs font-bold text-red-600">
+                    ₹{Number(balance).toFixed(2)}
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              {/* Due information */}
+              <div className="mt-3 flex items-center justify-between">
+
+                <div>
+
+                  <p className="text-[10px] font-medium uppercase text-gray-400">
+                    Payment
+                  </p>
+
+                  {inv.PaymentStatus ? (
+
+                    <span
+                      className="
+                        mt-1 inline-flex
+                        rounded-full
+                        border border-green-300
+                        bg-green-50
+                        px-2.5 py-1
+                        text-[10px] font-semibold
+                        text-green-600
+                      "
+                    >
+                      Paid
+                    </span>
+
+                  ) : dueInfo.status === "overdue" ? (
+
+                    <span
+                      className="
+                        mt-1 inline-flex
+                        rounded-full
+                        border border-red-300
+                        bg-red-50
+                        px-2.5 py-1
+                        text-[10px] font-semibold
+                        text-red-600
+                      "
+                    >
+                      Overdue
+                    </span>
+
+                  ) : (
+
+                    <span className="mt-1 block text-xs text-gray-700">
+                      {dueInfo.label}
+                    </span>
+
+                  )}
+
+                </div>
+
+
+                <div className="text-right">
+
+                  <p className="text-[10px] font-medium uppercase text-gray-400">
+                    Invoice
+                  </p>
+
+                  <p className="mt-1 text-xs font-semibold text-gray-700">
+                    #{inv.id}
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              {/* Mobile actions */}
+              <div
+                className="
+                  mt-4
+                  grid grid-cols-2
+                  gap-2
+                  sm:grid-cols-4
+                "
+              >
+
+                {/* Edit / Send */}
+                {inv.status === "Draft" ? (
+
+                  <button
+                    className="
+                      flex items-center justify-center gap-1.5
+                      rounded-lg
+                      bg-red-50
+                      px-3 py-2
+                      text-[11px] font-semibold
+                      text-red-600
+                      border border-red-200
+                    "
+                    onClick={() => UpdateInvoiceMailTemplate(inv)}
+                  >
+                    <SquarePen className="h-3.5 w-3.5" />
+                    Edit & Send
+                  </button>
+
+                ) : (
+
+                  <button
+                    className="
+                      flex items-center justify-center gap-1.5
+                      rounded-lg
+                      bg-blue-50
+                      px-3 py-2
+                      text-[11px] font-semibold
+                      text-blue-700
+                      border border-blue-200
+                    "
+                    onClick={() => UpdateInvoiceMailTemplate(inv)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit
+                  </button>
+
+                )}
+
+
+                {/* Payment */}
+                {inv.status !== "Draft" && !inv.PaymentStatus ? (
+
+                  <button
+                    className="
+                      flex items-center justify-center gap-1
+                      rounded-lg
+                      bg-teal-800
+                      px-3 py-2
+                      text-[11px] font-semibold
+                      text-white
+                      hover:bg-teal-900
+                    "
+                    onClick={() => {
+                      SetPaymentInformation(inv);
+                      setOpenPaymentMethods(true);
+                    }}
+                  >
+                    Record Payment
+                  </button>
+
+                ) : (
+
+                  <div
+                    className="
+                      flex items-center justify-center
+                      rounded-lg
+                      bg-gray-50
+                      px-3 py-2
+                      text-[11px] font-medium
+                      text-gray-500
+                      border border-gray-200
+                    "
+                  >
+                    {inv.PaymentStatus ? "Payment Received" : "Draft"}
+                  </div>
+
+                )}
+
+
+                {/* History */}
+                <button
+                  className="
+                    flex items-center justify-center gap-1.5
+                    rounded-lg
+                    border border-gray-200
+                    bg-white
+                    px-3 py-2
+                    text-[11px] font-semibold
+                    text-gray-700
+                    hover:bg-gray-50
+                  "
+                  onClick={() => {
+                    setOpenTransactions(true);
+                    setinvoiceTransactionData(inv);
+                  }}
+                >
+                  <PrinterCheck className="h-3.5 w-3.5 text-teal-700" />
+                  History
+                </button>
+
+
+                {/* Download */}
+                {inv.status !== "Draft" ? (
+
+                  <button
+                    className="
+                      flex items-center justify-center gap-1.5
+                      rounded-lg
+                      border border-gray-200
+                      bg-white
+                      px-3 py-2
+                      text-[11px] font-semibold
+                      text-gray-700
+                      hover:bg-gray-50
+                    "
+                    onClick={() => DownloadInvoice(inv)}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    Download
+                  </button>
+
+                ) : (
+
+                  <div
+                    className="
+                      flex items-center justify-center gap-1.5
+                      rounded-lg
+                      border border-gray-200
+                      bg-gray-50
+                      px-3 py-2
+                      text-[11px]
+                      text-gray-400
+                    "
+                  >
+                    <Loader className="h-3.5 w-3.5" />
+                    Download
+                  </div>
+
+                )}
+
+              </div>
+
+            </div>
+
+
+            {/* =====================================================
+                DESKTOP TABLE ROW
+            ===================================================== */}
+            <div
+              className="
+                hidden lg:grid
+             grid-cols-[45px_120px_1.1fr_1.1fr_100px_85px_95px_75px_75px_80px_120px_55px_110px_60px_70px_70px]
+                items-center gap-2
+                px-3 py-3
+                text-xs
+                hover:bg-[#f7f9fd]
+              "
+            >
+
+              {/* S No */}
+              <div className="font-medium text-gray-600">
+                {index + 1}
+              </div>
+<div className="min-w-0">
+  <span className="block truncate text-[11px] font-semibold text-teal-700">
+{String(inv.InvoiceNumber || inv.id || inv.number || "-").includes("#")
+  ? String(inv.InvoiceNumber || inv.id || inv.number || "-")
+  : `#${inv.InvoiceNumber || inv.id || inv.number || "-"}`}
+  </span>
+</div>
+
+              {/* Client */}
+              <div className="min-w-0">
+
+                <span className="block truncate text-[11px] font-semibold text-gray-800">
+                  {inv.ClientName || "-"}
+                </span>
+
+              </div>
+
+
+              {/* Patient */}
+              <div className="min-w-0">
+
+                <span className="block truncate text-[11px] font-semibold text-gray-800">
+                  {inv.name || "-"}
+                </span>
+
+              </div>
+
+
+              {/* Contact */}
+              <div className="truncate text-[11px] text-gray-600">
+                {inv.contact || "-"}
+              </div>
+
+
+              {/* Status */}
+              <div>
+
+                <span
+                  className={`
+                    inline-flex items-center gap-1
+                    rounded-full
+                    px-2 py-1
+                    text-[10px] font-medium
+                    ${statusStyles[inv.status]}
+                  `}
+                >
+                  {inv.status === "Sent" ? (
+                    <CheckCircle className="h-3 w-3" />
+                  ) : (
+                    <Clock className="h-3 w-3" />
+                  )}
+
+                  {inv.status}
+                </span>
+
+              </div>
+
+
+              {/* Due Date */}
+              <div>
+
+                {inv.PaymentStatus ? (
+
+                  <span
+                    className="
+                      inline-flex
+                      rounded-full
+                      border border-green-300
+                      bg-green-50
+                      px-2 py-1
+                      text-[10px] font-medium
+                      text-green-600
+                    "
+                  >
+                    Paid
+                  </span>
+
+                ) : dueInfo.status === "overdue" ? (
+
+                  <span
+                    className="
+                      inline-flex
+                      rounded-full
+                      border border-red-300
+                      bg-red-50
+                      px-2 py-1
+                      text-[10px] font-medium
+                      text-red-600
+                    "
+                  >
+                    Overdue
+                  </span>
+
+                ) : (
+
+                  <span className="text-[10px] text-gray-700">
+                    {dueInfo.label}
+                  </span>
+
+                )}
+
+              </div>
+
+
+              {/* Total */}
+              <div className="font-medium text-gray-700">
+                ₹{inv.status === "Draft"?Number(total):Number(inv.RoundedTotal)}
+              </div>
+
+
+              {/* Advance */}
+              <div className="font-medium text-blue-700">
+                ₹{Number(inv.AdvanceReceived || 0)}
+              </div>
+
+
+              {/* Balance */}
+              <div className="font-semibold text-red-600">
+                ₹{inv.status === "Draft"?Number(total) - Number(inv.AdvanceReceived || 0):Math.round(Number(inv.balanceDue))}
+              </div>
+
+
+              {/* Actions */}
+              <div>
+
+                {inv.status === "Draft" ? (
+
+                  <button
+                    className="
+                      flex items-center gap-1
+                      rounded-md
+                      px-2 py-1
+                      text-[10px] font-medium
+                      text-red-500
+                      hover:bg-red-50
+                    "
+                    onClick={() => UpdateInvoiceMailTemplate(inv)}
+                  >
+                    <SquarePen className="h-3.5 w-3.5" />
+                    Edit & Send
+                  </button>
+
+                ) : (
+
+                  <span className="flex items-end justify-center gap-1 text-[10px] font-medium text-green-700">
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    Sent
+                  </span>
+
+                )}
+
+              </div>
+
+
+              {/* Edit */}
+              <div className="flex justify-center">
+
+                {inv.status === "Draft" ? (
+
+                  <div className="group relative">
+
+                    <PencilOff
+                      size={15}
+                      className="text-gray-400"
+                    />
+
+                    <span
+                      className="
+                        absolute
+                        bottom-full
+                        left-1/2
+                        z-50
+                        mb-2
+                        hidden
+                        -translate-x-1/2
+                        whitespace-nowrap
+                        rounded
+                        bg-gray-800
+                        px-2 py-1
+                        text-[10px]
+                        text-white
+                        group-hover:block
+                      "
+                    >
+                      Send invoice before editing
+                    </span>
+
+                  </div>
+
+                ) : (
+
+                  <Pencil
+                    className="h-4 w-4 cursor-pointer text-gray-700 hover:text-teal-700"
+                    onClick={() => UpdateInvoiceMailTemplate(inv)}
+                  />
+
+                )}
+
+              </div>
+
+
+              {/* Payment */}
+              <div>
+
+                {inv.status !== "Draft" ? (
+
+                  <div
+                    className={`
+                      flex items-center justify-between gap-2
+                      rounded-md
+                      border
+                      px-2 py-1
+                      text-[9px] font-medium
+                      ${
+                        inv.PaymentStatus
+                          ? "border-green-400 bg-green-50 text-green-600"
+                          : "border-red-400 bg-red-50 text-red-600"
+                      }
+                    `}
+                  >
+
+                    <span>
+                      {inv.PaymentStatus ? "Received" : "Due"}
+                    </span>
+
+                    {!inv.PaymentStatus && (
+
+                      <button
+                        className="
+                          rounded-full
+                          bg-teal-800
+                          px-2 py-1
+                          text-[8px]
+                          leading-tight
+                          text-white
+                          hover:bg-teal-900
+                        "
+                        onClick={() => {
+                          SetPaymentInformation(inv);
+                          setOpenPaymentMethods(true);
+                        }}
+                      >
+                        Record
+                      </button>
+
+                    )}
+
+                  </div>
+
+                ) : (
+
+                  <div className="group relative flex justify-center">
+
+                    <Info
+                      size={17}
+                      className="cursor-help text-gray-500"
+                    />
+
+                    <span
+                      className="
+                        absolute
+                        bottom-full
+                        right-0
+                        z-50
+                        mb-2
+                        hidden
+                        whitespace-nowrap
+                        rounded
+                        bg-gray-800
+                        px-2 py-1
+                        text-[10px]
+                        text-white
+                        group-hover:block
+                      "
+                    >
+                      Complete invoice sending to update status
+                    </span>
+
+                  </div>
+
+                )}
+
+              </div>
+
+
+              {/* Team */}
+              <div className="flex justify-center">
+
+                <span
+                  className="
+                    inline-flex
+                    rounded-full
+                    bg-pink-100
+                    px-2 py-1
+                    text-[9px] font-bold
+                    text-pink-700
+                  "
+                >
+                  {inv.Team || "-"}
+                </span>
+
+              </div>
+
+
+              {/* History */}
+              <div className="flex justify-center">
+
+                <PrinterCheck
+                  size={17}
+                  className="cursor-pointer text-teal-700 hover:text-teal-900"
+                  onClick={() => {
+                    setOpenTransactions(true);
+                    setinvoiceTransactionData(inv);
+                  }}
+                />
+
+              </div>
+
+
+        
+
+             {inv.status !== "Draft" ? (
+  <div className="flex items-center justify-center">
+    <Download
+      size={17}
+      className="cursor-pointer text-gray-700 hover:text-teal-700"
+      onClick={() => DownloadInvoice(inv)}
+    />
+  </div>
+) : (
+  <div className="group relative flex items-center justify-center">
+    <Loader className="h-4 w-4 text-red-600" />
+
+    <span
+      className="
+        absolute
+        bottom-full
+        left-1/2
+        z-50
+        mb-2
+        hidden
+        -translate-x-1/2
+        whitespace-nowrap
+        rounded
+        bg-black
+        px-2 py-1
+        text-[10px]
+        text-white
+        group-hover:block
+      "
+    >
+      Send invoice before downloading
     </span>
   </div>
+)}
 
-  
-</div>
 
-        <div className="text-left text-xs">+91{inv.contact}</div>
+            </div>
 
-        {/* Status */}
-        <div className="hidden sm:block">
-    
-          <span
-            className={
-              "px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 " +
-              statusStyles[inv.status]
-            }
-          >
-            {inv.status === "Sent" ? (
-              <CheckCircle className="w-3 h-3" />
-            ) : (
-              <Clock className="w-3 h-3" />
-            )}
-            {inv.status}
-          </span>
-        </div>
-
- 
-        {inv.PaymentStatus ? (
-          <span className="hidden sm:block px-1 py-1 rounded-full text-[10px] w-[80px] text-center font-medium text-green-600 border border-green-300">
-            Paid
-          </span>
-        ) : (
-          <div className="hidden sm:block">
-            {dueInfo.status === "overdue" ? (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600 border border-red-300">
-                Overdue
-              </span>
-            ) : (
-              <span className="text-gray-700 text-xs">{dueInfo.label}</span>
-            )}
           </div>
-        )}
+        );
+      })}
 
-        <div className="hidden md:block">{Number(total).toFixed(2)}</div>
+    </div>
 
-
-        <div className="hidden md:block">
-          {  Number(inv.AdvanceReceived)|| 0}
-        </div>
-
-  
-        <div className="hidden md:block">{ Number(balance).toFixed(2)}</div>
-
-        {/* Actions */}
-        <div className="flex items-center">
-              
-          {inv.status === "Draft" ? (
-            <button
-              className="px-1 py-1 rounded-md text-[11px] flex items-center cursor-pointer gap-2 text-red-500"
-              onClick={() => UpdateInvoiceMailTemplate(inv)}
-            >
-              <SquarePen className="w-4 h-4" />
-              Edit & Send
-            </button>
-          ) : (
-            <button className="text-green-700 flex items-center gap-1 text-[13px]">
-              <CheckCircle className="w-4 h-4" />
-              Sent
-            </button>
-          )}
-        </div>
-
-        {/* Edit */}
-        {inv.status === "Draft" ?<div className="hidden lg:flex items-center ml-10 cursor-pointer">
-         <div className="relative inline-block group cursor-pointer">
-  <p className="flex items-center gap-2 text-gray-800">
-   <PencilOff size={15}/>
-  </p>
-
-  <span className="absolute bottom-2 mb-2 hidden group-hover:block 
-               bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-    Make sure the invoice is sent before Editing
-  </span>
-</div>
-        </div>:<div className="hidden lg:flex items-center ml-8 cursor-pointer">
-          <Pencil
-            className="w-4 h-4"
-            // onClick={() => EditInvoice(inv.id)}
-               onClick={() => UpdateInvoiceMailTemplate(inv)}
-          />
-        </div>}
-
-        {/* Payment Status */}
-      {inv.status !== "Draft"?  <div
-          className={`hidden lg:flex px-1 py-1 text-[10px] font-medium border rounded-md w-fit h-fit items-center gap-2 ${
-            inv.PaymentStatus
-              ? "border-green-400 text-green-600 bg-green-50"
-              : "border-red-400 text-red-600 bg-red-50"
-          }`}
-        >
-          {inv.PaymentStatus ? "Received" : "Due"}
-
-          {!inv.PaymentStatus && (
-            <button
-  className="px-2 py-2 bg-teal-800 text-white h-6 w-17 text-[9px] leading-tight cursor-pointer rounded-full hover:bg-teal-900 flex flex-col items-center justify-center"
- onClick={() =>{SetPaymentInformation(inv );setOpenPaymentMethods(true)}}
->
-  <span>Record</span>
-  <span>Payment</span>
-</button>
-          )}
-        </div>:<div className="hidden lg:flex items-center ml-6 cursor-pointer">
-         <div className="relative inline-block group cursor-pointer">
-  <p className="flex items-center gap-2 text-gray-800">
-   <Info   size={20} className="text-gray-600"/>
-  </p>
-
-  <span className="absolute bottom-2 right-4 mb-2 hidden group-hover:block 
-               bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-Complete invoice sending to update status
-
-  </span>
-</div>
-        </div>}
-        <div className="relative rounded-lg px-2 py-3 text-center" >
-               <p className="inline-flex items-center justify-center rounded-full bg-pink-100 px-3 py-1 text-xs font-bold text-pink-700">
-                 {inv.Team}
-               </p>
-       
-            
-       
-              
-             </div>
-
-     <div className="flex flex-col ml-4">
-         <PrinterCheck  size={18} className="text-teal-700" onClick={()=>{setOpenTransactions(true),setinvoiceTransactionData(inv)}}/>
-        </div>
-        <div className="hidden lg:flex justify-center cursor-pointer relative group">
-  {inv.status !== "Draft" ? (
-    <Download onClick={() => DownloadInvoice(inv.id)} />
-  ) : (
-    <>
-      <Loader className="text-red-600" />
-
-  
-      <div
-        className="
-        absolute right-full mb-2 right-0
-        hidden group-hover:block
-        bg-black text-white text-[10px] px-2 py-1 rounded
-        whitespace-nowrap
-        z-50
-      "
-      >
-        Send invoice then we'll let you download
-      </div>
-    </>
-  )}
-</div>
-      </div>
-    )
-  })}
-</div>
-</div>:<EmptyState
+  </div>
+) : (
+  <EmptyState
     title="No Invoices Found"
     description="No invoice records match the selected filters. Try changing or clearing your filters."
-  />}
+  />
+)}
+
+
   </div>
 </div>
 
