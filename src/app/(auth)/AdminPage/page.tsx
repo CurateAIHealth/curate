@@ -66,7 +66,7 @@ const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
 const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
 const UserFirstName=useSelector((state:any)=>state.LogUserName)
 
-console.log ("Check Deployment Info-----",users.filter((each:any)=>each.userId==="40b25c4d-24dd-47fe-b96c-5e6af5b76808"))
+
   const [HCPCurrentStatus,setHCPCurrentStatus]=useState("")
   const [SearchDate, SetSearchDate] = useState<any>(null)
   const now = new Date();
@@ -105,7 +105,7 @@ const ProfileInformation=useSelector((state:any)=>state.Useriinformation)
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
   const updatedStatusMsg=useSelector((each:any)=>each.GlobelRefresh)
-  console.log ("Find Users-----",loggedInEmail)
+  
 const RESTRICTED_EMAILS = new Set([
   "info@curatehealth.in",
   "admin@curatehealth.in",
@@ -229,7 +229,7 @@ const ContetUserInterface = () => {
 useEffect(() => {
   const email =loggedInEmail
   if (!email) return;
-  console.log ("Check Users---",users)
+
   if (!hasData) {
     router.replace("/");
   }
@@ -267,7 +267,7 @@ const GetHCPFullName = (A: any) => {
     ?.find((info: any) => info?.UserId === A);
 
   if (!info) return "";
-console.log("HCP Info:", info);
+
   const fullName = [
     info.HCPSurName,
     info.HCPFirstName,
@@ -305,9 +305,7 @@ console.log("HCP Info:", info);
         }
       );
 
-      console.log (
-"Current Task------",data
-      )
+     
 
       dispatch(setUsers(
         data.data.registeredUsers
@@ -368,9 +366,7 @@ console.log("HCP Info:", info);
         e,
         loggedInEmail
       );
-console.log (
-"Current------",res
-      )
+
     if (res.success) {
       dispatch(
         Refresh("Status Updated,Please Wait Fetching new Data......")
@@ -388,9 +384,7 @@ console.log (
         }
       );
 
-      console.log (
-"Current Task------",data
-      )
+  
 
       dispatch(setUsers(
         data.data.registeredUsers
@@ -593,8 +587,6 @@ const monthNames = [
     filterByMonthAndYear(each, SearchMonth, SearchYear)&&!GetUserCurrentStatus(each.userId)
   );
 
-
-  console.log("Check on Cur----",users.filter((each:any) => each.Type === 'Irrelevant'))
 
  
 
@@ -1984,7 +1976,7 @@ Awaiting Conversion
 
 
   const UpdateNavigattosuggetions = (D: any) => {
-  console.log("Check for D----",D)
+
     router.push("/Clientsuggetions")
     dispatch(UpdateClientSuggetion(D))
   }
@@ -2009,8 +2001,7 @@ const handleSave = async (data: any) => {
     }
     setIsEditing(false);
     dispatch(Refresh("Please Wait...."));
-console.log("Check for Imp Salary Data----",data
-)
+
     const updateSalary = await PostHCPSalaryRequest(
       data,
       UpdatedHCPSalary,

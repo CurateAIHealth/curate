@@ -138,7 +138,7 @@ export default function NotificationsCenter() {
           
             const yearMonth = info.yearMonth; 
 const [SearchYear, SearchMonth] = yearMonth.split("-");
-            console.log("Check Client Information------",info)
+       
             const dateResponse = await UpdateClientAttendanceStatus(
               SearchYear,
               SearchMonth,
@@ -146,7 +146,7 @@ const [SearchYear, SearchMonth] = yearMonth.split("-");
               loggedInEmail,
               info.Reason
             );
-console.log("Check Status------",dateResponse.message)
+
             if(dateResponse.success){
                    updateStatusSafe();
             dispatch(Refresh("Attendance update Successfully."));
@@ -158,7 +158,7 @@ console.log("Check Status------",dateResponse.message)
             return
           }
          if(info.UserAttendeceType!=="ClientAttendece"){
-          console.log("Check Attendece Information-------",info)
+       
            const response = await EditAttendanceByClientId(
             info?.ClientId,
             info?.HCPId,

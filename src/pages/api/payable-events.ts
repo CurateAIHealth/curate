@@ -60,13 +60,12 @@ export default async function handler(
      * Watch the ENTIRE DATABASE
      * Every collection will trigger an event.
      */
-    console.log("Before watch");
+  
     changeStream = db.watch([], {
       fullDocument: "updateLookup",
     });
 
 
-console.log("After watch");
 
     changeStream.on("change", (change: any) => {
       send({
@@ -92,12 +91,12 @@ console.log("After watch");
     });
 
     changeStream.on("close", async () => {
-      console.log("Change stream closed.");
+  
       await cleanup();
     });
 
     req.on("close", async () => {
-      console.log("Client disconnected.");
+     
       await cleanup();
     });
 

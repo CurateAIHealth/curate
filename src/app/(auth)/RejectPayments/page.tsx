@@ -114,7 +114,7 @@ const [menuOpen, setMenuOpen] = useState(false);
           terminationInfo,
         } = await GetAllUsersData();
 
-        console.log("Check ImportedData-------", GetData);
+      
         cachedUsersFullInfo = usersResult ?? [];
         cachedRegisterdUsers = RegisterdUsers ?? []
         setUsers([...cachedUsersFullInfo]);
@@ -159,7 +159,7 @@ const NumberOfDaysInMonth = getDaysInMonth(
 
     return CurrentPreviewUserType[0]?.PreviewUserType ?? "Not Entered";
   };
-console.log("Check Attendecence Information------",PreviewData)
+
   const PaymentInformation = useMemo(
     () =>
       PreviewData?.map((each: any) => ({
@@ -221,11 +221,7 @@ console.log("Check Attendecence Information------",PreviewData)
     [PaymentInformation, search, SearchMonth, SearchYear]
   );
 
-  console.log("PreviewData", PreviewData);
-  console.log("PaymentInformation", PaymentInformation);
-  console.log("SearchMonth", SearchMonth);
-  console.log("SearchYear", SearchYear);
-  console.log("search", search);
+ 
 const UpdateRevertStatus = async (ClientId:any,HCAId:any,Month:any) => {
 try{
   setPopup({

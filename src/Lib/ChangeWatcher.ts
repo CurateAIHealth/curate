@@ -43,10 +43,7 @@ async function startWatcher() {
         fullDocument: "updateLookup",
       })
       .on("change", (change) => {
-        console.log(
-          `Mongo Changed -> ${name}`,
-          change.operationType
-        );
+       
 
         listeners.forEach((listener) =>
           listener({
@@ -57,7 +54,7 @@ async function startWatcher() {
       });
   });
 
-  console.log("✅ Mongo Watcher Started");
+
 }
 
 startWatcher();

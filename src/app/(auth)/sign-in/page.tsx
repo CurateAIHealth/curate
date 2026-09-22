@@ -41,7 +41,7 @@ const { data } =await axios.post("/api/route", {
 
 
 
-console.log("API Response:", data);
+
     if (!data.success) {
       setsigninStatus(true);
       setError(data.message);

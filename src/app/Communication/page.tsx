@@ -101,7 +101,7 @@ const Leads = users
   const info = UserFullInfo
     ?.map((each: any) => each?.HCAComplitInformation)
     ?.find((info: any) => info?.UserId=== A);
-console.log("HCP Info:", UserFullInfo);
+
   if (!info) return "";
 
   const fullName = [
@@ -245,7 +245,7 @@ const filteredClients = useMemo(() => {
     return matchesFilter && matchesSearch&&matchesState ;
   });
 }, [clients, clientFilters, search, SelectedServiceStates]);
- console.log ("Check fro Clients-----",filteredClients)
+
 const filteredHCAs = useMemo(() => {
   const keyword = normalize(search);
 
@@ -300,7 +300,7 @@ const filteredLeads = useMemo(() => {
   search,
   SelectedServiceStates
 ]);
- console.log ("Check HCA",filteredLeads)
+
 const selectedCount =
   tab === "clients"
     ? filteredClients.length
@@ -1270,19 +1270,7 @@ Please do not reply directly to this email.
       transition-all
       "
     onClick={() => {
-  console.log({
-    message,
-    recipients:
-      tab === "clients"
-        ? filteredClients
-        : tab === "hcas"
-        ? filteredHCAs
-        : tab === "leads"
-        ? filteredLeads
-        : tab === "others"
-        ? []
-        : [],
-  });
+
 }}
     >
       <div className="flex items-center justify-center gap-2">

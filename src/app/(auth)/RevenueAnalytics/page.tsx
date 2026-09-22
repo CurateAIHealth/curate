@@ -109,24 +109,20 @@ const FetchDatFromDb = async (forceRefresh = false) => {
       revenueCache &&
       now - revenueCacheTime < CACHE_TIME
     ) {
-      console.log("Using Cached Revenue Data");
+     
       setImportedData(revenueCache);
       return;
     }
 
-    console.log("Fetching Revenue Data...");
+
 
     const { data } = await axios.get("/api/revenue-data");
 
     revenueCache = data.data;
     revenueCacheTime = now;
-console.log("Fetched Revenue Data:", revenueCache);
+
     setImportedData(revenueCache || []);
 
-    console.log(
-      "Sent Records:",
-      revenueCache?.filter((record: any) => record.status === "Sent")
-    );
   } catch (error) {
     console.error(error);
   } finally {
@@ -222,7 +218,6 @@ alert(FilterMonth)
 
 
 
-    console.log("Check New Data", data.data.deployedLength);
 setClientsInformation(data.data.deployedLength)
     dispatch(SetDeploymentInfo(data.data.deployedLength));
       setSelectedMonth(r);
@@ -245,7 +240,7 @@ const processedData = useMemo(() => {
 
   return data?.filter((record: any) => {
       if (!search) return true;
-console.log(record.days?.[0]);
+
       return (record.days || []).some((att: any) => {
         
         const client = att.Client_Name?.toLowerCase() || "";
@@ -310,16 +305,7 @@ console.log(record.days?.[0]);
       };
     });
 }, [data, searchTerm,AdminDeployment,ClientsInformation]);
-console.log("sssss---",processedData)
-console.log("Check for Current ProcessData-----",processedData.filter(
-    (each: any) =>
-      each.ClientId
 
-=== "c3830186-0781-4a16-8871-ed91ce822fc8" &&
-      each.
-startDate
- === "1/8/2026" 
-  ))
 const getAttendanceCount = (
   ImpprocessedData: any[],
   clientId: string,
@@ -354,7 +340,7 @@ const getAttendanceCount = (
   };
 };
 
-console.log ("Chekc for ")
+
 const monthNames = [
   "January",
   "February",
@@ -406,8 +392,7 @@ const result=processedData.filter(
   const halfDays = result[0]?.days.filter(
     (item: any) => item?.status === "HP"
   ).length||0;
-console.log("Present Days:", presentDays);
-console.log ("halfDays",halfDays)
+
 const monthlySalary = GetHCPPayment(record.HCA_Id);
 const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
 
@@ -446,7 +431,7 @@ const perDaySalary = Math.round(monthlySalary / daysInMonth);
 RefundAmount || 0),
     };
   });
-console.log("Check for info-----",ImportedData)
+
 
   const filteredData = useMemo(() => {
     return revenueData.filter((record) => {

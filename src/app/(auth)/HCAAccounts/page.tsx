@@ -834,7 +834,6 @@ useEffect(() => {
   setData(mergedData);
 }, [filtered]);
 
-console.log ("Look at Veer Info------",mergedPayments.filter((each:any)=>each.HCAId==="d88f2e78-2e66-4792-8c4c-3d0d1f384924"))
 const grouped = Object.values(
   mergedPayments.reduce((acc: any, item: any) => {
     if (!acc[item.HCAId]) {
@@ -913,7 +912,7 @@ const grouped = Object.values(
 // });
 
 
-console.log("Check Replacementinformation----",ReplasementAttendece)
+
 const GetMonthFreshData = async (r: string) => {
   try {
   

@@ -16,13 +16,13 @@ export default async function handler(
   }
 
   try {
-    console.log("API REQUEST START", Date.now());
+  
 
     console.time("GetApplicationData");
     const data = await GetInvoiceInfo();
     console.timeEnd("GetApplicationData");
 
-    console.log("API REQUEST END", Date.now());
+   
 
     return res.status(200).json({
       success: true,

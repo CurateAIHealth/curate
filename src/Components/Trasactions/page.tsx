@@ -59,7 +59,7 @@ const RegUserInfo=useSelector((state:any)=>state.AdminUsers)
 
   const downloadPDF = async () => {
     try {
-      const element = document.getElementById("PaymentTransactions");
+      const element = document.getElementById("transaction-pdf-area");
 
       if (!element) {
         throw new Error("Transaction history HTML not found");
@@ -164,7 +164,7 @@ setActionMessage("Sending Transaction History via Email...");
       const mailResponse = await axios.post(
         "/api/MailSend",
         {
-          to: "info@curatehealth.in",
+          to: "tsiddu805@gmail.com",
 
           subject: `Transaction History - ${data.ClientName}`,
 
@@ -203,19 +203,7 @@ setActionMessage("Sending Transaction History via Email...");
       <!-- Email Content -->
       <div style="padding: 28px 32px 36px;">
 
-        <div style="
-          display: inline-block;
-          padding: 7px 12px;
-          margin-bottom: 18px;
-          background-color: #eef8fd;
-          color: #1392d3;
-          border-radius: 6px;
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 0.5px;
-        ">
-          TRANSACTION STATEMENT
-        </div>
+       
 
         <h2 style="
           margin: 0 0 24px;
@@ -223,7 +211,7 @@ setActionMessage("Sending Transaction History via Email...");
           font-size: 25px;
           line-height: 1.3;
         ">
-          Your Transaction History
+           Transaction History
         </h2>
 
         <p style="
@@ -313,14 +301,10 @@ setActionMessage("Sending Transaction History via Email...");
           pdfBase64: base64.split(",")[1],
 
           pdfFileName:
-            `${data.ClientName}-Transaction-History.pdf`,
+            `${data.ClientName}-Transaction History.pdf`,
         }
       );
 
-      console.log(
-        "Mail Response:",
-        mailResponse?.data
-      );
 
       setActionMessage("Transaction history sent successfully.");
     } catch (error: any) {
@@ -347,12 +331,10 @@ setActionMessage("Sending Transaction History via Email...");
 
       
 
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white p-4">
-          <h2 className="text-xl font-bold text-gray-900">
-            Transaction History
-          </h2>
+        <div className="sticky top-0 z-10 flex items-center justify-end  border-b bg-white p-4">
+         
 
-          <div className="flex items-center gap-2">
+          <div className="flex justify-end gap-2">
               {ActionMessage&&
 <div className="relative overflow-hidden rounded-xl border border-[#1392d3]/20 bg-white px-4 py-3.5 shadow-sm">
   {/* Project color indicators */}
@@ -437,7 +419,7 @@ setActionMessage("Sending Transaction History via Email...");
 
                   <div>
                     <h2 className="text-base font-bold leading-tight text-[#ffffff]">
-                      Invoice
+                       Payment History
                     </h2>
 
                     {/* <p className="text-[11px] text-[#cbd5e1]">
@@ -465,104 +447,100 @@ setActionMessage("Sending Transaction History via Email...");
 
          
 
-            <div className="grid gap-3 bg-[#ffffff] p-3 text-sm md:grid-cols-2">
+          <div className="grid gap-3 bg-[#ffffff] p-3 text-base md:grid-cols-2">
 
-       
+  <div className="rounded-xl border border-[#f1f5f9] bg-[#f8fafc] p-3">
 
-              <div className="rounded-xl border border-[#f1f5f9] bg-[#f8fafc] p-3">
+    <h3 className="mb-2 text-xs uppercase tracking-[2px] text-[#64748b]">
+      Client
+    </h3>
 
-                <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[2px] text-[#64748b]">
-                  Client
-                </h3>
+    <div className="space-y-2">
 
-                <div className="space-y-1.5">
+      <p>
+        <span className="text-[#64748b]">
+          Name:
+        </span>{" "}
 
-                  <p>
-                    <span className="text-[#94a3b8]">
-                      Name:
-                    </span>{" "}
+        <span className="text-[#1e293b]">
+          {data.ClientName}
+        </span>
+      </p>
 
-                    <span className="font-medium text-[#1e293b]">
-                      {data.ClientName}
-                    </span>
-                  </p>
+      <p>
+        <span className="text-[#64748b]">
+          Patient:
+        </span>{" "}
 
-                  <p>
-                    <span className="text-[#94a3b8]">
-                      Patient:
-                    </span>{" "}
+        <span className="text-[#1e293b]">
+          {data.Patient || data.name}
+        </span>
+      </p>
 
-                    <span className="font-medium text-[#1e293b]">
-                      {data.Patient || data.name}
-                    </span>
-                  </p>
+      <p>
+        <span className="text-[#64748b]">
+          Phone:
+        </span>{" "}
 
-                  <p>
-                    <span className="text-[#94a3b8]">
-                      Phone:
-                    </span>{" "}
+        <span className="text-[#1e293b]">
+          {data.contact}
+        </span>
+      </p>
 
-                    <span className="font-medium text-[#1e293b]">
-                      {data.contact}
-                    </span>
-                  </p>
+    </div>
+  </div>
 
-                </div>
-              </div>
+  <div className="rounded-xl border border-[#f1f5f9] bg-[#ffffff] p-3">
 
-           
+    <h3 className="mb-2 text-xs uppercase tracking-[2px] text-[#64748b]">
+      Billing
+    </h3>
 
-              <div className="rounded-xl border border-[#f1f5f9] bg-[#ffffff] p-3">
+    <div className="space-y-2">
 
-                <h3 className="mb-2 text-[10px] font-bold uppercase tracking-[2px] text-[#64748b]">
-                  Billing
-                </h3>
+      <p>
+        <span className="text-[#64748b]">
+          Service:
+        </span>{" "}
 
-                <div className="space-y-1.5">
+        <span className="text-[#1e293b]">
+          {data.StartDate}
+          {" - "}
+          {data.ServiceEndDate}
+        </span>
+      </p>
 
-                  <p>
-                    <span className="text-[#94a3b8]">
-                      Service:
-                    </span>{" "}
+      <p>
+        <span className="text-[#64748b]">
+          Total:
+        </span>{" "}
 
-                    <span className="font-medium text-[#1e293b]">
-                      {data.StartDate}
-                      {" - "}
-                      {data.ServiceEndDate}
-                    </span>
-                  </p>
+        <span className="text-[#059669]">
+          ₹{data.RoundedTotal}
+        </span>
+      </p>
 
-                  <p>
-                    <span className="text-[#94a3b8]">
-                      Total:
-                    </span>{" "}
+      <p>
+        <span className="text-[#64748b]">
+          Address:
+        </span>{" "}
 
-                    <span className="font-bold text-[#059669]">
-                      ₹{data.RoundedTotal}
-                    </span>
-                  </p>
+        <span className="text-[#1e293b]">
+          {data.Adress || GetFulladress(RegUserInfo, data.ClienId)}
+        </span>
+      </p>
 
-                  <p>
-                    <span className="text-[#94a3b8]">
-                      Address:
-                    </span>{" "}
+    </div>
+  </div>
 
-                    <span className="font-medium text-[#1e293b]">
-                      {data.Adress||  GetFulladress(RegUserInfo,data.ClienId)}
-                    </span>
-                  </p>
-
-                </div>
-              </div>
-
-            </div>
+</div>
           </div>
 
 
 
           <table
             className="w-full border-collapse text-sm"
-            id="PaymentTransactions"
+              id="transaction-pdf-area"
             style={{
               color: "#000000",
               backgroundColor: "#ffffff",
@@ -587,7 +565,7 @@ setActionMessage("Sending Transaction History via Email...");
                   className="border p-2"
                   style={{ borderColor: "#d1d5db" }}
                 >
-                  Txn ID
+                  Transaction ID
                 </th>
 
                 <th

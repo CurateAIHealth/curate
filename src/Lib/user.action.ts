@@ -219,7 +219,7 @@ export const SignInRessult = async (SignInfor: {
   Password: string;
 }) => {
   try {
-console.log("SERVER ACTION START", Date.now());
+
 
     console.time("DB_CONNECTION");
     const cluster = await clientPromise;
@@ -1001,7 +1001,7 @@ export const UpdateInvoiceData = async (
     { HCA_Id: invoiceInfo.HCAId },
   ];
 }
-  console.log("Filter for update:", filter);
+;
     const result = await collection.updateOne(
      filter,   
       { $set: dynamicUpdates }
@@ -1087,12 +1087,11 @@ export const GetSentInvoiceDataforDownloadpdf = async (invoiceInfo: any) => {
       ];
     }
 
-    console.log("Final Filter:", filter);
+
 
     const result = await collection.find(filter).toArray();
 
-    console.log("Final result count:", result.length);
-    console.log("Final result:", result);
+   
 
     return {
       success: true,
@@ -1543,7 +1542,7 @@ Team:HCA.Team||1,
       // createdAt: new Date(),
       updatedAt: new Date(),
     };
-        console.log("HCA Data Height:", encryptedData);
+
     const result = await collection.insertOne(encryptedData);
 
     return {
@@ -1791,7 +1790,7 @@ User:any
       Reason:AbsentReason,
       UserAttendeceType:User
     };
-console.log("Check Client Info Details------",payload)
+
     const result = await collection.insertOne(payload);
 
     return {
@@ -1986,7 +1985,7 @@ export const PostHCAFullRegistration = async (Info: any) => {
     const db = cluster.db("CurateInformation");
     const collection = db.collection("CompliteRegistrationInformation");
 
-    console.log("Check Imported HCA Data-------", Info);
+
 
     const encryptedInfo = {
       Title: Info.title,
@@ -2163,7 +2162,7 @@ PreferdWorkingStates: Info.PreferdWorkingStates || "",
       CreatedAt: new Date(),
     };
 
-    console.log("Before insertOne");
+
 const FinelResult = await collection.insertOne({
   HCAComplitInformation: {
     ...encryptedInfo,
@@ -2171,7 +2170,7 @@ const FinelResult = await collection.insertOne({
   },
 });
 
-    console.log("After insertOne", FinelResult);
+   
 
     return {
       success: true,
@@ -3377,10 +3376,7 @@ export const GetHCACompleteInformation = async (
       });
 
     if (!registration && !complete) {
-      console.log(
-        "No HCA registration found for:",
-        userId
-      );
+     
 
       return null;
     }
@@ -3393,15 +3389,7 @@ export const GetHCACompleteInformation = async (
     const docs: any =
       full.Documents || {};
 
-    console.log(
-      "Fetched PRIMARY HCA:",
-      primary
-    );
-
-    console.log(
-      "Fetched COMPLETE HCA:",
-      full
-    );
+    
 
     // =====================================================
     // SUPPORT CURRENT + OLD FIELD NAMES
@@ -4089,10 +4077,7 @@ Reviews: full.Reviews,
       },
     };
 
-    console.log(
-      "FINAL NORMALIZED HCA INFORMATION:",
-      result
-    );
+  
 
     return result;
   } catch (error: any) {
@@ -4900,21 +4885,14 @@ export const GetDeploymentInfo = async (
       .find({})
       .project(projection || {});
 
-    console.timeEnd("Create Cursor");
-
-    console.time("Mongo Query");
+   
 
     const TimeSheetInfoData = await cursor.toArray();
 
-    console.timeEnd("Mongo Query");
-
-    console.log("Records Count:", TimeSheetInfoData.length);
+  
 
     if (TimeSheetInfoData.length > 0) {
-      console.log(
-        "Sample Record Size:",
-        JSON.stringify(TimeSheetInfoData[0]).length
-      );
+   
     }
 
     console.time("Map Records");
@@ -4952,9 +4930,7 @@ export const GetDeploymentInfoforMissingAttendece = async (
     const db = cluster.db("CurateInformation");
     const collection = db.collection("Deployment");
 
-    console.log("Month Key:", monthKey);
 
-    console.time("Mongo Query");
 
     const TimeSheetInfoData = await collection
       .find(
@@ -4964,27 +4940,21 @@ export const GetDeploymentInfoforMissingAttendece = async (
       )
       .toArray();
 
-    console.timeEnd("Mongo Query");
-
-    console.log("Records Count:", TimeSheetInfoData.length);
+   
 
     if (TimeSheetInfoData.length > 0) {
-      console.log(
-        "Sample Record Size:",
-        JSON.stringify(TimeSheetInfoData[0]).length
-      );
+      
     }
 
-    console.time("Map Records");
+ 
 
     const Result = TimeSheetInfoData.map((user: any) => ({
       ...user,
       _id: user._id?.toString(),
     }));
 
-    console.timeEnd("Map Records");
 
-    console.time("JSON Serialize");
+ 
 
     JSON.stringify(Result);
 
@@ -5570,7 +5540,7 @@ for (const record of records) {
     ? record.Attendance.filter((a: any) => a && typeof a === "object")
     : [];
 
-console.log("Cleaned Attendance:", record);
+
   const alreadyMarked = cleanedAttendance.some((a: any) => {
     if (a?.dateKey) {
       return a.dateKey === selectedDateKey;
@@ -5601,7 +5571,7 @@ const attendanceEntry = {
   UpdatedAt: new Date(),
   UpdatedBy: UpdatedBy || "Admin",
 };
-console.log("Attendance Entry:", attendanceEntry);
+
   operations.push({
     updateOne: {
       filter: { _id: record._id },
@@ -5719,7 +5689,7 @@ export const UpdateClientAttendanceStatus = async (
         ClientId: attendance.Client_Id,
         HCAId: attendance.HCA_Id,
       });
-console.log("Check Matched Record-----",matchedRecord)
+
       if (!matchedRecord) {
         missingDeploymentClients.push(attendance.Client_Name);
         continue;
@@ -5899,8 +5869,7 @@ console.log("Check Matched Record-----",matchedRecord)
 
 //     const monthKey = `${selectedYear}-${Number(selectedMonth)}`;
 
-//     console.log("Month Key:", monthKey);
-//     console.log("Attendance Info:", attendanceInfo);
+
 
 //     if (!attendanceInfo?.length) {
 //       return {
@@ -5927,7 +5896,7 @@ console.log("Check Matched Record-----",matchedRecord)
 //       })
 //       .toArray();
 
-//     console.log("Fetched Records:", records);
+//   
 
 //     if (!records.length) {
 //       return {
@@ -5955,7 +5924,7 @@ console.log("Check Matched Record-----",matchedRecord)
 //     const missingDeploymentClients: string[] = [];
 
 //     for (const attendance of attendanceInfo) {
-//       console.log("Processing Attendance:", attendance);
+//      
 
 //       const matchedRecord = records.find(
 //         (record: any) =>
@@ -5963,7 +5932,6 @@ console.log("Check Matched Record-----",matchedRecord)
 //           record.HCAId === attendance.HCA_Id
 //       );
 
-//       console.log("Matched Record:", matchedRecord);
 
 //       if (!matchedRecord) {
 //         missingDeploymentClients.push(attendance.Client_Name);
@@ -5973,7 +5941,7 @@ console.log("Check Matched Record-----",matchedRecord)
 //       const dateObj = new Date(attendance.date);
 //       const selectedDateKey = dateObj.toISOString().slice(0, 10);
 
-//       console.log("Selected Date Key:", selectedDateKey);
+//  
 
 //       const cleanedAttendance = Array.isArray(matchedRecord.ClientAttendance)
 //         ? matchedRecord.ClientAttendance.filter(
@@ -5981,7 +5949,7 @@ console.log("Check Matched Record-----",matchedRecord)
 //           )
 //         : [];
 
-//       console.log("Cleaned Attendance:", cleanedAttendance);
+//       
 
 //       const alreadyMarked = cleanedAttendance.some((a: any) => {
 //         const attendanceDate =
@@ -5999,7 +5967,7 @@ console.log("Check Matched Record-----",matchedRecord)
 //         return attendanceDateKey === selectedDateKey;
 //       });
 
-//       console.log("Already Marked:", alreadyMarked);
+//
 
 //       if (alreadyMarked) {
 //         alreadyMarkedClients.push(attendance.Client_Name);
@@ -6020,7 +5988,7 @@ console.log("Check Matched Record-----",matchedRecord)
 //         UpdatedBy: LogInUser || "Admin",
 //       };
 
-//       console.log("Attendance Entry:", attendanceEntry);
+// 
 
 //       operations.push({
 //         updateOne: {
@@ -6040,11 +6008,11 @@ console.log("Check Matched Record-----",matchedRecord)
 //       updatedClients.push(attendance.Client_Name);
 //     }
 
-//     console.log("Bulk Operations:", operations);
+//   
 
 //     if (operations.length > 0) {
 //       const bulkResult = await collection.bulkWrite(operations);
-//       console.log("Bulk Write Result:", bulkResult);
+//    
 //     }
 
 //     const summary = {
@@ -6060,8 +6028,6 @@ console.log("Check Matched Record-----",matchedRecord)
 //       missingDeploymentClients,
 //     };
 
-//     console.log("Summary:", summary);
-//     console.log("Details:", details);
 
 //     if (
 //       updatedClients.length === 0 &&
@@ -6473,10 +6439,7 @@ export const EditAttendanceByClientId = async (
       const [year, m] = month.split("-");
       return `${year}-${Number(m)}`;
     };
-console.log(
-  "Check fot UpdateBy-----",UpdateBy
-)
-console.log(AbsentReason)
+
     const normalizedMonth = normalizeMonth(Month);
 
     const statusMap = {
@@ -6766,7 +6729,7 @@ export const GetInvoiceInfoforInvoicePage = async (
       };
     }
 
-    console.log("Mongo Invoice Query:", query);
+
 
     const invoiceData = await collection
       .find(query)
@@ -6777,7 +6740,7 @@ export const GetInvoiceInfoforInvoicePage = async (
       _id: user._id.toString(),
     }));
 
-    console.log("Invoices fetched:", safeUsers.length);
+
 
     return safeUsers;
 
@@ -6843,7 +6806,7 @@ export const GetTerminationInfoForTerminationPage = async (
       query = {};
     }
 
-    console.log("Termination Mongo Query:", query);
+
 
     const TimeSheetInfoData = await collection
       .find(query)
@@ -6854,10 +6817,7 @@ export const GetTerminationInfoForTerminationPage = async (
       _id: user._id.toString(),
     }));
 
-    console.log(
-      "Termination records fetched:",
-      safeUsers.length
-    );
+   
 
     return safeUsers;
   } catch (e) {
@@ -6954,12 +6914,7 @@ export const UpdatePaymentVerificationStatusInDb = async (
   UpdateType: any[],
   MergedClienid:any
 ) => {
-  console.log("Check For UpdateType",UpdateType)
-  console.log("Check For MonthInfo",{
-            ClientId,
-            HCAId,
-            Month: MonthInfo,
-          })
+  
   try {
     if (
       !HCAId ||
@@ -7022,7 +6977,7 @@ const replacementClientId =
           });
           continue;
       }
-  console.log("Check For Filter",filter);
+ 
       const result = await collection.updateOne(filter, {
         $set: {
         PaymentVerificationStatus: value,
@@ -7150,12 +7105,8 @@ export const UpdateRefundAmountfromInoice = async (
     const db = client.db("CurateInformation");
     const collection = db.collection("Invoices");
 
-    console.log("Query:", {
- Client_Id,
-   ServiceStartDate,
-    });
 
-    console.time("MongoUpdate");
+
 
     const result = await collection.updateOne(
         {
@@ -7179,8 +7130,7 @@ export const UpdateRefundAmountfromInoice = async (
 
     console.timeEnd("MongoUpdate");
 
-    console.log("Matched:", result.matchedCount);
-    console.log("Modified:", result.modifiedCount);
+  
 
     if (result.matchedCount === 0) {
       console.warn("No matching document found.");
@@ -7547,7 +7497,7 @@ export const PostINRejectionDb = async (
         message: "Missing required parameters",
       };
     }
-console.log("Checkk------",RejectionInfo)
+
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
 
@@ -7561,7 +7511,7 @@ console.log("Checkk------",RejectionInfo)
     };
  
 
-console.log("Delete Filter", filter);
+
     const { _id, ...rejectionData } = RejectionInfo;
 
 const payload = {
@@ -7596,19 +7546,7 @@ export const PostINSuccesfulPaymentsDb = async (
   ImpBank:any
 ) => {
   try {
-  console.log("Validation Check:", {
-  PaymentInfo,
-  NeftTransactionNumber,
-  MonthInfo,
-  ClientId: PaymentInfo?.ClientId,
-  HCAId: PaymentInfo?.HCAId,
-
-  PaymentInfoFail: !PaymentInfo,
-  NeftFail: !String(NeftTransactionNumber || "").trim(),
-  MonthFail: !String(MonthInfo || "").trim(),
-  ClientIdFail: PaymentInfo?.ClientId == null,
-  HCAIdFail: PaymentInfo?.HCAId == null,
-});
+ 
  if (
   !PaymentInfo ||
   !String(NeftTransactionNumber || '').trim() ||
@@ -8317,11 +8255,7 @@ export const UpdateDeploymentStatus = async (
     const db = client.db("CurateInformation");
     const collection = db.collection("Deployment");
 
-    console.log("Query:", {
-      ClientId: userId,
-      HCAId: HCPId,
-      Month: MonthValue,
-    });
+  
 
     console.time("MongoUpdate");
 
@@ -8338,10 +8272,9 @@ export const UpdateDeploymentStatus = async (
       }
     );
 
-    console.timeEnd("MongoUpdate");
+    
 
-    console.log("Matched:", result.matchedCount);
-    console.log("Modified:", result.modifiedCount);
+  
 
     if (result.matchedCount === 0) {
       console.warn("No matching document found.");
@@ -8669,7 +8602,7 @@ export const UpdateClientComplitInformation = async (UserIdFromLocal: any, Info:
 };
 
 export const UpdateHCAComplitInformation = async (UserIdFromLocal: any, Info: any) => {
-console.log("Check Issue----",Info.professionalEducation)
+
   try {
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
@@ -8813,7 +8746,7 @@ export const updateHCARegistration = async (
 
     if (HCA.FirstName)
       updateData.FirstName = encrypt(HCA.FirstName);
-console.log("Test Sir Name",HCA.SurName)
+
     if (HCA.SurName)
       updateData.Surname = encrypt(HCA.SurName);
 
@@ -10097,7 +10030,7 @@ export const updateExpense = async (
         message: "User ID is required",
       };
     }
-    console.log("updateExpense called with:", importedEmail)
+    
 
     if (!importedEmail) {
       return {
@@ -10973,7 +10906,7 @@ export const GetDashboardData = async (userId: string) => {
       dashboardCache[cacheKey] &&
       now - dashboardCache[cacheKey].timestamp < 30 * 60 * 1000
     ) {
-      console.log("DASHBOARD CACHE HIT");
+     
       return dashboardCache[cacheKey].data;
     }
 
@@ -11403,7 +11336,7 @@ export const GetApplicationData = async () => {
     applicationCache &&
     now - applicationCacheTime < 30 * 60 * 1000
   ) {
-    console.log("APPLICATION CACHE HIT");
+
     return applicationCache;
   }
 

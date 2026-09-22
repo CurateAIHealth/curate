@@ -36,10 +36,7 @@ export default async function handler(
     console.time("API_DASHBOARD");
 
     if (refreshType) {
-      console.log(
-        `Refreshing cache for user ${userId} with types:`,
-        refreshType
-      );
+     
       const refreshArray = Array.isArray(refreshType)
         ? refreshType
         : [refreshType];
@@ -48,9 +45,7 @@ export default async function handler(
       if (refreshArray.includes("profile")) {
         ClearProfileCache(userId);
 
-        console.log(
-          `Profile cache cleared for user ${userId}`
-        );
+        
       }
 
       // Clear global dashboard cache
@@ -65,17 +60,13 @@ export default async function handler(
       if (dashboardTypes.length > 0) {
         ClearDashboardCache(dashboardTypes);
 
-        console.log(
-          `Dashboard cache cleared for ${dashboardTypes.join(
-            ", "
-          )}`
-        );
+        
       }
     }
 
     const result = await GetDashboardData(userId,Month);
-console.log(`Dashboard data fetched for :`, result.data);
-    console.timeEnd("API_DASHBOARD");
+
+   
 
     return res.status(200).json(result);
   } catch (error) {

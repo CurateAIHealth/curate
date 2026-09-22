@@ -129,7 +129,7 @@ const [loadingMessage, setLoadingMessage] = useState<any>("");
   const ImportedInformationOfCallEnquiry = useSelector((state: any) => state.NotificationCallEnquiryInformation)
    const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
   const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
-console.log("Check Email------",ImportedInformationOfCallEnquiry)
+
 
 
   const [EnquiryForm, setEnquiryForm] = useState<any>({
@@ -176,7 +176,7 @@ console.log("Check Email------",ImportedInformationOfCallEnquiry)
   const [ClientDiscount, SetClientDiscount] = useState<any>(0)
 const ProfileInformation=useSelector((state:any)=>state.Useriinformation)
   const stats=useSelector((state:any)=>state.DashBoardCount)
-console.log ("Check Personal Information----",stats.registeredUsers)
+
   const DASHBOARD_CACHE_KEY = "dashboardStats";
   const CACHE_TTL = 20 * 60 * 1000;
 
@@ -517,7 +517,7 @@ useEffect(() => {
         EnquiryForm.ClientStatus === "Lost";
 
 
-console.log(" EnquiryForm.patientHeight:", EnquiryForm.patientHeight);
+
       const generatedUserId = uuidv4()
       const payload: any = {
         userType: isPatient ? "patient" : "CallEnquiry",

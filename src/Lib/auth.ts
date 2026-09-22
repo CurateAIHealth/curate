@@ -7,7 +7,7 @@ export const SignInRessult = async (SignInfor: {
   Password: string;
 }) => {
   try {
-console.log("SERVER ACTION START", Date.now());
+
 
     console.time("DB_CONNECTION");
     const cluster = await clientPromise;
@@ -126,7 +126,7 @@ export const GetDeploymentInfo = async (projection?: any) => {
 
     console.timeEnd("Mongo Query");
 
-    console.log("Records Count:", TimeSheetInfoData.length);
+    
 
     return TimeSheetInfoData.map((item: any) => ({
       ...item,
@@ -265,7 +265,7 @@ let applicationCache: any = null;
 let applicationCacheTime = 0;
 
 export const GetApplicationData = async () => {
-  console.time("TOTAL_GetApplicationData");
+
 
   const now = Date.now();
 
@@ -273,15 +273,12 @@ export const GetApplicationData = async () => {
     applicationCache &&
     now - applicationCacheTime < 30 * 60 * 1000
   ) {
-    console.log(
-      "APPLICATION CACHE HIT",
-      `${now - applicationCacheTime}ms old`
-    );
+  
     console.timeEnd("TOTAL_GetApplicationData");
     return applicationCache;
   }
 
-  console.log("APPLICATION CACHE MISS");
+ 
 
   console.time("GetDeploymentInfo");
   const deploymentPromise = GetDeploymentInfo({
@@ -340,20 +337,9 @@ export const GetApplicationData = async () => {
 
   console.timeEnd("Promise.all");
 
-  console.log(
-    "deploymentInfo:",
-    deploymentInfo?.length || 0
-  );
+ 
 
-  console.log(
-    "registeredUsers:",
-    registeredUsers?.length || 0
-  );
-
-  console.log(
-    "usersFullInfo:",
-    usersFullInfo?.length || 0
-  );
+ 
 
   applicationCache = {
     deploymentInfo,
@@ -389,13 +375,9 @@ export const UpdateDeploymentStatus = async (
     const db = client.db("CurateInformation");
     const collection = db.collection("Deployment");
 
-    console.log("Query:", {
-      ClientId: userId,
-      HCAId: HCPId,
-      Month: MonthValue,
-    });
 
-    console.time("MongoUpdate");
+
+  
 
     const result = await collection.updateOne(
       {
@@ -410,10 +392,7 @@ export const UpdateDeploymentStatus = async (
       }
     );
 
-    console.timeEnd("MongoUpdate");
-
-    console.log("Matched:", result.matchedCount);
-    console.log("Modified:", result.modifiedCount);
+ 
 
     if (result.matchedCount === 0) {
       console.warn("No matching document found.");
@@ -682,10 +661,7 @@ export const UpdateRefundAmount = async (
     const db = client.db("CurateInformation");
     const collection = db.collection("Invoices");
 
-    console.log("Query:", {
- Client_Id,
-   ServiceStartDate,
-    });
+    
 
     console.time("MongoUpdate");
 
@@ -709,10 +685,7 @@ export const UpdateRefundAmount = async (
       }
     );
 
-    console.timeEnd("MongoUpdate");
-
-    console.log("Matched:", result.matchedCount);
-    console.log("Modified:", result.modifiedCount);
+    
 
     if (result.matchedCount === 0) {
       console.warn("No matching document found.");
@@ -921,9 +894,11 @@ const needsDeployment =
           ServiceState: 1,
           Email: 1,
           ContactNumber: 1,
-          VerificationStatus: 1,
+          // VerificationStatus: 1,
           FinelVerification: 1,
-          EmailVerification: 1,
+          // EmailVerification: 1,
+          AddressLine1:1,
+          AddressLine2:1,
           ClientStatus: 1,
           Status: 1,
           CurrentStatus: 1,
@@ -1050,7 +1025,7 @@ const needsDeployment =
       globalDashboardCache.registeredUsersTime =
         now;
     }
-console.log("Current Task",fullInfoRaw)
+
     if (needsFullInfo && fullInfoRaw) {
       globalDashboardCache.fullInfo =
         fullInfoRaw.map((user: any) => {
@@ -1801,9 +1776,7 @@ export const UpdateFileName= async(impDetails:any,NewName:any)=>{
 
 
     })
-console.log (
-  "Check Test Dataaaa-",UpdateInformation
-)
+
 
     if (UpdateInformation.matchedCount === 0) {
       return {
@@ -1837,9 +1810,7 @@ export const DeleteTraing= async(impDetails:any)=>{
       id:impDetails.id,
       url:impDetails.url
     })
-console.log (
-  "Check Test Dataaaa-",UpdateInformation
-)
+
 
       if (UpdateInformation.deletedCount === 0) {
       return {
@@ -2516,11 +2487,7 @@ export const GetReplacementInfo = async (
   year?: string | number
 ) => {
   try {
-    console.log(
-      "Check for imp Data from backend-----",
-      `${month}-${year}`
-    );
-
+  
     const cluster = await clientPromise;
 
     const db = cluster.db("CurateInformation");
@@ -2547,14 +2514,10 @@ export const GetReplacementInfo = async (
       };
     }
 
-    console.log("Mongo Query-----", query);
 
     const replacementData = await collection.find(query).toArray();
 
-    console.log(
-      "Replacement DB Count-----",
-      replacementData.length
-    );
+    
 
     return replacementData.map((user: any) => ({
       ...user,

@@ -1681,7 +1681,7 @@ const HCAFeedback: React.FC = () => {
   const UserFullInfo = useSelector(
     (state: any) => state.AdminFullInfo
   );
-console.log("Check for UserFullInfo---",UserFullInfo)
+
   const [isChecking, setIsChecking] =
     useState(true);
 const [qualityStatus, setQualityStatus] =
@@ -1792,10 +1792,7 @@ useEffect(() => {
               }
             );
 
-            console.log(
-              "check Task Response------",
-              response
-            );
+          
 
             return {
               userId,
@@ -1814,14 +1811,8 @@ useEffect(() => {
       );
 
       // IMPORTANT: This runs AFTER Promise.all completes
-      console.log(
-        "========== ALL QUALITY RESULTS =========="
-      );
+    
 
-      console.log(
-        "check Task Results------",
-        results
-      );
 
       const statusMap: Record<
         string,
@@ -1835,14 +1826,9 @@ useEffect(() => {
           item.status;
       });
 
-      console.log(
-        "========== QUALITY STATUS MAP =========="
-      );
+     
 
-      console.log(
-        "statusMap------",
-        statusMap
-      );
+    
 
       setQualityStatus(statusMap);
 
@@ -3324,7 +3310,7 @@ const completedCount = completedRoles.length;
       onClick={() =>
       {
         onViewFeedback(item)
-        console.log("Check View Information----",)
+        
       }
       }
       className="inline-flex items-center gap-2 rounded-xl border border-[#50c896]/30 bg-[#50c896]/10 px-2 py-2.5 text-xs font-semibold text-[#278f69] transition hover:bg-[#50c896] hover:text-white"
@@ -3461,14 +3447,9 @@ useEffect(() => {
     return;
   }
 
-  console.log(
-    "========== PREVIEW DATA =========="
-  );
+ 
 
-  console.log(
-    "EXISTING FEEDBACK:",
-    existingFeedback
-  );
+
 
   /*
    * ==========================================
@@ -3489,10 +3470,7 @@ useEffect(() => {
     existingFeedback?.Termination
   ].filter(Boolean);
 
-  console.log(
-    "SAVED ROLES:",
-    savedRoles
-  );
+ 
 
   /*
    * ==========================================
@@ -3552,20 +3530,9 @@ useEffect(() => {
         roleData?.Recording
     )?.Recording || null;
 
-  console.log(
-    "MERGED ANSWERS:",
-    mergedAnswers
-  );
+  
 
-  console.log(
-    "MERGED RECORDINGS:",
-    mergedRecordings
-  );
 
-  console.log(
-    "AUDIO:",
-    savedAudio
-  );
 
   /*
    * ==========================================
@@ -3729,10 +3696,6 @@ ClientId:ImpClientId,
           }
         );
 
-      console.log(
-        "Quality Save Response:",
-        response?.data
-      );
 
       if (
         !response?.data
@@ -3849,10 +3812,6 @@ ClientId:ImpClientId,
         }
       );
 
-    console.log(
-      "Role 2 Save Response:",
-      response?.data
-    );
 
     if (
       !response?.data?.success
@@ -3958,10 +3917,7 @@ ClientId:ImpClientId,
       }
     );
 
-    console.log(
-      "Role 3 Save Response:",
-      response?.data
-    );
+   
 
     if (!response?.data?.success) {
       throw new Error(
@@ -4217,10 +4173,7 @@ ClientId:ImpClientId,
         }
       );
 
-    console.log(
-      "Random HCA Call Save Response:",
-      response?.data
-    );
+ 
 
     if (!response?.data?.success) {
       throw new Error(
@@ -4250,17 +4203,12 @@ ClientId:ImpClientId,
     async (
       e: React.ChangeEvent<HTMLInputElement>
     ) => {
-      console.log(
-        "handleAudioUpload CALLED"
-      );
+     
 
       const file =
         e.target.files?.[0];
 
-      console.log(
-        "Selected File:",
-        file
-      );
+      
 
       if (!file) {
         alert(
@@ -4319,10 +4267,7 @@ ClientId:ImpClientId,
             formData
           );
 
-        console.log(
-          "UPLOAD RESPONSE:",
-          response?.data
-        );
+      
 
         const url =
           response?.data

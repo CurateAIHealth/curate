@@ -82,7 +82,7 @@ useEffect(() => {
     try {
       // ✅ Use cache
       if (!forceRefresh && payableCache.data) {
-        console.log("📦 Using Cached Payable Data");
+       
 
         if (mounted) {
           cachedPayableData = payableCache.data;
@@ -94,7 +94,7 @@ useEffect(() => {
 
       // ✅ Prevent duplicate requests
       if (!forceRefresh && payableCache.promise) {
-        console.log("⏳ Waiting for existing request...");
+  
 
         const data = await payableCache.promise;
 
@@ -106,7 +106,7 @@ useEffect(() => {
         return;
       }
 
-      console.log("🌐 Fetching Fresh Payable Data...");
+
       setIsChecking(true);
 const MonthInfo = `${SearchYear}-${SearchMonth}`;
 
@@ -126,7 +126,7 @@ payableCache.promise = axios
       cachedPayableData = payableData;
       setPaybleData([...cachedPayableData]);
 
-      console.log("✅ Cache Updated");
+   
     } catch (err) {
       payableCache.promise = null;
       console.error(err);
@@ -144,7 +144,7 @@ payableCache.promise = axios
 }, []);
 
 
-console.log ("Check for UserInfo-----",selectedUser)
+
  const getDaysInMonth = (month: number, year: number) => {
   return new Date(year, month, 0).getDate(); 
 };
@@ -268,17 +268,7 @@ const State = (item.ServiceState || "Telangana") === SelectedServiceState;
 ]);
 
 
-console.log("Selected Month:", SearchMonth);
-console.log("Selected Year:", SearchYear);
-console.log(
-  "All Payment Types:",
-  PayableDataformation.map((item) => item.PaymentType)
-);
-console.log(
-  "All Payable Months:",
-  PayableDataformation.map((item) => item.Month)
-);
-console.log("Check for Payable Data------", filteredPayableData);
+
 
 const UpdateRevertStatus = async (
   ClientId: any,

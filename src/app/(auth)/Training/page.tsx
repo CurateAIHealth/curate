@@ -198,7 +198,7 @@ useEffect(() => {
     try {
       const response = await axios.get("/api/GetTraings");
 
-      console.log("Check Data-----", response.data.data);
+
 
       const apiData = response.data.data;
 
@@ -207,7 +207,6 @@ useEffect(() => {
         return;
       }
 
-      console.log("Check imported Data------", apiData);
 
       const formattedMaterials: Material[] = apiData.map((item: any) => ({
         id: Number(item.id),
@@ -232,7 +231,7 @@ setisChecking(false)
   FetchData();
 }, []);
 
-console.log("Check full list-----",materials)
+
   const filteredMaterials = useMemo(() => {
     return materials.filter((item) => {
       const matchesType =
@@ -341,11 +340,11 @@ const PostinDb = await axios.post("/api/NewTrainig", {
     );
 
     if (!confirmed) return;
-console.log("Check imp delete Information------",ImpData)
+
     const DeleteTraining= await axios.post("/api/DeleteTraing",{
       DeleteInformation:ImpData
     })
-console.log ("Check Delete Information-----",DeleteTraining)
+
     setMaterials((prev) => prev.filter((item) => item.id !== ImpData.id));
   };
 
@@ -357,13 +356,13 @@ console.log ("Check Delete Information-----",DeleteTraining)
 
   const handleRename = async() => {
     if (!selectedMaterial || !renameValue.trim()) return;
-console.log("Check for Rename Itesm-----",selectedMaterial)
+
 setUpdatedStatusMessage("Please Wait........")
 const UpdateName=await axios.post("/api/UpdateTrainingName",{
   ImportedDetails:selectedMaterial,
   NewName:renameValue
 })
-console.log("Check Results-----",UpdateName.data.result.message)
+
 if(!UpdateName.data.result.success){
   return setUpdatedStatusMessage("Failed to Update the Name")
 }

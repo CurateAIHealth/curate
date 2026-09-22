@@ -61,14 +61,14 @@ const refreshCollection = async (forceRefresh = false,collection?: string) => {
   try {
     // ✅ Use client cache
     if (!forceRefresh && dashboardCache.data) {
-      console.log("📦 Using Dashboard Cache");
+    
       applyData(dashboardCache.data);
       return;
     }
 
     // ✅ Wait for existing request
     if (!forceRefresh && dashboardCache.promise) {
-      console.log("⏳ Waiting for existing dashboard request...");
+    
 
       const data = await dashboardCache.promise;
 
@@ -77,7 +77,7 @@ const refreshCollection = async (forceRefresh = false,collection?: string) => {
     }
 const refreshType =
   refreshMap[collection || ""] || undefined;
-    console.log("🌐 Fetching Fresh Dashboard Data...");
+   
 
     dashboardCache.promise = axios
       .post("/api/AdminPageInfo", {
@@ -93,7 +93,7 @@ const refreshType =
 
       applyData(data);
 
-      console.log("✅ Dashboard Cache Updated");
+ 
     } finally {
       dashboardCache.promise = null;
     }
@@ -121,7 +121,7 @@ const refreshType =
       eventSourceRef.current = es;
 
       es.onopen = () => {
-        console.log("✅ GlobalSync Connected");
+    
       };
 
       es.onmessage = (event) => {
@@ -137,7 +137,7 @@ const refreshType =
           refreshTimer.current = setTimeout(() => {
     
           
-             console.log("Refreshing collection:", payload.collection);
+            
          dashboardCache.data = null;
 
 refreshCollection(true, payload.collection);

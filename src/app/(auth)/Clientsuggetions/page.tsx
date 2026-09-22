@@ -85,8 +85,7 @@ const ClientSuggetions = () => {
          GetRegidterdUsersForClient()
         ]);
 
-        console.log('Fetched users:', users);
-        console.log('Fetched full info:', Final);
+        
 
       
 

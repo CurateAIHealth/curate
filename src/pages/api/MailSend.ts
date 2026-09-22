@@ -24,7 +24,7 @@ const transporter = nodemailer.createTransport({
       html,
       attachments: [
         {
-          filename: "invoice.pdf",
+          filename: "Transaction History",
           content: pdfBase64,
           encoding: "base64",
         },

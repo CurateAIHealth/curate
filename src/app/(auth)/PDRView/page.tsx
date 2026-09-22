@@ -101,7 +101,7 @@ useEffect(() => {
     mounted = false;
   };
 }, [dispatch]);
-console.log ("ssssqs",ClientsInformation)
+
   const GetTeamNumber = (A: any) => {
     if (!users?.length || !A) return "Not Entered";
 
@@ -411,9 +411,7 @@ const GetMonthFreshData = async (r: string) => {
    
 
        const UpdatedData:any=await GetTimeSheetInfoforPdr(r, SearchYear)
-       console.log("UpdatedData:", UpdatedData);
-       console.log("Redux SearchMonth:", SearchMonth);
-console.log("Selected Month:", r);
+    
       setClientsInformation(UpdatedData ?? []);
        setIsSwitchingMonth(false);
         SetActionStatusMessage("Data Updated Successfully")

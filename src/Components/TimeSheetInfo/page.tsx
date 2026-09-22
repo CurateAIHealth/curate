@@ -245,11 +245,10 @@ const DateRange = new Date().toISOString().split("T")[0];
 //         }
 //       }
 
-//       console.log("FETCH START", Date.now());
 
 //       const { data } = await axios.get("/api/Deployentinfo");
 
-//       console.log("FETCH END", Date.now());
+//     
 
 //       const {
 //         deploymentInfo = [],
@@ -510,13 +509,13 @@ const processedData = useMemo(() => {
   return data
     .filter((record: any) => {
       if (!search) return true;
-console.log(record.days?.[0]);
+
       return (record.days || []).some((att: any) => {
         
         const client = att.Client_Name?.toLowerCase() || "";
         const hca = att.HCA_Name?.toLowerCase() || "";
         const phone = record.clientPhone?.toString() || "";
-console.log ("Check for Client-----",client)
+
         return (
           client.includes(search) ||
           hca.includes(search) ||
@@ -771,7 +770,7 @@ const EditAttendence = async (): Promise<void> => {
         SetAttendeceEditReason("");
       }, 1500);
     };
-console.log("Check for UpdatedBy---",flexDate)
+
 
   
       const response = await EditAttendanceByClientId(
@@ -786,7 +785,7 @@ console.log("Check for UpdatedBy---",flexDate)
         loggedInEmail,
         AbsentReason
       );
-console.log("Check Results-------",response)
+
  if (response?.success) {
   setClientsInformation((prev: any) => {
     const updated = { ...prev };
@@ -1038,7 +1037,7 @@ const GetMonthFreshData = async (r: string) => {
       Month: `${selectedYear}-${month}`,
     });
 
-    console.log("Check New Data", data.data.deployedLength);
+  
 
     setClientsInformation(data.data.deployedLength);
     dispatch(SetDeploymentInfo(data.data.deployedLength));
@@ -1821,7 +1820,7 @@ className={`
           const clientName = dayInfo?.clientName ?? "";
           const UpdatedBy = dayInfo?.UpdatedBy ?? "-";
           const AbsentReason=dayInfo?.Reason?? "-";
-          console.log("Check For ReplaesMent Date------",attendanceInfo)
+          
           const currentDate = new Date();
 currentDate.setHours(0, 0, 0, 0);
 
