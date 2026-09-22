@@ -120,7 +120,7 @@ useEffect(() => {
         //   terminationInfo,
         // } = await GetAllUsersData();
 
-      console.log("Check ImportedData-------", GetData);
+
 //  cachedUsersFullInfo = usersResult ?? [];
 //    cachedRegisterdUsers=RegisterdUsers??[]
 //         setUsers([...cachedUsersFullInfo]);
@@ -200,7 +200,7 @@ const PaymentInformation = useMemo(
     })) || [],
   [PreviewData]
 );
-console.log("Check Attendece----",PreviewData)
+
 const matchesSearchAndMonth = (
   item: any,
   searchText: string,
@@ -301,11 +301,7 @@ const data = useMemo(
     </Wrapper>
   );
 }
-console.log("PreviewData", PreviewData);
-console.log("PaymentInformation", PaymentInformation);
-console.log("SearchMonth", SearchMonth);
-console.log("SearchYear", SearchYear);
-console.log("search", search);
+
 
   if (isChecking) {
       return (

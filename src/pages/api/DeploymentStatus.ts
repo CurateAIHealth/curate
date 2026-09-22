@@ -13,7 +13,7 @@ export default async function handler(
   }
 
   try {
-    console.log("API START", Date.now());
+  
 
     const {
       ClientId,
@@ -29,8 +29,7 @@ export default async function handler(
       Status
     );
 
-    console.log("API END", Date.now());
-
+ 
     return res.status(200).json(result);
   } catch (error) {
     console.error(error);

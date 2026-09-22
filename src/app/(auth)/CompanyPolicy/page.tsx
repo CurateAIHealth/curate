@@ -128,7 +128,7 @@ const CompanyPolicy = () => {
       setErrorMessage("");
 
       const response = await axios.get(API.list);
-console.log("Fetched company policies:", response);
+
       const data = response?.data.data
 ;
 
@@ -303,7 +303,7 @@ setUpdatedStatusMessage("Uploading file...");
             uploadedPolicy
         }
       );
-      console.log("PostinDB", PostinDB);
+  
       if(PostinDB.data.success){
       setUpdatedStatusMessage("File uploaded successfully.");
       setShowUploadModal(false);

@@ -44,6 +44,6 @@ export default function handler(
     unsubscribe();
     res.end();
 
-    console.log("🔴 SSE Client Disconnected");
+   
   });
 }

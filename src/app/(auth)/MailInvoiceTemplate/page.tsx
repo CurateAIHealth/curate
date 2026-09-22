@@ -51,7 +51,7 @@ type RoundType = "none" | "nearest" | "up" | "down";
 export default function InvoiceForm() {
   const InvoiceData = useSelector((state: any) => state.InvoiceInfo);
   const [isEditing, setIsEditing] = useState(false);
-console.log("InvoiceData", InvoiceData)
+
   const RegUserInfo=useSelector((state:any)=>state.AdminUsers)
   const [ShowServices,setShowServices]=useState(false)
   const [otherExpenses, setOtherExpenses] = useState<any>();
@@ -88,7 +88,7 @@ const [otherService, setOtherService] = useState({
     HCAAttendece: InvoiceData.HACAttendeceforRefund || []
 
   };
-  console.log("Check for hcaid-----",refundData.HCAId)
+
   const [ShowMailTemplate, setShowMailTemplate] = useState(true);
 const [isSending, setIsSending] = useState(false);
 const [selected, setSelected] = useState<any>({
@@ -339,8 +339,7 @@ return
 //     items: invoiceProps.items,
 //     totals: invoiceProps.totals,
 //   });
-// console.log("Save Response:", save);
-
+// 
  
 //   const { default: html2pdf } = await import("html2pdf.js");
 
@@ -473,7 +472,7 @@ return
 //     });
 
 // const UpdateInvoiceStatus=await UpdateInvoice(InvoiceData)
-// console.log("Update Invoice Status:", UpdateInvoiceStatus);
+
 // if(UpdateInvoiceStatus?.success===true){
 //   setMailstatus(false)
 // }
@@ -501,7 +500,7 @@ const SendInvoice = async () => {
     if (!invoiceProps || !invoice || !InvoiceData) {
       throw new Error("Missing invoice data");
     }
-  console.log("Check for Arguments-----",InvoiceData)
+
   
     const saveResponse = await UpdateInvoiceData(InvoiceData, {
       invoice: invoiceProps.invoice,
@@ -510,7 +509,7 @@ const SendInvoice = async () => {
       totals: invoiceProps.totals,
     });
 
-    console.log("Save Response:", saveResponse);
+  
     if (saveResponse?.success === false) {
       throw new Error(
         saveResponse?.message || "Failed to save invoice"
@@ -674,17 +673,13 @@ const SendInvoice = async () => {
       pdfBase64: base64.split(",")[1],
     });
 
-    console.log("Mail Response:", mailResponse?.data);
-
+  
     // ✅ Update invoice status
 
   
     // const updateInvoiceStatus = await UpdateInvoice(InvoiceData);
 
-    // console.log(
-    //   "Update Invoice Status:",
-    //   updateInvoiceStatus
-    // );
+    
 
     //     if (!updateInvoiceStatus?.success) {
     //   throw new Error("Invoice email sent, but invoice status update failed.");

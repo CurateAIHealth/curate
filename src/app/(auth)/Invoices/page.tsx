@@ -5,7 +5,7 @@ import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, El
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { GetInvoiceInfo, GetInvoiceInfoforInvoicePage, GetRegidterdUsers, GetSentInvoiceData, GetSentInvoiceDataforDownloadpdf, UpdateStatusPayment } from "@/Lib/user.action";
-import { GeneratePDF, getDaysBetween, parseFlexibleDate } from "@/Lib/Actions";
+import { GeneratePDF, getDaysBetween, GetFulladress, parseFlexibleDate } from "@/Lib/Actions";
 import { LoadingData } from "@/Components/Loading/page";
 
 import { Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateInvoiceInfo, UpdateInvoiceIntialStatus, UpdateInvoiceStatus, UpdateUserType } from "@/Redux/action";
@@ -61,7 +61,7 @@ const [activeTab, setActiveTab] = useState("due");
   const pageSize = 4;
 const invoiceEditStatus = useSelector((s: any) => s.InvoiceEditStatus);
 const ShowMailTemplate=useSelector((A:any)=>A.RevertInvoices)
-console.log("Check users--==-",RegUserInfo)
+
 const refreshInvoices = async (showLoader = true) => {
   try {
     if (showLoader) {
@@ -73,7 +73,7 @@ const refreshInvoices = async (showLoader = true) => {
       yearFilter
     );
 
-    console.log("Fresh Invoice Data ----", data);
+  
 
     setFetchedInfo(data);
   } catch (err) {
@@ -181,7 +181,7 @@ const downloadExcel = () => {
           : "Not Available";
 
       return {
-        "S No.": index + 1,
+        "S.No.": index + 1,
 
         "Invoice No.": invoiceNumber,
 
@@ -290,43 +290,44 @@ const GetTeamNumber = (A: any) => {
 
     return Number(ImpTeamNumber.Team) ?? "Not Entered";
   };
-  const DownloadInvoice = async (InvoiceInfo:any) => {
-    try {
- console.log ("Check invoice information-----",InvoiceInfo)
-      setIsSending(true)
-      dispatch(UpdateInvoiceIntialStatus(false))
-      const SentInvoices: any = await GetSentInvoiceDataforDownloadpdf(InvoiceInfo);
+ const DownloadInvoice = async (InvoiceInfo: any) => {
+  try {
+    setIsSending(true);
+    dispatch(UpdateInvoiceIntialStatus(false));
 
-      console.log ("Check Curret Information-------",SentInvoices)
+   
 
+    const SentInvoices: any =
+      await GetSentInvoiceDataforDownloadpdf(InvoiceInfo);
 
-      const FilteredResult:any =SentInvoices.data[0]
-  
-      setInvoiceData(FilteredResult);
+    const FilteredResult = SentInvoices?.data?.[0];
 
-      setTimeout(async () => {
-        const Result = await GeneratePDF(FilteredResult);
-        if (Result?.status === true) {
-          setIsSending(false)
-        
-             dispatch(UpdateInvoiceIntialStatus(true))
-        }
-      }, 500)
-
-
-      if (FilteredResult.length === 0) {
-        alert("Invoice Not Found");
-        return;
-      }
-
-
-
-
-
-    } catch (err: any) {
-      console.log("Error", err)
+    if (!FilteredResult) {
+      alert("Invoice Not Found");
+      return;
     }
+
+   
+
+    // Keep React state updated if the UI needs it
+    setInvoiceData(FilteredResult);
+
+    // Generate directly - no setTimeout
+    const Result = await GeneratePDF(FilteredResult);
+
+    if (!Result?.status) {
+      alert(Result?.message || "Unable to generate invoice");
+      return;
+    }
+
+  } catch (err: any) {
+    console.error("Invoice download error:", err);
+    alert("Unable to download invoice");
+  } finally {
+    setIsSending(false);
+    dispatch(UpdateInvoiceIntialStatus(true));
   }
+};
 
 
 
@@ -348,13 +349,14 @@ const GetTeamNumber = (A: any) => {
       console.log("Error", err)
     }
   }
-  console.log("FetchedInfo", FetchedInfo)
-  const PreviewInfo = FetchedInfo.map((each: any) => {
+  
+  const PreviewInfo =useMemo(()=>{
+    return FetchedInfo.map((each: any) => {
 
 
 
     return {
-       id: each.Invoice || each.number || each.InvoiceNumber || "",
+       id: each.Invoice || each.number || each.InvoiceNumber ||each.Invoice|| "",
   InvoiceNumber: each.Invoice || each.number || each.InvoiceNumber || "",
       ClienId:each.ClienId,
       HCAId:each.HCAId||each.HCA_Id,
@@ -391,6 +393,11 @@ const GetTeamNumber = (A: any) => {
 
   }
   )
+  },[[FetchedInfo, RegUserInfo]])
+  
+  
+  
+  
   const statusStyles: any = {
     Draft:
       "bg-[#50c89612] text-[#50c896] border border-[#50c89655]",
@@ -399,7 +406,8 @@ const GetTeamNumber = (A: any) => {
     Overdue:
       "bg-[#ff149312] text-[#ff1493] border border-[#ff149355]",
   };
-  const computedInvoices = PreviewInfo.map((inv: any) => {
+  const computedInvoices =useMemo(()=>{
+    return  PreviewInfo.map((inv: any) => {
     const dueInfo = getDueStatus(inv.StartDate);
 
     const newStatus: InvoiceStatus =
@@ -411,6 +419,14 @@ const GetTeamNumber = (A: any) => {
       dueInfo
     };
   });
+  },[
+    [PreviewInfo]
+  ])
+  
+  
+  
+  
+  
 
 const filteredInvoices = useMemo(() => {
   let data = [...computedInvoices];
@@ -492,7 +508,7 @@ const filteredInvoices = useMemo(() => {
   activeTab
 ]);
 
-console.log("Check info-----",filteredInvoices)
+
 
   const totalPages = Math.max(
     1,
@@ -506,7 +522,14 @@ console.log("Check info-----",filteredInvoices)
 
   const totalDraft = filteredInvoices.filter((x: any) => x.status === "Draft").length;
   const totalSent = filteredInvoices.filter((x: any) => x.status === "Sent").length;
-  const totalOverdue = filteredInvoices.filter((x: any) => x.status === "Overdue").length;
+const totalOverdue = filteredInvoices.filter((x: any) => {
+
+
+  return getDueStatus(x.StartDate ??
+    x.SeriviceStartDate ??
+    x.ServiceStartDate ??
+    x.DeployDate).label === "Overdue";
+}).length;
 
   const currentYear = new Date().getFullYear();
 
@@ -627,7 +650,7 @@ const handleLogout = () => {
   const diffTime:any = today - placed;
   const daysPassed = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-  const daysLeft = 7 - daysPassed;
+  const daysLeft = 5 - daysPassed;
 
   if (daysLeft < 0) {
     return { label: "Overdue", days: daysLeft, status: "overdue" };
@@ -655,10 +678,10 @@ const GetHCAType=(ImpId:any)=>{
 
 }
   const UpdateInvoiceMailTemplate = (MainTemplateInfo: any) => {
-console.log("MainTemplateInfo", MainTemplateInfo)
+
     const Values=GetTitiles(MainTemplateInfo.ClienId)
    const HCAType=GetHCAType(MainTemplateInfo.HCAId)
-   console.log("HCAType", HCAType[0].PreviewUserType)
+
      dispatch(
     UpdateInvoiceInfo({
       ...MainTemplateInfo,
@@ -798,20 +821,20 @@ CheckPaymentStatus:CurrentPaymentStatus
     <img
       src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png"
       alt="Curate Health Services Logo"
-      className="h-14 md:h-12 md:mr-4 "
+      className="h-14 md:h-14 md:mr-4 "
     />
 
     <div className="flex flex-col">
       <h1
-        className="text-2xl md:text-3xl font-semibold tracking-tight"
+        className="text-xl md:text-xl text-center font-semibold tracking-tight"
         style={{ color: "#ff1493" }}
       >
         Invoice Management
       </h1>
 
-      <p className="text-gray-500 text-sm">
+      {/* <p className="text-gray-500 text-sm">
         Billing overview for patients & clients
-      </p>
+      </p> */}
     </div>
   </div>
 <div className="inline-flex rounded-2xl bg-gray-100 p-1.5 shadow-inner">
@@ -937,26 +960,27 @@ CheckPaymentStatus:CurrentPaymentStatus
     <div className="flex items-center gap-2 bg-blue-50 border-l-4 border-blue-600 text-blue-700 p-2 rounded w-full md:w-auto">
     <p className="text-xs font-semibold whitespace-nowrap">● Total Amount</p>
     <h3 className="text-sm md:text-base font-bold">
-      {Math.round(TotalRoundedAmount)}
+       
+      ₹{Math.round(TotalRoundedAmount)}
     </h3>
   </div>
 
 
   <div className="flex items-center gap-2 bg-green-50 border-l-4 border-green-600 text-green-700 p-2 rounded w-full md:w-auto">
     <p className="text-xs font-semibold whitespace-nowrap">✔ Total Received</p>
-    <h3 className="text-sm md:text-base font-bold">{  BalancePaid}</h3>
+    <h3 className="text-sm md:text-base font-bold">₹{  BalancePaid}</h3>
   </div>
 
 
   <div className="flex items-center gap-2 bg-red-50 border-l-4 border-red-600 text-red-700 p-2 rounded w-full md:w-auto">
     <p className="text-xs font-semibold whitespace-nowrap">⚠ Pending Amount</p>
-    <h3 className="text-sm md:text-base font-bold">{Math.round(BalanceDue)}</h3>
+    <h3 className="text-sm md:text-base font-bold">₹{Math.round(BalanceDue)}</h3>
   </div>
 
   
   <div className="flex items-center gap-2 bg-yellow-50 border-l-4 border-yellow-600 text-yellow-700 p-2 rounded w-full md:w-auto">
     <p className="text-xs font-semibold whitespace-nowrap">↩ Refund Issued</p>
-    <h3 className="text-sm md:text-base font-bold">{RefundAmount}</h3>
+    <h3 className="text-sm md:text-base font-bold">₹{RefundAmount}</h3>
   </div>
 
 </div>
@@ -1048,7 +1072,7 @@ CheckPaymentStatus:CurrentPaymentStatus
 
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <SummaryCard label="Total Invoices" value={filteredInvoices.length} subtleLabel="All statuses" borderColor="#1392d3" />
+              <SummaryCard label="Total Invoices" value={filteredInvoices.length} subtleLabel="For this Month" borderColor="#1392d3" />
               <SummaryCard label="Draft" value={totalDraft} subtleLabel="Need review" borderColor="#50c896" />
               <SummaryCard label="Sent" value={totalSent} subtleLabel="Shared with Client" borderColor="#1392d3" />
               <SummaryCard label="Overdue" value={totalOverdue} subtleLabel="Needs follow-up" borderColor="#ff1493" />
@@ -1084,11 +1108,11 @@ CheckPaymentStatus:CurrentPaymentStatus
       <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-<img
+{/* <img
             src="/Icons/Curate-logoq.png"
             className="h-10"
             alt="Company Logo"
-          />
+          /> */}
 
           <h3 className="text-lg font-semibold text-[#1392d3]">
             Advanced Filter
@@ -1147,7 +1171,7 @@ CheckPaymentStatus:CurrentPaymentStatus
             }}
             className="px-4 py-2 bg-[#1392d3] text-white rounded-lg"
           >
-            Apply Filter
+            Submit
           </button>
         </div>
       </div>
@@ -1289,17 +1313,41 @@ CheckPaymentStatus:CurrentPaymentStatus
                       {index + 1}
                     </span>
 
-                    <div className="min-w-0">
+                  {/* Client */}
+<div className="min-w-0">
+  <span
+    className="
+      block
+      whitespace-normal
+      break-words
+      leading-4
+      text-[11px]
+      font-semibold
+      text-gray-800
+    "
+    title={inv.ClientName || "-"}
+  >
+    {inv.ClientName || "-"}
+  </span>
+</div>
 
-                      <p className="truncate text-sm font-bold text-gray-800">
-                        {inv.ClientName || "Unknown Client"}
-                      </p>
-
-                      <p className="truncate text-xs text-gray-500">
-                        {inv.name || "No Patient Name"}
-                      </p>
-
-                    </div>
+{/* Patient */}
+<div className="min-w-0">
+  <span
+    className="
+      block
+      whitespace-normal
+      break-words
+      leading-4
+      text-[11px]
+      font-semibold
+      text-gray-800
+    "
+    title={inv.name || "-"}
+  >
+    {inv.name || "-"}
+  </span>
+</div>
 
                   </div>
 
@@ -1676,30 +1724,48 @@ CheckPaymentStatus:CurrentPaymentStatus
               </div>
 <div className="min-w-0">
   <span className="block truncate text-[11px] font-semibold text-teal-700">
-{String(inv.InvoiceNumber || inv.id || inv.number || "-").includes("#")
+{String(inv.InvoiceNumber || inv.id || inv.number ||inv.Invoice|| "-").includes("#")
   ? String(inv.InvoiceNumber || inv.id || inv.number || "-")
   : `#${inv.InvoiceNumber || inv.id || inv.number || "-"}`}
   </span>
 </div>
 
               {/* Client */}
-              <div className="min-w-0">
+              {/* Client */}
+<div className="min-w-0">
+  <span
+    className="
+      block
+      whitespace-normal
+      break-words
+      leading-4
+      text-[11px]
+      font-semibold
+      text-gray-800
+    "
+    title={inv.ClientName || "-"}
+  >
+    {inv.ClientName || "-"}
+  </span>
+</div>
 
-                <span className="block truncate text-[11px] font-semibold text-gray-800">
-                  {inv.ClientName || "-"}
-                </span>
-
-              </div>
-
-
-              {/* Patient */}
-              <div className="min-w-0">
-
-                <span className="block truncate text-[11px] font-semibold text-gray-800">
-                  {inv.name || "-"}
-                </span>
-
-              </div>
+{/* Patient */}
+<div className="min-w-0">
+  <span
+    className="
+      block
+      whitespace-normal
+      break-words
+      leading-4
+      text-[11px]
+      font-semibold
+      text-gray-800
+    "
+    title={inv.name || "-"}
+  >
+    {inv.name || "-"}
+  </span>
+</div>
 
 
               {/* Contact */}
@@ -1925,34 +1991,35 @@ CheckPaymentStatus:CurrentPaymentStatus
 
                 ) : (
 
-                  <div className="group relative flex justify-center">
+                 <div className="group relative flex justify-center">
 
-                    <Info
-                      size={17}
-                      className="cursor-help text-gray-500"
-                    />
+  <Info
+    size={17}
+    className="cursor-help text-gray-500"
+  />
 
-                    <span
-                      className="
-                        absolute
-                        bottom-full
-                        right-0
-                        z-50
-                        mb-2
-                        hidden
-                        whitespace-nowrap
-                        rounded
-                        bg-gray-800
-                        px-2 py-1
-                        text-[10px]
-                        text-white
-                        group-hover:block
-                      "
-                    >
-                      Complete invoice sending to update status
-                    </span>
+  <span
+    className="
+      absolute
+      left-1/2
+      top-1/2
+      ml-2
+      -translate-y-1/2
+      z-50
+      hidden
+      whitespace-nowrap
+      rounded
+      bg-gray-800
+      px-2 py-1
+      text-[10px]
+      text-white
+      group-hover:block
+    "
+  >
+    Complete invoice sending to update status
+  </span>
 
-                  </div>
+</div>
 
                 )}
 

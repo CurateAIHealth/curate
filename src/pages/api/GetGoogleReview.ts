@@ -20,7 +20,7 @@ export default async function handler(
     }
 
     const ImpMonth = req.body?.ImpMonth;
-console.log ("Validate Information-----",ImpMonth)
+
     // Validate month
     if (
       typeof ImpMonth !== "string" ||

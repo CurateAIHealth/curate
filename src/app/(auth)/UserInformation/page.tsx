@@ -31,8 +31,7 @@ const UserDetailInfo = () => {
           GetUserInformation(userId),
           GetUserCompliteInformation(userId),
         ]);
-  
-console.log ("Check For User Types------",result)
+
 
         // Handle user redirections efficiently
         const userType = initialValues?.userType;
@@ -49,7 +48,7 @@ console.log ("Check For User Types------",result)
         }
 
         const userInfo = result?.HCAComplitInformation;
-        console.log("Check Imported UserType------",userInfo)
+    
         if (userInfo?.userType) {
           setUserType(userInfo.userType);
         } else {

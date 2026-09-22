@@ -462,7 +462,7 @@ return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.t
             <td className="px-6 py-4 text-center">
               <button
                 onClick={() =>
-                  console.log("Console TimeSheet---", placement.TimeSheetAttendence)
+                  console.log("Console TimeSheet---")
                 }
                 className="rounded-lg border border-emerald-600 px-5 py-1.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-300"
               >

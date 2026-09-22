@@ -25,12 +25,11 @@ const { month, year } = req.body;
       });
     }
 
-    console.time("GetPayableData");
-console.log ("Check for imp Data-----",`${month}-${year}`)
+
 
     const data = await GetReplacementInfo(month, year);
 
-    console.timeEnd("GetPayableData");
+
 
     return res.status(200).json({
       success: true,

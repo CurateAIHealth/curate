@@ -75,7 +75,7 @@ const hasData = users?.length > 0 && RegisterdUsers?.length > 0;
   GetTerminationInfoForTerminationPage(month, year),
   GetReasonsInfoInfo()
 ]);
-console.log("Done-----",FetchData)
+
         ReplacementReasonsCache = ReplacementReasons ?? []
       
         
@@ -166,7 +166,7 @@ console.log("Done-----",FetchData)
   return filtered
 };
 //   const ExtendTimeSheet = async () => {
-//     console.log("Check for Tha Datata-----", ExtendInfo);
+//    
     
  
     
@@ -215,7 +215,7 @@ console.log("Done-----",FetchData)
 //         },
 //       ];
 
-//       console.log("Check for Tha Datata-----", ExtendInfo);
+//   
 
 //       const deploymentRes = await InsertDeployment(
 //         StarteDate,
@@ -651,9 +651,7 @@ const attendanceRecord =
     return itemDate === dateKey;
   }) || null;
 
-// Debug
-console.log("Current Date :", dateKey);
-console.log("Attendance Record :", attendanceRecord);
+
 
 const clientName = attendanceRecord?.Client_Name ?? "";
 const UpdatedUser = attendanceRecord?.UpdatedBy ?? "";
@@ -1016,7 +1014,7 @@ const isFutureDate = cellDate > currentDate;
                   </td>
                   <td className="px-6 py-4 text-center">
                     <button
-                        onClick={()=>{setAttendenceInfo(placement),setShowFullMonth(true) ;console.log("dd",placement)}}
+                        onClick={()=>{setAttendenceInfo(placement),setShowFullMonth(true) ;}}
                  className="
       px-3 py-1.5
       text-sm font-medium
@@ -1168,7 +1166,7 @@ const isFutureDate = cellDate > currentDate;
   );
 };
 function DayBadge({ status }: { status: any }) {
-  console.log("Check Imp Data-----",status)
+ 
   const Wrapper = ({ children }: any) => (
     <div className="flex items-center justify-center w-full">
       {children}

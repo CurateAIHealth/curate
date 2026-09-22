@@ -266,7 +266,7 @@ export const GeneratePDF = async (invoiceData:any) => {
 
  
     const canvas = await html2canvas(pdfRef, { 
-        scale: 3,      
+        scale: 1,      
         useCORS: true,  
         allowTaint: true
     });
@@ -813,7 +813,6 @@ export const GetEmail = (
 
 export const GetFulladress=(Information:any,Id:any)=>{
 const fulladress= Information.find((each:any)=>each.userId===Id)
-return fulladress.
-Location
+return  `${fulladress.AddressLine1} ${fulladress.AddressLine2} ${fulladress.Location}`
 
 }

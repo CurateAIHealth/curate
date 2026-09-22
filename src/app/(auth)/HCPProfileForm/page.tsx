@@ -228,7 +228,7 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
   Other: '',
 });
 
-console.log("Check Docs-----",Docs)
+
   const [form, setForm] = useState<FormState>({
     firstName: '',
     lastName:'',
@@ -585,7 +585,7 @@ console.log("Check Docs-----",Docs)
       cancelled = true;
     };
   }, [previewUserId]);
-console.log("Check Form Data-----",form.Reviews)
+
   const completion = useMemo(() => {
     const { serviceHours12hrs, serviceHours24hrs, ...restForm } = form;
 

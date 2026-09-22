@@ -213,7 +213,7 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
   Other: '',
 });
 
-console.log("Check Docs-----",Docs)
+
   const [form, setForm] = useState<FormState>({
     firstName: '',
     lastName:'',
@@ -781,7 +781,7 @@ if (!isAnyFieldEmpty && !isReasonEmpty) {
             setUpdatedStatusMessage("Creating account and saving profile...");
 const Complitinfo = await PostHCAFullRegistration(FinelForm);
 
-console.log("Check Resistration------",Complitinfo)
+
 if (!Complitinfo?.success) {
   setUpdatedStatusMessage(
    Complitinfo.message
@@ -789,7 +789,7 @@ if (!Complitinfo?.success) {
   return;
 }
            const PrimaryDetails = await HCARegistration(payload);
-console.log ("Check HCA Registration Error----",PrimaryDetails)
+
 if (!PrimaryDetails.success===true) {
   setUpdatedStatusMessage(
 PrimaryDetails.message

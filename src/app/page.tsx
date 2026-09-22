@@ -68,7 +68,7 @@ const [loadingMessage, setLoadingMessage] = useState("Initializing...");
     const users=useSelector((state:any)=>state.AdminUsers)
     const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
     const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
-console.log ("Check Users---",users)
+
   const router = useRouter();
   const dispatch=useDispatch()
   const SearchMonth=useSelector((state:any)=>state.FilterMonth) 
@@ -197,7 +197,7 @@ useEffect(() => {
                   });
 
                   return data.data;
-                  console.log("Dashboard data fetched and cached:", data.data); 
+                
                 })
                 .finally(() => {
                   dashboardRequestCache.promise = null;
