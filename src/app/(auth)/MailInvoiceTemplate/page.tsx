@@ -1133,7 +1133,9 @@ message="Please provide the client’s email address to send the invoice."
 <InfoField
   label="Address"
   value={
-    GetFulladress(RegUserInfo, InvoiceData.ClienId) 
+    InvoiceData?.ClienId
+      ? GetFulladress(RegUserInfo, InvoiceData.ClienId) ?? ""
+      : ""
   }
 />
       <InfoField label="Client Charges" value={formData.invoice?.ServiceCharge} />
