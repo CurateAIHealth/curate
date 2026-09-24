@@ -238,9 +238,7 @@ if(UpdateCurrentClientStatus.success){
           }
         );
   
-        console.log (
-  "Current Task------",data
-        )
+    
   
         dispatch(setUsers(
           data.data.registeredUsers
@@ -541,7 +539,7 @@ text-left
   </div>
 
   {UpdatedFilterUserType.map((user, index) => (
-    console.log("User Comments:", user.comments),
+   
     <div
       key={index}
       className={`grid ${GRID_COLS} gap-4 items-center px-4 py-3 text-sm border-b min-w-[900px]`}

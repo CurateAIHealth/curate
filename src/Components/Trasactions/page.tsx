@@ -164,7 +164,7 @@ setActionMessage("Sending Transaction History via Email...");
       const mailResponse = await axios.post(
         "/api/MailSend",
         {
-          to: "tsiddu805@gmail.com",
+          to: "info@curatehealth.in",
 
           subject: `Transaction History - ${data.ClientName}`,
 

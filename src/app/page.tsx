@@ -148,12 +148,13 @@ useEffect(() => {
 
   (async () => {
     try {
-      const userId = localStorage.getItem("UserId");
+     const userId = localStorage.getItem("UserId");
 
-      if (!userId) {
-        router.replace("/sign-in");
-        return;
-      }
+if (!userId) {
+  setIsChecking(false);
+  clearInterval(progressTimer);
+  return;
+}
 
       setIsChecking(true);
       setLoadingProgress(0);

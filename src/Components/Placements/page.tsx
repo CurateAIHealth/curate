@@ -542,9 +542,6 @@ if(UpdateTeamStatus.data.success){
         }
       );
 
-      console.log (
-"Current Task------",data
-      )
 
       dispatch(setUsers(
         data.data.registeredUsers
@@ -757,7 +754,7 @@ const normalizedAttendance =
     payTerms:each.payTerms,
     HCPPrice:Math.round(Number(each.PaymentforStaff)) / 30||"Not Provided"
   }));
-console.log("Finel TimeSheet Data:", Finel);
+
  const handleDelete = () => {
     if (selectedReason === "Other") {
       confirmDelete(otherReason.trim());
@@ -954,7 +951,7 @@ const GetHCPFullName = (A: any) => {
     ?.find((info: any) => info?.UserId === A);
 
   if (!info) return "";
-console.log("HCP Info:", info);
+
   const fullName = [
     info.HCPSurName,
     info.HCPFirstName,
@@ -1165,7 +1162,7 @@ const toggleStatus = () => {
   setStatus((prev) => (prev === "Active" ? "Freeze" : "Active"));
 };
   const handleDeleteClick = (Info: any,Name:any) => {
-    console.log ("Check Termination Info-------",Info)
+
     SetTerminationInfo(Info)
 SetCareTakerName(GetHCPFullName(Info.HCA_Id))
     setShowDeletePopup(true);
@@ -1460,7 +1457,7 @@ const ExistingHCPStatusUpdate=await UpdateUserCurrentstatusInHCPView(
         selectedCase.StartDate
 
       );
-      console.log ("Check Replasement Info----",UpdateReplacmentInfo)
+
     if (!UpdateReplacmentInfo?.success) {
       SetActionStatusMessage(
         "Replacement update failed."
@@ -1499,7 +1496,7 @@ const ExistingHCPStatusUpdate=await UpdateUserCurrentstatusInHCPView(
         }
       );
 
-      console.log("Current Task------", data);
+
 
       dispatch(
         SetDeploymentInfo(
@@ -1725,8 +1722,7 @@ const TotalHCPPayment = processedData.reduce((acc: number, record: any) => {
 }, 0);
 
 const TotalMargin=calculateMargin(TotalServiceCharge,TotalHCPPayment)
-  
-console.log("Check Processed Data",FinelTimeSheet)
+
 const UpdateServiceCharge=async(A:any)=>{
   SetActionStatusMessage("Please Wait...")
   alert(A)
@@ -2656,7 +2652,6 @@ const GetMonthFreshData = async (r: string) => {
 
 
 
-    console.log("Check New Data", data.data.deployedLength);
 setClientsInformation(data.data.deployedLength)
     dispatch(SetDeploymentInfo(data.data.deployedLength));
  setIsSwitchingMonth(false);
@@ -3805,7 +3800,7 @@ const EditDate =
 
         if(UpdatedStatus === "Active") {
           setFreezeOperation(true)
-setShowReassignmentPopUp(!ShowReassignmentPopUp),setPopuptype("Repleasment"),SetCareTakerName(GetHCPFullName(c.HCA_Id)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA(""),console.log("Check Test Data-----",)
+setShowReassignmentPopUp(!ShowReassignmentPopUp),setPopuptype("Repleasment"),SetCareTakerName(GetHCPFullName(c.HCA_Id)),setselectedHCP(null),setselectedAssignHCP(null),setSelectedCase(c),setReplacementDate("");SetActionStatusMessage(""),setShowWarning(false),setUpdatedCareTakerStatus(""),setSearchHCA("")
 
 
         }
@@ -5152,7 +5147,7 @@ onClick={EditAttendence}
 
  const record = TimeSheet_Info.ClientAttendance?.find((t: any) => {
   if (!t?.dateKey) return false;
-console.log("Check for Repleasment Date--------",TimeSheet_Info)
+
   const [year, month, date] = t.dateKey.split("-").map(Number);
   const parsed = new Date(year, month - 1, date);
 

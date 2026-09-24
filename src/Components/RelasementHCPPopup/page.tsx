@@ -69,7 +69,7 @@ const RepleasementHCPPopup = ({
   };
 
 
-console.log ("Check information of Hcps-----",ClientInformation)
+
 const HCA_List = Array.isArray(filteredHcps)
   ? filteredHcps.filter((each: any) => {
       if (!each) return false;

@@ -6729,23 +6729,253 @@ export const GetInvoiceInfoforInvoicePage = async (
       };
     }
 
-
+    // ---------------------------------------------------------
+    // 1. Get invoices for selected month
+    // ---------------------------------------------------------
 
     const invoiceData = await collection
       .find(query)
       .toArray();
 
-    const safeUsers = invoiceData.map((user: any) => ({
-      ...user,
-      _id: user._id.toString(),
-    }));
 
+    // ---------------------------------------------------------
+    // 2. Get invoice number for EVERY CLIENT
+    //    from the WHOLE collection
+    // ---------------------------------------------------------
+
+    const allInvoiceNumbers = await collection
+      .find(
+        {
+          ClienId: { $exists: true, $ne: null },
+          Invoice: { $exists: true, $ne: "" },
+        },
+        {
+          projection: {
+            _id: 0,
+            ClienId: 1,
+            Invoice: 1,
+          },
+        }
+      )
+      .sort({ _id: 1 })
+      .toArray();
+
+
+    // ---------------------------------------------------------
+    // 3. Create ClientId -> InvoiceNumber map
+    // ---------------------------------------------------------
+
+    const invoiceNumberMap = new Map<string, string>();
+
+    for (const item of allInvoiceNumbers) {
+      const clientId = String(item.ClienId);
+
+      // Keep the FIRST invoice number found for the client
+      if (!invoiceNumberMap.has(clientId)) {
+        invoiceNumberMap.set(
+          clientId,
+          String(item.Invoice)
+        );
+      }
+    }
+
+
+    // ---------------------------------------------------------
+    // 4. Add Invoice number to selected month's records
+    // ---------------------------------------------------------
+
+    const safeUsers = invoiceData.map((user: any) => {
+      const clientId = String(user.ClienId);
+
+      return {
+        ...user,
+        _id: user._id.toString(),
+
+        // Existing invoice first, otherwise find from
+        // the whole collection using ClienId
+        Invoice:
+          user.Invoice ||
+          invoiceNumberMap.get(clientId) ||
+          "",
+      };
+    });
 
 
     return safeUsers;
 
   } catch (e) {
-    console.error("GetInvoiceInfoforInvoicePage error:", e);
+    console.error(
+      "GetInvoiceInfoforInvoicePage error:",
+      e
+    );
+
+    return [];
+  }
+};
+
+export const GetInvoiceInfoforAdvanceFilterInvoicePage = async (
+  fromDate: string,
+  toDate: string
+) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Invoices");
+
+    const from = new Date(`${fromDate}T00:00:00`);
+    const to = new Date(`${toDate}T23:59:59`);
+
+    const query = {
+      $or: [
+        {
+          $expr: {
+            $and: [
+              {
+                $gte: [
+                  {
+                    $dateFromString: {
+                      dateString: "$SerivceStartDate",
+                      format: "%d/%m/%Y",
+                      onError: null,
+                      onNull: null,
+                    },
+                  },
+                  from,
+                ],
+              },
+              {
+                $lte: [
+                  {
+                    $dateFromString: {
+                      dateString: "$SerivceStartDate",
+                      format: "%d/%m/%Y",
+                      onError: null,
+                      onNull: null,
+                    },
+                  },
+                  to,
+                ],
+              },
+            ],
+          },
+        },
+
+        {
+          $expr: {
+            $and: [
+              {
+                $gte: [
+                  {
+                    $dateFromString: {
+                      dateString: "$ServiceStartDate",
+                      format: "%d/%m/%Y",
+                      onError: null,
+                      onNull: null,
+                    },
+                  },
+                  from,
+                ],
+              },
+              {
+                $lte: [
+                  {
+                    $dateFromString: {
+                      dateString: "$ServiceStartDate",
+                      format: "%d/%m/%Y",
+                      onError: null,
+                      onNull: null,
+                    },
+                  },
+                  to,
+                ],
+              },
+            ],
+          },
+        },
+
+        {
+          $expr: {
+            $and: [
+              {
+                $gte: [
+                  {
+                    $dateFromString: {
+                      dateString: "$StartDate",
+                      format: "%d/%m/%Y",
+                      onError: null,
+                      onNull: null,
+                    },
+                  },
+                  from,
+                ],
+              },
+              {
+                $lte: [
+                  {
+                    $dateFromString: {
+                      dateString: "$StartDate",
+                      format: "%d/%m/%Y",
+                      onError: null,
+                      onNull: null,
+                    },
+                  },
+                  to,
+                ],
+              },
+            ],
+          },
+        },
+
+        {
+          $expr: {
+            $and: [
+              {
+                $gte: [
+                  {
+                    $dateFromString: {
+                      dateString: "$DeployDate",
+                      format: "%d/%m/%Y",
+                      onError: null,
+                      onNull: null,
+                    },
+                  },
+                  from,
+                ],
+              },
+              {
+                $lte: [
+                  {
+                    $dateFromString: {
+                      dateString: "$DeployDate",
+                      format: "%d/%m/%Y",
+                      onError: null,
+                      onNull: null,
+                    },
+                  },
+                  to,
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    const invoiceData = await collection
+      .find(query)
+      .toArray();
+
+    return invoiceData.map((user: any) => ({
+      ...user,
+      _id: user._id.toString(),
+    }));
+
+  } catch (error) {
+    console.error(
+      "GetInvoiceInfoforInvoicePage error:",
+      error
+    );
+
     return [];
   }
 };

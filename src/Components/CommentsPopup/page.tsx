@@ -22,7 +22,7 @@ const CommentsPopup: React.FC<CommentsPopupProps> = ({
   title = "Comments",
 }) => {
   if (!open) return null;
-console.log("Comments Data:", comments);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
       <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl animate-in fade-in zoom-in duration-300">

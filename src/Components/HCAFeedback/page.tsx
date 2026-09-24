@@ -1701,7 +1701,7 @@ const [showQuestionManager, setShowQuestionManager] =
   useState(false);
   const [selectedHCA, setSelectedHCA] =
     useState<any | null>(null);
-console.log("Check for HCA NAME---",selectedHCA)
+
   const [selectedSections, setSelectedSections] =
     useState<FeedbackSection[]>([]);
 
@@ -1728,7 +1728,7 @@ const [selectedYear, setSelectedYear] =
   /* =======================================================
      HCA DATA
   ======================================================= */
-console.log("Check selectedHCA------",)
+
   const hcaData = useMemo(() => {
     return Array.isArray(users)
       ? users.filter(
@@ -1844,7 +1844,7 @@ useEffect(() => {
 
 }, [hcaData]);
 
-console.log ("Find-----",qualityStatus)
+
   /* =======================================================
      FETCH QUALITY DATA
   ======================================================= */
@@ -2201,7 +2201,7 @@ const hasSavedFeedback = (item: any): boolean => {
   
   const completedSections =
     getCompletedSectionIds(getUserId(item));
-console.log ("Check for UserId-------",getUserId(item))
+
   return completedSections.length > 0;
 };
   const getCompletedSectionsCount = (
@@ -2222,7 +2222,7 @@ console.log ("Check for UserId-------",getUserId(item))
       getCompletedSectionIds(
         getUserId(item)
       );
-console.log ('Found-----',completedIds)
+
     return applicableSections.filter(
       (section) =>
         completedIds.includes(
@@ -2337,7 +2337,7 @@ if (role === "HCA Status Review") {
   ): FeedbackStatus => {
     const available =
       getAvailableSections(item);
-console.log ("Check Current Issue-----",available)
+
     return available.length > 0
       ? "Pending"
       : "Completed";
@@ -2483,7 +2483,7 @@ const PreferdWorkingStatus=item?.PreferdWorkingStatus||"Telangana"===SelectedSer
 
  const handleViewFeedback = (item: any) => {
   const userId = getUserId(item);
-console.log("Next Step----",userId)
+
   const status = item?.CurrentStatus as HCAStatus;
 
   const applicable = feedbackSections.filter(
@@ -3137,9 +3137,7 @@ const HCATable: React.FC<HCATableProps> = ({
               item,
               index
             ) => {
-console.log(
-"Check Current Information-----",item
-)
+
               const status =
                 item?.CurrentStatus as HCAStatus;
 

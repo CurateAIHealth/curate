@@ -132,11 +132,11 @@ useEffect(() => {
         }
       }
 
-      console.log("Time Sheet FETCH START", Date.now());
+   
 
       const data = await GetApplicationData();
 
-      console.log(" Time Sheet  FETCH END", Date.now());
+
 
       const deploymentInfo = data.deploymentInfo || [];
 
@@ -146,20 +146,7 @@ useEffect(() => {
       cachedUsersFullInfo =
         data.usersFullInfo || [];
 
-      console.log(
-        "Deployment Count",
-        deploymentInfo.length
-      );
-
-      console.log(
-        "Registered Users Count",
-        cachedRegisterdUsers.length
-      );
-
-      console.log(
-        "Users Full Info Count",
-        cachedUsersFullInfo.length
-      );
+     
 
       console.time("FORMAT_DATA");
 
@@ -647,7 +634,7 @@ const EditAttendence = async (): Promise<void> => {
         SetAttendeceEditReason("");
       }, 1500);
     };
-console.log("Check for UpdatedBy---",flexDate)
+
 
   
       const response = await EditAttendanceByClientId(
@@ -662,7 +649,7 @@ console.log("Check for UpdatedBy---",flexDate)
         loggedInEmail,
         AbsentReason
       );
-console.log("Check Results-------",response)
+
  if (response?.success) {
   setClientsInformation((prev: any) => {
     const updated = { ...prev };
@@ -1680,7 +1667,7 @@ className={`
           const clientName = dayInfo?.clientName ?? "";
           const UpdatedBy = dayInfo?.UpdatedBy ?? "-";
           const AbsentReason=dayInfo?.Reason?? "-";
-          console.log("Check For Reason------",dayInfo)
+      
           const currentDate = new Date();
 currentDate.setHours(0, 0, 0, 0);
 

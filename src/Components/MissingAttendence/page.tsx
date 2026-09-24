@@ -54,7 +54,7 @@ useEffect(() => {
 
     const deploymentData = await GetDeploymentInfoforMissingAttendece(cacheKey);
 
-    console.log("Check Imp Data-----", deploymentData);
+
 
     if (!mounted) return;
 
@@ -122,7 +122,7 @@ const hasToday = attendance.some((a: any) =>
  
   const isCurrentMonth = (() => {
   if (!item.StartDate) return false;
-console.log ("Check for Start Date------",item.StartDate)
+
   const [day, month, year] = item.StartDate.split("/").map(Number);
   const startDate = new Date(year, month - 1, day);
 
@@ -137,8 +137,7 @@ console.log ("Check for Start Date------",item.StartDate)
 
   return !hasToday && matchesSearch && isCurrentMonth;
 });
-console.log("Filtered Result:", AttendenceInfo);
-console.log ("Check Selected Date---",selectedDate)
+
 const UpdateCurrentAttendence = async () => {
   setStatusMessage("Please Wait...");
 
