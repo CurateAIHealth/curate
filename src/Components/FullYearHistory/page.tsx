@@ -330,10 +330,7 @@ setActionMessage("Sending Full transaction History via Email...");
         }
       );
 
-      console.log(
-        "Mail Response:",
-        mailResponse?.data
-      );
+     
 setActionMessage("Sent Email as Successfully")
      
     } catch (error: any) {
@@ -349,7 +346,7 @@ setActionMessage("Sent Email as Successfully")
       );
     } 
   };
-  console.log ("Check----",PAYMENT_HISTORY)
+
   return (
     <div>
       {ActionMessage&&

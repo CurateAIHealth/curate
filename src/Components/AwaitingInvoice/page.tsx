@@ -347,7 +347,7 @@ const FilterFinelTimeSheet = FinelTimeSheet.filter((item:any) =>item.Team===acti
 );
 const today:any = new Date().getDate();
 const UpdatePopup=async(a:any)=>{
-  console.log("Check For The Data",a)
+ 
   setshowExtendPopup(true)
   setExtendInfo(a)
 
@@ -687,9 +687,7 @@ ServiceState:ExtendInfo.ServiceState
         }
       );
 
-      console.log (
-"Current Task------",data
-      )
+   
 
       dispatch(setUsers(
         data.data.registeredUsers

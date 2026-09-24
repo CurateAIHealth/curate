@@ -253,7 +253,7 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
 //     }
 //   };
 
-console.log("PreviewComponentData", data)
+
 const UpdatePDRInfo = async () => {
   try {
     setSelectedRecord(true);
@@ -349,7 +349,7 @@ const UpdatePDRInfo = async () => {
         setUpdatingStatus("Deployment creation failed");
         return;
       }
-      console.log("FormData", data.ClientAgreementFront, data.ClientAgreementBack)
+
       const UpdatedDataWithInvoice = {
         ...UpdatedData,
         ServiceStartDate: new Date(data.InvoiseInformation

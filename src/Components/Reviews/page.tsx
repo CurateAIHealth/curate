@@ -540,7 +540,7 @@ export function HCPReviews({ HCAName,UserId,ImportedReviews }: Props){
     };
     
 const PostReview=await axios.post("api/NewReview",{newReview,UserId})
-console.log("CheckReview Status------",PostReview.data.success)
+
 alert(UserId)
 if(PostReview.data.success){
  setUploadStatusMessage("Review Posted Successfully")

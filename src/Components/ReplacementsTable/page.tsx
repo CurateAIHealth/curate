@@ -353,7 +353,7 @@ const dayInfo = attendanceInfo.days?.find((item: any) => {
           const UpdatedBy = dayInfo?.UpdatedBy ?? "-";
           const AbsentReason=dayInfo?.Reason?? "-";
           const AttendecStatus:any=getStatus(dayInfo)
-       console.log ("Checking----",AttendecStatus)
+ 
           const currentDate = new Date();
 currentDate.setHours(0, 0, 0, 0);
 
@@ -567,7 +567,7 @@ const isFutureDate = cellDate > currentDate;
                   <td className="px-3 py-2">
                    <button
                                   className="px-2 py-1 text-[10px] text-white bg-teal-800 rounded hover:bg-teal-600"
-                                  onClick={()=>{setAttendenceInfo(item),setShowFullMonth(true) ;console.log("dd",item.days)}}
+                                  onClick={()=>{setAttendenceInfo(item),setShowFullMonth(true) }}
                                 >
                                   View
                                 </button>
@@ -664,7 +664,7 @@ const isFutureDate = cellDate > currentDate;
   );
 };
 function DayBadge({ status }: { status: any }) {
-  console.log("Check Imp Data-----",status)
+ 
   const Wrapper = ({ children }: any) => (
     <div className="flex items-center justify-center w-full">
       {children}

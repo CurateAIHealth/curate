@@ -190,8 +190,7 @@ useEffect(()=>{
       const BasicInfo:any=await GetUserInformation(ImportedUserId)
     setShowPassword(BasicInfo.PreviewPassword)
       const FilterValue=Result.HCAComplitInformation
-    console.log("Check Imported Documents-----",FilterValue
-)
+  
       setUser(prev=>({...prev,
     firstName: FilterValue["First Name"] || "",
     LastName: FilterValue["LastName"] || "", 
@@ -272,7 +271,7 @@ Other:FilterValue.Other||FilterValue.Documents["Other"]||'/Icons/PatientDefault.
     Fetch()
 },[])
 
-console.log ("Check for Reviews----",user)
+
 
   const handleSave =async () => {
     setSubmitstatusMessage("Please Wait....")
@@ -373,10 +372,10 @@ const updateWithNewData = async () => {
     });
 
     const normalizedData = normalizeHCA(finalData);
-console.log("FinalData:", normalizedData);
+
    
     const PrimeUpdate=await updateHCARegistration(ImportedUserId, normalizedData);
-    console.log("ResultsData:", PrimeUpdate);
+
     await UpdateHCAComplitInformation(ImportedUserId, finalData);
 
   dispatch(Refresh(`Profile updated Successfully`))
@@ -432,7 +431,7 @@ case "HikeHistory":
     );
   }
 
-  console.log ("Check for Documets-----",ImportedUserId)
+
   const handleprofessionalSkillChange = (skill:any) => {
     setUser((prev:any) => {
       const skills:any = prev.ProfetionSkill || [];

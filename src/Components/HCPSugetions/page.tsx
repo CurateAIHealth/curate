@@ -107,7 +107,7 @@ const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
 }, [updatedRefresh]);
 
 const activeClient = clients?.[selectedClientIndex];
-console.log("Check Active Client Information",activeClient)
+
 useEffect(() => {
   if (!activeClient) return;
 
@@ -292,7 +292,7 @@ const filteredHcps = hcps.filter((each: any) => {
   const matchesSearch =
     each?.HCPFirstName?.toLowerCase().includes(query.toLowerCase()) ||
     each?.HCPSurName?.toLowerCase().includes(query.toLowerCase());
-console.log("Check Filter Information------",each)
+
   // Find matching user
   const matchedUser = usersInfo.find(
     (user: any) => user.userId === each.UserId
@@ -301,7 +301,6 @@ console.log("Check Filter Information------",each)
   const userType = matchedUser?.PreviewUserType;
   const CurrentStatus = matchedUser?.CurrentStatus === "Bench";
 
-  console.log("User Type for HCP", userType);
 
   // HCP Type filter
   const HCPTYPE = form.hcpType
@@ -326,7 +325,7 @@ console.log("Check Filter Information------",each)
         GenderMatch;
 });
 
-console.log("Check Client Information------",filteredHcps)
+
 
 
 
@@ -1113,7 +1112,7 @@ if (!activeClient) {
                 ) : (
                   <div className="md:h-[550px] overflow-y-auto flex flex-wrap justify-center md:justify-start gap-3 md:gap-2 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 p-2">
                     {filteredHcps.map((hcp: any, idx: number) => {
-                      console.log("HCP Status:", hcp);
+              
                       const alreadyInformed = ExsitingInformedUsers.some(
                         (each) =>
                           each.InformedHCPID === hcp.UserId &&

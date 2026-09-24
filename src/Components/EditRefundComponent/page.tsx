@@ -151,7 +151,7 @@ const processedData = useMemo(() => {
   };
 }, [form.HCAAttendece]);
 
-console.log ("Check Task Attendece-----",processedData)
+
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
@@ -212,7 +212,7 @@ const formatDateForInput = (date?: string) => {
 HCAId
 
     );
-    console.log("Check Update Results------",result)
+
     if (result.success === false) {
      setIsSending("Failed to update refund information.");
       return
@@ -838,7 +838,7 @@ Your refund request has been successfully processed. Please find the attached re
           const clientName = dayInfo?.clientName ?? "";
           const UpdatedBy = dayInfo?.UpdatedBy ?? "-";
           const AbsentReason=dayInfo?.Reason?? "-";
-          console.log("Check For ReplaesMent Date------",attendanceInfo)
+     
           const currentDate = new Date();
 currentDate.setHours(0, 0, 0, 0);
 

@@ -1109,11 +1109,7 @@ const SentTestEmail = async () => {
       `,
     });
 
-    console.log(
-      "Replacement Test Email Response:",
-      mailResponse.data
-    );
-
+   
     setStatusMessage(
       "Replacement Test Email Sent Successfully ✅"
     );

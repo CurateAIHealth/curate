@@ -21,7 +21,7 @@ export default function HikeHistory({
   history,
   HCAName,
 }: HikeHistoryProps) {
-console.log ("Check Hike info----",history)
+
    const [ActionMessage,setActionMessage]=useState("")
  const downloadPDF = async () => {
      try {
@@ -330,10 +330,7 @@ setActionMessage("Sending Hike History via Email...");
   pdfFileName: `${HCAName}-Hike-History.pdf`,
 });
 
-      console.log(
-        "Mail Response:",
-        mailResponse?.data
-      );
+   
 setActionMessage("Sent Email as Successfully")
      
     } catch (error: any) {

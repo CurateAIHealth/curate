@@ -76,7 +76,7 @@ const SearchYear=useSelector((state:any)=>state.FilterYear)
   const DeploymentInfo = useSelector(
     (state: any) => state.AdminDeployment
   );
-console.log("Check Deployment Info---",DeploymentInfo)
+
 const [reviewFilter, setReviewFilter] =
   useState<ReviewStatus>("Pending");
 const [StatusFilter,setStatusFilter] = useState<"Active" | "Freeze">("Active");
@@ -92,7 +92,7 @@ const [selectedReview, setSelectedReview] = useState<{
 
 const users=useSelector((state:any)=>state.AdminUsers)
  const [isChecking, setisChecking] = useState(true)
- console.log ("Check Deployment Info---",users)
+
 
 const formatIndianDate = (date:any) => {
   const [year, month, day] = date.split("-");
@@ -169,7 +169,7 @@ const TerminatedUsers = useMemo(() => {
   );
 }, [users, DeploymentInfo]);
 
-console.log ("Check Terminate Users---",TerminatedUsers)
+
 
 const FilteredDeploymentInfo = useMemo(() => {
   if (!Array.isArray(DeploymentInfo)) {
@@ -183,10 +183,7 @@ const FilteredDeploymentInfo = useMemo(() => {
   );
 }, [DeploymentInfo, StatusFilter,SearchMonth,SearchYear]);
 
-console.log(
-  "Filtered DeploymentInfo---",
-  FilteredDeploymentInfo
-);
+
    const TerminatedgoogleReviews = useMemo<any[]>(() => {
     if (!Array.isArray(TerminatedUsers)) {
       return [];
@@ -311,7 +308,7 @@ const googleReviews = useMemo<GoogleReviewData[]>(() => {
     });
 
 }, [DeploymentInfo, ImportedInfo, ImpMonth, StatusFilter]);
-console.log("Check Current Task",FilteredDeploymentInfo)
+
 
 // IMPORTANT:
 // This controls which data is displayed.
@@ -370,7 +367,7 @@ const completedCount = displayedReviews.filter(
   /* -------------------------------------------------------
      FILTER
   ------------------------------------------------------- */
-console.log ("Current Check----",selectedReview)
+
 const filteredData = useMemo(() => {
   const searchText = search.toLowerCase().trim();
 
@@ -405,7 +402,7 @@ const GetMonthFreshData = async (r: string) => {
 
 
 
-    console.log("Check New Data", data.data.deployedLength);
+
 
     dispatch(SetDeploymentInfo(data.data.deployedLength));
  setIsSwitchingMonth(false);

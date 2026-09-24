@@ -2409,10 +2409,10 @@ export const paymentData = [
 
 
 export  const serviceOptions = [
-  // { name: "Healthcare Assistant Service", code: "HCAS", amount: 20000 },
-  { name: "Nursing Care Service", code: "NURS", amount: 35000 },
-  { name: "Bedside Attendant", code: "BSA", amount: 15000 },
-    { name: "Other", code: "Other", amount: 0 }
+  { name: "HCN", code: "HCN", amount: 20000 },
+  // { name: "Nursing Care Service", code: "NURS", amount: 35000 },
+  // { name: "Bedside Attendant", code: "BSA", amount: 15000 },
+  //   { name: "Other", code: "Other", amount: 0 }
 ];
 
 

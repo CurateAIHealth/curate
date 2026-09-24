@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List, PencilOff, Info, PrinterCheck, ListFilterPlus, ChevronDown } from "lucide-react";
+import { Search, Eye, Download, CheckCircle, Clock, Slice, Pencil, SquarePen, EllipsisVertical, LogOut, Loader, List, PencilOff, Info, PrinterCheck, ListFilterPlus, ChevronDown, RotateCcw } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { GetInvoiceInfo, GetInvoiceInfoforInvoicePage, GetRegidterdUsers, GetSentInvoiceData, GetSentInvoiceDataforDownloadpdf, UpdateStatusPayment } from "@/Lib/user.action";
+import { GetInvoiceInfo, GetInvoiceInfoforAdvanceFilterInvoicePage, GetInvoiceInfoforInvoicePage, GetRegidterdUsers, GetSentInvoiceData, GetSentInvoiceDataforDownloadpdf, UpdateStatusPayment } from "@/Lib/user.action";
 import { GeneratePDF, getDaysBetween, GetFulladress, parseFlexibleDate } from "@/Lib/Actions";
 import { LoadingData } from "@/Components/Loading/page";
 
@@ -38,6 +38,7 @@ export default function InvoicesPage() {
     const [openTransactions, setOpenTransactions] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [FetchedInfo, setFetchedInfo] = useState<any>([])
+  const [isAdvancedFilterActive, setIsAdvancedFilterActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [openPaymentMethods, setOpenPaymentMethods] = useState(false);
   const [PaymentInformation,SetPaymentInformation]=useState<any>()
@@ -68,7 +69,7 @@ const refreshInvoices = async (showLoader = true) => {
       setisChecking(true);
     }
 
-    const data = await GetInvoiceInfoforInvoicePage(
+    const data:any = await GetInvoiceInfoforInvoicePage(
       monthFilter,
       yearFilter
     );
@@ -97,7 +98,40 @@ useEffect(() => {
   refreshInvoices(true);
 }, [monthFilter, yearFilter]);
 
+const GetAdvanceFilterData = async () => {
+  if (!fromDate || !toDate) {
+    setStatus("Please select both From Date and To Date");
+    return;
+  }
 
+  if (new Date(fromDate) > new Date(toDate)) {
+    setStatus("From Date cannot be after To Date");
+    return;
+  }
+
+  try {
+    setStatus("Please wait, fetching filtered data...");
+
+    const GetFilterData =
+      await GetInvoiceInfoforAdvanceFilterInvoicePage(
+        fromDate,
+        toDate
+      );
+
+    setFetchedInfo(
+      Array.isArray(GetFilterData) ? GetFilterData : []
+    );
+
+    setIsAdvancedFilterActive(true);
+    setPage(1);
+    setStatus("Filtered data fetched successfully");
+
+    setShowAdvancedFilter(false);
+  } catch (error) {
+    console.error("Advanced filter error:", error);
+    setStatus("Failed to fetch filtered data");
+  }
+};
 const downloadExcel = () => {
   try {
     // Keep Excel order same as the table
@@ -432,28 +466,34 @@ const filteredInvoices = useMemo(() => {
   let data = [...computedInvoices];
 
   // MONTH + YEAR
-  if (monthFilter !== "All" || yearFilter !== "All") {  
-    data = data.filter((inv: any) => {
-      const date = parseFlexibleDate(
-        inv.StartDate ??
-        inv.SeriviceStartDate ??
-        inv.ServiceStartDate ??
-        inv.DeployDate
-      );
+// MONTH + YEAR FILTER
+// Skip this filter when Advanced Filter is active.
 
-      if (!date) return false;
+if (
+  !isAdvancedFilterActive &&
+  (monthFilter !== "All" || yearFilter !== "All")
+) {
+  data = data.filter((inv: any) => {
+    const date = parseFlexibleDate(
+      inv.StartDate ??
+      inv.SeriviceStartDate ??
+      inv.ServiceStartDate ??
+      inv.DeployDate
+    );
 
-      const monthMatches =
-        monthFilter === "All" ||
-        date.getMonth() + 1 === Number(monthFilter);
+    if (!date) return false;
 
-      const yearMatches =
-        yearFilter === "All" ||
-        date.getFullYear() === Number(yearFilter);
+    const monthMatches =
+      monthFilter === "All" ||
+      date.getMonth() + 1 === Number(monthFilter);
 
-      return monthMatches && yearMatches;
-    });
-  }
+    const yearMatches =
+      yearFilter === "All" ||
+      date.getFullYear() === Number(yearFilter);
+
+    return monthMatches && yearMatches;
+  });
+}
 
   // SEARCH
   if (search.trim() !== "") {
@@ -505,7 +545,8 @@ const filteredInvoices = useMemo(() => {
   filter,
   SelectedServiceStates,
   activeTeam,
-  activeTab
+  activeTab,
+  isAdvancedFilterActive
 ]);
 
 
@@ -1025,9 +1066,30 @@ CheckPaymentStatus:CurrentPaymentStatus
     <ListFilterPlus  size={14} />
     <span className="text-xs font-medium">Advanced</span>
   </button>
-
+{isAdvancedFilterActive && (
+  <button
+    onClick={()=>{refreshInvoices(true);setIsAdvancedFilterActive(false)}}
+    className="
+      inline-flex items-center justify-center gap-2
+      rounded-lg border border-red-200
+      bg-red-50 px-4 py-2
+      text-sm font-semibold text-red-600
+      shadow-sm
+      transition-all duration-200
+      hover:border-red-300 hover:bg-red-100
+      hover:text-red-700 hover:shadow
+      active:scale-95
+      focus:outline-none focus:ring-2
+      focus:ring-red-300 focus:ring-offset-2
+    "
+  >
+    <RotateCcw size={16} />
+    Reset
+  </button>
+)}
 </div>
-
+{!isAdvancedFilterActive &&
+<div className="flex items-center gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-500">Month</span>
                   <select
@@ -1066,6 +1128,7 @@ CheckPaymentStatus:CurrentPaymentStatus
                     ))}
                   </select>
                 </div>
+                 </div>}
 
               </div>
             </div>
@@ -1085,6 +1148,7 @@ CheckPaymentStatus:CurrentPaymentStatus
     <div className="flex justify-between items-center px-5 py-3 border-b border-gray-400">
       <div>
         <p className="text-sm font-medium text-gray-800">Invoice list</p> 
+    
         {/* <p className="text-xs text-gray-500">
           Showing {paginatedData.length} of {filteredInvoices.length} filtered invoices
         </p> */}
@@ -1152,12 +1216,25 @@ CheckPaymentStatus:CurrentPaymentStatus
             />
           </div>
         </div>
-
+        {status&&
+<p
+  className="
+    inline-flex items-center justify-center gap-2 mt-2
+    rounded-full border border-blue-200
+    bg-blue-50 px-3 py-1.5
+    text-sm font-semibold text-blue-700
+    shadow-sm
+  "
+>
+  <span className="h-2 w-2 rounded-full bg-blue-500" />
+  {status}
+</p>}
         <div className="flex justify-end gap-2 mt-6">
           <button
             onClick={() => {
               setFromDate("");
               setToDate("");
+              setStatus("")
             }}
             className="px-4 py-2 border rounded-lg text-gray-600"
           >
@@ -1165,10 +1242,10 @@ CheckPaymentStatus:CurrentPaymentStatus
           </button>
 
           <button
-            onClick={() => {
+            onClick={
               
-              setShowAdvancedFilter(false);
-            }}
+              GetAdvanceFilterData
+            }
             className="px-4 py-2 bg-[#1392d3] text-white rounded-lg"
           >
             Submit
@@ -1722,11 +1799,22 @@ CheckPaymentStatus:CurrentPaymentStatus
               <div className="font-medium text-gray-600">
                 {index + 1}
               </div>
-<div className="min-w-0">
-  <span className="block truncate text-[11px] font-semibold text-teal-700">
-{String(inv.InvoiceNumber || inv.id || inv.number ||inv.Invoice|| "-").includes("#")
-  ? String(inv.InvoiceNumber || inv.id || inv.number || "-")
-  : `#${inv.InvoiceNumber || inv.id || inv.number || "-"}`}
+<div className="w-[120px] shrink-0">
+  <span className="block whitespace-nowrap text-left text-[10px] font-semibold text-teal-700">
+    {(() => {
+      const invoice =
+        inv.Invoice ||
+        inv.InvoiceNumber ||
+        inv.number ||
+        inv.id ||
+        "-";
+
+      const invoiceString = String(invoice);
+
+      return invoiceString.startsWith("#")
+        ? invoiceString
+        : `#${invoiceString}`;
+    })()}
   </span>
 </div>
 

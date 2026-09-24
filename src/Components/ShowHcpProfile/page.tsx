@@ -288,7 +288,7 @@ useEffect(() => {
       }
 
       const profileData = result.HCAComplitInformation;
-console.log ("Check imported Data------",profileData)
+
       setProfile({
         id: profileData.UserId,
         name: `${profileData["First Name"] || ""} ${profileData.LastName || ""}`.trim(),
@@ -498,7 +498,7 @@ const options = {
   setActionMessage("");
   onClose();
 };
-console.log("Check for Feedbacksss------",profile )
+
   if (loading) {
     return renderOverlay(
       <div className="relative h-full max-h-[850px] overflow-hidden rounded-3xl border border-[#e2e8f0] bg-[#ffffff] p-5 shadow-sm">

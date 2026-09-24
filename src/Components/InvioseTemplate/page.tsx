@@ -281,7 +281,7 @@ const recalcTotals = () => {
     }
   };
 
-console.log ("Check Client Name------",billTo)
+
   return (
     <div style={{ padding: "4px", width: "100%", background: "#fff", borderRadius: "10px", boxShadow: "0 0 10px #0001" }} id="Updated-pdf-area">
 <>
@@ -605,17 +605,62 @@ console.log ("Check Client Name------",billTo)
   </table>
 
   {/* FOOTER */}
-  <div style={{ marginTop: 30 }}>
-    <div style={{ height: 3, background: "#50c896", marginBottom: 10 }} />
+<div
+  style={{
+    marginTop: 30,
+    background: "#f1f1f1",
+    padding: "12px 20px",
+    fontFamily: "Arial, sans-serif",
+    color: "#555",
+    fontSize: 12,
+  }}
+>
+  {/* Registered Address */}
+  <div
+    style={{
+      textAlign: "center",
+      marginBottom: 12,
+      fontSize: 13,
+    }}
+  >
+    <strong style={{ color: "#333" }}>Registered Address - </strong>
+   H. No. 2-117/7-53, Anagha Datta Nilayam,
+2-117/3, Manikonda Road,
+Behind Preetham Hospital, OU Colony,
+Shaikpet, Hyderabad, Telangana – 500104
 
-    <table width="100%" style={{ fontSize: 12 }}>
-      <tr>
-        <td>#</td>
-        <td align="center">A Complete Home Healthcare Professionals</td>
-        <td align="right">www.curatehealthservices.com</td>
-      </tr>
-    </table>
   </div>
+
+  {/* Contact Information */}
+  <table
+    width="100%"
+    cellPadding="0"
+    cellSpacing="0"
+    style={{
+      fontSize: 12,
+      color: "#555",
+    }}
+  >
+    <tbody>
+      <tr>
+        <td align="center" width="33%">
+          <span style={{ fontSize: 15 }}>☎</span>
+          &nbsp; +91 73860 45569
+        </td>
+
+        <td align="center" width="34%">
+          <span style={{ fontSize: 15 }}>🌐</span>
+          &nbsp; www.curatehealthservices.com
+        </td>
+
+        <td align="center" width="33%">
+          <span style={{ fontSize: 14 }}>✉</span>
+          &nbsp; connect@curatehealthservices.com
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 </div>
 

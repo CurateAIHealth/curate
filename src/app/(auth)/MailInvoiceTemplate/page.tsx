@@ -99,7 +99,7 @@ const [selected, setSelected] = useState<any>({
 });
 const { month, year } = getMonthYear(InvoiceData?.StartDate);
   const invoice = {
-    number:`INV_${month}_${year}`,
+    number:InvoiceData.InvoiceNumber,
     ServiceCharge:InvoiceData.CareTakeCharge,
     date: InvoiceData?.StartDate,
     dueDate: addDays(InvoiceData?.StartDate, 7),
@@ -1133,11 +1133,9 @@ message="Please provide the client’s email address to send the invoice."
 <InfoField
   label="Address"
   value={
-    RegUserInfo?.length && InvoiceData?.ClienId
-      ? GetFulladress(RegUserInfo, InvoiceData.ClienId) ||
-        formData.billTo?.addressLines ||
-        "--"
-      : formData.billTo?.addressLines || "--"
+    InvoiceData?.ClienId
+      ? GetFulladress(RegUserInfo, InvoiceData.ClienId) ?? ""
+      : ""
   }
 />
       <InfoField label="Client Charges" value={formData.invoice?.ServiceCharge} />
@@ -1272,8 +1270,8 @@ message="Please provide the client’s email address to send the invoice."
               </div>
 
               <div className="px-6 py-4 overflow-x-auto">
-                <table className="w-full min-w-[520px] text-sm border border-slate-200 rounded-xl overflow-hidden">
-                  <thead className="bg-slate-50/80 text-slate-600">
+                <table className="w-full min-w-[520px] text-md border border-slate-200 rounded-xl overflow-hidden">
+                  <thead className="bg-slate-50/80 text-md text-slate-600">
                     <tr>
                       <Th>#</Th>
                       <Th>Service Name</Th>
@@ -1414,7 +1412,7 @@ message="Please provide the client’s email address to send the invoice."
             <div className="bg-white border border-slate-200 rounded-2xl shadow-sm">
               <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                  <p className="text-sm uppercase tracking-[0.18em] Payment Summary">
                     Payment Summary
                   </p>
                   <h2 className="text-lg font-semibold text-slate-900 mt-1">
@@ -1581,7 +1579,9 @@ message="Please provide the client’s email address to send the invoice."
 function InfoField({ label, value }: { label: string; value: any }) {
   return (
     <div>
-      <p className="text-xs text-slate-500 mb-0.5">{label}</p>
+    <p className="text-sm md:text-base font-semibold text-slate-600 mb-1 tracking-wide">
+  {label}
+</p>
       <div className="text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
         {value || "--"}
       </div>
@@ -1592,7 +1592,9 @@ function InfoField({ label, value }: { label: string; value: any }) {
 function StatItem({ label, value }: { label: string; value: any }) {
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">{label}</p>
+<p className="text-sm md:text-base font-semibold text-slate-600 mb-1 tracking-wide">
+  {label}
+</p>
       <p className="text-sm font-medium text-slate-800 mt-0.5">{value || "--"}</p>
     </div>
   );
@@ -1600,7 +1602,7 @@ function StatItem({ label, value }: { label: string; value: any }) {
 
 function Th({ children }: { children: React.ReactNode }) {
   return (
-    <th className="px-4 py-2.5 text-left text-xs font-semibold border-b border-slate-200">
+    <th className="px-4 py-2.5 text-left text-md font-semibold border-b border-slate-200 text-slate-600">
       {children}
     </th>
   );

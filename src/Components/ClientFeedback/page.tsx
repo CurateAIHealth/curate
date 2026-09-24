@@ -1713,10 +1713,7 @@ const [clientQuestionSections, setClientQuestionSections] = useState<QualitySect
           }
         );
 
-        console.log(
-          "Client Feedback Information -----",
-          response
-        );
+     
 
         if (response.data?.success) {
           setClientFeedbackInfo(response.data.data || []);
@@ -1773,7 +1770,6 @@ const GetPlacementFeedback = (
       }) ?? null
     );
   };
-console.log ("Check for Current Task----",GetClientFeedback(month,"fb9832ee-c4fd-4632-be73-67dd0b539db6","391a2c83-3ef3-4029-a215-7539cbc66707"))
 
   const currentSection =
     allSections[currentSectionIndex];
@@ -1858,7 +1854,7 @@ const FetchTerminationData = async () => {
 
         })) ?? [];
 
-console.log ("Check for Current Task----",Result)
+
         setTerminationInfo(Result);
      setPreviewType("Termination")
         setIsChecking(false);
@@ -1876,7 +1872,7 @@ console.log ("Check for Current Task----",Result)
       year: SearchYear,
     });
 const FetchDataReplasementData=response.data.data||[]
-   console.log("ReplasmentData------",response.data.data) 
+
 
     const Result: any = FetchDataReplasementData?.map((each: any) => ({
           id: each.ClientId,
@@ -2085,7 +2081,7 @@ const FetchDataReplasementData=response.data.data||[]
 
 
 
-      console.log("Check New Data", data.data.deployedLength);
+   
 
       dispatch(SetDeploymentInfo(data.data.deployedLength));
       setIsSwitchingMonth(false);
@@ -2140,7 +2136,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
 
   const savedFeedback = client.compliteInfo;
 
-  console.log("Opening Completed Feedback:", savedFeedback);
+ 
 
   // Load previously saved answers
   setAnswers(
@@ -2248,7 +2244,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
     Month: `${SearchMonth}-${SearchYear}`,
   };
 
-  console.log("QUALITY CALL:", qualityCall);
+  
 
   try {
     const PostClientFeedBack = await axios.post(
@@ -2258,11 +2254,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
       }
     );
 
-    console.log(
-      "Check Data Post Status----",
-      PostClientFeedBack
-    );
-
+ 
     setSaved(true);
   } catch (error) {
     console.error("Save Quality Call Error:", error);
@@ -3599,7 +3591,7 @@ const FinalCallScreen: React.FC<
   onBack,
   onSave,
 }) => {
-console.log("Check d---",selectedClient)
+
     return (
       <div className="space-y-6">
 

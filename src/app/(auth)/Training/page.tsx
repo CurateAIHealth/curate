@@ -277,6 +277,10 @@ const allowedTypes = [
   'video/webm',
   'video/ogg',
   'application/pdf',
+
+  // PowerPoint files
+  'application/vnd.ms-powerpoint', // .ppt
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
 ];
         if (!allowedTypes.includes(file.type)) {
             alert('Only image or video files are allowed.');
@@ -591,14 +595,15 @@ setUpdatedStatusMessage(UpdateName.data.result.message)
               <span className="text-right">Actions</span>
             </div>
 
-            {filteredMaterials.map((material) => (
-              <MaterialListItem
-                key={material.id}
-                material={material}
-                onRename={openRename}
-                onDelete={handleDelete}
-              />
-            ))}
+        {filteredMaterials.map((material) => (
+  <MaterialListItem
+    key={material.id}
+    material={material}
+    onRename={openRename}
+    onDelete={handleDelete}
+    onPreview={setPreviewMaterial}
+  />
+))}
           </div>
         )}
       </div>
@@ -1098,10 +1103,12 @@ function MaterialListItem({
   material,
   onRename,
   onDelete,
+  onPreview,
 }: {
   material: Material;
   onRename: (material: Material) => void;
   onDelete: (material: Material) => void;
+  onPreview: (material: Material) => void;
 }) {
   const config = typeConfig[material.type];
   const Icon = config.icon;
@@ -1138,7 +1145,11 @@ function MaterialListItem({
       </div>
 
       <div className="flex items-center justify-end gap-1">
-        <ActionButton icon={Eye} label="View" onClick={() => {}} />
+       <ActionButton
+  icon={Eye}
+  label="Preview"
+  onClick={() => onPreview(material)}
+/>
 
         {/* <ActionButton
           icon={Download}

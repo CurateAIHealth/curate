@@ -123,7 +123,7 @@ const summary =
     paymentMode: "",
     paymentDate: "",
   };
-console.log("Check For Current------",current)
+
   const totalCredit = transactions
     .filter((t:any) => t.type === "credit")
     .reduce((sum:any, t:any) => sum + t.amount, 0);
@@ -471,10 +471,7 @@ setActionMessage("Sending Salary Slip via Email...");
         }
       );
 
-      console.log(
-        "Mail Response:",
-        mailResponse?.data
-      );
+   
 setActionMessage("Sent Email as Successfully")
      
     } catch (error: any) {

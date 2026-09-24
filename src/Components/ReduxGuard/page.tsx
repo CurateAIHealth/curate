@@ -30,7 +30,7 @@ export default function ReduxGuard({ children }: Props) {
   useEffect(() => {
     // Redux validation - check first before anything else
     if (!hasReduxData && !PUBLIC_ROUTES.has(pathname)) {
-      console.log("Redux data missing.");
+  
       router.replace("/");
       return;
     }
@@ -45,7 +45,7 @@ export default function ReduxGuard({ children }: Props) {
 
     // Authentication check
     if (!userId) {
-      console.log("User not logged in.");
+   
       router.replace("/");
       return;
     }
