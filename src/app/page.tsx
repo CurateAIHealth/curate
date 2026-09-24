@@ -119,32 +119,28 @@ useEffect(() => {
   let mounted = true;
   let progress = 0;
 
-  const progressTimer = setInterval(() => {
-    if (!mounted || progress >= 95) return;
+ const progressTimer = setInterval(() => {
+  if (!mounted || progress >= 95) return;
 
-    if (progress < 25) progress += 5;
-    else if (progress < 50) progress += 3;
-    else if (progress < 75) progress += 2;
-    else if (progress < 90) progress += 1;
-    else progress += 0.5;
+  if (progress < 25) progress += 5;
+  else if (progress < 50) progress += 3;
+  else if (progress < 75) progress += 2;
+  else if (progress < 90) progress += 1;
+  else progress += 0.5;
 
-    const value = Math.min(Math.floor(progress), 95);
+  const value = Math.min(Math.floor(progress), 95);
 
-    const index = Math.min(
-      Math.floor((value / 95) * loadingSteps.length),
-      loadingSteps.length - 1
-    );
-  const userId = localStorage.getItem("UserId");
+  const index = Math.min(
+    Math.floor((value / 95) * loadingSteps.length),
+    loadingSteps.length - 1
+  );
 
-      if (!userId) {
-      setIsChecking(false);
-        return;
-      }
-    setLoadingProgress(value);
-    setLoadingMessage(
-      `${loadingSteps[index].icon} ${loadingSteps[index].text}`
-    );
-  }, 100);
+  setLoadingProgress(value);
+
+  setLoadingMessage(
+    `${loadingSteps[index].icon} ${loadingSteps[index].text}`
+  );
+}, 100);
 
   (async () => {
     try {
@@ -245,12 +241,10 @@ if (window.location.pathname !== "/DashBoard") {
       // ---------------- Normal User ----------------
       clearInterval(progressTimer);
 
-      flushSync(() => {
-        setLoadingProgress(100);
-        setLoadingMessage("Redirecting...");
-      });
+     setLoadingProgress(100);
+setLoadingMessage("Redirecting...");
 
-      setIsChecking(false);
+setIsChecking(false);
       const destination = !profile?.FinelVerification
         ? profile?.userType === "healthcare-assistant"
           ? "/HCARegistraion"

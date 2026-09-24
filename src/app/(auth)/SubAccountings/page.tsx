@@ -187,11 +187,34 @@ setIsNavigating(true);
           }
         />
                 
-     {isNavigating && (
-  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
-    <div className="bg-white rounded-xl shadow-xl px-8 py-6 flex flex-col items-center gap-4">
-      <div className="h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-      <p className="text-lg font-semibold">{loadingMessage}</p>
+{isNavigating && (
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div className="relative bg-white rounded-2xl shadow-2xl px-8 py-7 flex flex-col items-center gap-4 min-w-[280px]">
+
+      {/* Close Button */}
+      <button
+        onClick={() => setIsNavigating(false)}
+        className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
+        aria-label="Close loading overlay"
+        title="Close"
+      >
+        ✕
+      </button>
+
+      {/* Loading Spinner */}
+      <div className="h-12 w-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+
+      {/* Loading Message */}
+      <div className="text-center">
+        <p className="text-base font-semibold text-gray-800">
+          {loadingMessage}
+        </p>
+
+        <p className="text-sm text-gray-500 mt-1">
+          Please wait while we load your page.
+        </p>
+      </div>
+
     </div>
   </div>
 )}

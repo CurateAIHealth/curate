@@ -801,7 +801,328 @@ export const profileCache: Record<
     profileTime?: number;
   }
 > = {};
-export const GetDashboardData = async (userId: string, Month: string) => {
+// export const GetDashboardData = async (userId: string, Month: string) => {
+//   try {
+//     if (!userId) {
+//       return {
+//         success: false,
+//         message: "UserId is required",
+//         data: null,
+//       };
+//     }
+
+//     const CACHE_TIME = 1 * 60 * 1000;
+//     const now = Date.now();
+
+   
+//     const cluster = await clientPromise;
+//     const db = cluster.db("CurateInformation");
+
+//     const Users = db.collection("Registration");
+//     const UsersFullInfo = db.collection(
+//       "CompliteRegistrationInformation"
+//     );
+//     const Deployment = db.collection("Deployment");
+
+//     if (!profileCache[userId]) {
+//       profileCache[userId] = {};
+//     }
+
+//     const userProfileCache = profileCache[userId];
+
+//     const needsProfile =
+//       !userProfileCache.profile ||
+//       now - (userProfileCache.profileTime || 0) >
+//         CACHE_TIME;
+
+//     const needsUsers =
+//       !globalDashboardCache.registeredUsers ||
+//       now -
+//         (globalDashboardCache.registeredUsersTime ||
+//           0) >
+//         CACHE_TIME;
+
+//     const needsFullInfo =
+//       !globalDashboardCache.fullInfo ||
+//       now -
+//         (globalDashboardCache.fullInfoTime || 0) >
+//         CACHE_TIME;
+
+//   const deploymentCache =
+//   globalDashboardCache.deployment[Month];
+
+// const needsDeployment =
+//   !deploymentCache ||
+//   now - deploymentCache.time > CACHE_TIME;
+
+//     const [
+//       profileRaw,
+//       registeredUsersRaw,
+//       fullInfoRaw,
+//       deploymentRaw,
+//     ] = await Promise.all([
+//       needsProfile
+//         ? Users.findOne(
+//             { userId },
+//             {
+//               projection: {
+//                 _id: 0,
+//                 userId: 1,
+//                 FirstName: 1,
+//                 Email: 1,
+//               },
+//             }
+//           )
+//         : Promise.resolve(null),
+
+//     needsUsers
+//   ? Users.find(
+//       {},
+//       {
+//         projection: {
+//           _id: 1,
+//           userId: 1,
+//           userType: 1,
+//           Surname: 1,
+//           FirstName: 1,
+//           LastName: 1,
+//           patientName: 1,
+//           AadharNumber: 1,
+//           Age: 1,
+//           Location: 1,
+//           ServiceArea: 1,
+//           ServiceState: 1,
+//           Email: 1,
+//           ContactNumber: 1,
+//           // VerificationStatus: 1,
+//           FinelVerification: 1,
+//           // EmailVerification: 1,
+//           AddressLine1:1,
+//           AddressLine2:1,
+//           ClientStatus: 1,
+//           Status: 1,
+//           CurrentStatus: 1,
+//           Source: 1,
+//           NewLead: 1,
+//           ClientPriority: 1,
+//           LeadDate: 1,
+//           PreviewUserType: 1,
+//           PDRStatus: 1,
+//           Type: 1,
+//           Team: 1,
+//           StatusHistory: 1,
+//         },
+//       }
+//     ).toArray()
+//   : Promise.resolve(null),
+//       needsFullInfo
+//   ? UsersFullInfo.find(
+//       {},
+//       {
+//       projection: {
+//   _id: 0,
+
+//   "HCAComplitInformation.UserId": 1,
+//   "HCAComplitInformation.First Name": 1,
+//   "HCAComplitInformation.LastName": 1,
+//   "HCAComplitInformation.HCPAdharNumber": 1,
+//    "HCAComplitInformation.Date of Birth": 1,
+//   "HCAComplitInformation.Age": 1,
+//   "HCAComplitInformation.userType": 1,
+//   "HCAComplitInformation.Permanent Address": 1,
+//   "HCAComplitInformation.HCPEmail": 1,
+//   "HCAComplitInformation.Mobile Number": 1,
+//   "HCAComplitInformation.CurrentStatus": 1,
+//   "HCAComplitInformation.VerificationStatus": 1,
+//   "HCAComplitInformation.FinelVerification": 1,
+//   "HCAComplitInformation.EmailVerification": 1,
+//   "HCAComplitInformation.ClientStatus": 1,
+//   "HCAComplitInformation.Status": 1,
+//   "HCAComplitInformation.provider": 1,
+//   "HCAComplitInformation.payTerms": 1,
+//   "HCAComplitInformation.PaymentforStaff": 1,
+//    "HCAComplitInformation.Current Address": 1,
+//    "HCAComplitInformation.Experience": 1,
+//    "HCAComplitInformation.MonthlyExpenses": 1,
+ 
+
+
+//   // Already present in your projection
+//   "HCAComplitInformation.ApprovedBy": 1,
+//   "HCAComplitInformation.Gender": 1,
+//   "HCAComplitInformation.Surname": 1,
+//   "HCAComplitInformation.PermanentState": 1,
+//    "HCAComplitInformation.Aadhar Card No": 1,
+ 
+// }
+//       }
+//     ).toArray()
+//   : Promise.resolve(null),
+
+//      needsDeployment
+//   ? Deployment.find(
+//       { Month },
+//       {
+//         projection: {
+//           _id: 0,
+//         },
+//       }
+//     ).toArray()
+//   : Promise.resolve(
+//       deploymentCache.data
+//     ),
+//     ]);
+
+//     if (needsProfile) {
+//       userProfileCache.profile =
+//         profileRaw &&
+//         Object.fromEntries(
+//           Object.entries(profileRaw).map(
+//             ([key, value]) => [
+//               key,
+//               safeDecrypt(value),
+//             ]
+//           )
+//         );
+
+//       userProfileCache.profileTime = now;
+//     }
+
+//     if (needsUsers && registeredUsersRaw) {
+//       globalDashboardCache.registeredUsers =
+//         registeredUsersRaw.map((user: any) => {
+//           const decryptedUser: any = {
+//             ...user,
+//             _id: user._id?.toString() ?? null,
+//           };
+
+//           for (const [
+//             key,
+//             value,
+//           ] of Object.entries(user)) {
+//             if (
+//               value &&
+//               typeof value === "object" &&
+//               "iv" in value &&
+//               "content" in value
+//             ) {
+//               try {
+//                 decryptedUser[key] = decrypt(
+//                   value as {
+//                     iv: string;
+//                     content: string;
+//                   }
+//                 );
+//               } catch {
+//                 decryptedUser[key] = value;
+//               }
+//             }
+//           }
+
+//           return decryptedUser;
+//         });
+
+//       globalDashboardCache.registeredUsersTime =
+//         now;
+//     }
+
+//     if (needsFullInfo && fullInfoRaw) {
+//       globalDashboardCache.fullInfo =
+//         fullInfoRaw.map((user: any) => {
+//           const info =
+//             user.HCAComplitInformation || {};
+// ;
+// return {
+//   ...user,
+//   HCAComplitInformation: {
+//     UserId: info.UserId,
+
+//     HCPFirstName: safeDecrypt(info["First Name"]),
+//     HCPSurName: safeDecrypt(info.Surname),
+
+//     LastName: info.LastName,
+//     HCPAdharNumber: safeDecrypt(info["Aadhar Card No"]),
+//     DateOfBirth: info["Date of Birth"],
+//     Age: safeDecrypt(info.Age),
+//     userType: info.userType,
+
+//     PermanentAddress: safeDecrypt(info["Permanent Address"]),
+//     HCPEmail: safeDecrypt(info.HCPEmail),
+//     HCPContactNumber: safeDecrypt(info["Mobile Number"]),
+// MonthlyExpenses: info.MonthlyExpenses,
+//     CurrentStatus: info.CurrentStatus||"Leave",
+//     CurrentAddress: info["Current Address"],
+//     VerificationStatus: info.VerificationStatus,
+//     FinelVerification: info.FinelVerification,
+//     EmailVerification: info.EmailVerification,
+//     ClientStatus: info.ClientStatus,
+//     Status: info.Status,
+//     Experience: info.Experience,
+
+//     Provider: info.provider,
+//     PayTerms: info.payTerms,
+//     PaymentforStaff: info.PaymentforStaff,
+//     ApprovedBy: info.ApprovedBy,
+
+//     Gender: info.Gender,
+//     PermanentState: info.PermanentState,
+//   },
+// };
+//         });
+
+//       globalDashboardCache.fullInfoTime = now;
+//     }
+// if (needsDeployment && deploymentRaw) {
+//   globalDashboardCache.deployment[Month] = {
+//     data: deploymentRaw,
+//     time: now,
+//   };
+// }
+
+//     const responseData = {
+//       profile:
+//         userProfileCache.profile || null,
+
+//       registeredUsers:
+//         globalDashboardCache
+//           .registeredUsers || [],
+
+//       fullInfo:
+//         globalDashboardCache.fullInfo || [],
+
+//     deployedLength:
+//   globalDashboardCache.deployment[Month]
+//     ?.data || [],
+//     };
+// console.groupCollapsed("Dashboard Data Response",responseData.fullInfo);
+//     dashboardResponseCache.set(userId, {
+//       timestamp: now,
+//       data: responseData,
+//     });
+
+//     return {
+//       success: true,
+//       data: responseData,
+//     };
+//   } catch (error) {
+//     console.error(
+//       "Dashboard Fetch Error:",
+//       error
+//     );
+
+//     return {
+//       success: false,
+//       message:
+//         "Failed to fetch dashboard data",
+//       data: null,
+//     };
+//   }
+// };
+
+export const GetDashboardData = async (
+  userId: string,
+  Month: string
+) => {
   try {
     if (!userId) {
       return {
@@ -811,10 +1132,10 @@ export const GetDashboardData = async (userId: string, Month: string) => {
       };
     }
 
-    const CACHE_TIME = 1 * 60 * 1000;
+    const CACHE_TIME = 60 * 1000;
     const now = Date.now();
 
-   
+    // Connect to MongoDB
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
 
@@ -824,12 +1145,11 @@ export const GetDashboardData = async (userId: string, Month: string) => {
     );
     const Deployment = db.collection("Deployment");
 
-    if (!profileCache[userId]) {
-      profileCache[userId] = {};
-    }
+    // Initialize profile cache
+    const userProfileCache =
+      (profileCache[userId] ??= {});
 
-    const userProfileCache = profileCache[userId];
-
+    // Cache validation
     const needsProfile =
       !userProfileCache.profile ||
       now - (userProfileCache.profileTime || 0) >
@@ -838,8 +1158,7 @@ export const GetDashboardData = async (userId: string, Month: string) => {
     const needsUsers =
       !globalDashboardCache.registeredUsers ||
       now -
-        (globalDashboardCache.registeredUsersTime ||
-          0) >
+        (globalDashboardCache.registeredUsersTime || 0) >
         CACHE_TIME;
 
     const needsFullInfo =
@@ -848,19 +1167,22 @@ export const GetDashboardData = async (userId: string, Month: string) => {
         (globalDashboardCache.fullInfoTime || 0) >
         CACHE_TIME;
 
-  const deploymentCache =
-  globalDashboardCache.deployment[Month];
+    // Deployment cache
+    const deploymentCache =
+      globalDashboardCache.deployment[Month];
 
-const needsDeployment =
-  !deploymentCache ||
-  now - deploymentCache.time > CACHE_TIME;
+    const needsDeployment =
+      !deploymentCache ||
+      now - deploymentCache.time > CACHE_TIME;
 
+    // Fetch all required data in parallel
     const [
       profileRaw,
       registeredUsersRaw,
       fullInfoRaw,
       deploymentRaw,
     ] = await Promise.all([
+      // Profile
       needsProfile
         ? Users.findOne(
             { userId },
@@ -875,226 +1197,282 @@ const needsDeployment =
           )
         : Promise.resolve(null),
 
-    needsUsers
-  ? Users.find(
-      {},
-      {
-        projection: {
-          _id: 1,
-          userId: 1,
-          userType: 1,
-          Surname: 1,
-          FirstName: 1,
-          LastName: 1,
-          patientName: 1,
-          AadharNumber: 1,
-          Age: 1,
-          Location: 1,
-          ServiceArea: 1,
-          ServiceState: 1,
-          Email: 1,
-          ContactNumber: 1,
-          // VerificationStatus: 1,
-          FinelVerification: 1,
-          // EmailVerification: 1,
-          AddressLine1:1,
-          AddressLine2:1,
-          ClientStatus: 1,
-          Status: 1,
-          CurrentStatus: 1,
-          Source: 1,
-          NewLead: 1,
-          ClientPriority: 1,
-          LeadDate: 1,
-          PreviewUserType: 1,
-          PDRStatus: 1,
-          Type: 1,
-          Team: 1,
-          StatusHistory: 1,
-        },
-      }
-    ).toArray()
-  : Promise.resolve(null),
+      // Registered users
+      needsUsers
+        ? Users.find(
+            {},
+            {
+              projection: {
+                _id: 1,
+                userId: 1,
+                userType: 1,
+                Surname: 1,
+                FirstName: 1,
+                LastName: 1,
+                patientName: 1,
+                AadharNumber: 1,
+                Age: 1,
+                Location: 1,
+                ServiceArea: 1,
+                ServiceState: 1,
+                Email: 1,
+                ContactNumber: 1,
+                FinelVerification: 1,
+                AddressLine1: 1,
+                AddressLine2: 1,
+                ClientStatus: 1,
+                Status: 1,
+                CurrentStatus: 1,
+                Source: 1,
+                NewLead: 1,
+                ClientPriority: 1,
+                LeadDate: 1,
+                PreviewUserType: 1,
+                PDRStatus: 1,
+                Type: 1,
+                Team: 1,
+                StatusHistory: 1,
+              },
+            }
+          ).toArray()
+        : Promise.resolve(null),
+
+      // Full registration information
       needsFullInfo
-  ? UsersFullInfo.find(
-      {},
-      {
-      projection: {
-  _id: 0,
+        ? UsersFullInfo.find(
+            {},
+            {
+              projection: {
+                _id: 0,
+                "HCAComplitInformation.UserId": 1,
+                "HCAComplitInformation.First Name": 1,
+                "HCAComplitInformation.LastName": 1,
+                "HCAComplitInformation.HCPAdharNumber": 1,
+                "HCAComplitInformation.Date of Birth": 1,
+                "HCAComplitInformation.Age": 1,
+                "HCAComplitInformation.userType": 1,
+                "HCAComplitInformation.Permanent Address": 1,
+                "HCAComplitInformation.HCPEmail": 1,
+                "HCAComplitInformation.Mobile Number": 1,
+                "HCAComplitInformation.CurrentStatus": 1,
+                "HCAComplitInformation.VerificationStatus": 1,
+                "HCAComplitInformation.FinelVerification": 1,
+                "HCAComplitInformation.EmailVerification": 1,
+                "HCAComplitInformation.ClientStatus": 1,
+                "HCAComplitInformation.Status": 1,
+                "HCAComplitInformation.provider": 1,
+                "HCAComplitInformation.payTerms": 1,
+                "HCAComplitInformation.PaymentforStaff": 1,
+                "HCAComplitInformation.Current Address": 1,
+                "HCAComplitInformation.Experience": 1,
+                "HCAComplitInformation.MonthlyExpenses": 1,
+                "HCAComplitInformation.ApprovedBy": 1,
+                "HCAComplitInformation.Gender": 1,
+                "HCAComplitInformation.Surname": 1,
+                "HCAComplitInformation.PermanentState": 1,
+                "HCAComplitInformation.Aadhar Card No": 1,
+              },
+            }
+          ).toArray()
+        : Promise.resolve(null),
 
-  "HCAComplitInformation.UserId": 1,
-  "HCAComplitInformation.First Name": 1,
-  "HCAComplitInformation.LastName": 1,
-  "HCAComplitInformation.HCPAdharNumber": 1,
-   "HCAComplitInformation.Date of Birth": 1,
-  "HCAComplitInformation.Age": 1,
-  "HCAComplitInformation.userType": 1,
-  "HCAComplitInformation.Permanent Address": 1,
-  "HCAComplitInformation.HCPEmail": 1,
-  "HCAComplitInformation.Mobile Number": 1,
-  "HCAComplitInformation.CurrentStatus": 1,
-  "HCAComplitInformation.VerificationStatus": 1,
-  "HCAComplitInformation.FinelVerification": 1,
-  "HCAComplitInformation.EmailVerification": 1,
-  "HCAComplitInformation.ClientStatus": 1,
-  "HCAComplitInformation.Status": 1,
-  "HCAComplitInformation.provider": 1,
-  "HCAComplitInformation.payTerms": 1,
-  "HCAComplitInformation.PaymentforStaff": 1,
-   "HCAComplitInformation.Current Address": 1,
-   "HCAComplitInformation.Experience": 1,
-   "HCAComplitInformation.MonthlyExpenses": 1,
- 
-
-
-  // Already present in your projection
-  "HCAComplitInformation.ApprovedBy": 1,
-  "HCAComplitInformation.Gender": 1,
-  "HCAComplitInformation.Surname": 1,
-  "HCAComplitInformation.PermanentState": 1,
-   "HCAComplitInformation.Aadhar Card No": 1,
- 
-}
-      }
-    ).toArray()
-  : Promise.resolve(null),
-
-     needsDeployment
-  ? Deployment.find(
-      { Month },
-      {
-        projection: {
-          _id: 0,
-        },
-      }
-    ).toArray()
-  : Promise.resolve(
-      deploymentCache.data
-    ),
+      // Deployment data
+      needsDeployment
+        ? Deployment.find(
+            { Month },
+            {
+              projection: {
+                _id: 0,
+              },
+            }
+          ).toArray()
+        : Promise.resolve(deploymentCache.data),
     ]);
 
+    // Process profile
     if (needsProfile) {
-      userProfileCache.profile =
-        profileRaw &&
-        Object.fromEntries(
-          Object.entries(profileRaw).map(
-            ([key, value]) => [
-              key,
-              safeDecrypt(value),
-            ]
+      userProfileCache.profile = profileRaw
+        ? Object.fromEntries(
+            Object.entries(profileRaw).map(
+              ([key, value]) => [
+                key,
+                safeDecrypt(value),
+              ]
+            )
           )
-        );
+        : null;
 
       userProfileCache.profileTime = now;
     }
 
+    // Process registered users
     if (needsUsers && registeredUsersRaw) {
-      globalDashboardCache.registeredUsers =
-        registeredUsersRaw.map((user: any) => {
-          const decryptedUser: any = {
-            ...user,
-            _id: user._id?.toString() ?? null,
-          };
+      const decryptedUsers = new Array(
+        registeredUsersRaw.length
+      );
 
-          for (const [
-            key,
-            value,
-          ] of Object.entries(user)) {
-            if (
-              value &&
-              typeof value === "object" &&
-              "iv" in value &&
-              "content" in value
-            ) {
-              try {
-                decryptedUser[key] = decrypt(
-                  value as {
-                    iv: string;
-                    content: string;
-                  }
-                );
-              } catch {
-                decryptedUser[key] = value;
-              }
+      for (
+        let i = 0;
+        i < registeredUsersRaw.length;
+        i++
+      ) {
+        const user = registeredUsersRaw[i];
+
+        const decryptedUser: any = {
+          ...user,
+          _id: user._id?.toString() ?? null,
+        };
+
+        for (const key in user) {
+          const value = user[key];
+
+          if (
+            value &&
+            typeof value === "object" &&
+            "iv" in value &&
+            "content" in value
+          ) {
+            try {
+              decryptedUser[key] = decrypt(
+                value as {
+                  iv: string;
+                  content: string;
+                }
+              );
+            } catch {
+              decryptedUser[key] = value;
             }
           }
+        }
 
-          return decryptedUser;
-        });
+        decryptedUsers[i] = decryptedUser;
+      }
+
+      globalDashboardCache.registeredUsers =
+        decryptedUsers;
 
       globalDashboardCache.registeredUsersTime =
         now;
     }
 
+    // Process full information
     if (needsFullInfo && fullInfoRaw) {
+      const processedFullInfo = new Array(
+        fullInfoRaw.length
+      );
+
+      for (
+        let i = 0;
+        i < fullInfoRaw.length;
+        i++
+      ) {
+        const user = fullInfoRaw[i];
+
+        const info =
+          user.HCAComplitInformation || {};
+
+        processedFullInfo[i] = {
+          ...user,
+          HCAComplitInformation: {
+            UserId: info.UserId,
+
+            HCPFirstName: safeDecrypt(
+              info["First Name"]
+            ),
+
+            HCPSurName: safeDecrypt(
+              info.Surname
+            ),
+
+            LastName: info.LastName,
+
+            HCPAdharNumber: safeDecrypt(
+              info["Aadhar Card No"]
+            ),
+
+            DateOfBirth: info["Date of Birth"],
+
+            Age: safeDecrypt(info.Age),
+
+            userType: info.userType,
+
+            PermanentAddress: safeDecrypt(
+              info["Permanent Address"]
+            ),
+
+            HCPEmail: safeDecrypt(info.HCPEmail),
+
+            HCPContactNumber: safeDecrypt(
+              info["Mobile Number"]
+            ),
+
+            MonthlyExpenses: info.MonthlyExpenses,
+
+            CurrentStatus:
+              info.CurrentStatus || "Leave",
+
+            CurrentAddress: info["Current Address"],
+
+            VerificationStatus:
+              info.VerificationStatus,
+
+            FinelVerification:
+              info.FinelVerification,
+
+            EmailVerification:
+              info.EmailVerification,
+
+            ClientStatus: info.ClientStatus,
+
+            Status: info.Status,
+
+            Experience: info.Experience,
+
+            Provider: info.provider,
+
+            PayTerms: info.payTerms,
+
+            PaymentforStaff: info.PaymentforStaff,
+
+            ApprovedBy: info.ApprovedBy,
+
+            Gender: info.Gender,
+
+            PermanentState: info.PermanentState,
+          },
+        };
+      }
+
       globalDashboardCache.fullInfo =
-        fullInfoRaw.map((user: any) => {
-          const info =
-            user.HCAComplitInformation || {};
-;
-return {
-  ...user,
-  HCAComplitInformation: {
-    UserId: info.UserId,
-
-    HCPFirstName: safeDecrypt(info["First Name"]),
-    HCPSurName: safeDecrypt(info.Surname),
-
-    LastName: info.LastName,
-    HCPAdharNumber: safeDecrypt(info["Aadhar Card No"]),
-    DateOfBirth: info["Date of Birth"],
-    Age: safeDecrypt(info.Age),
-    userType: info.userType,
-
-    PermanentAddress: safeDecrypt(info["Permanent Address"]),
-    HCPEmail: safeDecrypt(info.HCPEmail),
-    HCPContactNumber: safeDecrypt(info["Mobile Number"]),
-MonthlyExpenses: info.MonthlyExpenses,
-    CurrentStatus: info.CurrentStatus||"Leave",
-    CurrentAddress: info["Current Address"],
-    VerificationStatus: info.VerificationStatus,
-    FinelVerification: info.FinelVerification,
-    EmailVerification: info.EmailVerification,
-    ClientStatus: info.ClientStatus,
-    Status: info.Status,
-    Experience: info.Experience,
-
-    Provider: info.provider,
-    PayTerms: info.payTerms,
-    PaymentforStaff: info.PaymentforStaff,
-    ApprovedBy: info.ApprovedBy,
-
-    Gender: info.Gender,
-    PermanentState: info.PermanentState,
-  },
-};
-        });
+        processedFullInfo;
 
       globalDashboardCache.fullInfoTime = now;
     }
-if (needsDeployment && deploymentRaw) {
-  globalDashboardCache.deployment[Month] = {
-    data: deploymentRaw,
-    time: now,
-  };
-}
 
+    // Update deployment cache
+    if (needsDeployment && deploymentRaw) {
+      globalDashboardCache.deployment[Month] = {
+        data: deploymentRaw,
+        time: now,
+      };
+    }
+
+    // Prepare response
     const responseData = {
-      profile:
-        userProfileCache.profile || null,
+      profile: userProfileCache.profile || null,
 
       registeredUsers:
-        globalDashboardCache
-          .registeredUsers || [],
+        globalDashboardCache.registeredUsers || [],
 
       fullInfo:
         globalDashboardCache.fullInfo || [],
 
-    deployedLength:
-  globalDashboardCache.deployment[Month]
-    ?.data || [],
+      deployedLength:
+        globalDashboardCache.deployment[Month]?.data ||
+        [],
     };
-console.groupCollapsed("Dashboard Data Response",responseData.fullInfo);
+
+    // Avoid logging the entire dataset
     dashboardResponseCache.set(userId, {
       timestamp: now,
       data: responseData,
@@ -1105,20 +1483,15 @@ console.groupCollapsed("Dashboard Data Response",responseData.fullInfo);
       data: responseData,
     };
   } catch (error) {
-    console.error(
-      "Dashboard Fetch Error:",
-      error
-    );
+    console.error("Dashboard Fetch Error:", error);
 
     return {
       success: false,
-      message:
-        "Failed to fetch dashboard data",
+      message: "Failed to fetch dashboard data",
       data: null,
     };
   }
-};
-export const UpdateClientTeam = async (
+};export const UpdateClientTeam = async (
   ImpClientId: any,
   ImpTeamValue: any
 ) => {
