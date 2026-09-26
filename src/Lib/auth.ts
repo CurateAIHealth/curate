@@ -1491,7 +1491,9 @@ export const GetDashboardData = async (
       data: null,
     };
   }
-};export const UpdateClientTeam = async (
+};
+
+export const UpdateClientTeam = async (
   ImpClientId: any,
   ImpTeamValue: any
 ) => {
@@ -1530,6 +1532,41 @@ export const GetDashboardData = async (
     }
   }
 }
+
+export const GetQuestionsfromDatabase = async (Imptype: string) => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Questions");
+
+    // Select the field based on Imptype
+    const questionField =
+      Imptype === "Replacement"
+        ? "ReplacementQuestions"
+        : Imptype === "Termination"
+        ? "TerminationQuestions"
+        : null;
+
+    if (!questionField) {
+      throw new Error("Invalid Imptype. Use Replacement or Termination.");
+    }
+
+    const getQuestions = await collection.findOne(
+      { [questionField]: { $exists: true } },
+      {
+        projection: {
+          [questionField]: 1,
+          _id: 0,
+        },
+      }
+    );
+
+    return getQuestions?.[questionField] ?? [];
+  } catch (error) {
+    console.error("Error fetching questions:", error);
+    throw error;
+  }
+};
 // 
 // export const GetDashboardData = async (
 //   userId: string

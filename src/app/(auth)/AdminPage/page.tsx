@@ -1896,7 +1896,7 @@ Awaiting Conversion
                   </p>
 
                   <button
-                    onClick={() => window.location.reload()}
+                    onClick={() =>router.push("/DashBoard")}
                     className="
         mt-6
         inline-flex items-center justify-center

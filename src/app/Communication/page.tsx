@@ -206,7 +206,7 @@ const toggleLeadFilter = (value: string) => {
     
  router.push( '/DashBoard')
      ;
-    dispatch(Update_Main_Filter_Status(""))
+   
  
   };
 

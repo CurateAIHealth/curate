@@ -5,7 +5,7 @@ let cachedReplacementInfo: any[] = [];
 let cachedTermination: any[] = [];
 let cachedRegisterdUsers: any[] = [];
 
-import { DeleteDeployMent, GetAllUsersData, GetUserInformation, InsertDeployment, InserTerminationData, PostInvoiceFromDeployment, PostReason, UpdateHCAnstatus, updateServicePrice, UpdateUserContactVerificationstatus } from "@/Lib/user.action";
+import { DeleteDeployMent, GetAllUsersData, GetInvoiceLength, GetUserInformation, InsertDeployment, InserTerminationData, PostInvoiceFromDeployment, PostReason, UpdateHCAnstatus, updateServicePrice, UpdateUserContactVerificationstatus, UpdateUserCurrentstatusInHCPView } from "@/Lib/user.action";
 import { setUsers, UpdateMonthFilter, UpdateSubHeading, UpdateYearFilter } from "@/Redux/action";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -483,11 +483,11 @@ const confirmDelete = async (selectedReason: string) => {
   try {
     SetActionStatusMessage("Please wait, deleting placement...");
 
-    await UpdateHCAnstatus(
-      TerminationInfo.HCA_Id,
-      UpdatedCareTakerStatus
-    );
-
+    // await UpdateHCAnstatus(
+    //   TerminationInfo.HCA_Id,
+    //   UpdatedCareTakerStatus
+    // );
+    await UpdateUserCurrentstatusInHCPView(    TerminationInfo.HCA_Id, UpdatedCareTakerStatus||"Bench",loggedInEmail);
  
     await UpdateUserContactVerificationstatus(
       TerminationInfo.Client_Id,
@@ -570,7 +570,7 @@ const ExtendTimeSheet = async () => {
     const currentMonth = `${startDateObj.getFullYear()}-${startDateObj.getMonth() + 1}`;
 
     const CareTakerCharges = serviceCharge || GetInfo?.serviceCharges;
-
+   const invoiceList:any=await GetInvoiceLength()
     // Update service price if provided
     if (serviceCharge) {
       await updateServicePrice(ExtendInfo.Client_Id, serviceCharge);
@@ -645,10 +645,11 @@ const ExtendTimeSheet = async () => {
 ServiceState:ExtendInfo.ServiceState
     };
 
+   const invoiceNo = `#INV_${(invoiceList??0) + 1}_${SearchMonth}_${SearchYear}`;
     const CompliteInvoiceInfo = await PostInvoiceFromDeployment(
       UpdatedData,
       0,
-      "",
+     invoiceNo,
       StarteDate,
       LastDate
     );

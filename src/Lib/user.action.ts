@@ -6677,6 +6677,21 @@ return safeUsers
 
   }
 }
+
+export const GetInvoiceLength = async () => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Invoices");
+
+    const invoiceCount = await collection.countDocuments();
+
+    return invoiceCount;
+  } catch (e) {
+    console.error("Error fetching invoice count:", e);
+    return 0;
+  }
+};
 export const GetInvoiceInfoforInvoicePage = async (
   month: string | number,
   year: string | number

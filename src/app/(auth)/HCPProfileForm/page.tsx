@@ -556,18 +556,18 @@ const isValidIndianMobile = (value: string) => /^[6-9]\d{9}$/.test(value);
         ]);
 
         setDocs((prev: any) => ({
-          ProfilePic: info.Documents?.ProfilePic || prev.ProfilePic,
-          PanCard: info.Documents?.PanCard || '',
-          AdharCard: info.Documents?.AadharCard || '',
-          AccountPassBook: info.Documents?.AccountPassBook || '',
-          CertificatOne: info.Documents?.CertificatOne || info.Documents?.CertificatOne || '',
-          CertificatTwo: info.Documents?.CertificatTwo || info.Documents?.CertificatTwo || '',
-          VideoFile: info.Documents?.VideoFile || '',
-          BVR: info.Documents?.BVR || '',
-          HCPform: info.Documents?.HCPform || info.Documents?.HCPform || '',
-          ReferenceCertificate: info.Documents?.ReferenceCertificate || '',
-          HealthCertificate: info.Documents?.HealthCertificate || '',
-          Other: info.Documents?.Other || '',
+          ProfilePic: info.Documents?.ProfilePic || prev.ProfilePic|| info.Documents?.ProfilePic || prev.ProfilePic ||info.Documents?.ProfilePic||"",
+          PanCard: info.Documents?.PanCard ||  info.Documents?.PanCard || info.Documents?.PanCard|| '',
+          AdharCard: info.Documents?.AadharCard || info.Documents?.AadharCard||'',
+          AccountPassBook: info.Documents?.AccountPassBook ||info.Documents?. AccountPassBook||'',
+          CertificatOne: info.Documents?.CertificatOne || info.Documents?.CertificatOne ||info.Documents?.CertificateOne|| '',
+          CertificatTwo: info.Documents?.CertificatTwo || info.Documents?.CertificatTwo ||  info.Documents?.CertificateTwo||'',
+          VideoFile: info.Documents?.VideoFile ||  info.Documents?.VideoFile||'',
+          BVR: info.Documents?.BVR ||  info.Documents?.BVR||'',
+          HCPform: info.Documents?.HCPform || info.Documents?.HCPform || info.Documents?.HCPForm|| '',
+          ReferenceCertificate: info.Documents?.ReferenceCertificate || info.Documents?.ReferenceCertificate|| '',
+          HealthCertificate: info.Documents?.HealthCertificate || info.Documents?.HealthCertificate|| '',
+          Other: info.Documents?.Other ||  info.Documents?.Other||'',
         }));
 
         setUpdatedStatusMessage('');

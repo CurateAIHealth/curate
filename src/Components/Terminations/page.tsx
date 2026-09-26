@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { Stethoscope, Shirt, CircleX, Search, X, ChevronsRight, Info, Minimize2 } from "lucide-react";
-import { GetReasonsInfoInfo, GetRegidterdUsers, GetTerminationInfo, GetTerminationInfoForTerminationPage, GetUserInformation, GetUsersFullInfo, InsertDeployment, PostInvoiceFromDeployment, updateServicePrice } from "@/Lib/user.action";
+import { GetInvoiceLength, GetReasonsInfoInfo, GetRegidterdUsers, GetTerminationInfo, GetTerminationInfoForTerminationPage, GetUserInformation, GetUsersFullInfo, InsertDeployment, PostInvoiceFromDeployment, updateServicePrice } from "@/Lib/user.action";
 import { LoadingData } from "../Loading/page";
 import { Placements_Filters, filterColors, months, years } from "@/Lib/Content";
 import { AssignSuitableIcon, getDaysBetween, getDaysInMonth, rupeeToNumber } from "@/Lib/Actions";
@@ -48,6 +48,7 @@ const TerminationTable: React.FC = () => {
   const TimeStamp = useSelector((state: any) => state.TimeStampInfo)
   const month = useSelector((state: any) => state.FilterMonth)
   const year = useSelector((state: any) => state.FilterYear)
+  
   const Impusers=useSelector((state:any)=>state.AdminFullInfo)
   const dispatch = useDispatch()
 const router=useRouter()
@@ -297,7 +298,9 @@ SetActionStatusMessage("Please Wait Working On Service Extention");
 
 if (!ExtendInfo?.ClientId) {
   throw new Error("Invalid client information");
-}
+}   
+
+const invoiceList:any=await GetInvoiceLength()
 
 
 // const [GetInfo, HCPInfo] = await Promise.all([
@@ -388,11 +391,11 @@ const UpdatedData = {
   MonthlyPayment:GetPatientName(ExtendInfo.ClientId)?.MonthlyServiceCharge ?true:false,
   RegistrationFee: 0,
 };
-
+ const invoiceNo = `#INV_${(invoiceList??0) + 1}_${month}_${year}`;
 const CompliteInvoiceInfo = await PostInvoiceFromDeployment(
   UpdatedData,
   0,
-  "",
+  invoiceNo,
   StarteDate,
   LastDate
 );
