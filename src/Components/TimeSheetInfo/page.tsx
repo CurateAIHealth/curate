@@ -12,7 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import MissingAttendence from "../MissingAttendence/page";
 import PaymentModal from "../PaymentInfoModel/page";
 import { IndianStates, months, teams, years } from "@/Lib/Content";
-import { AssignSuitableIcon, getDaysInMonth } from "@/Lib/Actions";
+import { AssignSuitableIcon, getDaysInMonth, GetHCPFullName } from "@/Lib/Actions";
 import DeletePopup from "../DeleteTimesheetPopUp/page";
 import { EditDeploymentPopup } from "../TimeSheetEditPopUp/page";
 import { LoadingData } from "../Loading/page";
@@ -1639,7 +1639,7 @@ className={`
       }
     />
 
-    {r.hcpName}
+     {GetHCPFullName(users,r.hcpId)}
 
     <div
       className="absolute left-0 -top-11 z-50
@@ -1787,7 +1787,7 @@ className={`
 
         <div>
           <p className="text-[10px] uppercase tracking-[0.2em] text-[#ff1493] font-semibold">
-           {attendanceInfo.hcpName}
+          {GetHCPFullName(users,attendanceInfo.hcpId)}
           </p>
           <h2 className="text-lg md:text-xl font-bold text-slate-800">
             Attendance Dashboard 

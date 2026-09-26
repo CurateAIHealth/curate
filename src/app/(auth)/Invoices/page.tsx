@@ -96,6 +96,7 @@ useEffect(() => {
   }
 
   refreshInvoices(true);
+  
 }, [monthFilter, yearFilter]);
 
 const GetAdvanceFilterData = async () => {
@@ -1294,7 +1295,7 @@ CheckPaymentStatus:CurrentPaymentStatus
   className="
     hidden lg:grid
     w-full
-    grid-cols-[45px_120px_1.1fr_1.1fr_100px_85px_95px_75px_75px_80px_120px_55px_110px_60px_70px_70px]
+    grid-cols-[45px_140px_1.1fr_1.1fr_100px_85px_95px_75px_75px_80px_120px_55px_110px_60px_70px_70px]
     items-center
     gap-2
     bg-teal-800
@@ -1305,7 +1306,7 @@ CheckPaymentStatus:CurrentPaymentStatus
     text-white
   "
 >
-      <div>S No.</div>
+      <div>S.No.</div>
       <div>Invoice No.</div>
       <div>Client</div>
       <div>Patient</div>
@@ -1787,7 +1788,7 @@ CheckPaymentStatus:CurrentPaymentStatus
             <div
               className="
                 hidden lg:grid
-             grid-cols-[45px_120px_1.1fr_1.1fr_100px_85px_95px_75px_75px_80px_120px_55px_110px_60px_70px_70px]
+             grid-cols-[45px_140px_1.1fr_1.1fr_100px_85px_95px_75px_75px_80px_120px_55px_110px_60px_70px_70px]
                 items-center gap-2
                 px-3 py-3
                 text-xs
@@ -1799,8 +1800,19 @@ CheckPaymentStatus:CurrentPaymentStatus
               <div className="font-medium text-gray-600">
                 {index + 1}
               </div>
-<div className="w-[120px] shrink-0">
-  <span className="block whitespace-nowrap text-left text-[10px] font-semibold text-teal-700">
+{/* Invoice Number */}
+{/* Invoice Number */}
+<div className="min-w-0 w-full">
+  <span
+    className="
+      block
+      whitespace-nowrap
+      text-left
+      text-[10px]
+      font-semibold
+      text-teal-700
+    "
+  >
     {(() => {
       const invoice =
         inv.Invoice ||

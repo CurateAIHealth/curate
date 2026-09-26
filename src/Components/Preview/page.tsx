@@ -4,6 +4,7 @@ import { GetHCPFullName } from "@/Lib/Actions";
 import {
   GetDeploymentInfo,
   GetInvoiceInfo,
+  GetInvoiceLength,
   GetUserPDRInfo,
   InsertDeployment,
   PostInvoice,
@@ -277,14 +278,14 @@ const UpdatePDRInfo = async () => {
  
     if (isNewPDR) {
       const [invoiceList, deploymentList] = await Promise.all([
-        GetInvoiceInfo(),
+       GetInvoiceLength(),
         GetDeploymentInfo(),
       ]);
 
       const today = new Date();
       const currentMonth = `${today.getFullYear()}-${today.getMonth() + 1}`;
 
-      const invoiceNo = `#INV255_${(invoiceList?.length??0) + 1}`;
+      const invoiceNo = `#INV_${(invoiceList??0) + 1}_${SearchMonth}_${SearchYear}`;
       const deploymentInvoice = `BSV${today.getFullYear()}_${(deploymentList?.length ?? 0) + 1}`;
 
 

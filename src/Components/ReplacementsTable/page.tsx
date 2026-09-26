@@ -44,7 +44,7 @@ useEffect(() => {
 
       const response = await fetch("/api/replacement-info");
       const result = await response.json();
-
+console.log ("Chek data-----",ReplacementReasons)
       if (!result.success) return;
 
       const {
@@ -183,8 +183,8 @@ const GetReplacementMessage = (A: any, B: any) => {
 
   const firstReason = results[0]?.Reason ?? "";
   const secondReason = results[0]?.EnterdReason ?? "";
-  const DateandTime=results[0]?.DateandTime??""
-
+  const DateandTime=results[0]?.DateandTime||results[0]?.ReplacementDate||""
+console.log("Check Time-----",results)
 if (firstReason && secondReason) {
   return `${firstReason} And ${secondReason}. Replacement Happend On ${DateandTime}`.trim();
 }
@@ -577,6 +577,7 @@ const isFutureDate = cellDate > currentDate;
        <td className="px-3 py-2">
   <button
     onClick={() => {
+      console.log("Check-----",GetReplacementMessage(item.CurrentHCA_id,item.AssignedHCA_id))
       setPopupInfo(GetReplacementMessage(item.CurrentHCA_id,item.AssignedHCA_id));
       setShowPopup(true);
     }}
