@@ -554,7 +554,7 @@ export const GetAwaitInfoData = (ClientsInformation: any[]) => {
       EndDate: each.EndDate,
       Month: each.Month,
       Replacement: each.Replacement,
-      ServiceState: each.ServiceState || "Not Provided",
+      ServiceState: each.ServiceState || "Telangana",
    
     };
   });

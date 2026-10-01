@@ -1172,7 +1172,7 @@ const isProfit = invoiceProfit >= 0;
           onClick={ExtendTimeSheet}
           className="px-5 py-2 rounded-full bg-[#16a34a] text-white hover:bg-[#15803d]"
         >
-     Prepare Dreaft Invoice
+     Prepare Draft Invoice
         </button>
       </div>}
   <p

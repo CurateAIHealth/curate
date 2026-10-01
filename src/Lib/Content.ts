@@ -1405,7 +1405,9 @@ export const LeadSources = [
   "Pandu",
   "Swaroop I",
   "Soumya Ranjan",
-  "Kiran"
+  "Kiran",
+  "Chamanthi",
+  "Shivani"
   
 
   

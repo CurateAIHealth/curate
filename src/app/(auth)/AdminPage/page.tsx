@@ -1044,7 +1044,7 @@ const UpdatePopup = async (a: any) => {
                     <table className="table-fixed w-full min-w-[800px] text-[11px] sm:text-[13px] text-left text-gray-700 border-collapse">
                       <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white  text-[10px] font-semibold">
                         <tr>
-                          <th className="px-2 py-2 w-[4%]">S.No</th>
+                          <th className="px-2 py-2 w-[4%]">S.No.</th>
                       
                             <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">{UpdateduserType === "patient"?"Date":"Joining Date"}</th>
                           {UpdateduserType === "patient" &&
@@ -1652,7 +1652,7 @@ const UpdatePopup = async (a: any) => {
   </div>
   ) : (
     <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 w-full">
-      <p className="text-[8px] text-gray-500 leading-none">HCP Salary</p>
+      <p className="text-[8px] text-gray-800 leading-none font-bold">HCP Salary</p>
 
       <div className="relative group flex w-[70px] items-center gap-2 mt-1">
   
@@ -1687,7 +1687,7 @@ const UpdatePopup = async (a: any) => {
   </button>
 </div>
       <p className="text-[9px] text-gray-500 leading-none mt-1">
-        Per day:
+        Per Day:
         <span className="ml-1 font-semibold text-green-600">
           {Math.round(Number(GetHCPPayment(user.userId)) / getDaysInMonthForMonthName(SearchMonth,SearchYear))}
         </span>

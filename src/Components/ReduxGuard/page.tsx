@@ -8,6 +8,11 @@ interface Props {
   children: React.ReactNode;
 }
 
+const PUBLIC_ROUTES = new Set([
+  "/",
+  "/sign-in",
+]);
+
 export default function ReduxGuard({ children }: Props) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
@@ -16,11 +21,7 @@ export default function ReduxGuard({ children }: Props) {
   const fullInfo = useSelector((state: any) => state.AdminFullInfo);
   const deployment = useSelector((state: any) => state.AdminDeployment);
 
-  // Pages that don't require authentication or Redux
-  const PUBLIC_ROUTES = new Set([
-    "/",
-    "/sign-in",
-  ]);
+  const isPublicRoute = PUBLIC_ROUTES.has(pathname);
 
   const hasReduxData =
     users?.length > 0 &&
@@ -28,28 +29,24 @@ export default function ReduxGuard({ children }: Props) {
     deployment?.length > 0;
 
   useEffect(() => {
-    // Redux validation - check first before anything else
-    if (!hasReduxData && !PUBLIC_ROUTES.has(pathname)) {
-  
-      router.replace("/");
+    // NEVER perform Redux/auth redirects on public pages
+    if (isPublicRoute) {
       return;
     }
 
-    // Skip public pages
-    if (PUBLIC_ROUTES.has(pathname)) return;
+    const userId = localStorage.getItem("UserId");
 
-    // localStorage only exists in browser
-    if (typeof window === "undefined") return;
-
-    const userId = window.localStorage.getItem("UserId");
-
-    // Authentication check
+    // No authenticated user
     if (!userId) {
-   
-      router.replace("/");
+      router.replace("/sign-in");
       return;
     }
-  }, [pathname, hasReduxData, router]);
+
+    // Authenticated user but required Redux data isn't available
+    if (!hasReduxData) {
+      router.replace("/");
+    }
+  }, [isPublicRoute, hasReduxData, pathname, router]);
 
   return <>{children}</>;
 }

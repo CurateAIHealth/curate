@@ -535,6 +535,53 @@ const ClientTable = ({
 
     return matchesSearch && overlaps;
   };
+
+  const ReplacementCountmatchesSearchAndMonth = (
+  item: any,
+  searchMonth: string,
+  searchYear: string
+) => {
+  // If no month/year filter is selected, show everything
+  if (!searchMonth && !searchYear) return true;
+
+  // Require valid dates
+  if (!item.StartDate || !item.EndDate) return false;
+
+  const [startDay, startMonth, startYear] = item.StartDate.split("/");
+  const [endDay, endMonth, endYear] = item.EndDate.split("/");
+
+  const serviceStart = new Date(
+    Number(startYear),
+    Number(startMonth) - 1,
+    Number(startDay)
+  );
+
+  const serviceEnd = new Date(
+    Number(endYear),
+    Number(endMonth) - 1,
+    Number(endDay)
+  );
+
+  // If only year is selected
+  if (!searchMonth && searchYear) {
+    const year = Number(searchYear);
+
+    const searchStart = new Date(year, 0, 1);
+    const searchEnd = new Date(year, 11, 31);
+
+    return serviceStart <= searchEnd && serviceEnd >= searchStart;
+  }
+
+  // If month and year are selected
+  const month = Number(searchMonth);
+  const year = Number(searchYear);
+
+  const searchStart = new Date(year, month - 1, 1);
+  const searchEnd = new Date(year, month, 0);
+
+  // Check whether service period overlaps selected month
+  return serviceStart <= searchEnd && serviceEnd >= searchStart;
+};
   const GetTeamNumber = (A: any) => {
     if (!RegisterdUsers?.length || !A) return "Not Entered";
 
@@ -3765,15 +3812,12 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
 
                             <div className="flex flex-col items-end leading-none text-right min-w-[70px]">
                               <span className="text-[11px] font-medium whitespace-nowrap">
-                                ₹{(
-                                  getDaysBetween(c.StartDate, c.EndDate) *
-                                  rupeeToNumber(c.ServiceCharge)
-                                )}
+                                ₹{Math.round(Number(c.ServiceCharge) * getDaysInMonthForMonthName(SearchMonthName, SearchYear))}
                                 <span className="text-gray-500 text-[10px] ml-1">/M</span>
                               </span>
 
                               <span className="text-[11px] font-medium whitespace-nowrap mt-1">
-                                ₹{rupeeToNumber(c.ServiceCharge)}
+                                ₹{Math.round(Number(c.ServiceCharge))}
                                 <span className="text-gray-500 text-[10px] ml-1">/D</span>
 
                               </span>
@@ -5786,7 +5830,7 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
 
       case "Replacements":
         return ImpReplasmentInfo.filter((item: any) =>
-          matchesSearchAndMonth(item, "", SearchMonth, SearchYear)
+          ReplacementCountmatchesSearchAndMonth(item, SearchMonth, SearchYear)
         ).length || 0
       default:
         return 0;

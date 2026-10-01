@@ -184,7 +184,7 @@ const GetReplacementMessage = (A: any, B: any) => {
   const firstReason = results[0]?.Reason ?? "";
   const secondReason = results[0]?.EnterdReason ?? "";
   const DateandTime=results[0]?.DateandTime||results[0]?.ReplacementDate||""
-console.log("Check Time-----",results)
+
 if (firstReason && secondReason) {
   return `${firstReason} And ${secondReason}. Replacement Happend On ${DateandTime}`.trim();
 }
