@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 const PUBLIC_ROUTES = new Set([
+  "/",
   "/sign-in",
 ]);
 
@@ -14,32 +15,18 @@ export default function AuthGuard({
 }) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
-  const redirecting = useRef(false);
 
   useEffect(() => {
+    // Public pages don't need authentication checking
     if (PUBLIC_ROUTES.has(pathname)) {
-      redirecting.current = false;
       return;
     }
 
-    const checkAuth = () => {
-   
+    const userId = localStorage.getItem("UserId");
 
-      const userId = localStorage.getItem("UserId");
-
-      if (!userId) {
-    
-        router.replace("/");
-      }
-    };
-
-    checkAuth();
-
-    const interval = window.setInterval(checkAuth, 1000);
-
-    return () => {
-      window.clearInterval(interval);
-    };
+    if (!userId) {
+      router.replace("/sign-in");
+    }
   }, [pathname, router]);
 
   return <>{children}</>;

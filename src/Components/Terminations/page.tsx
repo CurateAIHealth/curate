@@ -462,14 +462,14 @@ error?.message || "Something went wrong while extending timesheet"
     }
 
     const firstReason = results[0]?.Reason ?? "";
-    const secondReason = results[0]?.EnterdReason ?? "";
-    const DateandTime = results[0]?.DateandTime ?? ""
+  const secondReason = results[0]?.EnterdReason ?? "";
+  const DateandTime=results[0]?.DateandTime||results[0]?.ReplacementDate||""
 
-    if (firstReason && secondReason) {
-      return `${firstReason} And ${secondReason}. Replacement Happend On ${DateandTime}`.trim();
-    }
+if (firstReason && secondReason) {
+  return `${firstReason} And ${secondReason}. Replacement Happend On ${DateandTime}`.trim();
+}
 
-    return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.trim();
+return `${firstReason}${secondReason}. Replacement Happend On  ${DateandTime}`.trim();
 
 
   };

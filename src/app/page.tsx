@@ -59,7 +59,7 @@ const mainMenu = [
   ];
 export default function StaticInfoPage() {
   
-  const [isChecking, setIsChecking] = useState(true);
+  const [isChecking, setIsChecking] = useState(false);
     const [mobileOptsOpen, setMobileOptsOpen] = useState(false);
     const [loadingProgress, setLoadingProgress] = useState(0);
 const [loadingMessage, setLoadingMessage] = useState("Initializing...");

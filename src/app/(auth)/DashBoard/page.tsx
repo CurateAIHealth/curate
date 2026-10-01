@@ -119,6 +119,7 @@ export default function Dashboard() {
   const [languageInput, setLanguageInput] = useState("");
   const [languageOptions, setLanguageOptions] = useState<string[]>([]);
   const [showLeadSuggestions, setShowLeadSuggestions] = useState(false);
+    const [showCurateLeadSuggestions, setCurateShowLeadSuggestions] = useState(false);
 
   const [showExtra, setShowExtra] = useState(false);
 const [loadingMessage, setLoadingMessage] = useState<any>("");
@@ -465,7 +466,7 @@ useEffect(() => {
     bg: "bg-teal-800",
 },
   {
-      name: "TrainingAndKnowledge",
+      name: "Training And Knowledge",
       count: stats.trainingCount,
       icon: GraduationCap,
       bg: "bg-emerald-500",
@@ -907,7 +908,7 @@ const pageRoutes: Record<string, string> = {
   Quality:"/Quality",
   "HCP Missing Document":"/Documents",
   "Company Policy": "/CompanyPolicy",
-  TrainingAndKnowledge: "/Training",
+  "Training And Knowledge": "/Training",
  
 };
 
@@ -1223,13 +1224,11 @@ const Switching = (tab: string) => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      router.replace("/sign-in");
-                      localStorage.removeItem("UserId");
-                    
-                        
-                      setShowProfileOptions(false);
-                    }}
+                  onClick={() => {
+  localStorage.removeItem("UserId");
+  setShowProfileOptions(false);
+  router.replace("/sign-in");
+}}
                     className="
           w-full px-4 py-2.5
           flex items-center gap-3
@@ -2037,11 +2036,11 @@ className="flex-1 min-w-0 rounded-lg border border-gray-300 px-4 py-3 text-sm te
                           );
 
                           setFilteredLeads(results);
-                          setShowLeadSuggestions(results.length > 0);
+                          setCurateShowLeadSuggestions(results.length > 0);
                         }}
                       />
 
-                      {showLeadSuggestions && (
+                      {showCurateLeadSuggestions && (
                         <div className="absolute z-20 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto">
                           {filteredLeads.map((lead, index) => (
                             <p
