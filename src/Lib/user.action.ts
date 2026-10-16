@@ -4094,6 +4094,51 @@ Reviews: full.Reviews,
 };
 
 
+export const GetHCACEmailandContact = async (userId: string) => {
+  try {
+    if (!userId) return null;
+
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+
+    const complete = await db
+      .collection("CompliteRegistrationInformation")
+      .findOne(
+        {
+          "HCAComplitInformation.UserId": userId,
+        },
+        {
+          projection: {
+            _id: 0,
+            "HCAComplitInformation.EmailId": 1,
+              "HCAComplitInformation.Documents.ProfilePic": 1,
+           
+          },
+        }
+      );
+
+    if (!complete?.HCAComplitInformation) {
+      return null;
+    }
+
+    const full: any = complete.HCAComplitInformation;
+
+    return {
+      userId,
+      email: safeDecryptHCA(full.EmailId),
+      ProfilePic:full.Documents.ProfilePic
+
+    };
+  } catch (error: any) {
+    console.error("GetHCACEmailandContact:", error);
+
+    throw new Error(
+      error?.message || "Unable to load HCA email, contact and BVR"
+    );
+  }
+};
+
+
 export const InserTimeSheet=async(ClientUserId:any,HCAUserId:any,Name:any,Email:any,Contact:any,ClientAdress:any,NameHCA:any,Contacthca:any,TimeSheetArray:any)=>{
   try{
        
@@ -4329,7 +4374,8 @@ export const InsertDeployment = async (
   Type: any,
   CareTakerPrice:any,
   ClientAttendece:any,
-  ServiceState:any
+  ServiceState:any,
+  ValidationData:any
 ) => {
   try {
     const cluster = await clientPromise;
@@ -4376,6 +4422,7 @@ const isExists = await collection.findOne({
       CareTakerPrice,
       ClientAttendece,
       ServiceState,
+      ValidationData,
       PDRStatus: true
     };
 
@@ -4760,7 +4807,7 @@ Month:ImpMonth})
   }
 
 }
-export const InserTerminationData=async(ClientUserId:any,HCAUserId:any,HCA_Name:any,Name:any,Email:any,Contact:any,ClientAdress:any,Contacthca:any,TimeSheetArray:any,ClientAttendece:any,TerminatedTimeSheet:any,ImpState:any)=>{
+export const InserTerminationData=async(ClientUserId:any,HCAUserId:any,HCA_Name:any,Name:any,Email:any,Contact:any,ClientAdress:any,Contacthca:any,TimeSheetArray:any,ClientAttendece:any,TerminatedTimeSheet:any,ImpState:any,OTPValidations:any)=>{
   try{
 const cluster=await clientPromise
 const db=cluster.db("CurateInformation")
@@ -4778,7 +4825,8 @@ const TimeSheetDataInsert=await collection.insertOne({
   ClientAttendance:ClientAttendece,
   StartDate:new Date().toLocaleDateString("en-IN"),
   TerminationDate:new Date().toLocaleDateString("en-IN"),
-  ServiceState: ImpState
+  ServiceState: ImpState,
+  OTPValidations:OTPValidations
 
 })
 return {
@@ -5108,7 +5156,9 @@ export const UpdateReplacmentData = async (
       ImpMonth:any,
       ImpClientName:any,
       ImpHCA_Name:any,
-      ImpStartDate:any
+      ImpStartDate:any,
+      OTPValidationInfo:any,
+      ImpReplacementInformation:any
 ) => {
   try {
     const cluster = await clientPromise;
@@ -5268,6 +5318,8 @@ const updatedAttendance = Array.isArray(existingInfo.Attendance)
       NewHCAContact: Available_HCP?.Contact,
       ReplacementDate:ReplacementDate,
       ReplacementTime:ReplacementTime,
+      OTPValidationInfo:OTPValidationInfo,
+      ReplacementInformation:ImpReplacementInformation
     };
 
     await replacementCollection.insertOne(replacementData);
@@ -9468,6 +9520,30 @@ export const GetUsersFullInfoForMissingDocuments = async () => {
           _id: 0,
           "HCAComplitInformation.UserId": 1,
           "HCAComplitInformation.Documents": 1,
+        },
+      }
+    ).toArray();
+
+    return RegistrationResult;
+  } catch (err: any) {
+    console.error("Error fetching users:", err);
+    return [];
+  }
+};
+
+export const GetHCPProfilePic = async (ImpUserId:any) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("CompliteRegistrationInformation");
+
+    const RegistrationResult = await Collection.find(
+      {"HCAComplitInformation.UserId":ImpUserId},
+      {
+        projection: {
+          _id: 0,
+          "HCAComplitInformation.UserId": 1,
+          "HCAComplitInformation.Documents.ProfilePic": 1,
         },
       }
     ).toArray();

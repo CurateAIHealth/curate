@@ -300,7 +300,7 @@ setActionMessage("Sending Transaction History via Email...");
 
           pdfBase64: base64.split(",")[1],
 
-          pdfFileName:
+          fileName:
             `${data.ClientName}-Transaction History.pdf`,
         }
       );

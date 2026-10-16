@@ -8,7 +8,7 @@ let terminationCache: any[] | null = null;
 
 
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarCheck2, CircleCheckBig, ChevronsRight, FilePenLine, MapPin, Trash, CircleX, Plus, X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Minimize2, Info, ChevronDown, Sparkles, Pencil } from "lucide-react";
+import { CalendarCheck2, CircleCheckBig, ChevronsRight, FilePenLine, MapPin, Trash, CircleX, Plus, X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Minimize2, Info, ChevronDown, Sparkles, Pencil, FileText } from "lucide-react";
 import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId, UpdateClientAttendanceStatus, GetApplicationData, UpdateHCAnstatusInDeplyoment, UpdateUserCurrentstatusInHCPView, } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
 import { SetDeploymentInfo, setUsers, UpdateClient, UpdateInvoiceInfo, UpdateMonthFilter, UpdateSubHeading, UpdateUserInformation, UpdateUserType, UpdateYearFilter } from "@/Redux/action";
@@ -31,6 +31,9 @@ import { Console } from "console";
 import EmptyState from "../NoDeployments/page";
 import { stringify } from "querystring";
 import LoadingPopup from "../SwitchMonth/page";
+import HCAReplacement from "../ReplacementValidation/page";
+import HCAFreeze from "../HCAFreeze/page";
+import HCATermination from "../HCATermination/page";
 
 
 type DayStatus = "P" | "NA" | "HP" | "A";
@@ -62,6 +65,46 @@ interface ClientTableProps {
   terminationInfo: Termination[];
   RegisterdUsers: any[];
 }
+
+  const deploymentData = {
+    Address: "Hyderabad, Telangana",
+    ClientAttendance: [],
+    Client_Id: "CLIENT-1001",
+    EndDate: "2026-12-31",
+    HCAContact: "9876543210",
+    HCA_Id: "HCA-10245",
+    HCA_Name: "Priya Sharma",
+    Month: "October",
+    MonthlyServiceCharge: 30000,
+    PatientName: "Savitri Devi",
+    Patient_PhoneNumber: "9876501234",
+    Replacement: null,
+    ReplacementDate: "",
+    RreferralName: "Direct",
+    ServiceCharge: 1000,
+    ServiceState: "Active",
+    StartDate: "2026-08-01",
+    Status: "Active",
+    Team: 1,
+    TerminatedTimeSheet: [],
+    TimeSheet: [],
+    Type: ["Female"],
+    ad: 30,
+    cPay: 30000,
+    cTotal: 30000,
+    contact: "9876501234",
+    days: ["Monday", "Tuesday", "Wednesday"],
+    email: "client.test@example.com",
+    hcpPay: 22000,
+    hcpSource: "Curate",
+    hcpTotal: 22000,
+    hpd: 8,
+    invoice: "INV-2026-1001",
+    location: "Hyderabad",
+    name: "Rajesh Verma",
+    pd: 30,
+  };
+
 const ClientTable = ({
   users,
   ImpClientsInformation,
@@ -80,6 +123,7 @@ const ClientTable = ({
   const [activeTeam, setActiveTeam] = useState(1);
   const Timenow = new Date();
   const [Loading, setLoading] = useState(true)
+  const[ValidationData,setValidationData]=useState<any>()
   const [ParticularDate, SetParticularDate] = useState<any>()
   const [AttendeceEditReason, SetAttendeceEditReason] = useState("")
   const [AbsentReason, setAbsentReason] = useState("")
@@ -112,6 +156,13 @@ const ClientTable = ({
     status: ""
   })
   const [refreshKey, setRefreshKey] = useState(0);
+  const [ClientAgreements,setClientAgreements]=useState({
+     ClientAgreementFront: "",
+          ClientAgreementBack: "",
+          ClientAgreementFullPdf: "",
+  })
+  const [ShowClientAgreementPreview, setShowClientAgreementPreview] =
+  useState('Intial');
   const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
   const [CareTakerName, SetCareTakerName] = useState('')
   const [preparingQuestions, setpreparingQuestions] = useState(false)
@@ -174,6 +225,10 @@ const ClientTable = ({
   const [showExtendPopup, setshowExtendPopup] = useState(false)
   const [ExtendInfo, setExtendInfo] = useState<any>({})
   const [deleteTargetId, setDeleteTargetId] = useState<any>();
+  const [openMoreMenu, setOpenMoreMenu] = useState({
+    ClientId:"",
+    HCPId:""
+  })
   const [placements, setPlacements] = useState<any[]>([]);
   const [ActionStatusMessage, SetActionStatusMessage] = useState<any>("");
   const [ShowUpdateAttendece, SetShowUpdateAttendece] = useState(false)
@@ -361,6 +416,48 @@ const ClientTable = ({
 
     }
   }
+
+ 
+const GetClientAgreements = async (ImpClient: any) => {
+  try {
+    SetActionStatusMessage("Loading client agreement...");
+    
+setShowClientAgreementPreview("Loading")
+    const response = await axios.post("/api/ClientAgreement", {
+      ImpClient,
+    });
+
+    if (!response.data?.success) {
+      SetActionStatusMessage("Unable to load client agreement.");
+      return;
+    }
+
+    const data = response.data.data;
+
+    const agreements = {
+      ClientAgreementFront: data?.ClientAgreementFront || "",
+      ClientAgreementBack: data?.ClientAgreementBack || "",
+      ClientAgreementFullPdf: data?.ClientAgreementFullPdf || "",
+    };
+
+    setClientAgreements(agreements);
+
+    const hasAgreement = Object.values(agreements).some(
+      (value) => Boolean(value)
+    );
+
+    if (hasAgreement) {
+      setShowClientAgreementPreview("Available");
+      SetActionStatusMessage("");
+    } else {
+      SetActionStatusMessage("No agreement documents found.");
+    }
+  } catch (error) {
+    console.error("Error fetching client agreement:", error);
+    SetActionStatusMessage("Failed to load client agreement.");
+  }
+};
+
  const AddReason = async (
   type: "replacement" | "termination"
 ) => {
@@ -621,6 +718,7 @@ const ClientTable = ({
         HCAId: FreezeInformation.HCA_Id,
         Month: FreezeInformation.Month,
         Status: status,
+
       });
 
       const updateFreezeStatus = response?.data;
@@ -1090,7 +1188,8 @@ const ClientTable = ({
         ExtendInfo.Type,
         SelectedCareTakerCharges,
         ClientAttendece,
-        ExtendInfo.ServiceState
+        ExtendInfo.ServiceState,
+        ValidationData
       );
 
       if (!deploymentRes?.success) {
@@ -1264,7 +1363,8 @@ Kind regards,
       ExtendInfo.Type,
       CareTakerCharges,
       ClientAttendece,
-      ExtendInfo.ServiceState
+      ExtendInfo.ServiceState,
+      ValidationData
     );
 
     if (deploymentRes.success) {
@@ -1456,6 +1556,7 @@ Kind regards,
           ClientAttendance,
           TerminatedTimeSheet,
           TerminationInfo.ServiceState,
+          {}
         ),
       ]);
 
@@ -1630,7 +1731,9 @@ Kind regards,
           selectedCase.Month,
           selectedCase.name,
           selectedCase.HCA_Name,
-          selectedCase.StartDate
+          selectedCase.StartDate,
+          "",
+          {}
 
         );
 
@@ -2837,7 +2940,40 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
   };
   const OmServiceView = () => {
     return (
-      <div className="w-full flex flex-col gap-8 p-2 bg-gray-50">
+      <div>
+        {showDeletePopup?
+          <HCATermination
+  Type="Termination"
+  show={showDeletePopup}
+  onShowChange={setShowDeletePopup}
+  data={TerminationInfo}
+/>:
+      
+      <div>
+
+        { ( selectedCase&&Popuptype==="Repleasment")||FreezeInformation?(
+         ( selectedCase&&Popuptype==="Repleasment")? <HCAReplacement
+  show={selectedCase}
+  onShowChange={(show) => {setSelectedCase(null);setShowReassignmentPopUp(false)}}
+  data={selectedCase}
+  onSubmit={(data) => {
+    console.log("Replacement Data:", data);
+  }}
+    filterProfilePic={filterProfilePic}
+  HCA_List={HCA_List}
+/>:<HCAFreeze
+  Type=""
+  show={FreezeInformation}
+  onShowChange={(value) => {
+    setFreezeInformation(value);
+    setShowFreezPopUp(false);
+  }}
+  data={FreezeInformation}
+/>
+        )
+
+
+     : <div className="w-full flex flex-col gap-8 p-2 bg-gray-50">
 
 
 
@@ -2914,7 +3050,12 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
               <Sparkles size={17} />
               Ask AI
             </button>
-            <div className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white px-2 py-3 shadow-sm">
+
+      
+
+          
+
+          <div className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white px-2 py-3 shadow-sm">
               <div className="flex flex-col items-center text-center">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                   Daily Total Margin
@@ -3456,7 +3597,7 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
 
 
           }}
-          onUpdate={(hcp) => console.log("Updated HCP:", hcp.UserId)}
+     
         />
         {ClientsInformation.length > 0 && (
           <div className="w-full overflow-x-auto rounded-2xl shadow-xl">
@@ -3613,6 +3754,230 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
                 </div>
               </div>
             )}
+       
+
+
+
+{/* Client Agreement Preview Popup */}
+{ShowClientAgreementPreview ==="Available"&&(
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
+
+    <div className="flex max-h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+
+      {/* Header */}
+      <div className="flex shrink-0 items-center justify-between border-b px-5 py-3">
+        <div className="flex items-center gap-2">
+             <img
+                                      src="/Icons/Curate-logoq.png"
+                                      className="h-8"
+                                      alt="Company Logo"
+                                    />
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">
+            Client Agreement Preview
+          </h2>
+          <p className="text-xs text-gray-500">
+            Review front, back and PDF documents
+          </p>
+        </div>
+          </div>
+
+        <button
+          type="button"
+          onClick={() => setShowClientAgreementPreview("Intial")}
+          className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-red-600"
+        >
+          <X size={22} />
+        </button>
+      </div>
+
+      {/* Scrollable Content */}
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-gray-50 p-4">
+
+        {/* Front and Back Side by Side */}
+        {(ClientAgreements.ClientAgreementFront ||
+          ClientAgreements.ClientAgreementBack) && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+            {ClientAgreements.ClientAgreementFront && (
+              <section className="min-w-0 rounded-xl border bg-white p-3">
+                <h3 className="mb-2 text-center text-sm font-semibold">
+                  Front Side
+                </h3>
+
+                <div className="flex h-[280px] items-center justify-center overflow-hidden rounded-lg bg-gray-100">
+                  <img
+                    src={ClientAgreements.ClientAgreementFront}
+                    alt="Agreement front"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+               <a
+  href={ClientAgreements.ClientAgreementFront}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="mb-2 block cursor-pointer text-center text-sm font-semibold text-teal-700 hover:text-teal-900 hover:underline"
+>
+  Full View
+</a>
+              </section>
+            )}
+
+            {ClientAgreements.ClientAgreementBack && (
+              <section className="min-w-0 rounded-xl border bg-white p-3">
+                <h3 className="mb-2 text-center text-sm font-semibold">
+                  Back Side
+                </h3>
+
+                <div className="flex h-[280px] items-center justify-center overflow-hidden rounded-lg bg-gray-100">
+                  <img
+                    src={ClientAgreements.ClientAgreementBack}
+                    alt="Agreement back"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+                      <a
+  href={ClientAgreements.ClientAgreementBack  }
+  target="_blank"
+  rel="noopener noreferrer"
+  className="mb-2 block cursor-pointer text-center text-sm font-semibold text-teal-700 hover:text-teal-900 hover:underline"
+>
+  Full View
+</a>
+              </section>
+            )}
+   
+          </div>
+        )}
+
+        {/* Full PDF */}
+        {ClientAgreements.ClientAgreementFullPdf && (
+          <section className="rounded-xl border bg-white p-3">
+            <h3 className="mb-2 text-sm font-semibold">
+              Complete Agreement (PDF)
+            </h3>
+
+            <iframe
+              src={ClientAgreements.ClientAgreementFullPdf}
+              title="Client Agreement PDF"
+              className="h-[350px] w-full rounded-lg border"
+            />
+          </section>
+        )}
+
+      </div>
+
+      {/* Footer */}
+      <div className="flex shrink-0 justify-end border-t bg-white px-5 py-3">
+        <button
+          type="button"
+          onClick={() => setShowClientAgreementPreview("Intial")}
+          className="rounded-lg bg-teal-700 px-5 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+        >
+          Close Preview
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
+
+
+{ShowClientAgreementPreview === "Loading" && (
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+    <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/60 bg-white shadow-2xl">
+
+      {/* Top Accent */}
+      <div
+        className={`h-1.5 w-full ${
+          ActionStatusMessage === "No agreement documents found."
+            ? "bg-red-500"
+            : "bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500"
+        }`}
+      />
+
+      {/* Close Button */}
+      <button
+        type="button"
+        onClick={() => {
+          setShowClientAgreementPreview("Intial");
+          SetActionStatusMessage("");
+        }}
+        className="absolute right-4 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-all hover:rotate-90 hover:bg-red-50 hover:text-red-600"
+        aria-label="Close popup"
+      >
+        <X size={18} />
+      </button>
+
+      <div className="px-7 pb-8 pt-9 text-center">
+
+        {/* Status Icon */}
+        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-teal-50 ring-8 ring-teal-50/50">
+          {ActionStatusMessage === "No agreement documents found." ? (
+            <FileText size={34} className="text-red-500" />
+          ) : (
+            <div className="relative flex h-11 w-11 items-center justify-center">
+              <div className="absolute inset-0 animate-spin rounded-full border-[3px] border-teal-100 border-t-teal-600" />
+              <FileText size={18} className="text-teal-700" />
+            </div>
+          )}
+        </div>
+
+        {/* Heading */}
+        <h3
+          className={`text-xl font-bold tracking-tight ${
+            ActionStatusMessage === "No agreement documents found."
+              ? "text-red-600"
+              : "text-slate-900"
+          }`}
+        >
+          {ActionStatusMessage === "No agreement documents found."
+            ? "No Documents Found"
+            : "Loading Agreement"}
+        </h3>
+
+        {/* Description */}
+        <p
+          className={`mx-auto mt-3 max-w-xs text-sm leading-6 ${
+            ActionStatusMessage === "No agreement documents found."
+              ? "text-red-500"
+              : "text-slate-500"
+          }`}
+        >
+          {ActionStatusMessage ||
+            "Please wait while we securely retrieve the client agreement documents."}
+        </p>
+
+        {/* Loading Indicator */}
+        {ActionStatusMessage !== "No agreement documents found." && (
+          <div className="mx-auto mt-6 h-1.5 w-40 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-teal-500 to-emerald-400" />
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="mt-7">
+          <button
+            type="button"
+            onClick={() => {
+              setShowClientAgreementPreview("Intial");
+              SetActionStatusMessage("");
+            }}
+            className="w-full rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
+          >
+            Close
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
+
             {processedData.length > 0 ?
               <table className="min-w-[900px] w-full border-collapse bg-white">
 
@@ -3723,8 +4088,11 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
                     <th className="w-[70px] px-2 py-2 text-center">
                       Rise Refund
                     </th>
-                    <th className="w-[70px] px-2 py-2 text-center">
+                    <th className="w-[70px] min-w-[70px] px-2 py-2 text-center">
                       Terminate
+                    </th>
+                    <th className="w-[60px] min-w-[60px] px-2 py-2 text-center">
+                      More
                     </th>
                     {/* <th className="w-[70px] px-2 py-2 text-center">
    Remove
@@ -3961,6 +4329,7 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
                                 }
 
                                 if (UpdatedStatus === "Active") {
+                                  setFreezeInformation(null)
                                   setFreezeOperation(true)
                                   setShowReassignmentPopUp(!ShowReassignmentPopUp), setPopuptype("Repleasment"), SetCareTakerName(GetHCPFullName(c.HCA_Id)), setselectedHCP(null), setselectedAssignHCP(null), setSelectedCase(c), setReplacementDate(""); SetActionStatusMessage(""), setShowWarning(false), setUpdatedCareTakerStatus(""), setSearchHCA("")
 
@@ -3995,7 +4364,7 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
   Reassignment
 </button> */}
 
-                          <img src="Icons/Repleasement.png" alt="Repleasement Icons" className="h-6 ml-4 cursor-pointer " onClick={() => { setShowReassignmentPopUp(!ShowReassignmentPopUp), setFreezeOperation(false), setPopuptype("Repleasment"), SetCareTakerName(GetHCPFullName(c.HCA_Id)), setselectedHCP(null), setselectedAssignHCP(null), setSelectedCase(c), setReplacementDate(""); SetActionStatusMessage(""), setShowWarning(false), setUpdatedCareTakerStatus(""), setSearchHCA(""), console.log("Check Test Data-----",) }} />
+                          <img src="Icons/Repleasement.png" alt="Repleasement Icons" className="h-6 ml-4 cursor-pointer " onClick={() => { setShowReassignmentPopUp(!ShowReassignmentPopUp), setFreezeOperation(false), setPopuptype("Repleasment"), SetCareTakerName(GetHCPFullName(c.HCA_Id)), setselectedHCP(null), setselectedAssignHCP(null), setSelectedCase(c), setReplacementDate(""); SetActionStatusMessage(""), setShowWarning(false), setUpdatedCareTakerStatus(""), setSearchHCA(""), console.log("Check Test Data-----",c) }} />
 
                           {ShowReassignmentPopUp && (
                             <div
@@ -4243,12 +4612,12 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
                                           <div className="flex items-center justify-between bg-white shadow-md rounded-2xl p-4 border border-gray-200">
 
                                             <div>
-                                              <p className="text-sm text-gray-500 mb-1">New HCA Status</p>
+                                              <p className="text-sm text-gray-500 mb-1">New HCP Status</p>
 
                                               <p className="text-base font-semibold text-gray-800">
                                                 {selectedHCP
                                                   ? `Selected: ${selectedHCP.FirstName}`
-                                                  : "No HCA selected"}
+                                                  : "No HCP selected"}
                                               </p>
                                             </div>
 
@@ -4352,7 +4721,7 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
 
                                           <div className="bg-white rounded-lg p-3 border">
                                             <p className="font-semibold text-gray-700 mb-2">
-                                              Existing HCA
+                                              Existing HCP
                                             </p>
 
                                             <p>
@@ -4368,7 +4737,7 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
 
                                           <div className="bg-white rounded-lg p-3 border">
                                             <p className="font-semibold text-gray-700 mb-2">
-                                              New HCA
+                                              New HCP
                                             </p>
 
                                             <p>
@@ -4572,7 +4941,7 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
                         <td className="inline-block px-1 ml-4 cursor-pointer py-2 text-[10px] mt-4 hover:bg-gray-100 hover:rounded-full font-medium cursor-pointer ">
                           <button
                             className="cursor-pointer"
-                            onClick={() => { setShowAssignPopup(true), setPopuptype("AddHcp"), setselectedClient(c), setselectedAssignHCP(null), setselectedHCP(null), SetActionStatusMessage("") }}
+                            onClick={() => { setShowAssignPopup(true), setPopuptype("AddHcp"), setselectedClient(c), setselectedAssignHCP(null), setselectedHCP(null),setSelectedCase(c), SetActionStatusMessage("") }}
                           >
                             <Plus size={19} className="h-5 w-5 text-center text-teal-600" />
                           </button>
@@ -4645,6 +5014,45 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
                           >
                             <Trash />
                           </button>
+                        </td>
+
+                        <td className="relative px-2 py-3 text-center align-middle">
+                          <div className="relative inline-flex justify-center">
+                            <button
+                              type="button"
+                              aria-label="More actions"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-95"
+                              onClick={() => setOpenMoreMenu((prev) => ({...prev,    ClientId:c.Client_Id,
+    HCPId:c.HCA_Id}))}
+                            >
+                              <EllipsisVertical size={16} />
+                            </button>
+
+                            {(openMoreMenu.ClientId=== c.Client_Id&&openMoreMenu.HCPId===c.HCA_Id )&& (
+                              <div className="absolute right-0 bottom-full z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-[0_12px_35px_-10px_rgba(15,23,42,0.22)] ring-1 ring-black/[0.03] animate-in fade-in slide-in-from-top-2 duration-200">
+  {/* View Details */}
+  
+
+  {/* Divider */}
+  <div className="mx-3 my-1 border-t border-slate-100" />
+
+  {/* Agreement Documents */}
+<button
+  type="button"
+  onClick={()=>GetClientAgreements(c)}
+  className="group flex w-full items-center gap-2 rounded-lg cursor-pointer px-2.5 py-2 text-left transition-all duration-200 hover:bg-emerald-50 active:scale-[0.98]"
+>
+  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 transition-colors group-hover:bg-emerald-100">
+    <FileText size={15} strokeWidth={2} />
+  </span>
+
+  <span className="text-xs font-semibold text-slate-700 group-hover:text-emerald-700">
+    Agreement Documents
+  </span>
+</button>
+</div>
+                            )}
+                          </div>
                         </td>
 
                         {/* <td className="px-3 py-3 text-center break-words relative">
@@ -5188,7 +5596,7 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
               {ReplacementDate && <div className="flex items-start gap-2 rounded-lg border mt-2 text-center border-amber-300 bg-amber-50 px-4 py-3 text-amber-800">
                 <span className="text-xl">⚠️</span>
                 <p className="text-sm font-medium">
-                  Make sure HCA attendance is marked for{" "}
+                  Make sure HCP attendance is marked for{" "}
                   <span className="font-bold">{ReplacementDate}</span>.
                 </p>
               </div>}
@@ -5657,8 +6065,9 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
           </div>
         )}
 
-      </div>
-
+      </div>}
+        </div>}
+</div>
     );
   };
 

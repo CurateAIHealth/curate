@@ -218,7 +218,7 @@ const updatePopup = async (payload: any) => {
   
     SetActionStatusMessage("Please wait...");
 
-    // Run independent operations in parallel
+    
     const [_, userInfo] = await Promise.all([
       dispatch(GetCurrentDeploymentData(payload)),
       GetUserInformation(payload.Client_Id),
@@ -501,7 +501,7 @@ const GetMonthFreshData = async (r: string) => {
   </div>
 
 
-  {filteredClients.length === 0 && (
+  {filteredClients.length === 0?
     <div className="flex flex-col items-center justify-center text-center gap-8 h-[65vh] rounded-3xl bg-white/70 backdrop-blur-xl border border-emerald-100 shadow-[0_8px_40px_rgba(16,185,129,0.08)] p-16">
       <h2 className="text-4xl font-extrabold text-gray-800">
         No Pending <span className="text-emerald-600">PDRs</span> Found
@@ -514,10 +514,10 @@ const GetMonthFreshData = async (r: string) => {
        Check Complited PDR's
       </button>
     </div>
-  )}
+ :
 
 
-  {ClientsInformation.length > 0 && (
+
     <div className="flex flex-col gap-6 bg-white/80 backdrop-blur-xl border border-gray-100 rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.05)] p-8 transition-all hover:shadow-[0_12px_60px_rgba(0,0,0,0.08)]">
 
 
@@ -800,7 +800,7 @@ const GetMonthFreshData = async (r: string) => {
   ))}
 </div>
     </div>
-  )}
+ }
 </div>
 
 

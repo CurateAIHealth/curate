@@ -5,7 +5,7 @@ import { X, Eye, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 
-import { calculateAgeIndianFormat, GetPreviewUserType } from "@/Lib/Actions";
+import { calculateAgeIndianFormat, GetHCPFullName, GetPreviewUserType } from "@/Lib/Actions";
 import { UpdateClient, UpdateUserInformation } from "@/Redux/action";
 
 interface HCP {
@@ -76,7 +76,7 @@ const HCA_List = Array.isArray(filteredHcps)
 
       const userType = String(each.userType ?? "").trim().toLowerCase();
       const currentStatus = String(each.CurrentStatus ?? "").trim().toLowerCase();
-      const gender = String(each.Gender ?? "").trim().toLowerCase();
+      const gender = String(each.Gender ?? "").trim().toLowerCase()||"Male";
       const formGender = String(form?.Gender ?? "").trim().toLowerCase();
       const formHcpType = String(form?.hcpType ?? "").trim();
 
@@ -123,7 +123,7 @@ const HCA_List = Array.isArray(filteredHcps)
       );
     })
   : [];
-
+console.log ("Check for Task-----",filteredHcps)
   const searchedHcps = HCA_List.filter((hcp) =>
     `${hcp.HCPFirstName} ${hcp.HCPLastName || ""}`
       .toLowerCase()
@@ -426,8 +426,7 @@ const HCA_List = Array.isArray(filteredHcps)
                         text-slate-900
                       "
                     >
-                      {ClientInformation?.name ||
-                        "Nuzhath shakeel"}
+                      {ClientInformation?.name ||"Not Mentioned"}
                     </p>
 
                     <p
@@ -909,9 +908,7 @@ const HCA_List = Array.isArray(filteredHcps)
                               ${hcp.HCPLastName || ""}
                             `}
                           >
-                            {hcp.HCPSurName}{" "}
-                            {hcp.HCPFirstName}{" "}
-                            {hcp.HCPLastName}
+                          {GetHCPFullName(users,hcp.UserId)}
                           </h3>
 
                           {/* Contact */}
