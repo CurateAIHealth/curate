@@ -671,6 +671,7 @@ const SendInvoice = async () => {
       `,
 
       pdfBase64: base64.split(",")[1],
+      fileName: `invoice-${invoice.number || "document"}.pdf`,
     });
 
   

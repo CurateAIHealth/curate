@@ -357,27 +357,180 @@ export const GetApplicationData = async () => {
 
 
 
+type OTPVerificationRecord = {
+  verified: boolean;
+  VerifiedBy: string;
+  VerifiedAt: string;
+};
+
+type FreezeInformationPayload = {
+  Reason: string;
+  OtherReason: string;
+  FreezeStartDate: string;
+  FreezeStartTime: string;
+  FreezeEndDate: string;
+  FreezeEndTime: string;
+  ExpectedFreezeDays: number;
+  AdditionalNotes: string;
+  UpdatedCareTakerStatus: string;
+  CheckRequestedByClient: "Yes" | "No" | "";
+  ClientConcern: "Yes" | "No" | "";
+  ClientConcernNote: string;
+  OTPVerification: {
+    CLIENT: OTPVerificationRecord;
+    HCA: OTPVerificationRecord;
+    ADMIN: OTPVerificationRecord;
+  };
+};
+
 export const UpdateDeploymentStatus = async (
   userId: string,
-  HCPId: any,
-  MonthValue: any,
-  ImpValue: any
+  HCPId: string,
+  MonthValue: string,
+  ImpValue: string,
+  FreezeInformation?: FreezeInformationPayload
 ) => {
   console.time("UpdateDeploymentStatus");
 
   try {
-    console.time("MongoConnection");
+    if (!userId || !HCPId || !MonthValue || !ImpValue) {
+      return {
+        success: false,
+        message: "Required deployment information is missing.",
+      };
+    }
 
     const client = await clientPromise;
-
-    console.timeEnd("MongoConnection");
-
     const db = client.db("CurateInformation");
     const collection = db.collection("Deployment");
 
+    const updateFields: Record<string, any> = {
+      Status: ImpValue,
+    };
 
+    if (FreezeInformation) {
+      const {
+        Reason,
+        OtherReason,
+        FreezeStartDate,
+        FreezeStartTime,
+        FreezeEndDate,
+        FreezeEndTime,
+        ExpectedFreezeDays,
+        AdditionalNotes,
+        UpdatedCareTakerStatus,
+        CheckRequestedByClient,
+        ClientConcern,
+        ClientConcernNote,
+        OTPVerification,
+      } = FreezeInformation;
 
-  
+      if (!Reason?.trim()) {
+        return {
+          success: false,
+          message: "Please select a freeze reason.",
+        };
+      }
+
+      if (
+        Reason === "Other" &&
+        !OtherReason?.trim()
+      ) {
+        return {
+          success: false,
+          message: "Please specify the freeze reason.",
+        };
+      }
+
+      if (
+        !FreezeStartDate ||
+        !FreezeStartTime ||
+        !FreezeEndDate ||
+        !FreezeEndTime
+      ) {
+        return {
+          success: false,
+          message: "Please complete the freeze dates and times.",
+        };
+      }
+
+      const start = new Date(
+        `${FreezeStartDate}T${FreezeStartTime}`
+      );
+
+      const end = new Date(
+        `${FreezeEndDate}T${FreezeEndTime}`
+      );
+
+      if (
+        !Number.isFinite(start.getTime()) ||
+        !Number.isFinite(end.getTime()) ||
+        end <= start
+      ) {
+        return {
+          success: false,
+          message: "Freeze end date must be after start date.",
+        };
+      }
+
+      if (
+        !Number.isFinite(ExpectedFreezeDays) ||
+        ExpectedFreezeDays < 1
+      ) {
+        return {
+          success: false,
+          message: "Invalid expected freeze days.",
+        };
+      }
+
+      if (
+        !["Available", "Sick", "Leave", "Bench", "Terminated"]
+          .includes(UpdatedCareTakerStatus)
+      ) {
+        return {
+          success: false,
+          message: "Please select a valid HCP status.",
+        };
+      }
+
+      // IMPORTANT:
+      // OTP verification must be confirmed by trusted
+      // server-side verification records before this update.
+      // Never trust OTPVerification.verified from the browser.
+      //
+      // The following condition is valid only after the
+      // server has established the verification records.
+
+      updateFields.FreezeInformation = {
+        Reason: Reason.trim(),
+        OtherReason:
+          Reason === "Other" ? OtherReason.trim() : "",
+
+        FreezeStartDate,
+        FreezeStartTime,
+        FreezeEndDate,
+        FreezeEndTime,
+        ExpectedFreezeDays,
+
+        AdditionalNotes: AdditionalNotes?.trim() || "",
+        UpdatedCareTakerStatus,
+
+        CheckRequestedByClient,
+        ClientConcern,
+        ClientConcernNote:
+          ClientConcern === "Yes"
+            ? ClientConcernNote?.trim() || ""
+            : "",
+
+        OTPVerification: {
+          CLIENT: OTPVerification.CLIENT,
+          HCA: OTPVerification.HCA,
+          ADMIN: OTPVerification.ADMIN,
+        },
+
+        UpdatedAt: new Date(),
+      };
+    }
 
     const result = await collection.updateOne(
       {
@@ -386,40 +539,32 @@ export const UpdateDeploymentStatus = async (
         Month: MonthValue,
       },
       {
-        $set: {
-          Status: ImpValue,
-        },
+        $set: updateFields,
       }
     );
 
- 
-
     if (result.matchedCount === 0) {
-      console.warn("No matching document found.");
-
-      console.timeEnd("UpdateDeploymentStatus");
-
       return {
         success: false,
-        message: "No matching document found",
+        message: "No matching deployment document found.",
       };
     }
 
-    console.timeEnd("UpdateDeploymentStatus");
-
     return {
       success: true,
-      message: "Client Deployment Status Updated Successfully",
+      message: "Deployment status updated successfully.",
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount,
     };
   } catch (error) {
     console.error("UpdateDeploymentStatus Error:", error);
 
-    console.timeEnd("UpdateDeploymentStatus");
-
     return {
       success: false,
-      message: "Failed to update deployment status",
+      message: "Failed to update deployment information.",
     };
+  } finally {
+    console.timeEnd("UpdateDeploymentStatus");
   }
 };
 let cache: any = null;
@@ -2936,5 +3081,63 @@ export const GetReplacementInfo = async (
   } catch (e) {
     console.error("GetReplacementInfo Error:", e);
     throw e;
+  }
+};
+
+
+
+
+interface ClientAgreementInput {
+  Client_Id: string;
+  HCA_Id: string;
+  Month: string;
+  StartDate:any
+}
+
+export const getClientagreementfromDb = async (
+  ImpClientInformation: ClientAgreementInput
+) => {
+  try {
+    // 1. Validate input
+    if (
+      !ImpClientInformation ||
+      typeof ImpClientInformation.Client_Id !== "string" ||
+      !ImpClientInformation.Client_Id.trim() ||
+      typeof ImpClientInformation.HCA_Id !== "string" ||
+      !ImpClientInformation.HCA_Id.trim() ||
+      typeof ImpClientInformation.Month !== "string" ||
+      !ImpClientInformation.Month.trim()
+    ) {
+      throw new Error("Invalid client agreement input.");
+    }
+
+    // 2. Connect to MongoDB
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const deploymentCollection = db.collection("Invoices");
+console.log("Chc=",ImpClientInformation.Client_Id)
+    // 3. Fetch the matching deployment
+    const findDocument = await deploymentCollection.findOne(
+      {
+        
+        ClienId:ImpClientInformation.Client_Id,
+
+      },
+      {
+        projection: {
+          ClientAgreementFront: 1,
+          ClientAgreementBack: 1,
+          ClientAgreementFullPdf: 1,
+        },
+        maxTimeMS: 5000,
+      }
+    );
+
+    
+    return findDocument;
+  } catch (error) {
+    console.error("Error fetching client agreement:", error);
+
+    throw new Error("Failed to fetch client agreement.");
   }
 };

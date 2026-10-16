@@ -31,6 +31,7 @@ import {
   Info,
   MessageSquare,
   BookOpen,
+  Phone,
 } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -388,7 +389,7 @@ useEffect(() => {
       {
         name: "Call Enquiry",
         count: stats.registeredUsers,
-        icon: Bell,
+        icon: Phone,
         bg: "bg-blue-500",
       },
       {
@@ -416,6 +417,12 @@ useEffect(() => {
   icon: MessageSquare,
   bg: "bg-violet-500",
 },
+      {
+        name: "OTPValidation",
+        count: 0,
+        icon: Shield,
+        bg: "bg-indigo-500",
+      },
       {
         name: "Pending PDR",
         count: stats.pendingPdrCount,
@@ -909,6 +916,7 @@ const pageRoutes: Record<string, string> = {
   "HCP Missing Document":"/Documents",
   "Company Policy": "/CompanyPolicy",
   "Training And Knowledge": "/Training",
+  OTPValidation:"/OTPValidation"
  
 };
 
@@ -1044,9 +1052,9 @@ const Switching = (tab: string) => {
         <header className="flex flex-wrap justify-between items-center bg-gray-400 text-white px-4 sm:px-6 py-3 shadow-md gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
-            <span className="text-[15px] uppercase truncate">
+            <h1 className="text-[15px] truncate font-normal">
               Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
-            </span>
+            </h1>
 
           </div>
 
@@ -1375,7 +1383,7 @@ const Switching = (tab: string) => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
               {tabs.map((tab: any, index) => (
                 <div
-                  className="cursor-pointer"
+                  className="cursor-pointer rounded-xl focus-within:ring-2 focus-within:ring-teal-600"
                   key={tab.name}
                   onClick={
                     () => { if (tab.name !== "Call Enquiry") { Switching(tab.name) } }
@@ -1384,7 +1392,7 @@ const Switching = (tab: string) => {
 
                   <div
                     key={tab.name}
-                    className="flex flex-col items-center cursor-pointer hover:shadow-lg justify-center bg-white rounded-xl shadow-md border border-gray-100 p-3 sm:p-1 transition-transform hover:scale-[1.05]"
+                    className="flex flex-col items-center cursor-pointer hover:shadow-lg hover:border-teal-300 justify-center bg-white rounded-xl shadow-md border border-gray-100 p-3 sm:p-1 transition-transform hover:scale-[1.05]"
                   >
 
                     <div
@@ -1456,7 +1464,8 @@ const Switching = (tab: string) => {
       text-white font-medium
       hover:from-emerald-400 transition"
                           >
-                            📞 Call Enquiry
+                      📞 Call Enquiry
+
                           </button>
                         </div>
                       )}
@@ -2048,7 +2057,7 @@ className="flex-1 min-w-0 rounded-lg border border-gray-300 px-4 py-3 text-sm te
                               className="px-4 py-2 text-sm cursor-pointer hover:bg-gray-100"
                               onClick={() => {
                                 setEnquiryForm({ ...EnquiryForm, CurateNewLead: lead });
-                                setShowLeadSuggestions(false);
+                                setCurateShowLeadSuggestions(false);
                               }}
                             >
                               {lead}

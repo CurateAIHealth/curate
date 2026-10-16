@@ -153,21 +153,53 @@ const getDocumentsByUserId = (userId: string) => {
   return RegisterdInfo
     .map((each: any) => {
       const doc = getDocumentsByUserId(each.userId) || {};
-
+console.log("Check profilepic-----",doc)
    const missingDocs = Object.keys(doc).filter((key) => {
   const value = doc[key];
   return value === "" || value === null || value === undefined;
 });
 
 const availableDocs = Object.entries(doc)
-  .filter(([_, value]) => {
-    return (
-      typeof value === "string" &&
-      value.trim() !== "" &&
-      value.toLowerCase().includes("cloudinary.com")
-    );
+  .filter(([key, value]) => {
+    if (
+      typeof value !== "string" ||
+      value.trim() === ""
+    ) {
+      return false;
+    }
+
+    const normalizedKey = key
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+
+    // Profile picture must have a valid Cloudinary URL
+    if (normalizedKey === "profilepic") {
+      try {
+        const url = new URL(value.trim());
+
+        return (
+          url.protocol === "https:" &&
+          url.hostname === "res.cloudinary.com" &&
+          !value.includes("DefaultProfileIcon.png")
+        );
+      } catch {
+        return false;
+      }
+    }
+
+    // Other documents must also have a Cloudinary URL
+    try {
+      const url = new URL(value.trim());
+
+      return (
+        url.protocol === "https:" &&
+        url.hostname === "res.cloudinary.com"
+      );
+    } catch {
+      return false;
+    }
   })
-  .map(([key]) => key);
+  .map(([key]) => key)
 
       return {
         FirstName: GetHCPFullName(each?.userId) || "Not Provided",
@@ -532,7 +564,7 @@ const filteredPreviewData = useMemo(() => {
         className="
           sticky top-0 z-30
           grid
-          grid-cols-[70px_180px_repeat(9,140px)]
+grid-cols-[70px_180px_repeat(10,140px)]
           min-h-[56px]
           bg-[#dff9f7]
           border-b border-gray-200
@@ -575,6 +607,7 @@ const filteredPreviewData = useMemo(() => {
         </div>
 
         {[
+            "Profile Pic",
           "Aadhar",
           "PAN",
           "BVR",
@@ -634,6 +667,10 @@ const hasDocument = (...names: string[]) => {
 };
 
       const documents = [
+        {
+  label: "Profile Pic",
+  available: hasDocument("ProfilePic"),
+},
   {
     label: "Aadhar",
     available: hasDocument(
@@ -723,7 +760,7 @@ const hasDocument = (...names: string[]) => {
             key={p.UserId || i}
             className="
               grid
-              grid-cols-[70px_180px_repeat(9,140px)]
+             grid-cols-[70px_180px_repeat(10,140px)]
               items-center
               border-b border-gray-200
               hover:bg-[#f4fffe]

@@ -525,7 +525,8 @@ const confirmDelete = async (selectedReason: string) => {
       TerminationInfo.TimeSheet,
       TerminationInfo.ClientAttendance,
        TerminationInfo. TerminatedAttendece,
-      TerminationInfo.ServiceState
+      TerminationInfo.ServiceState,
+      {}
     );
 
    if (deleteTimeSheetResponse?.success) {
@@ -626,7 +627,8 @@ const ExtendTimeSheet = async () => {
       ExtendInfo.Type,
       CareTakerCharges,
       ClientAttendece,
-      ExtendInfo.ServiceState
+      ExtendInfo.ServiceState,
+      {}
     );
 
     const UpdatedData = {

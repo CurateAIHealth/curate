@@ -11,6 +11,8 @@
     CircleEllipsis,
     MessageSquare,
     QrCode,
+    FileText,
+    Upload,
   } from 'lucide-react'
   import Preview from '@/Components/Preview/page'
   import PreviewComponent from '@/Components/Preview/page'
@@ -21,13 +23,22 @@
   import MedicationSchedule from '@/Components/Medications/page'
   import { CheckboxGroup } from '@/Components/CheckboxGroup'
   import axios from 'axios'
-import { GetUsersFullInfo, SuitableHCPUpdate, UpdateHCAnstatus, UpdateInvoice, UpdateNewserviceCharges, UpdatePaymentForStaff } from '@/Lib/user.action'
+import { GetHCACEmailandContact, GetUsersFullInfo, SuitableHCPUpdate, UpdateHCAnstatus, UpdateInvoice, UpdateNewserviceCharges, UpdatePaymentForStaff } from '@/Lib/user.action'
 import { useRouter } from 'next/navigation'
-import { getDaysBetween } from '@/Lib/Actions'
+import { getDaysBetween, getHCAContactNumber, GetHCPFullName } from '@/Lib/Actions'
 import DatePopup from '@/Components/MissingDateRange/page'
 import { UpdateInvoicePageStatus } from '@/Redux/reducer'
+import OTPValidationPopup from '@/Components/OTPValidationPopup/page'
   type EditingKeys = 'PatientCardEditing' | 'ClientCardEditing' | 'PatientDetails' | 'AdditionalInformation' | 'OtherInformation' | 'EquipmentDetails' | 'Hygiene' | 'Medication';
 
+
+type OTPSource = "sms" | "email" | "whatsapp";
+type OTPType = "client" | "hca";
+interface PrepareOTPParams {
+  type: OTPType;
+  source: OTPSource;
+  otp: string;
+}
 
 
     function FieldItem({
@@ -42,18 +53,27 @@ import { UpdateInvoicePageStatus } from '@/Redux/reducer'
       onChange: (val: string) => void;
     }) {
       return (
-        <div className="mb-3">
-          <label className="block text-gray-800  font-bold text-md mb-1">{label}</label>
+        <div className="group rounded-2xl border border-slate-200/80 bg-white p-4 transition-all duration-200 hover:border-[#00A9A5]/35 hover:shadow-[0_8px_24px_rgba(15,118,110,0.07)]">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <label className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+              {label}
+            </label>
+            {!editable && (
+              <span className="h-1.5 w-1.5 rounded-full bg-[#00A9A5]" />
+            )}
+          </div>
           {editable ? (
             <input
               type="text"
               value={value || ""}
               onChange={(e) => onChange(e.target.value)}
               placeholder={`Enter ${label}`}
-              className="w-full border p-2 rounded-lg focus:outline-none focus:ring focus:ring-blue-200"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-800 outline-none transition focus:border-[#00A9A5] focus:bg-white focus:ring-4 focus:ring-[#00A9A5]/10"
             />
           ) : (
-            <p className="text-gray-800 min-h-[24px]">{value || "Unfilled"}</p>
+            <p className={`min-h-[24px] text-sm leading-6 ${value ? "font-semibold text-slate-800" : "text-slate-400"}`}>
+              {value || "Not provided"}
+            </p>
           )}
         </div>
       );
@@ -65,11 +85,13 @@ import { UpdateInvoicePageStatus } from '@/Redux/reducer'
   const [users, setUsers] = useState<any>([]);
     const [showRemark, setShowRemark] = useState<Record<string, boolean>>({});
     const [showScanner, setShowScanner] = useState(false);
+    const [PlacementValidate,setPlacementValidate]=useState(false)
     const [EditHealthcareProfessional,setEditHealthcareProfessional]=useState(false)
     const [UploadStatusMessage,setUploadStatusMessage]=useState("")
     const [StatusMessage,setStatusMessage]=useState("")
     const [form, setForm] = useState<StringMap>({});
     const [dateWarning, setDateWarning] = useState("");
+    const[showPlacementSuccess ,setShowPlacementSuccess]=useState(false)
     const [isInvoiseEditing, setisInvoiseEditing] = React.useState(false);
     const [otherInputs, setOtherInputs] = useState<StringMap>({});
     const [AdvanceAmount,setAdvanceAmount]=useState<any>("")
@@ -81,7 +103,16 @@ import { UpdateInvoicePageStatus } from '@/Redux/reducer'
     const ShowPreviewData = useSelector((state: any) => state.CurrentPreview)
 const [service, setService] = useState("");
   const [otherService, setOtherService] = useState("");
+  const [showOTPValidation, setShowOTPValidation] =
+      useState(false);
+    const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
+    const [imphcaInfo,setImphcaInfo]=useState<any>({})
+     const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
+    const [isOTPSubmitting, setIsOTPSubmitting] =
+      useState(false);
   const [ShowDateRangePopUp,setShowDateRangePopUp]=useState(false)
+  const [ValidateDetails,SetValidateDetails]=useState<any>({})
+ 
   const [InvoiseInformation, setInvoiseInformation] = useState<any>({
   enrollmentFee: "",
   dayPrice: "",
@@ -120,6 +151,7 @@ useEffect(() => {
     ...prev,
     ClientAgreementFront: "",
     ClientAgreementBack: "",
+    ClientAgreementFullPdf:""
   }));
     const cleanNumber = (val: any) => {
       if (!val) return "";
@@ -188,33 +220,52 @@ const handleInvoiseChange = (key: any, value: any) => {
 
 const handleImageChange = useCallback(
   async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUploadStatusMessage("Please Wait Uploading Document");
-
     const file = e.target.files?.[0];
     const inputName = e.target.name;
 
     if (!file) return;
 
+    // Validate file size (10 MB maximum)
     if (file.size > 10 * 1024 * 1024) {
       alert("File too large. Max allowed is 10MB.");
+      e.target.value = "";
       return;
     }
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "image/gif",
-      "video/mp4",
-      "video/webm",
-      "video/ogg",
-      "application/pdf",
-    ];
+    // Full Client Agreement must be a PDF
+    const isFullAgreementPdf = inputName === "ClientAgreementFullPdf";
 
-    if (!allowedTypes.includes(file.type)) {
-      alert("Only image, video, or PDF files are allowed.");
-      return;
+    if (isFullAgreementPdf) {
+      const isPdf =
+        file.type === "application/pdf" ||
+        file.name.toLowerCase().endsWith(".pdf");
+
+      if (!isPdf) {
+        alert("Please upload the complete Client Agreement as a PDF file.");
+        e.target.value = "";
+        return;
+      }
+    } else {
+      // Allowed formats for other upload fields
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "video/mp4",
+        "video/webm",
+        "video/ogg",
+        "application/pdf",
+      ];
+
+      if (!allowedTypes.includes(file.type)) {
+        alert("Only image, video, or PDF files are allowed.");
+        e.target.value = "";
+        return;
+      }
     }
+
+    setUploadStatusMessage("Please Wait Uploading Document");
 
     const formDataData = new FormData();
     formDataData.append("file", file);
@@ -228,17 +279,23 @@ const handleImageChange = useCallback(
 
       const url = res?.data?.url;
 
-      if (url) {
-        setFormData((prev: any) => ({
-          ...prev,
-          [inputName]: url,
-        }));
+      if (!url) {
+        throw new Error("Upload API did not return a file URL.");
       }
+
+      setFormData((prev: any) => ({
+        ...prev,
+        [inputName]: url,
+      }));
 
       setUploadStatusMessage("Document Uploaded Successfully");
     } catch (error: any) {
-      console.error("Upload failed:", error.message);
+      console.error("Upload failed:", error);
       setUploadStatusMessage("Upload Failed");
+      alert("Document upload failed. Please try again.");
+    } finally {
+      // Allows selecting the same file again
+      e.target.value = "";
     }
   },
   []
@@ -397,58 +454,1129 @@ const updateInvoiceEditedInformation = async () => {
     </div>
   );
 }
+  const handleOTPValidation = async ({
+  clientOTP,
+  clientSource,
+  hcaOTP,
+  hcaSource,
+}: {
+  clientOTP: string;
+  clientSource: OTPSource;
+  hcaOTP: string;
+  hcaSource: OTPSource;
+}) => {
+  // Prevent duplicate submissions
+  if (isOTPSubmitting) {
+    return;
+  }
 
+  try {
+    setIsOTPSubmitting(true);
+
+    /*
+     * ============================================================
+     * BASIC VALIDATION
+     * ============================================================
+     */
+
+    const normalizedClientOTP = String(clientOTP ?? "").trim();
+    const normalizedHCAOTP = String(hcaOTP ?? "").trim();
+
+    const validSources: OTPSource[] = [
+      "sms",
+      "email",
+      "whatsapp",
+    ];
+
+    if (!validSources.includes(clientSource)) {
+ alert("Invalid client verification method.");
+ return;
+    }
+
+    if (!validSources.includes(hcaSource)) {
+     alert("Invalid HCA verification method.");
+     return;
+    }
+
+    /*
+     * OTP should normally be 6 numeric digits.
+     * Do not accept arbitrary strings.
+     */
+    const OTP_REGEX = /^\d{6}$/;
+
+    if (!OTP_REGEX.test(normalizedClientOTP)) {
+      alert("Please enter a valid 6-digit Client OTP.");
+      return;
+
+    }
+
+    if (!OTP_REGEX.test(normalizedHCAOTP)) {
+      alert("Please enter a valid 6-digit HCA OTP.");
+      return;
+    }
+
+    /*
+     * ============================================================
+     * REQUIRED USER / PLACEMENT INFORMATION
+     * ============================================================
+     */
+
+    const clientId =
+      DeploaymentInformation?.Client_Id ||
+      formData?.userId;
+
+    const hcaId =
+      DeploaymentInformation?.HCA_Id;
+
+    const validatorEmail =
+      typeof loggedInEmail === "string"
+        ? loggedInEmail.trim().toLowerCase()
+        : "";
+
+    if (!clientId) {
+      alert("Client information is missing. Please refresh the page and try again.");
+      return;
+    }
+
+    if (!hcaId) {
+      alert("HCA information is missing. Please refresh the page and try again.");
+      return;
+    }
+
+    if (!validatorEmail) {
+      alert("Your login session could not be verified. Please sign in again.");
+      return;
+    }
+
+
+    const validationInformation = {
+      ClientSource: clientSource,
+      HCASource: hcaSource,
+      ValidateBy: validatorEmail,
+      ClientOTP: normalizedClientOTP,
+      HCPOTP: normalizedHCAOTP,
+
+      ClientOTPVerified: true,
+      HCAOTPVerified: true,
+
+      VerifiedAt: new Date().toISOString(),
+
+      ClientId: clientId,
+      HCAId: hcaId,
+    };
+
+    SetValidateDetails(validationInformation);
+console.log("Check Info-----",validationInformation)
+    /*
+     * Close popup only after successful verification.
+     */
+    setShowOTPValidation(false);
+setShowPlacementSuccess(true)
+    /*
+     * Continue with placement validation.
+     */
+    setPlacementValidate(true);
+
+  } catch (error: unknown) {
+    console.error("OTP verification failed");
+
+
+    let message =
+      "OTP verification failed. Please check the OTPs and try again.";
+
+
+    /*
+     * Keep popup open so the user can retry.
+     */
+    setShowOTPValidation(true);
+
+    /*
+     * Use your existing status state instead of alert().
+     */
+    setStatusMessage(message);
+
+  } finally {
+    setIsOTPSubmitting(false);
+  }
+};
+
+  const PrepareOTPValidation = async (
+  type: OTPType,
+  source: OTPSource,
+  otp: string
+) => {
+  try {
+    /*
+     * ============================================================
+     * GET PERSON DETAILS
+     * ============================================================
+     *
+     * Replace these fields with the actual fields from your data.
+     */
+const data = { ...formData, InvoiseInformation, HCAId: DeploaymentInformation.HCA_Id };
+    const recipientName =
+      type === "client"
+        ? data?.patientName || data?.FirstName || "Client"
+        : GetHCPFullName(UserFullInfo, data?.HCAId) || "HCA";
+
+    const recipientPhone =
+      type === "client"
+        ? data?.ContactNumber || data?.contact
+        : getHCAContactNumber(UserFullInfo, data?.HCAId) || "9347877159";
+
+//     const recipientEmail = type === "client"?data?.
+// Email
+//  || data?.email:imphcaInfo?.email || data?.email || ""
+   
+const recipientEmail ="tsiddu805@gmail.com"
+    const concernPerson =
+      data?.ConcernPerson ||
+      "Care Coordinator";
+
+    const concernPhone =
+      data?.ConcernPersonPhone ||
+      "+91 XXXXX XXXXX";
+
+    const emergencyNumber =
+      data?.EmergencyNumber ||
+      "+91 XXXXX XXXXX";
+
+    /*
+     * ============================================================
+     * DATE / TIME
+     * ============================================================
+     */
+
+    const startDate = data?.InvoiseInformation?.startDate;
+    const endDate = data?.InvoiseInformation?.endDate;
+
+    const formatDate = (value: any) => {
+      if (!value) return "-";
+
+      const date = new Date(value);
+
+      if (isNaN(date.getTime())) {
+        return "-";
+      }
+
+      return date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    };
+
+    const formatTime = (value: any) => {
+      if (!value) return "-";
+
+      const date = new Date(value);
+
+      if (isNaN(date.getTime())) {
+        return "-";
+      }
+
+      return date.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    };
+
+    const visitDate = formatDate(startDate);
+
+    const startTime = formatTime(startDate);
+
+    const endTime = formatTime(endDate);
+
+    /*
+     * ============================================================
+     * SUBJECT
+     * ============================================================
+     */
+
+    const subject =
+      "OTP Confirmation Required – Curate Care Placement";
+
+    /*
+     * ============================================================
+     * PLAIN TEXT MESSAGE
+     * ============================================================
+     */
+const logoUrl =
+  "https://www.curatehealthservices.com/Icons/Curate-logoq.png";
+const textMessage =
+  type === "client"
+    ? `
+Dear ${recipientName},
+
+Thank you for choosing Curate Health Services LLP to provide care and support for your loved one at home. We truly appreciate your trust in us, and we are committed to providing safe, respectful, compassionate, and reliable care.
+
+To help you and your family have a smooth experience, please find the Client Information Booklet attached with this email. It contains important information about our services.
+
+We kindly request you to go through the booklet carefully and keep it available for reference throughout the care period. It is designed to make the responsibilities and expectations clear for both the family and our caregivers.
+
+Our goal is to ensure that your loved one receives the best possible care while maintaining a comfortable and respectful environment for everyone involved.
+
+If you have any questions or concerns at any time, please do not hesitate to contact us. Our team is always here to support you.
+
+OTP: ${otp}
+
+Please provide the OTP only after you have read and understood the above information.
+
+Thank you once again for placing your trust in Curate Health Services LLP. We look forward to working with you and your family.
+
+Warm regards,
+Curate Team
+
+
+Need help?
+
+If you have any questions or would like to discuss this Placement, please contact our care coordination team at info@curatehealth.in or Phone: +91 73860 45659.
+`.trim()
+    : `
+Date: ${visitDate}
+Visit Time: ${startTime} – ${endTime}
+
+Confirmation
+
+By providing the OTP below, you confirm that:
+
+• You are willing and comfortable to provide care to the patient.
+• You are aware of the care requirements communicated to you.
+• You know who to contact at Curate if you have any concerns regarding the client, care delivery, working arrangements, or any other issue.
+• During Curate working hours, you can contact ${concernPerson} on ${concernPhone}.
+• For urgent concerns outside working hours, Curate's 24/7 emergency contact is ${emergencyNumber}.
+
+If you have any concern about your safety, the patient condition, the care environment, or your ability to continue the assignment, please contact Curate through the appropriate channel immediately.
+
+OTP: ${otp}
+
+Please provide the OTP only after you have read and understood the above information and are comfortable proceeding with the assignment.
+
+Thank you,
+Curate Care Team
+
+
+Need help?
+
+If you have any questions or would like to discuss this Placement, please contact our care coordination team at info@curatehealth.in or Phone: +91 73860 45659.
+`.trim();
+
+    /*
+     * ============================================================
+     * HTML EMAIL
+     * ============================================================
+     */
+
+const htmlMessage =
+  type === "client"
+    ? `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+
+<body style="
+  margin:0;
+  padding:0;
+  background:#f4f7f9;
+  font-family:Arial,Helvetica,sans-serif;
+">
+
+  <div style="
+    max-width:650px;
+    margin:30px auto;
+    background:#ffffff;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 4px 20px rgba(0,0,0,0.08);
+  ">
+
+    <!-- HEADER -->
+    <div style="
+      background:#0f766e;
+      padding:18px 25px;
+    ">
+
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+
+          <td width="55" valign="middle" style="
+            width:55px;
+            padding-right:12px;
+          ">
+
+            <img
+              src="${logoUrl}"
+              alt="Curate Health Care"
+              width="45"
+              height="45"
+              style="
+                display:block;
+                width:45px;
+                height:45px;
+                object-fit:contain;
+                border-radius:6px;
+                background:#ffffff;
+                padding:4px;
+              "
+            />
+
+          </td>
+
+          <td valign="middle">
+
+            <div style="
+              color:#ffffff;
+              font-size:20px;
+              font-weight:bold;
+              line-height:1.2;
+            ">
+              Curate Health Care Service
+            </div>
+
+            <div style="
+              color:#d9fffa;
+              font-size:12px;
+              margin-top:4px;
+            ">
+              Client Information & OTP Confirmation
+            </div>
+
+          </td>
+
+        </tr>
+      </table>
+
+    </div>
+
+
+    <!-- BODY -->
+    <div style="padding:30px;">
+
+      <p style="
+        font-size:16px;
+        color:#333333;
+        margin-top:0;
+      ">
+        Dear <strong>${recipientName}</strong>,
+      </p>
+
+
+      <p style="
+        font-size:15px;
+        color:#444444;
+        line-height:1.7;
+      ">
+        Thank you for choosing
+        <strong>Curate Health Services LLP</strong>
+        to provide care and support for your loved one at home.
+      </p>
+
+
+      <p style="
+        font-size:15px;
+        color:#444444;
+        line-height:1.7;
+      ">
+        We truly appreciate your trust in us, and we are committed to
+        providing safe, respectful, compassionate, and reliable care.
+      </p>
+
+
+      <!-- INFORMATION BOX -->
+      <div style="
+        background:#f0fdfa;
+        border:1px solid #ccfbf1;
+        border-radius:10px;
+        padding:20px;
+        margin:25px 0;
+      ">
+
+        <h3 style="
+          margin:0 0 12px;
+          color:#0f766e;
+          font-size:18px;
+        ">
+          Client Information Booklet
+        </h3>
+
+        <p style="
+          margin:0;
+          color:#444444;
+          line-height:1.7;
+          font-size:14px;
+        ">
+          To help you and your family have a smooth experience,
+          please find the <strong>Client Information Booklet</strong>
+          attached with this email. It contains important information
+          about our services.
+        </p>
+
+      </div>
+
+
+      <p style="
+        font-size:15px;
+        color:#444444;
+        line-height:1.7;
+      ">
+        We kindly request you to go through the booklet carefully and
+        keep it available for reference throughout the care period.
+      </p>
+
+
+      <p style="
+        font-size:15px;
+        color:#444444;
+        line-height:1.7;
+      ">
+        It is designed to make the responsibilities and expectations
+        clear for both the family and our caregivers.
+      </p>
+
+
+      <p style="
+        font-size:15px;
+        color:#444444;
+        line-height:1.7;
+      ">
+        Our goal is to ensure that your loved one receives the best
+        possible care while maintaining a comfortable and respectful
+        environment for everyone involved.
+      </p>
+
+
+      <p style="
+        font-size:15px;
+        color:#444444;
+        line-height:1.7;
+      ">
+        If you have any questions or concerns at any time, please do
+        not hesitate to contact us. Our team is always here to support you.
+      </p>
+
+
+      <!-- OTP -->
+      <div style="
+        text-align:center;
+        margin:30px 0;
+        padding:25px;
+        background:#f0fdfa;
+        border-radius:10px;
+        border:1px solid #ccfbf1;
+      ">
+
+        <p style="
+          margin:0 0 10px;
+          color:#555555;
+          font-size:14px;
+        ">
+          Your Verification OTP
+        </p>
+
+        <div style="
+          font-size:36px;
+          font-weight:bold;
+          letter-spacing:8px;
+          color:#0f766e;
+        ">
+          ${otp}
+        </div>
+
+        <p style="
+          margin:15px 0 0;
+          color:#666666;
+          font-size:13px;
+        ">
+          Please provide this OTP only after reading and understanding
+          the information provided above.
+        </p>
+
+      </div>
+
+
+      <p style="
+        font-size:15px;
+        color:#444444;
+        line-height:1.7;
+      ">
+        Thank you once again for placing your trust in
+        <strong>Curate Health Services LLP</strong>.
+        We look forward to working with you and your family.
+      </p>
+
+
+      <p style="
+        margin-top:30px;
+        color:#333333;
+        line-height:1.6;
+      ">
+        Warm regards,<br />
+        <strong>Curate Team</strong>
+      </p>
+
+    </div>
+
+
+    <!-- FOOTER -->
+    <div style="
+      background:#f8fafc;
+      padding:20px 30px;
+      border-top:1px solid #e5e7eb;
+      color:#555555;
+      font-size:13px;
+      text-align:center;
+    ">
+
+      <strong>Need help?</strong>
+
+      <p style="margin:8px 0;">
+        If you have any questions or would like to discuss this Placement,
+        please contact our care coordination team.
+      </p>
+
+      <p style="margin:8px 0;">
+        Email:
+        <a
+          href="mailto:info@curatehealth.in"
+          style="color:#0f766e;"
+        >
+          info@curatehealth.in
+        </a>
+      </p>
+
+      <p style="margin:8px 0;">
+        Phone: +91 73860 45659
+      </p>
+
+      <p style="
+        margin:15px 0 0;
+        color:#9ca3af;
+        font-size:11px;
+      ">
+        © ${new Date().getFullYear()} Curate Health Care Pvt. Ltd.
+      </p>
+
+    </div>
+
+  </div>
+
+</body>
+</html>
+`
+    : `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+
+<body style="
+  margin:0;
+  padding:0;
+  background:#f4f7f9;
+  font-family:Arial,Helvetica,sans-serif;
+">
+
+  <div style="
+    max-width:650px;
+    margin:30px auto;
+    background:#ffffff;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 4px 20px rgba(0,0,0,0.08);
+  ">
+
+    <!-- HEADER -->
+    <div style="
+      background:#0f766e;
+      padding:18px 25px;
+    ">
+
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+
+          <td width="55" valign="middle" style="
+            width:55px;
+            padding-right:12px;
+          ">
+
+            <img
+              src="${logoUrl}"
+              alt="Curate Health Care"
+              width="45"
+              height="45"
+              style="
+                display:block;
+                width:45px;
+                height:45px;
+                object-fit:contain;
+                border-radius:6px;
+                background:#ffffff;
+                padding:4px;
+              "
+            />
+
+          </td>
+
+          <td valign="middle">
+
+            <div style="
+              color:#ffffff;
+              font-size:20px;
+              font-weight:bold;
+            ">
+              Curate Health Care Service
+            </div>
+
+            <div style="
+              color:#d9fffa;
+              font-size:12px;
+              margin-top:4px;
+            ">
+              OTP Confirmation Required
+            </div>
+
+          </td>
+
+        </tr>
+      </table>
+
+    </div>
+
+
+    <!-- BODY -->
+    <div style="padding:30px;">
+
+      <p style="
+        font-size:16px;
+        color:#333333;
+      ">
+        Hello <strong>${recipientName}</strong>,
+      </p>
+
+
+      <!-- PLACEMENT DETAILS -->
+      <div style="
+        background:#f0fdfa;
+        border:1px solid #ccfbf1;
+        border-radius:10px;
+        padding:20px;
+        margin:20px 0;
+      ">
+
+        <h3 style="
+          margin:0 0 15px;
+          color:#0f766e;
+        ">
+          Placement Details
+        </h3>
+
+        <p style="margin:8px 0;">
+          <strong>Date:</strong> ${visitDate}
+        </p>
+
+        <p style="margin:8px 0;">
+          <strong>Visit Time:</strong>
+          ${startTime} – ${endTime}
+        </p>
+
+      </div>
+
+
+      <!-- CONFIRMATION -->
+      <h3 style="
+        color:#0f766e;
+        margin-top:25px;
+      ">
+        Confirmation
+      </h3>
+
+      <p style="
+        color:#444444;
+        line-height:1.6;
+      ">
+        By providing the OTP below, you confirm that:
+      </p>
+
+
+      <ul style="
+        color:#444444;
+        line-height:1.7;
+        padding-left:22px;
+      ">
+
+        <li>
+          You are willing and comfortable to provide care to the patient.
+        </li>
+
+        <li>
+          You are aware of the care requirements communicated to you.
+        </li>
+
+        <li>
+          You know who to contact at Curate if you have any concerns
+          regarding the client, care delivery, working arrangements,
+          or any other issue.
+        </li>
+
+        <li>
+          During Curate working hours, you can contact
+          <strong>${concernPerson}</strong>
+          on <strong>${concernPhone}</strong>.
+        </li>
+
+        <li>
+          For urgent concerns outside working hours,
+          Curate's 24/7 emergency contact is
+          <strong>${emergencyNumber}</strong>.
+        </li>
+
+      </ul>
+
+
+      <!-- SAFETY -->
+      <div style="
+        background:#fff7ed;
+        border-left:4px solid #f97316;
+        padding:15px;
+        margin:25px 0;
+        border-radius:6px;
+      ">
+
+        <strong style="color:#c2410c;">
+          Safety Notice
+        </strong>
+
+        <p style="
+          margin:8px 0 0;
+          color:#7c2d12;
+          line-height:1.5;
+        ">
+          If you have any concern about your safety, the patient's
+          condition, the care environment, or your ability to continue
+          the assignment, please contact Curate immediately.
+        </p>
+
+      </div>
+
+
+      <!-- OTP -->
+      <div style="
+        text-align:center;
+        margin:30px 0;
+        padding:25px;
+        background:#f0fdfa;
+        border-radius:10px;
+      ">
+
+        <p style="
+          margin:0 0 10px;
+          color:#555555;
+          font-size:14px;
+        ">
+          Your Verification OTP
+        </p>
+
+        <div style="
+          font-size:36px;
+          font-weight:bold;
+          letter-spacing:8px;
+          color:#0f766e;
+        ">
+          ${otp}
+        </div>
+
+      </div>
+
+
+      <p style="
+        color:#444444;
+        line-height:1.6;
+      ">
+        Please provide the OTP only after you have read and understood
+        the above information and are comfortable proceeding with the
+        assignment.
+      </p>
+
+
+      <p style="
+        margin-top:30px;
+        color:#333333;
+      ">
+        Thank you,<br />
+        <strong>Curate Care Team</strong>
+      </p>
+
+    </div>
+
+
+    <!-- FOOTER -->
+    <div style="
+      background:#f8fafc;
+      padding:20px 30px;
+      border-top:1px solid #e5e7eb;
+      color:#555555;
+      font-size:13px;
+      text-align:center;
+    ">
+
+      <strong>Need help?</strong>
+
+      <p style="margin:8px 0;">
+        If you have any questions or would like to discuss this Placement,
+        please contact our care coordination team.
+      </p>
+
+      <p style="margin:8px 0;">
+        Email:
+        <a
+          href="mailto:info@curatehealth.in"
+          style="color:#0f766e;"
+        >
+          info@curatehealth.in
+        </a>
+      </p>
+
+      <p style="margin:8px 0;">
+        Phone: +91 73860 45659
+      </p>
+
+      <p style="
+        margin:15px 0 0;
+        color:#9ca3af;
+        font-size:11px;
+      ">
+        © ${new Date().getFullYear()} Curate Health Care Pvt. Ltd.
+      </p>
+
+    </div>
+
+  </div>
+
+</body>
+</html>
+`;
+
+    /*
+     * ============================================================
+     * SEND EMAIL
+     * ============================================================
+     */
+
+    if (source === "email") {
+
+      if (!recipientEmail) {
+        throw new Error(
+          `${type} email address is not available`
+        );
+      }
+
+      const response = await axios.post(
+        "/api/MailSend",
+        {
+          to:recipientEmail || "tsiddu805@gmail.com",
+
+          subject,
+
+          html: htmlMessage,
+        }
+      );
+
+      return response.data;
+    }
+
+
+    /*
+     * ============================================================
+     * SEND SMS
+     * ============================================================
+     */
+
+    if (source === "sms") {
+
+      if (!recipientPhone) {
+        throw new Error(
+          `${type} phone number is not available`
+        );
+      }
+
+      /*
+       * Replace this endpoint with your SMS API.
+       *
+       * Example:
+       *
+       * await axios.post("/api/SendSMS", {
+       *   to: recipientPhone,
+       *   message: textMessage,
+       * });
+       */
+
+      const response = await axios.post(
+        "/api/SendSMS",
+        {
+          to: recipientPhone,
+
+          message: textMessage,
+        }
+      );
+
+      return response.data;
+    }
+
+
+    /*
+     * ============================================================
+     * SEND WHATSAPP
+     * ============================================================
+     */
+
+if (source === "whatsapp") {
+  if (!recipientPhone) {
+    throw new Error(`${type} phone number is not available`);
+  }
+
+  // Remove spaces, +, -, brackets, etc.
+  const phone = 9347877159;
+
+  // Make sure the number contains the country code
+  // Example: 919987579436
+  const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
+    textMessage
+  )}`;
+
+  // Open WhatsApp in a new desktop browser tab
+  window.open(whatsappUrl, "_blank");
+
+  return {
+    success: true,
+    method: "whatsapp-desktop",
+    phone,
+  };
+}
+
+    throw new Error(
+      "Unsupported OTP platform"
+    );
+
+  } catch (error) {
+
+    console.error(
+      "PrepareOTPValidation Error:",
+      error
+    );
+
+    throw error;
+  }
+};
+
+
+const PreviewHCAInfo = async () => {
+  try {
+    // Show OTP screen immediately
+    setShowOTPValidation(true);
+
+    // Start DB request immediately
+    const hcaInfoPromise = GetHCACEmailandContact(
+      DeploaymentInformation?.HCA_Id
+    );
+
+    // Scroll without blocking the API request
+    requestAnimationFrame(() => {
+      document
+        .getElementById("OTPValidationScreen")
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+    });
+
+    const hcaInfo = await hcaInfoPromise;
+
+    if (hcaInfo) {
+      setImphcaInfo(hcaInfo);
+    }
+  } catch (error) {
+    console.error("PreviewHCAInfo Error:", error);
+  }
+};
 
     return (
       <div>{ShowPreviewData ?
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-[#f4f8f8] px-0 pb-10 sm:px-3 lg:px-6"><div className="mx-auto max-w-[1440px]">
              <DatePopup
         isOpen={ShowDateRangePopUp}
         title="Missing Date Range"
         message="Kindly provide both the start date and end date to proceed."
         onClose={() => setShowDateRangePopUp(false)}
       />
-          <h1 className="relative text-sm sm:text-base md:text-xl font-medium text-center text-[#ff1493] tracking-wide leading-snug flex flex-wrap items-center justify-center gap-2 m-2">
-            <img src="/Icons/Curate-logo.png" alt="Logo" className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-white text-rose-500 rounded-full p-2 shadow-sm" />
-            {formData?.FirstName}'s Patient Daily Routine (PDR) Assessment
-            {/* <div className="relative group hidden md:flex">
-              <img src="Icons/info.png" className="h-4 w-4 cursor-pointer" alt="Info" />
-              <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-60 sm:w-72 md:w-96 p-3 text-[8px] sm:text-[8px] bg-white text-gray-700 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50">
-                Curate Health Services personalised care plan encompasses various aspects of care, including medical treatments, medication management, physiotherapy services, wellbeing service, assistance with activities of daily living (ADLs), emotional support, and social engagement. It is created through a collaborative effort between the patient, their family or health care assistance (HCAs) and a team of healthcare professionals (HCPs), such as nurses, doctors, physiotherapists, and social workers.
-                The Advanced Personal Care Plan (APCP) considers the specific health conditions, functional abilities, and personal goals of the individual receiving care. It outlines the specific services to be provided, the frequency of visits, and the goals to be achieved. The plan is regularly reviewed and modified as needed to ensure it remains responsive to the changing needs and progress of the patient.
-                By developing a personalised care plan for home health care, the aim is to provide a holistic and individualised approach to meet the patient's medical, physical, emotional, and social needs, while allowing them to maintain their independence and dignity in the familiar surroundings of their own home.
+          <div className="sticky top-0 z-40 mb-5 border-b border-slate-200/80 bg-white/95 px-4 py-3 shadow-[0_4px_20px_rgba(15,23,42,0.05)] backdrop-blur-xl sm:rounded-2xl sm:px-5 lg:px-6">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00A9A5] to-[#005f61] p-2 shadow-lg shadow-[#00A9A5]/20">
+                  <img src="/Icons/Curate-logo.png" alt="Curate" className="h-full w-full rounded-xl bg-white object-contain p-1" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-xs font-bold uppercase tracking-[0.16em] text-[#008f8b]">Curate Health Care</span>
+                    <span className="hidden rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 sm:inline-flex">PDR</span>
+                  </div>
+                  <h1 className="truncate text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
+                    {formData?.FirstName}'s Patient Daily Routine Assessment
+                  </h1>
+                  <p className="text-xs text-slate-500">Personalised care assessment & service planning</p>
+                </div>
               </div>
-            </div> */}
-            <button
-           onClick={()=>{ 
-               router.replace('/PDRView');
-            dispatch(Refresh(""))}}
-              className="flex cursor-pointer items-center gap-2 ml-auto w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
-            >
-             PDR Dashboard
-            </button>
-          </h1>
+              <button
+                onClick={()=>{ 
+                  router.replace('/PDRView');
+                  dispatch(Refresh(""))}}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition hover:bg-[#005f61] sm:w-auto"
+              >
+                PDR Dashboard
+              </button>
+            </div>
+          </div>
 
-          <main className="w-full flex flex-wrap  p-2 ">
-            <div className=" w-full bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6">
+          <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              ["Care Plan", "Active"],
+              ["Assessment", "In Progress"],
+              ["Patient", formData?.FirstName || "—"],
+              ["Review", "Required"],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</p>
+                <p className="mt-1 truncate text-sm font-bold text-slate-800">{value}</p>
+              </div>
+            ))}
+          </div>
+
+
+
+          <main className="w-full px-0 sm:px-1">
+            <div className="relative w-full overflow-hidden rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] sm:p-7 lg:p-8 mb-6 before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[#00A9A5] before:via-[#00A9A5]/50 before:to-transparent">
               <div className="flex  flex-row justify-between items-start items-center mb-6 ">
-                <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <img src='Icons/telecommuting.gif' className="w-10 h-10 " />
-                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Personal & Family Details</h2>
+                <div className="flex min-w-0 flex-wrap items-center gap-3 mb-2">
+                  <img src='Icons/telecommuting.gif' className="h-11 w-11 rounded-2xl bg-[#e8f8f7] p-2 object-contain ring-1 ring-[#00A9A5]/10" />
+                  <h2 className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg lg:text-xl">Personal & Family Details</h2>
                
                 </div>
 
                 <button
                   onClick={() => (isEditing.ClientCardEditing ? handleSave('ClientCardEditing') : setIsEditing((prev) => ({ ...prev, ClientCardEditing: !prev.ClientCardEditing })))}
-                  className={`flex items-center gap-2 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer
-                              ${isEditing.ClientCardEditing ? 'bg-teal-600 text-white hover:bg-[#1392d3]' : 'bg-teal-600  text-white hover:bg-blue-600'}`}
+                  className={`flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer shadow-sm
+                              ${isEditing.ClientCardEditing ? 'bg-[#005f61] text-white hover:bg-[#004b4d] shadow-[#00A9A5]/10' : 'bg-slate-900 text-white hover:bg-[#005f61]'}`}
                 >
                   {isEditing.ClientCardEditing ? <Save size={18} /> : <Pencil size={18} />}
                   {isEditing.ClientCardEditing ? "Save" : "Edit"}
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
                 <FieldItem
                   label="Current/Previous Occupation"
@@ -608,23 +1736,23 @@ const updateInvoiceEditedInformation = async () => {
               </div>
             </div>
 
-            <div className="w-full bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6">
+            <div className="relative w-full overflow-hidden rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] sm:p-7 lg:p-8 mb-6 before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[#00A9A5] before:via-[#00A9A5]/50 before:to-transparent">
               <div className="flex  flex-row justify-between items-start items-center mb-6 ">
-                <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <img src='Icons/health-checkup.gif' className="w-10 h-10 " />
-                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Present Health</h2>
+                <div className="flex min-w-0 flex-wrap items-center gap-3 mb-2">
+                  <img src='Icons/health-checkup.gif' className="h-11 w-11 rounded-2xl bg-[#e8f8f7] p-2 object-contain ring-1 ring-[#00A9A5]/10" />
+                  <h2 className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg lg:text-xl">Present Health</h2>
                 </div>
                 <button
                   onClick={() => (isEditing.PatientCardEditing ? handleSave('PatientCardEditing') : setIsEditing((prev) => ({ ...prev, PatientCardEditing: !prev.PatientCardEditing })))}
-                  className={`flex items-center gap-2 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer
-                              ${isEditing.PatientCardEditing ? 'bg-teal-600 text-white hover:bg-[#1392d3]' : 'bg-teal-600  text-white hover:bg-blue-600'}`}
+                  className={`flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer shadow-sm
+                              ${isEditing.PatientCardEditing ? 'bg-[#005f61] text-white hover:bg-[#004b4d] shadow-[#00A9A5]/10' : 'bg-slate-900 text-white hover:bg-[#005f61]'}`}
                 >
                   {isEditing.PatientCardEditing ? <Save size={18} /> : <Pencil size={18} />}
                   {isEditing.PatientCardEditing ? "Save" : "Edit"}
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <FieldItem
                   label="PresentIllness"
                   value={formData?.Present_Illness}
@@ -663,22 +1791,22 @@ const updateInvoiceEditedInformation = async () => {
             </div>
             {/* <div className="w-full bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 md:w-[49%]">
                 <div className="flex  flex-row justify-between items-start items-center mb-6 ">
-                <div className="flex flex-wrap items-center gap-3 mb-2">
-                <img src='Icons/medical-care.gif' className="w-10 h-10 " />
-                <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Treatment</h2>
+                <div className="flex min-w-0 flex-wrap items-center gap-3 mb-2">
+                <img src='Icons/medical-care.gif' className="h-11 w-11 rounded-2xl bg-[#e8f8f7] p-2 object-contain ring-1 ring-[#00A9A5]/10" />
+                <h2 className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg lg:text-xl">Treatment</h2>
               </div>
 
                 <button
                   onClick={() => (isEditing.PatientDetails? handleSave('PatientDetails') : setIsEditing((prev)=>({...prev,PatientDetails:!prev.PatientDetails})))}
-                  className={`flex items-center gap-2 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer
-                              ${isEditing.PatientDetails? 'bg-teal-600 text-white hover:bg-[#1392d3]' : 'bg-teal-600  text-white hover:bg-blue-600'}`}
+                  className={`flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer shadow-sm
+                              ${isEditing.PatientDetails? 'bg-[#005f61] text-white hover:bg-[#004b4d] shadow-[#00A9A5]/10' : 'bg-slate-900 text-white hover:bg-[#005f61]'}`}
                 >
                   {isEditing.PatientDetails ? <Save size={18} /> : <Pencil size={18} />}
                   {isEditing.PatientDetails ? "Save" : "Edit"}
                 </button>
               </div>
         
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   
                   <CheckboxGroup
                   label="OnGoing Treatment"
@@ -703,23 +1831,23 @@ const updateInvoiceEditedInformation = async () => {
                 
               </div>
             </div> */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 w-full">
+            <div className="relative w-full overflow-hidden rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] sm:p-7 lg:p-8 mb-6 before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[#00A9A5] before:via-[#00A9A5]/50 before:to-transparent">
               <div className="flex  flex-row justify-between items-start items-center mb-6 ">
-                <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <img src='Icons/wheelchair.gif' className="w-10 h-10" />
-                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Functional Assessments</h2>
+                <div className="flex min-w-0 flex-wrap items-center gap-3 mb-2">
+                  <img src='Icons/wheelchair.gif' className="h-11 w-11 rounded-2xl bg-[#e8f8f7] p-2 object-contain ring-1 ring-[#00A9A5]/10" />
+                  <h2 className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg lg:text-xl">Functional Assessments</h2>
                 </div>
                 <button
                   onClick={() => (isEditing.AdditionalInformation ? handleSave('AdditionalInformation') : setIsEditing((prev) => ({ ...prev, AdditionalInformation: !prev.AdditionalInformation })))}
-                  className={`flex items-center gap-2 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer
-                              ${isEditing.AdditionalInformation ? 'bg-teal-600 text-white hover:bg-[#1392d3]' : 'bg-teal-600  text-white hover:bg-blue-600'}`}
+                  className={`flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer shadow-sm
+                              ${isEditing.AdditionalInformation ? 'bg-[#005f61] text-white hover:bg-[#004b4d] shadow-[#00A9A5]/10' : 'bg-slate-900 text-white hover:bg-[#005f61]'}`}
                 >
                   {isEditing.AdditionalInformation ? <Save size={18} /> : <Pencil size={18} />}
                   {isEditing.AdditionalInformation ? "Save" : "Edit"}
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
 
 
@@ -848,24 +1976,24 @@ const updateInvoiceEditedInformation = async () => {
                 />
               </div>
             </div>
-            <div className="w-full bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 ">
+            <div className="relative w-full overflow-hidden rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] sm:p-7 lg:p-8 mb-6 before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[#00A9A5] before:via-[#00A9A5]/50 before:to-transparent">
               <div className="flex  flex-row justify-between items-start items-center mb-6 ">
-                <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <img src='Icons/surgery-room.gif' className="w-10 h-10" />
-                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Equipment Use</h2>
+                <div className="flex min-w-0 flex-wrap items-center gap-3 mb-2">
+                  <img src='Icons/surgery-room.gif' className="h-11 w-11 rounded-2xl bg-[#e8f8f7] p-2 object-contain ring-1 ring-[#00A9A5]/10" />
+                  <h2 className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg lg:text-xl">Equipment Use</h2>
                 </div>
 
                 <button
                   onClick={() => (isEditing.EquipmentDetails ? handleSave('EquipmentDetails') : setIsEditing((prev) => ({ ...prev, EquipmentDetails: !prev.EquipmentDetails })))}
-                  className={`flex items-center gap-2 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer
-                              ${isEditing.EquipmentDetails ? 'bg-teal-600 text-white hover:bg-[#1392d3]' : 'bg-teal-600  text-white hover:bg-blue-600'}`}
+                  className={`flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer shadow-sm
+                              ${isEditing.EquipmentDetails ? 'bg-[#005f61] text-white hover:bg-[#004b4d] shadow-[#00A9A5]/10' : 'bg-slate-900 text-white hover:bg-[#005f61]'}`}
                 >
                   {isEditing.EquipmentDetails ? <Save size={18} /> : <Pencil size={18} />}
                   {isEditing.EquipmentDetails ? "Save" : "Edit"}
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
                 <CheckboxGroup
                   label="Breathing Equipment"
@@ -891,24 +2019,24 @@ const updateInvoiceEditedInformation = async () => {
 
               </div>
             </div>
-            <div className="w-full bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 ">
+            <div className="relative w-full overflow-hidden rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] sm:p-7 lg:p-8 mb-6 before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[#00A9A5] before:via-[#00A9A5]/50 before:to-transparent">
               <div className="flex  flex-row justify-between items-start items-center mb-6 ">
-                <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <img src='Icons/hand-washing.gif' className="w-10 h-10" />
-                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Hygiene & Elimination</h2>
+                <div className="flex min-w-0 flex-wrap items-center gap-3 mb-2">
+                  <img src='Icons/hand-washing.gif' className="h-11 w-11 rounded-2xl bg-[#e8f8f7] p-2 object-contain ring-1 ring-[#00A9A5]/10" />
+                  <h2 className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg lg:text-xl">Hygiene & Elimination</h2>
                 </div>
 
                 <button
                   onClick={() => (isEditing.Hygiene ? handleSave('Hygiene') : setIsEditing((prev) => ({ ...prev, Hygiene: !prev.Hygiene })))}
-                  className={`flex items-center gap-2 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer
-                              ${isEditing.Hygiene ? 'bg-teal-600 text-white hover:bg-[#1392d3]' : 'bg-teal-600  text-white hover:bg-blue-600'}`}
+                  className={`flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer shadow-sm
+                              ${isEditing.Hygiene ? 'bg-[#005f61] text-white hover:bg-[#004b4d] shadow-[#00A9A5]/10' : 'bg-slate-900 text-white hover:bg-[#005f61]'}`}
                 >
                   {isEditing.Hygiene ? <Save size={18} /> : <Pencil size={18} />}
                   {isEditing.Hygiene ? "Save" : "Edit"}
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
                 <CheckboxGroup
                   label="Oral Care (Brushing & Face Fash)"
@@ -1039,23 +2167,23 @@ const updateInvoiceEditedInformation = async () => {
                 />
               </div>
             </div>
-            <div className="w-full bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 ">
+            <div className="relative w-full overflow-hidden rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] sm:p-7 lg:p-8 mb-6 before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[#00A9A5] before:via-[#00A9A5]/50 before:to-transparent">
               <div className="flex  flex-row justify-between items-start items-center mb-6 ">
-                <div className="flex flex-wrap items-center gap-3 mb-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-3 mb-2">
                   <img src='Icons/nutrition-plan.gif' className="w-10 h-10 text-rose-700" />
-                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Nutrition & Hydration</h2>
+                  <h2 className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg lg:text-xl">Nutrition & Hydration</h2>
                 </div>
                 <button
                   onClick={() => (isEditing.PatientDetails ? handleSave('PatientDetails') : setIsEditing((prev) => ({ ...prev, PatientDetails: !prev.PatientDetails })))}
-                  className={`flex items-center gap-2 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer
-                              ${isEditing.PatientDetails ? 'bg-teal-600 text-white hover:bg-[#1392d3]' : 'bg-teal-600  text-white hover:bg-blue-600'}`}
+                  className={`flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer shadow-sm
+                              ${isEditing.PatientDetails ? 'bg-[#005f61] text-white hover:bg-[#004b4d] shadow-[#00A9A5]/10' : 'bg-slate-900 text-white hover:bg-[#005f61]'}`}
                 >
                   {isEditing.PatientDetails ? <Save size={18} /> : <Pencil size={18} />}
                   {isEditing.PatientDetails ? "Save" : "Edit"}
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
                 <CheckboxGroup
                   label="Feeding Methode"
@@ -1173,23 +2301,23 @@ const updateInvoiceEditedInformation = async () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 w-full">
+            <div className="relative w-full overflow-hidden rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] sm:p-7 lg:p-8 mb-6 before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[#00A9A5] before:via-[#00A9A5]/50 before:to-transparent">
               <div className="flex  flex-row justify-between items-start items-center mb-6 ">
 
-                <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <img src='Icons/vital-Monitaring.png' className="w-10 h-10" />
-                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Vitals Monitoring & Mobility</h2>
+                <div className="flex min-w-0 flex-wrap items-center gap-3 mb-2">
+                  <img src='Icons/vital-Monitaring.png' className="h-11 w-11 rounded-2xl bg-[#e8f8f7] p-2 object-contain ring-1 ring-[#00A9A5]/10" />
+                  <h2 className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg lg:text-xl">Vitals Monitoring & Mobility</h2>
                 </div>
                 <button
                   onClick={() => (isEditing.OtherInformation ? handleSave('OtherInformation') : setIsEditing((prev) => ({ ...prev, OtherInformation: !prev.OtherInformation })))}
-                  className={`flex items-center gap-2 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer
-                              ${isEditing.OtherInformation ? 'bg-teal-600 text-white hover:bg-[#1392d3]' : 'bg-teal-600  text-white hover:bg-blue-600'}`}
+                  className={`flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer shadow-sm
+                              ${isEditing.OtherInformation ? 'bg-[#005f61] text-white hover:bg-[#004b4d] shadow-[#00A9A5]/10' : 'bg-slate-900 text-white hover:bg-[#005f61]'}`}
                 >
                   {isEditing.OtherInformation ? <Save size={18} /> : <Pencil size={18} />}
                   {isEditing.OtherInformation ? "Save" : "Edit"}
                 </button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
 
 
@@ -1327,18 +2455,18 @@ const updateInvoiceEditedInformation = async () => {
 
               </div>
             </div>
-            <div className="bg-white rounded-2xl shadow-lg p-2 mb-6 w-full">
+            <div className="relative w-full overflow-hidden rounded-[24px] border border-slate-200/80 bg-white p-4 shadow-[0_12px_40px_rgba(15,23,42,0.06)] sm:p-6 lg:p-7 mb-6 before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[#00A9A5] before:via-[#00A9A5]/50 before:to-transparent">
               <div className="flex  flex-row justify-between items-start items-center mb-6 ">
 
-                <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <img src='Icons/tablet.gif' className="w-10 h-10" />
-                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Medication List</h2>
+                <div className="flex min-w-0 flex-wrap items-center gap-3 mb-2">
+                  <img src='Icons/tablet.gif' className="h-11 w-11 rounded-2xl bg-[#e8f8f7] p-2 object-contain ring-1 ring-[#00A9A5]/10" />
+                  <h2 className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg lg:text-xl">Medication List</h2>
                 </div>
               
                 <button
                   onClick={() => (isEditing.Medication ? handleSave('Medication') : setIsEditing((prev) => ({ ...prev, Medication: !prev.Medication })))}
-                  className={`flex items-center gap-2 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer
-                              ${isEditing.Medication ? 'bg-teal-600 text-white hover:bg-[#1392d3]' : 'bg-teal-600  text-white hover:bg-blue-600'}`}
+                  className={`flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer shadow-sm
+                              ${isEditing.Medication ? 'bg-[#005f61] text-white hover:bg-[#004b4d] shadow-[#00A9A5]/10' : 'bg-slate-900 text-white hover:bg-[#005f61]'}`}
                 >
                   {isEditing.Medication ? <Save size={18} /> : <Pencil size={18} />}
                   {isEditing.Medication ? "Save" : "Edit"}
@@ -1403,6 +2531,60 @@ const updateInvoiceEditedInformation = async () => {
           </div>
         )}
       </div> */}
+
+      {showPlacementSuccess && (
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/20">
+    <div className="w-[280px] rounded-xl bg-white p-5 text-center shadow-xl">
+      <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600">
+        ✓
+      </div>
+
+      <p className="text-sm font-semibold text-gray-900">
+        Placement OTP Validation Successful
+      </p>
+
+      <button
+        onClick={() =>{
+           setShowPlacementSuccess(false)
+             const ScrollResult = document.getElementById("placement-validate-section")
+        ScrollResult?.scrollIntoView({ behavior: "smooth" })
+        
+        } }
+        className="mt-4 rounded-lg bg-black px-4 py-2 text-xs font-medium text-white"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
+
+<div id="OTPValidationScreen">
+  <OTPValidationPopup
+   
+               ImpData={{ ...formData, InvoiseInformation,HCAId:DeploaymentInformation.HCA_Id}}
+        isOpen={showOTPValidation}
+        onClose={() => {
+          if (!isOTPSubmitting) {
+            setShowOTPValidation(false);
+          }
+        }}
+
+    onSendOTP={async ({
+  type,
+  source,
+  otp,
+}) => {
+ 
+
+  const SendOTPresponse = await PrepareOTPValidation( type,
+  source,
+  otp)
+}}
+        isSubmitting={isOTPSubmitting}
+        onSubmit={handleOTPValidation}
+      />
+</div>
+     
 <div className="w-full mb-6">
 <div className="bg-white/90 backdrop-blur-xl border border-gray-100 rounded-3xl shadow-xl p-6 sm:p-10">
 
@@ -1414,7 +2596,7 @@ const updateInvoiceEditedInformation = async () => {
         alt="Invoice Icon"
         className="w-8 h-8 object-contain"
       />
-
+      
       <div>
         <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-gray-800">
           Invoice Information 
@@ -1481,7 +2663,7 @@ const updateInvoiceEditedInformation = async () => {
   </div>
 
   {/* Fields */}
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
    {fields.map((field: any, index: number) => {
   const value = InvoiseInformation[field.key];
 
@@ -1636,21 +2818,31 @@ const isProfit = invoiceProfit >= 0;
 </div> */}
 </div>
 </div>
+{!PlacementValidate&&
+<button className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 cursor-pointer transition" onClick={PreviewHCAInfo}>
+  Validate Placement
+</button>}
 
-      
-<div className="max-w-md bg-white rounded-2xl shadow-md p-6 space-y-5">
+{PlacementValidate&&
+<div
+  className="max-w-md bg-white rounded-2xl shadow-md p-6 space-y-5"
+  id="placement-validate-section"
+>
   <h3 className="text-lg font-semibold text-slate-800">
     Upload Client Agreement
   </h3>
 
   <p className="text-sm text-slate-500">
-    Upload Front Side and Back Side documents.
+    Upload the Front Side  and Back Side , or upload the
+    complete agreement as a single PDF.
   </p>
 
-  <div className=" flex gap-6 space-y-4">
-    <div>
+  {/* Front and Back Side Upload */}
+  <div className="flex flex-col sm:flex-row gap-4">
+    {/* Front Side */}
+    <div className="flex-1 min-w-0">
       <p className="text-sm font-medium text-slate-700 mb-2">
-        Front Side
+        Front Side <span className="text-red-500">*</span>
       </p>
 
       {!formData?.ClientAgreementFront ? (
@@ -1683,33 +2875,27 @@ const isProfit = invoiceProfit >= 0;
             id="agreementFront"
             name="ClientAgreementFront"
             type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
             className="hidden"
             onChange={handleImageChange}
           />
         </label>
       ) : (
-        <div
-          className="flex items-center justify-between
-                     border border-green-200 bg-green-50
-                     rounded-xl p-4"
-        >
+        <div className="flex flex-col gap-3 border border-green-200 bg-green-50 rounded-xl p-4">
           <p className="text-sm font-medium text-slate-800">
-            Front Side Uploaded
+            <span className="text-green-600">✓</span> Front Side Uploaded
           </p>
 
           <label
             htmlFor="agreementFront"
-            className="text-sm font-medium text-emerald-600
-                       cursor-pointer hover:underline"
+            className="text-sm font-medium text-emerald-600 cursor-pointer hover:underline"
           >
-            Replace
-
+            Replace Front Side
             <input
               id="agreementFront"
               name="ClientAgreementFront"
               type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
               className="hidden"
               onChange={handleImageChange}
             />
@@ -1718,9 +2904,10 @@ const isProfit = invoiceProfit >= 0;
       )}
     </div>
 
-    <div>
+    {/* Back Side - Optional */}
+    <div className="flex-1 min-w-0">
       <p className="text-sm font-medium text-slate-700 mb-2">
-        Back Side
+        Back Side <span className="text-red-500">*</span>
       </p>
 
       {!formData?.ClientAgreementBack ? (
@@ -1753,33 +2940,27 @@ const isProfit = invoiceProfit >= 0;
             id="agreementBack"
             name="ClientAgreementBack"
             type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
             className="hidden"
             onChange={handleImageChange}
           />
         </label>
       ) : (
-        <div
-          className="flex items-center justify-between
-                     border border-green-200 bg-green-50
-                     rounded-xl p-4"
-        >
+        <div className="flex flex-col gap-3 border border-green-200 bg-green-50 rounded-xl p-4">
           <p className="text-sm font-medium text-slate-800">
-            Back Side Uploaded
+            <span className="text-green-600">✓</span> Back Side Uploaded
           </p>
 
           <label
             htmlFor="agreementBack"
-            className="text-sm font-medium text-emerald-600
-                       cursor-pointer hover:underline"
+            className="text-sm font-medium text-emerald-600 cursor-pointer hover:underline"
           >
-            Replace
-
+            Replace Back Side
             <input
               id="agreementBack"
               name="ClientAgreementBack"
               type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
               className="hidden"
               onChange={handleImageChange}
             />
@@ -1787,6 +2968,53 @@ const isProfit = invoiceProfit >= 0;
         </div>
       )}
     </div>
+  </div>
+
+  {/* OR Divider */}
+  <div className="flex items-center gap-4">
+    <div className="flex-1 border-t border-slate-200" />
+    <span className="text-sm font-medium text-slate-400">OR</span>
+    <div className="flex-1 border-t border-slate-200" />
+  </div>
+
+  {/* Full Agreement PDF Upload */}
+  <div>
+    <p className="text-sm font-medium text-slate-700 mb-2">
+      Complete Agreement (PDF)
+    </p>
+
+    <label
+      htmlFor="agreementFullPdf"
+      className="flex items-center gap-3 border-2 border-dashed
+                 border-blue-300 rounded-xl p-4 cursor-pointer
+                 hover:bg-blue-50 transition"
+    >
+      <div className="flex items-center justify-center w-11 h-11
+                      rounded-lg bg-blue-100 text-blue-600 shrink-0"
+      >
+        <FileText size={24} />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-slate-800">
+          Upload Full Agreement PDF
+        </p>
+        <p className="text-xs text-slate-500">
+          PDF file only
+        </p>
+      </div>
+
+      <Upload size={20} className="text-blue-600" />
+
+      <input
+        id="agreementFullPdf"
+        name="ClientAgreementFullPdf"
+        type="file"
+        accept=".pdf,application/pdf"
+        className="hidden"
+        onChange={handleImageChange}
+      />
+    </label>
   </div>
 
   {UploadStatusMessage && (
@@ -1808,9 +3036,9 @@ const isProfit = invoiceProfit >= 0;
     </p>
   )}
 </div>
+      }
 
-
-
+{PlacementValidate&&
               <button
                 type="button"
                 onClick={() => {
@@ -1820,11 +3048,19 @@ const isProfit = invoiceProfit >= 0;
                     return
                   }
 
-                  if( !formData.ClientAgreementFront||
-    !formData.ClientAgreementBack){
-                    alert('Please Upload Both Sides of Client Agreement')
-                    return
-                  }
+                 const hasFrontAndBack =
+  !!formData?.ClientAgreementFront &&
+  !!formData?.ClientAgreementBack;
+
+const hasFullPdf =
+  !!formData?.ClientAgreementFullPdf;
+
+if (!hasFrontAndBack && !hasFullPdf) {
+  alert(
+    "Please upload either both Front and Back Sides of the Client Agreement or the complete Agreement PDF."
+  );
+  return;
+}
                   
                   dispatch(UpdatePreviewStatus(false));const payload = {
   ...formData,
@@ -1836,21 +3072,23 @@ const isProfit = invoiceProfit >= 0;
 dispatch(UpdateFetchedInformation(payload));
 }}
                 className="w-[200-px] cursor-pointer  text-center md:w-auto flex items-center justify-center gap-2 px-4 py-3 md:px-5 md:py-2 text-sm md:text-base font-medium rounded-xl shadow-sm transition-shadow duration-150
-          bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:shadow-lg active:shadow-md
-          focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 disabled:opacity-60 disabled:cursor-not-allowed"
+          bg-gradient-to-r from-[#00A9A5] to-[#005f61] text-white hover:shadow-lg active:shadow-md
+          focus:outline-none focus-visible:ring-4 focus-visible:ring-[#00A9A5]/20 disabled:opacity-60 disabled:cursor-not-allowed"
               >
 
 
 
                 <span>Preview </span>
-              </button>
+              </button>}
             </div>
           </main>
+          </div>
         </div> :(
   formData && Object.keys(formData).length > 0 ? (
     <PreviewComponent
         data={{ ...formData, InvoiseInformation,HCAId:DeploaymentInformation.HCA_Id}}
       Advance={Number(AdvanceAmount) || 0}
+      ValidationData={ValidateDetails}
     />
   ) : (
     <div className="flex justify-center p-10">
@@ -1862,4 +3100,8 @@ dispatch(UpdateFetchedInformation(payload));
       }</div>
     )
   }
+
+function UpdatePDRInfo() {
+  throw new Error('Function not implemented.')
+}
 

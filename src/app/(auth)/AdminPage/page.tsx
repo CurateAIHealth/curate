@@ -1557,7 +1557,7 @@ const UpdatePopup = async (a: any) => {
   );
 })()}
   {UpdateduserType === "healthcare-assistant" &&
-  
+
   
   <td className="md:px-8 md:py-2">
 
@@ -1567,7 +1567,7 @@ const UpdatePopup = async (a: any) => {
   className="inline-flex items-center justify-center rounded-lg border border-[#1392d3] bg-[#1392d3] px-1 py-1.5 text-[10px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#0f7bb3] hover:shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
 >
   Download Profile 
-</button>
+</button>  {user.userId}
                               </td>
                               
   }

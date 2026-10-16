@@ -24,6 +24,7 @@ import { useDispatch, useSelector } from "react-redux";
 interface PreviewProps {
   data: any;
   Advance: any;
+  ValidationData: any;
 }
 
 const F = (v: any) =>
@@ -90,7 +91,7 @@ const Section = ({
   </div>
 );
 
-const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
+const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance, ValidationData }) => {
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -128,7 +129,7 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
   }, [UpdatingStatus, router]);
 
  
-  
+  console.log("Preview Data:", ValidationData);
 
   if (!data) {
     return (
@@ -256,6 +257,7 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance }) => {
 
 
 const UpdatePDRInfo = async () => {
+  setUpdatingStatus("Please wait ...");
   try {
     setSelectedRecord(true);
 
@@ -342,7 +344,8 @@ const UpdatePDRInfo = async () => {
         DeploaymentInformation.Type,
         data.serviceCharges,
         ClientAttendece,
-        DeploaymentInformation.ServiceState
+        DeploaymentInformation.ServiceState,
+        ValidationData
 
       );
 
@@ -360,6 +363,7 @@ const UpdatePDRInfo = async () => {
         HCAId: data.HCAId,
         ClientAgreementFront: data.ClientAgreementFront,
         ClientAgreementBack: data.ClientAgreementBack,
+        ClientAgreementFullPdf:data.ClientAgreementFullPdf,
         
 ServiceState:DeploaymentInformation.ServiceState
       }
@@ -869,4 +873,4 @@ const ClientName=data.FirstName
   );
 };
 
-export default PreviewComponent;
+export default PreviewComponent;  
