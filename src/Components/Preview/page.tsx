@@ -847,17 +847,46 @@ const ClientName=data.FirstName
   </>
 ) : (
   <div className="flex flex-col items-center animate-[fadeIn_0.4s_ease-in-out]">
-    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 animate-[scaleIn_0.3s_ease-out]">
-      <svg
-        className="h-8 w-8 text-green-600"
-        fill="none"
+   {UpdatingStatus === "Please wait ..." ? (
+  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-100">
+    <svg
+      className="h-8 w-8 animate-spin text-blue-600"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
         stroke="currentColor"
-        strokeWidth="3"
-        viewBox="0 0 24 24"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-      </svg>
-    </div>
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+      />
+    </svg>
+  </div>
+) : (
+  <div className="mb-3 flex h-14 w-14 animate-[scaleIn_0.3s_ease-out] items-center justify-center rounded-full bg-green-100">
+    <svg
+      className="h-8 w-8 text-green-600"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M5 13l4 4L19 7"
+      />
+    </svg>
+  </div>
+)}
 
     <p className="text-xl font-bold text-green-600 text-center">
       {UpdatingStatus}

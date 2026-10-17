@@ -368,7 +368,7 @@ console.log("HCPEmail", otp);
     }
 
     if (recipient === "HCA") {
-      recipientEmail =HCPEmail;
+      recipientEmail =HCPEmail||HCP_Email;
       recipientPhone = getHCAContactNumber(UserFullInfo,hcaRegistrationNumber)
       recipientName = hcaName || "HCP";
     }
@@ -560,6 +560,8 @@ setHCPVerificationOTP(NewOTP)
         subject,
         html: htmlMessage,
       });
+
+      alert(`OTP Deliverd to ${recipientEmail}`)
        setOtp((previous) => ({
       ...previous,
 
@@ -774,6 +776,8 @@ setNewHCPVerificationOTP(NewOTP)
         subject,
         html: htmlMessage,
       });
+      
+      alert(`OTP Deliverd to ${recipientEmail}`)
        setOtp((previous) => ({
       ...previous,
 
@@ -990,6 +994,8 @@ setnewClientVerificationOTP((NewOTP))
         subject,
         html: htmlMessage,
       });
+      
+      alert(`OTP Deliverd to ${recipientEmail}`)
        setOtp((previous) => ({
       ...previous,
 

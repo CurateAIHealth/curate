@@ -99,7 +99,7 @@ const [HCPVerificationOTP, setHCPVerificationOTP] = useState("");
            const [preparingQuestions, setpreparingQuestions] = useState(false)
                  const [newReplacementReason, setNewReplacementReason] = useState("");
                    const [ShowEditReasons, setShowEditReasons] = useState(false)
-                    const [ActionStatusMessage, SetActionStatusMessage] = useState<any>("sfsdfdsfsf");
+                    const [ActionStatusMessage, SetActionStatusMessage] = useState<any>("");
                       const [terminationReasons, setTerminationReasons] = useState<string[]>([
                       
                         ]);
@@ -659,6 +659,7 @@ setClientVerificationOTP(NewOTP)
         subject,
         html: htmlMessage,
       });
+      alert(`OTP Deliverd to ${recipientEmail}`)
        setOtp((previous) => ({
       ...previous,
 
