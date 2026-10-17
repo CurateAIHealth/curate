@@ -623,12 +623,15 @@ const data = { ...formData, InvoiseInformation, HCAId: DeploaymentInformation.HC
       type === "client"
         ? data?.ContactNumber || data?.contact
         : getHCAContactNumber(UserFullInfo, data?.HCAId) || "9347877159";
+        console.log("Check Info======",data)
 
 //     const recipientEmail = type === "client"?data?.
 // Email
 //  || data?.email:imphcaInfo?.email || data?.email || ""
    
-const recipientEmail ="tsiddu805@gmail.com"
+const recipientEmail =  type === "client"?data?.Email:imphcaInfo?.email
+alert(recipientPhone)
+alert(recipientEmail)
     const concernPerson =
       data?.ConcernPerson ||
       "Care Coordinator";
@@ -1440,7 +1443,7 @@ if (source === "whatsapp") {
   }
 
   // Remove spaces, +, -, brackets, etc.
-  const phone = 9347877159;
+  const phone = recipientPhone;
 
   // Make sure the number contains the country code
   // Example: 919987579436
