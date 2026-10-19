@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 type AttendanceLocation = {
@@ -129,7 +130,7 @@ export default function ManagerAttendanceDashboard() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [leaveDecisions, setLeaveDecisions] = useState<Record<string, "Approved" | "Rejected">>({});
-
+const router=useRouter()
   const employees = useMemo(() => makeTestAttendance(selectedDate), [selectedDate]);
   const selectedDateObj = new Date(`${selectedDate}T12:00:00`);
   const selectedMonth = selectedDateObj.getMonth();
@@ -174,12 +175,24 @@ export default function ManagerAttendanceDashboard() {
     <main className="w-full min-w-0 bg-slate-50 p-3 text-slate-900 sm:p-5 lg:p-7">
       <div className="mx-auto w-full max-w-screen-2xl space-y-5">
         <header className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
             
+          <div className="flex items-center gap-2">
+              <img
+                        src="/Icons/Curate-logoq.png"
+                        alt="Company Logo"
+                        className="h-10 w-10 object-contain"
+                      />
             <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Employee Attendance</h1>
           
           </div>
-          <button type="button" onClick={() => { setSelectedDate(getLocalDate()); setSearch(""); setStatusFilter("All"); }} className="inline-flex shrink-0 items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Today&apos;s Attendance</button>
+          {selectedDate !== getLocalDate() && <button type="button" onClick={() => { setSelectedDate(getLocalDate()); setSearch(""); setStatusFilter("All"); }} className="inline-flex shrink-0 items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Today&apos;s Attendance</button>}
+      
+                    <button
+               onClick={() =>router.push("/DashBoard")}
+              className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+            >
+              DashBoard
+            </button>
         </header>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
@@ -247,12 +260,10 @@ export default function ManagerAttendanceDashboard() {
                   </article>;
                 })}
               </div>
-              <div className="border-t border-slate-200 px-4 py-3 text-xs text-slate-500 sm:px-5">Showing {filteredEmployees.length} of {employees.length} test employees</div>
-            </>
+              </>
           )}
         </section>
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800">Demo mode: employee names and attendance are fictional. Map coordinates are approximate Hyderabad-area test points and are not real employee locations. This dashboard does not read or write MongoDB.</p>
-      </div>
+        </div>
     </main>
   );
 }
