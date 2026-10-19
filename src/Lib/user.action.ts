@@ -9279,6 +9279,7 @@ try{
 }
 
 
+
 export const PostEmployeeAttendance = async (EmployInfo: any) => {
   try {
     const cluster = await clientPromise;
@@ -9294,8 +9295,46 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
       date,
       fromDate,
       toDate,
+      location,
     } = EmployInfo;
+
+    /* ================= DAILY ATTENDANCE FLOW ================= */
+
     if (status !== "Leave") {
+      // Require employee location
+      if (!location) {
+        return {
+          success: false,
+          message: "Location is required to mark attendance.",
+        };
+      }
+
+      const { latitude, longitude, accuracy } = location;
+
+      // Validate coordinates and accuracy
+      if (
+        typeof latitude !== "number" ||
+        typeof longitude !== "number" ||
+        typeof accuracy !== "number" ||
+        !Number.isFinite(latitude) ||
+        !Number.isFinite(longitude) ||
+        !Number.isFinite(accuracy) ||
+        latitude < -90 ||
+        latitude > 90 ||
+        longitude < -180 ||
+        longitude > 180 ||
+        accuracy <= 0
+      ) {
+        return {
+          success: false,
+          message: "Invalid location data. Please try again.",
+        };
+      }
+
+      // Accept only reported accuracy of 10 meters or better
+
+
+      // Check existing attendance
       const exists = await attendanceCollection.findOne({
         UserId: userId,
         AttendanceDate: date,
@@ -9308,11 +9347,20 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
         };
       }
 
+      // Insert attendance with location
       const result = await attendanceCollection.insertOne({
         UserId: userId,
         EmployeeName: userName,
         Status: status,
         AttendanceDate: date,
+
+        Location: {
+          Latitude: latitude,
+          Longitude: longitude,
+          Accuracy: accuracy,
+          CapturedAt: new Date(),
+        },
+
         ApprovalStatus: "Approved",
         CreatedAt: new Date(),
       });
@@ -9329,19 +9377,28 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
     const start = new Date(fromDate);
     const end = new Date(toDate);
 
-    if (start > end) {
+    if (
+      !fromDate ||
+      !toDate ||
+      Number.isNaN(start.getTime()) ||
+      Number.isNaN(end.getTime()) ||
+      start > end
+    ) {
       return {
         success: false,
         message: "Invalid leave date range",
       };
     }
 
+    // Calculate total leave days
     const totalDays =
       Math.floor(
-        (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+        (end.getTime() - start.getTime()) /
+          (1000 * 60 * 60 * 24)
       ) + 1;
 
-    /* 🔒 BLOCK OVERLAPPING LEAVE */
+    /* BLOCK OVERLAPPING PENDING LEAVE */
+
     const overlappingLeave = await attendanceCollection.findOne({
       UserId: userId,
       Status: "Leave",
@@ -9367,6 +9424,7 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
     }
 
     /* INSERT SINGLE LEAVE RECORD */
+
     const leaveResult = await attendanceCollection.insertOne({
       UserId: userId,
       EmployeeName: userName,
@@ -9381,6 +9439,7 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
     });
 
     /* INSERT NOTIFICATION */
+
     await notificationCollection.insertOne({
       Type: "LEAVE_REQUEST",
       LeaveId: leaveResult.insertedId.toString(),
@@ -9403,12 +9462,14 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
     };
   } catch (err: any) {
     console.error("PostEmployeeAttendance Error:", err);
+
     return {
       success: false,
-      message: "Failed to submit leave request",
+      message: "Failed to submit attendance or leave request",
     };
   }
 };
+
 
 
 

@@ -398,6 +398,12 @@ useEffect(() => {
         icon: Calendar,
         bg: "bg-pink-500",
       },
+      {
+        name: "Staff Attendece",
+        count: 0,
+        icon: UserCheck,
+        bg: "bg-green-500",
+      },
       
      
       {
@@ -916,7 +922,8 @@ const pageRoutes: Record<string, string> = {
   "HCP Missing Document":"/Documents",
   "Company Policy": "/CompanyPolicy",
   "Training And Knowledge": "/Training",
-  OTPValidation:"/OTPValidation"
+  OTPValidation:"/OTPValidation",
+  "Staff Attendece":"/StaffAttendece"
  
 };
 

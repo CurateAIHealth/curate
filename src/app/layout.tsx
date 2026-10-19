@@ -2,6 +2,7 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
+
 import WrapProvider from "./Provider";
 import { NotificationProvider } from "./NotificationProvider";
 import ReduxGuard from "@/Components/ReduxGuard/page";
