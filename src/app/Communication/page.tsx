@@ -18,6 +18,11 @@ export default function BulkMessagePage() {
 const [communicationType, setCommunicationType] =
 useState<"email" | "whatsapp" | "both">("email");
   const [clientFilters, setClientFilters] = useState<string[]>([]);
+  const [whatsAppQueue, setWhatsAppQueue] = useState<
+  { phone: string; url: string }[]
+>([]);
+
+const [whatsAppIndex, setWhatsAppIndex] = useState(0);
   const [hcaFilters, setHcaFilters] = useState<string[]>([]);
   const [ActionMessage,setActionMessage]=useState("")
   const [phoneInput, setPhoneInput] = useState("");
@@ -480,6 +485,117 @@ Please do not reply directly to this email.
     );
   }
 };
+
+
+
+const sendWhatsAppMessages = () => {
+  if (!message.trim()) {
+    setActionMessage("Please enter a WhatsApp message.");
+    return;
+  }
+
+  let recipients: any[] = [];
+
+  switch (tab) {
+    case "clients":
+      recipients = filteredClients.map((item: any) => ({
+        phone: item.Phone,
+        name: item.patientName,
+      }));
+      break;
+
+    case "hcas":
+      recipients = filteredHCAs.map((item: any) => ({
+        phone: item.Phone,
+        name: item.name,
+      }));
+      break;
+
+    case "leads":
+      recipients = filteredLeads.map((item: any) => ({
+        phone: item.phone,
+        name: item.name,
+      }));
+      break;
+
+    case "Employees":
+      recipients = filteredEmploys.map((item: any) => ({
+        phone: item.Phone,
+        name: item.name,
+      }));
+      break;
+
+    case "others":
+      recipients = otherNumbers.map((phone) => ({
+        phone,
+        name: "Custom recipient",
+      }));
+      break;
+  }
+
+  // Normalize Indian mobile numbers and remove invalid entries.
+  const seen = new Set<string>();
+
+  const validRecipients = recipients.filter((item: any) => {
+    const digits = String(item.phone || "").replace(/\D/g, "");
+
+    const phone =
+      digits.length === 10
+        ? `91${digits}`
+        : digits.length === 12 && digits.startsWith("91")
+        ? digits
+        : "";
+
+    if (!phone || seen.has(phone)) return false;
+
+    seen.add(phone);
+    item.phone = phone;
+
+    return true;
+  });
+
+  if (!validRecipients.length) {
+    setActionMessage(
+      "No valid phone numbers found. Please check the selected recipients."
+    );
+    return;
+  }
+
+  const queue = validRecipients.map((item: any) => ({
+    phone: item.phone,
+    url: `https://wa.me/${item.phone}?text=${encodeURIComponent(
+      message.trim()
+    )}`,
+  }));
+
+  setWhatsAppQueue(queue);
+  setWhatsAppIndex(0);
+
+  // Open the first recipient.
+  window.open(queue[0].url, "_blank");
+
+  setActionMessage(
+    `Ready to send to ${queue.length} recipients. Send the first message in WhatsApp, then return here to open the next recipient.`
+  );
+};
+
+const openNextWhatsApp = () => {
+  const nextIndex = whatsAppIndex + 1;
+
+  if (nextIndex >= whatsAppQueue.length) {
+    setActionMessage("All recipient chats have been opened.");
+    return;
+  }
+
+  window.open(whatsAppQueue[nextIndex].url, "_blank");
+
+  setWhatsAppIndex(nextIndex);
+
+  setActionMessage(
+    `Opened recipient ${nextIndex + 1} of ${whatsAppQueue.length}. Send the message in WhatsApp before continuing.`
+  );
+};
+
   return (
 <div className="w-full min-w-0 overflow-x-hidden bg-slate-50 min-h-screen px-3 py-4 sm:px-4 md:px-6">
 
@@ -1269,9 +1385,7 @@ Please do not reply directly to this email.
       font-semibold
       transition-all
       "
-    onClick={() => {
-
-}}
+    onClick={sendWhatsAppMessages}
     >
       <div className="flex items-center justify-center gap-2">
         <img
@@ -1283,6 +1397,45 @@ Please do not reply directly to this email.
         Send WhatsApp to {selectedCount} Users
       </div>
     </button>
+    
+{whatsAppQueue.length > 0 && (
+  <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-4">
+    <p className="font-semibold text-green-800">
+      WhatsApp Sending Queue
+    </p>
+
+    <p className="mt-2 text-sm text-green-700">
+      {Math.min(whatsAppIndex + 1, whatsAppQueue.length)} of{" "}
+      {whatsAppQueue.length} recipients opened.
+    </p>
+
+    <div className="mt-3 h-2 overflow-hidden rounded-full bg-green-200">
+      <div
+        className="h-full rounded-full bg-green-600 transition-all"
+        style={{
+          width: `${
+            ((whatsAppIndex + 1) / whatsAppQueue.length) * 100
+          }%`,
+        }}
+      />
+    </div>
+
+    {whatsAppIndex < whatsAppQueue.length - 1 ? (
+      <button
+        type="button"
+        onClick={openNextWhatsApp}
+        className="mt-4 w-full rounded-xl bg-green-600 px-5 py-3 font-semibold text-white hover:bg-green-700"
+      >
+        Open Next WhatsApp Chat
+      </button>
+    ) : (
+      <p className="mt-4 text-sm font-medium text-green-800">
+        Queue completed. Make sure all messages were sent.
+      </p>
+    )}
+  </div>
+)}
+
 
   </div>
 : <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
