@@ -1,6 +1,7 @@
 "use client";
 
 
+import { GetEmail } from "@/Lib/Actions";
 import { IndianStates } from "@/Lib/Content";
 import { Update_Main_Filter_Status } from "@/Redux/action";
 import axios from "axios";
@@ -81,13 +82,16 @@ const clients = DeploymentInfo.map((each: any) => ({
   _id: each.ClientId,
   patientName: each.ClientName,
   Adress: each.Address,
-  email: each.Email || "",
+  email:  GetEmail(
+    users,
+    each.ClientId
+  )|| "",
   clientStatus: each.Status,
   Phone: each.ClientContact,
   leadSource: each.referralName || "",
   ServiceState: each.ServiceState || "Telangana",
 }));
- 
+ console.log ("Check for EMail-----",clients)
 const Leads = users
   .filter((each: any) => (each.ClientStatus === "Waiting List"||each.ClientStatus === "Lost"))
   .map((each: any) => ({
