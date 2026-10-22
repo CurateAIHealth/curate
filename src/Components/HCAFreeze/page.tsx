@@ -131,7 +131,7 @@ const [HCPVerificationOTP, setHCPVerificationOTP] = useState("");
 const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
 const users=useSelector((state:any)=>state.AdminUsers)
 const HCAContactInfo=getHCAContactNumber(UserFullInfo,hcaId)
-console.log("Check Contact-----",data)
+
 useEffect(() => {
   const GetEmail = async () => {
     try {
@@ -226,15 +226,15 @@ const generateOTP = () => {
     // 4. DETERMINE EMAIL / PHONE
     // ============================================================
 
-    let recipientEmail = "";
-    let recipientPhone = "";
-    let recipientName = "";
+    let recipientEmail = "admin@curatehealth.in";
+    let recipientPhone = "877975659";
+    let recipientName = recipient === "CLIENT"?clientName:hcaName;
 
-    if (recipient === "CLIENT") {
-      recipientEmail = Client_Email || "";
-      recipientPhone = Client_Contact || "";
-      recipientName = clientName || "Client";
-    }
+    // if (recipient === "CLIENT") {
+    //   recipientEmail = Client_Email || "";
+    //   recipientPhone = Client_Contact || "";
+    //   recipientName = clientName || "Client";
+    // }
 
 
     
@@ -245,16 +245,16 @@ const generateOTP = () => {
     // }
    
 
-    if (recipient === "HCA") {
-      recipientEmail =HCP_Email||"tsiddu805@gmail.com" ;
-      recipientPhone = HCP_Contact||"9347877159" 
-      recipientName = hcaName || "HCA";
-    }
+    // if (recipient === "HCA") {
+    //   recipientEmail =HCP_Email||"tsiddu805@gmail.com" ;
+    //   recipientPhone = HCP_Contact||"9347877159" 
+    //   recipientName = hcaName || "HCA";
+    // }
 
-    if (recipient === "ADMIN") {
-      recipientEmail = Admin_Email;
-      recipientName = "Admin";
-    }
+    // if (recipient === "ADMIN") {
+    //   recipientEmail = Admin_Email;
+    //   recipientName = "Admin";
+    // }
 
     // ============================================================
     // 5. VALIDATE DESTINATION
@@ -425,13 +425,7 @@ const htmlMessage = `
 
 setHCPVerificationOTP(NewOTP)
 
-      console.log(
-        `Sending ${recipient} OTP through Gmail`,
-        {
-          email: recipientEmail,
-          otp: NewOTP,
-        }
-      );
+     
 
       await axios.post("/api/MailSend", {
         to: recipientEmail,
@@ -646,13 +640,6 @@ const htmlMessage = `
 setClientVerificationOTP(NewOTP)
 
 
-      console.log(
-        `Sending ${recipient} OTP through Gmail`,
-        {
-          email: recipientEmail,
-          otp: NewOTP,
-        }
-      );
 
       await axios.post("/api/MailSend", {
         to: recipientEmail,
@@ -795,13 +782,7 @@ const htmlMessage =`
 
 setClientVerificationOTP(NewOTP)
 
-      console.log(
-        `Sending ${recipient} OTP through Gmail`,
-        {
-          email: recipientEmail,
-          otp: NewOTP,
-        }
-      );
+     
 
       await axios.post("/api/MailSend", {
         to: recipientEmail,
@@ -844,9 +825,7 @@ setClientVerificationOTP(NewOTP)
       },
     }));
 
-    console.log(
-      `✅ ${recipient} OTP sent successfully through ${mode}`
-    );
+   
 
   } catch (error: any) {
 

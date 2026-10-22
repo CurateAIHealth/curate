@@ -1312,11 +1312,11 @@ const Switching = (tab: string) => {
               onClick={(e) => e.stopPropagation()}
             >
               <MarkAttendance
-                userId={compliteInfo?.userId}
+                userId={localStorage.getItem("UserId")}
                 userName={ProfileName}
-                SickLeaves={compliteInfo?.Sick}
-                CasualLeaves={compliteInfo?.Casual}
-                usedLeaves={compliteInfo?.UsedLeaves}
+                SickLeaves={0}
+                CasualLeaves={0}
+                usedLeaves={0}
                 onSubmit={async (data) => {
                
                   await axios.post("/api/attendance", data);

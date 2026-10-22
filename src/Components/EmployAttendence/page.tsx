@@ -14,7 +14,7 @@ import { form } from "framer-motion/client";
 import { useSelector } from "react-redux";
 
 interface AttendanceProps {
-  userId: string;
+  userId: any;
   userName: string;
   onSubmit: (data: any) => void;
   onClose?: () => void;
@@ -41,6 +41,7 @@ export default function MarkAttendance({
     fromDate: "",
     toDate: "",
   });
+  const [leaveType, setLeaveType] = useState<string>("")
 const[statusMessage,setStatusMessage]=useState<any>()
   const isLeave = attendance.status === "Leave";
   const totalLeaves=SickLeaves+CasualLeaves
@@ -125,7 +126,7 @@ const UpdateDailyAttendance = async () => {
         longitude:   78.3962529
       }
     : await getEmployeeLocation();
-console.log("Check Location Info------",location)
+
       attendancePayload = {
         ...attendance,
      
@@ -134,17 +135,334 @@ console.log("Check Location Info------",location)
     }
 
     const result = await PostEmployeeAttendance(attendancePayload);
-
+console.log("Found-----",result)
+ setStatusMessage(result?.message || "Request processed");
     // Send the leave email only after a successful leave submission
     if (result?.success && attendance.status === "Leave") {
-      await axios.post("/api/MailSend", {
-        to: "tsiddu805@gmail.com",
-        subject: "Leave Request Submitted – Approval Required",
-        html: `<!-- Keep your existing leave email HTML here -->`,
-      });
+    await axios.post("/api/MailSend", {
+  to: "tsiddu805@gmail.com",
+  subject: "Leave Request Submitted – Approval Required",
+  html: `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+
+  <body style="
+    margin: 0;
+    padding: 0;
+    background-color: #f1f5f9;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #1e293b;
+  ">
+
+    <table width="100%" cellpadding="0" cellspacing="0"
+      style="padding: 35px 12px; background-color: #f1f5f9;">
+      <tr>
+        <td align="center">
+
+          <table width="100%" cellpadding="0" cellspacing="0"
+            style="
+              max-width: 620px;
+              background-color: #ffffff;
+              border-radius: 16px;
+              overflow: hidden;
+              border: 1px solid #e2e8f0;
+            ">
+
+            <!-- Header -->
+            <tr>
+              <td style="
+                background-color: #0f766e;
+                padding: 30px 28px;
+                color: #ffffff;
+              ">
+                <p style="
+                  margin: 0 0 12px;
+                  font-size: 12px;
+                  font-weight: bold;
+                  letter-spacing: 2px;
+                  color: #ccfbf1;
+                ">
+                  CURATE HEALTH CARE SERVICES
+                </p>
+
+                <h1 style="
+                  margin: 0;
+                  font-size: 26px;
+                  line-height: 1.4;
+                  font-weight: 700;
+                ">
+                  Leave Application
+                </h1>
+
+                <p style="
+                  margin: 8px 0 0;
+                  font-size: 14px;
+                  line-height: 1.6;
+                  color: #d1fae5;
+                ">
+                  A new leave request has been submitted for approval.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Main Content -->
+            <tr>
+              <td style="padding: 30px 28px;">
+
+                <p style="
+                  margin: 0 0 12px;
+                  font-size: 16px;
+                  line-height: 1.7;
+                ">
+                  Hello Manager,
+                </p>
+
+                <p style="
+                  margin: 0 0 24px;
+                  font-size: 14px;
+                  line-height: 1.8;
+                  color: #475569;
+                ">
+                  An employee has submitted a leave application.
+                  Please review the details below and take the
+                  appropriate action.
+                </p>
+
+                <!-- Status -->
+                <table width="100%" cellpadding="0" cellspacing="0"
+                  style="
+                    background-color: #fffbeb;
+                    border: 1px solid #fde68a;
+                    border-radius: 10px;
+                    margin-bottom: 24px;
+                  ">
+                  <tr>
+                    <td style="padding: 15px 18px;">
+                      <span style="
+                        display: inline-block;
+                        padding: 6px 12px;
+                        border-radius: 20px;
+                        background-color: #fef3c7;
+                        color: #92400e;
+                        font-size: 12px;
+                        font-weight: bold;
+                      ">
+                        PENDING APPROVAL
+                      </span>
+
+                      <p style="
+                        margin: 10px 0 0;
+                        font-size: 13px;
+                        color: #92400e;
+                      ">
+                        Your action is required to process this request.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Leave Details -->
+                <h2 style="
+                  margin: 0 0 16px;
+                  font-size: 18px;
+                  color: #0f172a;
+                ">
+                  Leave Details
+                </h2>
+
+                <table width="100%" cellpadding="0" cellspacing="0"
+                  style="
+                    border: 1px solid #e2e8f0;
+                    border-radius: 10px;
+                  ">
+
+                  <tr>
+                    <td style="
+                      padding: 14px 16px;
+                      width: 40%;
+                      background-color: #f8fafc;
+                      border-bottom: 1px solid #e2e8f0;
+                      font-size: 13px;
+                      color: #64748b;
+                    ">
+                      Employee Name
+                    </td>
+                    <td style="
+                      padding: 14px 16px;
+                      border-bottom: 1px solid #e2e8f0;
+                      font-size: 14px;
+                      font-weight: bold;
+                    ">
+                      ${  userName ?? "N/A"}
+                    </td>
+                  </tr>
+
+                  
+
+                  <tr>
+                    <td style="
+                      padding: 14px 16px;
+                      background-color: #f8fafc;
+                      border-bottom: 1px solid #e2e8f0;
+                      font-size: 13px;
+                      color: #64748b;
+                    ">
+                      Leave Type
+                    </td>
+                    <td style="
+                      padding: 14px 16px;
+                      border-bottom: 1px solid #e2e8f0;
+                      font-size: 14px;
+                      font-weight: bold;
+                    ">
+                      ${leaveType ?? "N/A"}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="
+                      padding: 14px 16px;
+                      background-color: #f8fafc;
+                      border-bottom: 1px solid #e2e8f0;
+                      font-size: 13px;
+                      color: #64748b;
+                    ">
+                      From Date
+                    </td>
+                    <td style="
+                      padding: 14px 16px;
+                      border-bottom: 1px solid #e2e8f0;
+                      font-size: 14px;
+                    ">
+                      ${attendance.fromDate ?? "N/A"}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="
+                      padding: 14px 16px;
+                      background-color: #f8fafc;
+                      border-bottom: 1px solid #e2e8f0;
+                      font-size: 13px;
+                      color: #64748b;
+                    ">
+                      To Date
+                    </td>
+                    <td style="
+                      padding: 14px 16px;
+                      border-bottom: 1px solid #e2e8f0;
+                      font-size: 14px;
+                    ">
+                      ${attendance.toDate ?? "N/A"}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="
+                      padding: 14px 16px;
+                      background-color: #f8fafc;
+                      font-size: 13px;
+                      color: #64748b;
+                    ">
+                      Total Days
+                    </td>
+                    <td style="
+                      padding: 14px 16px;
+                      font-size: 14px;
+                      font-weight: bold;
+                      color: #0f766e;
+                    ">
+                      ${totalDays ?? "N/A"}
+                    </td>
+                  </tr>
+
+                </table>
+
+               
+
+                <!-- Action -->
+                <table width="100%" cellpadding="0" cellspacing="0"
+                  style="margin-top: 28px;">
+                  <tr>
+                    <td align="center" style="
+                      padding: 20px;
+                      background-color: #f0fdfa;
+                      border-radius: 10px;
+                    ">
+                      <p style="
+                        margin: 0 0 8px;
+                        font-size: 15px;
+                        font-weight: bold;
+                        color: #115e59;
+                      ">
+                        Review Required
+                      </p>
+
+                      <p style="
+                        margin: 0;
+                        font-size: 13px;
+                        line-height: 1.7;
+                        color: #475569;
+                      ">
+                        Please log in to the Curate application to
+                        review and approve or reject this request.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="
+                  margin: 26px 0 0;
+                  font-size: 14px;
+                  line-height: 1.8;
+                  color: #475569;
+                ">
+                  Thank you,<br />
+                  <strong style="color: #0f766e;">
+                    Curate Health Care Services
+                  </strong>
+                </p>
+
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="
+                padding: 20px;
+                text-align: center;
+                background-color: #f8fafc;
+                border-top: 1px solid #e2e8f0;
+              ">
+                <p style="
+                  margin: 0;
+                  font-size: 11px;
+                  line-height: 1.8;
+                  color: #94a3b8;
+                ">
+                  This is an automated notification from Curate Health
+                  Care Services. Please do not reply directly to this email.
+                </p>
+              </td>
+            </tr>
+
+          </table>
+
+        </td>
+      </tr>
+    </table>
+
+  </body>
+  </html>
+  `,
+});
     }
 
-    setStatusMessage(result?.message || "Request processed");
+   
   } catch (err: any) {
     setStatusMessage(
       err?.message || "Something went wrong"
@@ -308,6 +626,7 @@ const openAttendanceLocation = (
         transition-all duration-200
       "
       defaultValue=""
+      onChange={(e)=>setLeaveType(e.target.value)}
     >
       <option value="" disabled>
         Choose leave type

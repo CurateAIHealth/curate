@@ -91,7 +91,7 @@ const clients = DeploymentInfo.map((each: any) => ({
   leadSource: each.referralName || "",
   ServiceState: each.ServiceState || "Telangana",
 }));
- console.log ("Check for EMail-----",clients)
+
 const Leads = users
   .filter((each: any) => (each.ClientStatus === "Waiting List"||each.ClientStatus === "Lost"))
   .map((each: any) => ({

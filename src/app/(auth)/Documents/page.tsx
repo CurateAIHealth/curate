@@ -153,7 +153,7 @@ const getDocumentsByUserId = (userId: string) => {
   return RegisterdInfo
     .map((each: any) => {
       const doc = getDocumentsByUserId(each.userId) || {};
-console.log("Check profilepic-----",doc)
+
    const missingDocs = Object.keys(doc).filter((key) => {
   const value = doc[key];
   return value === "" || value === null || value === undefined;

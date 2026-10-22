@@ -9286,7 +9286,7 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
     const db = cluster.db("CurateInformation");
 
     const attendanceCollection = db.collection("EmployeesAttendance");
-    const notificationCollection = db.collection("Notifications");
+    // const notificationCollection = db.collection("Notifications");
 
     const {
       userId,
@@ -9362,7 +9362,13 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
         },
 
         ApprovalStatus: "Approved",
-        CreatedAt: new Date(),
+       CreatedAt: new Date().toLocaleTimeString("en-IN", {
+  timeZone: "Asia/Kolkata",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: true,
+}),
       });
 
       return {
@@ -9417,7 +9423,7 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
 
     if (overlappingLeave) {
       return {
-        success: false,
+        success: true,
         message:
           "A leave request for the selected dates is already submitted and pending approval.",
       };
@@ -9430,30 +9436,37 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
       EmployeeName: userName,
       Status: "Leave",
       FromDate: fromDate,
+      AttendanceDate:fromDate,
       ToDate: toDate,
       TotalDays: totalDays,
       ApprovalStatus: "Pending",
       ApprovedBy: null,
       ApprovedAt: null,
-      CreatedAt: new Date(),
+        CreatedAt: new Date().toLocaleTimeString("en-IN", {
+  timeZone: "Asia/Kolkata",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: true,
+}),
     });
 
     /* INSERT NOTIFICATION */
 
-    await notificationCollection.insertOne({
-      Type: "LEAVE_REQUEST",
-      LeaveId: leaveResult.insertedId.toString(),
-      UserId: userId,
-      EmployeeName: userName,
-      FromDate: fromDate,
-      ToDate: toDate,
-      TotalDays: totalDays,
-      Status: "Pending",
-      Message: `${userName} requested leave from ${fromDate} to ${toDate}`,
-      IsRead: false,
-      ActionTaken: false,
-      CreatedAt: new Date(),
-    });
+    // await notificationCollection.insertOne({
+    //   Type: "LEAVE_REQUEST",
+    //   LeaveId: leaveResult.insertedId.toString(),
+    //   UserId: userId,
+    //   EmployeeName: userName,
+    //   FromDate: fromDate,
+    //   ToDate: toDate,
+    //   TotalDays: totalDays,
+    //   Status: "Pending",
+    //   Message: `${userName} requested leave from ${fromDate} to ${toDate}`,
+    //   IsRead: false,
+    //   ActionTaken: false,
+    //   CreatedAt: new Date(),
+    // });
 
     return {
       success: true,
