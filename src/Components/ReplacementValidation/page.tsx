@@ -277,7 +277,7 @@ const generateOTP = () => {
       setShowPrivacyPopup(false);
     }
   };
-console.log("HCPEmail", otp);
+
   const handleOTPModeChange = (
     recipient: "HCA" | "CLIENT" | "NEWHCA"|"NEWHCPCLIENT",
     mode: OTPMode
@@ -338,45 +338,46 @@ console.log("HCPEmail", otp);
     // 4. DETERMINE EMAIL / PHONE
     // ============================================================
 
-    let recipientEmail = "";
-    let recipientPhone = "";
-    let recipientName = "";
+    let recipientEmail = Admin_Email;
+    let recipientPhone = "8977975659";
+    let recipientName =recipient === "CLIENT"?clientName: "HCP";
 
-    if (recipient === "CLIENT") {
-      recipientEmail = Client_Email || "";
-      recipientPhone = Client_Contact || "";
-      recipientName = clientName || "Client";
-    }
+//     if (recipient === "CLIENT") {
+//       recipientEmail = Client_Email || "";
+//       recipientPhone = Client_Contact || "";
+//       recipientName = clientName || "Client";
+//     }
 
 
 
-     if (recipient === "NEWHCPCLIENT") {
-  recipientEmail = Client_Email || "";
-      recipientPhone = Client_Contact || "";
-      recipientName = clientName || "Client";
-    }
-       if (recipient === "NEWHCA") {
-     recipientEmail =NewHCPMail
-;
+//      if (recipient === "NEWHCPCLIENT") {
+//   recipientEmail = Client_Email || "";
+//       recipientPhone = Client_Contact || "";
+//       recipientName = clientName || "Client";
+//     }
+
+//        if (recipient === "NEWHCA") {
+//      recipientEmail =NewHCPMail
+// ;
     
-      recipientPhone = getHCAContactNumber(UserFullInfo,selectedHCP?.userId)
-      recipientName = clientName || "Client";
+//       recipientPhone = getHCAContactNumber(UserFullInfo,selectedHCP?.userId)
+//       recipientName = clientName || "Client";
 
-;
+// ;
     
 
-    }
+//     }
 
-    if (recipient === "HCA") {
-      recipientEmail =HCPEmail||HCP_Email;
-      recipientPhone = getHCAContactNumber(UserFullInfo,hcaRegistrationNumber)
-      recipientName = hcaName || "HCP";
-    }
+//     if (recipient === "HCA") {
+//       recipientEmail =HCPEmail||HCP_Email;
+//       recipientPhone = getHCAContactNumber(UserFullInfo,hcaRegistrationNumber)
+//       recipientName = hcaName || "HCP";
+//     }
 
-    if (recipient === "ADMIN") {
-      recipientEmail = Admin_Email;
-      recipientName = "Admin";
-    }
+//     if (recipient === "ADMIN") {
+//       recipientEmail = Admin_Email;
+//       recipientName = "Admin";
+//     }
 
     // ============================================================
     // 5. VALIDATE DESTINATION
@@ -547,14 +548,7 @@ const htmlMessage = `
 
 setHCPVerificationOTP(NewOTP)
 
-      console.log(
-        `Sending ${recipient} OTP through Gmail`,
-        {
-          email: recipientEmail,
-          otp: NewOTP,
-        }
-      );
-
+    
       await axios.post("/api/MailSend", {
         to: recipientEmail,
         subject,
@@ -763,13 +757,7 @@ const htmlMessage = `
 
 setNewHCPVerificationOTP(NewOTP)
 
-      console.log(
-        `Sending ${recipient} OTP through Gmail`,
-        {
-          email: recipientEmail,
-          otp: NewOTP,
-        }
-      );
+   
 
       await axios.post("/api/MailSend", {
         to: recipientEmail,
@@ -980,14 +968,6 @@ const htmlMessage = `
 
 setClientVerificationOTP(NewOTP)
 setnewClientVerificationOTP((NewOTP))
-
-      console.log(
-        `Sending ${recipient} OTP through Gmail`,
-        {
-          email: recipientEmail,
-          otp: NewOTP,
-        }
-      );
 
       await axios.post("/api/MailSend", {
         to: recipientEmail,
@@ -1200,14 +1180,7 @@ const htmlMessage = `
 
 setClientVerificationOTP(NewOTP)
 
-      console.log(
-        `Sending ${recipient} OTP through Gmail`,
-        {
-          email: recipientEmail,
-          otp: NewOTP,
-        }
-      );
-
+      
       await axios.post("/api/MailSend", {
         to: recipientEmail,
         subject,
@@ -1249,10 +1222,7 @@ setClientVerificationOTP(NewOTP)
       },
     }));
 
-    console.log(
-      `✅ ${recipient} OTP sent successfully through ${mode}`
-    );
-
+   
   } catch (error: any) {
 
     console.error(

@@ -3141,3 +3141,102 @@ console.log("Chc=",ImpClientInformation.Client_Id)
     throw new Error("Failed to fetch client agreement.");
   }
 };
+
+
+
+
+
+export const StaffAttendecebyDate = async (ImpData: unknown) => {
+  try {
+    if (typeof ImpData !== "string" || !ImpData.trim()) {
+      throw new Error("AttendanceDate is required and must be a valid string.");
+    }
+
+    const client = await clientPromise;
+    const db = client.db("CurateInformation");
+
+    const StaffAttendeceCollection = db.collection("EmployeesAttendance");
+
+    const FilteredAttendeceData = await StaffAttendeceCollection
+      .find(
+        { AttendanceDate: ImpData.trim() },
+        {
+          maxTimeMS: 10000,
+        }
+      )
+      .toArray();
+
+    return FilteredAttendeceData;
+  } catch (error) {
+    console.error("StaffAttendecebyDate failed:", error);
+
+    throw new Error("Failed to fetch staff attendance by date.");
+  }
+};
+
+
+
+export const UpdateStaffLeaveStatus = async (ImpData: any) => {
+  try {
+    if (
+      !ImpData?.UserId ||
+      !ImpData?.AttendanceDate ||
+      !["Approved", "Rejected"].includes(ImpData?.ApprovalStatus)
+    ) {
+      return {
+        success: false,
+        message: "Invalid leave approval details.",
+      };
+    }
+
+    const client = await clientPromise;
+    const db = client.db("CurateInformation");
+
+    const StaffAttendeceCollection = db.collection(
+      "EmployeesAttendance"
+    );
+
+    const updateResult = await StaffAttendeceCollection.updateOne(
+      {
+        UserId: ImpData.UserId,
+        AttendanceDate: ImpData.AttendanceDate,
+        Status: "Leave",
+      },
+      {
+        $set: {
+          ApprovalStatus: ImpData.ApprovalStatus,
+          UpdatedAt: new Date(),
+          ApprovedBy:ImpData.loggedInEmail ,
+ApprovedAt: new Date()
+        },
+      }
+    );
+
+    if (updateResult.matchedCount === 0) {
+      return {
+        success: false,
+        message: "Leave record not found.",
+      };
+    }
+
+    if (updateResult.modifiedCount === 0) {
+      return {
+        success: true,
+        message: "Leave status is already up to date.",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Leave status updated successfully.",
+      ApprovalStatus: ImpData.ApprovalStatus,
+    };
+  } catch (error) {
+    console.error("UpdateStaffLeaveStatus error:", error);
+
+    return {
+      success: false,
+      message: "Failed to update leave status.",
+    };
+  }
+};

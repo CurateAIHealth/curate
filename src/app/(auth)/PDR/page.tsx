@@ -168,7 +168,7 @@ useEffect(() => {
       enrollmentFee: cleanNumber(reduxFormData.RegistrationFee) || 0,
       dayPrice: cleanNumber(reduxFormData.serviceCharges),
       hcaPrice:  Math.round(Number(cleanNumber(hcaData?.PaymentforStaff)) / 30) || 0,
-      hcaName:hcaData.HCPFirstName||""
+      hcaName:GetHCPFullName(UserFullInfo,DeploaymentInformation.HCA_Id)||""
 
      
     }));
@@ -566,7 +566,7 @@ const updateInvoiceEditedInformation = async () => {
     };
 
     SetValidateDetails(validationInformation);
-console.log("Check Info-----",validationInformation)
+
     /*
      * Close popup only after successful verification.
      */
@@ -619,17 +619,21 @@ const data = { ...formData, InvoiseInformation, HCAId: DeploaymentInformation.HC
         ? data?.patientName || data?.FirstName || "Client"
         : GetHCPFullName(UserFullInfo, data?.HCAId) || "HCA";
 
-    const recipientPhone =
-      type === "client"
-        ? data?.ContactNumber || data?.contact
-        : getHCAContactNumber(UserFullInfo, data?.HCAId) || "9347877159";
-        console.log("Check Info======",data)
+    // const recipientPhone =
+    //   type === "client"
+    //     ? data?.ContactNumber || data?.contact
+    //     : getHCAContactNumber(UserFullInfo, data?.HCAId) || "9347877159";
+    //     console.log("Check Info======",data)
+
+        const recipientPhone ="8977975659"
 
 //     const recipientEmail = type === "client"?data?.
 // Email
 //  || data?.email:imphcaInfo?.email || data?.email || ""
    
-const recipientEmail =  type === "client"?data?.Email:imphcaInfo?.email
+// const recipientEmail =  type === "client"?data?.Email:imphcaInfo?.email
+
+const recipientEmail ="admin@curatehealth.in"
 alert(recipientPhone)
 alert(recipientEmail)
     const concernPerson =

@@ -181,7 +181,7 @@ useEffect(() => {
     try {
       const ResultEmail: any =
         await GetHCACEmailandContact(ImpData.HCAId);
-console.log("ResultEmail", ResultEmail);
+
       setHCAdata(prev => ({ ...prev, email: ResultEmail?.email || "" }));
     } catch (error) {
       console.error("Failed to get HCP email:", error);
@@ -199,7 +199,7 @@ if (!isOpen) {
   // ============================================================
   // SEND CLIENT OTP
   // ============================================================
-console.log("ImpData in handleSendClientOTP:", HCAdata);
+
   const handleSendClientOTP = async () => {
     try {
       setError("");
@@ -797,7 +797,7 @@ const handleHCAManualOTP = async () => {
   // ============================================================
   // HCA MANUAL OTP
   // ============================================================
-console.log("ImpData in handleClientManualOTP:", ImpData);
+
   const handleClientManualOTP = async () => {
     setError("");
     setClientSending(true);
