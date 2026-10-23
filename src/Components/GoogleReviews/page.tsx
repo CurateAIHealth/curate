@@ -82,7 +82,7 @@ const [reviewFilter, setReviewFilter] =
 const [StatusFilter,setStatusFilter] = useState<"Active" | "Freeze">("Active");
 const [showTerminated, setShowTerminated] = useState(false);
 const [SelectedServiceStates, setSelectedServiceStates] = useState("Telangana");
-const [ImportedInfo,setImportedInfo]=useState([])
+const [ImportedInfo,setImportedInfo]=useState<any[]>([])
   const [isSwitchingMonth, setIsSwitchingMonth] = useState(false);
 const [selectedReview, setSelectedReview] = useState<{
   popupType: string;
@@ -246,10 +246,7 @@ const googleReviews = useMemo<GoogleReviewData[]>(() => {
       const endDate = item?.EndDate || "";
 
       return {
-        id:
-          item?._id?.toString() ||
-          item?.ClientId ||
-          `google-review-${index}`,
+      id: item?.ClientId || item?._id?.toString() || `google-review-${index}`,
 
         clientName: item?.ClientName?.trim() || "—",
         ptName: item?.patientName?.trim() || "—",
@@ -328,18 +325,43 @@ case "Request Review":
           }
         />;
 case "Update Review":
- return   <SubmitReviewModal
-    data={selectedReview.Info}
-    onClose={() => setSelectedReview(null)}
-    onSubmit={(reviewData) => {
-    
+  return (
+    <SubmitReviewModal
+      data={selectedReview.Info}
+      onClose={() => setSelectedReview(null)}
+      onSubmit={(reviewData) => {
+        setImportedInfo((prev: any[]) => {
+          const existingIndex = prev.findIndex(
+            (item: any) =>
+              item.Month === reviewData.Month &&
+              item.UserId === reviewData.UserId
+          );
 
-      // API call here
-      // await saveReview(reviewData);
+          const updatedReview = {
+            ...reviewData,
+            reviewImage: reviewData.reviewImage,
+          };
 
-      setSelectedReview(null);
-    }}
-  />
+          if (existingIndex !== -1) {
+            return prev.map((item: any, index: number) =>
+              index === existingIndex
+                ? { ...item, ...updatedReview }
+                : item
+            );
+          }
+
+          return [...prev, updatedReview];
+        });
+
+        // Automatically switch to Completed after submission
+        if (reviewData.status === "Completed") {
+          setReviewFilter("Completed");
+        }
+
+        setSelectedReview(null);
+      }}
+    />
+  );
 
   case "View Review":
       return <ViewReviewModal
@@ -1879,18 +1901,15 @@ const postData={
       reviewDate,
       Month:ImpMonth
     }
-alert(postData.Month)
-    const PostInDb=await axios.post("/api/GoogleReviewPost",{
-postData
 
-    })
+   const { data: response } = await axios.post(
+  "/api/GoogleReviewPost",
+  { postData }
+);
 
-
-
-setImagePreview(PostInDb.data.message)
-setTimeout(()=>{
-  onSubmit(postData)
-},1000)
+if (response?.message) {
+  onSubmit(postData);
+}
    }catch(err:any){
       
     }

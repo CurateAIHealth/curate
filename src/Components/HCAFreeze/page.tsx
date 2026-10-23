@@ -1267,7 +1267,7 @@ if (
                  <div>
                                                   <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-semibold text-gray-500">
-                    Reason for Replacement
+                    Reason for Freeze 
                   </label>
                 
                   {replacementReasons.length > 1 && (
@@ -1725,7 +1725,7 @@ function OTPCard({
         disabled:cursor-not-allowed disabled:opacity-50"
     >
         <AlertTriangle size={14} />
-        Technical issue? Send Admin fallback OTP
+        Technical issue? Send OTP to Admin
     </button>}
                 {/* OTP Input and Verification */}
                 {state.sent && !state.verified && (

@@ -379,7 +379,7 @@ const handleImageChange = useCallback(
     provider:each.provider,
     payTerms:each.payTerms
   }));
-const GetHCPName=Finel.filter((each:any)=>each.userId=== DeploaymentInformation.HCA_Id)
+
 
 
   const HCA_List = Finel.filter((each: any) => {
@@ -1532,7 +1532,7 @@ const PreviewHCAInfo = async () => {
                     <span className="hidden rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 sm:inline-flex">PDR</span>
                   </div>
                   <h1 className="truncate text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-                    {formData?.FirstName}'s Patient Daily Routine Assessment
+                    {formData?.patientName}'s Patient Daily Routine Assessment
                   </h1>
                   <p className="text-xs text-slate-500">Personalised care assessment & service planning</p>
                 </div>
@@ -1552,7 +1552,7 @@ const PreviewHCAInfo = async () => {
             {[
               ["Care Plan", "Active"],
               ["Assessment", "In Progress"],
-              ["Patient", formData?.FirstName || "—"],
+              ["Patient", formData?.patientName || "—"],
               ["Review", "Required"],
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
@@ -1676,7 +1676,7 @@ const PreviewHCAInfo = async () => {
         Assigned Healthcare Professional
       </p>
       <p className="text-sm font-semibold text-gray-800">
-    {GetHCPName[0]?.FirstName||"Loading...."}
+    {GetHCPFullName(UserFullInfo,DeploaymentInformation.HCA_Id)||"Loading...."}
       </p>
     </div>
   )}
@@ -3108,7 +3108,5 @@ dispatch(UpdateFetchedInformation(payload));
     )
   }
 
-function UpdatePDRInfo() {
-  throw new Error('Function not implemented.')
-}
+
 

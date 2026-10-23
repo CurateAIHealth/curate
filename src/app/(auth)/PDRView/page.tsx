@@ -10,7 +10,7 @@ import { GetCurrentDeploymentData, Update_Main_Filter_Status, UpdateFetchedInfor
 import TerminationTable from "@/Components/Terminations/page";
 import { useRouter } from "next/navigation";
 import { LoadingData } from "@/Components/Loading/page";
-import { normalizeDate, years } from "@/Lib/Actions";
+import { GetHCPFullName, normalizeDate, years } from "@/Lib/Actions";
 import { teams } from "@/Lib/Content";
 import LoadingPopup from "@/Components/SwitchMonth/page";
 
@@ -66,6 +66,7 @@ const ClientTable = () => {
   const SearchYear=useSelector((state:any)=>state.FilterYear) 
 const TimeStamp=useSelector((state:any)=>state.TimeStampInfo)
   const SubHeading = useSelector((state: any) => state.SubHeadinList);
+  const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
   const dispatch = useDispatch();
 const Router=useRouter()
 useEffect(() => {
@@ -678,7 +679,7 @@ const GetMonthFreshData = async (r: string) => {
           </td>
 
           <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-semibold text-gray-900 whitespace-nowrap">
-            {c.HCA_Name}
+            {GetHCPFullName(UserFullInfo,c.HCA_Id)}
           </td>
 
           <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
@@ -762,7 +763,7 @@ const GetMonthFreshData = async (r: string) => {
 
         <div>
           <p className="text-xs text-gray-500">HCP Name</p>
-          <p className="font-semibold">{c.HCA_Name}</p>
+          <p className="font-semibold">{GetHCPFullName(UserFullInfo,c.HCA_Id)}</p>
         </div>
 
         <div>

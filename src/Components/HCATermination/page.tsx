@@ -1878,7 +1878,7 @@ function OTPCard({
         disabled:cursor-not-allowed disabled:opacity-50"
     >
         <AlertTriangle size={14} />
-        Technical issue? Send Admin fallback OTP
+       Technical issue? Send OTP to Admin
     </button>}
                 {/* OTP Input and Verification */}
                 {state.sent && !state.verified && (
