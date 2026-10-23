@@ -118,8 +118,8 @@ const [service, setService] = useState("");
   dayPrice: "",
   startDate: "",
   endDate: "",
-  hcaPrice: "",
-  hcaName:"",
+  hcaPrice: "Loading.....",
+  hcaName:"Loading....",
   serviceDays: "",
 });
   const DeploaymentInformation = useSelector(
@@ -1523,18 +1523,18 @@ const PreviewHCAInfo = async () => {
           <div className="sticky top-0 z-40 mb-5 border-b border-slate-200/80 bg-white/95 px-4 py-3 shadow-[0_4px_20px_rgba(15,23,42,0.05)] backdrop-blur-xl sm:rounded-2xl sm:px-5 lg:px-6">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00A9A5] to-[#005f61] p-2 shadow-lg shadow-[#00A9A5]/20">
-                  <img src="/Icons/Curate-logo.png" alt="Curate" className="h-full w-full rounded-xl bg-white object-contain p-1" />
-                </div>
+
+                  <img src="/Icons/Curate-logo.png" alt="Curate" className="h-11 w-11 rounded-xl bg-white object-contain p-1" />
+              
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  {/* <div className="flex items-center gap-2">
                     <span className="truncate text-xs font-bold uppercase tracking-[0.16em] text-[#008f8b]">Curate Health Care</span>
                     <span className="hidden rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 sm:inline-flex">PDR</span>
-                  </div>
+                  </div> */}
                   <h1 className="truncate text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-                    {formData?.patientName}'s Patient Daily Routine Assessment
+                   Patient Daily Routine Assessment
                   </h1>
-                  <p className="text-xs text-slate-500">Personalised care assessment & service planning</p>
+                  {/* <p className="text-xs text-slate-500">Personalised care assessment & service planning</p> */}
                 </div>
               </div>
               <button
@@ -1548,7 +1548,7 @@ const PreviewHCAInfo = async () => {
             </div>
           </div>
 
-          <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {/* <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               ["Care Plan", "Active"],
               ["Assessment", "In Progress"],
@@ -1560,7 +1560,7 @@ const PreviewHCAInfo = async () => {
                 <p className="mt-1 truncate text-sm font-bold text-slate-800">{value}</p>
               </div>
             ))}
-          </div>
+          </div> */}
 
 
 
@@ -1761,7 +1761,7 @@ const PreviewHCAInfo = async () => {
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <FieldItem
-                  label="PresentIllness"
+                  label="Present Illness"
                   value={formData?.Present_Illness}
                   editable={isEditing.PatientCardEditing}
                   onChange={(val) => handleChange("Present_Illness", val)}
@@ -1778,7 +1778,7 @@ const PreviewHCAInfo = async () => {
 
                 />
                 <CheckboxGroup
-                  label="OnGoing Treatment"
+                  label="Ongoing Treatment"
                   options={treatmentOptions}
                   selected={formData?.OnGoing_Treatment}
                   editable={isEditing.PatientCardEditing}
@@ -1786,7 +1786,7 @@ const PreviewHCAInfo = async () => {
 
                 />
                 <FieldItem
-                  label="PresentHealthRemarks"
+                  label="Present Health Remarks"
                   value={formData?.PresentHealthRemarks}
                   editable={isEditing.PatientCardEditing}
                   onChange={(val) => handleChange("PresentHealthRemarks", val)}
@@ -1918,7 +1918,7 @@ const PreviewHCAInfo = async () => {
 
                 />
                 <CheckboxGroup
-                  label="Frequent_Urination"
+                  label="Frequent Urination"
                   options={["Yes", "No",]}
                   selected={formData?.Frequent_Urination}
                   editable={isEditing.AdditionalInformation}
@@ -1926,7 +1926,7 @@ const PreviewHCAInfo = async () => {
 
                 />
                 <CheckboxGroup
-                  label="Sleep_Issues"
+                  label="Sleep Issues"
                   options={["Yes", "No",]}
                   selected={formData?.Sleep_Issues}
                   editable={isEditing.AdditionalInformation}
@@ -1967,7 +1967,7 @@ const PreviewHCAInfo = async () => {
 
                 />
                 <CheckboxGroup
-                  label="Washroom_Accessories"
+                  label="Washroom Accessories"
                   options={washroomAccessories}
                   selected={formData?.Washroom_Accessories}
                   editable={isEditing.AdditionalInformation}
@@ -1975,7 +1975,7 @@ const PreviewHCAInfo = async () => {
 
                 />
                 <FieldItem
-                  label="FunctionalAssessmentsRemarks"
+                  label="Functional Assessments Remarks"
                   value={formData?.FunctionalAssessmentsRemarks}
                   editable={isEditing.AdditionalInformation}
                   onChange={(val) => handleChange("FunctionalAssessmentsRemarks", val)}
@@ -2133,7 +2133,7 @@ const PreviewHCAInfo = async () => {
 
                 />
                 <CheckboxGroup
-                  label="is Patient Indipendent of Elimination"
+                  label="Patient Indipendent of Elimination"
                   options={["Yes", 'No']}
                   selected={formData?.Patient_Indipendent_Elimination}
                   editable={isEditing.Hygiene}
@@ -2298,7 +2298,7 @@ const PreviewHCAInfo = async () => {
 
                   />}
                 <FieldItem
-                  label="Nutritionremarks"
+                  label="Nutrition remarks"
                   value={formData?.Nutritionremarks}
                   editable={isEditing.PatientDetails}
                   onChange={(val) => handleChange("Nutritionremarks", val)}
@@ -2361,7 +2361,7 @@ const PreviewHCAInfo = async () => {
                   onChange={(e) => handleChange("Pulse", e.target.value)}
                 />}
                 <CheckboxGroup
-                  label="OxygenSaturation"
+                  label="Oxygen   Saturation"
                   options={Vitals_Options}
                   selected={formData?.OxygenSaturation}
                   editable={isEditing.OtherInformation}
@@ -2376,7 +2376,7 @@ const PreviewHCAInfo = async () => {
                   onChange={(e) => handleChange("OxygenSaturation", e.target.value)}
                 />}
                 <CheckboxGroup
-                  label="BloodPressure"
+                  label="Blood Pressure"
                   options={Vitals_Options}
                   selected={formData?.BloodPressure}
                   editable={isEditing.OtherInformation}
@@ -2692,22 +2692,40 @@ const PreviewHCAInfo = async () => {
   {value}
 </p>:
       <input
-        id={field.key}
-        type={field.type || "number"}
-        placeholder={field.placeholder}
-       value={Number.isNaN(value) ? "" : value ?? ""}
-        onChange={(e) =>
-          handleInvoiseChange(field.key, e.target.value)
-        }
-        disabled={field.key==="serviceDays"?true:isDisabled}
-        className={`w-full rounded-xl border px-4 py-2.5 text-gray-700 
-          placeholder-gray-400 transition-all duration-200 outline-none shadow-sm
-          ${
-            isDisabled
-              ? "bg-gray-100 border-gray-200 cursor-not-allowed"
-              : "bg-gray-50 border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          }`}
-      />}
+  id={field.key}
+  type={
+    field.key === "hcaPrice" &&
+    InvoiseInformation.hcaPrice === "Loading....."
+      ? "text"
+      : field.type || "number"
+  }
+  placeholder={field.placeholder}
+  value={
+    field.key === "hcaPrice" &&
+    InvoiseInformation.hcaPrice === "Loading....."
+      ? "Loading....."
+      : Number.isNaN(value)
+        ? "Loading..."
+        : value ?? ""
+  }
+  onChange={(e) =>
+    handleInvoiseChange(field.key, e.target.value)
+  }
+  disabled={
+    field.key === "serviceDays" ||
+    (field.key === "hcaPrice" &&
+      InvoiseInformation.hcaPrice === "Loading.....")
+      ? true
+      : isDisabled
+  }
+  className={`w-full rounded-xl border px-4 py-2.5 text-gray-700
+    placeholder-gray-400 transition-all duration-200 outline-none shadow-sm
+    ${
+      isDisabled
+        ? "bg-gray-100 border-gray-200 cursor-not-allowed"
+        : "bg-gray-50 border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+    }`}
+/>}
     </div>
   );
 })}

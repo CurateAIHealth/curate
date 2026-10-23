@@ -348,10 +348,10 @@ const GetHCPFullName = (A: any) => {
   e: string,
   UserId: any
 ) => {
- if(e==="Active"){
-   setShowStatusWarning(true);
-  return
- }
+//  if(e==="Active"){
+//    setShowStatusWarning(true);
+//   return
+//  }
  
   dispatch(
     Refresh(
@@ -1743,10 +1743,10 @@ const UpdatePopup = async (a: any) => {
                                   onChange={(e) =>
 
                                 {
-                                   if(user.CurrentStatus==="Active"){
-  setShowStatusWarning(true);
-  return;
-  }
+  //                                  if(user.CurrentStatus==="Active"){
+  // setShowStatusWarning(true);
+  // return;
+  // }
                                     UpdateCurrentstatus(user.FirstName, e.target.value, user.userId)
                                 }
                                   }

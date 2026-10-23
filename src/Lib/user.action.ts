@@ -4523,6 +4523,46 @@ HCAId:hcaid });
     return { success: false, message: err.message };
   }
 };
+export const GetUserPDRInfoinPreview = async (
+  UserId: string,
+  hcaid: string
+) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("TimeSheet");
+
+    const userPDR = await Collection.findOne(
+      {
+        ClientId: UserId,
+        HCAId: hcaid,
+      },
+      {
+        projection: {
+          _id: 0,
+          PDRStatus: 1,
+        },
+      }
+    );
+
+    if (!userPDR) {
+      return {
+        success: false,
+        message: "No PDR Record Found",
+      };
+    }
+
+    return {
+      success: true,
+      data: userPDR,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err.message,
+    };
+  }
+};
 export const GetPopUpUserPDRInfo = async (UserId: any,) => {
   try {
     const Cluster = await clientPromise;
@@ -4962,6 +5002,21 @@ export const GetDeploymentInfo = async (
   } catch (e) {
     console.error("GetDeploymentInfo Error:", e);
     return [];
+  }
+};
+
+export const GetDeploymentInfoinPreview = async (): Promise<number> => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("Deployment");
+
+    const totalLength = await collection.countDocuments({});
+
+    return totalLength;
+  } catch (error) {
+    console.error("GetDeploymentInfo Error:", error);
+    return 0;
   }
 };
 
