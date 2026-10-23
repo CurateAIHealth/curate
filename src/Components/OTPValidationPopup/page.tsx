@@ -106,7 +106,7 @@ export default function OTPValidationPopup({
   // ============================================================
 const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
   const [clientSource, setClientSource] =
-    useState<OTPSource>("sms");
+    useState<OTPSource>("email");
 const     [HCAdata,setHCAdata]=useState({
  email:"",
   contact:getHCAContactNumber(UserFullInfo,ImpData.HCAId),
@@ -134,7 +134,7 @@ const     [HCAdata,setHCAdata]=useState({
   // ============================================================
 
   const [hcaSource, setHcaSource] =
-    useState<OTPSource>("sms");
+    useState<OTPSource>("email");
 
   const [hcaGeneratedOTP, setHcaGeneratedOTP] =
     useState("");
@@ -329,10 +329,10 @@ const handleHCAManualOTP = async () => {
     setError("");
   setHcaSending(true);
     // OTP must already have been generated
-    if (!hcaGeneratedOTP) {
-      setError("Please send HCA OTP first.");
-      return;
-    }
+    // if (!hcaGeneratedOTP) {
+    //   setError("Please send HCA OTP first.");
+    //   return;
+    // }
 
     setHcaManual(true);
 
@@ -423,7 +423,8 @@ const handleHCAManualOTP = async () => {
         minute: "2-digit",
       });
     };
-
+const HCPotp=generateOTP()
+setHcaGeneratedOTP(HCPotp)
     const visitDate = formatDate(startDate);
     const startTime = formatTime(startDate);
     const endTime = formatTime(endDate);
@@ -442,15 +443,13 @@ const handleHCAManualOTP = async () => {
     const subject =
       `HCA OTP Status - Yes | ${hcaName} | ${clientName}`;
 
-    const htmlMessage = `
+ 
+const htmlMessage = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 
 <body style="
@@ -470,30 +469,10 @@ const handleHCAManualOTP = async () => {
   ">
 
     <!-- HEADER -->
-
-    <div style="
-      background:#0f766e;
-      padding:18px 25px;
-    ">
-
-      <table
-        width="100%"
-        cellpadding="0"
-        cellspacing="0"
-        border="0"
-      >
+    <div style="background:#0f766e;padding:18px 25px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-
-          <!-- LOGO -->
-
-          <td
-            width="55"
-            valign="middle"
-            style="
-              width:55px;
-              padding-right:12px;
-            "
-          >
+          <td width="55" valign="middle" style="width:55px;padding-right:12px;">
             <img
               src="${logoUrl}"
               alt="Curate Health Care"
@@ -511,13 +490,7 @@ const handleHCAManualOTP = async () => {
             />
           </td>
 
-          <!-- TITLE -->
-
-          <td
-            valign="middle"
-            style="text-align:left;"
-          >
-
+          <td valign="middle" style="text-align:left;">
             <div style="
               color:#ffffff;
               font-size:20px;
@@ -532,47 +505,33 @@ const handleHCAManualOTP = async () => {
               font-size:12px;
               margin-top:4px;
             ">
-              HCA OTP Confirmation
+              New Placement Confirmation
             </div>
-
           </td>
-
         </tr>
       </table>
-
     </div>
 
     <!-- BODY -->
-
     <div style="padding:30px;">
 
-      <p style="
-        font-size:16px;
-        color:#333333;
-      ">
+      <p style="font-size:16px;color:#333333;">
         Dear <strong>${hcaName}</strong>,
       </p>
 
-      <p style="
-        font-size:15px;
-        color:#444444;
-        line-height:1.6;
-      ">
-        You have been assigned as the replacement HCA for
-        <strong>${clientName}</strong>.
+      <p style="font-size:15px;color:#444444;line-height:1.6;">
+        We are pleased to inform you that you have been assigned
+        to a new client, <strong>${clientName}</strong>, through
+        Curate Health Care.
       </p>
 
-      <p style="
-        font-size:15px;
-        color:#444444;
-        line-height:1.6;
-      ">
-        Please confirm that you have attended / received the client
-        and that you are comfortable proceeding with the care assignment.
+      <p style="font-size:15px;color:#444444;line-height:1.6;">
+        Please review the placement details below and confirm that
+        you understand the care requirements and are willing and
+        comfortable to proceed with this assignment.
       </p>
 
-      <!-- ASSIGNMENT DETAILS -->
-
+      <!-- PLACEMENT DETAILS -->
       <div style="
         background:#f0fdfa;
         border:1px solid #ccfbf1;
@@ -581,60 +540,52 @@ const handleHCAManualOTP = async () => {
         margin:20px 0;
       ">
 
-        <h3 style="
-          margin:0 0 15px;
-          color:#0f766e;
-        ">
-          Assignment Details
+        <h3 style="margin:0 0 15px;color:#0f766e;">
+          Placement Details
         </h3>
 
         <p style="margin:8px 0;">
-          <strong>Client:</strong>
-          ${clientName}
+          <strong>Client:</strong> ${clientName}
         </p>
 
         <p style="margin:8px 0;">
-          <strong>Date:</strong>
-          ${visitDate}
+          <strong>Date:</strong> ${visitDate}
         </p>
 
         <p style="margin:8px 0;">
-          <strong>Visit Time:</strong>
-          ${startTime} – ${endTime}
+          <strong>Visit Time:</strong> ${startTime} – ${endTime}
         </p>
 
       </div>
 
       <!-- CONFIRMATION -->
-
-      <h3 style="
-        color:#0f766e;
-        margin-top:25px;
-      ">
-        Confirmation
+      <h3 style="color:#0f766e;margin-top:25px;">
+        Placement Confirmation
       </h3>
 
-      <p style="color:#444;">
+      <p style="color:#444;line-height:1.6;">
         By providing the OTP below, you confirm that:
       </p>
 
-      <ul style="
-        color:#444;
-        line-height:1.7;
-        padding-left:22px;
-      ">
+      <ul style="color:#444;line-height:1.7;padding-left:22px;">
 
         <li>
-          You are willing and comfortable to provide care to the patient.
+          You understand that you have been assigned to the
+          above-mentioned client.
         </li>
 
         <li>
-          You are aware of the care requirements communicated to you.
+          You are willing and comfortable to provide the required care.
         </li>
 
         <li>
-          You know who to contact at Curate if you have any concerns
-          regarding the client, care delivery, working arrangements,
+          You understand the care requirements and working arrangements
+          communicated to you.
+        </li>
+
+        <li>
+          You know whom to contact at Curate if you have any concerns
+          about the client, care delivery, working arrangements,
           or any other issue.
         </li>
 
@@ -645,15 +596,14 @@ const handleHCAManualOTP = async () => {
         </li>
 
         <li>
-          For urgent concerns outside working hours,
-          Curate's 24/7 emergency contact is
+          For urgent concerns outside working hours, Curate's
+          24/7 emergency contact is
           <strong>${emergencyNumber}</strong>.
         </li>
 
       </ul>
 
       <!-- SAFETY NOTICE -->
-
       <div style="
         background:#fff7ed;
         border-left:4px solid #f97316;
@@ -671,17 +621,15 @@ const handleHCAManualOTP = async () => {
           color:#7c2d12;
           line-height:1.5;
         ">
-          If you have any concern about your safety,
-          the patient's condition, the care environment,
-          or your ability to continue the assignment,
-          please contact Curate through the appropriate
-          channel immediately.
+          If you have any concerns about your safety, the patient's
+          condition, the care environment, or your ability to carry
+          out the assignment, please contact Curate through the
+          appropriate channel immediately.
         </p>
 
       </div>
 
       <!-- OTP -->
-
       <div style="
         text-align:center;
         margin:30px 0;
@@ -690,11 +638,7 @@ const handleHCAManualOTP = async () => {
         border-radius:10px;
       ">
 
-        <p style="
-          margin:0 0 10px;
-          color:#555;
-          font-size:14px;
-        ">
+        <p style="margin:0 0 10px;color:#555;font-size:14px;">
           HCA Verification OTP
         </p>
 
@@ -704,24 +648,19 @@ const handleHCAManualOTP = async () => {
           letter-spacing:8px;
           color:#0f766e;
         ">
-          ${hcaGeneratedOTP}
+          ${HCPotp}
         </div>
 
       </div>
 
-      <p style="
-        color:#444;
-        line-height:1.6;
-      ">
-        Please provide the OTP only after you have read and understood
-        the above information and are comfortable proceeding with the
-        assignment.
+      <p style="color:#444;line-height:1.6;">
+        Please provide the OTP only after reviewing the placement
+        details, reading and understanding the confirmation above,
+        and confirming that you are comfortable proceeding with
+        the assignment.
       </p>
 
-      <p style="
-        margin-top:30px;
-        color:#333;
-      ">
+      <p style="margin-top:30px;color:#333;">
         Thank you,<br />
         <strong>Curate Care Team</strong>
       </p>
@@ -729,7 +668,6 @@ const handleHCAManualOTP = async () => {
     </div>
 
     <!-- FOOTER -->
-
     <div style="
       background:#f8fafc;
       padding:20px 30px;
@@ -781,7 +719,9 @@ const handleHCAManualOTP = async () => {
       subject,
       html: htmlMessage,
     });
-  setHcaManualEmailSent(false);
+  setHcaManualEmailSent(true);
+  
+  setHcaOTPSent(true)
    setHcaSending(false);
   
   } catch (error) {
@@ -820,7 +760,9 @@ const handleHCAManualOTP = async () => {
         const emergencyNumber =
           ImpData?.EmergencyNumber ||
           "+91 XXXXX XXXXX";
-    
+
+          const OTP=generateOTP()
+    setClientGeneratedOTP(OTP)
         /*
          * ============================================================
          * DATE / TIME
@@ -1106,7 +1048,7 @@ const subject =
           letter-spacing:8px;
           color:#0f766e;
         ">
-          ${generateOTP()}
+          ${OTP}
         </div>
 
       </div>
@@ -1183,6 +1125,7 @@ const subject =
         }
       );
       setClientManualEmailSent(true);
+      setClientOTPSent(true)
           setClientSending(false);
     
   };
@@ -1734,7 +1677,7 @@ return (
             {/* MANUAL OTP */}
             {/* ================================================= */}
 
-            {clientOTPSent && !clientManual && (
+            
              
 <div>
 
@@ -1755,33 +1698,37 @@ return (
 
                 <div className="flex gap-2">
 
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600" />
+                  {/* <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600" /> */}
 
                   <div className="flex-1">
 
-                    <p className="text-[11px] font-semibold text-yellow-800">
+                    {/* <p className="text-[11px] font-semibold text-yellow-800">
                       OTP not received?
-                    </p>
+                    </p> */}
 
-                    <p className="mt-0.5 text-[10px] leading-4 text-yellow-700">
+                    {/* <p className="mt-0.5 text-[10px] leading-4 text-yellow-700">
                       If there is a technical issue with
                       SMS, Email or WhatsApp, you can view
                       the generated OTP here.
-                    </p>
+                    </p> */}
 
                     <button
                       type="button"
                       onClick={
                         handleClientManualOTP
                       }
-                      className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-yellow-800 underline"
-                    >
+                    className="mt-2 inline-flex h-6 items-center gap-1 px-2 text-[16px] font-medium text-yellow-800 border rounded-md bg-yellow-100 cursor-pointer"
+>
+  <KeyRound className="h-4 w-4" />
+  Send OTP to Admin
+</button>
 
-                      <KeyRound className="h-3.5 w-3.5" />
+                    <p className="mt-0.5 text-[10px] leading-4 text-yellow-700">
+                      If there is a technical issue with
+                      SMS, Email or WhatsApp, you can view
+                      the generated OTP here.
+                    </p> 
 
-                   Send OTP to Admin
-
-                    </button>
 
                   </div>
 
@@ -1789,7 +1736,7 @@ return (
 
               </div>}
   </div>
-            )}
+           
 
             {/* ================================================= */}
             {/* CLIENT OTP INPUT */}
@@ -2096,9 +2043,7 @@ return (
             {/* MANUAL OTP */}
             {/* ================================================= */}
 
-            {hcaOTPSent && (
-
-              <div className="mt-3 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+            
 
        
              {hcaManualEmailSent ?       
@@ -2107,28 +2052,33 @@ return (
              
              <div className="flex gap-2">
 
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600" />
+                  {/* <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600" /> */}
                   <div className="flex-1">
-
+{/* 
                     <p className="text-[11px] font-semibold text-yellow-800">
                       OTP not received?
-                    </p>
+                    </p> */}
+
+                    {/* <p className="mt-0.5 text-[10px] leading-4 text-yellow-700">
+                      If there is a technical issue with
+                      SMS, Email or WhatsApp, you can view
+                      the generated OTP here.
+                    </p> */}
+
+                  <button
+  type="button"
+  onClick={handleHCAManualOTP}
+  className="mt-2 inline-flex h-6 items-center gap-1 px-2 text-[16px] font-medium text-yellow-800 border rounded-md bg-yellow-100 cursor-pointer"
+>
+  <KeyRound className="h-4 w-4" />
+  Send OTP to Admin
+</button>
 
                     <p className="mt-0.5 text-[10px] leading-4 text-yellow-700">
                       If there is a technical issue with
                       SMS, Email or WhatsApp, you can view
                       the generated OTP here.
-                    </p>
-
-                  <button
-  type="button"
-  onClick={handleHCAManualOTP}
-  className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-yellow-800 underline"
->
-  <KeyRound className="h-3.5 w-3.5" />
-  Send OTP to Admin
-</button>
-
+                    </p> 
 
   
 
@@ -2152,9 +2102,7 @@ return (
 
             
 
-              </div>
-
-            )}
+             
 
             {/* ================================================= */}
             {/* GENERATED HCA OTP */}

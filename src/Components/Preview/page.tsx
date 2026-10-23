@@ -94,7 +94,7 @@ const Section = ({
 const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance, ValidationData }) => {
   const dispatch = useDispatch();
   const router = useRouter();
-
+console.log("Check----",ValidationData)
   const reduxData = useSelector(
     (state: any) => state.RegisterdUsersFullInformation
   );

@@ -2609,7 +2609,7 @@ email || "");
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <OTPCard
                   recipient="HCA"
-                  name={hcaName}
+                  name={GetHCPFullName(UserFullInfo,hcaRegistrationNumber)}
                   mode={otpModes.HCA}
                   state={otp.HCA}
                   sending={otpSending === "HCA"}
