@@ -3,9 +3,11 @@
 import { GetHCPFullName } from "@/Lib/Actions";
 import {
   GetDeploymentInfo,
+  GetDeploymentInfoinPreview,
   GetInvoiceInfo,
   GetInvoiceLength,
   GetUserPDRInfo,
+  GetUserPDRInfoinPreview,
   InsertDeployment,
   PostInvoice,
   UpdateHCAnstatus,
@@ -34,6 +36,14 @@ type BadgeListProps = {
   list?: any;
 };
 
+  type OperationStatus = "waiting" | "running" | "completed" | "failed" | "skipped";
+
+type OperationStep = {
+  id: string;
+  label: string;
+  status: OperationStatus;
+  detail?: string;
+};
 function BadgeList({ list }: BadgeListProps) {
   // Normalize data safely
   const safeList: string[] = Array.isArray(list)
@@ -98,6 +108,22 @@ console.log("Check----",ValidationData)
   const reduxData = useSelector(
     (state: any) => state.RegisterdUsersFullInformation
   );
+
+
+const [operationSteps, setOperationSteps] = useState<OperationStep[]>([]);
+const [isSubmitting, setIsSubmitting] = useState(false);
+
+const updateStep = (
+  id: string,
+  status: OperationStatus,
+  detail?: string
+) => {
+  setOperationSteps((prev) =>
+    prev.map((step) =>
+      step.id === id ? { ...step, status, detail } : step
+    )
+  );
+};
   const DeploaymentInformation = useSelector(
     (state: any) => state.DeploaymentData
   );
@@ -256,339 +282,396 @@ console.log("Check----",ValidationData)
 //   };
 
 
+
 const UpdatePDRInfo = async () => {
-  setUpdatingStatus("Please wait ...");
+  if (isSubmitting) return;
+
+  setIsSubmitting(true);
+  setSelectedRecord(true);
+  setUpdatingStatus("Preparing PDR update...");
+
+  const steps: OperationStep[] = [
+    {
+      id: "pdr",
+      label: "Updating PDR information",
+      status: "waiting",
+    },
+    {
+      id: "fetch",
+      label: "Fetching PDR details",
+      status: "waiting",
+    },
+    {
+      id: "counts",
+      label: "Fetching invoice and deployment counts",
+      status: "waiting",
+    },
+    {
+      id: "deployment",
+      label: "Creating deployment",
+      status: "waiting",
+    },
+    {
+      id: "invoice",
+      label: "Creating invoice",
+      status: "waiting",
+    },
+    {
+      id: "status",
+      label: "Updating PDR status",
+      status: "waiting",
+    },
+    {
+      id: "refresh",
+      label: "Refreshing deployment data",
+      status: "waiting",
+    },
+    {
+      id: "redirect",
+      label: "Opening invoices",
+      status: "waiting",
+    },
+  ];
+
+  setOperationSteps(steps);
+
+  const skipStep = (id: string, detail: string) => {
+    updateStep(id, "skipped", detail);
+  };
+
+  const failStep = (
+    id: string,
+    message: string
+  ) => {
+    updateStep(id, "failed", message);
+    setUpdatingStatus(message);
+  };
+
   try {
-    setSelectedRecord(true);
+    // STEP 1: Update PDR information
+    updateStep("pdr", "running", "Saving PDR changes...");
 
-    const updateRes = await UpdatePDR(data.userId, UpdatedData);
+    const updateRes = await UpdatePDR(
+      data.userId,
+      UpdatedData
+    );
+
     if (!updateRes?.success) {
-      setUpdatingStatus("Failed! Try again.");
+      failStep("pdr", "Failed to update PDR information.");
       return;
     }
- 
 
-    const pdrRes = await GetUserPDRInfo( DeploaymentInformation.Client_Id,
-                              DeploaymentInformation.HCA_Id,);
+    updateStep("pdr", "completed", "PDR information saved.");
+
+    // STEP 2: Fetch PDR details
+    updateStep("fetch", "running", "Checking current PDR status...");
+
+    const pdrRes = await GetUserPDRInfoinPreview(
+      DeploaymentInformation.Client_Id,
+      DeploaymentInformation.HCA_Id
+    );
+
     if (!pdrRes?.success || !pdrRes?.data) {
-      setUpdatingStatus("Error fetching PDR info");
+      failStep("fetch", "Failed to fetch PDR details.");
       return;
     }
+
+    updateStep("fetch", "completed", "PDR details retrieved.");
 
     const isNewPDR = pdrRes.data.PDRStatus === false;
 
- 
-    if (isNewPDR) {
-      const [invoiceList, deploymentList] = await Promise.all([
-       GetInvoiceLength(),
-        GetDeploymentInfo(),
-      ]);
+    // EXISTING PDR: No new deployment or invoice
+    if (!isNewPDR) {
+      skipStep("counts", "Not required for an existing PDR.");
+      skipStep("deployment", "No new deployment required.");
+      skipStep("invoice", "No new invoice required.");
+      skipStep("status", "No new PDR status update required.");
+      skipStep("refresh", "No deployment refresh required.");
 
-      const today = new Date();
-      const currentMonth = `${today.getFullYear()}-${today.getMonth() + 1}`;
-
-      const invoiceNo = `#INV_${(invoiceList??0) + 1}_${SearchMonth}_${SearchYear}`;
-      const deploymentInvoice = `BSV${today.getFullYear()}_${(deploymentList?.length ?? 0) + 1}`;
-
-
-      const attendance = [
-        {
-          AttendenceDate: today,
-          HCPAttendence: true,
-          AdminAttendece: true,
-        },
-      ];
-      const ClientAttendece = [
-        {
-          AttendenceDate: today,
-          AttendeceStatus: "Present"
-        }
-      ]
-      const lastDateOfMonth = new Date(
-        today.getFullYear(),
-        today.getMonth() + 1,
-        0
-      ).toLocaleDateString("en-IN");
-
-      const serviceCharge = String(
-        UpdatedData?.serviceCharges || ""
-      ).replace(/,/g, "");
-
-      const deploymentRes = await InsertDeployment(
-        new Date(data.InvoiseInformation
-          .startDate).toLocaleDateString("en-IN"),
-        new Date(data.InvoiseInformation
-          .endDate).toLocaleDateString("en-IN"),
-        "Active",
-        DeploaymentInformation.location,
-        DeploaymentInformation.contact,
-        DeploaymentInformation.name,
-        DeploaymentInformation.PatientName,
-        DeploaymentInformation.Patient_PhoneNumber,
-        DeploaymentInformation.RreferralName,
-        DeploaymentInformation.HCA_Id,
-        DeploaymentInformation.Client_Id,
-        DeploaymentInformation.HCA_Name,
-        DeploaymentInformation.HCAContact,
-        "Google",
-        "Not Provided",
-        "PP",
-        "21000",
-        "700",
-        "1800",
-        serviceCharge,
-        currentMonth,
-        attendance,
-        TimeStampInfo,
-        deploymentInvoice,
-        DeploaymentInformation.Type,
-        data.serviceCharges,
-        ClientAttendece,
-        DeploaymentInformation.ServiceState,
-        ValidationData
-
+      updateStep(
+        "redirect",
+        "running",
+        "Opening the invoices page..."
       );
 
-      if (!deploymentRes?.success) {
-        setUpdatingStatus("Deployment creation failed");
-        return;
-      }
+      setUpdatingStatus("PDR updated successfully. Redirecting...");
 
-      const UpdatedDataWithInvoice = {
-        ...UpdatedData,
-        ServiceStartDate: new Date(data.InvoiseInformation
-          .startDate).toLocaleDateString("en-IN"),
-        ServiceEndDate: new Date(data.InvoiseInformation
-          .endDate).toLocaleDateString("en-IN"),
-        HCAId: data.HCAId,
-        ClientAgreementFront: data.ClientAgreementFront,
-        ClientAgreementBack: data.ClientAgreementBack,
-        ClientAgreementFullPdf:data.ClientAgreementFullPdf,
-        
-ServiceState:DeploaymentInformation.ServiceState
-      }
-      const [invoiceRes, statusRes] = await Promise.all([
-        PostInvoice(UpdatedDataWithInvoice, Advance, invoiceNo),
-        UpdatePdrStatus( DeploaymentInformation.Client_Id,
-                              DeploaymentInformation.HCA_Id,),
-      ]);
+      updateStep("redirect", "completed", "Redirecting to invoices.");
 
-      if (!invoiceRes?.success || !statusRes?.success) {
-        setUpdatingStatus("Invoice or PDR status update failed");
-        return;
-      }
-       
-const ImageLink=data.ClientAgreement||''
-const ClientName=data.FirstName
-//       await axios.post("/api/MailSend", {
-//   to:  "tsiddu805@gmail.com",
-//   subject: "🎉 Registration Successful – Welcome to Curate Health Care Pvt. Ltd.",
-// html: `
-// <div style="background:#eef2f7;padding:30px 10px;font-family:Arial, Helvetica, sans-serif;">
+      setTimeout(() => {
+        router.push("/Invoices");
+      }, 1500);
 
-//   <div style="
-//     max-width:760px;
-//     margin:auto;
-//     background:#ffffff;
-//     border-radius:10px;
-//     overflow:hidden;
-//     border:1px solid #e5e7eb;
-//   ">
+      return;
+    }
 
-//     <!-- WHITE HEADER (LOGO SAFE) -->
-//     <div style="
-//       background:#ffffff;
-//       padding:18px 22px;
-//       border-bottom:1px solid #e5e7eb;
-//     ">
-//       <table style="width:100%;">
-//         <tr>
-//           <td>
-//             <img src="https://curate-pearl.vercel.app/Icons/UpdateCurateLogo.png" style="height:42px;" />
-//           </td>
-//           <td style="text-align:right;font-size:12px;color:#6b7280;">
-//             Curate Health Care Pvt. Ltd.<br/>
-//             Registration Confirmation
-//           </td>
-//         </tr>
-//       </table>
-//     </div>
+    // STEP 3: Get invoice and deployment counts
+    updateStep(
+      "counts",
+      "running",
+      "Retrieving current record counts..."
+    );
 
-//     <!-- MAIN CONTENT -->
-//     <table style="width:100%;border-collapse:collapse;">
-//       <tr>
+    const [invoiceList, deploymentList] = await Promise.all([
+      GetInvoiceLength(),
+      GetDeploymentInfoinPreview(),
+    ]);
 
-//         <!-- LEFT BRAND STRIP -->
-//         <td style="
-//           width:140px;
-//           background:#1392d3;
-//           color:#ffffff;
-//           vertical-align:top;
-//           padding:22px 14px;
-//         ">
-//           <div style="font-size:13px;line-height:20px;">
-//             <strong>Healthcare Services</strong>
-//           </div>
+    updateStep(
+      "counts",
+      "completed",
+      "Record counts retrieved."
+    );
 
-//           <div style="
-//             margin-top:30px;
-//             font-size:12px;
-//             line-height:18px;
-//             opacity:0.9;
-//           ">
-//             Reliable caregiver support and patient care solutions.
-//           </div>
+    // Prepare invoice and deployment information
+    const today = new Date();
 
-//           <!-- STATUS -->
-//           <div style="
-//             margin-top:40px;
-//             background:#50c896;
-//             padding:8px;
-//             text-align:center;
-//             border-radius:6px;
-//             font-size:12px;
-//             font-weight:600;
-//           ">
-//             ACTIVE
-//           </div>
-//         </td>
+    const currentMonth =
+      `${today.getFullYear()}-${today.getMonth() + 1}`;
 
-//         <!-- RIGHT CONTENT -->
-//         <td style="padding:28px 26px;vertical-align:top;">
+    const invoiceNo =
+      `#INV_${(invoiceList ?? 0) + 1}_${SearchMonth}_${SearchYear}`;
 
-//           <!-- TITLE -->
-//           <div style="
-//             font-size:20px;
-//             font-weight:700;
-//             color:#111827;
-//             margin-bottom:6px;
-//           ">
-//             Registration Confirmed
-//           </div>
+    const deploymentInvoice =
+      `BSV${today.getFullYear()}_${deploymentList + 1}`;
 
-//           <div style="
-//             font-size:13px;
-//             color:#6b7280;
-//             margin-bottom:18px;
-//           ">
-//             Your onboarding process has been successfully completed
-//           </div>
+    const attendance = [
+      {
+        AttendenceDate: today,
+        HCPAttendence: true,
+        AdminAttendece: true,
+      },
+    ];
 
-//           <!-- MESSAGE -->
-//           <p style="font-size:14px;color:#374151;line-height:22px;">
-//             Dear <strong>"${ClientName}"</strong>,
-//           </p>
+    const clientAttendance = [
+      {
+        AttendenceDate: today,
+        AttendeceStatus: "Present",
+      },
+    ];
 
-//           <p style="font-size:14px;color:#374151;line-height:22px;">
-//             We are pleased to confirm that your registration with 
-//             <strong>Curate Health Care Pvt. Ltd.</strong> has been successfully completed.
-//           </p>
+    const serviceStartDate = new Date(
+      data.InvoiseInformation.startDate
+    );
 
-//           <p style="font-size:14px;color:#374151;line-height:22px;">
-//             Your account is now active and ready for service engagement.
-//           </p>
+    const serviceEndDate = new Date(
+      data.InvoiseInformation.endDate
+    );
 
-//           <!-- DIVIDER -->
-//           <div style="height:1px;background:#e5e7eb;margin:22px 0;"></div>
+    if (
+      Number.isNaN(serviceStartDate.getTime()) ||
+      Number.isNaN(serviceEndDate.getTime())
+    ) {
+      failStep("deployment", "Invalid service start or end date.");
+      skipStep("invoice", "Stopped because service dates are invalid.");
+      skipStep("status", "Stopped because service dates are invalid.");
+      skipStep("refresh", "Stopped because service dates are invalid.");
+      skipStep("redirect", "Resolve the date error before continuing.");
+      return;
+    }
 
-//           <!-- DETAILS -->
-//           <table style="width:100%;font-size:14px;">
-//             <tr>
-//               <td style="color:#6b7280;">Name</td>
-//               <td style="text-align:right;"><strong>"${ClientName}"</strong></td>
-//             </tr>
-           
-//           </table>
+    const lastDateOfMonth = new Date(
+      today.getFullYear(),
+      today.getMonth() + 1,
+      0
+    ).toLocaleDateString("en-IN");
 
-//           <!-- AGREEMENT -->
-//           <div style="margin-top:26px;">
+    const serviceCharge = String(
+      UpdatedData?.serviceCharges || ""
+    ).replace(/,/g, "");
 
-//             <div style="
-//               font-size:14px;
-//               font-weight:600;
-//               margin-bottom:10px;
-//               color:#111827;
-//             ">
-//               Agreement Document
-//             </div>
+    // STEP 4: Create deployment
+    updateStep(
+      "deployment",
+      "running",
+      "Registering service dates and attendance..."
+    );
 
-//             <div style="
-//               border:1px solid #e5e7eb;
-//               border-radius:8px;
-//               padding:12px;
-//               background:#fafafa;
-//             ">
-//               <img 
-//                 src="${ImageLink}"
-//                 style="width:100%;border-radius:6px;"
-//               />
-//             </div>
+    const deploymentRes = await InsertDeployment(
+      serviceStartDate.toLocaleDateString("en-IN"),
+      serviceEndDate.toLocaleDateString("en-IN"),
+      "Active",
+      DeploaymentInformation.location,
+      DeploaymentInformation.contact,
+      DeploaymentInformation.name,
+      DeploaymentInformation.PatientName,
+      DeploaymentInformation.Patient_PhoneNumber,
+      DeploaymentInformation.RreferralName,
+      DeploaymentInformation.HCA_Id,
+      DeploaymentInformation.Client_Id,
+      DeploaymentInformation.HCA_Name,
+      DeploaymentInformation.HCAContact,
+      "Google",
+      "Not Provided",
+      "PP",
+      "21000",
+      "700",
+      "1800",
+      serviceCharge,
+      currentMonth,
+      attendance,
+      TimeStampInfo,
+      deploymentInvoice,
+      DeploaymentInformation.Type,
+      data.serviceCharges,
+      clientAttendance,
+      DeploaymentInformation.ServiceState,
+      ValidationData
+    );
 
-//             <!-- BUTTON -->
-//             <div style="margin-top:14px;">
-//               <a href="${ImageLink}" target="_blank" style="
-//                 display:inline-block;
-//                 padding:10px 16px;
-//                 background:#ff1493;
-//                 color:#ffffff;
-//                 text-decoration:none;
-//                 border-radius:6px;
-//                 font-size:13px;
-//                 font-weight:600;
-//               ">
-//                 View Agreement
-//               </a>
-//             </div>
+    if (!deploymentRes?.success) {
+      failStep("deployment", "Deployment creation failed.");
+      skipStep("invoice", "Stopped after deployment failure.");
+      skipStep("status", "Stopped after deployment failure.");
+      skipStep("refresh", "Deployment was not confirmed.");
+      skipStep("redirect", "Resolve the deployment error first.");
+      return;
+    }
 
-//           </div>
+    updateStep(
+      "deployment",
+      "completed",
+      "Deployment created successfully."
+    );
 
-//           <!-- FOOT -->
-//           <p style="margin-top:24px;font-size:13px;color:#6b7280;">
-//             For assistance, please contact our support team.
-//           </p>
+    // Prepare invoice data
+    const updatedDataWithInvoice = {
+      ...UpdatedData,
+      ServiceStartDate: serviceStartDate.toLocaleDateString("en-IN"),
+      ServiceEndDate: serviceEndDate.toLocaleDateString("en-IN"),
+      HCAId: data.HCAId,
+      ClientAgreementFront: data.ClientAgreementFront,
+      ClientAgreementBack: data.ClientAgreementBack,
+      ClientAgreementFullPdf: data.ClientAgreementFullPdf,
+      ServiceState: DeploaymentInformation.ServiceState,
+    };
 
-//           <p style="margin-top:16px;font-size:14px;">
-//             <strong style="color:#1392d3;">Curate Health Care Pvt. Ltd.</strong>
-//           </p>
+    // STEP 5: Create invoice
+    updateStep(
+      "invoice",
+      "running",
+      `Creating invoice ${invoiceNo}...`
+    );
 
-//         </td>
-//       </tr>
-//     </table>
+    const invoiceRes = await PostInvoice(
+      updatedDataWithInvoice,
+      Advance,
+      invoiceNo
+    );
 
-//   </div>
+    if (!invoiceRes?.success) {
+      failStep("invoice", "Invoice creation failed.");
+      skipStep("status", "Stopped because invoice creation failed.");
+      skipStep("refresh", "Invoice creation needs attention.");
+      skipStep("redirect", "Resolve the invoice error first.");
+      return;
+    }
 
-// </div>
-// `
-// });
+    updateStep(
+      "invoice",
+      "completed",
+      `Invoice ${invoiceNo} created successfully.`
+    );
 
-      setUpdatingStatus("PDR created successfully. Redirecting With Updated Data...");
-   const userId = localStorage.getItem("UserId");
+    // STEP 6: Update PDR status
+    updateStep(
+      "status",
+      "running",
+      "Updating PDR status..."
+    );
 
-   const  ResultData:any  = await axios.post(
+    const statusRes = await UpdatePdrStatus(
+      DeploaymentInformation.Client_Id,
+      DeploaymentInformation.HCA_Id
+    );
+
+    if (!statusRes?.success) {
+      failStep("status", "PDR status update failed.");
+      skipStep("refresh", "PDR status update needs attention.");
+      skipStep("redirect", "Resolve the status error first.");
+      return;
+    }
+
+    updateStep(
+      "status",
+      "completed",
+      "PDR status updated successfully."
+    );
+
+    // STEP 7: Refresh deployment information
+    updateStep(
+      "refresh",
+      "running",
+      "Refreshing dashboard deployment data..."
+    );
+
+    const userId = localStorage.getItem("UserId");
+
+    const resultData =await axios.post(
   "/api/AdminPageInfo",
   {
     userId,
     Month: `${SearchYear}-${SearchYear}`,
+  refreshType: "deployment",
   }
 );
+dispatch(SetDeploymentInfo(data.data.deployedLength));
+    updateStep(
+      "refresh",
+      "completed",
+      "Deployment data refreshed successfully."
+    );
 
+    // STEP 8: Redirect
+    updateStep(
+      "redirect",
+      "running",
+      "Preparing the invoices page..."
+    );
 
+    setUpdatingStatus(
+      "PDR created successfully. Redirecting to invoices..."
+    );
 
+    updateStep(
+      "redirect",
+      "completed",
+      "All requested operations completed."
+    );
 
-    dispatch(SetDeploymentInfo(ResultData.data.deployedLength));
-      setTimeout(() => router.push("/Invoices"), 1500);
-      return;
-    }
-
-  
-    setUpdatingStatus("PDR updated successfully. Redirecting...");
-    setTimeout(() => router.push("/Invoices"), 1500);
+    setTimeout(() => {
+      router.push("/Invoices");
+    }, 1500);
 
   } catch (error) {
-    console.error(error);
-    setUpdatingStatus("Something went wrong!");
+    console.error("[UpdatePDRInfo] Failed:", error);
+
+    setUpdatingStatus(
+      "An unexpected error occurred. Check the failed operation."
+    );
+
+    setOperationSteps((previous) => {
+      const runningIndex = previous.findIndex(
+        (step) => step.status === "running"
+      );
+
+      if (runningIndex === -1) return previous;
+
+      return previous.map((step, index) =>
+        index === runningIndex
+          ? {
+              ...step,
+              status: "failed",
+              detail: "The operation failed unexpectedly.",
+            }
+          : step
+      );
+    });
+  } finally {
+    setIsSubmitting(false);
   }
 };
+
 
 
 
@@ -829,74 +912,120 @@ const ClientName=data.FirstName
       </div>
 
       {selectedRecord && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-[90%] max-w-md">
-            <div className="flex flex-col items-center justify-center">
-            
-
-{!isSuccess ? (
-  <>
-    <div className="relative h-14 w-14 mb-6">
-      <div className="h-full w-full border-4 border-gray-300 rounded-full"></div>
-      <div className="absolute inset-0 border-4 border-gray-700 border-t-transparent rounded-full animate-spin"></div>
-    </div>
-
-    <p className="text-lg font-semibold text-gray-700 animate-pulse">
-      {UpdatingStatus}
-    </p>
-  </>
-) : (
-  <div className="flex flex-col items-center animate-[fadeIn_0.4s_ease-in-out]">
-   {UpdatingStatus === "Please wait ..." ? (
-  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-100">
-    <svg
-      className="h-8 w-8 animate-spin text-blue-600"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
+     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div
+      className="w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pdr-popup-title"
     >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-      />
-    </svg>
-  </div>
-) : (
-  <div className="mb-3 flex h-14 w-14 animate-[scaleIn_0.3s_ease-out] items-center justify-center rounded-full bg-green-100">
-    <svg
-      className="h-8 w-8 text-green-600"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M5 13l4 4L19 7"
-      />
-    </svg>
-  </div>
-)}
+      {/* Header */}
+      <div className="border-b border-gray-100 px-5 py-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50">
+              {operationSteps.some(
+                (step) => step.status === "running"
+              ) ? (
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+              ) : (
+                <span className="text-lg font-bold text-blue-600">
+                  ✓
+                </span>
+              )}
+            </div>
 
-    <p className="text-xl font-bold text-green-600 text-center">
-      {UpdatingStatus}
-    </p>
-  </div>
-)}
-
+            <div>
+              <h2
+                id="pdr-popup-title"
+                className="text-base font-bold text-gray-900"
+              >
+                Processing PDR
+              </h2>
+              <p className="mt-1 text-xs text-gray-500">
+                Please keep this window open while we process your request.
+              </p>
             </div>
           </div>
+
+         
         </div>
+      </div>
+
+      {/* Operation Steps */}
+      <div className="max-h-[55vh] space-y-4 overflow-y-auto px-5 py-5">
+        {operationSteps.map((step, index) => (
+          <div key={step.id} className="flex items-start gap-3">
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+              {step.status === "completed" ? (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-700">
+                  ✓
+                </span>
+              ) : step.status === "failed" ? (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-xs font-bold text-red-700">
+                  ✕
+                </span>
+              ) : step.status === "running" ? (
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+              ) : (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-[10px] text-gray-400">
+                  {index + 1}
+                </span>
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1 pb-1">
+              <p
+                className={`text-sm font-semibold ${
+                  step.status === "failed"
+                    ? "text-red-600"
+                    : step.status === "completed"
+                    ? "text-green-700"
+                    : step.status === "running"
+                    ? "text-blue-700"
+                    : "text-gray-500"
+                }`}
+              >
+                {step.label}
+              </p>
+
+              {step.detail && (
+                <p
+                  className={`mt-1 break-words text-xs leading-5 ${
+                    step.status === "failed"
+                      ? "text-red-600"
+                      : "text-gray-500"
+                  }`}
+                >
+                  {step.detail}
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-gray-100 bg-gray-50 px-5 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-gray-500">
+            {operationSteps.some(
+              (step) => step.status === "failed"
+            )
+              ? "Processing encountered an error."
+              : operationSteps.length > 0 &&
+                operationSteps.every(
+                  (step) => step.status === "completed"
+                )
+              ? "All operations completed successfully."
+              : "Please wait..."}
+          </p>
+
+          
+        </div>
+      </div>
+    </div>
+  </div>
       )}
     </div>
   );

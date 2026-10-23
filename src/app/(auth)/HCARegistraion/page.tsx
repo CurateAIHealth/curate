@@ -661,7 +661,7 @@ const HEIGHT_OPTIONS = Array.from(
 
 const payment = Number(form.PaymentforStaff);
 
-if (!form.PaymentforStaff?.trim() || payment <= 0) {
+if (payment <= 0) {
   alert("Payment for staff must be greater than 0.");
   return;
 }

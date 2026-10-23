@@ -449,25 +449,25 @@ const GetMonthFreshData = async (r: string) => {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
         <SummaryCard
-          title="Total Reviews"
+          title="Total Clients"
         value={googleReviews.length}
           color="#1392d3"
         />
 
         <SummaryCard
-          title="Pending Review"
+          title="Pending Client Review"
           value={pendingCount}
           color="#ff1493"
         />
 
         <SummaryCard
-          title="Completed Review"
+          title="Completed Client Review"
           value={completedCount}
           color="#50c896"
         />
 
         <SummaryCard
-          title="Review Rate"
+          title="Client Review Rate"
         value={
   googleReviews.length
     ? `${Math.round(
@@ -495,7 +495,7 @@ const GetMonthFreshData = async (r: string) => {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
             {/* Left */}
-            <div>
+            {/* <div>
 
               <h2 className="flex items-center gap-2 text-lg font-bold text-slate-800">
 
@@ -512,7 +512,7 @@ const GetMonthFreshData = async (r: string) => {
                 Track pending and completed Google reviews 
               </p>
 
-            </div>
+            </div> */}
             <LoadingPopup
               open={isSwitchingMonth}
               title="Switching Month"
