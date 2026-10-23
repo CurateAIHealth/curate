@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 export default function BulkMessagePage() {
   const [tab, setTab] = useState<
-  "clients" | "hcas" | "leads" | "others"|"Employees"
+  "clients" | "HCP" | "leads" | "others"|"Employees"
 >("clients");
 const [communicationType, setCommunicationType] =
 useState<"email" | "whatsapp" | "both">("email");
@@ -313,7 +313,7 @@ const filteredLeads = useMemo(() => {
 const selectedCount =
   tab === "clients"
     ? filteredClients.length
-    : tab === "hcas"
+    : tab === "HCP"
     ? filteredHCAs.length
     : tab === "leads"
     ? filteredLeads.length
@@ -329,7 +329,7 @@ const SendEmail = async () => {
     const recipients =
   tab === "clients"
     ? filteredClients
-    : tab === "hcas"
+    : tab === "HCP"
     ? filteredHCAs
     : tab === "leads"
     ? filteredLeads
@@ -508,7 +508,7 @@ const sendWhatsAppMessages = () => {
       }));
       break;
 
-    case "hcas":
+    case "HCP":
       recipients = filteredHCAs.map((item: any) => ({
         phone: item.Phone,
         name: item.name,
@@ -712,14 +712,14 @@ const openNextWhatsApp = () => {
   </button>
 
   <button
-    onClick={() => setTab("hcas")}
+    onClick={() => setTab("HCP")}
     className={`flex-1 sm:flex-none min-w-[110px] px-5 py-3 rounded-xl font-medium transition-all cursor-pointer ${
-      tab === "hcas"
+      tab === "HCP"
         ? "bg-[#50c896] text-white shadow"
         : "text-slate-600 hover:bg-slate-100"
     }`}
   >
-    HCAs
+    HCPs
   </button>
 
   <button
@@ -878,10 +878,10 @@ const openNextWhatsApp = () => {
         </>
       )}
 
-      {tab === "hcas" && (
+      {tab === "HCP" && (
         <>
           <p className="font-medium text-slate-700 mb-3">
-            HCA Status
+            HCP Status
           </p>
 
           {[
@@ -1047,7 +1047,7 @@ const openNextWhatsApp = () => {
   ))}
 
   {/* HCAs */}
-  {tab === "hcas" &&
+  {tab === "HCP" &&
     filteredHCAs.map((hcp:any) => (
       <div
         key={hcp._id}
@@ -1093,7 +1093,7 @@ const openNextWhatsApp = () => {
         </div>
 
         <span className="px-3 py-1 rounded-full bg-violet-50 text-violet-700 text-xs font-semibold border border-violet-200">
-          HCA
+          HCP
         </span>
       </div>
     ))}
