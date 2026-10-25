@@ -21,6 +21,8 @@ const DEFAULT_PROFILE_PIC = '/Icons/DefaultProfileIcon.png';
 const DEFAULT_DOCUMENT_ICON = '/Icons/DefaultDocumentIcon.png';
 
 export default function DoctorProfileForm() {
+  const [warningPopup, setWarningPopup] = useState('');
+  const showWarningPopup = (message: string) => setWarningPopup(message);
   const [ProfileName, SetProfileName] = useState('');
   const [isOther, setIsOther] = useState(false);
   const [IsOtherReferal, setIsOtherReferal] = useState(false);
@@ -591,14 +593,14 @@ const isOtherSelected = form.professionalSkill.includes("Other");
 
 
       if (file.size > 10 * 1024 * 1024) {
-        alert('File too large. Max allowed is 10MB.');
+        showWarningPopup('File too large. Max allowed is 10MB.');
         return;
       }
 
 
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/ogg', 'application/pdf',];
       if (!allowedTypes.includes(file.type)) {
-        alert('Only image or video files are allowed.');
+        showWarningPopup('Only image or video files are allowed.');
         return;
       }
 
@@ -653,28 +655,75 @@ const HEIGHT_OPTIONS = Array.from(
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      const payment = Number(form.PaymentforStaff);
+if (payment <= 0) {
+  showWarningPopup("Payment for staff must be greater than 0.");
+  return;
+}
+      const controls = Array.from(
+        e.currentTarget.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+          "input, select, textarea"
+        )
+      ).filter((control) => {
+        const type = control instanceof HTMLInputElement ? control.type : "";
+        return (
+          !control.disabled &&
+          type !== "hidden" &&
+          type !== "button" &&
+          type !== "submit" &&
+          type !== "reset" &&
+          control.getClientRects().length > 0
+        );
+      });
+
+      const checkedGroups = new Set<string>();
+      for (const control of controls) {
+        if (
+          control instanceof HTMLInputElement &&
+          (control.type === "checkbox" || control.type === "radio")
+        ) {
+          const groupKey = `${control.type}:${control.name || control.id}`;
+          if (checkedGroups.has(groupKey)) continue;
+          checkedGroups.add(groupKey);
+
+          const group = controls.filter(
+            (item): item is HTMLInputElement =>
+              item instanceof HTMLInputElement &&
+              item.type === control.type &&
+              (control.name ? item.name === control.name : item.id === control.id)
+          );
+          if (group.some((item) => item.checked)) continue;
+
+          showWarningPopup(`Please complete ${control.name || "all required fields"}.`);
+          control.focus();
+          return;
+        }
+
+        if (!control.value.trim()) {
+          showWarningPopup(`Please complete ${control.getAttribute("placeholder") || control.name || "all required fields"}.`);
+          control.focus();
+          return;
+        }
+      }
 
       if(form.emailId==="admin@curatehealth.in"){
-        alert("Your Useing AdminEmail.")
+        showWarningPopup("Your Useing AdminEmail.")
         return
       }
 
-const payment = Number(form.PaymentforStaff);
 
-if (payment <= 0) {
-  alert("Payment for staff must be greater than 0.");
-  return;
-}
+
+
 
       if (CurrentUserType === null) {
-        alert("UserType Not Selected");
+        showWarningPopup("UserType Not Selected");
         return;
       }
 
 
 
            if (form.gender  === "") {
-        alert("Gender Not Selected");
+        showWarningPopup("Gender Not Selected");
         return;
       }
 
@@ -688,7 +737,7 @@ if (payment <= 0) {
           if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
 
           if (age < 18) {
-            alert("❌ Cannot submit. Age must be at least 18 years.");
+            showWarningPopup("❌ Cannot submit. Age must be at least 18 years.");
             SetUpdateingStatus(true);
             return;
           }
@@ -712,7 +761,7 @@ const isAnyFieldEmpty = requiredFields.some(
 const isReasonEmpty = ReasonValue.trim() === "";
 
 if (!isAnyFieldEmpty && !isReasonEmpty) {
-  alert(
+  showWarningPopup(
     "Upload all the required documents OR provide a reason for not uploading them."
   );
   SetUpdateingStatus(true);
@@ -1050,6 +1099,22 @@ if (CurrentUserType === null) {
   return (
 
     <div className=" md:flex md:min-h-[100vh] md:h-[86.5vh] bg-white flex-col items-center justify-center overflow-hidden">
+      {warningPopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" role="alertdialog" aria-modal="true" aria-labelledby="warning-popup-title">
+          <div className="w-full max-w-sm rounded-2xl border border-amber-200 bg-white p-6 shadow-2xl">
+            <h2 id="warning-popup-title" className="mb-2 text-lg font-semibold text-amber-800">Warning</h2>
+            <p className="text-sm text-gray-700">{warningPopup}</p>
+            <button
+              type="button"
+              autoFocus
+              onClick={() => setWarningPopup('')}
+              className="mt-5 rounded-lg bg-amber-600 px-5 py-2 text-sm font-semibold text-white hover:bg-amber-700"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
       <header className="w-full    px-2">
         <div className="bg-white border border-gray-200 rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-500">
 
@@ -4099,7 +4164,7 @@ form.HusbendContact!=="Not Available"&&
              <div className="flex flex-col gap-1">
 
   <input
-    type="number"
+    type="text"
     required
     name="PaymentforStaff"
     value={form.PaymentforStaff || ''}
