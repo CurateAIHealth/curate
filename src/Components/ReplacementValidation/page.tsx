@@ -189,7 +189,25 @@ export default function HCAReplacement({
 
   const [companyConcern, setCompanyConcern] = useState<YesNo>("");
   const [companyConcernNote, setCompanyConcernNote] = useState("");
- const [ActionStatusMessage, SetActionStatusMessage] = useState<any>("");
+const [ActionStatusMessage, SetActionStatusMessage] = useState<string>("");
+
+const [isReplacementUpdating, setIsReplacementUpdating] =
+  useState(false);
+       const SearchMonth = useSelector((state: any) => state.FilterMonth);
+       const SearchYear = useSelector((state: any) => state.FilterYear);
+const [replacementStep, setReplacementStep] = useState(0);
+
+const [replacementStatusType, setReplacementStatusType] =
+  useState<"info" | "success" | "error">("info");
+
+const replacementSteps = [
+  "Validate replacement details",
+  "Verify logged-in user",
+  "Update replacement reason",
+  "Update HCP statuses",
+  "Save replacement information",
+  "Refresh dashboard data",
+];
   const [leavingMode, setLeavingMode] = useState<LeavingMode>("");
   const [otherLeavingMode, setOtherLeavingMode] = useState("");
  const [replacementReasons, setReplacementReasons] = useState<string[]>([
@@ -1589,181 +1607,228 @@ AdminUI?.scrollIntoView({behavior:'smooth'})
 
   
 
-   const UpdateReplacement = async (
-      Available_HCP: any,
-      Exsting_HCP: any
-    ) => {
-      try {
-        SetActionStatusMessage("Please wait...");
-  
-        // Price validation
-        if (Available_HCP?.HCPPrice === "Not Provided") {
-          SetActionStatusMessage("");
-          setShowReassignmentPopUp(false);
-          setShowCareTakerPriceUpdate(true);
-          return;
-        }
-  
-        // Basic validation
-        if (!Available_HCP?.userId || !Exsting_HCP?.HCA_Id) {
-          SetActionStatusMessage("Invalid HCP information.");
-          return;
-        }
-  
-        const localValue = localStorage.getItem("UserId");
-  
-        if (!localValue?.trim()) {
-          SetActionStatusMessage(
-            "User session expired. Please login again."
-          );
-          return;
-        }
-  
-        // Get logged-in user information
-        const Sign_in_UserInfo: any =
-          await GetUserInformation(localValue);
-  
-        if (!Sign_in_UserInfo) {
-          SetActionStatusMessage(
-            "Unable to fetch user details."
-          );
-          return;
-        }
-  
-        // Update replacement reason
-        const postReasonRes = await UpdateReason(
-          Available_HCP.userId,
-          Exsting_HCP.HCA_Id,
-          selectedReason,
-          otherReason,
-          endDate,
-          endTime
-        );
-  
-        if (!postReasonRes?.success) {
-          SetActionStatusMessage(
-            "Failed to update replacement reason."
-          );
-          return;
-        }
-       
-          const ExistingHCPStatusUpdate = await UpdateUserCurrentstatusInHCPView(
-            Exsting_HCP.HCA_Id,
-            UpdatedCareTakerStatus?.trim() || "Bench",
-            loggedInEmail
-          )
-          if (!ExistingHCPStatusUpdate?.success) {
-            SetActionStatusMessage(
-              ExistingHCPStatusUpdate?.message ||
-              "Replacement was created, but existing HCP status could not be updated."
-            );
-            return;
-          }
-        
-  
-  
-  
-  
-        const AvailableHCPStatusUpdate = await UpdateUserCurrentstatusInHCPView(
-          Available_HCP.userId,
-          "Active",
-          loggedInEmail
-        )
-        const ImpReplacementInformation = {
-          LeavingMode: leavingMode,
-          otherLeavingMode: otherLeavingMode,
-          privacyConfirmed: privacyConfirmed ? "Yes" : "No",
-          clientConcern: clientConcern,
-          clientConcernNote: clientConcernNote,
-          companyConcern: companyConcern,
-          companyConcernNote: companyConcernNote,
-          checkDone:checkDone
 
-        }
-  
-        const TimeStampData = `${Sign_in_UserInfo?.FirstName || ""} ${Sign_in_UserInfo?.LastName || ""
-          }, Email: ${Sign_in_UserInfo?.Email || ""}`;
-  
-        // Update replacement data
-        const UpdateReplacmentInfo =
-          await UpdateReplacmentData(
-            Available_HCP,
-            Exsting_HCP,
-            TimeStampData,
-            endDate,
-            endTime,
-            selectedCase.Client_Id,
-            selectedCase.Month,
-            selectedCase.name,
-            selectedCase.HCA_Name,
-            selectedCase.StartDate,
-            otp,
-            ImpReplacementInformation
-  
-          );
-  
-        if (!UpdateReplacmentInfo?.success) {
-          SetActionStatusMessage(
-            "Replacement update failed."
-          );
-          return;
-        }
-  
-  
-  
-  
-  
-  
-  
-        if (!AvailableHCPStatusUpdate?.success) {
-          SetActionStatusMessage(
-            AvailableHCPStatusUpdate?.message ||
-            "Replacement was updated, but available HCP status could not be updated."
-          );
-          return;
-        }
-        SetActionStatusMessage(
-          "Replacement Updated, Please Wait Fetching Updated Data..."
-        );
-  
-        const userId = localStorage.getItem("UserId");
-  
-        if (userId) {
-          const { data } = await axios.post(
-            "/api/AdminPageInfo",
-            {
-              userId,
-              refreshType: [
-                "registeredUsers",
-                "deployment",
-              ],
-            }
-          );
-  
-  
-  
-          dispatch(
-            SetDeploymentInfo(
-              data?.data?.deployedLength || 0
-            )
-          );
-        }
-  
-        setTimeout(() => {
-         onShowChange(false)
-        }, 400);
-      } catch (err: any) {
-        console.error(
-          "UpdateReplacement Error:",
-          err?.response?.data || err
-        );
-  
-        SetActionStatusMessage(
-          err?.message ||
-          "Something went wrong. Please try again."
-        );
-      }
+
+   
+const UpdateReplacement = async (
+  Available_HCP: any,
+  Exsting_HCP: any
+) => {
+  // Prevent duplicate submissions
+  if (isReplacementUpdating) return;
+
+  setIsReplacementUpdating(true);
+  setReplacementStep(0);
+  setReplacementStatusType("info");
+  SetActionStatusMessage("Preparing replacement update...");
+
+  const updateProgress = (step: number, message: string) => {
+    setReplacementStep(step);
+    setReplacementStatusType("info");
+    SetActionStatusMessage(message);
+  };
+
+  const showError = (message: string) => {
+    setReplacementStatusType("error");
+    SetActionStatusMessage(message);
+  };
+
+  try {
+    // STEP 1: Validate replacement details
+    updateProgress(1, "Step 1/6: Validating replacement details...");
+
+    if (Available_HCP?.HCPPrice === "Not Provided") {
+      SetActionStatusMessage(
+        "Please update the available HCP salary before continuing."
+      );
+
+      setShowReassignmentPopUp(false);
+      setShowCareTakerPriceUpdate(true);
+      return;
+    }
+
+    if (!Available_HCP?.userId || !Exsting_HCP?.HCA_Id) {
+      showError("Invalid HCP information. Please select the HCPs again.");
+      return;
+    }
+
+    if (!selectedCase?.Client_Id) {
+      showError("Client information is missing. Please reopen the replacement.");
+      return;
+    }
+
+    // STEP 2: Verify logged-in user
+    updateProgress(2, "Step 2/6: Verifying logged-in user...");
+
+    const localValue = localStorage.getItem("UserId");
+
+    if (!localValue?.trim()) {
+      showError("Your session has expired. Please log in again.");
+      return;
+    }
+
+    const Sign_in_UserInfo: any =
+      await GetUserInformation(localValue);
+
+    if (!Sign_in_UserInfo) {
+      showError("Unable to fetch user details. Please try again.");
+      return;
+    }
+
+    // STEP 3: Update replacement reason
+    updateProgress(3, "Step 3/6: Updating replacement reason...");
+
+    const postReasonRes = await UpdateReason(
+      Available_HCP.userId,
+      Exsting_HCP.HCA_Id,
+      selectedReason,
+      otherReason,
+      endDate,
+      endTime
+    );
+
+    if (!postReasonRes?.success) {
+      showError(
+        postReasonRes?.message ||
+          "Failed to update replacement reason."
+      );
+      return;
+    }
+
+    // STEP 4: Update existing HCP status
+    updateProgress(
+      4,
+      "Step 4/6: Updating existing HCP status..."
+    );
+
+    const ExistingHCPStatusUpdate =
+      await UpdateUserCurrentstatusInHCPView(
+        Exsting_HCP.HCA_Id,
+        UpdatedCareTakerStatus?.trim() || "Bench",
+        loggedInEmail
+      );
+
+    if (!ExistingHCPStatusUpdate?.success) {
+      showError(
+        ExistingHCPStatusUpdate?.message ||
+          "Failed to update the existing HCP status."
+      );
+      return;
+    }
+
+    // STEP 4 continued: Update available HCP status
+    updateProgress(
+      4,
+      "Step 4/6: Activating the replacement HCP..."
+    );
+
+    const AvailableHCPStatusUpdate =
+      await UpdateUserCurrentstatusInHCPView(
+        Available_HCP.userId,
+        "Active",
+        loggedInEmail
+      );
+
+    if (!AvailableHCPStatusUpdate?.success) {
+      showError(
+        AvailableHCPStatusUpdate?.message ||
+          "Failed to activate the replacement HCP."
+      );
+      return;
+    }
+
+    // Prepare replacement information
+    const ImpReplacementInformation = {
+      LeavingMode: leavingMode,
+      otherLeavingMode: otherLeavingMode,
+      privacyConfirmed: privacyConfirmed ? "Yes" : "No",
+      clientConcern,
+      clientConcernNote,
+      companyConcern,
+      companyConcernNote,
+      checkDone,
     };
+
+    const TimeStampData = `${Sign_in_UserInfo?.FirstName || ""} ${
+      Sign_in_UserInfo?.LastName || ""
+    }, Email: ${Sign_in_UserInfo?.Email || ""}`;
+
+    // STEP 5: Save replacement information
+    updateProgress(
+      5,
+      "Step 5/6: Saving replacement information..."
+    );
+
+    const UpdateReplacmentInfo = await UpdateReplacmentData(
+      Available_HCP,
+      Exsting_HCP,
+      TimeStampData,
+      endDate,
+      endTime,
+      selectedCase.Client_Id,
+      selectedCase.Month,
+      selectedCase.name,
+      selectedCase.HCA_Name,
+      selectedCase.StartDate,
+      otp,
+      ImpReplacementInformation
+    );
+
+    if (!UpdateReplacmentInfo?.success) {
+      showError(
+        UpdateReplacmentInfo?.message ||
+          "Failed to save replacement information."
+      );
+      return;
+    }
+
+    // STEP 6: Refresh dashboard data
+    updateProgress(
+      6,
+      "Step 6/6: Replacement saved. Refreshing dashboard data..."
+    );
+
+    const userId = localStorage.getItem("UserId");
+ const MonthInfo = `${SearchYear}-${SearchMonth}`;
+    if (userId) {
+      const { data } = await axios.post("/api/AdminPageInfo", {
+        userId,
+        Month: MonthInfo,
+        refreshType: ["registeredUsers", "deployment"],
+      });
+
+      dispatch(
+        SetDeploymentInfo(data?.data?.deployedLength || 0)
+      );
+    }
+
+    // SUCCESS
+    setReplacementStatusType("success");
+    setReplacementStep(6);
+
+    SetActionStatusMessage(
+      "Replacement completed successfully! Dashboard data has been refreshed."
+    );
+
+    setTimeout(() => {
+      onShowChange(false);
+    }, 800);
+  } catch (err: any) {
+    console.error(
+      "UpdateReplacement Error:",
+      err?.response?.data || err
+    );
+
+    showError(
+      err?.response?.data?.message ||
+        err?.message ||
+        "Something went wrong while updating the replacement. Please check and try again."
+    );
+  } finally {
+    setIsReplacementUpdating(false);
+  }
+};
+
  const GetHCPGender = (A: any) => {
     if (!UserFullInfo?.length || !A) return "Not Entered";
 
@@ -2466,7 +2531,7 @@ email || "");
                   </div>
                 </div>
 
-                {checkDone === "Yes" && (
+                {/* {checkDone === "Yes" && (
                   <>
                     <div className="mt-5 rounded-xl border border-[#BFEBDD] bg-[#F1FCF8] p-4">
                       <div className="flex items-center gap-2 mb-2">
@@ -2499,7 +2564,7 @@ email || "");
                       </div>
                     </div>
                   </>
-                )}
+                )} */}
               </div>
             </section>
 
@@ -2726,11 +2791,181 @@ email || "");
                 </div>
               )}
             </section>
-          {ActionStatusMessage&&
-<div className="rounded-xl border border-teal-300 bg-teal-100 p-3 text-sm text-center font-medium text-teal-800 shadow-sm">
-  {ActionStatusMessage}
-</div>}
-            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-5 border-t border-slate-200">
+  {ActionStatusMessage && (
+  <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
+
+    <div
+      className={`w-full max-w-lg rounded-2xl border p-5 sm:p-6 shadow-2xl animate-in fade-in zoom-in duration-200 ${
+        replacementStatusType === "success"
+          ? "border-green-300 bg-green-50 text-green-800"
+          : replacementStatusType === "error"
+          ? "border-red-300 bg-red-50 text-red-800"
+          : "border-teal-300 bg-white text-slate-800"
+      }`}
+      role="status"
+      aria-live="polite"
+    >
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        {isReplacementUpdating ? (
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-teal-100">
+            <div className="h-7 w-7 animate-spin rounded-full border-4 border-teal-600 border-t-transparent" />
+          </div>
+        ) : replacementStatusType === "success" ? (
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-100 text-2xl text-green-700">
+            ✓
+          </div>
+        ) : replacementStatusType === "error" ? (
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100 text-2xl text-red-700">
+            !
+          </div>
+        ) : null}
+
+        <div className="min-w-0 flex-1">
+          <h3 className="text-lg font-bold">
+            {replacementStatusType === "success"
+              ? "Replacement Completed"
+              : replacementStatusType === "error"
+              ? "Replacement Failed"
+              : "Processing Replacement"}
+          </h3>
+
+          <p className="mt-1 text-sm opacity-80">
+            {ActionStatusMessage}
+          </p>
+        </div>
+        <img
+                    src="/Icons/Curate-logoq.png"
+                    alt="Curate Logo"
+                    className="h-10"
+                  />
+      </div>
+
+      {/* Progress */}
+      {replacementStep > 0 && (
+        <div className="mt-6 space-y-4">
+          <div className="flex items-center justify-between text-sm font-medium">
+            <span>Operation Progress</span>
+            <span>
+              {Math.round(
+                (replacementStep / replacementSteps.length) * 100
+              )}%
+            </span>
+          </div>
+
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                replacementStatusType === "success"
+                  ? "bg-green-500"
+                  : replacementStatusType === "error"
+                  ? "bg-red-500"
+                  : "bg-teal-600"
+              }`}
+              style={{
+                width: `${
+                  (replacementStep / replacementSteps.length) * 100
+                }%`,
+              }}
+            />
+          </div>
+
+          {/* Step List */}
+          <div className="space-y-3 pt-2">
+            {replacementSteps.map((step, index) => {
+              const stepNumber = index + 1;
+              const isComplete = stepNumber < replacementStep;
+              const isCurrent = stepNumber === replacementStep;
+
+              return (
+                <div
+                  key={step}
+                  className={`flex items-center gap-3 text-sm ${
+                    isCurrent
+                      ? "font-semibold text-teal-700"
+                      : "text-slate-500"
+                  }`}
+                >
+                  <span
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
+                      isComplete
+                        ? "border-green-500 bg-green-500 text-white"
+                        : isCurrent
+                        ? "border-teal-600 bg-teal-600 text-white"
+                        : "border-slate-300 bg-white text-slate-500"
+                    }`}
+                  >
+                    {isComplete ? "✓" : stepNumber}
+                  </span>
+
+                  <span className="flex-1">{step}</span>
+
+                  {isCurrent && isReplacementUpdating && (
+                    <span className="text-xs text-teal-600">
+                      Processing...
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Close button only when processing has finished */}
+      {!isReplacementUpdating && (
+        <div className="mt-6 flex justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              SetActionStatusMessage("");
+              setReplacementStep(0);
+            }}
+            className="rounded-xl bg-slate-800 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
+          >
+            {replacementStatusType === "success" ? "Done" : "Close"}
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+<div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-5 border-t border-slate-200">
+  <button
+    type="button"
+    onClick={() => onShowChange(false)}
+    disabled={isReplacementUpdating}
+    className="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-200 bg-white text-slate-600 font-semibold text-sm hover:bg-slate-50 transition disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    Cancel
+  </button>
+
+  <button
+    type="button"
+    onClick={() => UpdateReplacement(selectedHCP, selectedCase)}
+    disabled={
+      isReplacementUpdating ||
+      otp.HCA.verified !== true ||
+      otp.CLIENT.verified !== true ||
+      !privacyConfirmed
+    }
+    className="w-full sm:w-auto px-7 py-3 rounded-xl bg-[#145DA0] hover:bg-[#0F4C81] text-white font-semibold text-sm shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    {isReplacementUpdating && (
+      <span className="inline-block mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent align-middle" />
+    )}
+
+    {isReplacementUpdating
+      ? "Processing Replacement..."
+      : "Submit Replacement"}
+  </button>
+</div>
+
+
+
+
+            {/* <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-5 border-t border-slate-200">
               <button
                 type="button"
                 onClick={() => onShowChange(false)}
@@ -2747,7 +2982,7 @@ email || "");
               >
                 Submit Replacement
               </button>
-            </div>
+            </div> */}
           </div>
         )}
       </div>
