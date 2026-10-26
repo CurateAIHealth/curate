@@ -615,7 +615,9 @@ const UpdatePDRInfo = async () => {
   refreshType: "deployment",
   }
 );
-dispatch(SetDeploymentInfo(data.data.deployedLength));
+
+console.log("Check For Updated Data-----",resultData)
+dispatch(SetDeploymentInfo(resultData .data.deployedLength));
     updateStep(
       "refresh",
       "completed",

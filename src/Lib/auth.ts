@@ -2890,20 +2890,10 @@ export const InsertGoogleReview = async (
 };
 
 export const GetGoogleReview = async (
-  ImportedMonth: string
 ) => {
   try {
     // Validate month
-    if (
-      !ImportedMonth ||
-      typeof ImportedMonth !== "string"
-    ) {
-      return {
-        success: false,
-        error: "Valid month is required",
-        data: [],
-      };
-    }
+  
 
     const client = await clientPromise;
 
@@ -2914,9 +2904,7 @@ export const GetGoogleReview = async (
 
     const result =
       await GoogleReviewCollection
-        .find({
-          Month: ImportedMonth.trim(),
-        })
+        .find()
         .sort({
           CreatedAt: -1,
         })
@@ -3160,6 +3148,37 @@ export const StaffAttendecebyDate = async (ImpData: unknown) => {
     const FilteredAttendeceData = await StaffAttendeceCollection
       .find(
         { AttendanceDate: ImpData.trim() },
+        {
+          maxTimeMS: 10000,
+        }
+      )
+      .toArray();
+
+    return FilteredAttendeceData;
+  } catch (error) {
+    console.error("StaffAttendecebyDate failed:", error);
+
+    throw new Error("Failed to fetch staff attendance by date.");
+  }
+};
+export const FullMonthStaffAttendecebyDate = async (ImpData: any) => {
+  try {
+    
+
+    const client = await clientPromise;
+    const db = client.db("CurateInformation");
+
+    const StaffAttendeceCollection = db.collection("EmployeesAttendance");
+
+    const FilteredAttendeceData = await StaffAttendeceCollection
+      .find(
+        { 
+          Month:ImpData.Month,
+          UserId:ImpData.UserId
+
+
+
+         },
         {
           maxTimeMS: 10000,
         }

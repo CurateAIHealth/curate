@@ -19,22 +19,10 @@ export default async function handler(
       });
     }
 
-    const ImpMonth = req.body?.ImpMonth;
 
-    // Validate month
-    if (
-      typeof ImpMonth !== "string" ||
-      !ImpMonth.trim()
-    ) {
-      return res.status(400).json({
-        success: false,
-        error: "Valid Month information is required",
-        data: [],
-      });
-    }
+   
 
     const result = await GetGoogleReview(
-      ImpMonth.trim()
     );
 
     // Handle service/database failure

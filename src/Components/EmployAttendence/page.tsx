@@ -33,6 +33,8 @@ export default function MarkAttendance({
   CasualLeaves,
   usedLeaves,
 }: AttendanceProps) {
+   const SearchMonth = useSelector((state: any) => state.FilterMonth);
+         const SearchYear = useSelector((state: any) => state.FilterYear);
   const [attendance, setAttendance] = useState<any>({
     userId,
     userName,
@@ -40,6 +42,7 @@ export default function MarkAttendance({
     date: new Date().toISOString().split("T")[0],
     fromDate: "",
     toDate: "",
+    Month:`${SearchYear}-${SearchMonth}`
   });
   const [leaveType, setLeaveType] = useState<string>("")
 const[statusMessage,setStatusMessage]=useState<any>()
@@ -133,7 +136,7 @@ const UpdateDailyAttendance = async () => {
         location,
       };
     }
-
+alert("s")
     const result = await PostEmployeeAttendance(attendancePayload);
 console.log("Found-----",result)
  setStatusMessage(result?.message || "Request processed");

@@ -227,12 +227,11 @@ const ContetUserInterface = () => {
   
 
 useEffect(() => {
-  const email =loggedInEmail
+  const email = loggedInEmail?.toLowerCase();
+
   if (!email) return;
 
-  if (!hasData) {
-    router.replace("/");
-  }
+  // Only redirect for an unauthorized account.
   if (!RESTRICTED_EMAILS.has(email)) {
     router.replace("/");
     return;
@@ -243,7 +242,7 @@ useEffect(() => {
   } else if (email === "gouricurate@gmail.com") {
     dispatch(UpdateUserType("healthcare-assistant"));
   }
-}, [dispatch, router, cachedUserInfo]);
+}, [loggedInEmail, dispatch, router]);
 
 const GetHCPTypeCount = (HCPType: string) => {
   try {
@@ -1896,7 +1895,11 @@ Awaiting Conversion
                   </p>
 
                   <button
-                    onClick={() =>router.push("/DashBoard")}
+                    onClick={() => {
+                      dispatch(Update_Main_Filter_Status("Call Enquiry"));
+    dispatch(UpdateUserType("patient"));
+    router.push("/DashBoard")
+                    }}
                     className="
         mt-6
         inline-flex items-center justify-center

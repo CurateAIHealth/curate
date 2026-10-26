@@ -213,7 +213,7 @@ const res = await UpdateUserCurrentstatusInHCPView(UserIdHCA, "Active", loggedIn
         dispatch(UpdateRefresh(1));
         router.push("/PDRView");
         dispatch(Update_Main_Filter_Status("Deployment"));
-      }, 3000);
+      }, 1000);
     }else{
       setStatusMessage(PostTimeSheet.message);
     }
