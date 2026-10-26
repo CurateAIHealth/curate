@@ -10,9 +10,10 @@ import {
     Pencil,
 } from "lucide-react";
 import { GetEmail, getHCAContactNumber, GetHCPFullName } from "@/Lib/Actions";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { GetHCACEmailandContact, UpdateUserCurrentstatusInHCPView } from "@/Lib/user.action";
 import axios from "axios";
+import { SetDeploymentInfo } from "@/Redux/action";
 
 type YesNo = "Yes" | "No" | "";
 type OTPMode = "WHATSAPP" | "GMAIL" | "SMS";
@@ -128,10 +129,13 @@ const [HCPVerificationOTP, setHCPVerificationOTP] = useState("");
     const [otpVerifying, setOtpVerifying] = useState<OTPRecipient | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [formError, setFormError] = useState("");
+    const [freezeOperationLog, setFreezeOperationLog] = useState<string[]>([]);
 const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
 const users=useSelector((state:any)=>state.AdminUsers)
 const HCAContactInfo=getHCAContactNumber(UserFullInfo,hcaId)
-
+const SearchMonth = useSelector((state: any) => state.FilterMonth);
+       const SearchYear = useSelector((state: any) => state.FilterYear);
+const dispatch=useDispatch()
 useEffect(() => {
   const GetEmail = async () => {
     try {
@@ -1189,16 +1193,22 @@ if (
     };
 
     setSubmitting(true);
+    setFreezeOperationLog(["Freeze request started."]);
+    const logFreezeOperation = (message: string) =>
+      setFreezeOperationLog((operations) => [...operations, message]);
     SetActionStatusMessage("Please wait... submitting Freeze Request.");
 
     // Update the HCP's current status.
+    logFreezeOperation("Updating the HCP's current status...");
     await UpdateUserCurrentstatusInHCPView(
      hcaId,
       currentHCAStatus,
       loggedInEmail
     );
+    logFreezeOperation("HCP status updated successfully.");
 
     // Save deployment status and the complete freeze request payload.
+    logFreezeOperation("Saving the freeze request and deployment status...");
     const response = await axios.post("/api/DeploymentStatus", {
       ClientId: data.Client_Id,
       HCAId: data.HCA_Id,
@@ -1214,7 +1224,25 @@ if (
         updateFreezeStatus?.message || "Failed to update deployment status."
       );
     }
+    logFreezeOperation("Freeze request and deployment status saved.");
+ const userId = localStorage.getItem("UserId");
+ const MonthInfo = `${SearchYear}-${SearchMonth}`;
+    if (userId) {
+      logFreezeOperation("Refreshing deployment information...");
+      const { data } = await axios.post("/api/AdminPageInfo", {
+        userId,
+        Month: MonthInfo,
+        refreshType: ["registeredUsers", "deployment"],
+      });
 
+      dispatch(
+        SetDeploymentInfo(data?.data?.deployedLength || 0)
+      );
+      logFreezeOperation("Deployment information refreshed.");
+    } else {
+      logFreezeOperation("Deployment information refresh skipped: user ID not found.");
+    }
+    logFreezeOperation("Freeze request completed successfully.");
     SetActionStatusMessage(
       updateFreezeStatus.message || "Freeze request submitted successfully."
     );
@@ -1229,6 +1257,7 @@ if (
       err?.message ||
       "Failed to submit freeze request. Please try again.";
 
+    setFreezeOperationLog((operations) => [...operations, `Operation failed: ${errorMessage}`]);
     setFormError(errorMessage);
     SetActionStatusMessage(errorMessage);
   } finally {
@@ -1490,6 +1519,19 @@ if (
 <div className="rounded-xl border border-teal-300 bg-teal-100 p-3 text-sm text-center font-medium text-teal-800 shadow-sm">
   {ActionStatusMessage}
 </div>}
+                {freezeOperationLog.length > 0 && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4" aria-live="polite">
+                    <h3 className="mb-2 text-sm font-semibold text-slate-700">Freeze Request Progress</h3>
+                    <ol className="space-y-1.5 text-sm text-slate-600">
+                      {freezeOperationLog.map((operation, index) => (
+                        <li key={`${index}-${operation}`} className="flex gap-2">
+                          <span className="text-[#145DA0]">{index + 1}.</span>
+                          <span>{operation}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
 
 <div className="flex flex-col-reverse justify-end gap-3 border-t border-slate-200 pt-5 sm:flex-row"><button type="button" onClick={() => onShowChange(false)} className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-600">Cancel</button><button type="button" disabled={
   (!otp.CLIENT.verified &&

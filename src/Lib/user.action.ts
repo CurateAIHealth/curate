@@ -9351,6 +9351,7 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
       fromDate,
       toDate,
       location,
+      Month
     } = EmployInfo;
 
     /* ================= DAILY ATTENDANCE FLOW ================= */
@@ -9408,6 +9409,7 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
         EmployeeName: userName,
         Status: status,
         AttendanceDate: date,
+        Month:Month,
 
         Location: {
           Latitude: latitude,
@@ -9495,6 +9497,7 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
       ToDate: toDate,
       TotalDays: totalDays,
       ApprovalStatus: "Pending",
+      Month:Month,
       ApprovedBy: null,
       ApprovedAt: null,
         CreatedAt: new Date().toLocaleTimeString("en-IN", {

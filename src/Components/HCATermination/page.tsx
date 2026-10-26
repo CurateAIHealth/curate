@@ -138,7 +138,8 @@ const [HCPVerificationOTP, setHCPVerificationOTP] = useState("");
 const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
 const users=useSelector((state:any)=>state.AdminUsers)
 const HCAContactInfo=getHCAContactNumber(UserFullInfo,hcaId)
-
+const SearchMonth = useSelector((state: any) => state.FilterMonth);
+       const SearchYear = useSelector((state: any) => state.FilterYear);
 useEffect(() => {
   const GetEmail = async () => {
     try {
@@ -1418,7 +1419,7 @@ setClientVerificationOTP(NewOTP)
     }
 
     setSubmitting(true);
-    SetActionStatusMessage("Please wait, deleting placement...");
+    SetActionStatusMessage("Step 1 of 5: Updating the HCP's current status...");
 
     await UpdateUserCurrentstatusInHCPView(
       HCA_Id,
@@ -1426,8 +1427,10 @@ setClientVerificationOTP(NewOTP)
       loggedInEmail
     );
 
+    SetActionStatusMessage("Step 2 of 5: Updating the client's contact verification status...");
     await UpdateUserContactVerificationstatus(Client_Id, "Lost");
 
+    SetActionStatusMessage("Step 3 of 5: Removing the deployment...");
     const deleteDeploymentResponse: any = await DeleteDeployMent(
       Client_Id,
       HCA_Id,
@@ -1441,6 +1444,7 @@ setClientVerificationOTP(NewOTP)
       return;
     }
 
+    SetActionStatusMessage("Step 4 of 5: Saving the termination reason and details...");
     await Promise.all([
       PostReason(
         HCA_Id,
@@ -1467,32 +1471,25 @@ setClientVerificationOTP(NewOTP)
       ),
     ]);
 
-    SetActionStatusMessage("Placement deleted successfully. Fetching updated data...");
-
-    const userId = localStorage.getItem("UserId");
-
+    SetActionStatusMessage("Step 5 of 5: Refreshing deployment data...");
+const userId = localStorage.getItem("UserId");
+ const MonthInfo = `${SearchYear}-${SearchMonth}`;
     if (userId) {
-      try {
-        const { data: result } = await axios.post("/api/AdminPageInfo", {
-          userId,
-          refreshType: "deployment",
-        });
+     
+      const { data } = await axios.post("/api/AdminPageInfo", {
+        userId,
+        Month: MonthInfo,
+        refreshType: ["registeredUsers", "deployment"],
+      });
 
-        const deployedLength = result?.data?.deployedLength;
-        if (typeof deployedLength === "number") {
-          dispatch(SetDeploymentInfo(deployedLength));
-        }
-
-        SetActionStatusMessage("Termination completed successfully. Deployment data updated.");
-      } catch (refreshError) {
-        console.error("Failed to refresh deployment count:", refreshError);
-        SetActionStatusMessage("Termination completed, but deployment count refresh failed.");
-      }
-    } else {
-      SetActionStatusMessage("Termination completed successfully.");
+      dispatch(
+        SetDeploymentInfo(data?.data?.deployedLength || 0)
+      );
+      
     }
 
-    setTimeout(() => onShowChange(false), 500);
+    SetActionStatusMessage("Termination completed successfully. All updates are finished.");
+
   } catch (error: any) {
     console.error("Termination failed:", error);
 
@@ -1640,8 +1637,9 @@ setClientVerificationOTP(NewOTP)
    
                 </section>
                 {ActionStatusMessage&&
-<div className="rounded-xl border border-teal-300 bg-teal-100 p-3 text-sm text-center font-medium text-teal-800 shadow-sm">
-  {ActionStatusMessage}
+                <div role="status" aria-live="polite" className={`flex items-center justify-center gap-2 rounded-xl border p-3 text-sm text-center font-medium shadow-sm ${submitting ? "border-sky-300 bg-sky-50 text-sky-800" : "border-teal-300 bg-teal-100 text-teal-800"}`}>
+                  {submitting && <RefreshCw size={16} className="shrink-0 animate-spin" />}
+                  <span>{ActionStatusMessage}</span>
 </div>}
 
 <div className="flex flex-col-reverse justify-end gap-3 border-t border-slate-200 pt-5 sm:flex-row"><button type="button" onClick={() => onShowChange(false)} className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-600">Cancel</button><button type="button" disabled={

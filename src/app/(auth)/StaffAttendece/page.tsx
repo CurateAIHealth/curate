@@ -3,6 +3,7 @@
 import { LoadingData } from "@/Components/Loading/page";
 import { GetEmail } from "@/Lib/Actions";
 import axios from "axios";
+import { MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -23,6 +24,7 @@ type Employee = {
 };
 
 type EmployeeAttendance = {
+  TotalLeaves: number;
   ToDate: any;
   FromDate: any;
   UserId: string;
@@ -98,10 +100,18 @@ export default function ManagerAttendanceDashboard() {
   const [selectedDate, setSelectedDate] = useState(getLocalDate());
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [showFullMonth, setShowFullMonth] = useState(false);
+const [selectedStaff, setSelectedStaff] = useState<any>(null);
+  const [leaveBalanceStaff, setLeaveBalanceStaff] = useState<any>(null);
+  const [leaveTotalInput, setLeaveTotalInput] = useState("12");
+  const [updatingLeaveBalance, setUpdatingLeaveBalance] = useState(false);
+const [monthlyAttendance, setMonthlyAttendance] = useState<any[]>([]);
+const [loadingMonthlyAttendance, setLoadingMonthlyAttendance] = useState(false);
   const [updatingAction, setUpdatingAction] = useState<{
   userId: string;
   action: "Approve" | "Reject";
 } | null>(null);
+const [isEditingLeaveTotal, setIsEditingLeaveTotal] = useState(false);
   const [leaveDecisions, setLeaveDecisions] = useState<Record<string, "Approved" | "Rejected">>({});
   const [isChecking, setIsChecking] = useState(true);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
@@ -148,6 +158,7 @@ useEffect(() => {
           Status:each.Status,
           ApprovalStatus:each.ApprovalStatus,
            ToDate: each.ToDate,
+           Month:each.Month,
   FromDate: each.FromDate
         })
       );
@@ -179,7 +190,7 @@ useEffect(() => {
     isMounted = false;
   };
 }, [selectedDate]);
-
+console.log("Find Month----",employeeRoster)
 function makeTestAttendance(date: string): EmployeeAttendance[] {
   return employeeRoster.map((employee:any, index:any) => {
     const pattern = index % 10;
@@ -198,7 +209,9 @@ function makeTestAttendance(date: string): EmployeeAttendance[] {
       EmployeeName: employee.EmployeeName,
       Area: employee.Area,
       AttendanceDate: date,
+      TotalLeaves: employee.TotalLeaves ?? 10,
       FromDate:employee.FromDate,
+      Month:employee.Month,
       ToDate:employee.ToDate,
        CreatedAt: employee.CreatedAt,
             CheckoutAt: checkoutAt,
@@ -219,7 +232,27 @@ function makeTestAttendance(date: string): EmployeeAttendance[] {
   });
 }
 
+const openFullMonthAttendance = async (employee: any) => {
+  setSelectedStaff(employee);
+  setShowFullMonth(true);
+  setLoadingMonthlyAttendance(true);
+  setMonthlyAttendance([]);
 
+  try {
+    const response = await axios.post("/api/FullMonthStaffAttendance",  {
+        UserId: employee.UserId,
+        Month: employee.Month,
+      });
+
+    setMonthlyAttendance(
+      response.data.AttendeceResuls ?? []
+    );
+  } catch (error) {
+    console.error("Failed to load monthly attendance:", error);
+  } finally {
+    setLoadingMonthlyAttendance(false);
+  }
+};
 
   const filteredEmployees = useMemo(() => employees.filter((employee) => {
     const matchesSearch = `${employee.EmployeeName} ${employee.UserId} ${employee.Area}`.toLowerCase().includes(search.trim().toLowerCase());
@@ -627,6 +660,49 @@ await axios.post("/api/MailSend", {
   }
 };
 
+const getSpentLeaves = (userId: string) => {
+  const approvedLeaves = employeeRoster.filter(
+    (item: any) => item.UserId === userId && item.Status === "Leave" && item.ApprovalStatus === "Approved"
+  );
+  const ranges = new Set<string>();
+  return approvedLeaves.reduce((total: number, leave: any) => {
+    const from = leave.FromDate ? new Date(leave.FromDate) : null;
+    const to = leave.ToDate ? new Date(leave.ToDate) : from;
+    if (!from || !to || Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return total;
+    const key = `${from.toISOString().slice(0, 10)}:${to.toISOString().slice(0, 10)}`;
+    if (ranges.has(key)) return total;
+    ranges.add(key);
+    const days = Math.max(1, Math.floor((to.getTime() - from.getTime()) / 86400000) + 1);
+    return total + days;
+  }, 0);
+};
+
+const updateLeaveBalance = async () => {
+  if (!leaveBalanceStaff) return;
+  const totalLeaves = Number(leaveTotalInput);
+  if (!Number.isFinite(totalLeaves) || totalLeaves < 0) {
+    alert("Enter a valid total leave allowance.");
+    return;
+  }
+  const spentLeaves = getSpentLeaves(leaveBalanceStaff.UserId);
+  try {
+    setUpdatingLeaveBalance(true);
+    await axios.post("/api/UpdateStaffLeaveBalance", {
+      UserId: leaveBalanceStaff.UserId,
+      TotalLeaves: totalLeaves,
+      SpentLeaves: spentLeaves,
+      AvailableLeaves: Math.max(0, totalLeaves - spentLeaves),
+      loggedInEmail,
+    });
+    setLeaveBalanceStaff(null);
+  } catch (error: any) {
+    console.error("Failed to update leave balance:", error.response?.data || error.message || error);
+    alert(error.response?.data?.message || "Unable to update leave balance. Please try again.");
+  } finally {
+    setUpdatingLeaveBalance(false);
+  }
+};
+
   if (isChecking) {
    return <LoadingData />
   }
@@ -692,7 +768,7 @@ await axios.post("/api/MailSend", {
     return (
       <article
         key={employee.UserId}
-        className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:border-indigo-200 hover:shadow-md"
+        className="relative flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:border-indigo-200 hover:shadow-md"
       >
         {/* Employee Header */}
         <div className="flex min-w-0 items-center justify-between gap-3 p-3 sm:p-4">
@@ -843,18 +919,365 @@ updatingAction?.action === "Reject"
           })()}
 
         {/* Footer */}
-        <div className="mt-auto flex min-w-0 items-center justify-end border-t border-slate-100 px-3 py-3 sm:px-4">
-          {coordinates && (
+      
+<div className="mt-auto border-t border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-3 py-3 sm:px-5">
+  <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+
+    {/* Leave Management */}
+    <button
+      type="button"
+      onClick={() => {
+        setLeaveBalanceStaff(employee);
+        setLeaveTotalInput(String(employee.TotalLeaves ?? 12));
+      }}
+      className="group inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-amber-200 bg-amber-50 px-2 text-xs font-semibold text-amber-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-400 hover:bg-amber-600 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:gap-2 sm:px-4"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01" />
+      </svg>
+      <span>Leave Management</span>
+    </button>
+
+    {/* Full Month Attendance */}
+    <button
+      type="button"
+      onClick={() => openFullMonthAttendance(employee)}
+      className="group inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-teal-200 bg-teal-50 px-2 text-xs font-semibold text-teal-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-teal-400 hover:bg-teal-600 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 sm:gap-2 sm:px-4"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01" />
+      </svg>
+      <span>Full Month Attendance</span>
+    </button>
+  </div>
+
+  {/* View Location — bottom row */}
+  {coordinates && (
+    <button
+      type="button"
+      onClick={() => openLocation(employee)}
+      className="group mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-teal-800 px-4 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21s7-5.2 7-12a7 7 0 10-14 0c0 6.8 7 12 7 12z" />
+        <circle cx="12" cy="9" r="2.5" />
+      </svg>
+      <span>View Location</span>
+    </button>
+  )}
+</div>
+
+{leaveBalanceStaff?.UserId === employee.UserId &&
+  (() => {
+    const spentLeaves = getSpentLeaves(employee.UserId)||4;
+    const totalLeaves = Number(leaveTotalInput) || 0;
+    const availableLeaves = Math.max(0, totalLeaves - spentLeaves);
+
+    return (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-950/50 p-3 backdrop-blur-sm sm:p-5"
+        onClick={() => setLeaveBalanceStaff(null)}
+        role="presentation"
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Leave balance for ${employee.EmployeeName}`}
+          onClick={(event) => event.stopPropagation()}
+          className="relative my-auto flex max-h-[calc(100dvh-24px)] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-white/60 bg-white shadow-2xl shadow-slate-950/20 sm:max-h-[calc(100dvh-40px)]"
+        >
+          {/* Header */}
+          <div className="relative shrink-0 overflow-hidden bg-teal-600 px-5 py-4 text-white">
+            <div className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/10" />
+            <div className="absolute -bottom-12 right-16 h-24 w-24 rounded-full bg-white/10" />
+
+            <div className="relative flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                 <img
+                src="/Icons/Curate-logoq.png"
+                className="h-12"
+                alt="Company Logo"
+              />
+
+                <div className="min-w-0">
+                  <h3 className="text-lg font-bold tracking-tight">
+                    Leave Balance
+                  </h3>
+                  <p className="mt-1 truncate text-sm text-amber-50">
+                    {employee.EmployeeName}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setLeaveBalanceStaff(null)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-xl text-white transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
+                aria-label="Close leave balance"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4 sm:p-5">
+            {/* Total Leaves Input */}
+            <div>
+              <label
+                htmlFor="leave-total-input"
+                className="mb-2 block text-sm font-semibold text-slate-700"
+              >
+                Total allocated leaves
+              </label>
+
+             <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 transition focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-100">
+  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-5 w-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.8}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 4v16m8-8H4"
+      />
+    </svg>
+  </div>
+
+  <input
+    id="leave-total-input"
+    type="number"
+    min="0"
+    value={leaveTotalInput}
+    readOnly={!isEditingLeaveTotal}
+    onChange={(event) => setLeaveTotalInput(event.target.value)}
+    className={`w-full min-w-0 border-0 bg-transparent text-lg font-bold outline-none focus:ring-0 ${
+      isEditingLeaveTotal
+        ? "text-slate-800"
+        : "cursor-default text-slate-500"
+    }`}
+    aria-label="Total leaves"
+  />
+
+  <span className="shrink-0 text-xs font-medium text-slate-500">
+    Days
+  </span>
+
+  <button
+    type="button"
+    onClick={() => setIsEditingLeaveTotal((prev) => !prev)}
+    className={`inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
+      isEditingLeaveTotal
+        ? "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 focus:ring-slate-300"
+        : "border border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-400 hover:bg-amber-100 focus:ring-amber-400"
+    }`}
+  >
+    {isEditingLeaveTotal ? (
+      <>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-3.5 w-3.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+        Cancel
+      </>
+    ) : (
+      <>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-3.5 w-3.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M16 4l4 4M4 20l4-.8L19.5 7.7a2.1 2.1 0 00-3-3L5 16.2 4 20z"
+          />
+        </svg>
+        Edit
+      </>
+    )}
+  </button>
+</div>
+            </div>
+
+            {/* Leave Summary Cards */}
+            <div className="grid grid-cols-3 gap-2.5">
+              {/* Total */}
+              <div className="rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm">
+                <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 011 1v13H4V6a1 1 0 011-1z"
+                    />
+                  </svg>
+                </div>
+
+                <p className="text-[11px] font-medium text-slate-500">
+                  Total
+                </p>
+
+                <p className="mt-1 text-xl font-bold text-slate-800">
+                  {totalLeaves}
+                </p>
+              </div>
+
+              {/* Spent */}
+              <div className="rounded-xl border border-amber-100 bg-amber-50/70 p-3 text-center shadow-sm">
+                <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 7v5l3 2"
+                    />
+                  </svg>
+                </div>
+
+                <p className="text-[11px] font-medium text-amber-800">
+                  Spent
+                </p>
+
+                <p className="mt-1 text-xl font-bold text-amber-700">
+                  {spentLeaves}
+                </p>
+              </div>
+
+              {/* Available */}
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3 text-center shadow-sm">
+                <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.8}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 12l4 4L19 6"
+                    />
+                  </svg>
+                </div>
+
+                <p className="text-[11px] font-medium text-emerald-800">
+                  Available
+                </p>
+
+                <p className="mt-1 text-xl font-bold text-emerald-700">
+                  {availableLeaves}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Fixed Action Footer */}
+          <div className="flex shrink-0 gap-3 border-t border-slate-100 bg-white p-4 sm:px-5">
             <button
               type="button"
-              onClick={() => openLocation(employee)}
-              className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              onClick={() => setLeaveBalanceStaff(null)}
+              className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300"
             >
-              <span aria-hidden="true">⌖</span>
-              View map
+              Cancel
             </button>
-          )}
+
+            <button
+              type="button"
+              onClick={updateLeaveBalance}
+              disabled={updatingLeaveBalance}
+              className="group relative inline-flex h-11 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl border border-amber-500 bg-teal-600 px-3 text-sm font-bold tracking-wide text-white shadow-lg shadow-orange-500/20 transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-600 hover:from-amber-600 hover:via-orange-600 hover:to-orange-700 hover:shadow-xl hover:shadow-orange-500/30 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-500/20 focus-visible:ring-offset-2 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
+            >
+              {updatingLeaveBalance ? (
+                <>
+                  <svg
+                    className="h-5 w-5 shrink-0 animate-spin"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="3.5"
+                    />
+                    <path
+                      className="opacity-90"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  <span>Updating...</span>
+                </>
+              ) : (
+                <>
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20 transition-transform duration-300 group-hover:scale-110">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 12l4 4L19 6"
+                      />
+                    </svg>
+                  </span>
+                  <span>Save Changes</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
+      </div>
+    );
+  })()}
+
       </article>
     );
   })}
@@ -862,6 +1285,359 @@ updatingAction?.action === "Reject"
               </>
           )}
         </section>
+
+ 
+
+{showFullMonth && selectedStaff && (
+  <div
+    className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/30 p-0 backdrop-blur-[2px] sm:p-3"
+    onClick={() => setShowFullMonth(false)}
+  >
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="monthly-attendance-title"
+      onClick={(e) => e.stopPropagation()}
+      className="flex h-full max-h-[100dvh] w-full max-w-[1600px] flex-col overflow-hidden rounded-none border border-slate-200 bg-white shadow-2xl sm:h-auto sm:max-h-[98dvh] sm:rounded-[24px]"
+    >
+      {/* Header */}
+      <div className="flex shrink-0 flex-col gap-4 px-4 pb-4 pt-5 sm:px-7 sm:pb-5 sm:pt-7 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-[19px] bg-white shadow-lg sm:h-[64px] sm:w-[64px]">
+            <img
+              src="/Icons/Curate-logoq.png"
+              alt="Curate Logo"
+              className="h-12 w-12 object-contain"
+            />
+          </div>
+
+          <div className="min-w-0">
+            <p className="mb-1 truncate text-[11px] font-bold uppercase tracking-[2.5px] text-pink-500 sm:text-xs sm:tracking-[3px]">
+              {selectedStaff.EmployeeName}
+            </p>
+
+            <h2
+              id="monthly-attendance-title"
+              className="text-xl font-extrabold leading-tight tracking-tight text-slate-800 sm:text-2xl"
+            >
+              Attendance Dashboard
+            </h2>
+
+            <p className="mt-1 text-sm font-medium text-slate-400">
+              {new Date(
+                selectedYear,
+                selectedMonth,
+                1
+              ).toLocaleString("en-IN", {
+                month: "long",
+              })}{" "}
+              {selectedYear}
+            </p>
+          </div>
+        </div>
+
+        {/* Month, Year and Actions */}
+        <div className="flex w-full items-center gap-2 sm:gap-3 lg:w-auto">
+          {/* <select
+            value={selectedMonth}
+            onChange={(e) => {
+              const month = Number(e.target.value);
+
+              setSelectedDate(
+                `${selectedYear}-${String(month + 1).padStart(2, "0")}-01`
+              );
+            }}
+            aria-label="Attendance month"
+            className="h-11 min-w-0 flex-1 cursor-pointer rounded-[14px] border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none transition hover:border-slate-400 focus:border-emerald-500 sm:min-w-[145px] sm:flex-none sm:px-4"
+          >
+            {Array.from({ length: 12 }, (_, i) => (
+              <option key={i} value={i}>
+                {new Date(2026, i, 1).toLocaleString("en-IN", {
+                  month: "long",
+                })}
+              </option>
+            ))}
+          </select> */}
+
+          {/* <select
+            value={selectedYear}
+            onChange={(e) => {
+              const year = Number(e.target.value);
+
+              setSelectedDate(
+                `${year}-${String(selectedMonth + 1).padStart(2, "0")}-01`
+              );
+            }}
+            aria-label="Attendance year"
+            className="h-11 min-w-0 flex-1 cursor-pointer rounded-[14px] border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none transition hover:border-slate-400 focus:border-emerald-500 sm:min-w-[110px] sm:flex-none sm:px-4"
+          >
+            {Array.from(
+              { length: 7 },
+              (_, i) => new Date().getFullYear() - 5 + i
+            ).map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select> */}
+
+          <button
+            type="button"
+            title="Expand dashboard"
+            aria-label="Expand dashboard"
+            onClick={(e) => {
+              const dialog = e.currentTarget.closest(
+                '[role="dialog"]'
+              );
+
+              if (dialog) {
+                dialog.classList.toggle("sm:max-w-[1600px]");
+                dialog.classList.toggle("sm:max-w-none");
+                dialog.classList.toggle("sm:h-auto");
+                dialog.classList.toggle("sm:h-[98dvh]");
+              }
+            }}
+            className="ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 sm:h-11 sm:w-11"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="19"
+              height="19"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M15 3h6v6" />
+              <path d="m21 3-7 7" />
+              <path d="M9 21H3v-6" />
+              <path d="m3 21 7-7" />
+            </svg>
+          </button>
+  <button
+            type="button"
+            onClick={() => setShowFullMonth(false)}
+            aria-label="Close dashboard"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-lg text-slate-600 transition hover:bg-rose-50 hover:text-rose-600 "
+          >
+            ✕
+          </button>
+          
+        </div>
+      </div>
+
+      {/* Calendar */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-5 sm:px-6 sm:pb-6">
+        {loadingMonthlyAttendance ? (
+          <div className="flex min-h-[300px] items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-500" />
+              <p className="text-sm text-slate-500">
+                Loading full month attendance...
+              </p>
+            </div>
+          </div>
+        ) : (
+          (() => {
+            const daysInMonth = new Date(
+              selectedYear,
+              selectedMonth + 1,
+              0
+            ).getDate();
+
+            const getDayStatus = (day: number) => {
+              const date = `${selectedYear}-${String(
+                selectedMonth + 1
+              ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+              const records = monthlyAttendance.filter((record) => {
+                if (
+                  String(record.UserId) !==
+                  String(selectedStaff.UserId)
+                ) {
+                  return false;
+                }
+
+                const from = String(
+                  record.FromDate || record.AttendanceDate || ""
+                ).slice(0, 10);
+
+                const to = String(
+                  record.ToDate || record.AttendanceDate || from
+                ).slice(0, 10);
+
+                if (record.Status === "Leave") {
+                  return (
+                    record.ApprovalStatus === "Approved" &&
+                    date >= from &&
+                    date <= to
+                  );
+                }
+
+                return (
+                  String(record.AttendanceDate || "").slice(0, 10) ===
+                  date
+                );
+              });
+
+              const attendance = records.find(
+                (record) => record.Status !== "Leave"
+              );
+
+              const leave = records.find(
+                (record) => record.Status === "Leave"
+              );
+
+              if (attendance?.Status === "Present") {
+                return {
+                  label: "P",
+                  status: "Present",
+                  circle: "border-emerald-500 text-emerald-600",
+                };
+              }
+
+              if (attendance?.Status === "Absent") {
+                return {
+                  label: "A",
+                  status: "Absent",
+                  circle: "border-rose-500 text-rose-600",
+                };
+              }
+
+              if (leave) {
+                return {
+                  label: "L",
+                  status: "Leave",
+                  circle: "border-amber-500 text-amber-600",
+                };
+              }
+
+              return {
+                label: "—",
+                status: "Not Marked",
+                circle: "border-slate-300 text-slate-400",
+              };
+            };
+
+            const dayCounts = Array.from(
+              { length: daysInMonth },
+              (_, index) => getDayStatus(index + 1).status
+            ).reduce(
+              (counts, status) => {
+                counts[status] += 1;
+                return counts;
+              },
+              { Present: 0, Absent: 0, Leave: 0, "Not Marked": 0 } as Record<string, number>
+            );
+
+            return (
+              <>
+                <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {[
+                    { label: "Present Days", count: dayCounts.Present, style: "border-emerald-100 bg-emerald-50 text-emerald-700" },
+                    { label: "Absent Days", count: dayCounts.Absent, style: "border-rose-100 bg-rose-50 text-rose-700" },
+                    { label: "Leave Days", count: dayCounts.Leave, style: "border-amber-100 bg-amber-50 text-amber-700" },
+                    { label: "Not Marked", count: dayCounts["Not Marked"], style: "border-slate-200 bg-slate-50 text-slate-600" },
+                  ].map((item) => (
+                    <div key={item.label} className={`rounded-xl border p-3 text-center ${item.style}`}>
+                      <p className="text-xs font-medium">{item.label}</p>
+                      <p className="mt-1 text-2xl font-bold">{item.count}</p>
+                    </div>
+                  ))}
+                </div>
+
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+                {Array.from(
+                  { length: daysInMonth },
+                  (_, i) => {
+                    const day = i + 1;
+                    const status = getDayStatus(day);
+                    const isNotMarked =
+                      status.status === "Not Marked";
+
+                    return (
+                      <div
+                        key={day}
+                        className="flex min-h-[125px] min-w-0 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.12)] transition-shadow hover:shadow-md sm:min-h-[127px] sm:px-2"
+                      >
+                        <p className="text-[10px] font-semibold uppercase leading-4 text-slate-500 sm:text-[11px]">
+                          DAY {day}
+                        </p>
+
+                        {isNotMarked ? (
+                          <span className="mt-4 max-w-full rounded-md bg-slate-300 px-2.5 py-1 text-center text-[9px] font-semibold leading-3 text-slate-600 sm:text-[10px]">
+                            Not Marked
+                          </span>
+                        ) : (
+                          <div
+                            title={status.status}
+                            className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 bg-white text-sm font-semibold ${status.circle}`}
+                          >
+                            {status.label}
+                          </div>
+                        )}
+
+                        <p
+                          className={`mt-1 max-w-full truncate text-center text-[9px] leading-3 ${
+                            isNotMarked
+                              ? "invisible"
+                              : "font-medium text-slate-500"
+                          }`}
+                        >
+                          {`HCA: ${
+                            selectedStaff.HCAName ??
+                            selectedStaff.HCA ??
+                            selectedStaff.EmployeeName ??
+                            ""
+                          }`}
+                        </p>
+
+                      <button
+  type="button"
+  onClick={() => openLocation(selectedStaff)}
+  disabled={isNotMarked}
+  title="View attendance location"
+  aria-label={`View location for day ${day}`}
+  className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-full transition hover:bg-red-50 ${
+    isNotMarked
+      ? "cursor-not-allowed opacity-40"
+      : "cursor-pointer"
+  }`}
+>
+  <MapPin className="h-4 w-4 text-red-500" />
+</button>
+
+                        {/* <button
+                          type="button"
+                          disabled={isNotMarked}
+                          onClick={() => {
+                            // Connect your existing day-edit handler here.
+                          }}
+                          className={`mt-0.5 rounded-full px-2.5 py-[3px] text-[9px] font-semibold leading-3 transition ${
+                            isNotMarked
+                              ? "cursor-not-allowed bg-slate-100 text-slate-300"
+                              : "bg-slate-700 text-white hover:bg-emerald-600"
+                          }`}
+                        >
+                          Edit
+                        </button> */}
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+              </>
+            );
+          })()
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
+
         </div>
     </main>
   );

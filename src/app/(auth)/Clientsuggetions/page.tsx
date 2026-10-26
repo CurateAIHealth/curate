@@ -31,7 +31,8 @@ const ClientSuggetions = () => {
 
   const router = useRouter();
   const dispatch = useDispatch();
-
+const fullInfo=useSelector((state:any)=>state.AdminFullInfo)
+ const Final=useSelector((state:any)=>state.AdminUsers)
 
   // useEffect(() => {
   //   let mounted = true;
@@ -78,13 +79,8 @@ const ClientSuggetions = () => {
 
       try {
        
-
-        const [users, fullInfo,Final] = await Promise.all([
-           GetRegidterdUsersForMathing(currentClientUserId),
-          GetUsersFullInfo(),
-         GetRegidterdUsersForClient()
-        ]);
-
+const users =await  GetRegidterdUsersForMathing(currentClientUserId)
+       
         
 
       

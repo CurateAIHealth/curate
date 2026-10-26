@@ -91,7 +91,7 @@ const [selectedReview, setSelectedReview] = useState<{
 
 
 const users=useSelector((state:any)=>state.AdminUsers)
- const [isChecking, setisChecking] = useState(true)
+ const [isChecking, setisChecking] = useState(false)
 
 
 const formatIndianDate = (date:any) => {
@@ -114,26 +114,28 @@ const dispatch=useDispatch()
    * Convert DeploymentInfo into Google Review data
    */
 const ImpMonth=`${SearchMonth}-${SearchYear}`
-useEffect(()=>{
-  const FetchGoogleReviewInfo=async()=>{
-    
-try{
-const Get=await axios.post("/api/GetGoogleReview",{
-ImpMonth
-})
-
-setImportedInfo(Get.data.data)
-setisChecking(false)
-}catch(err){
-  
-}
+const FetchGoogleReviewInfo = async () => {
+  setisChecking(true);
+  try {
+    const Get = await axios.post("/api/GetGoogleReview");
+    setImportedInfo(Get.data.data);
+  } catch (err) {
+    console.error("FetchGoogleReviewInfo Error:", err);
+  } finally {
+    setisChecking(false);
   }
-  FetchGoogleReviewInfo()
-},[SearchMonth,SearchYear])
+};
+
+const handleCompletedReviews = () => {
+  if (reviewFilter !== "Completed") {
+    setReviewFilter("Completed");
+    void FetchGoogleReviewInfo();
+  }
+};
 
 const GetStatus = (
   importedInfo: any[],
-  month: string,
+ 
   userId: string
 ): {
   status?: string;
@@ -144,7 +146,6 @@ const GetStatus = (
 } | null => {
   const userInfo = importedInfo.find(
     (each: any) =>
-      each?.Month === month &&
       each?.UserId === userId
   );
 
@@ -220,7 +221,7 @@ const FilteredDeploymentInfo = useMemo(() => {
     clientStatus: user?.ClientStatus || "—",
 
     source: user?.Source || "—",
-      status:GetStatus(ImportedInfo, ImpMonth, user?.userId || user?._id)?.status === "Completed"
+      status:GetStatus(ImportedInfo,  user?.userId || user?._id)?.status === "Completed"
               ? "Completed"
               : "Pending",
 
@@ -228,12 +229,12 @@ const FilteredDeploymentInfo = useMemo(() => {
 
           reviewRequestMethod: null,
 
-          review:GetStatus(ImportedInfo, ImpMonth,user?.userId || user?._id)?.review|| null,
+          review:GetStatus(ImportedInfo,user?.userId || user?._id)?.review|| null,
 
-          suggestions:GetStatus(ImportedInfo, ImpMonth, user?.userId || user?._id)?.suggestions|| null,
+          suggestions:GetStatus(ImportedInfo,  user?.userId || user?._id)?.suggestions|| null,
 
-          reviewDate:GetStatus(ImportedInfo, ImpMonth, user?.userId || user?._id)?.reviewDate|| null,
-          ReviewImage:GetStatus(ImportedInfo, ImpMonth, user?.userId || user?._id)?.reviewImage|| null,
+          reviewDate:GetStatus(ImportedInfo,  user?.userId || user?._id)?.reviewDate|| null,
+          ReviewImage:GetStatus(ImportedInfo,  user?.userId || user?._id)?.reviewImage|| null,
         };
       });
   }, [DeploymentInfo, ImportedInfo, ImpMonth]);
@@ -265,7 +266,7 @@ const googleReviews = useMemo<GoogleReviewData[]>(() => {
         status:
           GetStatus(
             ImportedInfo,
-            ImpMonth,
+           
             item?.ClientId
           )?.status === "Completed"
             ? "Completed"
@@ -277,28 +278,28 @@ const googleReviews = useMemo<GoogleReviewData[]>(() => {
         review:
           GetStatus(
             ImportedInfo,
-            ImpMonth,
+            
             item?.ClientId
           )?.review || null,
 
         suggestions:
           GetStatus(
             ImportedInfo,
-            ImpMonth,
+       
             item?.ClientId
           )?.suggestions || null,
 
         reviewDate:
           GetStatus(
             ImportedInfo,
-            ImpMonth,
+       
             item?.ClientId
           )?.reviewDate || null,
 
         ReviewImage:
           GetStatus(
             ImportedInfo,
-            ImpMonth,
+      
             item?.ClientId
           )?.reviewImage || null,
       };
@@ -450,7 +451,7 @@ const GetMonthFreshData = async (r: string) => {
 
         <SummaryCard
           title="Total Clients"
-        value={googleReviews.length}
+        value={displayedReviews.length}
           color="#1392d3"
         />
 
@@ -539,7 +540,7 @@ const GetMonthFreshData = async (r: string) => {
                     className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
                   />
                 </div>
-              {!showTerminated&&
+              {(!showTerminated&&reviewFilter==="Pending")&&
  <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
              <select
       value={SearchMonth}
@@ -637,7 +638,7 @@ const GetMonthFreshData = async (r: string) => {
     {/* Completed */}
     <button
       type="button"
-      onClick={() => setReviewFilter("Completed")}
+      onClick={handleCompletedReviews}
       className={`inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition sm:flex-none sm:px-5 ${
         reviewFilter === "Completed"
           ? "bg-[#50c896] text-white shadow-sm"
@@ -660,7 +661,7 @@ const GetMonthFreshData = async (r: string) => {
     </button>
     {/* Active */}
 
-    {!showTerminated&&
+    {(!showTerminated&&reviewFilter==="Pending")&&
 <div>
   <button
   type="button"
@@ -979,9 +980,9 @@ const CompletedReviewTable: React.FC<ReviewTableProps> = ({
             Enrollment Date
           </th>
 
-          <th className="px-5 py-4">
+          {/* <th className="px-5 py-4">
             Terminated
-          </th>
+          </th> */}
 
           <th className="px-5 py-4">
             Review
@@ -1006,7 +1007,7 @@ const CompletedReviewTable: React.FC<ReviewTableProps> = ({
           data.map((item, index) => (
 
             <tr
-              key={item.id}
+              key={index}
               className="transition hover:bg-slate-50"
             >
 
@@ -1046,7 +1047,7 @@ const CompletedReviewTable: React.FC<ReviewTableProps> = ({
               </td>
 
               {/* Terminated */}
-              <td className="px-5 py-4">
+              {/* <td className="px-5 py-4">
 
                 {item.terminated === "NA" ? (
 
@@ -1062,7 +1063,7 @@ const CompletedReviewTable: React.FC<ReviewTableProps> = ({
 
                 )}
 
-              </td>
+              </td> */}
 
               {/* Review */}
               <td className="max-w-[300px] px-5 py-4">
@@ -1310,7 +1311,7 @@ const mailResponse = await axios.post("/api/MailSend", {
                         font-weight:700;
                         letter-spacing:1px;
                     ">
-                        CUSTOMER FEEDBACK
+                        CLIENT FEEDBACK
                     </div>
 
                 </td>

@@ -228,13 +228,7 @@ if (!userId) {
  
 setLoadingProgress(99);
 setLoadingMessage("Redirecting...");
-
-// if (!mounted) return;
-
-// Navigate immediately after 100%
-if (window.location.pathname !== "/DashBoard") {
-  router.replace("/DashBoard");
-}
+router.replace("/DashBoard");
         return;
       }
 

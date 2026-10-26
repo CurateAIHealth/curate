@@ -187,7 +187,8 @@ export default function CallEnquiryForm() {
   const [FetchedInfo,setFetchedInfo]=useState<any>()
   const [TimeStameDetails, setTimeStameDetails] = useState("setTimeStameDetails")
   const [showTooltip, setShowTooltip] = useState(false);
-  const [ImportedVendors, setImportedVendors] = useState<any>([])
+  const users=useSelector((state:any)=>state.AdminUsers)
+const ImportedVendors=useState<any>(users.filter((each: any) => each.userType === "Vendor"))
   const [isChecking, setIsChecking] = useState(true);
   const [MinimiseOptions, setMinimizeOptions] = useState({ Hygiene: false, Nutrition: false, Vitals: false, Elimination: false, Mobility: false, Medication: false })
   const [RemarkStatus, setRemarkStatus] = useState({
@@ -198,6 +199,8 @@ export default function CallEnquiryForm() {
     hcpType: false,
     Medication: false
   })
+  const SearchMonth=useSelector((state:any)=>state.FilterMonth) 
+    const SearchYear=useSelector((state:any)=>state.FilterYear)
   const [Options, setOptions] = useState(false)
   const dispatch = useDispatch()
   const router = useRouter()
@@ -270,13 +273,9 @@ const toProperCaseLive = (value: string) => {
   useEffect(() => {
     const Fetch = async () => {
       const localValue = localStorage.getItem('UserId');
-      const [Sign_in_UserInfo, RegisterdUsers,GetUserInfo] = await Promise.all([
-        GetUserInformation(localValue),
-        GetRegidterdUsers(),
-        GetUserInformation(PDRFilledUser)
-      ]);
-      setImportedVendors(RegisterdUsers.filter((each: any) => each.userType === "Vendor"))
-      setTimeStameDetails(`${Sign_in_UserInfo?.FirstName} ${Sign_in_UserInfo.LastName}, Email: ${Sign_in_UserInfo.Email}`)
+     const GetUserInfo= await GetUserInformation(PDRFilledUser)
+
+       
  GetUserInfo&&setStatusMessage("Pre-Filling the Form....")
 setFetchedInfo(GetUserInfo)
 setFormData({...formData,clientPhone:GetUserInfo?.ContactNumber,
@@ -434,11 +433,12 @@ const handleCmChange = (value: string) => {
       `${postResult.message || "Lead updated successfully"},Please wait untill Fetching Updated Data.....`
     );
  const userId =localStorage.getItem("UserId");
-
+const ArgumentMonth=`${SearchYear}-${SearchMonth}`
       const { data:result } = await axios.post(
         "/api/AdminPageInfo",
         {
           userId,
+          Month:ArgumentMonth,
           refreshType: [
             "registeredUsers",
             "fullInfo",
@@ -724,11 +724,11 @@ const hasSubTypes = (service: any): service is ServiceWithSubType => {
       inputValue.trim() === "" ||
       options.some(
         (item: string) =>
-          item.toLowerCase() === inputValue.toLowerCase()
+          item?.toLowerCase() === inputValue.toLowerCase()
       )
         ? []
         : options.filter((item: string) =>
-            item.toLowerCase().includes(inputValue.toLowerCase())
+            item?.toLowerCase().includes(inputValue.toLowerCase())
           );
 
     return (

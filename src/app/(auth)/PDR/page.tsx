@@ -1563,7 +1563,21 @@ const PreviewHCAInfo = async () => {
           </div> */}
 
 
+<div className="flex flex-row items-between w-full mb-2 gap-3">
+  <div className="w-fit rounded-lg border border-gray-300 bg-white p-3 shadow-sm">
+    <p className="text-xs font-medium text-gray-500">Patient Name</p>
+    <p className="text-base font-semibold text-gray-800">
+      {formData.patientName}
+    </p>
+  </div>
 
+  <div className="w-fit rounded-lg border border-gray-300 bg-white p-3 shadow-sm">
+    <p className="text-xs font-medium text-gray-500">Client Name</p>
+    <p className="text-base font-semibold text-gray-800">
+      {formData.FirstName}
+    </p>
+  </div>
+</div>
           <main className="w-full px-0 sm:px-1">
             <div className="relative w-full overflow-hidden rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.06)] sm:p-7 lg:p-8 mb-6 before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[#00A9A5] before:via-[#00A9A5]/50 before:to-transparent">
               <div className="flex  flex-row justify-between items-start items-center mb-6 ">

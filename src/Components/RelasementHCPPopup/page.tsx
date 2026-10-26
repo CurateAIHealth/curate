@@ -76,7 +76,7 @@ const HCA_List = Array.isArray(filteredHcps)
 
       const userType = String(each.userType ?? "").trim().toLowerCase();
       const currentStatus = String(each.CurrentStatus ?? "").trim().toLowerCase();
-      const gender = String(each.Gender ?? "").trim().toLowerCase()||"Male";
+      const gender =each.Gender==="Other"?"Female" :String(each.Gender ?? "").trim().toLowerCase()||"Male";
       const formGender = String(form?.Gender ?? "").trim().toLowerCase();
       const formHcpType = String(form?.hcpType ?? "").trim();
 
