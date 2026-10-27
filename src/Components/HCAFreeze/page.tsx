@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
     CalendarDays, ChevronDown, Clock, UserCheck, Users, ShieldCheck,
     MessageCircle, Mail, Send, CheckCircle2, AlertTriangle, RefreshCw,
@@ -128,6 +128,7 @@ const [HCPVerificationOTP, setHCPVerificationOTP] = useState("");
       }); const [otpSending, setOtpSending] = useState<OTPRecipient | null>(null);
     const [otpVerifying, setOtpVerifying] = useState<OTPRecipient | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const submissionInProgress = useRef(false);
     const [formError, setFormError] = useState("");
     const [freezeOperationLog, setFreezeOperationLog] = useState<string[]>([]);
 const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
@@ -1083,78 +1084,56 @@ setClientVerificationOTP(NewOTP)
       }
     };
        const UpdateFreezeInformation = async () => {
-  if (submitting) return;
-
-  SetActionStatusMessage("Please Wait.......")
-
-
+  if (submissionInProgress.current) return;
+  submissionInProgress.current = true;
+  setSubmitting(true);
+  setFormError("");
+  setFreezeOperationLog(["Freeze request started."]);
+  const log = (message: string) => setFreezeOperationLog((items) => [...items, message]);
+  const stageLog = (stage: string, detail: string) => {
+    console.info(`[HCAFreeze] stage=${stage} ${detail}`);
+    log(detail);
+  };
+  let requestSaved = false;
+  let finalStatusMessage = "";
 
   try {
-    setFormError("");
-
-    if (!data?.Client_Id || !data?.HCA_Id || !data?.Month) {
-      const message = "Client, HCP, or deployment month information is missing.";
+    stageLog("validation", "Validating deployment details and form fields.");
+    const failValidation = (message: string) => {
       setFormError(message);
       SetActionStatusMessage(message);
+      log(`Validation failed: ${message}`);
+      return;
+    };
+
+    if (!data?.Client_Id || !data?.HCA_Id || !data?.Month) {
+      failValidation("Client, HCP, or deployment month information is missing.");
       return;
     }
-// Admin OTP verification overrides Client and HCP OTP requirements.
-if (
-  !otp.ADMIN.verified &&
-  (!otp.CLIENT.verified || !otp.HCA.verified)
-) {
-  const missing = [
-    !otp.CLIENT.verified ? "Client" : "",
-    !otp.HCA.verified ? "HCP" : "",
-  ]
-    .filter(Boolean)
-    .join(" and ");
-
-  const message = `Please complete ${missing} OTP verification before submitting.`;
-
-  setFormError(message);
-  SetActionStatusMessage(message);
-  return;
-}
-    if (!selectedReason.trim()) {
-      setFormError("Please select a freeze reason.");
+    if (!otp.ADMIN.verified && (!otp.CLIENT.verified || !otp.HCA.verified)) {
+      const missing = [!otp.CLIENT.verified ? "Client" : "", !otp.HCA.verified ? "HCP" : ""]
+        .filter(Boolean).join(" and ");
+      failValidation(`Please complete ${missing} OTP verification before submitting.`);
       return;
     }
-
-    if (selectedReason === "Other" && !otherReason.trim()) {
-      setFormError("Please specify the freeze reason.");
-      return;
-    }
-
+    if (!selectedReason.trim()) return failValidation("Please select a freeze reason.");
+    if (selectedReason === "Other" && !otherReason.trim()) return failValidation("Please specify the freeze reason.");
     if (!freezeStartDate || !freezeStartTime || !freezeEndDate || !freezeEndTime) {
-      setFormError("Please complete the freeze start and end dates and times.");
-      return;
+      return failValidation("Please complete the freeze start and end dates and times.");
     }
-
     const start = new Date(`${freezeStartDate}T${freezeStartTime}`);
     const end = new Date(`${freezeEndDate}T${freezeEndTime}`);
-
-    if (
-      !Number.isFinite(start.getTime()) ||
-      !Number.isFinite(end.getTime()) ||
-      end <= start
-    ) {
-      setFormError("Freeze end date and time must be after the start date and time.");
-      return;
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end <= start) {
+      return failValidation("Freeze end date and time must be after the start date and time.");
     }
-
     if (!Number.isFinite(expectedFreezeDays) || expectedFreezeDays < 1) {
-      setFormError("Expected freeze days must be at least 1.");
-      return;
+      return failValidation("Expected freeze days must be at least 1.");
     }
-
     if (clientConcern === "Yes" && !clientConcernNote.trim()) {
-      setFormError("Please enter the client concern details.");
-      return;
+      return failValidation("Please enter the client concern details.");
     }
 
     const currentHCAStatus = UpdatedCareTakerStatus || "Bench";
-
     const freezeInformation = {
       Reason: selectedReason.trim(),
       OtherReason: selectedReason === "Other" ? otherReason.trim() : "",
@@ -1169,98 +1148,87 @@ if (
       ClientConcern: clientConcern,
       ClientConcernNote: clientConcern === "Yes" ? clientConcernNote.trim() : "",
       OTPVerification: {
-        CLIENT: {
-          verified: otp.CLIENT.verified,
-          VerifiedBy: otp.CLIENT.VerifiedBy || "",
-          VerifiedAt: otp.CLIENT.VerifiedAt || "",
-          Mode: otpModes.CLIENT,
-        },
-        HCA: {
-          verified: otp.HCA.verified,
-          VerifiedBy: otp.HCA.VerifiedBy || "",
-          VerifiedAt: otp.HCA.VerifiedAt || "",
-          Mode: otpModes.HCA,
-        },
-        ADMIN: {
-          verified: otp.ADMIN.verified,
-          VerifiedBy: otp.ADMIN.VerifiedBy || "",
-          VerifiedAt: otp.ADMIN.VerifiedAt || "",
-          Mode: "GMAIL",
-        },
+        CLIENT: { verified: otp.CLIENT.verified, VerifiedBy: otp.CLIENT.VerifiedBy || "", VerifiedAt: otp.CLIENT.VerifiedAt || "", Mode: otpModes.CLIENT },
+        HCA: { verified: otp.HCA.verified, VerifiedBy: otp.HCA.VerifiedBy || "", VerifiedAt: otp.HCA.VerifiedAt || "", Mode: otpModes.HCA },
+        ADMIN: { verified: otp.ADMIN.verified, VerifiedBy: otp.ADMIN.VerifiedBy || "", VerifiedAt: otp.ADMIN.VerifiedAt || "", Mode: "GMAIL" },
       },
       UpdatedBy: loggedInEmail || "",
       UpdatedAt: new Date().toISOString(),
     };
 
-    setSubmitting(true);
-    setFreezeOperationLog(["Freeze request started."]);
-    const logFreezeOperation = (message: string) =>
-      setFreezeOperationLog((operations) => [...operations, message]);
     SetActionStatusMessage("Please wait... submitting Freeze Request.");
-
-    // Update the HCP's current status.
-    logFreezeOperation("Updating the HCP's current status...");
-    await UpdateUserCurrentstatusInHCPView(
-     hcaId,
-      currentHCAStatus,
-      loggedInEmail
-    );
-    logFreezeOperation("HCP status updated successfully.");
-
-    // Save deployment status and the complete freeze request payload.
-    logFreezeOperation("Saving the freeze request and deployment status...");
-    const response = await axios.post("/api/DeploymentStatus", {
-      ClientId: data.Client_Id,
-      HCAId: data.HCA_Id,
-      Month: data.Month,
-      Status: "Freeze",
-      FreezeInformation: freezeInformation,
-    });
-
-    const updateFreezeStatus = response?.data;
-
-    if (!updateFreezeStatus?.success) {
-      throw new Error(
-        updateFreezeStatus?.message || "Failed to update deployment status."
-      );
+    stageLog("deployment-save", "Saving freeze request and deployment status.");
+    let response;
+    try {
+      response = await axios.post("/api/DeploymentStatus", {
+        ClientId: data.Client_Id,
+        HCAId: data.HCA_Id,
+        Month: data.Month,
+        Status: "Freeze",
+        FreezeInformation: freezeInformation,
+      }, { timeout: 30000 });
+    } catch (error: any) {
+      const status = error?.response?.status ?? "network/timeout";
+      console.error(`[HCAFreeze] stage=deployment-save httpStatus=${status} message=${error?.message || "Request failed"}`);
+      throw new Error(error?.response?.data?.message || `Freeze request save failed (${status}). Verify the request status before retrying.`);
     }
-    logFreezeOperation("Freeze request and deployment status saved.");
- const userId = localStorage.getItem("UserId");
- const MonthInfo = `${SearchYear}-${SearchMonth}`;
-    if (userId) {
-      logFreezeOperation("Refreshing deployment information...");
-      const { data } = await axios.post("/api/AdminPageInfo", {
+    if (response.status < 200 || response.status >= 300 || response.data?.success !== true) {
+      console.error(`[HCAFreeze] stage=deployment-save httpStatus=${response.status} outcome=unsuccessful`);
+      throw new Error(response.data?.message || `Freeze request save was not confirmed (HTTP ${response.status}).`);
+    }
+    requestSaved = true;
+    stageLog("deployment-save", "Freeze request and deployment status saved successfully.");
+
+    let statusUpdated = false;
+    try {
+      stageLog("hcp-status", "Updating the HCP current status.");
+      await UpdateUserCurrentstatusInHCPView(hcaId, currentHCAStatus, loggedInEmail);
+      statusUpdated = true;
+      stageLog("hcp-status", "HCP current status update completed.");
+    } catch (error: any) {
+      console.error(`[HCAFreeze] stage=hcp-status outcome=failed message=${error?.message || "Status update failed"}`);
+      log("HCP status update failed after the freeze request was saved.");
+    }
+
+    let refreshWarning = "";
+    try {
+      const userId = typeof window !== "undefined" ? localStorage.getItem("UserId") : null;
+      if (!userId) throw new Error("Dashboard refresh skipped: UserId is not available in local storage.");
+      const MonthInfo = `${SearchYear}-${SearchMonth}`;
+      stageLog("dashboard-refresh", "Refreshing deployment dashboard information.");
+      const refreshResponse = await axios.post("/api/AdminPageInfo", {
         userId,
         Month: MonthInfo,
         refreshType: ["registeredUsers", "deployment"],
-      });
-
-      dispatch(
-        SetDeploymentInfo(data?.data?.deployedLength || 0)
-      );
-      logFreezeOperation("Deployment information refreshed.");
-    } else {
-      logFreezeOperation("Deployment information refresh skipped: user ID not found.");
-    }
-    logFreezeOperation("Freeze request completed successfully.");
-    SetActionStatusMessage(
-      updateFreezeStatus.message || "Freeze request submitted successfully."
-    );
-
+      }, { timeout: 30000 });
+      const refreshedData = refreshResponse.data?.data;
    
-    setTimeout(() => onShowChange(false), 1500);
+      dispatch(SetDeploymentInfo(refreshedData.deployedLength));
+      stageLog("dashboard-refresh", "Dashboard information refreshed from server data.");
+    } catch (error: any) {
+      refreshWarning = error?.message || "Dashboard refresh failed.";
+      console.error(`[HCAFreeze] stage=dashboard-refresh outcome=failed message=${refreshWarning}`);
+      log(`Freeze request is saved; dashboard refresh warning: ${refreshWarning}`);
+    }
+
+    if (!statusUpdated) {
+      finalStatusMessage = "Freeze request saved, but the HCP status update failed. Contact an administrator to reconcile the status; do not resubmit the request.";
+    } else {
+      finalStatusMessage = response.data.message || "Freeze request submitted successfully.";
+    }
+    if (refreshWarning) finalStatusMessage += ` Dashboard refresh warning: ${refreshWarning}`;
+    setFormError(statusUpdated ? "" : finalStatusMessage);
+    SetActionStatusMessage(finalStatusMessage);
+    log(statusUpdated ? "Freeze submission completed." : "Partial completion: freeze saved, HCP status update needs recovery.");
+    if (statusUpdated) setTimeout(() => onShowChange(false), 1500);
   } catch (err: any) {
-    console.error("UpdateFreezeInformation Error:", err);
-
-    const errorMessage =
-      err?.response?.data?.message ||
-      err?.message ||
-      "Failed to submit freeze request. Please try again.";
-
-    setFreezeOperationLog((operations) => [...operations, `Operation failed: ${errorMessage}`]);
+    const errorMessage = err?.message || "Failed to submit freeze request. Please try again.";
+    console.error(`[HCAFreeze] stage=${requestSaved ? "post-save" : "deployment-save"} outcome=failed message=${errorMessage}`);
+    log(requestSaved ? `Partial completion: ${errorMessage}` : `Operation failed: ${errorMessage}`);
     setFormError(errorMessage);
     SetActionStatusMessage(errorMessage);
   } finally {
+    submissionInProgress.current = false;
     setSubmitting(false);
   }
 };
@@ -1519,20 +1487,222 @@ if (
 <div className="rounded-xl border border-teal-300 bg-teal-100 p-3 text-sm text-center font-medium text-teal-800 shadow-sm">
   {ActionStatusMessage}
 </div>}
-                {freezeOperationLog.length > 0 && (
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4" aria-live="polite">
-                    <h3 className="mb-2 text-sm font-semibold text-slate-700">Freeze Request Progress</h3>
-                    <ol className="space-y-1.5 text-sm text-slate-600">
-                      {freezeOperationLog.map((operation, index) => (
-                        <li key={`${index}-${operation}`} className="flex gap-2">
-                          <span className="text-[#145DA0]">{index + 1}.</span>
-                          <span>{operation}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
+ {freezeOperationLog.length > 0 && (
+  <div
+    className="fixed inset-0 z-[9999] flex items-center justify-center
+    bg-slate-950/60 p-3 backdrop-blur-sm sm:p-5"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="freeze-progress-title"
+  >
+    <div className="flex max-h-[90vh] w-full max-w-2xl flex-col
+      overflow-hidden rounded-2xl border border-slate-200
+      bg-white shadow-2xl">
+
+      {/* Header */}
+      <div className="flex items-center justify-between
+        border-b border-slate-200 bg-slate-50 px-5 py-4">
+
+        <div>
+          <h3
+            id="freeze-progress-title"
+            className="text-lg font-bold text-slate-900"
+          >
+            Freeze Request Workflow
+          </h3>
+
+          <p className="mt-1 text-xs text-slate-500">
+            Follow each step to understand the request progress.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            // Add your existing popup close handler here
+          }}
+          aria-label="Close popup"
+          className="flex h-9 w-9 shrink-0 items-center justify-center
+            rounded-full text-2xl text-slate-500
+            transition hover:bg-slate-200 hover:text-slate-900"
+        >
+          &times;
+        </button>
+      </div>
+
+      {/* Progress Summary */}
+      <div className="border-b border-slate-100 px-5 py-4">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold text-slate-700">
+            Process Activity
+          </span>
+
+          <span className="rounded-full bg-blue-50 px-3 py-1
+            text-xs font-bold text-blue-700">
+            {freezeOperationLog.length}{" "}
+            {freezeOperationLog.length === 1 ? "Step" : "Steps"} Recorded
+          </span>
+        </div>
+
+        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+          <div
+            className="h-full rounded-full bg-gradient-to-r
+              from-blue-500 to-emerald-500 transition-all duration-500"
+            style={{
+              width: "100%",
+            }}
+          />
+        </div>
+
+        <p className="mt-2 text-xs text-slate-500">
+          Review the recorded actions below in chronological order.
+        </p>
+      </div>
+
+      {/* Flowchart */}
+      <div className="overflow-y-auto px-5 py-5">
+        <div className="relative">
+
+          {freezeOperationLog.map((operation, index) => {
+            const isLast =
+              index === freezeOperationLog.length - 1;
+
+            return (
+              <div
+                key={`${index}-${operation}`}
+                className="relative flex gap-4 pb-6 last:pb-0"
+              >
+                {/* Connecting Line */}
+                {!isLast && (
+                  <div
+                    className="absolute left-[19px] top-10
+                      h-[calc(100%-16px)] w-0.5 bg-blue-200"
+                    aria-hidden="true"
+                  />
                 )}
 
+                {/* Step Indicator */}
+                <div className="relative z-10 flex h-10 w-10
+                  shrink-0 items-center justify-center
+                  rounded-full border-2 border-blue-200
+                  bg-blue-50 text-sm font-extrabold text-blue-700
+                  shadow-sm">
+
+                  {isLast ? (
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      className="h-5 w-5"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M5 12l4 4L19 6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    index + 1
+                  )}
+                </div>
+
+                {/* Step Content */}
+                <div className={`min-w-0 flex-1 rounded-xl border
+                  p-4 transition-colors ${
+                    isLast
+                      ? "border-blue-200 bg-blue-50/70"
+                      : "border-slate-200 bg-white"
+                  }`}>
+
+                  <div className="mb-2 flex flex-wrap
+                    items-center justify-between gap-2">
+
+                    <span className="text-xs font-bold uppercase
+                      tracking-wider text-slate-500">
+                      Step {index + 1}
+                    </span>
+
+                    <span className={`rounded-full px-2.5 py-1
+                      text-[11px] font-bold ${
+                        isLast
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-emerald-100 text-emerald-700"
+                      }`}>
+                      {isLast ? "Latest Activity" : "Recorded"}
+                    </span>
+                  </div>
+
+                  <p className="break-words text-sm font-medium
+                    leading-6 text-slate-800">
+                    {operation}
+                  </p>
+
+                  {!isLast && (
+                    <div className="mt-3 flex items-center gap-1
+                      text-xs font-medium text-slate-400">
+                      <span>↓</span>
+                      <span>Next step</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+        </div>
+
+        {/* Workflow End */}
+        <div className="mt-6 rounded-xl border border-slate-200
+          bg-slate-50 p-4 text-center">
+
+          <div className="mx-auto mb-2 flex h-9 w-9
+            items-center justify-center rounded-full
+            bg-slate-200 text-slate-600">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-5 w-5"
+              aria-hidden="true"
+            >
+              <rect x="6" y="6" width="12" height="12" rx="2" />
+            </svg>
+          </div>
+
+          <p className="text-sm font-bold text-slate-800">
+            End of Recorded Activities
+          </p>
+
+          <p className="mt-1 text-xs text-slate-500">
+            The final recorded activity is shown above.
+          </p>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex justify-end border-t border-slate-200
+        bg-white px-5 py-4">
+
+        <button
+          type="button"
+          onClick={() => {
+            // Add your existing popup close handler here
+          }}
+          className="rounded-xl bg-[#145DA0] px-6 py-2.5
+            text-sm font-semibold text-white shadow-sm
+            transition hover:bg-[#104a80]
+            focus:outline-none focus:ring-2
+            focus:ring-blue-400 focus:ring-offset-2"
+        >
+          Close Workflow
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 <div className="flex flex-col-reverse justify-end gap-3 border-t border-slate-200 pt-5 sm:flex-row"><button type="button" onClick={() => onShowChange(false)} className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-600">Cancel</button><button type="button" disabled={
   (!otp.CLIENT.verified &&
    !otp.HCA.verified &&
