@@ -2846,20 +2846,28 @@ export  const ImportedinvoiceData = {
         "tsiddu805@gmail.com",
         "info@curatehealth.in",
       ],
+
+       "Staff Attendece": [
+        "tsiddu805@gmail.com",
+        "info@curatehealth.in",
+      ],
   
       "Deployment": [
         "tsiddu805@gmail.com",
         "panducurate@gmail.com",
         "srivanikasham@curatehealth.in",
+          "admin@curatehealth.in",
       ],
   
       "Timesheet": [
         "panducurate@gmail.com",
         "srivanikasham@curatehealth.in",
+          "admin@curatehealth.in",
       ],
   
       "Referral Pay": [
         "info@curatehealth.in",
+          "admin@curatehealth.in",
       ],
   
       "Payments": [
@@ -2867,42 +2875,51 @@ export  const ImportedinvoiceData = {
         "tsiddu805@gmail.com",
         "panducurate@gmail.com",
         "srivanikasham@curatehealth.in",
+          "admin@curatehealth.in",
       ],
   
       "HCP List": [
         "sravanthicurate@gmail.com",
+          "admin@curatehealth.in",
       ],
   
       "Pending PDR": [
         "gouricurate@gmail.com",
         "rpandu823@gmail.com",
         "panducurate@gmail.com",
+          "admin@curatehealth.in",
   
       ],
   
       "Vendors": [
         "kirancuratehealth@gmail.com",
+          "admin@curatehealth.in",
       ],
   
       "Training": [
         "info@curatehealth.in",
+          "admin@curatehealth.in",
       ],
   
       "Document Compliance": [
         "info@curatehealth.in",
+          "admin@curatehealth.in",
       ],
   
       "Registration": [
         "tsiddu805@gmail.com",
+          "admin@curatehealth.in",
       ],
   
       "Invoices": [
         "rpandu823@gmail.com",
+          "admin@curatehealth.in",
       ],
   
       "Notifications": [
         "info@curatehealth.in",
-        "kirancuratehealth@gmail.com"
+        "kirancuratehealth@gmail.com",
+          "admin@curatehealth.in",
       ],
   
       "Hostel Attendance": [
@@ -2913,18 +2930,25 @@ export  const ImportedinvoiceData = {
         "info@curatehealth.in",
       ],
   
+      // ALL: [
+      //   "tsiddu805@gmail.com",
+      //   "kirancuratehealth@gmail.com",
+      //   "admin@curatehealth.in",
+      //   "sravanthicurate@gmail.com",
+      //   "srinivasnew0803@gmail.com",
+      //   "srivanikasham@curatehealth.in",
+      //   "info@curatehealth.in",
+      //   "gouricurate@gmail.com",
+      //   "shreeshmacurate@gmail.com",
+      //   "panducurate@gmail.com"
+      // ],
       ALL: [
-        "tsiddu805@gmail.com",
-        "kirancuratehealth@gmail.com",
-        "admin@curatehealth.in",
-        "sravanthicurate@gmail.com",
+       
+   
         "srinivasnew0803@gmail.com",
         "srivanikasham@curatehealth.in",
-        "info@curatehealth.in",
-        "gouricurate@gmail.com",
-        "shreeshmacurate@gmail.com",
-        "panducurate@gmail.com"
-      ],
+       
+      ]
     };
 
 

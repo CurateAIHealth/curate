@@ -44,7 +44,7 @@ useEffect(() => {
 
       const response = await fetch("/api/replacement-info");
       const result = await response.json();
-console.log ("Chek data-----",ReplacementReasons)
+
       if (!result.success) return;
 
       const {
@@ -577,7 +577,7 @@ const isFutureDate = cellDate > currentDate;
        <td className="px-3 py-2">
   <button
     onClick={() => {
-      console.log("Check-----",GetReplacementMessage(item.CurrentHCA_id,item.AssignedHCA_id))
+     
       setPopupInfo(GetReplacementMessage(item.CurrentHCA_id,item.AssignedHCA_id));
       setShowPopup(true);
     }}

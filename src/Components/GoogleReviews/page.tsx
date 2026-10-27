@@ -94,6 +94,10 @@ const users=useSelector((state:any)=>state.AdminUsers)
  const [isChecking, setisChecking] = useState(false)
 
 
+ useEffect(()=>{
+   void FetchGoogleReviewInfo();
+ },[])
+
 const formatIndianDate = (date:any) => {
   const [year, month, day] = date.split("-");
   return `${day}/${month}/${year}`;
@@ -115,22 +119,23 @@ const dispatch=useDispatch()
    */
 const ImpMonth=`${SearchMonth}-${SearchYear}`
 const FetchGoogleReviewInfo = async () => {
-  setisChecking(true);
+ 
   try {
     const Get = await axios.post("/api/GetGoogleReview");
     setImportedInfo(Get.data.data);
+     setisChecking(true);
   } catch (err) {
     console.error("FetchGoogleReviewInfo Error:", err);
-  } finally {
-    setisChecking(false);
+     setisChecking(false);
   }
 };
 
+
 const handleCompletedReviews = () => {
-  if (reviewFilter !== "Completed") {
+
     setReviewFilter("Completed");
-    void FetchGoogleReviewInfo();
-  }
+   
+  
 };
 
 const GetStatus = (
@@ -435,13 +440,13 @@ const GetMonthFreshData = async (r: string) => {
  
   }
 };
-  if (isChecking) {
-    return (
-      <LoadingData />
-    );
-  }
+  // if (isChecking) {
+  //   return (
+  //     <LoadingData />
+  //   );
+  // }
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-4 sm:space-y-6">
 
       {/* =================================================
           SUMMARY CARDS
@@ -463,7 +468,7 @@ const GetMonthFreshData = async (r: string) => {
 
         <SummaryCard
           title="Completed Client Review"
-          value={completedCount}
+          value={!isChecking ?"Loading...":completedCount}
           color="#50c896"
         />
 
@@ -491,7 +496,7 @@ const GetMonthFreshData = async (r: string) => {
             HEADER
         ================================================= */}
 
-        <div className="border-b border-slate-200 p-5">
+        <div className="border-b border-slate-200 p-3 sm:p-5">
 
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
@@ -519,12 +524,12 @@ const GetMonthFreshData = async (r: string) => {
               title="Switching Month"
               description="Updating dashboard data..."
             />
-            <div className="flex gap-2">
-               <div className="relative">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <div className="relative w-full sm:w-auto sm:min-w-[150px]">
                   <select
                     value={SelectedServiceStates}
                     onChange={(e) => setSelectedServiceStates(e.target.value)}
-                    className="w-full text-center h-10 appearance-none rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
+                    className="h-10 w-full appearance-none rounded-lg border border-gray-300 bg-white px-3 pr-10 text-center text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
                   >
                   
               
@@ -541,12 +546,12 @@ const GetMonthFreshData = async (r: string) => {
                   />
                 </div>
               {(!showTerminated&&reviewFilter==="Pending")&&
- <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+ <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
              <select
       value={SearchMonth}
    onChange={(e) =>GetMonthFreshData(e.target.value)}
       className="
-        w-full sm:w-[140px] h-[40px]
+        h-[40px] w-full sm:w-[140px]
         rounded-xl border border-gray-300
         px-3 text-sm bg-white text-gray-800
         focus:outline-none focus:ring-2 focus:ring-indigo-500
@@ -566,7 +571,7 @@ const GetMonthFreshData = async (r: string) => {
       value={SearchYear}
       onChange={(e) => dispatch(UpdateYearFilter(e.target.value))}
       className="
-        w-full sm:w-[120px] h-[40px]
+        h-[40px] w-full sm:w-[120px]
         rounded-xl border border-gray-300
         px-3 text-sm bg-white text-gray-800
         focus:outline-none focus:ring-2 focus:ring-indigo-500
@@ -581,7 +586,7 @@ const GetMonthFreshData = async (r: string) => {
     </select>
           </div>}
             {/* Search */}
-            <div className="relative w-full lg:w-80">
+            <div className="relative w-full sm:flex-1 lg:w-80 lg:flex-none">
 
               <Search
                 size={18}
@@ -605,7 +610,7 @@ const GetMonthFreshData = async (r: string) => {
           {/* =================================================
               PENDING / COMPLETED BUTTONS
           ================================================= */}
-<div className="mt-5 flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+<div className="mt-4 flex w-full min-w-0 flex-col gap-3 sm:mt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
   {/* Review Filters */}
  
 
@@ -636,15 +641,26 @@ const GetMonthFreshData = async (r: string) => {
     </button>
 
     {/* Completed */}
-    <button
-      type="button"
-      onClick={handleCompletedReviews}
-      className={`inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition sm:flex-none sm:px-5 ${
-        reviewFilter === "Completed"
-          ? "bg-[#50c896] text-white shadow-sm"
-          : "border border-slate-200 bg-white text-slate-600 hover:border-[#50c896] hover:text-[#50c896]"
-      }`}
-    >
+
+<button
+  type="button"
+  onClick={handleCompletedReviews}
+  disabled={!isChecking}
+  className={`inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition sm:flex-none sm:px-5 ${
+    !isChecking
+      ? "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
+      : reviewFilter === "Completed"
+        ? "bg-[#50c896] text-white shadow-sm"
+        : "border border-slate-200 bg-white text-slate-600 hover:border-[#50c896] hover:text-[#50c896]"
+  }`}
+>
+  {!isChecking ? (
+    <>
+      <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-teal-600" />
+      <span>Loading...</span>
+    </>
+  ) : (
+    <>
       <CheckCircle2 size={17} className="shrink-0" />
 
       <span className="truncate">Completed Review</span>
@@ -658,11 +674,14 @@ const GetMonthFreshData = async (r: string) => {
       >
         {completedCount}
       </span>
-    </button>
+    </>
+  )}
+</button>
+
     {/* Active */}
 
     {(!showTerminated&&reviewFilter==="Pending")&&
-<div>
+<div className="flex w-full gap-2 sm:w-auto">
   <button
   type="button"
   onClick={() => setStatusFilter("Active")}
@@ -722,7 +741,7 @@ const GetMonthFreshData = async (r: string) => {
             TABLE
         ================================================= */}
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overscroll-x-contain">
 
     {reviewFilter === "Pending" ? (
   <PendingReviewTable
@@ -1592,9 +1611,9 @@ setTimeout(()=>{
     }
   }
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 backdrop-blur-sm sm:p-4">
 
-      <div className="relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+      <div className="relative max-h-[95dvh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl sm:max-h-[90vh]">
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 p-5">
@@ -1629,7 +1648,7 @@ setTimeout(()=>{
         <div className="space-y-5 p-5">
 
           {/* Basic Information */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
             <div className="rounded-xl bg-slate-50 p-4">
 
@@ -1918,9 +1937,9 @@ if (response?.message) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 backdrop-blur-sm sm:p-4">
 
-      <div className="relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+      <div className="relative max-h-[95dvh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl sm:max-h-[90vh]">
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 p-5">
@@ -1953,7 +1972,7 @@ if (response?.message) {
         <div className="space-y-5 p-5">
 
           {/* Basic Information */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
             <div className="rounded-xl bg-slate-50 p-4">
               <p className="text-xs text-slate-400">
@@ -2144,21 +2163,21 @@ const ViewReviewModal: React.FC<ViewReviewModalProps> = ({
   onClose,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-2 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="relative my-auto flex max-h-[calc(100dvh-1rem)] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-h-[min(90dvh,800px)]">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 p-5">
-          <div>
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200 p-4 sm:p-5">
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wide text-[#1392d3]">
               Google Review
             </p>
 
-            <h3 className="mt-1 text-xl font-bold text-slate-800">
+            <h3 className="mt-1 break-words text-lg font-bold text-slate-800 sm:text-xl">
               {data.clientName}
             </h3>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 break-words text-sm text-slate-500">
               PT: {data.ptName || "—"}
             </p>
           </div>
@@ -2166,17 +2185,17 @@ const ViewReviewModal: React.FC<ViewReviewModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-500 transition hover:bg-slate-200"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-500 transition hover:bg-slate-200"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="space-y-5 p-5">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 sm:space-y-5 sm:p-5">
 
           {/* Review Status */}
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:p-5">
             <div className="flex items-center justify-between">
 
               <div>
@@ -2184,7 +2203,7 @@ const ViewReviewModal: React.FC<ViewReviewModalProps> = ({
                   Review Status
                 </p>
 
-                <p className="mt-1 text-lg font-bold text-emerald-700">
+                <p className="mt-1 text-base font-bold text-emerald-700 sm:text-lg">
                   Review Submitted
                 </p>
               </div>
@@ -2211,7 +2230,7 @@ const ViewReviewModal: React.FC<ViewReviewModalProps> = ({
                 </p>
               </div>
 
-              <p className="mt-2 font-semibold text-slate-800">
+              <p className="mt-2 break-words font-semibold text-slate-800">
                 {data.clientName || "—"}
               </p>
             </div>
@@ -2228,7 +2247,7 @@ const ViewReviewModal: React.FC<ViewReviewModalProps> = ({
                 </p>
               </div>
 
-              <p className="mt-2 font-semibold text-slate-800">
+              <p className="mt-2 break-words font-semibold text-slate-800">
                 {data.reviewDate || "—"}
               </p>
             </div>
@@ -2248,7 +2267,7 @@ const ViewReviewModal: React.FC<ViewReviewModalProps> = ({
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
 
               {/* Stars */}
               <div className="mb-4 flex gap-1">
@@ -2261,7 +2280,7 @@ const ViewReviewModal: React.FC<ViewReviewModalProps> = ({
                 ))}
               </div>
 
-              <p className="text-[15px] leading-7 text-slate-700">
+              <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-700 sm:text-[15px] sm:leading-7">
                 {data.review || "No review available."}
               </p>
 
@@ -2281,8 +2300,8 @@ const ViewReviewModal: React.FC<ViewReviewModalProps> = ({
               </p>
             </div>
 
-            <div className="rounded-2xl border border-pink-100 bg-pink-50/50 p-5">
-              <p className="text-[15px] leading-7 text-slate-700">
+            <div className="rounded-2xl border border-pink-100 bg-pink-50/50 p-4 sm:p-5">
+              <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-700 sm:text-[15px] sm:leading-7">
                 {data.suggestions || "No suggestions provided."}
               </p>
             </div>
@@ -2299,7 +2318,7 @@ const ViewReviewModal: React.FC<ViewReviewModalProps> = ({
                 <img
                   src={data.ReviewImage}
                   alt="Review"
-                  className="h-auto max-h-[400px] w-full object-contain bg-slate-50"
+                  className="h-auto max-h-[min(50dvh,400px)] w-full object-contain bg-slate-50"
                 />
               </div>
             </div>
@@ -2311,7 +2330,7 @@ const ViewReviewModal: React.FC<ViewReviewModalProps> = ({
         </div>
 
         {/* Close Button */}
-        <div className="border-t border-slate-200 p-4">
+        <div className="shrink-0 border-t border-slate-200 p-3 sm:p-4">
           <button
             type="button"
             onClick={onClose}

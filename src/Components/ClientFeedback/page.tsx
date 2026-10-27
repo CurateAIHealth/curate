@@ -25,7 +25,8 @@ import {
   ToggleLeft,
   ToggleRight,
 } from "lucide-react";
-let terminationCache: any[] | null = null;
+const terminationCache = new Map<string, any[]>();
+const replacementCache = new Map<string, any[]>();
 import { useDispatch, useSelector } from "react-redux";
 import { SetDeploymentInfo, UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import { years } from "@/Lib/Content";
@@ -33,6 +34,7 @@ import axios from "axios";
 import LoadingPopup from "../SwitchMonth/page";
 import { LoadingData } from "../Loading/page";
 import { GetTerminationInfoForTerminationPage } from "@/Lib/user.action";
+import { GetHCPFullName } from "@/Lib/Actions";
 
 /* =========================================================
    TYPES
@@ -918,6 +920,7 @@ const ClientQuestionManager: React.FC<{
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<ManagedClientQuestion | null>(null);
   const [deleting, setDeleting] = useState<ManagedClientQuestion | null>(null);
+  
   const [form, setForm] = useState({
     question: "",
     feedbackType: "Deployment" as ManagedClientQuestion["feedbackType"],
@@ -1629,11 +1632,13 @@ const ClientQuestionManager: React.FC<{
 const ClientFeedback: React.FC = () => {
   const [selectedClient, setSelectedClient] =
     useState<Client | null>(null);
+  const [popupMessage, setPopupMessage] = useState("");
   const [finelScreenMessage, setfinelScreenMessage] = useState("")
+  const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
   const [recordingMessage, setRecordingMessage] = useState("");
   const [searchClient, setSearchClient] =
     useState<string>("");
-
+const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
   const [callStarted, setCallStarted] =
     useState<boolean>(false);
 
@@ -1657,8 +1662,8 @@ const ClientFeedback: React.FC = () => {
   const [isSwitchingMonth, setIsSwitchingMonth] = useState(false);
   const [recording, setRecording] =
     useState<CallRecording | null>(null);
-const [TerminationInfo,setTerminationInfo]=useState([])
-const [ReplacementInfo,setReplacementInfo]=useState([])
+const [TerminationInfo,setTerminationInfo]=useState<any[]>([])
+const [ReplacementInfo,setReplacementInfo]=useState<any[]>([])
   const [saved, setSaved] =
     useState<boolean>(false);
   const DeploymentInfo = useSelector((state: any) => state.AdminDeployment)
@@ -1697,8 +1702,9 @@ const [clientQuestionSections, setClientQuestionSections] = useState<QualitySect
       (section) => section.id !== "termination" && section.id !== "replacement"
     );
   }, [clientQuestionSections, PreviewType]);
-  const [isChecking, setIsChecking] = useState(true);
+  const [isChecking, setIsChecking] = useState(false);
   const [showQuestionManager, setShowQuestionManager] = useState(false)
+  const users=useSelector((state:any)=>state.AdminUsers)
   const dispatch = useDispatch()
   const month = `${SearchMonth}-${SearchYear}`;
   useEffect(() => {
@@ -1736,6 +1742,35 @@ const [clientQuestionSections, setClientQuestionSections] = useState<QualitySect
     }
   }, [SearchMonth, SearchYear]);
 
+
+const handleFeedbackFilterChange = async (
+  filter: "Pending" | "Completed"
+) => {
+  setFeedbackFilter(filter);
+
+  // Do not fetch feedback when viewing Pending clients.
+  if (filter === "Pending") return;
+
+  // Fetch feedback from DB only when Completed is selected.
+  try {
+    setIsLoadingFeedback(true);
+
+    const response = await axios.post("/api/ClientFeedBackInfo", {
+      month: `${SearchMonth}-${SearchYear}`,
+    });
+
+    if (response.data?.success) {
+      setClientFeedbackInfo(response.data.data || []);
+    } else {
+      setClientFeedbackInfo([]);
+    }
+  } catch (error) {
+    console.error("Get Client Feedback Error:", error);
+    setClientFeedbackInfo([]);
+  } finally {
+    setIsLoadingFeedback(false);
+  }
+};
 const GetPlacementFeedback = (
   clientId: string,
   hcaId: string
@@ -1781,10 +1816,12 @@ const GetPlacementFeedback = (
 const FetchTerminationData = async () => {
       try {
            setIsChecking(true);
-        if (terminationCache) {
-          setTerminationInfo(terminationCache);
-          
-   setPreviewType("Termination")
+        const cacheKey = `${SearchMonth}-${SearchYear}`;
+        const cachedData = terminationCache.get(cacheKey);
+        if (cachedData) {
+          setTerminationInfo(cachedData);
+             setPreviewType("Termination");
+   
           setIsChecking(false);
           return;
         }
@@ -1795,12 +1832,16 @@ const FetchTerminationData = async () => {
       
       
         
+       
+   
         const Result: any = FetchData?.map((each: any) => ({
           id: each.ClientId,
           name: each.ClientName,
           hcaId: each.HCAid,
           hcaName: each.HCAName,
-          patientName: each.patientName?.trim() || "Not Available",
+          patientName:
+    each.patientName?.trim() ||
+    GetPatientName(each.ClientId),
 
 
 
@@ -1854,7 +1895,7 @@ const FetchTerminationData = async () => {
 
         })) ?? [];
 
-
+  terminationCache.set(cacheKey, Result);
         setTerminationInfo(Result);
      setPreviewType("Termination")
         setIsChecking(false);
@@ -1867,6 +1908,14 @@ const FetchTerminationData = async () => {
     const GetReplasementData=async()=>{
       try{
    setIsChecking(true)
+     const cacheKey = `${SearchMonth}-${SearchYear}`;
+     const cachedData = replacementCache.get(cacheKey);
+     if (cachedData) {
+       setReplacementInfo(cachedData);
+       setIsChecking(false);
+       setPreviewType("Replacement");
+       return;
+     }
      const response = await axios.post("/api/qualityreplasement", {
       month: SearchMonth,
       year: SearchYear,
@@ -1930,27 +1979,41 @@ const FetchDataReplasementData=response.data.data||[]
 
         })) ?? [];
 
+       replacementCache.set(cacheKey, Result);
              setReplacementInfo(Result);
              setIsChecking(false)
+             setPreviewType("Replacement");
       }catch(err:any){
-
+     setIsChecking(false);
       }
 
     }
+ const GetPatientName = (clientId: any) => {
+  const matchedUser = Array.isArray(users)
+    ? users.find(
+        (each: any) =>
+          String(each.userId ?? "").trim() ===
+          String(clientId ?? "").trim()
+      )
+    : null;
+
+  return matchedUser?.patientName?.trim() || "Not Available";
+};
   const clients: Client[] = useMemo(() => {
     if (!Array.isArray(DeploymentInfo)||!Array.isArray(TerminationInfo)|| !Array.isArray(ReplacementInfo)) {
       return [];
     }
 
   return PreviewType==="Replacement"?ReplacementInfo:  PreviewType==="Termination"?TerminationInfo:  DeploymentInfo.map((item: any) => ({
+
       id: item.ClientId,
       name: item.ClientName?.trim() || "Unknown Client",
       hcaName: item.HCAName?.trim() || "Not Assigned",
       hcaId: item.HCAId || "",
 
-      patientName: item.patientName?.trim() || "Not Available",
+      patientName: PreviewType==="Deployment"?item.patientName?.trim():PreviewType==="Termination"?item.patientName:item.patientName|| "Not Available",
 
-      enrollmentDate: item.StartDate || "N/A",
+      enrollmentDate:PreviewType==="Deployment"? item.StartDate:PreviewType==="Termination"?item.TerminationDate:item.ReplacementDate  || "N/A",
 
       terminated:
         item.Status === "Terminated"
@@ -2029,6 +2092,56 @@ const FetchDataReplasementData=response.data.data||[]
     );
   };
 
+  const getUnansweredQuestions = () =>
+    allSections.flatMap((section) =>
+      section.questions
+        .filter((question) => !getAnswer(question.id).trim())
+        .map((question) => ({ ...question, sectionId: section.id }))
+    );
+
+  const goToFinalSummary = () => {
+    const unanswered = getUnansweredQuestions();
+    if (unanswered.length > 0) {
+      const firstUnanswered = unanswered[0];
+      const sectionIndex = allSections.findIndex(
+        (section) => section.id === firstUnanswered.sectionId
+      );
+      setCurrentSectionIndex(sectionIndex);
+      setPopupMessage(`Please answer all questions before continuing. Start with: ${firstUnanswered.question}`);
+      return;
+    }
+
+    setCurrentSectionIndex(totalSections);
+  };
+
+  const navigateToSection = (targetIndex: number) => {
+    if (targetIndex <= currentSectionIndex) {
+      setCurrentSectionIndex(targetIndex);
+      return;
+    }
+
+    const unanswered = allSections
+      .slice(0, targetIndex)
+      .flatMap((section) =>
+        section.questions
+          .filter((question) => !getAnswer(question.id).trim())
+          .map((question) => ({ ...question, sectionId: section.id }))
+      )[0];
+
+    if (unanswered) {
+      const sectionIndex = allSections.findIndex(
+        (section) => section.id === unanswered.sectionId
+      );
+      setCurrentSectionIndex(sectionIndex);
+      setPopupMessage(
+        `Please answer all questions before continuing. Start with: ${unanswered.question}`
+      );
+      return;
+    }
+
+    setCurrentSectionIndex(targetIndex);
+  };
+
   const updateAnswer = (
     questionId: string,
     value: string
@@ -2102,7 +2215,7 @@ const FetchDataReplasementData=response.data.data||[]
     const maxSize = 100 * 1024 * 1024;
 
     if (file.size > maxSize) {
-      alert("Recording must be less than 100MB.");
+      setPopupMessage("Recording must be less than 100MB.");
       return;
     }
     const formData = new FormData();
@@ -2191,75 +2304,141 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
      SAVE
   ========================================================= */
 
-  const saveQualityCall = async () => {
+
+
+const saveQualityCall = async () => {
   if (!selectedClient) return;
+
+  const unanswered = getUnansweredQuestions();
+  if (unanswered.length > 0) {
+    const firstUnanswered = unanswered[0];
+    setCurrentSectionIndex(
+      allSections.findIndex((section) => section.id === firstUnanswered.sectionId)
+    );
+    setPopupMessage(`Please answer all questions before saving. Start with: ${firstUnanswered.question}`);
+    return;
+  }
 
   setfinelScreenMessage("Please Wait.......");
 
-  // Get the correct question sections for the selected PreviewType
-  let activeSections: QualitySection[];
+  const activeSections: QualitySection[] =
+    PreviewType === "Replacement"
+      ? replacementSections
+      : PreviewType === "Termination"
+        ? terminationSections
+        : qualitySections;
 
-  if (PreviewType === "Replacement") {
-    activeSections = replacementSections;
-  } else if (PreviewType === "Termination") {
-    activeSections = terminationSections;
-  } else {
-    activeSections = qualitySections;
-  }
-
-  // Get only the questions belonging to the selected section type
   const activeQuestionIds = activeSections.flatMap((section) =>
     section.questions.map((question) => question.id)
   );
 
-  // Save only answers belonging to the current PreviewType
-  const filteredAnswers: QualityAnswer[] = answers.filter((answer) =>
+  const filteredAnswers = answers.filter((answer) =>
     activeQuestionIds.includes(answer.questionId)
   );
 
   const qualityCall: QualityCall = {
     clientId: selectedClient.id,
     clientName: selectedClient.name,
-
     hcaId: selectedClient.hcaId,
     hcaName: selectedClient.hcaName,
-
     callDate: new Date().toISOString(),
     calledBy: "Current Admin",
-
     answers: filteredAnswers,
-
     overallFeedback,
     concerns,
-
     followUpRequired,
     followUpNotes,
-
     recording: recording?.url,
-
-    // Deployment / Replacement / Termination
     feedbackType: PreviewType,
-
     status: "Completed",
     Month: `${SearchMonth}-${SearchYear}`,
   };
 
-  
-
   try {
-    const PostClientFeedBack = await axios.post(
-      "/api/ClientFeedback",
-      {
-        qualityCall,
-      }
-    );
+    const response = await axios.post("/api/ClientFeedback", {
+      qualityCall,
+    });
 
- 
+    if (response.data?.success === false) {
+      throw new Error(
+        response.data?.message || "Failed to save feedback"
+      );
+    }
+
+    const savedFeedback = {
+      ...qualityCall,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // 1. Update shared feedback state immediately.
+    setClientFeedbackInfo((previous) => [
+      savedFeedback,
+      ...previous.filter(
+        (item: any) =>
+          !(
+            String(item.clientId).trim() ===
+              String(qualityCall.clientId).trim() &&
+            String(item.hcaId).trim() ===
+              String(qualityCall.hcaId).trim() &&
+            String(item.Month).trim() ===
+              String(qualityCall.Month).trim() &&
+            String(item.feedbackType).trim() ===
+              String(qualityCall.feedbackType).trim()
+          )
+      ),
+    ]);
+
+    // 2. Update Replacement client list immediately.
+    if (PreviewType === "Replacement") {
+      setReplacementInfo((previous: any[]) =>
+        previous.map((client: any) =>
+          String(client.id).trim() ===
+            String(qualityCall.clientId).trim() &&
+          String(client.hcaId).trim() ===
+            String(qualityCall.hcaId).trim()
+            ? {
+                ...client,
+                feedbackStatus: "Completed",
+                Month: qualityCall.Month,
+                compliteInfo: savedFeedback,
+                LastUpdate: savedFeedback.updatedAt,
+              }
+            : client
+        )
+      );
+    }
+
+    // 3. Update Termination client list immediately.
+    if (PreviewType === "Termination") {
+      setTerminationInfo((previous: any[]) =>
+        previous.map((client: any) =>
+          String(client.id).trim() ===
+            String(qualityCall.clientId).trim() &&
+          String(client.hcaId).trim() ===
+            String(qualityCall.hcaId).trim()
+            ? {
+                ...client,
+                feedbackStatus: "Completed",
+                Month: qualityCall.Month,
+                compliteInfo: savedFeedback,
+                LastUpdate: savedFeedback.updatedAt,
+              }
+            : client
+        )
+      );
+    }
+
+    setfinelScreenMessage("");
     setSaved(true);
   } catch (error) {
     console.error("Save Quality Call Error:", error);
+    setfinelScreenMessage(
+      "Failed to save feedback. Please try again."
+    );
   }
 };
+
+
 
   /* =========================================================
      CLIENT SELECTION SCREEN
@@ -2284,6 +2463,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
   if (!callStarted) {
     return (
       <div className="space-y-6">
+        <PopupMessage message={popupMessage} onClose={() => setPopupMessage("")} />
 
         {/* Header */}
        <div className="w-full space-y-6">
@@ -2334,7 +2514,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
         <button
           type="button"
           onClick={() => {
-            setPreviewType("Replacement");
+            
             GetReplasementData();
           }}
           className={`flex min-h-[44px] min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition-all duration-200 sm:gap-2 sm:px-4 sm:text-sm ${
@@ -2356,7 +2536,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
         <button
           type="button"
           onClick={() => {
-            setPreviewType("Termination");
+         
             FetchTerminationData();
           }}
           className={`flex min-h-[44px] min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition-all duration-200 sm:gap-2 sm:px-4 sm:text-sm ${
@@ -2422,13 +2602,19 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
       </div>
 
       <div className="mt-3">
-        <span className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
-          {
-            clients.filter(
-              (client) => client.feedbackStatus === "Pending"
-            ).length
-          }
+       
+          <span className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
+    {clients.filter(
+      (client) => client.feedbackStatus ===  "Pending"
+    ).length || (
+      <span className="inline-flex items-center gap-2 align-middle">
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600" />
+        <span className="text-sm font-medium text-slate-500">
+          Loading
         </span>
+      </span>
+    )}
+  </span>
       </div>
     </div>
 
@@ -2443,14 +2629,19 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
       </div>
 
       <div className="mt-3">
-        <span className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
-          {
-            clients.filter(
-              (client) => client.feedbackStatus === "Completed"
-            ).length
-          }
+  <span className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
+    {clients.filter(
+      (client) => client.feedbackStatus === "Completed"
+    ).length || (
+      <span className="inline-flex items-center gap-2 align-middle">
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600" />
+        <span className="text-sm font-medium text-slate-500">
+          Loading
         </span>
-      </div>
+      </span>
+    )}
+  </span>
+</div>
     </div>
 
   </div>
@@ -2564,7 +2755,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
       {/* Pending */}
       <button
         type="button"
-        onClick={() => setFeedbackFilter("Pending")}
+     onClick={() => handleFeedbackFilterChange("Pending")}
         className={`
           flex min-h-[44px] w-full
           items-center justify-center
@@ -2604,7 +2795,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
       {/* Completed */}
       <button
         type="button"
-        onClick={() => setFeedbackFilter("Completed")}
+    onClick={() => handleFeedbackFilterChange("Completed")}
         className={`
           flex min-h-[44px] w-full
           items-center justify-center
@@ -2623,22 +2814,25 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
 
         <span>Completed</span>
 
-        <span
-          className={`
-            rounded-full px-2 py-0.5 text-xs
-            ${
-              feedbackFilter === "Completed"
-                ? "bg-white/20 text-white"
-                : "bg-slate-100 text-slate-600"
-            }
-          `}
-        >
-          {
-            clients.filter(
-              (client) => client.feedbackStatus === "Completed"
-            ).length
+         <span     className={`
+   
+          ${
+            feedbackFilter === "Completed"
+              ? "bg-[#50c896] text-white shadow-sm"
+              : " bg-white text-slate-600 hover:border-[#50c896] hover:text-[#50c896]"
           }
+        `}>
+    {clients.filter(
+      (client) => client.feedbackStatus === "Completed"
+    ).length || (
+      <span className="inline-flex items-center gap-2 align-middle">
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600" />
+        <span className="text-sm font-medium text-slate-500">
+          Loading
         </span>
+      </span>
+    )}
+  </span>
       </button>
 
     </div>
@@ -2649,8 +2843,11 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
               title="Switching Month"
               description="Updating dashboard data..."
             />
+{(feedbackFilter === "Completed" && isLoadingFeedback) ?
+  <div className="py-6 text-center text-sm text-slate-500">
+    Loading completed feedback...
+  </div>:
 
-            {/* Feedback Table */}
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[1200px] border-collapse text-sm">
@@ -2671,7 +2868,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
                     Last Update
                       </th>
                       <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                        Enrollment date
+                        {PreviewType==="Deployment"?"Enrollment date ":PreviewType==="Replacement"?"Replacement Date":"Termination Date"}
                       </th>
 
                       {/* <th className="px-4 py-3 text-left font-semibold text-slate-600">
@@ -2684,9 +2881,9 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
 
 
 
-                      <th className="px-4 py-3 text-left font-semibold text-slate-600">
+                      {/* <th className="px-4 py-3 text-left font-semibold text-slate-600">
                         Status
-                      </th>
+                      </th> */}
 
                       <th className="px-4 py-3 text-left font-semibold text-slate-600">
                         Feedback
@@ -2727,7 +2924,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
                                   </p>
 
                                   <p className="mt-0.5 text-xs text-slate-400">
-                                    HCA: {client.hcaName}
+                                    HCA: {GetHCPFullName(UserFullInfo,client?.hcaId)}
                                   </p>
                                 </div>
                               </div>
@@ -2753,7 +2950,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
         type="button"
         className="cursor-pointer text-blue-600 underline"
       >
-        View
+        Call History
       </button>
 
       {/* Tooltip Popup */}
@@ -2806,7 +3003,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
 
 
                             {/* Status */}
-                            <td className="px-4 py-4">
+                            {/* <td className="px-4 py-4">
                               <span
                                 className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${client.status === "Active"
                                     ? "bg-emerald-50 text-[#50c896]"
@@ -2817,7 +3014,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
                               >
                                 {client.status}
                               </span>
-                            </td>
+                            </td> */}
 
                             {/* Feedback */}
                             <td className="px-4 py-4">
@@ -2901,7 +3098,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </div>}
 
           </div>
 
@@ -2921,6 +3118,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
   if (saved) {
     return (
       <div className="flex min-h-[500px] items-center justify-center">
+        <PopupMessage message={popupMessage} onClose={() => setPopupMessage("")} />
 
         <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
 
@@ -2943,11 +3141,11 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
           <div className="mt-6 rounded-xl bg-slate-50 p-4 text-left">
 
             <p className="text-xs text-slate-400">
-              Assigned HCA
+              Assigned HCP
             </p>
 
             <p className="mt-1 font-semibold text-slate-700">
-              {selectedClient?.hcaName}
+              {GetHCPFullName(UserFullInfo,selectedClient?.hcaId)}
             </p>
 
             <div className="mt-4 grid grid-cols-2 gap-4">
@@ -3021,9 +3219,12 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
         recordingMessage={recordingMessage}
         finelScreenMessage={finelScreenMessage}
         onRecordingUpload={handleRecordingUpload}
+        popupMessage={popupMessage}
+        onClosePopup={() => setPopupMessage("")}
         onBack={() =>
           setCurrentSectionIndex(totalSections - 1)
         }
+        onDownloadPDF={() => downloadPDF(selectedClient)}
         onSave={saveQualityCall}
       />
     );
@@ -3032,7 +3233,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
   /* =========================================================
      QUESTIONNAIRE
   ========================================================= */
-const downloadPDF = async (client: any) => {
+async function downloadPDF(client: any, currentScreenOnly = false) {
   try {
     setfinelScreenMessage(
       `Preparing ${client.name}'s PDF... Please wait.`
@@ -3052,7 +3253,16 @@ const downloadPDF = async (client: any) => {
     const margin = 15;
     const contentWidth = pageWidth - margin * 2;
 
-    let y = 18;
+    let y = 30;
+
+    // Add the company logo from the public folder when available.
+    try {
+
+      const logoData="/Icons/Curate-logoq.png"
+           doc.addImage(logoData, "PNG", pageWidth - margin - 30, 10, 30, 15);
+    } catch (logoError) {
+      console.warn("Company logo could not be added to the PDF:", logoError);
+    }
 
     const addPageIfNeeded = (heightNeeded = 10) => {
       if (y + heightNeeded > pageHeight - 15) {
@@ -3080,7 +3290,11 @@ const downloadPDF = async (client: any) => {
     // QUESTIONS + ANSWERS
     // ==========================================
 
-    allSections.forEach((section) => {
+    const sectionsToDownload = currentScreenOnly
+      ? [currentSection]
+      : allSections;
+
+    sectionsToDownload.forEach((section) => {
       addPageIfNeeded(15);
 
       // Section title
@@ -3102,9 +3316,7 @@ const downloadPDF = async (client: any) => {
 
       // Questions
       section.questions.forEach((question, index) => {
-        const answer =
-          String(getAnswer(question.id) || "").trim() ||
-          "No answer provided";
+        const answer = String(getAnswer(question.id) || "").trim();
 
         // ==========================================
         // QUESTION
@@ -3141,29 +3353,60 @@ const downloadPDF = async (client: any) => {
         // ANSWER
         // ==========================================
 
-        doc.setFont("helvetica", "normal");
+        if (answer || !currentScreenOnly) {
+          const answerText = answer || "No answer provided";
+          doc.setFont("helvetica", "normal");
 
-        const answerLines =
-          doc.splitTextToSize(
-            `Answer: ${answer}`,
+          const answerLines = doc.splitTextToSize(
+            `Answer: ${answerText}`,
             contentWidth
           );
 
-        addPageIfNeeded(
-          answerLines.length * 5 + 8
-        );
-
-        doc.text(
-          answerLines,
-          margin,
-          y
-        );
-
-        y += answerLines.length * 5 + 7;
+          addPageIfNeeded(answerLines.length * 5 + 8);
+          doc.text(answerLines, margin, y);
+          y += answerLines.length * 5 + 7;
+        }
       });
 
       y += 4;
     });
+
+    // ==========================================
+    // FINAL SUMMARY
+    // ==========================================
+
+    if (!currentScreenOnly) {
+      addPageIfNeeded(15);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Final Summary", margin, y);
+      y += 8;
+
+    const summaryItems: { label: string; value: string }[] = [
+      { label: "Overall Feedback", value: overallFeedback || "Not provided" },
+      { label: "Concerns / Issues", value: concerns || "Not provided" },
+      { label: "Follow-up Required?", value: followUpRequired ? "Yes" : "No" },
+    ];
+
+    if (followUpNotes) {
+      summaryItems.push({ label: "Follow-up Notes", value: followUpNotes });
+    }
+
+    summaryItems.forEach(({ label, value }) => {
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      const labelLines = doc.splitTextToSize(`${label}:`, contentWidth);
+      addPageIfNeeded(labelLines.length * 5 + 8);
+      doc.text(labelLines, margin, y);
+      y += labelLines.length * 5;
+
+      doc.setFont("helvetica", "normal");
+      const valueLines = doc.splitTextToSize(value, contentWidth);
+      addPageIfNeeded(valueLines.length * 5 + 6);
+      doc.text(valueLines, margin, y);
+      y += valueLines.length * 5 + 4;
+      });
+    }
 
     // ==========================================
     // DOWNLOAD
@@ -3187,14 +3430,15 @@ const downloadPDF = async (client: any) => {
       error
     );
 
-    alert(
+    setPopupMessage(
       error?.message ||
         "Failed to download feedback PDF."
     );
   }
-};
+}
   return (
     <div className="space-y-5">
+      <PopupMessage message={popupMessage} onClose={() => setPopupMessage("")} />
 
       {/* Header */}
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -3318,9 +3562,7 @@ const downloadPDF = async (client: any) => {
               <button
                 key={section.id}
                 type="button"
-                onClick={() =>
-                  setCurrentSectionIndex(index)
-                }
+                onClick={() => navigateToSection(index)}
                 className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition ${isActive
                     ? "bg-[#1392d3] text-white"
                     : isCompleted
@@ -3345,9 +3587,7 @@ const downloadPDF = async (client: any) => {
 
           <button
             type="button"
-            onClick={() =>
-              setCurrentSectionIndex(totalSections)
-            }
+            onClick={goToFinalSummary}
             className="rounded-xl bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-100"
           >
             Final Summary
@@ -3385,7 +3625,7 @@ const downloadPDF = async (client: any) => {
     {selectedClient?.feedbackStatus === "Completed" && (
       <button
         type="button"
-   onClick={()=>downloadPDF(selectedClient)}
+  onClick={()=>downloadPDF(selectedClient, true)}
         className="
           inline-flex min-h-[42px] shrink-0
           items-center justify-center gap-2
@@ -3517,11 +3757,7 @@ const downloadPDF = async (client: any) => {
 
           <button
             type="button"
-            onClick={() =>
-              setCurrentSectionIndex(
-                (previous) => previous + 1
-              )
-            }
+            onClick={() => navigateToSection(currentSectionIndex + 1)}
             className="inline-flex items-center gap-2 rounded-xl bg-[#1392d3] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
           >
             {currentSectionIndex ===
@@ -3568,7 +3804,10 @@ interface FinalCallScreenProps {
   onRecordingUpload: (
     event: React.ChangeEvent<HTMLInputElement>
   ) => void;
+  popupMessage: string;
+  onClosePopup: () => void;
   onBack: () => void;
+  onDownloadPDF: () => void;
   onSave: () => void;
 }
 
@@ -3588,12 +3827,16 @@ const FinalCallScreen: React.FC<
   recordingMessage,
   finelScreenMessage,
   onRecordingUpload,
+  popupMessage,
+  onClosePopup,
   onBack,
+  onDownloadPDF,
   onSave,
 }) => {
-
+const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
     return (
       <div className="space-y-6">
+        <PopupMessage message={popupMessage} onClose={onClosePopup} />
 
         {/* Header */}
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -3618,34 +3861,25 @@ const FinalCallScreen: React.FC<
     </div>
   </div>
 
-  {/* Right: Back Button */}
-  <button
-    type="button"
-    onClick={onBack}
-    className="
-      inline-flex min-h-[44px] w-full shrink-0
-      items-center justify-center gap-2
-      rounded-xl
-      border border-slate-200
-      bg-white
-      px-4 py-2.5
-      text-sm font-semibold text-slate-600
-      shadow-sm
-      transition-all duration-200
-      hover:border-slate-300
-      hover:bg-slate-50
-      hover:text-slate-800
-      hover:shadow-md
-      active:scale-[0.98]
-      focus:outline-none
-      focus:ring-2
-      focus:ring-[#1392d3]/20
-      sm:w-auto sm:px-5
-    "
-  >
-    <ArrowLeft size={17} strokeWidth={2.2} />
-    <span>Back to Questions</span>
-  </button>
+  <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
+    <button
+      type="button"
+      onClick={onDownloadPDF}
+      className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-200 sm:px-5"
+    >
+      <Download size={17} />
+      <span>Download PDF</span>
+    </button>
+
+    <button
+      type="button"
+      onClick={onBack}
+      className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#1392d3]/20 sm:px-5"
+    >
+      <ArrowLeft size={17} strokeWidth={2.2} />
+      <span>Back to Questions</span>
+    </button>
+  </div>
 
 </div>
 
@@ -3663,7 +3897,7 @@ const FinalCallScreen: React.FC<
 
             <InfoBox
               label="Assigned HCA"
-              value={selectedClient.hcaName}
+              value={GetHCPFullName(UserFullInfo,selectedClient?.hcaId)}
             />
 
             <InfoBox
@@ -3924,5 +4158,25 @@ const InfoBox: React.FC<InfoBoxProps> = ({
 
   </div>
 );
+
+const PopupMessage: React.FC<{ message: string; onClose: () => void }> = ({
+  message,
+  onClose,
+}) => {
+  if (!message) return null;
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 p-4" role="alertdialog" aria-modal="true">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <p className="text-sm leading-6 text-slate-700">{message}</p>
+        <div className="mt-5 flex justify-end">
+          <button type="button" onClick={onClose} className="rounded-xl bg-[#1392d3] px-5 py-2.5 text-sm font-semibold text-white">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default ClientFeedback;

@@ -104,7 +104,7 @@ const Section = ({
 const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance, ValidationData }) => {
   const dispatch = useDispatch();
   const router = useRouter();
-console.log("Check----",ValidationData)
+
   const reduxData = useSelector(
     (state: any) => state.RegisterdUsersFullInformation
   );
@@ -616,7 +616,7 @@ const UpdatePDRInfo = async () => {
   }
 );
 
-console.log("Check For Updated Data-----",resultData)
+
 dispatch(SetDeploymentInfo(resultData .data.deployedLength));
     updateStep(
       "refresh",

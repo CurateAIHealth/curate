@@ -101,12 +101,24 @@ export default function ManagerAttendanceDashboard() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showFullMonth, setShowFullMonth] = useState(false);
+  const [LoadingLeaves,setLoadingLeaves]=useState(false)
 const [selectedStaff, setSelectedStaff] = useState<any>(null);
   const [leaveBalanceStaff, setLeaveBalanceStaff] = useState<any>(null);
-  const [leaveTotalInput, setLeaveTotalInput] = useState("12");
+
+  const [spentLeaves,setspentLeaves]=useState(0)
   const [updatingLeaveBalance, setUpdatingLeaveBalance] = useState(false);
+  const [popupMessage, setPopupMessage] = useState<string | null>(null);
 const [monthlyAttendance, setMonthlyAttendance] = useState<any[]>([]);
 const [loadingMonthlyAttendance, setLoadingMonthlyAttendance] = useState(false);
+const [isEditingCasualLeaves, setIsEditingCasualLeaves] =
+  useState(false);
+
+const [isEditingSickLeaves, setIsEditingSickLeaves] =
+  useState(false);
+  const [SickLeaves,setSickLeaves]=useState<any>()
+  
+  const [CasualLeaves,setCasualLeaves]=useState<any>()
+    const [leaveTotalInput, setLeaveTotalInput] = useState(Number(SickLeaves)+Number(CasualLeaves));
   const [updatingAction, setUpdatingAction] = useState<{
   userId: string;
   action: "Approve" | "Reject";
@@ -190,7 +202,54 @@ useEffect(() => {
     isMounted = false;
   };
 }, [selectedDate]);
-console.log("Find Month----",employeeRoster)
+const updateLeave = async (ImpValue: any) => {
+ setLeaveBalanceStaff(ImpValue)
+          setLoadingLeaves(true);
+  try {
+  
+    const employeeId = String(ImpValue.UserId).trim();
+ 
+
+    const response = await axios.get("/api/leavesinfo", {
+      params: { userId: employeeId },
+      timeout: 15000,
+    });
+
+    const leaveData = response?.data?.GetData;
+    if (!leaveData || typeof leaveData !== "object") {
+      throw new Error("Leave information not found.");
+    }
+
+    const parseLeaveCount = (value: unknown): number => {
+      if (
+        (typeof value !== "number" && typeof value !== "string") ||
+        (typeof value === "string" && value.trim() === "")
+      ) {
+        throw new Error("Leave information contains an invalid count.");
+      }
+
+      const count = Number(value);
+      if (!Number.isFinite(count) || count < 0) {
+        throw new Error("Leave information contains an invalid count.");
+      }
+      return count;
+    };
+
+    const sickLeaves = parseLeaveCount(leaveData.sick);
+    const casualLeaves = parseLeaveCount(leaveData.Casual);
+    
+    setspentLeaves(parseLeaveCount(leaveData.usedLeaves))
+    setLeaveTotalInput((Number(sickLeaves) + Number(casualLeaves)));
+ setSickLeaves(sickLeaves)
+ setCasualLeaves(casualLeaves)
+    setLoadingLeaves(false);
+  } catch (err: unknown) {
+   
+
+    // Keep existing leave values if the request fails.
+    // Do not update attendance status after a failed request.
+  }
+};
 function makeTestAttendance(date: string): EmployeeAttendance[] {
   return employeeRoster.map((employee:any, index:any) => {
     const pattern = index % 10;
@@ -650,7 +709,7 @@ await axios.post("/api/MailSend", {
       error.response?.data || error.message || error
     );
 
-    alert(
+    setPopupMessage(
       error.response?.data?.message ||
         "Unable to update leave status. Please try again."
     );
@@ -678,26 +737,27 @@ const getSpentLeaves = (userId: string) => {
 };
 
 const updateLeaveBalance = async () => {
-  if (!leaveBalanceStaff) return;
-  const totalLeaves = Number(leaveTotalInput);
-  if (!Number.isFinite(totalLeaves) || totalLeaves < 0) {
-    alert("Enter a valid total leave allowance.");
+  const userId = leaveBalanceStaff?.UserId;
+
+  if (!userId) {
+    console.error("Missing UserId in leaveBalanceStaff:", leaveBalanceStaff);
+    setPopupMessage("Employee UserId is missing. Please check the attendance API response.");
     return;
   }
-  const spentLeaves = getSpentLeaves(leaveBalanceStaff.UserId);
+  
   try {
     setUpdatingLeaveBalance(true);
-    await axios.post("/api/UpdateStaffLeaveBalance", {
-      UserId: leaveBalanceStaff.UserId,
-      TotalLeaves: totalLeaves,
-      SpentLeaves: spentLeaves,
-      AvailableLeaves: Math.max(0, totalLeaves - spentLeaves),
-      loggedInEmail,
+    const Update=await axios.post("/api/UpdateStaffLeaveBalance", {
+      UserId: userId,
+      CasualLeaves: Number(CasualLeaves),
+      SickLeaves: Number(SickLeaves),
     });
+   
+    setPopupMessage(`Leave balance updated successfully. Casual Leaves: ${Number(CasualLeaves)}. Sick Leaves: ${Number(SickLeaves)}.`);
     setLeaveBalanceStaff(null);
   } catch (error: any) {
     console.error("Failed to update leave balance:", error.response?.data || error.message || error);
-    alert(error.response?.data?.message || "Unable to update leave balance. Please try again.");
+    setPopupMessage(error.response?.data?.message || "Unable to update leave balance. Please try again.");
   } finally {
     setUpdatingLeaveBalance(false);
   }
@@ -708,6 +768,30 @@ const updateLeaveBalance = async () => {
   }
   return (
     <main className="w-full min-w-0 bg-slate-50 p-3 text-slate-900 sm:p-5 lg:p-7">
+      {popupMessage && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm"
+          role="presentation"
+          onClick={() => setPopupMessage(null)}
+        >
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-label="Notification"
+            onClick={(event) => event.stopPropagation()}
+            className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+          >
+            <p className="text-sm leading-6 text-slate-700">{popupMessage}</p>
+            <button
+              type="button"
+              onClick={() => setPopupMessage(null)}
+              className="mt-5 w-full rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
       <div className="mx-auto w-full max-w-screen-2xl space-y-5">
         <header className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             
@@ -927,8 +1011,10 @@ updatingAction?.action === "Reject"
     <button
       type="button"
       onClick={() => {
-        setLeaveBalanceStaff(employee);
-        setLeaveTotalInput(String(employee.TotalLeaves ?? 12));
+         
+        updateLeave(employee);
+       
+       
       }}
       className="group inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-amber-200 bg-amber-50 px-2 text-xs font-semibold text-amber-800 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-400 hover:bg-amber-600 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 sm:gap-2 sm:px-4"
     >
@@ -971,9 +1057,9 @@ updatingAction?.action === "Reject"
 
 {leaveBalanceStaff?.UserId === employee.UserId &&
   (() => {
-    const spentLeaves = getSpentLeaves(employee.UserId)||4;
-    const totalLeaves = Number(leaveTotalInput) || 0;
-    const availableLeaves = Math.max(0, totalLeaves - spentLeaves);
+   
+ 
+    const availableLeaves = Math.max(0, Number(SickLeaves)+Number(CasualLeaves) - spentLeaves);
 
     return (
       <div
@@ -1021,10 +1107,12 @@ updatingAction?.action === "Reject"
               </button>
             </div>
           </div>
-
+          {!LoadingLeaves?
+<div>
           {/* Scrollable Content */}
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4 sm:p-5">
             {/* Total Leaves Input */}
+            
             <div>
               <label
                 htmlFor="leave-total-input"
@@ -1033,91 +1121,99 @@ updatingAction?.action === "Reject"
                 Total allocated leaves
               </label>
 
-             <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 transition focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-100">
-  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.8}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 4v16m8-8H4"
+     
+<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+  {/* Casual Leaves */}
+  <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div className="mb-3 flex items-center justify-between">
+      <label
+        htmlFor="casual-leaves-input"
+        className="text-sm font-semibold text-slate-700"
+      >
+        Casual Leaves
+      </label>
+
+      <button
+        type="button"
+        onClick={() => setIsEditingCasualLeaves((prev) => !prev)}
+        className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
+          isEditingCasualLeaves
+            ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            : "bg-blue-50 text-blue-700 hover:bg-blue-100"
+        }`}
+      >
+        {isEditingCasualLeaves ? "Done" : "Edit"}
+      </button>
+    </div>
+
+    <div className="flex items-center gap-2">
+      <input
+        id="casual-leaves-input"
+        type="number"
+        min="0"
+        step="1"
+        value={CasualLeaves}
+        readOnly={!isEditingCasualLeaves}
+        onChange={(event) => {
+          const value = event.target.value;
+          setCasualLeaves(Number(value));
+        }}
+        className={`w-full rounded-lg border px-3 py-2 text-sm font-semibold outline-none transition focus:ring-2 focus:ring-blue-100 ${
+          isEditingCasualLeaves
+            ? "border-blue-300 bg-white text-slate-800"
+            : "border-slate-100 bg-slate-50 text-slate-600"
+        }`}
       />
-    </svg>
+      <span className="text-xs text-slate-500">Days</span>
+    </div>
   </div>
 
-  <input
-    id="leave-total-input"
-    type="number"
-    min="0"
-    value={leaveTotalInput}
-    readOnly={!isEditingLeaveTotal}
-    onChange={(event) => setLeaveTotalInput(event.target.value)}
-    className={`w-full min-w-0 border-0 bg-transparent text-lg font-bold outline-none focus:ring-0 ${
-      isEditingLeaveTotal
-        ? "text-slate-800"
-        : "cursor-default text-slate-500"
-    }`}
-    aria-label="Total leaves"
-  />
+  {/* Sick Leaves */}
+  <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div className="mb-3 flex items-center justify-between">
+      <label
+        htmlFor="sick-leaves-input"
+        className="text-sm font-semibold text-slate-700"
+      >
+        Sick Leaves
+      </label>
 
-  <span className="shrink-0 text-xs font-medium text-slate-500">
-    Days
-  </span>
+      <button
+        type="button"
+        onClick={() => setIsEditingSickLeaves((prev) => !prev)}
+        className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
+          isEditingSickLeaves
+            ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            : "bg-rose-50 text-rose-700 hover:bg-rose-100"
+        }`}
+      >
+        {isEditingSickLeaves ? "Done" : "Edit"}
+      </button>
+    </div>
 
-  <button
-    type="button"
-    onClick={() => setIsEditingLeaveTotal((prev) => !prev)}
-    className={`inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-      isEditingLeaveTotal
-        ? "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 focus:ring-slate-300"
-        : "border border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-400 hover:bg-amber-100 focus:ring-amber-400"
-    }`}
-  >
-    {isEditingLeaveTotal ? (
-      <>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-3.5 w-3.5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-        Cancel
-      </>
-    ) : (
-      <>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-3.5 w-3.5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M16 4l4 4M4 20l4-.8L19.5 7.7a2.1 2.1 0 00-3-3L5 16.2 4 20z"
-          />
-        </svg>
-        Edit
-      </>
-    )}
-  </button>
+    <div className="flex items-center gap-2">
+      <input
+        id="sick-leaves-input"
+        type="number"
+        min="0"
+        step="1"
+        value={SickLeaves}
+        readOnly={!isEditingSickLeaves}
+        onChange={(event) => {
+          const value = event.target.value;
+          setSickLeaves(value);
+        }}
+        className={`w-full rounded-lg border px-3 py-2 text-sm font-semibold outline-none transition focus:ring-2 focus:ring-rose-100 ${
+          isEditingSickLeaves
+            ? "border-rose-300 bg-white text-slate-800"
+            : "border-slate-100 bg-slate-50 text-slate-600"
+        }`}
+      />
+      <span className="text-xs text-slate-500">Days</span>
+    </div>
+  </div>
 </div>
+
             </div>
 
             {/* Leave Summary Cards */}
@@ -1146,7 +1242,7 @@ updatingAction?.action === "Reject"
                 </p>
 
                 <p className="mt-1 text-xl font-bold text-slate-800">
-                  {totalLeaves}
+                  {Number(SickLeaves)+Number(CasualLeaves)}
                 </p>
               </div>
 
@@ -1273,6 +1369,12 @@ updatingAction?.action === "Reject"
               )}
             </button>
           </div>
+         </div>: <div className="flex h-32 w-full items-center justify-center gap-2 text-gray-500">
+  <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-[#00A9A5]" />
+  <span className="text-sm font-medium">
+    Loading leave information...
+  </span>
+</div>}
         </div>
       </div>
     );

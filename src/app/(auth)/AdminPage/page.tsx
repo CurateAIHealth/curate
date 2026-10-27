@@ -278,46 +278,64 @@ const GetHCPFullName = (A: any) => {
   return fullName;
 };
 
-  const UpdateStatus = async (first: string, e: string, UserId: any) => {
-   
-      dispatch(Refresh(`Updating Client Status....`))
-    try {
-      const res = await UpdateUserContactVerificationstatus(UserId, e);
-      
+ 
+const UpdateStatus = async (
+  first: string,
+  e: string,
+  UserId: any
+) => {
+  const previousUser = users.find(
+    (user: any) => user.userId === UserId
+  );
 
+  if (!previousUser) return;
 
+  // 1. Update UI immediately
+  dispatch(
+    setUsers(
+      users.map((user: any) =>
+        user.userId === UserId
+          ? { ...user, ClientStatus: e }
+          : user
+      )
+    )
+  );
 
-      if (res.success) {
-      dispatch(
-        Refresh("Status Updated,Please Wait Fetching new Data......")
-      );
-      const userId =
-        localStorage.getItem("UserId");
+  dispatch(Refresh(`Updating ${first} Client Status....`));
 
-      const { data } = await axios.post(
-        "/api/AdminPageInfo",
-        {
-          userId,
-          refreshType: 
-            "registeredUsers",
-            
-        }
-      );
+  try {
+    // 2. Update database
+    const res = await UpdateUserContactVerificationstatus(
+      UserId,
+      e
+    );
 
-     
-
-      dispatch(setUsers(
-        data.data.registeredUsers
-      ))
-
-       
-
-      dispatch(Refresh(`${first} Client Status Updated Successfully`))
+    if (!res?.success) {
+      throw new Error(res?.message || "Status update failed");
     }
-    } catch (err: any) {
-      console.error(err);
-    }
-  };
+
+    // 3. No full data refetch required
+    dispatch(
+      Refresh(`${first} Client Status Updated Successfully`)
+    );
+  } catch (err: any) {
+    console.error("UpdateStatus error:", err);
+
+    // 4. Roll back if database update fails
+    dispatch(
+      setUsers(
+        users.map((user: any) =>
+          user.userId === UserId
+            ? previousUser
+            : user
+        )
+      )
+    );
+
+    dispatch(Refresh("Failed to update client status"));
+  }
+};
+
   const pillStyles: Record<string, string> = {
     HCA: "bg-yellow-200 text-yellow-900",
     HCP: "bg-green-200 text-green-900",
@@ -342,66 +360,122 @@ const GetHCPFullName = (A: any) => {
   const filteredLeads = LeadSources.filter((lead: string) =>
   lead.toLowerCase().includes(searchLead.toLowerCase())
 );
- const UpdateCurrentstatus = async (
-  first: string,
-  e: string,
-  UserId: any
-) => {
-//  if(e==="Active"){
-//    setShowStatusWarning(true);
-//   return
-//  }
+//  const UpdateCurrentstatus = async (
+//   first: string,
+//   e: string,
+//   UserId: any
+// ) => {
+// //  if(e==="Active"){
+// //    setShowStatusWarning(true);
+// //   return
+// //  }
  
-  dispatch(
-    Refresh(
-      `Updating ${first} Current Status....`
-    )
-  );
+//   dispatch(
+//     Refresh(
+//       `Updating ${first} Current Status....`
+//     )
+//   );
 
-  try {
-    const res =
-      await UpdateUserCurrentstatusInHCPView(
-        UserId,
-        e,
-        loggedInEmail
-      );
+//   try {
+//     const res =
+//       await UpdateUserCurrentstatusInHCPView(
+//         UserId,
+//         e,
+//         loggedInEmail
+//       );
 
-    if (res.success) {
-      dispatch(
-        Refresh("Status Updated,Please Wait Fetching new Data......")
-      );
-      const userId =localStorage.getItem("UserId");
+//     if (res.success) {
+//       dispatch(
+//         Refresh("Status Updated,Please Wait Fetching new Data......")
+//       );
+//       const userId =localStorage.getItem("UserId");
 
-      const { data } = await axios.post(
-        "/api/AdminPageInfo",
-        {
-          userId,
-          refreshType: [
-            "registeredUsers",
-            "fullInfo",
-          ],
-        }
-      );
+//       const { data } = await axios.post(
+//         "/api/AdminPageInfo",
+//         {
+//           userId,
+//           refreshType: [
+//             "registeredUsers",
+//             "fullInfo",
+//           ],
+//         }
+//       );
 
   
 
-      dispatch(setUsers(
-        data.data.registeredUsers
-      ))
+//       dispatch(setUsers(
+//         data.data.registeredUsers
+//       ))
 
-       dispatch(setFullInfo(
-        data.data.fullInfo
-      ))
+//        dispatch(setFullInfo(
+//         data.data.fullInfo
+//       ))
 
-      dispatch(
-        Refresh(res.message)
-      );
+//       dispatch(
+//         Refresh(res.message)
+//       );
+//     }
+//   } catch (err) {
+//     console.error(err);
+//   }
+// };
+
+
+const UpdateCurrentstatus = async (
+  first: string,
+  e: string,
+  UserId: string
+) => {
+  const previousUser = users.find(
+    (user: any) => user.userId === UserId
+  );
+
+  if (!previousUser) return;
+
+  // 1. Update Redux immediately so the UI reflects the change.
+  dispatch(
+    setUsers(
+      users.map((user: any) =>
+        user.userId === UserId
+          ? { ...user, CurrentStatus: e }
+          : user
+      )
+    )
+  );
+
+  dispatch(Refresh(`Updating ${first} Current Status....`));
+
+  try {
+    // 2. Persist the change in the database.
+    const res = await UpdateUserCurrentstatusInHCPView(
+      UserId,
+      e,
+      loggedInEmail
+    );
+
+    if (!res?.success) {
+      throw new Error(res?.message || "Status update failed");
     }
+
+    // 3. No full collection refetch required for this UI update.
+    dispatch(Refresh(res.message || "Status Updated Successfully"));
   } catch (err) {
-    console.error(err);
+    console.error("UpdateCurrentstatus error:", err);
+
+    // 4. Roll back the UI if the database update fails.
+    dispatch(
+      setUsers(
+        users.map((user: any) =>
+          user.userId === UserId
+            ? previousUser
+            : user
+        )
+      )
+    );
+
+    dispatch(Refresh("Failed to update status. Please try again."));
   }
 };
-
 
   const callEnquiryArray = users.filter((each:any) => each.userType === 'CallEnquiry')
   const NotIntrestedArray= users.filter((each:any) => each.Type === 'Irrelevant')
