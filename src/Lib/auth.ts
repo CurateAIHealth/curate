@@ -3259,3 +3259,88 @@ ApprovedAt: new Date()
     };
   }
 };
+
+export const FetchLeavesInfo = async (ImpId: string) => {
+  try {
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Registration");
+
+    const GetLeaveInfo = await Collection.findOne(
+      { userId
+: ImpId },
+      {
+        projection: {
+         
+          Casual: 1,
+          sick: 1,
+          usedLeaves:1
+        },
+      }
+    );
+
+    return GetLeaveInfo;
+  } catch (err: unknown) {
+    console.error("Error fetching leave information:", err);
+    throw err;
+  }
+};
+export const UpdateLeavesInfo = async (
+  ImpId: any,
+  ImpCasual: any,
+  ImpSick: any
+) => {
+  try {
+    // Validate user ID
+    if (!ImpId || typeof ImpId !== "string" || !ImpId.trim()) {
+      throw new Error("Valid user ID is required.");
+    }
+
+    // Validate leave values
+    const Casual = Number(ImpCasual);
+    const sick = Number(ImpSick);
+
+    if (
+      !Number.isFinite(Casual) ||
+      !Number.isFinite(sick) ||
+      Casual < 0 ||
+      sick < 0 ||
+      !Number.isInteger(Casual) ||
+      !Number.isInteger(sick)
+    ) {
+      throw new Error(
+        "Casual and sick leaves must be non-negative whole numbers."
+      );
+    }
+
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
+    const Collection = Db.collection("Registration");
+
+    const result = await Collection.updateOne(
+      { userId: ImpId },
+      {
+        $set: {
+          Casual,
+          sick,
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        message: "User not found.",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Leave information updated successfully.",
+      modified: result.modifiedCount > 0,
+    };
+  } catch (err: unknown) {
+    console.error("Error updating leave information:", err);
+    throw err;
+  }
+};

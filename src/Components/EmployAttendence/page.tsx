@@ -29,12 +29,18 @@ export default function MarkAttendance({
   userName,
   onSubmit,
   onClose,
- SickLeaves,
-  CasualLeaves,
-  usedLeaves,
+ 
 }: AttendanceProps) {
    const SearchMonth = useSelector((state: any) => state.FilterMonth);
          const SearchYear = useSelector((state: any) => state.FilterYear);
+
+ 
+  
+         
+  const [ SickLeaves, setSickLeaves]=useState(0)
+   const [ CasualLeaves,setCasualLeaves]=useState(0)
+   const [LoadingLeaves,setLoadingLeaves]=useState(false)
+    const [usedLeaves,setusedLeaves]=useState(0)
   const [attendance, setAttendance] = useState<any>({
     userId,
     userName,
@@ -112,7 +118,45 @@ const getEmployeeLocation = (): Promise<{
     );
   });
 };
+const updateLeave = async (ImpValue: string) => {
+  setLoadingLeaves(true);
 
+  try {
+    const response = await axios.get("/api/leavesinfo", {
+      params: { userId },
+      timeout: 15000,
+    });
+
+    const leaveData = response?.data?.GetData;
+
+    if (!leaveData) {
+      throw new Error("Leave information not found.");
+    }
+
+    setSickLeaves(Number(leaveData.sick ?? 0));
+    setCasualLeaves(Number(leaveData.Casual ?? 0));
+    setusedLeaves(Number(leaveData.usedLeaves ?? 0));
+
+    setAttendance((prev: any) => ({
+      ...prev,
+      status: ImpValue,
+    }));
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      console.error(
+        "Fetch leaves API error:",
+        err.response?.data ?? err.message
+      );
+    } else {
+      console.error("Update leave error:", err);
+    }
+
+    // Keep existing leave values if the request fails.
+    // Do not update attendance status after a failed request.
+  } finally {
+    setLoadingLeaves(false);
+  }
+};
 const UpdateDailyAttendance = async () => {
   setStatusMessage("Please wait, marking attendance...");
 
@@ -136,9 +180,9 @@ const UpdateDailyAttendance = async () => {
         location,
       };
     }
-alert("s")
+
     const result = await PostEmployeeAttendance(attendancePayload);
-console.log("Found-----",result)
+
  setStatusMessage(result?.message || "Request processed");
     // Send the leave email only after a successful leave submission
     if (result?.success && attendance.status === "Leave") {
@@ -519,37 +563,53 @@ const openAttendanceLocation = (
    
       <div className="px-6 py-6 space-y-6">
     
-  {isLeave&&     <div className="flex items-center justify-between rounded-xl bg-white px-4 py-3 text-sm border-l-4 border-[#00A9A5]">
-  <div className="flex gap-6 text-gray-700">
-    <span>
-      Total Leaves <strong>{totalLeaves}</strong>
-    </span>
+ {(isLeave||LoadingLeaves )&& (
+  <div className="flex items-center justify-between rounded-xl border-l-4 border-[#00A9A5] bg-white px-4 py-3 text-sm">
+    {LoadingLeaves ? (
+      <div className="flex w-full items-center justify-center gap-2 py-1 text-gray-500">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-[#00A9A5]" />
+        <span className="text-sm font-medium">
+          Loading leave information...
+        </span>
+      </div>
+    ) : (
+      <>
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-gray-700">
+          <span>
+            Total Leaves <strong>{totalLeaves}</strong>
+          </span>
 
-    <span>
-      Left{" "}
-      <strong
-        className={
-          remainingLeaves <= 3 ? "text-[#dc2626]" : "text-[#16a34a]"
-        }
-      >
-        {remainingLeaves}
-      </strong>
-    </span>
+          <span>
+            Left{" "}
+            <strong
+              className={
+                remainingLeaves <= 3
+                  ? "text-[#dc2626]"
+                  : "text-[#16a34a]"
+              }
+            >
+              {remainingLeaves}
+            </strong>
+          </span>
 
-    <span>
-      Absents <strong className="text-red-500">{usedLeaves}</strong>
-    </span>
+          <span>
+            Absents <strong className="text-red-500">{usedLeaves}</strong>
+          </span>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
+            Casual · {CasualLeaves}
+          </span>
+
+          <span className="rounded-md bg-pink-50 px-2 py-0.5 text-xs text-pink-700">
+            Sick · {SickLeaves}
+          </span>
+        </div>
+      </>
+    )}
   </div>
-
-  <div className="flex gap-2">
-    <span className="px-2 py-0.5 rounded-md text-xs bg-blue-50 text-blue-700">
-      Casual · {CasualLeaves}
-    </span>
-    <span className="px-2 py-0.5 rounded-md text-xs bg-pink-50 text-pink-700">
-      Sick · {SickLeaves}
-    </span>
-  </div>
-</div>}
+)}
 
 
   
@@ -571,6 +631,9 @@ const openAttendanceLocation = (
                 <button
                   key={item.value}
                   onClick={() =>
+
+                    item.value==="Leave"?
+                    updateLeave(item.value):
                     setAttendance({
                       ...attendance,
                       status: item.value,

@@ -52,7 +52,8 @@ type FeedbackRole =
   | "HCA Status Review"
   | "Role 3"
   | "Random HCA Call"
-  | "Termination";
+  | "Termination"
+  | "HCA Feedback";
 
 interface Question {
   id: string;
@@ -93,6 +94,77 @@ interface SavedFeedback {
 /* =========================================================
    STATUS CONFIG
 ========================================================= */
+
+interface PopupMessageProps {
+  message: string;
+  onClose: () => void;
+}
+
+const PopupMessage: React.FC<PopupMessageProps> = ({
+  message,
+  onClose,
+}) => {
+  if (!message) return null;
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-start justify-center px-4 pt-6 pointer-events-none">
+      <div
+        role="alert"
+        aria-live="assertive"
+        className="pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-2xl animate-in fade-in slide-in-from-top-3 duration-200"
+      >
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4" />
+            <path d="M12 16h.01" />
+          </svg>
+        </div>
+
+        <div className="min-w-0 flex-1 pt-1">
+          <p className="text-sm font-semibold text-slate-800">
+            Notification
+          </p>
+          <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-5 text-slate-600">
+            {message}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close notification"
+          className="shrink-0 rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m18 6-12 12" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const statusConfig: Record<
   HCAStatus,
@@ -1683,7 +1755,8 @@ const HCAFeedback: React.FC = () => {
   );
 
   const [isChecking, setIsChecking] =
-    useState(true);
+    useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
 const [qualityStatus, setQualityStatus] =
   useState<Record<string, any>>({});
   const [ImportedData, setImportedData] =
@@ -1852,7 +1925,7 @@ useEffect(() => {
   useEffect(() => {
     const FetchData = async () => {
       try {
-        setIsChecking(true);
+     
 
         const response = await axios.get(
           "/api/GetQualityData"
@@ -1866,16 +1939,15 @@ useEffect(() => {
             ? data
             : []
         );
+           setIsChecking(true);
       } catch (error) {
         console.error(
           "GetQualityData failed:",
           error
         );
-
+   setIsChecking(false);
         setImportedData([]);
-      } finally {
-        setIsChecking(false);
-      }
+      } 
     };
 
     FetchData();
@@ -1943,6 +2015,15 @@ const getCompletedSectionIds = (
     );
 
   const completedIds: string[] = [];
+
+  // The combined feedback submission contains every applicable section.
+  if (
+    monthlyRecords.some(
+      (item: any) => item?.Role === "HCA Feedback"
+    )
+  ) {
+    return feedbackSections.map((section) => section.id);
+  }
 
   /*
    * =====================================================
@@ -2257,6 +2338,7 @@ const mainRoles: FeedbackRole[] = [
   "HCA Status Review",
   "Role 3",
   "Random HCA Call",
+  "Termination",
 ];
 
   const applicableRoles = mainRoles.filter((role) =>
@@ -2266,6 +2348,16 @@ const mainRoles: FeedbackRole[] = [
         section.visibleFor.includes(status)
     )
   );
+
+  const hasCombinedFeedback = records.some(
+    (record: any) =>
+      record?.Role === "HCA Feedback" &&
+      String(record?.Month) === selectedMonthValue
+  );
+
+  if (hasCombinedFeedback) {
+    return applicableRoles.length;
+  }
 
   const completedRoles = applicableRoles.filter(
     (role) => {
@@ -2290,7 +2382,7 @@ if (role === "HCA Status Review") {
   return records.some(
     (record: any) =>
       record?.Role === "HCA Status Review" &&
-      String(record?.Month) === selectedMonthValue
+      String(record?.Month ?? "").trim() === selectedMonthValue
   );
 }
       /* ==========================================
@@ -2332,17 +2424,40 @@ if (role === "HCA Status Review") {
      applicable section remains.
   ======================================================= */
 
-  const getHCAFeedbackStatus = (
-    item: any
-  ): FeedbackStatus => {
-    const available =
-      getAvailableSections(item);
+const getHCAFeedbackStatus = (
+  item: any
+): FeedbackStatus => {
+  const status = item?.CurrentStatus as HCAStatus;
 
-    return available.length > 0
-      ? "Pending"
-      : "Completed";
-  };
+  // Use the same main-role completion rules as the table:
+  // Role 2 is lifetime; the other applicable roles are monthly.
+  const mainRoles: FeedbackRole[] = [
+    "Role 1",
+    "Role 2",
+    "HCA Status Review",
+    "Role 3",
+    "Random HCA Call",
+    "Termination",
+  ];
 
+  const applicableRoles = mainRoles.filter((role) =>
+    feedbackSections.some(
+      (section) =>
+        section.role === role &&
+        section.visibleFor.includes(status)
+    )
+  );
+
+  if (applicableRoles.length === 0) {
+    return "Completed";
+  }
+
+  const completedCount = getCompletedMainSectionsCount(item);
+
+  return completedCount >= applicableRoles.length
+    ? "Completed"
+    : "Pending";
+};
  const pendingCount = hcaData.filter(
   (item: any) =>
     item?.CurrentStatus === statusFilter &&
@@ -2460,7 +2575,7 @@ const PreferdWorkingStatus=item?.PreferdWorkingStatus||"Telangana"===SelectedSer
     if (
       sections.length === 0
     ) {
-      alert(
+      setPopupMessage(
         "All applicable feedback has already been completed for this month."
       );
       return;
@@ -2481,22 +2596,16 @@ const PreferdWorkingStatus=item?.PreferdWorkingStatus||"Telangana"===SelectedSer
      VIEW FEEDBACK
   ======================================================= */
 
- const handleViewFeedback = (item: any) => {
-  const userId = getUserId(item);
+const handleViewFeedback = (item: any) => {
+  setSelectedHCA(item);
 
   const status = item?.CurrentStatus as HCAStatus;
 
-  const applicable = feedbackSections.filter(
-    (section) =>
+  setSelectedSections(
+    feedbackSections.filter((section) =>
       section.visibleFor.includes(status)
+    )
   );
-const dispatch = useDispatch();
-  const userQualityStatus = qualityStatus?.[userId];
-
-  
-  setSelectedHCA(item);
-
-  setSelectedSections(applicable);
 
   setFeedbackMode("view");
 };
@@ -2531,15 +2640,39 @@ const dispatch = useDispatch();
   UserFullInfo={UserFullInfo}
 existingFeedback={
   feedbackMode === "view"
-    ? qualityStatus?.[
-        getUserId(selectedHCA)
-      ]
+    ? qualityStatus?.[getUserId(selectedHCA)]
     : undefined
 }
   onBack={closeFeedback}
         onSave={(
           feedback
         ) => {
+          setQualityStatus((previous) => {
+            const userId = String(feedback.UserId);
+            const currentStatus = previous[userId] || {};
+            const currentRecords = Array.isArray(currentStatus.records)
+              ? currentStatus.records
+              : [];
+
+            return {
+              ...previous,
+              [userId]: {
+                ...currentStatus,
+                records: [
+                  ...currentRecords.filter(
+                    (record: any) =>
+                      !(
+                        record?.Role === feedback.Role &&
+                        record?.SectionId === feedback.SectionId &&
+                        String(record?.Month) === String(feedback.Month)
+                      )
+                  ),
+                  feedback,
+                ],
+              },
+            };
+          });
+
           setSavedFeedback(
             (previous) => ({
               ...previous,
@@ -2553,6 +2686,10 @@ existingFeedback={
            * immediately from current screen.
            */
      setSelectedSections((previous) => {
+  if (feedback.Role === "HCA Feedback") {
+    return [];
+  }
+
   if (feedback.Role === "Role 2") {
     return previous.filter(
       (section) => section.role !== "Role 2"
@@ -2630,9 +2767,9 @@ existingFeedback={
  
 //   }
 // };
-  if (isChecking) {
-    return <LoadingData />;
-  }
+  // if (isChecking) {
+  //   return <LoadingData />;
+  // }
 if (showQuestionManager) {
   return (
     <QualityQuestionManager
@@ -2645,6 +2782,7 @@ if (showQuestionManager) {
 
   return (
     <div className="space-y-6">
+      <PopupMessage message={popupMessage} onClose={() => setPopupMessage("")} />
 
       {/* =====================================================
           SUMMARY
@@ -2791,34 +2929,48 @@ if (showQuestionManager) {
           </button>
 
           {/* Completed */}
-          <button
-            type="button"
-            onClick={() => setFeedbackFilter("Completed")}
-            className={`
-              flex h-10 min-w-0 items-center justify-between
-              rounded-xl border px-3
-              text-xs font-semibold
-              transition-all duration-200
-              sm:text-sm
-              ${
-                feedbackFilter === "Completed"
-                  ? "border-[#50c896] bg-[#eafaf4] text-[#278f69]"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-[#50c896]"
-              }
-            `}
-          >
-            <span className="flex min-w-0 items-center gap-1.5">
-              <CheckCircle2
-                size={14}
-                className="shrink-0 text-[#278f69]"
-              />
-              <span className="truncate">Completed</span>
-            </span>
+          
+<button
+  type="button"
+  onClick={() => setFeedbackFilter("Completed")}
+  disabled={!isChecking}
+  className={`
+    flex h-10 min-w-0 items-center justify-between
+    rounded-xl border px-3
+    text-xs font-semibold
+    transition-all duration-200
+    sm:text-sm
+    ${
+      !isChecking
+        ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
+        : feedbackFilter === "Completed"
+          ? "border-[#50c896] bg-[#eafaf4] text-[#278f69]"
+          : "border-slate-200 bg-white text-slate-600 hover:border-[#50c896]"
+    }
+  `}
+>
+  <span className="flex min-w-0 items-center gap-1.5">
+    {!isChecking ? (
+      <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-teal-600" />
+    ) : (
+      <CheckCircle2
+        size={14}
+        className="shrink-0 text-[#278f69]"
+      />
+    )}
 
-            <span className="ml-1 flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#d9f5e9] px-1.5 text-[10px] font-bold text-[#278f69]">
-              {completedCount}
-            </span>
-          </button>
+    <span className="truncate">
+      {!isChecking ? "Loading..." : "Completed"}
+    </span>
+  </span>
+
+  {isChecking && (
+    <span className="ml-1 flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#d9f5e9] px-1.5 text-[10px] font-bold text-[#278f69]">
+      {completedCount}
+    </span>
+  )}
+</button>
+
 
         </div>
       </div>
@@ -3082,6 +3234,7 @@ const HCATable: React.FC<HCATableProps> = ({
   getFeedbackStatus,
   getAvailableSections,
   getCompletedSectionsCount,
+  getCompletedMainSectionsCount,
   hasSavedFeedback,
 }) => {
   const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
@@ -3162,6 +3315,7 @@ const mainRoles: FeedbackRole[] = [
   "HCA Status Review",
   "Role 3",
   "Random HCA Call",
+  "Termination",
 ];
 
 const applicableRoles = mainRoles.filter((role) =>
@@ -3172,23 +3326,11 @@ const applicableRoles = mainRoles.filter((role) =>
   )
 );
 
-const completedSectionIds =
-  getCompletedSectionIds(getUserId(item));
-
-const completedRoles = applicableRoles.filter((role) => {
-  const roleSections = feedbackSections.filter(
-    (section) =>
-      section.role === role &&
-      section.visibleFor.includes(status)
-  );
-
-  return roleSections.some((section) =>
-    completedSectionIds.includes(section.id)
-  );
-});
-
 const applicableCount = applicableRoles.length;
-const completedCount = completedRoles.length;
+const completedCount = Math.min(
+  getCompletedMainSectionsCount(item),
+  applicableCount
+);
               return (
                 <tr
                   key={
@@ -3384,6 +3526,7 @@ const FeedbackScreen: React.FC<
   onBack,
   onSave,
 }) => {
+  const [popupMessage, setPopupMessage] = useState("");
   const [answers, setAnswers] =
     useState<
       Record<string, string>
@@ -3436,125 +3579,57 @@ const [DownloadMessage, setDownloadMessage] = useState("");
   /* UI ONLY: role-level slide navigation. Existing save/API logic is unchanged. */
   const [currentSlide, setCurrentSlide] = useState(0);
 
+
 useEffect(() => {
-  if (
-    mode !== "view" ||
-    !existingFeedback ||
-    sections.length === 0
-  ) {
+  if (mode !== "view" || !existingFeedback) {
     return;
   }
 
- 
+  // Support the records structure returned by GetQualityStatus.
+  const records = Array.isArray(existingFeedback?.records)
+    ? existingFeedback.records
+    : [];
 
-
-
-  /*
-   * ==========================================
-   * GET ALL SAVED DATA
-   * ==========================================
-   */
-
-  const savedRoles = [
+  // Keep compatibility with the existing role-based structure.
+  const legacyRoles = [
     existingFeedback?.Role1?.data,
-
     existingFeedback?.Role2?.data,
-
     existingFeedback?.Role3?.data,
-
     existingFeedback?.RandomHCA?.data ||
       existingFeedback?.RandomHCACall?.data,
-
-    existingFeedback?.Termination
+    existingFeedback?.Termination?.data ||
+      existingFeedback?.Termination,
   ].filter(Boolean);
 
- 
+  const savedRoles = [...records, ...legacyRoles];
 
-  /*
-   * ==========================================
-   * MERGE ALL ANSWERS
-   * ==========================================
-   */
+  const mergedAnswers: Record<string, string> = {};
+  const mergedRecordings: Record<string, AudioRecording> = {};
 
-  const mergedAnswers: Record<
-    string,
-    string
-  > = {};
+  savedRoles.forEach((record: any) => {
+    if (record?.answers && typeof record.answers === "object") {
+      Object.assign(mergedAnswers, record.answers);
+    }
 
-  savedRoles.forEach((roleData: any) => {
     if (
-      roleData?.answers &&
-      typeof roleData.answers === "object"
+      record?.recordings &&
+      typeof record.recordings === "object"
     ) {
-      Object.assign(
-        mergedAnswers,
-        roleData.answers
-      );
+      Object.assign(mergedRecordings, record.recordings);
     }
   });
-
-  /*
-   * ==========================================
-   * MERGE RECORDINGS
-   * ==========================================
-   */
-
-  const mergedRecordings: Record<
-    string,
-    AudioRecording
-  > = {};
-
-  savedRoles.forEach((roleData: any) => {
-    if (
-      roleData?.recordings &&
-      typeof roleData.recordings === "object"
-    ) {
-      Object.assign(
-        mergedRecordings,
-        roleData.recordings
-      );
-    }
-  });
-
-  /*
-   * ==========================================
-   * AUDIO
-   * ==========================================
-   */
 
   const savedAudio =
-    savedRoles.find(
-      (roleData: any) =>
-        roleData?.Recording
-    )?.Recording || null;
+    [...savedRoles]
+      .reverse()
+      .find((record: any) => record?.Recording)?.Recording ||
+    null;
 
-  
+  setAnswers(mergedAnswers);
+  setRecordings(mergedRecordings);
+  setAudioFile(savedAudio);
+}, [mode, existingFeedback]);
 
-
-
-  /*
-   * ==========================================
-   * SET PREVIEW DATA
-   * ==========================================
-   */
-
-  setAnswers(
-    mergedAnswers
-  );
-
-  setRecordings(
-    mergedRecordings
-  );
-
-  setAudioFile(
-    savedAudio
-  );
-
-}, [
-  mode,
-  existingFeedback,
-  sections,
-]);
   /* =======================================================
      UPDATE ANSWER
   ======================================================= */
@@ -3597,7 +3672,6 @@ useEffect(() => {
     const missingQuestion =
       section.questions.find(
         (question) =>
-          question.required &&
           !String(
             answers[
               question.id
@@ -3608,7 +3682,7 @@ useEffect(() => {
     if (
       missingQuestion
     ) {
-      alert(
+      setPopupMessage(
         `Please answer: ${missingQuestion.question}`
       );
 
@@ -3645,7 +3719,7 @@ useEffect(() => {
         );
 
       if (!userId) {
-        alert(
+        setPopupMessage(
           "HCA UserId is missing."
         );
         return;
@@ -3718,7 +3792,7 @@ ClientId:ImpClientId,
         error
       );
 
-      alert(
+      setPopupMessage(
         "Failed to save feedback. Please try again."
       );
     } finally {
@@ -3738,14 +3812,13 @@ const handleSaveRole2 = async (
     const missingQuestion =
       section.questions.find(
         (question) =>
-          question.required &&
           !String(
             answers[question.id] || ""
           ).trim()
       );
 
     if (missingQuestion) {
-      alert(
+      setPopupMessage(
         `Please answer: ${missingQuestion.question}`
       );
 
@@ -3776,7 +3849,7 @@ const handleSaveRole2 = async (
         );
         
     if (!userId) {
-      alert("HCA UserId is missing.");
+      setPopupMessage("HCA UserId is missing.");
       return;
     }
 
@@ -3828,7 +3901,7 @@ ClientId:ImpClientId,
       error
     );
 
-    alert(
+    setPopupMessage(
       "Failed to save Role 2 feedback. Please try again."
     );
 
@@ -3847,14 +3920,13 @@ const handleSaveRole3 = async (
   for (const section of role3Sections) {
     const missingQuestion = section.questions.find(
       (question) =>
-        question.required &&
         !String(
           answers[question.id] || ""
         ).trim()
     );
 
     if (missingQuestion) {
-      alert(
+      setPopupMessage(
         `Please answer: ${missingQuestion.question}`
       );
 
@@ -3882,7 +3954,7 @@ const handleSaveRole3 = async (
         );
         
     if (!userId) {
-      alert("HCA UserId is missing.");
+      setPopupMessage("HCA UserId is missing.");
       return;
     }
 
@@ -3931,7 +4003,7 @@ ClientId:ImpClientId,
       error
     );
 
-    alert(
+    setPopupMessage(
       "Failed to save Role 3 feedback. Please try again."
     );
   } finally {
@@ -3939,7 +4011,100 @@ ClientId:ImpClientId,
   }
 };
 
-const downloadPDF = async (ImpFileName: string) => {
+const handleSaveAllFeedback = async () => {
+  let operationLog = "";
+  const reportOperation = (operation: string) => {
+    operationLog = operationLog
+      ? `${operationLog}\n${operation}`
+      : operation;
+    setPopupMessage(operationLog);
+  };
+
+  reportOperation("Save all feedback started.");
+
+  if (mode === "view") {
+    reportOperation("Save cancelled: feedback is in view-only mode.");
+    return;
+  }
+
+  reportOperation("Checking required questions...");
+  for (const section of sections) {
+    reportOperation(`Checking ${section.title || section.role}...`);
+    const missingQuestion = section.questions.find(
+      (question) => !String(answers[question.id] || "").trim()
+    );
+
+    if (missingQuestion) {
+      reportOperation(`Validation failed. Please answer: ${missingQuestion.question}`);
+      setOpenSections((previous) => ({
+        ...previous,
+        [section.id]: true,
+      }));
+      const roleIndex = [
+        "Role 1",
+        "Role 2",
+        "HCA Status Review",
+        "Role 3",
+        "Random HCA Call",
+        "Termination",
+      ]
+        .filter((role) => sections.some((item) => item.role === role))
+        .indexOf(section.role);
+      if (roleIndex >= 0) setCurrentSlide(roleIndex);
+      return;
+    }
+  }
+
+  reportOperation("All required questions are answered.");
+
+  try {
+    setIsSaving(true);
+    reportOperation("Preparing feedback for saving...");
+
+    const userId = String(
+      hca?.userId || hca?._id || hca?.id || ""
+    );
+
+    if (!userId) {
+      reportOperation("Save stopped: HCA UserId is missing.");
+      return;
+    }
+
+    const feedback: SavedFeedback = {
+      UserId: userId,
+      ClientId: String(hca?.ClientId || ""),
+      SectionId: "hca-feedback",
+      Role: "HCA Feedback",
+      answers,
+      recordings,
+      Recording: AudioFile,
+      completedAt: new Date().toISOString(),
+      Month: `${selectedMonth}-${selectedYear}`,
+      Type: "HCA",
+    };
+
+    reportOperation("Sending feedback to the server...");
+    const response = await axios.post("/api/QualityPost", { feedback });
+
+    if (!response?.data?.success) {
+      throw new Error("HCA feedback was not saved");
+    }
+
+    reportOperation("Feedback saved successfully.");
+    onSave(feedback);
+  } catch (error) {
+    console.error("Save all HCA feedback failed:", error);
+    reportOperation("Save failed. Please try again.");
+  } finally {
+    setIsSaving(false);
+    reportOperation("Save operation finished.");
+  }
+};
+
+const downloadPDF = async (
+  ImpFileName: string,
+  activeRole?: FeedbackRole
+) => {
   try {
     setDownloadMessage(`Please Wait Preparing ${ImpFileName} Feedback.......`);
 
@@ -3958,6 +4123,13 @@ const downloadPDF = async (ImpFileName: string) => {
     const contentWidth = pageWidth - margin * 2;
 
     let y = 18;
+ const logoDataUrl="/Icons/Curate-logoq.png"
+  
+    try {
+   
+    } catch (logoError) {
+      console.warn("Could not load the company logo for the PDF:", logoError);
+    }
 
     const addPageIfNeeded = (heightNeeded = 10) => {
       if (y + heightNeeded > pageHeight - 15) {
@@ -3966,10 +4138,18 @@ const downloadPDF = async (ImpFileName: string) => {
       }
     };
 
-    // Title
+    // Company logo and title
+    if (logoDataUrl ) {
+      doc.addImage(logoDataUrl,  margin, 8, 26, 18);
+    }
+
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text(`${ImpFileName} - HCA Feedback`, margin, y);
+    doc.text(
+      `${ImpFileName} - HCA Feedback`,
+      logoDataUrl ? margin + 31 : margin,
+      y
+    );
 
     y += 10;
 
@@ -3989,7 +4169,14 @@ const downloadPDF = async (ImpFileName: string) => {
      * =====================================================
      */
 
-    sections.forEach((section) => {
+    // Export only the role currently displayed, except Random HCA Call,
+    // which intentionally retains the full-feedback export.
+    const sectionsToDownload =
+      activeRole && activeRole !== "Random HCA Call"
+        ? sections.filter((section) => section.role === activeRole)
+        : sections;
+
+    sectionsToDownload.forEach((section) => {
       addPageIfNeeded(15);
 
       // Role / Section heading
@@ -4078,7 +4265,7 @@ const downloadPDF = async (ImpFileName: string) => {
       error
     );
 
-    alert(
+    setPopupMessage(
       error?.message ||
         "Failed to download feedback."
     );
@@ -4100,14 +4287,13 @@ const handleSaveRandomCall = async (
     const missingQuestion =
       section.questions.find(
         (question) =>
-          question.required &&
           !String(
             answers[question.id] || ""
           ).trim()
       );
 
     if (missingQuestion) {
-      alert(
+      setPopupMessage(
         `Please answer: ${missingQuestion.question}`
       );
 
@@ -4137,7 +4323,7 @@ const handleSaveRandomCall = async (
         );
         
     if (!userId) {
-      alert("HCA UserId is missing.");
+      setPopupMessage("HCA UserId is missing.");
       return;
     }
 
@@ -4188,7 +4374,7 @@ ClientId:ImpClientId,
       error
     );
 
-    alert(
+    setPopupMessage(
       "Failed to save Random HCA Call. Please try again."
     );
 
@@ -4209,7 +4395,7 @@ ClientId:ImpClientId,
       
 
       if (!file) {
-        alert(
+        setPopupMessage(
           "No file selected"
         );
         return;
@@ -4221,7 +4407,7 @@ ClientId:ImpClientId,
           1024 *
           1024
       ) {
-        alert(
+        setPopupMessage(
           "Audio file too large. Max allowed is 10MB."
         );
 
@@ -4236,7 +4422,7 @@ ClientId:ImpClientId,
           "audio/"
         )
       ) {
-        alert(
+        setPopupMessage(
           "Only audio files are allowed."
         );
 
@@ -4342,6 +4528,7 @@ ClientId:ImpClientId,
 
   return (
     <div className="min-h-screen space-y-6 bg-slate-50">
+      <PopupMessage message={popupMessage} onClose={() => setPopupMessage("")} />
 
       {/* =====================================================
           HEADER
@@ -4377,7 +4564,7 @@ ClientId:ImpClientId,
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                Complete each available feedback section separately.
+                Complete all feedback sections, then submit once on the final slide.
               </p>
 
             </div>
@@ -4515,9 +4702,10 @@ ClientId:ImpClientId,
           "Role 1": "Role 1 — Complete Feedback",
           "Role 2": "Role 2 — Complete All Questions",
           "Role 3": "Role 3 — Welfare Parameters Analysis",
-          "HCA Status Review":"HCA Status Review — Complete All Questions",
+          "HCA Status Review": "HCA Status Review — Complete All Questions",
           "Random HCA Call": "Random HCA Call — Complete All Questions",
           "Termination": "Termination — Complete All Questions",
+          "HCA Feedback": ""
         };
 
         return (
@@ -4647,7 +4835,8 @@ ClientId:ImpClientId,
   <button
     onClick={() =>
       downloadPDF(
-        `${hca?.FirstName || ""} ${hca?.Surname || ""}`.trim()
+        `${hca?.FirstName || ""} ${hca?.Surname || ""}`.trim(),
+        activeRole
       )
     }
     type="button"
@@ -4856,114 +5045,28 @@ ClientId:ImpClientId,
       </button>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        {mode === "create" && activeRole === "Role 2" && (
+        {mode === "create" && (
           <button
             type="button"
             disabled={isSaving}
             onClick={() => {
-              handleSaveRole2(activeSections);
-              if (!isSaving && !isLastSlide) goToNextSlide();
+              if (isLastSlide) {
+                handleSaveAllFeedback();
+              } else {
+                goToNextSlide();
+              }
             }}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
-            style={{
-              backgroundColor: "#50c896",
-              color: "#ffffff",
-            }}
+            style={{ backgroundColor: "#50c896", color: "#ffffff" }}
           >
             {isSaving ? <Save size={17} /> : <Check size={17} />}
             {isSaving
-              ? "Saving Role 2..."
+              ? "Saving All Feedback..."
               : isLastSlide
-              ? "Complete Role 2"
-              : "Complete Role 2 & Next"}
+                ? "Submit All Feedback"
+                : "Next Role"}
           </button>
         )}
-
-        {mode === "create" && activeRole === "Role 3" && (
-          <button
-            type="button"
-            disabled={isSaving}
-            onClick={() => {
-              handleSaveRole3(activeSections);
-              if (!isSaving && !isLastSlide) goToNextSlide();
-            }}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
-            style={{
-              backgroundColor: "#50c896",
-              color: "#ffffff",
-            }}
-          >
-            {isSaving ? <Save size={17} /> : <Check size={17} />}
-            {isSaving
-              ? "Saving Role 3..."
-              : isLastSlide
-              ? "Complete Role 3"
-              : "Complete Role 3 & Next"}
-          </button>
-        )}
-
-        {mode === "create" && activeRole === "Random HCA Call" && (
-          <button
-            type="button"
-            disabled={isSaving}
-            onClick={() => {
-              handleSaveRandomCall(activeSections);
-              if (!isSaving && !isLastSlide) goToNextSlide();
-            }}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
-            style={{
-              backgroundColor: "#50c896",
-              color: "#ffffff",
-            }}
-          >
-            {isSaving ? <Save size={17} /> : <Check size={17} />}
-            {isSaving
-              ? "Saving Random HCA Call..."
-              : isLastSlide
-              ? "Complete Random HCA Call"
-              : "Complete Random HCA Call & Next"}
-          </button>
-        )}
-
-        {mode === "create" && activeRole === "Role 1" && (
-          <button
-            type="button"
-            disabled={isSaving}
-            onClick={() => {
-              activeSections.forEach((section) => {
-                handleSaveSection(section);
-              });
-
-              if (!isSaving && !isLastSlide) goToNextSlide();
-            }}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
-            style={{
-              backgroundColor: "#50c896",
-              color: "#ffffff",
-            }}
-          >
-            <Check size={17} />
-            Complete Role 1 & Next
-          </button>
-        )}
-
-        {mode === "create" &&
-          activeRole === "Termination" &&
-          activeSections[0] && (
-            <button
-              type="button"
-              disabled={isSaving}
-              onClick={() => handleSaveSection(activeSections[0])}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
-              style={{
-                backgroundColor: "#50c896",
-                color: "#ffffff",
-              }}
-            >
-              <Check size={17} />
-              Complete Termination
-            </button>
-          )}
 
         {mode === "view" && !isLastSlide && (
           <button

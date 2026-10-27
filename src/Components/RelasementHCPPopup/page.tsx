@@ -123,7 +123,7 @@ const HCA_List = Array.isArray(filteredHcps)
       );
     })
   : [];
-console.log ("Check for Task-----",filteredHcps)
+
   const searchedHcps = HCA_List.filter((hcp) =>
     `${hcp.HCPFirstName} ${hcp.HCPLastName || ""}`
       .toLowerCase()
