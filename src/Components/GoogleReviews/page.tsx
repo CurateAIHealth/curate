@@ -59,6 +59,12 @@ interface GoogleReviewData {
   ReviewImage?: string | null;
 }
 
+const GOOGLE_REVIEW_CACHE_TTL = 30_000;
+const googleReviewCache = new Map<string, { data: any[]; cachedAt: number }>();
+
+const getGoogleReviewCacheKey = () =>
+  typeof window === "undefined" ? null : localStorage.getItem("UserId");
+
 /* =========================================================
    TEST DATA
 ========================================================= */
@@ -94,11 +100,39 @@ const users=useSelector((state:any)=>state.AdminUsers)
  const [isChecking, setisChecking] = useState(false)
 
 
- useEffect(()=>{
-   void FetchGoogleReviewInfo();
- },[])
+ useEffect(() => {
+   const cacheKey = getGoogleReviewCacheKey();
+   const cached = cacheKey ? googleReviewCache.get(cacheKey) : undefined;
+   if (cached && Date.now() - cached.cachedAt < GOOGLE_REVIEW_CACHE_TTL) {
+     setImportedInfo(cached.data);
+     setisChecking(true);
+   }
+
+   const controller = new AbortController();
+   const fetchReviews = async () => {
+     try {
+       const response = await axios.post("/api/GetGoogleReview", undefined, {
+         signal: controller.signal,
+       });
+       const nextData = Array.isArray(response.data?.data) ? response.data.data : [];
+       setImportedInfo(nextData);
+       if (cacheKey) {
+         googleReviewCache.set(cacheKey, { data: nextData, cachedAt: Date.now() });
+       }
+       setisChecking(true);
+     } catch (error) {
+       if (controller.signal.aborted) return;
+       console.error("FetchGoogleReviewInfo Error:", error);
+       setisChecking(Boolean(cached));
+     }
+   };
+
+   void fetchReviews();
+   return () => controller.abort();
+ }, [])
 
 const formatIndianDate = (date:any) => {
+  if (typeof date !== "string" || !date) return "Missing";
   const [year, month, day] = date.split("-");
   return `${day}/${month}/${year}`;
 };
@@ -106,31 +140,22 @@ const formatIndianDate = (date:any) => {
 
  
 
- const GetEnrolmentDate=(A:any)=>{
-  const ResultsDate=users.find((each:any)=>each.
-userId===A
-)
-
-return formatIndianDate(ResultsDate.LeadDate)||"Missing"
- }
+ const usersById = useMemo(() => {
+   const byId = new Map<string, any>();
+   if (Array.isArray(users)) {
+     users.forEach((user: any) => {
+       if (user?.userId != null) byId.set(String(user.userId), user);
+     });
+   }
+   return byId;
+ }, [users]);
+ const GetEnrolmentDate = (id: any) =>
+   formatIndianDate(usersById.get(String(id))?.LeadDate);
 const dispatch=useDispatch()
   /*
    * Convert DeploymentInfo into Google Review data
    */
 const ImpMonth=`${SearchMonth}-${SearchYear}`
-const FetchGoogleReviewInfo = async () => {
- 
-  try {
-    const Get = await axios.post("/api/GetGoogleReview");
-    setImportedInfo(Get.data.data);
-     setisChecking(true);
-  } catch (err) {
-    console.error("FetchGoogleReviewInfo Error:", err);
-     setisChecking(false);
-  }
-};
-
-
 const handleCompletedReviews = () => {
 
     setReviewFilter("Completed");
@@ -138,24 +163,14 @@ const handleCompletedReviews = () => {
   
 };
 
-const GetStatus = (
-  importedInfo: any[],
- 
-  userId: string
-): {
-  status?: string;
-  review?: string | null;
-  suggestions?: string | null;
-  reviewDate?: string | null;
-  reviewImage?: string | null;
-} | null => {
-  const userInfo = importedInfo.find(
-    (each: any) =>
-      each?.UserId === userId
-  );
-
-  return userInfo ?? null;
-};
+const reviewsByUserId = useMemo(() => {
+  const byId = new Map<string, any>();
+  ImportedInfo.forEach((item: any) => {
+    const id = item?.UserId;
+    if (id != null && !byId.has(String(id))) byId.set(String(id), item);
+  });
+  return byId;
+}, [ImportedInfo]);
 
 const TerminatedUsers = useMemo(() => {
   if (!Array.isArray(users) || !Array.isArray(DeploymentInfo)) {
@@ -226,7 +241,7 @@ const FilteredDeploymentInfo = useMemo(() => {
     clientStatus: user?.ClientStatus || "—",
 
     source: user?.Source || "—",
-      status:GetStatus(ImportedInfo,  user?.userId || user?._id)?.status === "Completed"
+      status:reviewsByUserId.get(String(user?.userId || user?._id))?.status === "Completed"
               ? "Completed"
               : "Pending",
 
@@ -234,15 +249,15 @@ const FilteredDeploymentInfo = useMemo(() => {
 
           reviewRequestMethod: null,
 
-          review:GetStatus(ImportedInfo,user?.userId || user?._id)?.review|| null,
+          review:reviewsByUserId.get(String(user?.userId || user?._id))?.review|| null,
 
-          suggestions:GetStatus(ImportedInfo,  user?.userId || user?._id)?.suggestions|| null,
+          suggestions:reviewsByUserId.get(String(user?.userId || user?._id))?.suggestions|| null,
 
-          reviewDate:GetStatus(ImportedInfo,  user?.userId || user?._id)?.reviewDate|| null,
-          ReviewImage:GetStatus(ImportedInfo,  user?.userId || user?._id)?.reviewImage|| null,
+          reviewDate:reviewsByUserId.get(String(user?.userId || user?._id))?.reviewDate|| null,
+          ReviewImage:reviewsByUserId.get(String(user?.userId || user?._id))?.reviewImage|| null,
         };
       });
-  }, [DeploymentInfo, ImportedInfo, ImpMonth]);
+  }, [TerminatedUsers, reviewsByUserId]);
 const googleReviews = useMemo<GoogleReviewData[]>(() => {
   if (!Array.isArray(DeploymentInfo)) {
     return [];
@@ -269,48 +284,24 @@ const googleReviews = useMemo<GoogleReviewData[]>(() => {
         note: "",
 
         status:
-          GetStatus(
-            ImportedInfo,
-           
-            item?.ClientId
-          )?.status === "Completed"
+          reviewsByUserId.get(String(item?.ClientId))?.status === "Completed"
             ? "Completed"
             : "Pending",
 
         reviewRequested: false,
         reviewRequestMethod: null,
 
-        review:
-          GetStatus(
-            ImportedInfo,
-            
-            item?.ClientId
-          )?.review || null,
+        review: reviewsByUserId.get(String(item?.ClientId))?.review || null,
 
-        suggestions:
-          GetStatus(
-            ImportedInfo,
-       
-            item?.ClientId
-          )?.suggestions || null,
+        suggestions: reviewsByUserId.get(String(item?.ClientId))?.suggestions || null,
 
-        reviewDate:
-          GetStatus(
-            ImportedInfo,
-       
-            item?.ClientId
-          )?.reviewDate || null,
+        reviewDate: reviewsByUserId.get(String(item?.ClientId))?.reviewDate || null,
 
-        ReviewImage:
-          GetStatus(
-            ImportedInfo,
-      
-            item?.ClientId
-          )?.reviewImage || null,
+        ReviewImage: reviewsByUserId.get(String(item?.ClientId))?.reviewImage || null,
       };
     });
 
-}, [DeploymentInfo, ImportedInfo, ImpMonth, StatusFilter]);
+}, [FilteredDeploymentInfo, reviewsByUserId, usersById]);
 
 
 // IMPORTANT:

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -25,8 +25,33 @@ import {
   ToggleLeft,
   ToggleRight,
 } from "lucide-react";
-const terminationCache = new Map<string, any[]>();
-const replacementCache = new Map<string, any[]>();
+type CacheEntry<T> = { data: T; expiresAt: number };
+const CACHE_TTL_MS = 2 * 60 * 1000;
+const CACHE_MAX_ENTRIES = 20;
+const terminationCache = new Map<string, CacheEntry<any[]>>();
+const replacementCache = new Map<string, CacheEntry<any[]>>();
+
+const readCache = <T,>(cache: Map<string, CacheEntry<T>>, key: string): T | null => {
+  const entry = cache.get(key);
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now()) {
+    cache.delete(key);
+    return null;
+  }
+  cache.delete(key);
+  cache.set(key, entry);
+  return entry.data;
+};
+
+const writeCache = <T,>(cache: Map<string, CacheEntry<T>>, key: string, data: T) => {
+  cache.delete(key);
+  cache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+  while (cache.size > CACHE_MAX_ENTRIES) {
+    const oldestKey = cache.keys().next().value;
+    if (oldestKey === undefined) break;
+    cache.delete(oldestKey);
+  }
+};
 import { useDispatch, useSelector } from "react-redux";
 import { SetDeploymentInfo, UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import { years } from "@/Lib/Content";
@@ -1707,11 +1732,12 @@ const [clientQuestionSections, setClientQuestionSections] = useState<QualitySect
   const users=useSelector((state:any)=>state.AdminUsers)
   const dispatch = useDispatch()
   const month = `${SearchMonth}-${SearchYear}`;
+  const feedbackRequestId = useRef(0);
   useEffect(() => {
+    const requestId = ++feedbackRequestId.current;
+    let active = true;
     const GetClientData = async () => {
       try {
-
-
         const response = await axios.post(
           "/api/ClientFeedBackInfo",
           {
@@ -1721,13 +1747,14 @@ const [clientQuestionSections, setClientQuestionSections] = useState<QualitySect
 
      
 
+        if (!active || requestId !== feedbackRequestId.current) return;
         if (response.data?.success) {
           setClientFeedbackInfo(response.data.data || []);
-          setIsChecking(false)
         } else {
           setClientFeedbackInfo([]);
         }
       } catch (error) {
+        if (!active || requestId !== feedbackRequestId.current) return;
         console.error(
           "Get Client Feedback Error -----",
           error
@@ -1738,8 +1765,12 @@ const [clientQuestionSections, setClientQuestionSections] = useState<QualitySect
     };
 
     if (SearchMonth && SearchYear) {
+      setIsLoadingFeedback(true);
       GetClientData();
     }
+    return () => {
+      active = false;
+    };
   }, [SearchMonth, SearchYear]);
 
 
@@ -1817,7 +1848,7 @@ const FetchTerminationData = async () => {
       try {
            setIsChecking(true);
         const cacheKey = `${SearchMonth}-${SearchYear}`;
-        const cachedData = terminationCache.get(cacheKey);
+        const cachedData = readCache(terminationCache, cacheKey);
         if (cachedData) {
           setTerminationInfo(cachedData);
              setPreviewType("Termination");
@@ -1895,7 +1926,7 @@ const FetchTerminationData = async () => {
 
         })) ?? [];
 
-  terminationCache.set(cacheKey, Result);
+  writeCache(terminationCache, cacheKey, Result);
         setTerminationInfo(Result);
      setPreviewType("Termination")
         setIsChecking(false);
@@ -1909,7 +1940,7 @@ const FetchTerminationData = async () => {
       try{
    setIsChecking(true)
      const cacheKey = `${SearchMonth}-${SearchYear}`;
-     const cachedData = replacementCache.get(cacheKey);
+    const cachedData = readCache(replacementCache, cacheKey);
      if (cachedData) {
        setReplacementInfo(cachedData);
        setIsChecking(false);
@@ -1979,7 +2010,7 @@ const FetchDataReplasementData=response.data.data||[]
 
         })) ?? [];
 
-       replacementCache.set(cacheKey, Result);
+      writeCache(replacementCache, cacheKey, Result);
              setReplacementInfo(Result);
              setIsChecking(false)
              setPreviewType("Replacement");
@@ -2369,6 +2400,11 @@ const saveQualityCall = async () => {
       ...qualityCall,
       updatedAt: new Date().toISOString(),
     };
+
+    // The underlying month lists may have changed; force a fresh fetch next time.
+    const cacheKey = `${SearchMonth}-${SearchYear}`;
+    terminationCache.delete(cacheKey);
+    replacementCache.delete(cacheKey);
 
     // 1. Update shared feedback state immediately.
     setClientFeedbackInfo((previous) => [

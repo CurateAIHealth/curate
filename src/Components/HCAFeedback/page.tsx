@@ -1741,6 +1741,67 @@ question:
   },
 ];
 
+/* In-memory only: avoid persistent storage for potentially sensitive feedback. */
+const QUALITY_CACHE_TTL_MS = 30_000;
+const qualityStatusCache = new Map<
+  string,
+  { value: any; expiresAt: number }
+>();
+const qualityStatusRequests = new Map<string, Promise<any>>();
+let qualityDataCache:
+  | { value: any[]; expiresAt: number }
+  | undefined;
+let qualityDataRequest: Promise<any[]> | undefined;
+
+const fetchQualityStatus = (userId: string): Promise<any> => {
+  const cached = qualityStatusCache.get(userId);
+  if (cached && cached.expiresAt > Date.now()) {
+    return Promise.resolve(cached.value);
+  }
+
+  const pending = qualityStatusRequests.get(userId);
+  if (pending) return pending;
+
+  const request = axios
+    .post("/api/GetQualityStatus", { UserId: userId })
+    .then((response) => {
+      const value = response?.data;
+      qualityStatusCache.set(userId, {
+        value,
+        expiresAt: Date.now() + QUALITY_CACHE_TTL_MS,
+      });
+      return value;
+    })
+    .finally(() => qualityStatusRequests.delete(userId));
+
+  qualityStatusRequests.set(userId, request);
+  return request;
+};
+
+const fetchQualityData = (): Promise<any[]> => {
+  if (qualityDataCache && qualityDataCache.expiresAt > Date.now()) {
+    return Promise.resolve(qualityDataCache.value);
+  }
+  if (qualityDataRequest) return qualityDataRequest;
+
+  qualityDataRequest = axios
+    .get("/api/GetQualityData")
+    .then((response) => {
+      const data = response?.data?.data?.data;
+      const value = Array.isArray(data) ? data : [];
+      qualityDataCache = {
+        value,
+        expiresAt: Date.now() + QUALITY_CACHE_TTL_MS,
+      };
+      return value;
+    })
+    .finally(() => {
+      qualityDataRequest = undefined;
+    });
+
+  return qualityDataRequest;
+};
+
 /* =========================================================
    MAIN COMPONENT
 ========================================================= */
@@ -1759,6 +1820,8 @@ const HCAFeedback: React.FC = () => {
   const [popupMessage, setPopupMessage] = useState("");
 const [qualityStatus, setQualityStatus] =
   useState<Record<string, any>>({});
+  const [qualityRefreshVersion, setQualityRefreshVersion] =
+    useState(0);
   const [ImportedData, setImportedData] =
     useState<any[]>([]);
 
@@ -1840,9 +1903,15 @@ const yearOptions = useMemo(() => {
 }, []);
 
 useEffect(() => {
-  if (!hcaData.length) return;
+  let cancelled = false;
+  if (!hcaData.length) {
+    setQualityStatus({});
+    return () => {
+      cancelled = true;
+    };
+  }
 
-  const FetchQualityStatus = async () => {
+  const fetchStatuses = async () => {
     try {
       const results = await Promise.all(
         hcaData.map(async (hca: any) => {
@@ -1858,18 +1927,9 @@ useEffect(() => {
           }
 
           try {
-            const response = await axios.post(
-              "/api/GetQualityStatus",
-              {
-                UserId: userId,
-              }
-            );
-
-          
-
             return {
               userId,
-              status: response?.data,
+              status: await fetchQualityStatus(userId),
             };
 
           } catch (error) {
@@ -1903,7 +1963,12 @@ useEffect(() => {
 
     
 
-      setQualityStatus(statusMap);
+      if (!cancelled) {
+        setQualityStatus((previous) => ({
+          ...previous,
+          ...statusMap,
+        }));
+      }
 
     } catch (error) {
       console.error(
@@ -1913,9 +1978,12 @@ useEffect(() => {
     }
   };
 
-  FetchQualityStatus();
+  fetchStatuses();
 
-}, [hcaData]);
+  return () => {
+    cancelled = true;
+  };
+}, [hcaData, qualityRefreshVersion]);
 
 
   /* =======================================================
@@ -1923,24 +1991,17 @@ useEffect(() => {
   ======================================================= */
 
   useEffect(() => {
-    const FetchData = async () => {
+    let cancelled = false;
+    const fetchData = async () => {
       try {
-     
-
-        const response = await axios.get(
-          "/api/GetQualityData"
-        );
-
-        const data =
-          response?.data?.data.data;
-
+        const data = await fetchQualityData();
+        if (cancelled) return;
         setImportedData(
-          Array.isArray(data)
-            ? data
-            : []
+          data
         );
            setIsChecking(true);
       } catch (error) {
+        if (cancelled) return;
         console.error(
           "GetQualityData failed:",
           error
@@ -1950,7 +2011,10 @@ useEffect(() => {
       } 
     };
 
-    FetchData();
+    fetchData();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   /* =======================================================
@@ -2542,10 +2606,14 @@ const completedCount = hcaData.filter(
           const matchesFeedbackStatus =
             feedbackStatus ===
             feedbackFilter;
-const PreferdWorkingStatus=item?.PreferdWorkingStatus||"Telangana"===SelectedServiceStates;
+const preferredWorkingState =
+            item?.PreferdWorkingStatus || "Telangana";
+          const matchesServiceState =
+            preferredWorkingState === SelectedServiceStates;
           return (
             matchesSearch &&
-            matchesHCAStatus &&PreferdWorkingStatus&&
+            matchesHCAStatus &&
+            matchesServiceState &&
             matchesFeedbackStatus
           );
         }
@@ -2672,6 +2740,8 @@ existingFeedback={
               },
             };
           });
+          qualityStatusCache.delete(String(feedback.UserId));
+          setQualityRefreshVersion((version) => version + 1);
 
           setSavedFeedback(
             (previous) => ({
@@ -5587,4 +5657,3 @@ const EmptyTable = ({
 };
 
 export default HCAFeedback;
-

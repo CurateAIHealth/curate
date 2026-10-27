@@ -85,7 +85,10 @@ export default function AccountingSub(){
 
 const handleLogout = () => {
   
-  router.push("/DashBoard");
+  router.push("/DashBoard")
+                      dispatch(Update_Main_Filter_Status(""));
+    dispatch(UpdateUserType(""));
+   
 }
   const canAccessTab = useCallback(
     (tab: string, email: string | null) => {

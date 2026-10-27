@@ -19,21 +19,10 @@ import { HomeLoadingData } from '@/Components/HomeLoading/page';
 import { startTransition } from "react";
 import { flushSync } from 'react-dom';
 
-const dashboardCache = new Map<
-  string,
-  {
-    timestamp: number;
-    data: any;
-  }
->();
-
-const dashboardRequestCache: {
-  data: any | null;
-  promise: Promise<any> | null;
-} = {
-  data: null,
-  promise: null,
-};
+const DASHBOARD_CACHE_TTL = 5 * 60 * 1000;
+const MAX_DASHBOARD_CACHE_ENTRIES = 20;
+const dashboardCache = new Map<string, { timestamp: number; data: any }>();
+const dashboardRequests = new Map<string, Promise<any>>();
 
 
 const pink = "#ff1493";
@@ -79,7 +68,6 @@ const INITIAL_REVIEWS_COUNT = 4;
 const visibleReviews = showAllReviews
   ? reviews
   : reviews.slice(0, INITIAL_REVIEWS_COUNT);
-const CACHE_TTL = 30 * 60 * 1000; 
 const loadingSteps = [
   {
     icon: "🔐",
@@ -170,42 +158,39 @@ if (!userId) {
       // ---------------- Admin ----------------
       if (StaffEmails.includes(email)) {
         dispatch(CurrentLoginUser(profile.Email));
+        const cacheKey = `${userId}:${ArgumentMonth}`;
+        const cached = dashboardCache.get(cacheKey);
+        let dashboardData =
+          cached && Date.now() - cached.timestamp < DASHBOARD_CACHE_TTL
+            ? cached.data
+            : null;
 
-        let dashboardData = dashboardRequestCache.data;
+        if (cached && !dashboardData) dashboardCache.delete(cacheKey);
 
         if (!dashboardData) {
-          const cached = dashboardCache.get(userId);
+          let request = dashboardRequests.get(cacheKey);
+          if (!request) {
+            request = axios
+              .post("/api/AdminPageInfo", { userId, Month: ArgumentMonth })
+              .then(({ data }) => {
+                if (!data?.success || !data.data) {
+                  throw new Error("Dashboard fetch failed");
+                }
 
-          if (cached) {
-            dashboardData = cached.data;
-            dashboardRequestCache.data = cached.data;
-          } else {
-            if (!dashboardRequestCache.promise) {
-              dashboardRequestCache.promise = axios
-                .post("/api/AdminPageInfo", { userId, Month: ArgumentMonth })
-                .then(({ data }) => {
-                  if (!data.success) throw new Error("Dashboard fetch failed");
-
-                  dashboardRequestCache.data = data.data;
-
-                  dashboardCache.set(userId, {
-                    timestamp: Date.now(),
-                    data: data.data,
-                  });
-
-                  return data.data;
-                
-                })
-                .finally(() => {
-                  dashboardRequestCache.promise = null;
-                });
-            }
-
-            dashboardData = await dashboardRequestCache.promise;
+                dashboardCache.set(cacheKey, { timestamp: Date.now(), data: data.data });
+                if (dashboardCache.size > MAX_DASHBOARD_CACHE_ENTRIES) {
+                  const oldestKey = dashboardCache.keys().next().value;
+                  if (oldestKey) dashboardCache.delete(oldestKey);
+                }
+                return data.data;
+              })
+              .finally(() => dashboardRequests.delete(cacheKey));
+            dashboardRequests.set(cacheKey, request);
           }
+          dashboardData = await request;
         }
 
-
+        if (!mounted) return;
 
         dispatch(setUsers(dashboardData.registeredUsers));
         dispatch(setFullInfo(dashboardData.fullInfo));
@@ -262,7 +247,7 @@ setIsChecking(false);
     mounted = false;
     clearInterval(progressTimer);
   };
-}, [dispatch, router,]);
+}, [dispatch, router, ArgumentMonth]);
 
 const ViewContactInfo=()=>{
   const Contact_Container=document.getElementById("ContactInformation")
