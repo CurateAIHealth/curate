@@ -66,7 +66,7 @@ case "UpdateSuHeading":
 }
 
 
-export const Admin_Main_Filter = (state: any = "Call Enquiry", action: any) => {
+export const Admin_Main_Filter = (state: any = "", action: any) => {
     switch (action.type) {
         case "Update_Main_Filter":
             return action.payload;
@@ -132,7 +132,7 @@ export const RefreshCount = (state: any = 0, action: any) => {
 }
 
 
-export const FullHCPList=(state:any="patient",action:any)=>{
+export const FullHCPList=(state:any="",action:any)=>{
 switch(action.type){
 
     case "CurrentUserType":
