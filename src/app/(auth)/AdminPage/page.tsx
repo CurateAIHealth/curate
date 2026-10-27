@@ -2340,8 +2340,8 @@ const GetAllHCPCount = () => {
             <button
        onClick={() => {
                        router.push("/DashBoard")
-                      dispatch(Update_Main_Filter_Status(""));
-    dispatch(UpdateUserType(""));
+                      dispatch(Update_Main_Filter_Status("Call Enquiry"));
+    dispatch(UpdateUserType("patient"));
    
                     }}
               className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
