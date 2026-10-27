@@ -310,35 +310,47 @@ useEffect(() => {
      
   //   }
   // }, [ImportedInformationOfCallEnquiry]);
+
 const run = useCallback(async () => {
   const userId = localStorage.getItem("UserId");
-  let currentEmail = null;
 
-  if (userId) {
-    const user = await GetUserInformation(userId);
-
-    if (user?.Email) {
-      currentEmail = user.Email;
-      dispatch(CurrentLoginUser(user.Email));
-      SetProfileName(user.FirstName);
-      SetPasswordValues(user?.PasswordValue);
-    }
+  if (!userId) {
+    router.replace("/sign-in");
+    return;
   }
+
+  setLoading(true);
 
   try {
-    const statsRes=await  GetDashboardStats(currentEmail)
+    const user = await GetUserInformation(userId);
 
-    if (statsRes?.success) {
-   
-      dispatch(UpdatedDashBoardNumbers(statsRes.data))
+    if (!user?.Email) {
+      throw new Error("Unable to load user information");
     }
 
-    setLoading(false);
+    dispatch(CurrentLoginUser(user.Email));
+    SetProfileName(user.FirstName);
+    SetPasswordValues(user.PasswordValue);
+
+    const statsRes = await GetDashboardStats(user.Email);
+
+    if (!statsRes?.success) {
+      throw new Error("Unable to load dashboard statistics");
+    }
+
+    dispatch(UpdatedDashBoardNumbers(statsRes.data));
   } catch (error) {
-    console.error(error);
+    console.error("Dashboard data loading failed:", error);
+    // Keep existing Redux data visible if a refresh fails.
+  } finally {
     setLoading(false);
   }
-}, [dispatch]);
+}, [dispatch, router]);;
+
+useEffect(() => {
+  void run();
+}, [run, updatedRefreshCount]);
+
 useEffect(() => {
    const userId = localStorage.getItem("UserId");
 
@@ -1060,7 +1072,7 @@ const Switching = (tab: string) => {
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <h1 className="text-[15px] truncate font-normal">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
             </h1>
 
           </div>
