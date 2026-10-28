@@ -9,10 +9,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const { UserId,
             AttendanceDate,
-            ApprovalStatus,loggedInEmail } = req.body
+            ApprovalStatus,loggedInEmail,employee } = req.body
         if (!UserId ||
             !AttendanceDate ||
-            !ApprovalStatus||!loggedInEmail) {
+            !ApprovalStatus||!loggedInEmail!) {
             return res.status(405).json({ message: "Attendece Date Missing" })
         }
 

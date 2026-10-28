@@ -47,7 +47,7 @@ const QualityPage: React.FC = () => {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<QualityTab>("hca");
-  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+
 
   const users = useSelector(
     (state: any) => state.AdminUsers
@@ -57,18 +57,7 @@ const QualityPage: React.FC = () => {
     (state: any) => state.AdminFullInfo
   );
 
-  useEffect(() => {
-    const hasUsers = Array.isArray(users) && users.length > 0;
-    const hasUserFullInfo =
-      Array.isArray(userFullInfo) && userFullInfo.length > 0;
-
-    if (!hasUsers || !hasUserFullInfo) {
-      router.replace("/");
-      return;
-    }
-
-    setIsCheckingAccess(false);
-  }, [users, userFullInfo, router]);
+  
 
   const renderQualityComponent = (): React.ReactNode => {
     switch (activeTab) {
@@ -87,19 +76,6 @@ const QualityPage: React.FC = () => {
   };
 
   // Prevent the page from rendering before Redux data is available.
-  if (isCheckingAccess) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-[#1392d3]" />
-
-          <p className="text-sm font-medium text-slate-600">
-            Loading Quality...
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-6">

@@ -1526,12 +1526,7 @@ AdminUI?.scrollIntoView({behavior:'smooth'})
       })
       .map(([key]) => key);
 
-    if (missing.length) {
-      alert(
-        `Mandatory parent data is missing:\n\n${missing.join(", ")}`
-      );
-      return false;
-    }
+    
 
     if (!Client_Id.trim() || !HCA_Id.trim()) {
       alert("Client_Id and HCA_Id are mandatory for additional data lookup.");

@@ -3195,6 +3195,7 @@ export const FullMonthStaffAttendecebyDate = async (ImpData: any) => {
 
 
 
+
 export const UpdateStaffLeaveStatus = async (ImpData: any) => {
   try {
     if (
@@ -3214,19 +3215,44 @@ export const UpdateStaffLeaveStatus = async (ImpData: any) => {
     const StaffAttendeceCollection = db.collection(
       "EmployeesAttendance"
     );
+    const Registerdb = db.collection("Registration");
 
+    const now = new Date();
+
+    // Find the requested leave record
+    const leaveRecord = await StaffAttendeceCollection.findOne({
+      UserId: ImpData.UserId,
+      AttendanceDate: ImpData.AttendanceDate,
+      Status: "Leave",
+    });
+
+    if (!leaveRecord) {
+      return {
+        success: false,
+        message: "Leave record not found.",
+      };
+    }
+
+    // Prevent duplicate approval and duplicate balance updates
+    if (leaveRecord.ApprovalStatus === ImpData.ApprovalStatus) {
+      return {
+        success: true,
+        message: "Leave status is already up to date.",
+      };
+    }
+
+    // Update leave approval status
     const updateResult = await StaffAttendeceCollection.updateOne(
       {
-        UserId: ImpData.UserId,
-        AttendanceDate: ImpData.AttendanceDate,
-        Status: "Leave",
+        _id: leaveRecord._id,
+        ApprovalStatus: leaveRecord.ApprovalStatus ?? { $exists: false },
       },
       {
         $set: {
           ApprovalStatus: ImpData.ApprovalStatus,
-          UpdatedAt: new Date(),
-          ApprovedBy:ImpData.loggedInEmail ,
-ApprovedAt: new Date()
+          UpdatedAt: now,
+          ApprovedBy: ImpData.loggedInEmail,
+          ApprovedAt: now,
         },
       }
     );
@@ -3234,15 +3260,62 @@ ApprovedAt: new Date()
     if (updateResult.matchedCount === 0) {
       return {
         success: false,
-        message: "Leave record not found.",
+        message: "Leave record was updated by another request. Please refresh.",
       };
     }
 
-    if (updateResult.modifiedCount === 0) {
-      return {
-        success: true,
-        message: "Leave status is already up to date.",
-      };
+    // Update leave balance only when approved
+    if (ImpData.ApprovalStatus === "Approved") {
+      const LeaveType = ImpData.employee?.LeaveType;
+      const NoOfDays = Number(ImpData.employee?.TotalDays);
+
+      if (!Number.isFinite(NoOfDays) || NoOfDays <= 0) {
+        return {
+          success: false,
+          message: "Invalid number of leave days.",
+        };
+      }
+
+      let leaveUpdate: any;
+
+     if (LeaveType === "Other") {
+  leaveUpdate = {
+    $inc: {
+      OtherLeaves: NoOfDays,
+    },
+  };
+} else if (LeaveType === "Casual") {
+  leaveUpdate = {
+    $inc: {
+      Casual: -NoOfDays,
+      usedLeaves: NoOfDays,
+    },
+  };
+} else if (LeaveType === "Sick") {
+  leaveUpdate = {
+    $inc: {
+      sick: -NoOfDays,
+      usedLeaves: NoOfDays,
+    },
+  };
+} else {
+        return {
+          success: false,
+          message: "Invalid leave type.",
+        };
+      }
+
+      const registrationUpdate = await Registerdb.updateOne(
+        { userId: ImpData.UserId },
+        leaveUpdate
+      );
+
+      if (registrationUpdate.matchedCount === 0) {
+        return {
+          success: false,
+          message: "Registration record not found.",
+        };
+      }
     }
 
     return {
@@ -3260,6 +3333,7 @@ ApprovedAt: new Date()
   }
 };
 
+
 export const FetchLeavesInfo = async (ImpId: string) => {
   try {
     const Cluster = await clientPromise;
@@ -3274,7 +3348,8 @@ export const FetchLeavesInfo = async (ImpId: string) => {
          
           Casual: 1,
           sick: 1,
-          usedLeaves:1
+          usedLeaves:1,
+          OtherLeaves:1,
         },
       }
     );

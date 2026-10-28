@@ -9351,7 +9351,9 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
       fromDate,
       toDate,
       location,
-      Month
+      Month,
+      leaveType,
+      leaveDescription
     } = EmployInfo;
 
     /* ================= DAILY ATTENDANCE FLOW ================= */
@@ -9493,6 +9495,8 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
       EmployeeName: userName,
       Status: "Leave",
       FromDate: fromDate,
+      leaveType:leaveType,
+      Description:leaveDescription,
       AttendanceDate:fromDate,
       ToDate: toDate,
       TotalDays: totalDays,

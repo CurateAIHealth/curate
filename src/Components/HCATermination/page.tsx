@@ -87,6 +87,7 @@ export default function HCATermination({
 }: HCATerminationProps) {
     const dispatch = useDispatch();
     const TerminationInfo = data;
+    console.log("Check Dataa----",TerminationInfo)
     const clientName = String(data?.name ?? data?.ClientName ?? "");
     const patientName = String(data?.PatientName ?? "");
     const hcaName = String(data?.HCA_Name ?? "");
@@ -1361,7 +1362,7 @@ setClientVerificationOTP(NewOTP)
     SetActionStatusMessage(message);
   };
 
-  if (!Client_Id || !HCA_Id || Month == null || String(Month).trim() === "") {
+  if (!Client_Id || !HCA_Id || Month == null) {
     reject("Client, HCP, or deployment month information is missing.");
     return;
   }
