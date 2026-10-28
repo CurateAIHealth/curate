@@ -3344,3 +3344,73 @@ export const UpdateLeavesInfo = async (
     throw err;
   }
 };
+
+
+
+
+export const GetBenchList = async () => {
+  try {
+    const cluster = await clientPromise;
+    const db = cluster.db("CurateInformation");
+    const collection = db.collection("CompliteRegistrationInformation");
+
+    const users = await collection
+      .find(
+        {
+          "HCAComplitInformation.CurrentStatus": "Bench",
+        },
+        {
+          projection: {
+            _id: 0,
+            "HCAComplitInformation.UserId": 1,
+            "HCAComplitInformation.First Name": 1,
+            "HCAComplitInformation.Surname": 1,
+            "HCAComplitInformation.Mobile Number": 1,
+            "HCAComplitInformation.Gender": 1,
+            "HCAComplitInformation.Current Address": 1,
+            "HCAComplitInformation.Date of Birth": 1,
+            "HCAComplitInformation.ProfilePic": 1,
+            "HCAComplitInformation.Languages": 1,
+            "HCAComplitInformation.Experience": 1,
+            "HCAComplitInformation.CurrentStatus": 1,
+            "HCAComplitInformation.userType": 1,
+          },
+        }
+      )
+      .toArray();
+
+    const data = users.map((user: any) => {
+      const hca = user.HCAComplitInformation ?? {};
+
+      return {
+        UserId: hca.UserId ?? "",
+        HCPFirstName: safeDecrypt(hca["First Name"]) ?? "",
+        HCPSurName: safeDecrypt(hca.Surname) ?? "",
+        HCPContactNumber: safeDecrypt(hca["Mobile Number"]) ?? "",
+        Gender: hca.Gender ?? "",
+        CurrentAddress: hca["Current Address"] ?? "",
+        DateOfBirth: hca["Date of Birth"] ?? "",
+        ProfilePic: hca.ProfilePic || "/Icons/DefaultProfileIcon.png",
+        Languages: hca.Languages ?? "",
+        Experience: hca.Experience ?? 0,
+        CurrentStatus: hca.CurrentStatus ?? "",
+        userType: hca.userType ?? "",
+      };
+    });
+
+    return {
+      success: true,
+      data,
+      count: data.length,
+    };
+  } catch (error) {
+    console.error("GetBenchList Error:", error);
+
+    return {
+      success: false,
+      data: [],
+      count: 0,
+      message: "Failed to fetch bench list",
+    };
+  }
+};

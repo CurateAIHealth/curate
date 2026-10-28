@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
     CalendarDays, ChevronDown, Clock, UserCheck, Users, ShieldCheck,
     MessageCircle, Mail, Send, CheckCircle2, AlertTriangle, RefreshCw,
@@ -134,6 +134,7 @@ const [HCPVerificationOTP, setHCPVerificationOTP] = useState("");
       }); const [otpSending, setOtpSending] = useState<OTPRecipient | null>(null);
     const [otpVerifying, setOtpVerifying] = useState<OTPRecipient | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const submissionInProgress = useRef(false);
     const [formError, setFormError] = useState("");
 const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
 const users=useSelector((state:any)=>state.AdminUsers)
@@ -1344,163 +1345,125 @@ setClientVerificationOTP(NewOTP)
       }
     };
        const UpdateTerminationInformation = async () => {
-  if (submitting) return;
+  if (submitting || submissionInProgress.current) return;
 
   if (!TerminationInfo) {
-    SetActionStatusMessage("Unable to delete. Required information is missing.");
+    SetActionStatusMessage("Unable to submit. Required information is missing.");
     return;
   }
 
-  const finalCareTakerStatus = UpdatedCareTakerStatus?.trim() || "Bench";
   const {
-    HCA_Id,
-    Client_Id,
-    Month,
-    HCA_Name,
-    name,
-    email,
-    contact,
-    location,
-    HCAContact,
-    TimeSheet,
-    ClientAttendance,
-    TerminatedTimeSheet,
+    HCA_Id, Client_Id, Month, HCA_Name, name, email, contact, location,
+    HCAContact, TimeSheet, ClientAttendance, TerminatedTimeSheet,
   } = TerminationInfo;
+  const reject = (message: string) => {
+    setFormError(message);
+    SetActionStatusMessage(message);
+  };
+
+  if (!Client_Id || !HCA_Id || Month == null || String(Month).trim() === "") {
+    reject("Client, HCP, or deployment month information is missing.");
+    return;
+  }
+  // Admin verification overrides the requirement for both Client and HCP verification.
+  if (!otp.ADMIN.verified && !(otp.CLIENT.verified && otp.HCA.verified)) {
+    const missing = [!otp.CLIENT.verified ? "Client" : "", !otp.HCA.verified ? "HCP" : ""]
+      .filter(Boolean).join(" and ");
+    reject(`Please complete ${missing} OTP verification before submitting.`);
+    return;
+  }
+  if (!selectedReason.trim()) return reject("Please select a termination reason.");
+  if (selectedReason === "Other" && !otherReason.trim()) return reject("Please specify the termination reason.");
+  if (!terminationDate || !terminationTime) return reject("Please enter the termination date and time.");
+  if (clientConcern === "Yes" && !clientConcernNote.trim()) return reject("Please enter the client concern details.");
+
+  let userId: string | null = null;
+  try {
+    userId = window.localStorage.getItem("UserId");
+  } catch {
+    // Storage may be unavailable in restricted browser contexts.
+  }
+  if (!userId?.trim()) {
+    reject("Unable to identify the signed-in user. Please sign in again before submitting.");
+    return;
+  }
+
+  submissionInProgress.current = true;
+  setSubmitting(true);
+  setFormError("");
+  const identifiers = { clientId: String(Client_Id), hcaId: String(HCA_Id) };
+  const logStep = (step: string, outcome: string, startedAt: number, httpStatus?: number, errorCode?: string) => {
+    console.info("[HCATermination]", {
+      step, ...identifiers, outcome, elapsedMs: Date.now() - startedAt,
+      ...(httpStatus ? { httpStatus } : {}), ...(errorCode ? { errorCode } : {}),
+    });
+  };
+  const runStep = async (step: string, action: () => Promise<any>, fallback: string) => {
+    const startedAt = Date.now();
+    logStep(step, "started", startedAt);
+    try {
+      const result = await action();
+      const httpStatus = typeof result?.status === "number" ? result.status : undefined;
+      const body = result?.data ?? result;
+      if (result !== true && body?.success !== true) {
+        logStep(step, "failed", startedAt, httpStatus, "UNCONFIRMED_OR_REJECTED");
+        throw new Error(body?.message || fallback);
+      }
+      logStep(step, "succeeded", startedAt, httpStatus);
+    } catch (error: any) {
+      if (error?.message === fallback || error?.response) throw error;
+      logStep(step, "failed", startedAt,
+        typeof error?.response?.status === "number" ? error.response.status : undefined,
+        typeof error?.code === "string" ? error.code : "REQUEST_FAILED");
+      throw new Error(error?.response?.data?.message || error?.message || fallback);
+    }
+  };
 
   try {
-    setFormError("");
-
-    if (!Client_Id || !HCA_Id || !Month) {
-      const message = "Client, HCP, or deployment month information is missing.";
-      setFormError(message);
-      SetActionStatusMessage(message);
-      return;
-    }
-
-    // Admin OTP verification overrides Client and HCP OTP requirements.
-    if (!otp.ADMIN.verified && (!otp.CLIENT.verified || !otp.HCA.verified)) {
-      const missing = [
-        !otp.CLIENT.verified ? "Client" : "",
-        !otp.HCA.verified ? "HCP" : "",
-      ].filter(Boolean).join(" and ");
-
-      const message = `Please complete ${missing} OTP verification before submitting.`;
-      setFormError(message);
-      SetActionStatusMessage(message);
-      return;
-    }
-
-    if (!selectedReason.trim()) {
-      const message = "Please select a termination reason.";
-      setFormError(message);
-      SetActionStatusMessage(message);
-      return;
-    }
-
-    if (selectedReason === "Other" && !otherReason.trim()) {
-      const message = "Please specify the termination reason.";
-      setFormError(message);
-      SetActionStatusMessage(message);
-      return;
-    }
-
-    if (!terminationDate || !terminationTime) {
-      const message = "Please enter the termination date and time.";
-      setFormError(message);
-      SetActionStatusMessage(message);
-      return;
-    }
-
-    if (clientConcern === "Yes" && !clientConcernNote.trim()) {
-      const message = "Please enter the client concern details.";
-      setFormError(message);
-      SetActionStatusMessage(message);
-      return;
-    }
-
-    setSubmitting(true);
+    const finalCareTakerStatus = UpdatedCareTakerStatus?.trim() || "Bench";
     SetActionStatusMessage("Step 1 of 5: Updating the HCP's current status...");
-
-    await UpdateUserCurrentstatusInHCPView(
-      HCA_Id,
-      finalCareTakerStatus,
-      loggedInEmail
-    );
+    await runStep("update_hcp_status", () => UpdateUserCurrentstatusInHCPView(HCA_Id, finalCareTakerStatus, loggedInEmail), "Could not confirm the HCP status update.");
 
     SetActionStatusMessage("Step 2 of 5: Updating the client's contact verification status...");
-    await UpdateUserContactVerificationstatus(Client_Id, "Lost");
+    await runStep("update_client_verification", () => UpdateUserContactVerificationstatus(Client_Id, "Lost"), "Could not confirm the client verification update.");
 
     SetActionStatusMessage("Step 3 of 5: Removing the deployment...");
-    const deleteDeploymentResponse: any = await DeleteDeployMent(
-      Client_Id,
-      HCA_Id,
-      Month
-    );
+    await runStep("delete_deployment", () => DeleteDeployMent(Client_Id, HCA_Id, Month), "Deployment deletion failed or could not be confirmed.");
 
-    if (!deleteDeploymentResponse?.success) {
-      const message = deleteDeploymentResponse?.message || "Deployment deletion failed.";
-      setFormError(message);
-      SetActionStatusMessage(message);
-      return;
-    }
+    SetActionStatusMessage("Step 4 of 5: Saving the termination reason...");
+    await runStep("save_termination_reason", () => PostReason(HCA_Id, Client_Id, selectedReason, otherReason, terminationDate, terminationTime), "Could not confirm the termination reason was saved.");
 
-    SetActionStatusMessage("Step 4 of 5: Saving the termination reason and details...");
-    await Promise.all([
-      PostReason(
-        HCA_Id,
-        Client_Id,
-        selectedReason,
-        otherReason,
-        terminationDate,
-        terminationTime
-      ),
-      InserTerminationData(
-        Client_Id,
-        HCA_Id,
-        HCA_Name,
-        name,
-        email,
-        contact,
-        location,
-        HCAContact,
-        TimeSheet,
-        ClientAttendance,
-        TerminatedTimeSheet,
-        TerminationInfo.ServiceState,
-        otp
-      ),
-    ]);
+    SetActionStatusMessage("Step 4 of 5: Saving termination details...");
+    await runStep("save_termination_details", () => InserTerminationData(
+      Client_Id, HCA_Id, HCA_Name, name, email, contact, location, HCAContact,
+      TimeSheet, ClientAttendance, TerminatedTimeSheet, TerminationInfo.ServiceState, otp
+    ), "Could not confirm the termination details were saved.");
 
-    SetActionStatusMessage("Step 5 of 5: Refreshing deployment data...");
-const userId = localStorage.getItem("UserId");
- const MonthInfo = `${SearchYear}-${SearchMonth}`;
-    if (userId) {
+    // Refresh failure is separate from the already-saved termination writes.
+    const refreshStartedAt = Date.now();
+    logStep("refresh_dashboard", "started", refreshStartedAt);
+    try {
      
-      const { data } = await axios.post("/api/AdminPageInfo", {
-        userId,
-        Month: MonthInfo,
+      const response = await axios.post("/api/AdminPageInfo", {
+        userId, Month: `${SearchYear}-${SearchMonth}`,
         refreshType: ["registeredUsers", "deployment"],
       });
-
-      dispatch(
-        SetDeploymentInfo(data?.data?.deployedLength || 0)
-      );
       
+      dispatch(SetDeploymentInfo(response.data?.data?.deployedLength || 0));
+      logStep("refresh_dashboard", "succeeded", refreshStartedAt, response.status);
+      SetActionStatusMessage("Termination completed successfully. Dashboard data is refreshed.");
+    } catch (error: any) {
+      logStep("refresh_dashboard", "failed", refreshStartedAt,
+        typeof error?.response?.status === "number" ? error.response.status : undefined,
+        typeof error?.code === "string" ? error.code : "REFRESH_FAILED");
+      SetActionStatusMessage("Termination was saved successfully, but the dashboard could not be refreshed. Please retry the dashboard refresh.");
     }
-
-    SetActionStatusMessage("Termination completed successfully. All updates are finished.");
-
   } catch (error: any) {
-    console.error("Termination failed:", error);
-
-    const errorMessage =
-      error?.response?.data?.message ||
-      error?.message ||
-      "Something went wrong while terminating the placement. Please try again.";
-
+    const errorMessage = error?.response?.data?.message || error?.message || "Termination could not be completed. Please contact support before retrying.";
     setFormError(errorMessage);
-    SetActionStatusMessage(errorMessage);
+    SetActionStatusMessage(`Termination stopped before all updates were confirmed: ${errorMessage}`);
   } finally {
+    submissionInProgress.current = false;
     setSubmitting(false);
   }
 };
@@ -1643,9 +1606,7 @@ const userId = localStorage.getItem("UserId");
 </div>}
 
 <div className="flex flex-col-reverse justify-end gap-3 border-t border-slate-200 pt-5 sm:flex-row"><button type="button" onClick={() => onShowChange(false)} className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-600">Cancel</button><button type="button" disabled={
-  (!otp.CLIENT.verified &&
-   !otp.HCA.verified &&
-   !otp.ADMIN.verified) ||
+  (!(otp.CLIENT.verified && otp.HCA.verified) && !otp.ADMIN.verified) ||
   submitting
 } onClick={UpdateTerminationInformation} className="flex items-center justify-center gap-2 rounded-xl bg-[#145DA0] px-6 py-3 text-sm font-semibold text-white disabled:opacity-60">{submitting ? "Submitting..." : <><UserCheck size={17} /> Submit Termination</>}</button></div>
             </div>

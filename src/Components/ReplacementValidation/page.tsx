@@ -118,7 +118,7 @@ export default function HCAReplacement({
   onShowChange,
   data,
   onSubmit,
-  filterProfilePic,
+  
   HCA_List,
 }: HCAReplacementProps) {
   const {
@@ -165,7 +165,8 @@ export default function HCAReplacement({
   const hcaRegistrationNumber = HCA_Id;
   const hcaStartDate = StartDate;
   const hcaGender = Type?.[0] || "";
-
+const [filterProfilePic,setfilterProfilePic]=useState([])
+const [ShowAvaialbleList,setShowAvaialbleList]=useState(false)
   const [hcaImage,sethcaImage]=useState("")
   const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -193,6 +194,8 @@ const [ActionStatusMessage, SetActionStatusMessage] = useState<string>("");
 
 const [isReplacementUpdating, setIsReplacementUpdating] =
   useState(false);
+const replacementSubmissionLock = useRef(false);
+const [replacementNeedsReview, setReplacementNeedsReview] = useState(false);
        const SearchMonth = useSelector((state: any) => state.FilterMonth);
        const SearchYear = useSelector((state: any) => state.FilterYear);
 const [replacementStep, setReplacementStep] = useState(0);
@@ -316,7 +319,24 @@ const generateOTP = () => {
       },
     }));
   };
+const GetBechList=async()=>{
+  try{
 
+    setShowAvaialbleList(true)
+const GetBenchList=await axios.get("api/BenchList")
+console.log ("Check Info Data----",GetBenchList)
+const ImpData=GetBenchList.data.getBechData.data??[]
+console.log ("fIT dATA---",ImpData)
+setfilterProfilePic(ImpData)
+ setShowHCAList(!showHCAList);
+                                                             
+ setShowReassignmentPopUp(false);
+  }catch(err:any){
+
+  }finally{
+    setShowAvaialbleList(false)
+  }
+}
   const sendOTP = async (recipient: OTPRecipient) => {
   try {
     setOtpSending(recipient);
@@ -1534,7 +1554,9 @@ AdminUI?.scrollIntoView({behavior:'smooth'})
       return false;
     }
 
-    if (!reason.trim()) {
+    const effectiveReason =
+      selectedReason === "Other" ? otherReason : selectedReason;
+    if (!effectiveReason.trim()) {
       alert("Please enter the reason for replacement.");
       return false;
     }
@@ -1614,8 +1636,9 @@ const UpdateReplacement = async (
   Available_HCP: any,
   Exsting_HCP: any
 ) => {
-  // Prevent duplicate submissions
-  if (isReplacementUpdating) return;
+  // A ref closes the gap before React applies the state update.
+  if (replacementSubmissionLock.current || replacementNeedsReview) return;
+  replacementSubmissionLock.current = true;
 
   setIsReplacementUpdating(true);
   setReplacementStep(0);
@@ -1633,9 +1656,29 @@ const UpdateReplacement = async (
     SetActionStatusMessage(message);
   };
 
+  let currentOperation = "validation";
+  let databaseChangesStarted = false;
+  const logStage = (operation: string, outcome: string, details: Record<string, unknown> = {}) => {
+    // Never include user data, OTP values, credentials, or request payloads.
+    console.info("[HCAReplacement]", {
+      operation,
+      outcome,
+      ...details,
+    });
+  };
+  const getHttpStatus = (error: any) =>
+    typeof error?.response?.status === "number" ? error.response.status : undefined;
+
   try {
     // STEP 1: Validate replacement details
+    currentOperation = "validate replacement details";
     updateProgress(1, "Step 1/6: Validating replacement details...");
+
+    if (!validateBeforeSubmit()) {
+      logStage(currentOperation, "validation_failed");
+      showError("Please correct the highlighted replacement details before submitting.");
+      return;
+    }
 
     if (Available_HCP?.HCPPrice === "Not Provided") {
       SetActionStatusMessage(
@@ -1647,7 +1690,11 @@ const UpdateReplacement = async (
       return;
     }
 
-    if (!Available_HCP?.userId || !Exsting_HCP?.HCA_Id) {
+    if (
+      !Available_HCP?.userId ||
+      !Exsting_HCP?.HCA_Id ||
+      String(Available_HCP.userId) === String(Exsting_HCP.HCA_Id)
+    ) {
       showError("Invalid HCP information. Please select the HCPs again.");
       return;
     }
@@ -1658,34 +1705,49 @@ const UpdateReplacement = async (
     }
 
     // STEP 2: Verify logged-in user
+    currentOperation = "verify logged-in user";
     updateProgress(2, "Step 2/6: Verifying logged-in user...");
 
-    const localValue = localStorage.getItem("UserId");
+    const localValue = window.localStorage.getItem("UserId");
 
     if (!localValue?.trim()) {
       showError("Your session has expired. Please log in again.");
       return;
     }
 
-    const Sign_in_UserInfo: any =
-      await GetUserInformation(localValue);
+    let Sign_in_UserInfo: any;
+    try {
+      Sign_in_UserInfo = await GetUserInformation(localValue.trim());
+      logStage(currentOperation, Sign_in_UserInfo ? "success" : "empty_response");
+    } catch (error: any) {
+      logStage(currentOperation, "failed", { httpStatus: getHttpStatus(error) });
+      throw error;
+    }
 
-    if (!Sign_in_UserInfo) {
+    if (!Sign_in_UserInfo || typeof Sign_in_UserInfo !== "object") {
       showError("Unable to fetch user details. Please try again.");
       return;
     }
 
     // STEP 3: Update replacement reason
+    currentOperation = "update replacement reason";
     updateProgress(3, "Step 3/6: Updating replacement reason...");
 
-    const postReasonRes = await UpdateReason(
-      Available_HCP.userId,
-      Exsting_HCP.HCA_Id,
-      selectedReason,
-      otherReason,
-      endDate,
-      endTime
-    );
+    let postReasonRes: any;
+    try {
+      postReasonRes = await UpdateReason(
+        Available_HCP.userId,
+        Exsting_HCP.HCA_Id,
+        selectedReason,
+        otherReason,
+        endDate,
+        endTime
+      );
+    } catch (error: any) {
+      logStage(currentOperation, "failed", { httpStatus: getHttpStatus(error) });
+      throw error;
+    }
+    logStage(currentOperation, postReasonRes?.success ? "success" : "rejected");
 
     if (!postReasonRes?.success) {
       showError(
@@ -1694,45 +1756,60 @@ const UpdateReplacement = async (
       );
       return;
     }
+    databaseChangesStarted = true;
 
     // STEP 4: Update existing HCP status
+    currentOperation = "update existing HCP status";
     updateProgress(
       4,
       "Step 4/6: Updating existing HCP status..."
     );
 
-    const ExistingHCPStatusUpdate =
-      await UpdateUserCurrentstatusInHCPView(
+    let ExistingHCPStatusUpdate: any;
+    try {
+      ExistingHCPStatusUpdate = await UpdateUserCurrentstatusInHCPView(
         Exsting_HCP.HCA_Id,
         UpdatedCareTakerStatus?.trim() || "Bench",
         loggedInEmail
       );
+    } catch (error: any) {
+      logStage(currentOperation, "failed", { httpStatus: getHttpStatus(error) });
+      throw error;
+    }
+    logStage(currentOperation, ExistingHCPStatusUpdate?.success ? "success" : "rejected");
 
     if (!ExistingHCPStatusUpdate?.success) {
+      setReplacementNeedsReview(true);
       showError(
-        ExistingHCPStatusUpdate?.message ||
-          "Failed to update the existing HCP status."
+        `${ExistingHCPStatusUpdate?.message || "Failed to update the existing HCP status."} Earlier replacement data may already have changed. Do not retry; contact an administrator to reconcile it.`
       );
       return;
     }
 
     // STEP 4 continued: Update available HCP status
+    currentOperation = "activate replacement HCP";
     updateProgress(
       4,
       "Step 4/6: Activating the replacement HCP..."
     );
 
-    const AvailableHCPStatusUpdate =
-      await UpdateUserCurrentstatusInHCPView(
+    let AvailableHCPStatusUpdate: any;
+    try {
+      AvailableHCPStatusUpdate = await UpdateUserCurrentstatusInHCPView(
         Available_HCP.userId,
         "Active",
         loggedInEmail
       );
+    } catch (error: any) {
+      logStage(currentOperation, "failed", { httpStatus: getHttpStatus(error) });
+      throw error;
+    }
+    logStage(currentOperation, AvailableHCPStatusUpdate?.success ? "success" : "rejected");
 
     if (!AvailableHCPStatusUpdate?.success) {
+      setReplacementNeedsReview(true);
       showError(
-        AvailableHCPStatusUpdate?.message ||
-          "Failed to activate the replacement HCP."
+        `${AvailableHCPStatusUpdate?.message || "Failed to activate the replacement HCP."} Earlier HCP updates may already have succeeded. Do not retry; contact an administrator to reconcile them.`
       );
       return;
     }
@@ -1754,55 +1831,72 @@ const UpdateReplacement = async (
     }, Email: ${Sign_in_UserInfo?.Email || ""}`;
 
     // STEP 5: Save replacement information
+    currentOperation = "save replacement information";
     updateProgress(
       5,
       "Step 5/6: Saving replacement information..."
     );
 
-    const UpdateReplacmentInfo = await UpdateReplacmentData(
-      Available_HCP,
-      Exsting_HCP,
-      TimeStampData,
-      endDate,
-      endTime,
-      selectedCase.Client_Id,
-      selectedCase.Month,
-      selectedCase.name,
-      selectedCase.HCA_Name,
-      selectedCase.StartDate,
-      otp,
-      ImpReplacementInformation
-    );
+    let UpdateReplacmentInfo: any;
+    try {
+      UpdateReplacmentInfo = await UpdateReplacmentData(
+        Available_HCP,
+        Exsting_HCP,
+        TimeStampData,
+        endDate,
+        endTime,
+        selectedCase.Client_Id,
+        selectedCase.Month,
+        selectedCase.name,
+        selectedCase.HCA_Name,
+        selectedCase.StartDate,
+        otp,
+        ImpReplacementInformation
+      );
+    } catch (error: any) {
+      logStage(currentOperation, "failed", { httpStatus: getHttpStatus(error) });
+      throw error;
+    }
+    logStage(currentOperation, UpdateReplacmentInfo?.success ? "success" : "rejected");
 
     if (!UpdateReplacmentInfo?.success) {
+      if (databaseChangesStarted) setReplacementNeedsReview(true);
       showError(
-        UpdateReplacmentInfo?.message ||
-          "Failed to save replacement information."
+        `${UpdateReplacmentInfo?.message || "Failed to save replacement information."}${databaseChangesStarted ? " Earlier HCP updates may already have succeeded. Do not retry; contact an administrator to reconcile them." : ""}`
       );
       return;
     }
 
     // STEP 6: Refresh dashboard data
+    currentOperation = "refresh dashboard data";
     updateProgress(
       6,
       "Step 6/6: Replacement saved. Refreshing dashboard data..."
     );
 
-    const userId = localStorage.getItem("UserId");
- const MonthInfo = `${SearchYear}-${SearchMonth}`;
-    if (userId) {
-      const { data } = await axios.post("/api/AdminPageInfo", {
-        userId,
-        Month: MonthInfo,
-        refreshType: ["registeredUsers", "deployment"],
-      });
-
-      dispatch(
-        SetDeploymentInfo(data?.data?.deployedLength || 0)
-      );
+    const userId = window.localStorage.getItem("UserId")?.trim();
+    const MonthInfo = `${SearchYear}-${SearchMonth}`;
+    if (!userId) {
+      logStage(currentOperation, "skipped_missing_session");
+      setReplacementStatusType("error");
+      SetActionStatusMessage("Replacement was saved, but dashboard refresh failed because your session is missing. Please sign in again and refresh the dashboard.");
+      return;
     }
 
+    const refreshResponse = await axios.post("/api/AdminPageInfo", {
+      userId,
+      Month: MonthInfo,
+      refreshType: ["registeredUsers", "deployment"],
+    });
+    logStage(currentOperation, "http_response", { httpStatus: refreshResponse.status });
+    const refreshedData = refreshResponse.data;
+  
+    const deployedLength = refreshedData?.data?.deployedLength;
+   
+    dispatch(SetDeploymentInfo(deployedLength));
+
     // SUCCESS
+    logStage("replacement submission", "success");
     setReplacementStatusType("success");
     setReplacementStep(6);
 
@@ -1814,17 +1908,20 @@ const UpdateReplacement = async (
       onShowChange(false);
     }, 800);
   } catch (err: any) {
-    console.error(
-      "UpdateReplacement Error:",
-      err?.response?.data || err
-    );
-
-    showError(
-      err?.response?.data?.message ||
-        err?.message ||
-        "Something went wrong while updating the replacement. Please check and try again."
-    );
+    const httpStatus = getHttpStatus(err);
+    logStage(currentOperation, "failed", { httpStatus });
+    if (currentOperation === "refresh dashboard data") {
+      setReplacementStatusType("error");
+      SetActionStatusMessage("Replacement was saved successfully, but the dashboard refresh failed. Refresh the dashboard manually; do not resubmit the replacement.");
+    } else {
+      if (databaseChangesStarted) setReplacementNeedsReview(true);
+      const message = err?.response?.data?.message || err?.message;
+      showError(
+        `${message || `Failed during ${currentOperation}.`}${databaseChangesStarted ? " Earlier database updates may already have succeeded. Do not retry; contact an administrator to reconcile them." : ""}`
+      );
+    }
   } finally {
+    replacementSubmissionLock.current = false;
     setIsReplacementUpdating(false);
   }
 };
@@ -1956,6 +2053,14 @@ const UpdateReplacement = async (
     };
   return (
     <>
+      {ShowAvaialbleList && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30" role="status" aria-label="Loading available HCPs">
+          <div className="flex items-center gap-3 rounded-xl bg-white px-5 py-4 shadow-lg">
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#145DA0] border-t-transparent" />
+            <span className="text-sm font-medium text-slate-700">Loading available HCPs...</span>
+          </div>
+        </div>
+      )}
       <div className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <button
           type="button"
@@ -2214,6 +2319,7 @@ const UpdateReplacement = async (
                                     />
                                   )}
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 ">
+                                      
                 <InputField
                   label="HCP End Date"
                   type="date"
@@ -2269,10 +2375,7 @@ email || "");
                                                          
              
                                                          <button
-                                                           onClick={() => {
-                                                             setShowHCAList(!showHCAList);
-                                                             setShowReassignmentPopUp(false);
-                                                           }}
+                                                           onClick={GetBechList}
                                                            className={`px-2 py-2 rounded-xl text-[10px] cursor-pointer transition-all duration-300 shadow-sm
                    ${showHCAList
                                                                ? "bg-red-500 hover:bg-red-600 text-white"

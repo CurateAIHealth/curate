@@ -1,0 +1,2678 @@
+'use client';
+let cachedUserInfo: any = null;
+let cachedRegisteredUsers: any = null;
+let cachedFullInfo: any = null;
+let cachedDeployed: any = null;
+
+import {
+  ClearEnquiry,
+  GetDeploymentInfo,
+  GetRegidterdUsers,
+  GetUserInformation,
+  GetUsersFullInfo,
+  InserTimeSheet,
+  UpdatedClientPriority,
+  UpdatedPreviewUserType,
+  UpdatedServiceArea,
+  UpdatedUserJoingDate,
+  UpdateHCAnstatus,
+  UpdateUserContactVerificationstatus,
+  UpdateUserCurrentstatus,
+  UpdateUserEmailVerificationstatus,
+  GetUserPDRInfo,
+  UpdateUserCurrentstatusInHCPView,
+  GetPopUpUserPDRInfo,
+  HCASalaryUpdate,
+  PostHCPSalaryRequest,
+  GetDashboardData,
+  ClearHCPEnquiry,
+  
+} from '@/Lib/user.action';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { CircleCheckBig, Delete, LogOut, Pencil, Trash, Trash2 ,Hourglass ,BadgeCheck, MapPin,FileCheck,FileX, Router, List, Calendar1, ChevronDown } from 'lucide-react';
+import { CurrrentPDRUserId, GetCurrentDeploymentData, Refresh, SetDeploymentInfo, setFullInfo, setUsers, Update_Main_Filter_Status, UpdateAdminMonthFilter, UpdateAdminYearFilter, UpdateClient, UpdateClientSuggetion, UpdateFetchedInformation, UpdateSubHeading, UpdateUserInformation, UpdateUserType } from '@/Redux/action';
+import { useDispatch, useSelector } from 'react-redux';
+import { ClientEnquiry_Filters, filterColors, HCPFilters, hyderabadAreas, IndianStates, LeadSources, Main_Filters, Payments_Filters, Placements_Filters, ReferralPay_Filters, statusStyles, Timesheet_Filters } from '@/Lib/Content';
+
+import { select, thead, tr } from 'framer-motion/client';
+import ClientTable from '@/Components/Placements/page';
+import StatusPopup from '@/Components/PDRStatusPopup/page';
+import { HCAList } from '@/Redux/reducer';
+import WorkingOn from '@/Components/CurrentlyWoring/page';
+import axios from 'axios';
+
+import { AssignSuitableIcon, decrypt, encrypt, getDaysBetween, getDaysInMonth, getDaysInMonthForMonthName, getPopularArea, normalizeDate, toCamelCase, toProperCaseLive } from '@/Lib/Actions';
+import InvoiceMedicalTable from '@/Components/TimeSheetInfo/page';
+import { LoadingData } from '@/Components/Loading/page';
+import ReplacementsTable from '@/Components/ReplacementsTable/page';
+import CallEnquiryList from '@/Components/CallEnquiry/page';
+import { stat } from 'fs';
+import { ClientsPopup } from '@/Components/SentProfile/page';
+import NotIntrestedTable from '@/Components/NotIntrested/page';
+import { HCPProfileCard } from '@/Components/ShowHcpProfile/page';
+import StatusUpdateWarning from '@/Components/StatusUpdateWarning/page';
+interface UserTableListProps {
+  UpdateView: (view: "home" | "admin") => void;
+}
+
+export default function UserTableList({
+  UpdateView,
+}:UserTableListProps) {
+ const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  // const [users, setUsers] = useState<any[]>([]);
+  const [isChecking, setIsChecking] = useState(true);
+const [showStatusWarning, setShowStatusWarning] = useState(false);
+const users=useSelector((state:any)=>state.AdminUsers)
+
+const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
+const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
+const UserFirstName=useSelector((state:any)=>state.LogUserName)
+
+
+  const [HCPCurrentStatus,setHCPCurrentStatus]=useState("")
+  const [SearchDate, SetSearchDate] = useState<any>(null)
+  const now = new Date();
+  const [showClients, setShowClients] = useState(false);
+  const [ProfileId,setProfileId]=useState("")
+  const SearchMonth = useSelector((state: any) => state.MonthFilterAdmin)
+  const SearchYear = useSelector((state: any) => state.YearFilterAdmin)
+  const [HCPPreviewtype,setHCPPreviewtype]=useState("")
+  const [UpdatedHCPSalary,SetUpdatedHCPSalary]=useState<any>()
+  const [EffectiveDate,SetEffectiveDate]=useState("")
+  const [Reason,SetReason]=useState("")
+const [SearchResult, setSearchResult] = useState("")
+  const [search, setSearch] = useState('');
+   const [isEditing, setIsEditing] = useState(false);
+  const [AsignStatus, setAsignStatus] = useState("")
+  const [LoginEmail, setLoginEmail] = useState("");
+  const [DeleteInformation, SetDeleteInformation] = useState<any>()
+  const [SelectedHCPSalaryId,setSelectedHCPSalaryId]=useState()
+  const [showOptions,setShowOptions] = useState(false);
+  const [SelectedServiceStates, setSelectedServiceStates] = useState("Telangana");
+const [searchLead, setSearchLead] = useState("");
+// const [DeploymentInfo,SetDeploymentInfo]=useState<any[]>([])
+const [showSuggestions, setShowSuggestions] = useState(true);
+  const [ShowDeletePopUp, setShowDeletePopUp] = useState(false)
+  const Status = ["Converted", "Waiting List", "Lost",];
+  const EmailVerificationStatus = ['Verified', 'Pending'];
+  const CurrentStatusOptions = ["Active", "Sick", "Leave", "Terminated"];
+const ProfileInformation=useSelector((state:any)=>state.Useriinformation)
+  // const [UserFullInfo, setFullInfo] = useState([])
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const UpdateMainFilter = useSelector((state: any) => state.Main_Filter)
+  const CurrentClientStatus = useSelector((state: any) => state.Submitted_Current_Status)
+  const UpdateduserType = useSelector((state: any) => state.ViewHCPList)
+  const CurrentCount = useSelector((state: any) => state.updatedCount)
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
+  const updatedStatusMsg=useSelector((each:any)=>each.GlobelRefresh)
+  
+const RESTRICTED_EMAILS = new Set([
+  "info@curatehealth.in",
+  "admin@curatehealth.in",
+  "tsiddu805@gmail.com",
+  "gouricurate@gmail.com",
+  "srivanikasham@curatehealth.in",
+  "sravanthicurate@gmail.com",
+  "srinivasnew0803@gmail.com",
+  "kirancuratehealth@gmail.com",
+  "panducurate@gmail.com",
+]);
+const [authChecked, setAuthChecked] = useState(false);
+
+const hasData =
+  users?.length > 0 &&
+  UserFullInfo?.length > 0  &&
+  DeploymentInfo?.length > 0;
+
+
+// useEffect(() => {
+//   let mounted = true;
+
+//   const isInitialLoad = updatedStatusMsg === "";
+//   const isSuccessUpdate = updatedStatusMsg?.includes("Successfully");
+
+//   if (!isInitialLoad && !isSuccessUpdate) return;
+
+//   const fetchFreshData = async () => {
+//     try {
+//       const userId = localStorage.getItem("UserId");
+//       if (!userId) return;
+
+//       setIsChecking(true);
+
+//       console.time("GetUserInformation");
+//       const profilePromise = GetUserInformation(userId);
+//       console.timeEnd("GetUserInformation");
+
+//       console.time("GetRegidterdUsers");
+//       const usersPromise = GetRegidterdUsers();
+//       console.timeEnd("GetRegidterdUsers");
+
+//       console.time("GetUsersFullInfo");
+//       const fullInfoPromise = GetUsersFullInfo();
+//       console.timeEnd("GetUsersFullInfo");
+
+//       console.time("GetDeploymentInfo");
+//       const deployedPromise = GetDeploymentInfo();
+//       console.timeEnd("GetDeploymentInfo");
+// console.time("Total Fetch");
+
+// const [profile, registeredUsers, fullInfo, deployedLength] =
+//   await Promise.all([
+//     profilePromise,
+//     usersPromise,
+//     fullInfoPromise,
+//     deployedPromise,
+//   ]);
+
+// console.timeEnd("Total Fetch");
+//       if (!mounted) return;
+
+//       cachedUserInfo = profile;
+//       cachedRegisteredUsers = registeredUsers;
+//       cachedFullInfo = fullInfo;
+//       cachedDeployed = deployedLength;
+
+//       setUsers(registeredUsers);
+//       setUserFirstName(profile?.FirstName);
+//       setLoginEmail(profile?.Email);
+//       setFullInfo(fullInfo);
+//     } catch (e) {
+//       console.error("Fetch error:", e);
+//     } finally {
+//       if (mounted) setIsChecking(false);
+//     }
+//   };
+
+//   fetchFreshData();
+
+//   return () => {
+//     mounted = false;
+//   };
+// }, [updatedStatusMsg]);
+const DASHBOARD_CACHE_KEY = "dashboard_cache";
+const CACHE_TTL = 2 * 60 * 1000;
+    
+const ContetUserInterface = () => {
+    switch (UpdateMainFilter) {
+      case "Call Enquiry":
+      case "HCP List":
+        return ClientEnquiryUserInterFace()
+      case "Deployment":
+        return <ClientTable users={UserFullInfo}
+         ImpClientsInformation={DeploymentInfo}
+  ReplacementInformation={[]}
+  terminationInfo={[]}
+  RegisterdUsers={users}/>
+      case "Timesheet":
+       return (
+  <InvoiceMedicalTable
+    users={UserFullInfo}
+    RegisterdUsers={users}
+    ImpClientsInformation={DeploymentInfo}
+  />
+);
+      case "Replacements":
+        return <ReplacementsTable />
+      case "Referral Pay":
+        return <WorkingOn ServiceName="Referral Pay" />
+      case "Payments":
+        return <WorkingOn ServiceName="Payments" />
+      default:
+        return null
+
+    }
+  }
+
+  
+
+useEffect(() => {
+  const email = loggedInEmail?.toLowerCase();
+
+  if (!email) return;
+
+  // Only redirect for an unauthorized account.
+  if (!RESTRICTED_EMAILS.has(email)) {
+    router.replace("/");
+    return;
+  }
+
+  if (email === "info@curatehealth.in") {
+    dispatch(UpdateUserType("patient"));
+  } else if (email === "gouricurate@gmail.com") {
+    dispatch(UpdateUserType("healthcare-assistant"));
+  }
+}, [loggedInEmail, dispatch, router]);
+
+const GetHCPTypeCount = (HCPType: string) => {
+  try {
+    const HCPTypeCount = users?.filter(
+      (each: any) => each?.PreviewUserType === HCPType
+    );
+
+    return HCPTypeCount?.length || 0;
+  } catch (err) {
+    console.error("GetHCPTypeCount error:", err);
+    return 0;
+  }
+};
+
+
+const GetHCPFullName = (A: any) => {
+  if (!UserFullInfo?.length || !A) return "";
+
+  const info = UserFullInfo
+    ?.map((each: any) => each?.HCAComplitInformation)
+    ?.find((info: any) => info?.UserId === A);
+
+  if (!info) return "";
+
+  const fullName = [
+    info.HCPSurName,
+    info.HCPFirstName,
+    info.LastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return fullName;
+};
+
+ 
+const UpdateStatus = async (
+  first: string,
+  e: string,
+  UserId: any
+) => {
+  const previousUser = users.find(
+    (user: any) => user.userId === UserId
+  );
+
+  if (!previousUser) return;
+
+  // 1. Update UI immediately
+  dispatch(
+    setUsers(
+      users.map((user: any) =>
+        user.userId === UserId
+          ? { ...user, ClientStatus: e }
+          : user
+      )
+    )
+  );
+
+  dispatch(Refresh(`Updating ${first} Client Status....`));
+
+  try {
+    // 2. Update database
+    const res = await UpdateUserContactVerificationstatus(
+      UserId,
+      e
+    );
+
+    if (!res?.success) {
+      throw new Error(res?.message || "Status update failed");
+    }
+
+    // 3. No full data refetch required
+    dispatch(
+      Refresh(`${first} Client Status Updated Successfully`)
+    );
+  } catch (err: any) {
+    console.error("UpdateStatus error:", err);
+
+    // 4. Roll back if database update fails
+    dispatch(
+      setUsers(
+        users.map((user: any) =>
+          user.userId === UserId
+            ? previousUser
+            : user
+        )
+      )
+    );
+
+    dispatch(Refresh("Failed to update client status"));
+  }
+};
+
+  const pillStyles: Record<string, string> = {
+    HCA: "bg-yellow-200 text-yellow-900",
+    HCP: "bg-green-200 text-green-900",
+    HCN: "bg-purple-200 text-purple-900",
+  };
+  const UpdateEmailVerificationStatus = async (first: string, e: string, UserId: any) => {
+   
+     dispatch(Refresh(`Updating Email Verification Status....`))
+
+    try {
+      const res = await UpdateUserEmailVerificationstatus(UserId, e);
+      if (res?.success === true) {
+     
+          dispatch(Refresh(`${first} Email Verification Status Updated Successfully`))
+      }
+
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
+
+  const filteredLeads = LeadSources.filter((lead: string) =>
+  lead.toLowerCase().includes(searchLead.toLowerCase())
+);
+//  const UpdateCurrentstatus = async (
+//   first: string,
+//   e: string,
+//   UserId: any
+// ) => {
+// //  if(e==="Active"){
+// //    setShowStatusWarning(true);
+// //   return
+// //  }
+ 
+//   dispatch(
+//     Refresh(
+//       `Updating ${first} Current Status....`
+//     )
+//   );
+
+//   try {
+//     const res =
+//       await UpdateUserCurrentstatusInHCPView(
+//         UserId,
+//         e,
+//         loggedInEmail
+//       );
+
+//     if (res.success) {
+//       dispatch(
+//         Refresh("Status Updated,Please Wait Fetching new Data......")
+//       );
+//       const userId =localStorage.getItem("UserId");
+
+//       const { data } = await axios.post(
+//         "/api/AdminPageInfo",
+//         {
+//           userId,
+//           refreshType: [
+//             "registeredUsers",
+//             "fullInfo",
+//           ],
+//         }
+//       );
+
+  
+
+//       dispatch(setUsers(
+//         data.data.registeredUsers
+//       ))
+
+//        dispatch(setFullInfo(
+//         data.data.fullInfo
+//       ))
+
+//       dispatch(
+//         Refresh(res.message)
+//       );
+//     }
+//   } catch (err) {
+//     console.error(err);
+//   }
+// };
+
+
+const UpdateCurrentstatus = async (
+  first: string,
+  e: string,
+  UserId: string
+) => {
+  const previousUser = users.find(
+    (user: any) => user.userId === UserId
+  );
+
+  if (!previousUser) return;
+
+  // 1. Update Redux immediately so the UI reflects the change.
+  dispatch(
+    setUsers(
+      users.map((user: any) =>
+        user.userId === UserId
+          ? { ...user, CurrentStatus: e }
+          : user
+      )
+    )
+  );
+
+  dispatch(Refresh(`Updating ${first} Current Status....`));
+
+  try {
+    // 2. Persist the change in the database.
+    const res = await UpdateUserCurrentstatusInHCPView(
+      UserId,
+      e,
+      loggedInEmail
+    );
+
+    if (!res?.success) {
+      throw new Error(res?.message || "Status update failed");
+    }
+
+    // 3. No full collection refetch required for this UI update.
+    dispatch(Refresh(res.message || "Status Updated Successfully"));
+  } catch (err) {
+    console.error("UpdateCurrentstatus error:", err);
+
+    // 4. Roll back the UI if the database update fails.
+    dispatch(
+      setUsers(
+        users.map((user: any) =>
+          user.userId === UserId
+            ? previousUser
+            : user
+        )
+      )
+    );
+
+    dispatch(Refresh("Failed to update status. Please try again."));
+  }
+};
+
+  const callEnquiryArray = users.filter((each:any) => each.userType === 'CallEnquiry')
+  const NotIntrestedArray= users.filter((each:any) => each.Type === 'Irrelevant')
+
+ const GetUserCurrentStatus:any=(UserId:any)=>{
+    try{
+ if (!DeploymentInfo?.length || !UserId) return "Not Entered";
+ 
+
+const monthNames = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
+
+  const  SelectedMonth=`${SearchYear}-${monthNames.indexOf(SearchMonth)+1}`
+    const address =
+      DeploymentInfo?.find((info: any) => info?.ClientId ===UserId &&info?.Month===SelectedMonth)
+
+    return address;
+    }catch(err:any){
+
+    }
+  }
+
+  const clientsData= users.filter((each:any) => each.userType === 'patient')
+
+  const Finel = users.map((each: any) => ({
+    id: each.userId,
+    Surname: each.Surname,
+    FirstName: each.FirstName,
+    LastName: each.LastName,
+    PatientName: each.patientName || "Not Mentioned",
+    AadharNumber: each.AadharNumber,
+    Age: each.Age,
+    userType: each.userType,
+
+    Location: each.Location || each.serviceLocation ||each.Location|| 'Not Provided',
+    Email: each.Email,
+    Contact: each.ContactNumber,
+    userId: each.userId,
+    VerificationStatus: each.VerificationStatus,
+    DetailedVerification: each.FinelVerification,
+    EmailVerification: each.EmailVerification,
+    ClientStatus: each.ClientStatus,
+    Status: each.Status,
+    CurrentStatus: each.CurrentStatus || "None",
+    LeadSource: each.Source||each.NewLead,
+    ClientPriority: each.ClientPriority,
+    // CreatedAt: each.createdAt,
+    LeadDate: each.LeadDate,
+    ServiceArea: each.ServiceArea,
+    ServiceLocation: each.ServiceArea,
+    PreviewUserType: each.PreviewUserType||"HCA",
+    PDRStatus:each.PDRStatus||"No Available",
+    Type:each.Type,
+    ServiceState:each.ServiceState||"Telangana",
+    StatusHistory:each.StatusHistory
+
+
+  }));
+
+  const UpdatedFilterUserType = Finel
+  .filter((each:any) => {
+
+
+  
+    
+    const matchesType =
+      !UpdateduserType || each.userType === UpdateduserType;
+
+
+      
+   const matchesStatus =
+  !search ||
+  (
+    (search === "None" ? !each.ClientStatus : each.ClientStatus === search) &&
+    each.userType === "patient"
+  );
+
+        
+    // const notAdmin =
+    //   each.Email?.toLowerCase() !== "admin@curatehealth.in";
+
+
+      
+    const matchesSearchResult =
+      !SearchResult ||
+      [each.FirstName, each.Email, each.Contact]
+        .filter(Boolean)
+        .some((value) =>
+          value
+            .toString()
+            .toLowerCase()
+            .includes(SearchResult.toLowerCase())
+        );
+
+
+        
+    const matchesCurrentStatus =
+      !HCPCurrentStatus || each.CurrentStatus === HCPCurrentStatus;
+
+  const HCPUserType =
+  !HCPPreviewtype ||
+  each.PreviewUserType.toLowerCase() === HCPPreviewtype.toLowerCase();
+
+
+
+    // Date Checker
+    const checkDate = (value: any) => {
+  if (!value) return false;
+
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return false;
+
+  const monthNames = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
+
+  const matchesMonth =
+    !SearchMonth || monthNames[date.getMonth()] === SearchMonth;
+
+  const matchesYear =
+    !SearchYear || date.getFullYear() === Number(SearchYear);
+
+  return matchesMonth && matchesYear;
+};
+
+  const matchesDate =
+  (!SearchMonth && !SearchYear) ||
+  checkDate(each.LeadDate);
+
+
+  const matchesHCAConditions =
+  UpdateduserType !== "healthcare-assistant" ||
+  (
+    matchesDate &&
+    !GetUserCurrentStatus(each.userId)
+  );
+
+  return (
+  HCPUserType &&
+  matchesType &&
+  matchesStatus &&
+  matchesSearchResult &&
+  matchesCurrentStatus &&
+  each.ServiceState === SelectedServiceStates 
+);
+  })
+  .slice()
+  .reverse();
+
+ 
+
+
+  const filterByMonthAndYear = (
+    each: any,
+    SearchMonth: string,
+    SearchYear: string
+  ) => {
+    const checkDate = (value: any) => {
+      if (!value) return false;
+
+      const date = new Date(value);
+      if (isNaN(date.getTime())) return false;
+
+      const matchesMonth =
+        !SearchMonth ||
+        date.toLocaleString("default", { month: "long" }) === SearchMonth;
+
+      const matchesYear =
+        !SearchYear || date.getFullYear() === Number(SearchYear);
+
+      return matchesMonth && matchesYear;
+    };
+
+    return checkDate(each.LeadDate);
+  };
+
+
+  const MonthlyCount = Finel.filter((each:any) =>
+    filterByMonthAndYear(each, SearchMonth, SearchYear)&&!GetUserCurrentStatus(each.userId)
+  );
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+  // useEffect(() => {
+  //   const Fetch = async () => {
+  //     try {
+  //       const localValue = localStorage.getItem("UserId");
+  //       if (!localValue) return;  
+  //       const [profile, registeredUsers, fullInfo,DeployedLength] = await Promise.all([
+  //         cachedUserInfo ?? GetUserInformation(localValue),
+  //         cachedRegisteredUsers ?? GetRegidterdUsers(),
+  //         cachedFullInfo ?? GetUsersFullInfo(),
+  //         Deployed?? GetDeploymentInfo()
+  //       ]);
+
+
+  //       cachedUserInfo ||= profile;
+  //       cachedRegisteredUsers ||= registeredUsers;
+  //       cachedFullInfo ||= fullInfo;
+  //       Deployed ||=DeployedLength 
+
+
+  //       setUsers(registeredUsers);
+  //       setUserFirstName(profile.FirstName);
+  //       setLoginEmail(profile.Email);
+  //       setFullInfo(fullInfo);
+
+
+  //       const email = profile?.Email?.toLowerCase();
+
+
+  //       if (email === "info@curatehealth.in") {
+  //         dispatch(UpdateUserType("patient"));
+  //       } else if (email === "gouricurate@gmail.com") {
+  //         dispatch(UpdateUserType("healthcare-assistant"));
+  //       }
+
+
+  //       const restricted = [
+  //         "admin@curatehealth.in",
+  //         "info@curatehealth.in",
+  //         "gouricurate@gmail.com"
+  //       ];
+
+  //       if (!restricted.includes(email)) {
+  //         router.push("/");
+  //         return;
+  //       }
+
+  //     } catch (err: any) {
+  //       console.error("Error fetching data:", err);
+  //     } finally {
+  //       setIsChecking(false);
+  //     }
+  //   };
+
+  //   Fetch();
+  // }, [updatedStatusMsg, CurrentClientStatus, UpdateduserType]);
+
+
+
+
+
+
+  const FilterUserType = (e: any) => {
+    if (e.target.value !== "patient") {
+
+    }
+    dispatch(UpdateUserType(e.target.value));
+  };
+
+ const DeleteClient = async () => {
+  try {
+    if (!DeleteInformation?.userId) return;
+
+    dispatch(Refresh("Please wait Deleting Profile..."));
+//  if (loggedInEmail !== "srivanikasham@curatehealth.in") {
+     
+//               dispatch(Refresh('You don’t have the required permissions to proceed'))
+//         return
+//       }
+   
+     const workingStatus = HCPWorkingStatus(DeleteInformation.userId);
+  const isAssigned =
+    Array.isArray(workingStatus) && workingStatus.includes("Assigned");
+    if (isAssigned) {
+      dispatch(Refresh("HCP currently on service – deletion not allowed"));
+      
+        setTimeout(() => {
+        setShowDeletePopUp(false);
+        dispatch(Refresh(null))
+      }, 2000);
+      return;
+    }
+
+    let response;
+
+
+    if (DeleteInformation.userType === "healthcare-assistant") {
+      response = await ClearHCPEnquiry(DeleteInformation.userId);
+
+    }
+
+   
+    response = await ClearEnquiry(DeleteInformation.userId);
+
+    if (response?.success) {
+      dispatch(Refresh("Profile deleted Successfully, Please Wait Refreshing the Data"));
+const userId =
+        localStorage.getItem("UserId");
+
+      const { data } = await axios.post(
+        "/api/AdminPageInfo",
+        {
+          userId,
+          refreshType: [ "fullInfo", "registeredUsers"]
+            ,
+            
+        }
+      );
+        dispatch(setUsers(
+        data.data.registeredUsers
+      ))
+
+       dispatch(setFullInfo(
+        data.data.fullInfo
+      ))
+
+         dispatch(Refresh("Fetched Updated Data Successfully"));
+      setTimeout(() => {
+        setShowDeletePopUp(false);
+        dispatch(Refresh(null))
+      }, 2000);
+    } else {
+      dispatch(Refresh("Failed to delete profile"));
+    }
+
+  } catch (err) {
+    console.error("DeleteClient error:", err);
+    dispatch(Refresh("Something went wrong while deleting the profile"));
+  }
+};
+
+  const UpdateFilterValue = (UpdatedValue: any) => {
+         dispatch(Refresh(''))
+    setSearch(UpdatedValue)
+    // dispatch(UpdateSubHeading(UpdatedValue))
+    // dispatch(Update_Main_Filter_Status(UpdatedValue))
+  };
+
+  // const UpdateMainFilterValue=(Z:any)=>{
+
+  //   // SetUpdateMainFilter(Z)
+  //   dispatch(Update_Main_Filter_Status(Z))
+  // }
+
+
+
+
+
+  const UpdateMainFilterValues = () => {
+    switch (UpdateMainFilter) {
+      case "Call Enquiry":
+
+        return ClientEnquiry_Filters;
+      case "Deployment":
+        return Placements_Filters;
+      case "Timesheet":
+        return []
+      case "Referral Pay":
+        return ReferralPay_Filters;
+      case "Payments":
+        return Payments_Filters;
+      default:
+        return []
+
+    }
+  }
+
+
+  const UpdateFilterHCA = (e: any) => {
+    setAsignStatus(e.target.value)
+  }
+
+  
+  const sendWhatsApp = async (clientNumber: string, hcaNumber: string) => {
+    const res = await axios.post("/api/send-whatsapp", {
+      clientNumber,
+      hcaNumber,
+    });
+
+
+  };
+
+  const UpdateClientPriority = async (ClientName: any, ClientUserId: any, UpdatedValue: any) => {
+    try {
+   
+       dispatch(Refresh(`Please Wait,${ClientName} ...`))
+      const PriorityResult: any = await UpdatedClientPriority(ClientUserId, UpdatedValue)
+
+      if (PriorityResult.success === true) {
+     
+         dispatch(Refresh(`${ClientName}  Updated Successfully`))
+      }
+    } catch (err: any) {
+
+    }
+  }
+
+  const UpdateClientServiceLocation = async (ClientName: any, ClientUserId: any, UpdatedValue: any) => {
+    try {
+    
+       dispatch(Refresh(`Please Wait...`))
+      const AreaUpdateResult: any = await UpdatedServiceArea(ClientUserId, UpdatedValue)
+
+      if (AreaUpdateResult.success === true) {
+        
+         dispatch(Refresh(`${ClientName}  Updated Successfully`))
+      }
+    } catch (err: any) {
+
+    }
+  }
+
+  const UpdatePreviewUserType = async (ClientName: any, ClientUserId: any, UpdatedValue: any) => {
+    try {
+      
+       dispatch(Refresh(`Please Wait,${ClientName} ...`))
+      const AreaUpdateResult: any = await UpdatedPreviewUserType(ClientUserId, UpdatedValue)
+
+      if (AreaUpdateResult.success === true) {
+      
+         dispatch(Refresh(`${ClientName}  Updated Successfully`))
+      }
+    } catch (err: any) {
+
+    }
+  }
+
+const lastUpdatedDates: Record<string, string> = {};
+
+const UpdateJoiningDate = async (
+  ClientName: any,
+  ClientUserId: any,
+  UpdatedValue: any
+) => {
+  try {
+    
+    if (!UpdatedValue) return;
+
+    
+   
+    if (lastUpdatedDates[ClientUserId] === UpdatedValue) return;
+
+    lastUpdatedDates[ClientUserId] = UpdatedValue;
+
+    dispatch(Refresh("Please Wait..."));
+
+    const PriorityResult: any = await UpdatedUserJoingDate(
+      ClientUserId,
+      UpdatedValue
+    );
+
+    if (PriorityResult.success === true) {
+      dispatch(Refresh(`Lead Date Updated Successfully`));
+    }
+  } catch (err: any) {
+    console.error(err);
+  }
+};
+
+  const UpdateAssignHca = async (UserIDClient: any, UserIdHCA: any, ClientName: any, ClientEmail: any, ClientContact: any, Adress: any, HCAName: any, HCAContact: any) => {
+    
+     dispatch(Refresh("Please Wait Assigning HCA..."))
+    try {
+      const today = new Date();
+      const attendanceRecord = {
+        date: today.toLocaleDateString('EN-In'),
+        checkIn: today.toLocaleTimeString(),
+        status: "Present",
+      };
+
+
+      const TimeSheetData: any[] = [];
+      TimeSheetData.push(attendanceRecord)
+      const UpdateStatus = await UpdateUserContactVerificationstatus(UserIDClient, "Placced")
+      const UpdateHcaStatus = await UpdateHCAnstatus(UserIdHCA, "Assigned")
+      const PostTimeSheet: any = await InserTimeSheet(UserIDClient, UserIdHCA, ClientName, ClientEmail, ClientContact, Adress, HCAName, HCAContact, TimeSheetData)
+      if (PostTimeSheet.success === true) {
+       
+         dispatch(Refresh("HCA Assigned Successfully, For More Information Check in Placemets"))
+
+        sendWhatsApp("+919347877159", "+919347877159");
+
+
+
+
+      }
+
+    } catch (err: any) {
+  
+       dispatch(Refresh(err))
+    }
+  }
+
+const UpdatePopup = async (a: any) => {
+  try {
+    setOpen(true);
+    setLoading(true);
+
+    const pdrRes = await GetPopUpUserPDRInfo(a.userId);
+
+ 
+    if ( pdrRes?.data?.PDRStatus === false) {
+      setLoading(false);
+      return;
+    }
+    if (!pdrRes?.success ) {
+      setLoading(false);
+      dispatch(Refresh("No PDR Record Found"))
+      return;
+    }
+
+
+    dispatch(GetCurrentDeploymentData(a));
+
+    const data = await GetUserInformation(a.userId);
+
+    if (data) {
+      dispatch(
+        UpdateFetchedInformation({
+          ...data,
+          updatedAt: normalizeDate(data.updatedAt),
+          createdAt: normalizeDate(data.createdAt),
+        })
+      );
+    }
+
+    router.push("/PDR");
+
+  } catch (error) {
+    console.error("UpdatePopup error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  const ClientEnquiryUserInterFace = () => {
+    return (
+      <div>
+        {search === "CallEnquiry" ? (<CallEnquiryList
+          data={callEnquiryArray}
+          SearchData={SearchResult}
+          title="Recent Call Enquiries"
+        />) : search === "Irrelevant" ? (
+    <NotIntrestedTable data={NotIntrestedArray} />
+  ):(
+           <div className="w-full">
+            {ShowDeletePopUp && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">
+
+                <div className="w-full max-w-md bg-white rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.35)] animate-fadeIn">
+
+
+                  <div className="flex justify-center pt-8">
+                    <div className="h-14 w-14 rounded-full border border-red-200 bg-red-50 flex items-center justify-center">
+                      <Trash2 size={22} className="text-red-600" />
+                    </div>
+                  </div>
+
+                  <div className="px-8 pt-6 pb-8 text-center">
+                    <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
+                      Are You Sure Want to Delete ?
+                    </h2>
+
+                    <p className="mt-3 text-sm text-gray-600 leading-relaxed">
+                      all associated data will be permanently deleted.
+                      This action cannot be undone.
+                    </p>
+
+                    <p className="mt-4 text-sm font-medium text-gray-900">
+                      Do you want to continue?
+                    </p>
+                  </div>
+
+
+                  <div className="flex border-t border-gray-200">
+                    <button
+                      onClick={() => setShowDeletePopUp(false)}
+                      className="flex-1 py-4 text-sm font-medium text-gray-700
+        hover:bg-gray-50 transition rounded-bl-[28px]"
+                    >
+                      Cancel
+                    </button>
+
+                    <div className="w-px bg-gray-200" />
+
+                    <button
+                      onClick={DeleteClient}
+                      className="flex-1 py-4 text-sm font-semibold text-red-600
+        hover:bg-red-50 transition rounded-br-[28px]"
+                    >
+                      Delete
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+
+            )}
+
+
+            {/* <ClientsPopup
+  open={showClients}
+  onClose={() => setShowClients(false)}
+  clients={clientsData}
+  title="Clients List"
+/> */}
+
+
+<HCPProfileCard
+  userId={ProfileId}
+  open={showClients}
+   onClose={() => setShowClients(false)}
+  clients={[]}
+/>
+            <>
+      <StatusPopup
+        open={open}
+        loading={loading}
+        message="Assign an HCP and complete the PDR before making any updates."
+         onClose={()=>setOpen(false)}
+      />
+    </>
+    <StatusUpdateWarning
+  isOpen={showStatusWarning}
+  onClose={() => setShowStatusWarning(false)}
+  logoSrc="/Icons/Curate-logoq.png"
+  
+/>
+            {UpdatedFilterUserType.length > 0 ? (
+              <div className="bg-white/90 rounded-2xl shadow-2xl border border-gray-100">
+                <div className=" overflow-y-auto">
+                  <div className="w-full overflow-x-auto sm:overflow-x-hidden">
+                    <table className="table-fixed w-full min-w-[800px] text-[11px] sm:text-[13px] text-left text-gray-700 border-collapse">
+                      <thead className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-emerald-500 text-white  text-[10px] font-semibold">
+                        <tr>
+                          <th className="px-2 py-2 w-[4%]">S.No.</th>
+                      
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">{UpdateduserType === "patient"?"Date":"Joining Date"}</th>
+                          {UpdateduserType === "patient" &&
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Lead Source</th>}
+                          {/* {UpdateduserType === "patient" &&
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client Priority</th>} */}
+                          {UpdateduserType === "healthcare-assistant" &&
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">User type</th>}
+                     {UpdateduserType === "healthcare-assistant"&&
+                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">HCP </th>}
+ {UpdateduserType === "patient" &&
+                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Client </th>}
+                           {UpdateduserType === "patient" &&
+                          <th className="px-2 py-2 sm:px-4 sm:py-3 w-[14%]">Patient </th>}
+                          {/* <th className="px-2 py-2 sm:px-4 sm:py-3 w-[18%]">Email</th> */}
+                          <th className="px-2 py-2 w-[12%]">Contact</th>
+                          {/* <th className="px-2 py-2 w-[10%]">Role</th>
+                    <th className="px-2 py-2 w-[12%]">Aadhar</th> */}
+                          <th className="px-2 py-2 w-[12%]">Location</th>
+                          {UpdateduserType === "healthcare-assistant"?  <th className="px-2 py-2 w-[14%]">Status Due Days</th>:  <th className="px-2 py-2 w-[14%]">Email Verification</th>}
+                        
+                          {UpdateduserType === "healthcare-assistant" && (
+                            <th className="px-4 py-2 w-[14%]">Working Status</th>
+                          )}
+                          {UpdateduserType === "healthcare-assistant" && (
+                            <th className="px-4 py-2 text-center w-[14%]">Inform</th>
+                          )}
+                          {UpdateduserType === "healthcare-assistant" && (
+                            <th className="px-4 py-2 text-center w-[14%]">Payment</th>
+                          )}
+                          {UpdateduserType !== "healthcare-assistant" && (
+                            <th className="px-4 py-2 w-[14%]">Client Status</th>
+                          )}
+                          {UpdateduserType === "healthcare-assistant" && (
+                            <th className="px-4 py-2 w-[14%]">Current Status</th>
+                          )}
+                          {/* {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
+                      <th className="px-2 py-2 w-[14%]">Designate</th>
+                    )} */}
+                          <th className="px-4 py-2 w-[10%]">Action</th>
+                            {UpdateduserType === "patient" &&
+                          <th className="px-4 py-2 text-center w-[10%]">PDR</th>}
+                            
+                          {UpdateduserType === 'patient' && <th className="px-2 py-2 w-[10%]">Suitable HCP</th>}
+                          {/* <th className="px-2 py-2 w-[10%]">Delete</th> */}
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {UpdatedFilterUserType.map((user:any, index:any) => (
+                          <tr
+                            key={index}
+                            
+                          >
+                          
+                            <td className='pl-4'>{index + 1}</td>
+                          
+                       <td>
+                       {/* <input className="
+    h-8 w-[70px] px-1
+    rounded-xl
+    bg-white
+    border border-slate-300
+    text-[10px] font-semibold text-slate-700
+    shadow-sm
+
+    transition-all duration-200 ease-in-out
+
+    hover:border-slate-400 hover:shadow-md
+    focus:outline-none
+    focus:border-[#62e0d9]
+    focus:ring-2 focus:ring-[#caf0f8]
+
+    disabled:bg-slate-100 disabled:cursor-not-allowed
+
+  "
+  value={user.LeadDate || ""}
+  onChange={(e) =>
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.userId === user.userId
+          ? { ...u, LeadDate: e.target.value }
+          : u
+      )
+    )
+  }
+/> */}
+<p className="
+    h-6 pt-1 w-[90px] px-1
+    rounded-xl
+    bg-white
+    border border-slate-300
+    text-[10px] font-semibold text-slate-700
+    shadow-sm
+
+    text-center
+
+  ">{user.LeadDate || ""}</p>
+
+
+
+                            </td>
+                            {UpdateduserType === "patient" &&
+                            
+                              <td className='pl-6'>{toProperCaseLive(user.LeadSource) || "Not Mentioned"} <button
+                                    onClick={() => setEditingUserId(user.userId)}
+                                    className="
+          rounded-lg p-1
+          text-slate-500
+          transition-all
+          hover:bg-slate-100 hover:text-slate-700
+        "
+                                    title="Edit service area"
+                                  >
+                                    {/* <Pencil size={12} /> */}
+                                  </button> {editingUserId === user.userId && (
+                                   <div
+  className="
+    absolute z-50 mt-2 w-56 rounded-xl bg-white
+    border border-slate-200 shadow-[0_12px_30px_rgba(0,0,0,0.12)]
+    p-2 animate-in fade-in zoom-in-95
+  "
+>
+
+ <input
+  autoFocus
+  value={searchLead}
+  placeholder="Enter Lead"
+  onChange={(e) => {
+    setSearchLead(e.target.value);
+    setShowSuggestions(true);
+  }}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      UpdateClientServiceLocation(
+        user.FirstName,
+        user.userId,
+        searchLead   
+      );
+      setEditingUserId(null);
+    }
+  }}
+  onBlur={() => {
+    UpdateClientServiceLocation(
+      user.FirstName,
+      user.userId,
+      searchLead   
+    );
+    setEditingUserId(null);
+  }}
+  className="h-10 w-full px-3 rounded-lg border border-slate-300 bg-[#f8fafc]"
+/>
+
+
+  {showSuggestions && filteredLeads.length > 0 && (
+    <div className="mt-2 max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-white">
+      {filteredLeads.map((area: string) => (
+        <div
+          key={area}
+          onMouseDown={() => {
+            UpdateClientServiceLocation(
+              user.FirstName,
+              user.userId,
+              area
+            );
+            setSearchLead(area);
+            setEditingUserId(null);
+          }}
+          className="
+            px-3 py-2 text-sm cursor-pointer
+            hover:bg-[#f1f5f9] transition-colors
+          "
+        >
+          {area}
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+                                  )}</td>}
+
+
+
+
+                            
+
+
+                            {UpdateduserType === "healthcare-assistant" &&
+                              <td className="px-6 py-2 break-words">
+
+                                <div className="flex items-center gap-2">
+
+                                  <span
+                                    className={`text-sm ${user.PreviewUserType
+                                        ? "text-slate-700 font-medium"
+                                        : "italic text-slate-400"
+                                      }`}
+                                  >
+                                    {user.PreviewUserType}
+                                  </span>
+
+
+                                  <button
+                                    onClick={() => setEditingUserId(user.userId)}
+                                    className="
+          rounded-lg p-1
+          text-slate-500
+          transition-all
+          hover:bg-slate-100 hover:text-slate-700
+        "
+                                    title="Edit service area"
+                                  >
+                                    {/* <Pencil size={14} /> */}
+                                  </button>
+
+
+                                  {editingUserId === user.userId && (
+                                    <div
+                                      className="
+      absolute z-50
+      mt-2
+      w-56
+      rounded-xl
+      bg-white
+      border border-slate-200
+      shadow-[0_12px_30px_rgba(0,0,0,0.12)]
+      p-2
+      animate-in fade-in zoom-in-95
+    "
+                                    >
+                                      <select
+                                        autoFocus
+                                        onChange={(e) => {
+                                          UpdatePreviewUserType(user.FirstName, user.userId, e.target.value)
+                                          setEditingUserId(null);
+                                        }}
+                                        onBlur={() => setEditingUserId(null)}
+                                        className="
+        h-10 w-full px-3
+        rounded-lg
+        border border-slate-300
+        bg-[#f8fafc]
+        text-sm font-medium text-slate-700
+        cursor-pointer
+
+        focus:outline-none
+        focus:border-[#62e0d9]
+        focus:ring-2 focus:ring-[#caf0f8]
+      "
+                                      >
+                                        <option value="">Select Type</option>
+                                        {["HCA", "HCP", "HCN"].map((area: any) => (
+                                          <option key={area} 
+                                          value={area}>
+                                            {area}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  )}
+
+                                </div>
+
+                              </td>
+                            }
+                            <td className="px-2 py-2 truncate">
+                              <div className="flex items-center gap-2">
+                                {/* <img
+                            src={
+                              FilterProfilePic.filter((each:any) => each.UserId === user.id)[0]?.Documents?.ProfilePic ||
+                              FilterProfilePic.filter((each:any) => each.UserId === user.id)[0]?.ProfilePic ||
+                              "Icons/DefaultProfileIcon.png"
+                            }
+                            className="rounded-full h-7 w-7 sm:h-10 sm:w-10 object-cover"
+                          /> */}
+{UpdateduserType === "healthcare-assistant" &&
+
+
+
+<img className='h-4' src={AssignSuitableIcon(GetHCPGender(user.id),user.PreviewUserType).image}/>
+}<span className="min-w-0 flex-1 text-xs font-semibold leading-5 break-words whitespace-normal">
+  {GetHCPFullName(user.id)||toProperCaseLive(user.FirstName)} {toProperCaseLive(user.LastName)}
+</span>
+
+                              </div>
+                            </td>
+                                    {UpdateduserType === "patient" &&
+                            <td className="px-2 py-2 truncate">
+                              <div className="flex items-center gap-2">
+                                {/* <img
+                            src={
+                              FilterProfilePic.filter((each:any) => each.UserId === user.id)[0]?.Documents?.ProfilePic ||
+                              FilterProfilePic.filter((each:any) => each.UserId === user.id)[0]?.ProfilePic ||
+                              "Icons/DefaultProfileIcon.png"
+                            }
+                            className="rounded-full h-7 w-7 sm:h-10 sm:w-10 object-cover"
+                          /> */}
+
+                                <span className="font-semibold text-xs">
+                                  {toProperCaseLive(user.PatientName)}
+
+
+                                </span>
+
+                              </div>
+                              </td>}
+                            {/* <td className="px-2 py-2 break-words">{user?.Email?.toLowerCase()||"Not Provided"}</td> */}
+                      
+                            <td className="px-2 py-2">
+                              {user?.Contact ? `${user.Contact}` : "Not Provided"}
+                            </td>
+
+
+                            {/* <td className="px-2 py-2">
+                        <span className="px-2 sm:px-3 py-1 rounded-full bg-[#ecfefd] text-[#009688] font-semibold uppercase text-[9px] sm:text-xs">
+                          {user.userType === "healthcare-assistant" ? "HCA" : user.userType}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2">
+                        {user.AadharNumber ? user.AadharNumber : "Aadhaar Pending"}
+                      </td> */}
+                            <td className="px-2 py-2 break-words">
+                              {UpdateduserType === "patient" ? (
+                                <div className="flex items-center gap-2">
+                                  {/* Display Value */}
+                                   <MapPin size={14} className="text-green-600 shrink-0" />
+                                  <span
+                                    className={`text-xs ${user.ServiceLocation||user.Location
+                                        ? "text-slate-700 font-medium"
+                                        : "italic text-slate-400"
+                                      }`}
+                                  >
+                                   
+                                     {/* {getPopularArea(user.ServiceLocation ||user.Location|| "Not mentioned")} */}
+                                     {user.ServiceLocation ||user.Location|| "Not mentioned"}
+                                  </span>
+
+                                
+                                 
+
+
+                                 
+
+                                </div>
+                              ) : (
+   <div className="flex items-center gap-2">
+                                 <MapPin size={14} className="text-green-600 shrink-0" />
+                                <span className="text-[12px] text-slate-700">
+                                 
+                                  {GetPermanentAddress(user.userId)}
+                                </span>
+                                </div>
+                              )}
+                            </td>
+{UpdateduserType === "patient" ? (
+  <td className="px-2 py-2">
+    {user.EmailVerification ? (
+      <div className="relative group inline-block ml-10">
+        <BadgeCheck
+          size={30}
+          className="text-green-600 cursor-pointer hover:bg-gray-300 p-1 rounded-full"
+          onClick={() =>
+            UpdateEmailVerificationStatus(
+              user.FirstName,
+              "Pending",
+              user.userId
+            )
+          }
+        />
+
+        <div
+          className="absolute top-0 right-full -translate-y-1/2 mr-2
+                     opacity-0 group-hover:opacity-100
+                     transition-opacity duration-200
+                     bg-black text-white text-xs px-3 py-1 rounded-md
+                     whitespace-nowrap"
+        >
+          Email Verified, Click to Update
+        </div>
+      </div>
+    ) : (
+      <div className="relative group inline-block ml-10">
+        <Hourglass
+          size={30}
+          className="text-yellow-500 cursor-pointer hover:bg-gray-300 p-1 rounded-full"
+          onClick={() =>
+            UpdateEmailVerificationStatus(
+              user.FirstName,
+              "Verified",
+              user.userId
+            )
+          }
+        />
+
+        <div
+          className="absolute top-0 right-full -translate-y-1/2 mr-2
+                     opacity-0 group-hover:opacity-100
+                     transition-opacity duration-200
+                     bg-black text-white text-xs px-3 py-1 rounded-md
+                     whitespace-nowrap"
+        >
+          Email Verification Pending, Click to Update
+        </div>
+      </div>
+    )}
+  </td>
+) : (
+  <td className="px-2 py-2 text-center">
+{user?.StatusHistory?.[0]?.Date
+  ?
+    `${getDaysBetween(user.StatusHistory[user.StatusHistory.length - 1].Date,new Date().toLocaleDateString("en-IN"))} ${[1,2].includes(getDaysBetween(user.StatusHistory[user.StatusHistory.length - 1].Date,new Date().toLocaleDateString("en-IN")))?"Day":"Days"}`
+  : "0 Days"}
+  </td>
+)}
+                            
+                            {user.userType === "patient" && (
+                            
+                              <td className="px-2 py-2">
+                              
+                                  {GetUserCurrentStatus(user.userId)?<p className="text-[10px] text-center font-bold text-gray-800 border-l-4 border-green-500 border p-1 shadow-lg rounded-md">
+  On Deployment
+</p>:
+                                <select
+                                  className={`w-full px-2 py-2 rounded-xl text-center font-medium transition-all duration-200 cursor-pointer ${user.ClientStatus === "Placced"
+                                      ? "text-[13px] font-bold shadow-lg"
+                                      : "shadow-md"
+                                    } ${filterColors[user.ClientStatus]}`}
+                                  value={user.ClientStatus}
+                                  onChange={(e) => UpdateStatus(user.FirstName, e.target.value, user.userId)}
+                                >
+                                  {Status.map((status) => (
+                                    <option key={status} value={status}>
+                                      {status === "Deployed" ? "Deployed ✅" : status}
+                                    </option>
+                                  ))}
+                                </select>}
+
+                              </td>
+                            )}
+
+                           {UpdateduserType === "healthcare-assistant" && (() => {
+  const workingStatus = HCPWorkingStatus(user.userId);
+  const isAssigned =
+    Array.isArray(workingStatus) && workingStatus.includes("Assigned");
+
+  const handleUpdate = async () => {
+ dispatch(Refresh("Please Wait....."))
+    const res = await UpdateHCAnstatus(user.userId, "Bench");
+    if(res.success){
+      dispatch(Refresh("Please Wait Fetching Updated Data...."))
+        const userId =
+        localStorage.getItem("UserId");
+
+      const { data } = await axios.post(
+        "/api/AdminPageInfo",
+        {
+          userId,
+          refreshType: [ "fullInfo", "registeredUsers"]
+            ,
+            
+        }
+      );
+        dispatch(setUsers(
+        data.data.registeredUsers
+      ))
+
+       dispatch(setFullInfo(
+        data.data.fullInfo
+      ))
+ dispatch(Refresh(res.message))
+    }
+    
+  };
+
+  return (
+    <td className="px-2 py-2">
+  
+
+      {isAssigned||user.CurrentStatus==="Active" ? (
+       <div className="flex flex-col items-center justify-center text-center gap-1">
+  
+  <p className="inline-flex items-center gap-1.5 rounded-full 
+                 bg-gradient-to-r from-teal-500 to-green-500 
+                 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
+    Active  
+  </p>
+
+ 
+  {/* <button
+    onClick={handleUpdate}
+    className="text-[11px] font-medium text-blue-600 
+               hover:text-blue-700 hover:underline  cursor-pointer
+               transition"
+  >
+
+    Make Unassigned
+  </button> */}
+
+</div>
+
+      ):<p
+  className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold border ${
+    statusStyles[user.CurrentStatus] ||
+    "bg-gray-50 text-gray-700 border-gray-200"
+  }`}
+>
+  {user.CurrentStatus} 
+</p>
+}
+    </td>
+  );
+})()}
+  {UpdateduserType === "healthcare-assistant" &&
+
+  
+  <td className="md:px-8 md:py-2">
+
+                              <button
+  type="button"
+  onClick={() => {setShowClients(true),setProfileId(user.userId)}}
+  className="inline-flex items-center justify-center rounded-lg border border-[#1392d3] bg-[#1392d3] px-1 py-1.5 text-[10px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#0f7bb3] hover:shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
+>
+  Download Profile 
+</button> 
+                              </td>
+                              
+  }
+{UpdateduserType === "healthcare-assistant" &&
+  <td className="md:px-8 md:py-2">
+                              
+        <div className="flex items-center justify-center w-fit">
+  {isEditing&&SelectedHCPSalaryId===user.userId ? (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div className="w-[340px] rounded-xl bg-white shadow-2xl border border-gray-200 p-5 animate-in fade-in zoom-in-95">
+
+      <h2 className="text-sm font-semibold text-gray-800">
+        Update HCP Salary
+      </h2>
+      <p className="text-[11px] text-gray-500 mb-4">
+        Enter the new salary details.
+      </p>
+
+      {/* Salary */}
+      <div className="mb-3">
+        <label className="block text-[11px] font-medium text-gray-600 mb-1">
+          New Salary
+        </label>
+        <input
+          type="number"
+          value={UpdatedHCPSalary}
+          onChange={(e) => SetUpdatedHCPSalary(e.target.value)}
+          placeholder="Enter Salary"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                     focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none"
+        />
+      </div>
+
+      {/* Effective Date */}
+      <div className="mb-3">
+        <label className="block text-[11px] font-medium text-gray-600 mb-1">
+          Effective From
+        </label>
+        <input
+          type="date"
+          value={EffectiveDate}
+          onChange={(e) => SetEffectiveDate(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                     focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none"
+        />
+      </div>
+
+
+      <div className="mb-4">
+        <label className="block text-[11px] font-medium text-gray-600 mb-1">
+          Reason
+        </label>
+        <textarea
+          rows={3}
+          value={Reason}
+          onChange={(e) => SetReason(e.target.value)}
+          placeholder="Example: Annual appraisal, Promotion, Performance increment..."
+          className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm
+                     focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none"
+        />
+      </div>
+
+      {/* Buttons */}
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => setIsEditing(false)}
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium
+                     text-gray-700 hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={() => handleSave(user)}
+          className="rounded-lg bg-pink-600 px-4 py-2 text-sm font-medium
+                     text-white hover:bg-pink-700 cursor-pointer"
+        >
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+  ) : (
+    <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 w-full">
+      <p className="text-[8px] text-gray-800 leading-none font-bold">HCP Salary</p>
+
+      <div className="relative group flex w-[70px] items-center gap-2 mt-1">
+  
+  <div
+    className="
+      absolute bottom-full right-0 mb-1
+      hidden group-hover:block
+      bg-black text-white text-[10px] px-2 py-1 rounded
+      whitespace-nowrap
+      z-50
+    "
+  >
+    {GetHCPPaymentApproved(user.userId)}
+  </div>
+
+  <span className="text-[10px] font-semibold text-gray-800">
+     {UpdatedHCPSalary && SelectedHCPSalaryId === user.userId
+        ? UpdatedHCPSalary
+        : GetHCPPayment(user.userId)}
+  </span>
+
+  <button
+    onClick={() => {
+      setIsEditing(true);
+      setSelectedHCPSalaryId(user.userId);
+      SetUpdatedHCPSalary(GetHCPPayment(user.userId));
+      SetReason("")
+    }}
+    className="text-[9px] text-indigo-600 bg-indigo-50 px-1 cursor-pointer py-[2px] rounded"
+  >
+    <Pencil size={9} />
+  </button>
+</div>
+      <p className="text-[9px] text-gray-500 leading-none mt-1">
+        Per Day:
+        <span className="ml-1 font-semibold text-green-600">
+          {Math.round(Number(GetHCPPayment(user.userId)) / getDaysInMonthForMonthName(SearchMonth,SearchYear))}
+        </span>
+      </p>
+    </div>
+  )}
+</div>
+                              </td>}
+                            {/* {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
+                        <td className="px-2 py-2">
+                          <select
+                            onChange={(e) => {
+                              const selectedHCA = Filter_HCA.find(
+                                (each) => each.FirstName === e.target.value
+                              );
+                              UpdateAssignHca(
+                                user.id,
+                                selectedHCA?.id,
+                                user.FirstName,
+                                user.Email,
+                                user.Contact,
+                                user.Location,
+                                selectedHCA?.FirstName,
+                                selectedHCA?.Contact
+                              );
+                            }}
+                            className="w-full text-center px-2 py-1 rounded-lg bg-[#f9fdfa] border border-gray-200 cursor-pointer text-xs sm:text-sm"
+                          >
+                            <option>Assign HCA</option>
+                            {Filter_HCA.map((each) => (
+                              <option key={each.userId}>{each.FirstName}</option>
+                            ))}
+                          </select>
+                        </td>
+                      )} */}
+                            {UpdateduserType === "healthcare-assistant" && (
+                              <td className="">
+                             
+                                <select
+                                  className={` text-center w-[120px]  px-2 py-1 rounded-lg border cursor-pointer text-xs sm:text-sm transition-all duration-200 font-semibold
+      ${user.CurrentStatus === "Available"
+                                      ? "bg-green-100 border-green-300 text-green-800"
+                                      : user.CurrentStatus === "Sick"
+                                        ? "bg-yellow-100 border-yellow-300 text-yellow-800"
+                                        : user.CurrentStatus === "Leave"
+                                          ? "bg-blue-100 border-blue-300 text-blue-800"
+                                          : user.CurrentStatus === "Terminated"
+                                            ? "bg-red-100 border-red-300 text-red-800"
+                                            : "bg-gray-100 border-gray-300 text-gray-800"
+                                    }
+    `}
+                                  value={user.CurrentStatus || ""}
+                                  onChange={(e) =>
+
+                                {
+  //                                  if(user.CurrentStatus==="Active"){
+  // setShowStatusWarning(true);
+  // return;
+  // }
+                                    UpdateCurrentstatus(user.FirstName, e.target.value, user.userId)
+                                }
+                                  }
+                                >
+
+                                 <option value="Active">🟢 Active</option>
+
+<option value="Training">🟠 Training</option>
+<option value="Sick">🟡 Sick</option>
+<option value="Leave">🔵 Leave</option>
+<option value="Bench">🟣 Bench</option>
+
+<option value="Terminated">🔴 Terminated</option>
+                                </select>
+                              </td>
+
+
+                            )}
+
+
+                            <td className="px-2 py-2">
+                              {(user?.DetailedVerification === false && UpdateduserType === "healthcare-assistant")||(UpdateduserType==='patient'&&user?.PDRStatus!=="Filled") ? <p className="inline-block px-2 py-1 text-[10px] text-center font-semibold 
+              text-neutral-700 bg-neutral-100 rounded-md">
+  Full Info Required 
+</p>
+ :
+                                <button
+                                  className="w-full text-white bg-gradient-to-br from-[#00A9A5] to-[#007B7F] hover:from-[#01cfc7] hover:to-[#00403e] rounded-lg px-2 py-2 transition cursor-pointer text-xs sm:text-sm"
+                                  
+                  onClick={() => {
+  if (UpdateduserType === "healthcare-assistant") {
+    router.push(
+      `/HCPProfileForm?previewUserId=${encodeURIComponent(user.userId)}`
+    );
+  } else {
+    ShowDompleteInformation(user.userId, user.FirstName);
+  }
+}}
+                                >
+                                  {user.DetailedVerification ? "View" : "Preview"}
+                                </button>}
+
+                            </td>
+                                 {UpdateduserType === 'patient' &&
+                             <td className="px-2 py-2 text-center">
+                        {user.ClientStatus==="Converted" ?
+                        
+                        <div>{user?.PDRStatus==="Filled" ?
+  <span className="inline-flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:shadow-lg
+                   bg-emerald-100 text-emerald-600">
+<FileX
+  size={18}
+  strokeWidth={2.2}
+  onClick={() => {
+    router.push("/NewLead");
+
+    dispatch(CurrrentPDRUserId(user.userId));
+    dispatch(Refresh("Please Wait......"));
+  }}
+/>
+  </span>:  <span className="inline-flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:shadow-lg
+                   bg-red-100 text-red-600">
+    <FileX size={18} strokeWidth={2.2}  onClick={()=>{dispatch(CurrrentPDRUserId(user.userId)) ; dispatch(Refresh("Please Wait......"));router.push("/NewLead")}}/>
+  </span>}
+</div>:<p className="inline-flex items-center gap-2 rounded-full w-[100px] h-[28px] border border-gray-200 px-3 shadow-lg py-1 text-[9px] text-gray-600">
+  <span className="h-4 w-2 rounded-full bg-green-500"></span>
+Awaiting Conversion
+</p>
+}
+
+
+                            </td>}
+                            {UpdateduserType === 'patient' &&
+                              <td className="md:px-8 md:py-2">
+{user?.PDRStatus==="Filled"&&user.ClientStatus==="Converted" ?<div className="relative group inline-block"> <button
+                                  onClick={() => UpdateNavigattosuggetions(user.userId)}
+                                  disabled={GetUserCurrentStatus(user.userId)}
+                                  className={`flex  ${GetUserCurrentStatus(user.userId) ? "cursor-not-allowed" : "cursor-pointer"} items-center gap-2 w-full sm:w-auto justify-center  py-2
+ text-white    h-10 text-[9px] transition-all duration-150`}
+                                >
+                                  {/* <img src="Icons/HCP.png" className='h-10 w-10 rounded-full'/> */}
+                                  <img src="Icons/FemaleHCA.png" className='h-10 w-15 rounded-full' />
+
+                                </button>
+                                 {GetUserCurrentStatus(user.userId) && (
+    <div className="absolute right-full top-1/2 -translate-y-1/2 ml-2 
+      hidden group-hover:block bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+      Client Already in PLACEMENT
+    </div>
+  )}
+                                </div>: <p className="text-gray-700 text-center text-[10px]  w-[40px] opacity-50 cnot-allowedursor-">
+{user?.PDRStatus!=="Filled"? "Fill PDR to view": user.ClientStatus!=="Converted"?"Convert to view":"Not Available"}
+</p>}
+                               
+                              </td>}
+                            
+                              {/* <td className="md:px-8 md:py-2">
+
+                                <button
+
+                                  className="flex   cursor-pointer items-center gap-2 w-full sm:w-auto justify-center  py-2
+    h-10 text-[9px] transition-all duration-150"
+                                >
+                                  <Trash onClick={() => { setShowDeletePopUp(true), SetDeleteInformation(user),dispatch(Refresh(null)) }} />
+
+                                </button>
+                              </td> */}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-20">
+                <div className="
+    w-full max-w-md
+    rounded-3xl
+    bg-white/70 backdrop-blur-xl
+    border border-slate-200
+    shadow-[0_20px_50px_rgba(0,0,0,0.08)]
+    px-8 py-10
+    text-center
+    transition-all
+  ">
+                  <div className="
+      mx-auto mb-5
+      flex h-16 w-16
+      items-center justify-center
+      rounded-full
+      bg-gradient-to-br from-[#e0f7f5] to-[#f1faf8]
+      shadow-inner
+    ">
+                    <span className="text-3xl">🗂️</span>
+                  </div>
+
+
+                  <h3 className="text-lg font-semibold tracking-tight text-slate-800">
+                    No data available for Current Month/ Filter
+                  </h3>
+
+
+                  <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                    We couldn’t find any records matching your current selection.
+                    Try changing filters or come back later.
+                  </p>
+
+                  <button
+                    onClick={() => {
+                       UpdateView("home")
+                   
+   
+                    }}
+                    className="
+        mt-6
+        inline-flex items-center justify-center
+        rounded-xl
+        bg-gradient-to-r from-[#62e0d9] to-[#3bcfc8]
+        px-6 py-2.5
+        text-sm font-semibold text-white
+        shadow-md
+
+        transition-all duration-200
+        hover:scale-[1.03] hover:shadow-lg
+        active:scale-[0.97]
+      "
+                  >
+                    Refresh
+                  </button>
+                </div>
+              </div>
+
+            )}
+
+            {updatedStatusMsg && (
+              <div className="fixed bottom-4 sm:bottom-6 left-3 sm:left-10 bg-gradient-to-br from-[#00A9A5] to-[#005f61] text-white px-3 sm:px-6 py-2 sm:py-4 rounded-xl shadow-2xl font-semibold text-xs sm:text-base z-50 max-w-[90vw] sm:max-w-xs">
+                {updatedStatusMsg}
+              </div>
+            )}
+          </div>)}
+      </div>
+
+    );
+  };
+
+
+
+
+  const ShowDompleteInformation = (userId: any, ClientName: any) => {
+
+    if (userId) {
+      dispatch(UpdateClient(ClientName));
+      dispatch(UpdateUserInformation(userId));
+      router.replace("/UserInformation");
+    }
+  };
+
+
+
+
+
+  const handleMainLogout = async () => {
+    localStorage.removeItem("UserId");
+   
+    router.replace("/");
+  };
+
+
+  if (isChecking) {
+    <LoadingData />
+  }
+
+
+
+
+  const Filter_HCA = Finel.filter((each: any) => {
+    const isHCA = each.userType === "healthcare-assistant";
+    const isAvailable = each.Status !== "Assigned";
+    const matchesName =
+      !AsignStatus || each.FirstName.toLowerCase().includes(AsignStatus.toLowerCase());
+
+    return isHCA && isAvailable && matchesName;
+  });
+
+
+  const UpdateNavigattosuggetions = (D: any) => {
+
+    router.push("/Clientsuggetions")
+    dispatch(UpdateClientSuggetion(D))
+  }
+
+  const GetPermanentAddress = (A: any) => {
+    if (!UserFullInfo?.length || !A) return "Not Entered";
+
+    const address =
+      UserFullInfo
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.["PermanentState"]||"Not Provided";
+
+    return address ?? "Not Entered";
+  };
+const handleSave = async (data: any) => {
+  try {
+
+    if(EffectiveDate===""){
+      alert("Please Select Effective Date")
+      return
+    }
+    setIsEditing(false);
+    dispatch(Refresh("Please Wait...."));
+
+    const updateSalary = await PostHCPSalaryRequest(
+      data,
+      UpdatedHCPSalary,
+      UserFirstName,
+      EffectiveDate,
+      Reason
+    );
+
+    if (updateSalary?.success) {
+      const res:any=await axios.post("/api/Slack", {
+  userIds: "U08HWTFQCJ0",
+  isHighlight: true,
+  message: {
+    title: "HCP Salary Updates",
+    body: "Hi Sir, Kindly requesting HCP salary update. Please check notification in the application. Thank you.",
+  },
+});
+    
+      dispatch(
+        Refresh(
+          "Salary update request submitted to management. You will be notified once the status is updated."
+        )
+      );
+
+      // const phoneNumber = "8977975659";
+      // const message =
+      //   "Hi Sir, Kindly requesting HCP salary update. Please check notification in the application. Thank you.";
+
+        
+
+      // const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+      //   message
+      // )}`;
+
+      // window.open(whatsappURL, "_blank");
+
+      SetUpdatedHCPSalary(null);
+      setIsEditing(false);
+    }
+  } catch (error) {
+    console.error("Salary update error:", error);
+    dispatch(Refresh("Something went wrong. Please try again."));
+  }
+};
+   const GetHCPPayment = (A: any) => {
+    if (!UserFullInfo?.length || !A) return "Not Entered";
+
+    const address =
+      UserFullInfo
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.["PaymentforStaff"]||0;
+
+    return Number(address) 
+  };
+
+    const GetHCPPaymentApproved = (A: any) => {
+    if (!UserFullInfo?.length || !A) return "Not Entered";
+
+    const address =
+      UserFullInfo
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.["ApprovedBy"]||"Salary Not Updated Yet";
+
+    return address==="Salary Not Updated Yet"?address:`Salary Updated By ${address}`
+  };
+
+
+    const GetHCPGender = (A: any) => {
+    if (!UserFullInfo?.length || !A) return "Not Entered";
+
+    const address =
+      UserFullInfo
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.['Gender']||"Not Provided";
+
+    return address ?? "Not Entered";
+  };
+
+
+ 
+
+
+
+
+
+
+  const HCPWorkingStatus=(A:any)=>{
+    try{
+   if (!UserFullInfo?.length || !A) return "Not Entered";
+
+    const address =
+      UserFullInfo
+        ?.map((each: any) => each?.HCAComplitInformation)
+        ?.find((info: any) => info?.UserId === A)
+      ?.["Status"];
+
+    return address ?? "Not Entered";
+
+
+    }catch(err:any){
+
+    }
+  }
+
+  
+
+const GetHCPStatusCount = (status: string) => {
+  return Finel.filter(
+    (each: any) =>
+      each.userType === "healthcare-assistant" &&
+      !GetUserCurrentStatus(each.userId) &&
+      each.CurrentStatus === status
+  ).length;
+};
+
+const GetAllHCPCount = () => {
+  return Finel.filter(
+    (each: any) =>
+      each.userType === "healthcare-assistant" &&
+      !GetUserCurrentStatus(each.userId)
+  ).length;
+};
+
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#f7fafc] via-[#e3f6f5] to-[#f9f9ff] text-gray-900 p-2 ">
+
+
+      <div className="sticky top-0 z-50 bg-opacity-90 backdrop-blur-lg mb-3">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-white/90 rounded-xl p-3 shadow-2xl border border-gray-100">
+        <div className="flex items-center gap-3 relative">
+          {showOptions && (
+    <div className="absolute top-12 left-0 bg-white border border-gray-200 rounded-xl shadow-lg w-40 py-2 z-50">
+      <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("Call Enquiry"));
+      dispatch(UpdateUserType("patient"));
+      dispatch(UpdateAdminMonthFilter(new Date(now.getFullYear(), now.getMonth()).toLocaleString("default", { month: "long" })));
+  dispatch(UpdateAdminYearFilter(String(now.getFullYear())))
+    setShowOptions(false)}
+      }>
+   Call Enquiry
+      </button>
+       <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("HCP List"));
+        dispatch(UpdateUserType("healthcare-assistant"));
+
+    setShowOptions(false)}
+      }>
+   HCP List
+      </button>
+      <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("Deployment"));
+      dispatch(UpdateUserType("patient"));
+    setShowOptions(false)}
+      }>
+     Deployment
+      </button>
+       <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>{  dispatch(Update_Main_Filter_Status("Timesheet"));
+      dispatch(UpdateUserType("patient"));
+    setShowOptions(false)}
+      }>
+      Timesheet
+      </button>
+      <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>router.push("/Invoices")}>
+      Invoice
+      </button>
+      <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>router.push("/PDRView")}>
+    PDR 
+      </button>
+      <button className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm cursor-pointer" onClick={()=>router.push("/PaymentsInfo")}>
+    Payments 
+      </button>
+      
+    </div>
+  )}
+    <button
+      onClick={() => setShowOptions(!showOptions)}
+      className="rounded-lg hover:bg-gray-100 transition cursor-pointer"
+    >
+         <List size={40} className='text-teal-800  p-2'/>
+    </button>
+  <img
+    src="/Icons/Curate-logo.png"
+    onClick={() =>{        UpdateView("home")
+                   }}
+    alt="Logo"
+    className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl"
+  />
+
+  <h1 className="text-lg sm:text-2xl font-extrabold text-[#007B7F] tracking-tight leading-tight flex items-center gap-2">
+    Hi,<span className="text-[#ff1493]">{UserFirstName}</span> 
+
+    
+  
+  </h1>
+
+
+  
+</div>
+{/* <button onClick={()=>dispatch(setUsers([]))}>Check{users.length}</button> */}
+
+
+          <div className='flex gap-2 items-center'>
+            {(UpdateMainFilter === "Call Enquiry" || UpdateMainFilter === "HCP List")
+              &&
+              <div className='md:flex items-center gap-2'>
+              <div className="relative">
+    <select
+      value={SelectedServiceStates}
+      onChange={(e) => setSelectedServiceStates(e.target.value)}
+      className="w-full text-center h-10 appearance-none rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-700 outline-none transition-all hover:border-gray-400 focus:border-[#1392d3] focus:ring-2 focus:ring-[#1392d3]/20"
+    >
+    
+
+      {IndianStates.map((state) => (
+        <option key={state} value={state}>
+          {state}
+        </option>
+      ))}
+    </select>
+
+    <ChevronDown
+      size={16}
+      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+    />
+  </div>
+              <div
+                className="
+      flex items-center bg-white shadow-md rounded-xl
+      px-4 h-[44px]
+      border border-gray-200
+      focus-within:border-indigo-500
+      transition
+      w-full sm:w-[320px]
+    "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="w-5 h-5 text-gray-500 mr-2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 100-15 7.5 7.5 0 000 15z"
+                  />
+                </svg>
+
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  onChange={(e: any) => setSearchResult(e.target.value)}
+                  className="
+        w-full bg-transparent outline-none
+        text-sm text-gray-700 placeholder-gray-400
+      "
+                />
+              </div>
+              </div>}
+
+            
+            <button
+                          onClick={() => {
+                              UpdateView("home")
+                          }}
+              className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
+            >
+              DashBoard
+            </button>
+            {/* <button
+              onClick={handleMainLogout}
+              className="
+                   px-4 py-2.5
+                  text-sm flex items-center gap-2
+                  text-red-600
+                  hover:bg-red-50
+                  font-medium
+                "
+            >
+              <LogOut size={16} /> Logout
+            </button> */}
+          </div>
+        </div>
+
+
+        <div className="flex flex-col md:flex-row gap-4 justify-between mt-2">
+          {/* {UpdateduserType === "patient" && (
+            <div className="flex gap-2 flex-wrap w-full sm:w-auto">
+              {Filters.map((each, index) => (
+                <button
+                  key={index}
+                  onClick={() => UpdateFilterValue(each)}
+                  className={` cursor-pointer px-3 py-2 text-sm sm:text-base flex-1 sm:flex-none sm:min-w-[160px] ${search === each && "border-3"} rounded-xl shadow-md font-medium transition-all duration-200 ${filterColors[each]}`}
+                >
+                  {each}
+                </button>
+              ))}
+            </div>
+          )} */}
+          {UpdateduserType === "patient" &&
+            <div className="flex  flex-col gap-2 flex-wrap w-full ">
+              {/* <div className="flex gap-3 flex-wrap w-full sm:w-auto">
+  {Main_Filters.map((each, index) => {
+
+
+    return (
+      <button
+        key={index}
+        onClick={() => UpdateMainFilterValue(each)}
+        className={`px-4 py-2 rounded-xl shadow-md font-medium text-sm sm:text-base 
+          transition-all duration-200 flex-1 sm:flex-none sm:min-w-[160px]
+          ${
+            each===UpdateMainFilter
+ ? "bg-[#50c896] text-white border border-white-700 scale-105"
+ 
+    : "bg-gray-100 text-gray-800 border border-gray-300 hover:bg-gray-200 hover:scale-105"
+          }
+        `}
+      >
+        {each === "Client Enquiry"
+          ? `${each} (${Finel.filter((item) => item.userType === "patient").length})`
+          : each}
+      </button>
+    );
+  })}
+</div> */}
+
+              <div className="flex gap-2 flex-wrap w-full items-center">
+                {UpdateMainFilter === "Call Enquiry" && <div className="flex gap-2 flex-wrap">
+
+                  {UpdateMainFilterValues().map((each: any, index: any) => (
+                    <button
+                      key={index}
+                      onClick={() => UpdateFilterValue(each)}
+                      className={`cursor-pointer px-1 py-1 text-xs flex-1 sm:flex-none sm:min-w-[100px] ${search === each && "border-3"
+                        } rounded-xl shadow-md font-medium transition-all duration-200 ${filterColors[each]
+                        }`}
+                    >
+                      {
+                        UpdateMainFilter === "Call Enquiry"
+                          ? `${each} (${MonthlyCount?.filter(
+                            (Try:any) => (Try.ClientStatus === each && Try.userType==="patient")|| Try.userType === each||Try.Type === each
+                          )?.length || each==="Irrelevant"&&users.filter((each:any) => each.Type === 'Irrelevant').length||0
+                          })`
+                          : each
+                      }
+
+
+                    </button>
+                  ))}
+                </div>}
+
+
+                {/*   
+  {UpdateMainFilter === "Client Enquiry" && search === "Converted" && (
+    <input
+      placeholder="Search HCA..."
+      className="text-center border-2 rounded-md w-[150px] ml-auto"
+      onChange={UpdateFilterHCA}
+    />
+  )} */}
+              </div>
+
+
+            </div>}
+
+
+          {/* {UpdateduserType === "healthcare-assistant" && 
+          <div className="flex gap-3 flex-wrap items-center">
+  {["HCA", "HCP", "HCN"].map((each, index) => {
+    const isActive = HCPPreviewtype === each;
+
+    return (
+      <span
+        key={index}
+        onClick={() => {setHCPPreviewtype(each);  dispatch(Refresh(""))}}
+        className={`
+          px-4 py-1.5
+          rounded-full
+          text-sm font-semibold
+          cursor-pointer
+          transition-all duration-200
+          border
+          ${
+            isActive
+              ? "bg-teal-600 text-white border-teal-600 shadow-md scale-105"
+              : "bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200"
+          }
+        `}
+      >
+ {each}({MonthlyCount?.filter(
+                            (Try:any) => Try.PreviewUserType === each &&Try.userType==="healthcare-assistant"
+                          )?.length || 0
+                          })
+      </span>
+    );
+  })}
+</div>
+
+          } */}
+          {/* <button
+onClick={()=>UpdateNavigattosuggetions()}
+            className="flex mt-7 cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-2 py-2 bg-gradient-to-br from-[#10b981] to-[#065f46] hover:from-[#34d399] hover:to-[#064e3b]
+ text-white rounded-xl  hover:shadow-lg hover:rounded-full h-8 text-[9px] transition-all duration-150"
+          >
+            Show Placement Suggetions
+            
+          </button> */}
+{UpdateduserType === "healthcare-assistant" && (
+  <div className="w-full flex items-center justify-between gap-4">
+
+    {/* ===================================================== */}
+    {/* LEFT SIDE - Preview User Type Filter */}
+    {/* ===================================================== */}
+    <div className="flex flex-wrap items-center justify-start gap-1">
+
+      {/* All Types */}
+      <button
+        type="button"
+        onClick={() => {
+          setHCPPreviewtype("");
+        }}
+        className={`px-4 py-1 rounded-md text-[15px] font-medium border transition whitespace-nowrap cursor-pointer
+          ${
+            HCPPreviewtype === ""
+              ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+          }`}
+      >
+        All ({GetAllHCPCount()})
+      </button>
+
+      {/* HCA / HCP / HCN */}
+      {["HCA", "HCP", "HCN"].map((type) => (
+        <button
+          key={type}
+          type="button"
+          onClick={() => {
+            setHCPPreviewtype(type);
+          }}
+          className={`px-4 py-1 rounded-md text-[15px] font-medium border transition whitespace-nowrap cursor-pointer
+            ${
+              HCPPreviewtype === type
+                ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+        >
+          {type} ({GetHCPTypeCount(type)})
+        </button>
+      ))}
+
+    </div>
+
+
+    {/* ===================================================== */}
+    {/* RIGHT SIDE - Current Status Filter */}
+    {/* ===================================================== */}
+    <div className="flex flex-wrap items-center justify-end gap-1">
+
+      {/* All Status */}
+      <button
+        type="button"
+        onClick={() => {
+          setHCPCurrentStatus("");
+        }}
+        className={`px-4 py-1 rounded-md text-[15px] font-medium border transition whitespace-nowrap cursor-pointer
+          ${
+            HCPCurrentStatus === ""
+              ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+          }`}
+      >
+        All ({GetAllHCPCount()})
+      </button>
+
+      {/* Active / Bench / Training / Sick / Leave / Terminated */}
+      {HCPFilters.map((status) => (
+        <button
+          key={status.value}
+          type="button"
+          onClick={() => {
+            setHCPCurrentStatus(status.value);
+          }}
+          className={`px-4 py-1 rounded-md text-[15px] font-medium border transition whitespace-nowrap cursor-pointer
+            ${
+              HCPCurrentStatus === status.value
+                ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+        >
+          {status.label} ({GetHCPStatusCount(status.value)})
+        </button>
+      ))}
+
+    </div>
+
+  </div>
+)}
+
+
+
+          {((UpdateMainFilter !== "Timesheet") && (UpdateMainFilter !== 'Deployment'))&&(UpdateduserType !== "healthcare-assistant") &&
+            <div className="flex justify-between gap-3 md:w-[330px]">
+
+
+
+
+
+              <div className="w-full sm:w-[130px]">
+                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  Month
+                </label>
+
+                <select
+                  value={SearchMonth}
+                  onChange={async (e) => {
+    const month = e.target.value;
+
+    // dispatch(Refresh(`Please Wait... Fetching ${month || "All"} info...`));
+
+    // ⏳ wait until month data updates
+   
+  dispatch(UpdateAdminMonthFilter(month));
+  
+    // ✅ now trigger fresh reload + message
+    // dispatch(Refresh(`Successfully Fetched ${month || "All"} Data`));
+  }}
+                   className="
+        w-full h-[44px] rounded-xl
+        border border-gray-300
+        px-4 text-sm bg-white text-gray-800
+        focus:outline-none focus:ring-2 focus:ring-indigo-500
+        focus:border-transparent transition-all
+      "
+                >
+                  <option value="">All Months</option>
+                  {[
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+                  ].map((month) => (
+                    <option key={month} value={month}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+
+
+
+              <div >
+                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  Year
+                </label>
+
+                <select
+                  value={SearchYear}
+                  onChange={(e) => dispatch(UpdateAdminYearFilter(e.target.value))}
+                  className="
+        w-full rounded-xl border border-gray-300
+        px-4 py-3 text-sm bg-white text-gray-800
+        focus:outline-none focus:ring-2 focus:ring-indigo-500
+        focus:border-transparent transition-all
+      "
+                >
+                  <option value="">All Years</option>
+                  {[2024, 2025, 2026].map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+            </div>}
+
+
+
+
+
+        </div>
+      </div>
+
+
+
+      {ContetUserInterface()}
+
+
+
+
+    </div>
+  );
+}
+function each(value: { id: any; FirstName: any; AadharNumber: any; Age: any; userType: any; Location: any; Email: any; Contact: any; userId: any; VerificationStatus: any; DetailedVerification: any; EmailVerification: any; ClientStatus: any; }, index: number, array: { id: any; FirstName: any; AadharNumber: any; Age: any; userType: any; Location: any; Email: any; Contact: any; userId: any; VerificationStatus: any; DetailedVerification: any; EmailVerification: any; ClientStatus: any; }[]): value is { id: any; FirstName: any; AadharNumber: any; Age: any; userType: any; Location: any; Email: any; Contact: any; userId: any; VerificationStatus: any; DetailedVerification: any; EmailVerification: any; ClientStatus: any; } {
+  throw new Error('Function not implemented.');
+}

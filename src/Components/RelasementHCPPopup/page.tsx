@@ -118,8 +118,7 @@ const HCA_List = Array.isArray(filteredHcps)
         typeMatch &&
         isNotAssigned &&
         isValidCurrentStatus &&
-        genderMatch &&
-        previewTypeMatch
+        genderMatch 
       );
     })
   : [];
