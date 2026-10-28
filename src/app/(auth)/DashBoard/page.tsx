@@ -52,7 +52,7 @@ import {
 import { CallEnquiryRegistration, GetDashboardStats, GetDeploymentInfo, GetInvoiceInfo, GetRegidterdUsers, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, PostCallEnquiryNotification, UpdateNotIntrestInformation } from "@/Lib/user.action";
 
 
-
+type DashboardView = "home" | "admin";
 
 
 
@@ -72,6 +72,8 @@ import SubheadingPop from "@/Components/Sunheading/page";
 import SessionExpiredPopup from "@/Components/LoginSesion/page";
 import { usePathname, useRouter } from "next/navigation";
 import { useDashboardNavigation } from "@/Components/Navigation/page";
+import UserTableList from "@/Components/NewAdminPannel/page";
+
 
 const DOCUMENT_KEYS = [
   "AadharAttachmentURL",
@@ -89,6 +91,7 @@ const DOCUMENT_KEYS = [
 export default function Dashboard() {
   const router = useRouter()
     const dispatch = useDispatch();
+    const [activeView, setActiveView] = useState<DashboardView>("home");
   const [isNavigating, setIsNavigating] = useState<boolean>(false);
   const updatedRefreshCount = useSelector((afterEach: any) => afterEach.updatedCount);
   const [isManagement, setIsManagement] = useState<boolean | null>(null);
@@ -619,7 +622,7 @@ if(EnquiryForm.ClientStatus!=="Send"){
           setShowCallEnquiry(false);
           dispatch(Update_Main_Filter_Status('Call Enquiry'));
           dispatch(UpdateUserType("patient"));
-          router.replace("/AdminPage");
+         setActiveView("home")
           dispatch(Refresh("New Call Enquiry Added  Successfully"));
           
         }, 1500);
@@ -956,7 +959,9 @@ const Switching = (tab: string) => {
   if (adminTabs[tab]) {
     dispatch(Update_Main_Filter_Status(tab));
     dispatch(UpdateUserType(adminTabs[tab]));
-    router.push("/AdminPage");
+  
+    setActiveView("admin");
+   
     return;
   }
 
@@ -1065,6 +1070,8 @@ const Switching = (tab: string) => {
 
 
   return (
+      <div className="min-h-screen">
+        {activeView === "home" ?
     <div className="flex min-h-screen h-auto bg-gray-100 relative">
       <div className="flex min-w-0 flex-1 flex-col">
 
@@ -2711,6 +2718,9 @@ Contact}
 
         </main>
       </div>
+    </div>:<UserTableList
+  UpdateView={(view: DashboardView) =>{ setActiveView(view); setIsNavigating(false);}}
+/>}
     </div>
   );
 }

@@ -20,7 +20,7 @@ import { SetDeploymentInfo, UpdatePreviewStatus } from "@/Redux/action";
 import axios from "axios";
 import { SquarePen } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 interface PreviewProps {
@@ -112,6 +112,8 @@ const PreviewComponent: React.FC<PreviewProps> = ({ data, Advance, ValidationDat
 
 const [operationSteps, setOperationSteps] = useState<OperationStep[]>([]);
 const [isSubmitting, setIsSubmitting] = useState(false);
+const submissionLock = useRef(false);
+const activeOperation = useRef("PDR submission");
 
 const updateStep = (
   id: string,
@@ -284,8 +286,9 @@ const updateStep = (
 
 
 const UpdatePDRInfo = async () => {
-  if (isSubmitting) return;
+  if (submissionLock.current || isSubmitting) return;
 
+  submissionLock.current = true;
   setIsSubmitting(true);
   setSelectedRecord(true);
   setUpdatingStatus("Preparing PDR update...");
@@ -347,9 +350,33 @@ const UpdatePDRInfo = async () => {
     setUpdatingStatus(message);
   };
 
+  const runStep = (id: string, detail: string) => {
+    activeOperation.current =
+      steps.find((step) => step.id === id)?.label ?? id;
+    updateStep(id, "running", detail);
+  };
+
   try {
+    const clientId = DeploaymentInformation?.Client_Id;
+    const hcaId = DeploaymentInformation?.HCA_Id;
+    if (
+      !data?.userId ||
+      clientId === null || clientId === undefined || clientId === "" ||
+      hcaId === null || hcaId === undefined || hcaId === ""
+    ) {
+      failStep("pdr", "Required user, client, or HCA ID is missing.");
+      skipStep("fetch", "Resolve the missing IDs before continuing.");
+      skipStep("counts", "Submission stopped because required IDs are missing.");
+      skipStep("deployment", "Submission stopped because required IDs are missing.");
+      skipStep("invoice", "Submission stopped because required IDs are missing.");
+      skipStep("status", "Submission stopped because required IDs are missing.");
+      skipStep("refresh", "Submission stopped because required IDs are missing.");
+      skipStep("redirect", "Resolve the missing IDs before continuing.");
+      return;
+    }
+
     // STEP 1: Update PDR information
-    updateStep("pdr", "running", "Saving PDR changes...");
+    runStep("pdr", "Saving PDR changes...");
 
     const updateRes = await UpdatePDR(
       data.userId,
@@ -364,11 +391,11 @@ const UpdatePDRInfo = async () => {
     updateStep("pdr", "completed", "PDR information saved.");
 
     // STEP 2: Fetch PDR details
-    updateStep("fetch", "running", "Checking current PDR status...");
+    runStep("fetch", "Checking current PDR status...");
 
     const pdrRes = await GetUserPDRInfoinPreview(
-      DeploaymentInformation.Client_Id,
-      DeploaymentInformation.HCA_Id
+      clientId,
+      hcaId
     );
 
     if (!pdrRes?.success || !pdrRes?.data) {
@@ -406,16 +433,25 @@ const UpdatePDRInfo = async () => {
     }
 
     // STEP 3: Get invoice and deployment counts
-    updateStep(
-      "counts",
-      "running",
-      "Retrieving current record counts..."
-    );
+    runStep("counts", "Retrieving current record counts...");
 
     const [invoiceList, deploymentList] = await Promise.all([
       GetInvoiceLength(),
       GetDeploymentInfoinPreview(),
     ]);
+
+    if (
+      !Number.isSafeInteger(invoiceList) || invoiceList < 0 ||
+      !Number.isSafeInteger(deploymentList) || deploymentList < 0
+    ) {
+      failStep("counts", "Invoice or deployment count response was invalid.");
+      skipStep("deployment", "Stopped because record counts were invalid.");
+      skipStep("invoice", "Stopped because record counts were invalid.");
+      skipStep("status", "Stopped because record counts were invalid.");
+      skipStep("refresh", "Stopped because record counts were invalid.");
+      skipStep("redirect", "Resolve the count response error first.");
+      return;
+    }
 
     updateStep(
       "counts",
@@ -430,7 +466,7 @@ const UpdatePDRInfo = async () => {
       `${today.getFullYear()}-${today.getMonth() + 1}`;
 
     const invoiceNo =
-      `#INV_${(invoiceList ?? 0) + 1}_${SearchMonth}_${SearchYear}`;
+      `#INV_${invoiceList + 1}_${SearchMonth}_${SearchYear}`;
 
     const deploymentInvoice =
       `BSV${today.getFullYear()}_${deploymentList + 1}`;
@@ -459,6 +495,8 @@ const UpdatePDRInfo = async () => {
     );
 
     if (
+      !data?.InvoiseInformation?.startDate ||
+      !data?.InvoiseInformation?.endDate ||
       Number.isNaN(serviceStartDate.getTime()) ||
       Number.isNaN(serviceEndDate.getTime())
     ) {
@@ -481,11 +519,7 @@ const UpdatePDRInfo = async () => {
     ).replace(/,/g, "");
 
     // STEP 4: Create deployment
-    updateStep(
-      "deployment",
-      "running",
-      "Registering service dates and attendance..."
-    );
+    runStep("deployment", "Registering service dates and attendance...");
 
     const deploymentRes = await InsertDeployment(
       serviceStartDate.toLocaleDateString("en-IN"),
@@ -547,11 +581,7 @@ const UpdatePDRInfo = async () => {
     };
 
     // STEP 5: Create invoice
-    updateStep(
-      "invoice",
-      "running",
-      `Creating invoice ${invoiceNo}...`
-    );
+    runStep("invoice", `Creating invoice ${invoiceNo}...`);
 
     const invoiceRes = await PostInvoice(
       updatedDataWithInvoice,
@@ -574,15 +604,11 @@ const UpdatePDRInfo = async () => {
     );
 
     // STEP 6: Update PDR status
-    updateStep(
-      "status",
-      "running",
-      "Updating PDR status..."
-    );
+    runStep("status", "Updating PDR status...");
 
     const statusRes = await UpdatePdrStatus(
-      DeploaymentInformation.Client_Id,
-      DeploaymentInformation.HCA_Id
+      clientId,
+      hcaId
     );
 
     if (!statusRes?.success) {
@@ -599,25 +625,33 @@ const UpdatePDRInfo = async () => {
     );
 
     // STEP 7: Refresh deployment information
-    updateStep(
-      "refresh",
-      "running",
-      "Refreshing dashboard deployment data..."
-    );
+    runStep("refresh", "Refreshing dashboard deployment data...");
 
     const userId = localStorage.getItem("UserId");
+    const numericMonth = Number(SearchMonth);
+    const numericYear = Number(SearchYear);
+    if (
+      !userId ||
+      !Number.isInteger(numericMonth) || numericMonth < 1 || numericMonth > 12 ||
+      !Number.isInteger(numericYear) || numericYear < 1000 || numericYear > 9999
+    ) {
+      failStep("refresh", "Dashboard refresh requires a valid user ID and month/year.");
+      skipStep("redirect", "Resolve the dashboard refresh error first.");
+      return;
+    }
 
-    const resultData =await axios.post(
-  "/api/AdminPageInfo",
-  {
-    userId,
-    Month: `${SearchYear}-${SearchYear}`,
-  refreshType: "deployment",
-  }
-);
+    const resultData = await axios.post(
+      "/api/AdminPageInfo",
+      {
+        userId,
+        Month: `${numericYear}-${String(numericMonth).padStart(2, "0")}`,
+        refreshType: "deployment",
+      }
+    );
 
-
-dispatch(SetDeploymentInfo(resultData .data.deployedLength));
+    const deployedLength = resultData?.data?.deployedLength;
+  
+    dispatch(SetDeploymentInfo(deployedLength));
     updateStep(
       "refresh",
       "completed",
@@ -625,11 +659,7 @@ dispatch(SetDeploymentInfo(resultData .data.deployedLength));
     );
 
     // STEP 8: Redirect
-    updateStep(
-      "redirect",
-      "running",
-      "Preparing the invoices page..."
-    );
+    runStep("redirect", "Preparing the invoices page...");
 
     setUpdatingStatus(
       "PDR created successfully. Redirecting to invoices..."
@@ -646,10 +676,13 @@ dispatch(SetDeploymentInfo(resultData .data.deployedLength));
     }, 1500);
 
   } catch (error) {
-    console.error("[UpdatePDRInfo] Failed:", error);
+    console.error("[UpdatePDRInfo] Operation failed", {
+      operation: activeOperation.current,
+      error,
+    });
 
     setUpdatingStatus(
-      "An unexpected error occurred. Check the failed operation."
+      `${activeOperation.current} failed. Please retry after checking the operation details.`
     );
 
     setOperationSteps((previous) => {
@@ -664,12 +697,13 @@ dispatch(SetDeploymentInfo(resultData .data.deployedLength));
           ? {
               ...step,
               status: "failed",
-              detail: "The operation failed unexpectedly.",
+              detail: `${activeOperation.current} failed. The request could not be completed.`,
             }
           : step
       );
     });
   } finally {
+    submissionLock.current = false;
     setIsSubmitting(false);
   }
 };
