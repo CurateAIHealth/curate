@@ -1,9 +1,9 @@
 "use client";
 
 import { LoadingData } from "@/Components/Loading/page";
-import { GetEmail } from "@/Lib/Actions";
+import { getDaysBetween, GetEmail } from "@/Lib/Actions";
 import axios from "axios";
-import { MapPin } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock, FileText, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -24,6 +24,8 @@ type Employee = {
 };
 
 type EmployeeAttendance = {
+  Description: any;
+  LeaveType: any;
   TotalLeaves: number;
   ToDate: any;
   FromDate: any;
@@ -106,6 +108,7 @@ const [selectedStaff, setSelectedStaff] = useState<any>(null);
   const [leaveBalanceStaff, setLeaveBalanceStaff] = useState<any>(null);
 
   const [spentLeaves,setspentLeaves]=useState(0)
+  const [OtherLeaves,setOtherLeaves]=useState(0)
   const [updatingLeaveBalance, setUpdatingLeaveBalance] = useState(false);
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
 const [monthlyAttendance, setMonthlyAttendance] = useState<any[]>([]);
@@ -169,9 +172,12 @@ useEffect(() => {
           CreatedAt:each.CreatedAt,
           Status:each.Status,
           ApprovalStatus:each.ApprovalStatus,
+          TotalDays:each.TotalDays,
            ToDate: each.ToDate,
            Month:each.Month,
-  FromDate: each.FromDate
+  FromDate: each.FromDate,
+  LeaveType:each.leaveType,
+  Description:each.Description
         })
       );
 
@@ -237,7 +243,9 @@ const updateLeave = async (ImpValue: any) => {
 
     const sickLeaves = parseLeaveCount(leaveData.sick);
     const casualLeaves = parseLeaveCount(leaveData.Casual);
+    const OtherLeavesInfo= parseLeaveCount(leaveData.OtherLeaves);
     
+    setOtherLeaves(OtherLeavesInfo)
     setspentLeaves(parseLeaveCount(leaveData.usedLeaves))
     setLeaveTotalInput((Number(sickLeaves) + Number(casualLeaves)));
  setSickLeaves(sickLeaves)
@@ -268,7 +276,10 @@ function makeTestAttendance(date: string): EmployeeAttendance[] {
       EmployeeName: employee.EmployeeName,
       Area: employee.Area,
       AttendanceDate: date,
+      LeaveType:employee.LeaveType,
+      Description:employee.Description,
       TotalLeaves: employee.TotalLeaves ?? 10,
+      TotalDays:employee.TotalDays,
       FromDate:employee.FromDate,
       Month:employee.Month,
       ToDate:employee.ToDate,
@@ -374,7 +385,8 @@ setUpdatingAction({
       UserId: employee.UserId,
       AttendanceDate: employee.AttendanceDate,
       ApprovalStatus: approvalStatus,
-      loggedInEmail:loggedInEmail
+      loggedInEmail:loggedInEmail,
+      employee:employee
         
     });
 
@@ -922,14 +934,25 @@ const updateLeaveBalance = async () => {
                     </svg>
                   </div>
 
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">
-                      Leave period
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      Requested dates
-                    </p>
-                  </div>
+                <div className="space-y-1">
+  <p className="text-sm font-semibold text-slate-800">
+    Leave Period
+  </p>
+
+  <p className="text-sm text-slate-600">
+    <span className="text-slate-800  font-bold">Leave Type:</span> {employee.LeaveType}
+  </p>
+
+  {employee.LeaveType === "Other" && (
+    <p className="text-sm text-slate-500">
+      {employee.Description}
+    </p>
+  )}
+
+  <p className="pt-1 text-xs text-slate-500">
+    Requested Dates
+  </p>
+</div>
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -954,7 +977,7 @@ const updateLeaveBalance = async () => {
 
                   <span className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 sm:text-sm">
                     {employee.ToDate || "—"}
-                  </span>
+                  </span> <span>{getDaysBetween(employee.FromDate,employee.ToDate)} days</span>
                 </div>
               </div>
             )}
@@ -1062,321 +1085,261 @@ updatingAction?.action === "Reject"
     const availableLeaves = Math.max(0, Number(SickLeaves)+Number(CasualLeaves) - spentLeaves);
 
     return (
-      <div
-        className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-950/50 p-3 backdrop-blur-sm sm:p-5"
-        onClick={() => setLeaveBalanceStaff(null)}
-        role="presentation"
-      >
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Leave balance for ${employee.EmployeeName}`}
-          onClick={(event) => event.stopPropagation()}
-          className="relative my-auto flex max-h-[calc(100dvh-24px)] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-white/60 bg-white shadow-2xl shadow-slate-950/20 sm:max-h-[calc(100dvh-40px)]"
+    
+<div
+  className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-3 backdrop-blur-sm sm:p-5"
+  onClick={() => setLeaveBalanceStaff(null)}
+  role="presentation"
+>
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-label={`Leave balance for ${employee.EmployeeName}`}
+    onClick={(event) => event.stopPropagation()}
+    className="flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+  >
+    {/* Header */}
+    <div className="relative shrink-0 overflow-hidden bg-teal-600 px-5 py-4 text-white">
+      <div className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/10" />
+
+      <div className="relative flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <img
+            src="/Icons/Curate-logoq.png"
+            alt="Company Logo"
+            className="h-10 w-auto shrink-0 object-contain"
+          />
+
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold">
+              Leave Balance
+            </h3>
+            <p className="truncate text-sm text-teal-50">
+              {employee.EmployeeName}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setLeaveBalanceStaff(null)}
+          aria-label="Close leave balance"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-2xl transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white"
         >
-          {/* Header */}
-          <div className="relative shrink-0 overflow-hidden bg-teal-600 px-5 py-4 text-white">
-            <div className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/10" />
-            <div className="absolute -bottom-12 right-16 h-24 w-24 rounded-full bg-white/10" />
+          ×
+        </button>
+      </div>
+    </div>
 
-            <div className="relative flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                 <img
-                src="/Icons/Curate-logoq.png"
-                className="h-12"
-                alt="Company Logo"
-              />
+    {/* Content */}
+    {LoadingLeaves ? (
+      <div className="flex min-h-48 flex-1 items-center justify-center gap-2 p-6 text-slate-500">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600" />
+        <span className="text-sm">Loading leave information...</span>
+      </div>
+    ) : (
+      <>
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4 sm:p-5">
+          {/* Leave Allocation */}
+          <section>
+            <h4 className="mb-3 text-sm font-semibold text-slate-800">
+              Leave Allocation
+            </h4>
 
-                <div className="min-w-0">
-                  <h3 className="text-lg font-bold tracking-tight">
-                    Leave Balance
-                  </h3>
-                  <p className="mt-1 truncate text-sm text-amber-50">
-                    {employee.EmployeeName}
-                  </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {/* Casual Leaves */}
+              <div className="rounded-xl border border-slate-200 p-4">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <label
+                    htmlFor="casual-leaves-input"
+                    className="text-sm font-semibold text-slate-700"
+                  >
+                    Casual Leaves
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsEditingCasualLeaves((prev) => !prev)
+                    }
+                    className={`rounded-md px-3 py-1.5 text-xs font-medium ${
+                      isEditingCasualLeaves
+                        ? "bg-slate-100 text-slate-600"
+                        : "bg-teal-50 text-teal-700 hover:bg-teal-100"
+                    }`}
+                  >
+                    {isEditingCasualLeaves ? "Done" : "Edit"}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    id="casual-leaves-input"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={CasualLeaves}
+                    readOnly={!isEditingCasualLeaves}
+                    onChange={(event) =>
+                      setCasualLeaves(Number(event.target.value))
+                    }
+                    className="w-full min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 read-only:cursor-default"
+                  />
+                  <span className="text-xs text-slate-500">Days</span>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setLeaveBalanceStaff(null)}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-xl text-white transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
-                aria-label="Close leave balance"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-          {!LoadingLeaves?
-<div>
-          {/* Scrollable Content */}
-          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4 sm:p-5">
-            {/* Total Leaves Input */}
-            
-            <div>
-              <label
-                htmlFor="leave-total-input"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Total allocated leaves
-              </label>
-
-     
-<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-  {/* Casual Leaves */}
-  <div className="rounded-xl border border-slate-200 bg-white p-4">
-    <div className="mb-3 flex items-center justify-between">
-      <label
-        htmlFor="casual-leaves-input"
-        className="text-sm font-semibold text-slate-700"
-      >
-        Casual Leaves
-      </label>
-
-      <button
-        type="button"
-        onClick={() => setIsEditingCasualLeaves((prev) => !prev)}
-        className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
-          isEditingCasualLeaves
-            ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            : "bg-blue-50 text-blue-700 hover:bg-blue-100"
-        }`}
-      >
-        {isEditingCasualLeaves ? "Done" : "Edit"}
-      </button>
-    </div>
-
-    <div className="flex items-center gap-2">
-      <input
-        id="casual-leaves-input"
-        type="number"
-        min="0"
-        step="1"
-        value={CasualLeaves}
-        readOnly={!isEditingCasualLeaves}
-        onChange={(event) => {
-          const value = event.target.value;
-          setCasualLeaves(Number(value));
-        }}
-        className={`w-full rounded-lg border px-3 py-2 text-sm font-semibold outline-none transition focus:ring-2 focus:ring-blue-100 ${
-          isEditingCasualLeaves
-            ? "border-blue-300 bg-white text-slate-800"
-            : "border-slate-100 bg-slate-50 text-slate-600"
-        }`}
-      />
-      <span className="text-xs text-slate-500">Days</span>
-    </div>
-  </div>
-
-  {/* Sick Leaves */}
-  <div className="rounded-xl border border-slate-200 bg-white p-4">
-    <div className="mb-3 flex items-center justify-between">
-      <label
-        htmlFor="sick-leaves-input"
-        className="text-sm font-semibold text-slate-700"
-      >
-        Sick Leaves
-      </label>
-
-      <button
-        type="button"
-        onClick={() => setIsEditingSickLeaves((prev) => !prev)}
-        className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
-          isEditingSickLeaves
-            ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            : "bg-rose-50 text-rose-700 hover:bg-rose-100"
-        }`}
-      >
-        {isEditingSickLeaves ? "Done" : "Edit"}
-      </button>
-    </div>
-
-    <div className="flex items-center gap-2">
-      <input
-        id="sick-leaves-input"
-        type="number"
-        min="0"
-        step="1"
-        value={SickLeaves}
-        readOnly={!isEditingSickLeaves}
-        onChange={(event) => {
-          const value = event.target.value;
-          setSickLeaves(value);
-        }}
-        className={`w-full rounded-lg border px-3 py-2 text-sm font-semibold outline-none transition focus:ring-2 focus:ring-rose-100 ${
-          isEditingSickLeaves
-            ? "border-rose-300 bg-white text-slate-800"
-            : "border-slate-100 bg-slate-50 text-slate-600"
-        }`}
-      />
-      <span className="text-xs text-slate-500">Days</span>
-    </div>
-  </div>
-</div>
-
-            </div>
-
-            {/* Leave Summary Cards */}
-            <div className="grid grid-cols-3 gap-2.5">
-              {/* Total */}
-              <div className="rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm">
-                <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.8}
+              {/* Sick Leaves */}
+              <div className="rounded-xl border border-slate-200 p-4">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <label
+                    htmlFor="sick-leaves-input"
+                    className="text-sm font-semibold text-slate-700"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 011 1v13H4V6a1 1 0 011-1z"
-                    />
-                  </svg>
+                    Sick Leaves
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsEditingSickLeaves((prev) => !prev)
+                    }
+                    className={`rounded-md px-3 py-1.5 text-xs font-medium ${
+                      isEditingSickLeaves
+                        ? "bg-slate-100 text-slate-600"
+                        : "bg-rose-50 text-rose-700 hover:bg-rose-100"
+                    }`}
+                  >
+                    {isEditingSickLeaves ? "Done" : "Edit"}
+                  </button>
                 </div>
 
-                <p className="text-[11px] font-medium text-slate-500">
-                  Total
-                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="sick-leaves-input"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={SickLeaves}
+                    readOnly={!isEditingSickLeaves}
+                    onChange={(event) =>
+                      setSickLeaves(Number(event.target.value))
+                    }
+                    className="w-full min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100 read-only:cursor-default"
+                  />
+                  <span className="text-xs text-slate-500">Days</span>
+                </div>
+              </div>
+            </div>
+          </section>
 
-                <p className="mt-1 text-xl font-bold text-slate-800">
-                  {Number(SickLeaves)+Number(CasualLeaves)}
+          {/* Leave Summary */}
+          <section>
+            <h4 className="mb-3 text-sm font-semibold text-slate-800">
+              Leave Summary
+            </h4>
+
+            <div className="grid grid-cols-2 gap-3">
+              {/* Total */}
+              <div className="rounded-xl border border-slate-200 p-3 sm:p-4">
+                <div className="flex items-center gap-2 text-slate-500">
+                  <CalendarDays className="h-4 w-4 shrink-0" />
+                  <span className="text-xs font-medium sm:text-sm">
+                    Total Leaves
+                  </span>
+                </div>
+                <p className="mt-3 text-2xl font-bold text-slate-900">
+                  {Number(SickLeaves) +
+                    Number(CasualLeaves) +
+                    Number(spentLeaves)}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Allocated leave days
                 </p>
               </div>
 
               {/* Spent */}
-              <div className="rounded-xl border border-amber-100 bg-amber-50/70 p-3 text-center shadow-sm">
-                <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.8}
-                  >
-                    <circle cx="12" cy="12" r="9" />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 7v5l3 2"
-                    />
-                  </svg>
+              <div className="rounded-xl border border-amber-200 p-3 sm:p-4">
+                <div className="flex items-center gap-2 text-amber-600">
+                  <Clock className="h-4 w-4 shrink-0" />
+                  <span className="text-xs font-medium sm:text-sm">
+                    Spent
+                  </span>
                 </div>
-
-                <p className="text-[11px] font-medium text-amber-800">
-                  Spent
-                </p>
-
-                <p className="mt-1 text-xl font-bold text-amber-700">
+                <p className="mt-3 text-2xl font-bold text-amber-600">
                   {spentLeaves}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Leaves used
                 </p>
               </div>
 
               {/* Available */}
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3 text-center shadow-sm">
-                <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.8}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 12l4 4L19 6"
-                    />
-                  </svg>
+              <div className="rounded-xl border border-emerald-200 p-3 sm:p-4">
+                <div className="flex items-center gap-2 text-emerald-600">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <span className="text-xs font-medium sm:text-sm">
+                    Available
+                  </span>
                 </div>
-
-                <p className="text-[11px] font-medium text-emerald-800">
-                  Available
+                <p className="mt-3 text-2xl font-bold text-emerald-600">
+                  {Number(SickLeaves) + Number(CasualLeaves)}
                 </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Remaining leave days
+                </p>
+              </div>
 
-                <p className="mt-1 text-xl font-bold text-emerald-700">
-                  {availableLeaves}
+              {/* Other */}
+              <div className="rounded-xl border border-blue-200 p-3 sm:p-4">
+                <div className="flex items-center gap-2 text-blue-600">
+                  <FileText className="h-4 w-4 shrink-0" />
+                  <span className="text-xs font-medium sm:text-sm">
+                    Other Leaves
+                  </span>
+                </div>
+                <p className="mt-3 text-2xl font-bold text-blue-600">
+                  {OtherLeaves}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Other leave days
                 </p>
               </div>
             </div>
-          </div>
-
-          {/* Fixed Action Footer */}
-          <div className="flex shrink-0 gap-3 border-t border-slate-100 bg-white p-4 sm:px-5">
-            <button
-              type="button"
-              onClick={() => setLeaveBalanceStaff(null)}
-              className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="button"
-              onClick={updateLeaveBalance}
-              disabled={updatingLeaveBalance}
-              className="group relative inline-flex h-11 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl border border-amber-500 bg-teal-600 px-3 text-sm font-bold tracking-wide text-white shadow-lg shadow-orange-500/20 transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-600 hover:from-amber-600 hover:via-orange-600 hover:to-orange-700 hover:shadow-xl hover:shadow-orange-500/30 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-500/20 focus-visible:ring-offset-2 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
-            >
-              {updatingLeaveBalance ? (
-                <>
-                  <svg
-                    className="h-5 w-5 shrink-0 animate-spin"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="3.5"
-                    />
-                    <path
-                      className="opacity-90"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  <span>Updating...</span>
-                </>
-              ) : (
-                <>
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20 transition-transform duration-300 group-hover:scale-110">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M5 12l4 4L19 6"
-                      />
-                    </svg>
-                  </span>
-                  <span>Save Changes</span>
-                </>
-              )}
-            </button>
-          </div>
-         </div>: <div className="flex h-32 w-full items-center justify-center gap-2 text-gray-500">
-  <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-[#00A9A5]" />
-  <span className="text-sm font-medium">
-    Loading leave information...
-  </span>
-</div>}
+          </section>
         </div>
-      </div>
+
+        {/* Fixed Footer */}
+        <div className="flex shrink-0 gap-3 border-t border-slate-200 bg-white p-4">
+          <button
+            type="button"
+            onClick={() => setLeaveBalanceStaff(null)}
+            className="h-10 flex-1 rounded-lg border border-slate-200 px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={updateLeaveBalance}
+            disabled={updatingLeaveBalance}
+            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 text-sm font-semibold text-white transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {updatingLeaveBalance ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                Updating...
+              </>
+            ) : (
+              "Save Changes"
+            )}
+          </button>
+        </div>
+      </>
+    )}
+  </div>
+</div>
+
     );
   })()}
 
@@ -1681,21 +1644,7 @@ updatingAction?.action === "Reject"
                           </div>
                         )}
 
-                        <p
-                          className={`mt-1 max-w-full truncate text-center text-[9px] leading-3 ${
-                            isNotMarked
-                              ? "invisible"
-                              : "font-medium text-slate-500"
-                          }`}
-                        >
-                          {`HCA: ${
-                            selectedStaff.HCAName ??
-                            selectedStaff.HCA ??
-                            selectedStaff.EmployeeName ??
-                            ""
-                          }`}
-                        </p>
-
+                        
                       <button
   type="button"
   onClick={() => openLocation(selectedStaff)}

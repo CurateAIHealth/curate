@@ -73,6 +73,8 @@ import SessionExpiredPopup from "@/Components/LoginSesion/page";
 import { usePathname, useRouter } from "next/navigation";
 import { useDashboardNavigation } from "@/Components/Navigation/page";
 import UserTableList from "@/Components/NewAdminPannel/page";
+import SkillManagement from "@/Components/SkillManagement/page";
+import SalarySlip from "@/Components/SalarySlip/page";
 
 
 const DOCUMENT_KEYS = [
@@ -134,7 +136,8 @@ const [loadingMessage, setLoadingMessage] = useState<any>("");
   const ImportedInformationOfCallEnquiry = useSelector((state: any) => state.NotificationCallEnquiryInformation)
    const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
   const [showServiceSuggestions, setShowServiceSuggestions] = useState(false);
-
+const [showSkillsView, setSkillsView] = useState(false);
+const [showSalarySlipView, setSalarySlipView] = useState(false);
 
 
   const [EnquiryForm, setEnquiryForm] = useState<any>({
@@ -193,10 +196,23 @@ useEffect(() => {
   setIsNavigating(false);
 }, [pathname]);
 useEffect(() => {
-  router.prefetch("/AdminPage");
-  router.prefetch("/Communication");
-  router.prefetch("/PaymentsInfo");
-  router.prefetch("/SubAccountings");
+  [
+    "/PDRView",
+    "/Communication",
+    "/PaymentsInfo",
+    "/SubAccountings",
+    "/Notifications",
+    "/UserTypeRegistration",
+    "/VendorsPanel",
+    "/Documents",
+    "/HostelAttendence",
+    "/Employes",
+    "/Quality",
+    "/CompanyPolicy",
+    "/Training",
+    "/OTPValidation",
+    "/StaffAttendece",
+  ].forEach((route) => router.prefetch(route));
 }, []);
   // useEffect(() => {
   //   let mounted = true;
@@ -956,6 +972,11 @@ const Switching = (tab: string) => {
   setIsNavigating(true);
   setLoadingMessage(`Opening ${tab}...`);
 
+  if (pageRoutes[tab]) {
+    router.push(pageRoutes[tab]);
+
+    return;
+  }
   if (adminTabs[tab]) {
     dispatch(Update_Main_Filter_Status(tab));
     dispatch(UpdateUserType(adminTabs[tab]));
@@ -965,10 +986,6 @@ const Switching = (tab: string) => {
     return;
   }
 
-  if (pageRoutes[tab]) {
-    router.push(pageRoutes[tab]);
-    return;
-  }
 
   // Hide the loading screen if no route exists
   setIsNavigating(false);
@@ -1072,14 +1089,15 @@ const Switching = (tab: string) => {
   return (
       <div className="min-h-screen">
         {activeView === "home" ?
-    <div className="flex min-h-screen h-auto bg-gray-100 relative">
+    <div >
+      {showSkillsView?<SkillManagement Hide={(A:any)=>setSkillsView(A)}/>:showSalarySlipView?<SalarySlip Hide={(A:any)=>setSalarySlipView(A)}/>:
       <div className="flex min-w-0 flex-1 flex-col">
 
         <header className="flex flex-wrap justify-between items-center bg-gray-400 text-white px-4 sm:px-6 py-3 shadow-md gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <h1 className="text-[15px] truncate font-normal">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard.
             </h1>
 
           </div>
@@ -1187,71 +1205,112 @@ const Switching = (tab: string) => {
                   </div>
 
 
-                  <div className="py-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOpenProfile(true);
-                        setShowProfileOptions(false);
-                        setshowReferalPopup(false)
-                      }}
-                      className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
-                    >
-                      <User size={16} className="text-slate-500" />
-                      My Profile
-                    </button>
+<div className="py-1">
+  <button
+    type="button"
+    onClick={() => {
+      setOpenProfile(true);
+      setShowProfileOptions(false);
+      setshowReferalPopup(false);
+    }}
+    className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+  >
+    <User size={16} className="text-slate-500" />
+    My Profile
+  </button>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAttendeceView(true);
-                        setShowProfileOptions(false);
-                        setshowReferalPopup(false)
-                      }}
-                      className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
-                    >
-                      <ClipboardCheck size={16} className="text-slate-500" />
-                      Attendance
-                    </button>
+  <button
+    type="button"
+    onClick={() => {
+      setAttendeceView(true);
+      setShowProfileOptions(false);
+      setshowReferalPopup(false);
+    }}
+    className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+  >
+    <ClipboardCheck size={16} className="text-slate-500" />
+    Attendance
+  </button>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOpenExpense(true);
-                        setShowProfileOptions(false);
-                        setshowReferalPopup(false)
-                      }}
-                      className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
-                    >
-                      <IndianRupee size={16} className="text-slate-500" />
-                      Post Expense
-                    </button>
+  {/* Skills */}
+  <button
+    type="button"
+    onClick={() => {
+      setSkillsView(true);
+      setShowProfileOptions(false);
+      setshowReferalPopup(false);
+    }}
+    className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+  >
+    <GraduationCap size={16} className="text-slate-500" />
+    Skills
+  </button>
 
+  {/* Salary Slip */}
+  <button
+    type="button"
+    onClick={() => {
+      setSalarySlipView(true);
+      setShowProfileOptions(false);
+      setshowReferalPopup(false);
+    }}
+    className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+  >
+    <FileText size={16} className="text-slate-500" />
+    Salary Slip
+  </button>
 
-                    <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100" onClick={
-                      () => {
-                        setshowReferalPopup(true), setOpenExpense(false);
-                        setShowProfileOptions(false);
-                      }
-                    }>
-                      <Share2 size={16} className="text-slate-500" />
-                      referral
-                    </button>
-                    <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
-                      <Shield size={16} className="text-slate-500" />
-                      Security
-                    </button>
+  <button
+    type="button"
+    onClick={() => {
+      setOpenExpense(true);
+      setShowProfileOptions(false);
+      setshowReferalPopup(false);
+    }}
+    className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+  >
+    <IndianRupee size={16} className="text-slate-500" />
+    Post Expense
+  </button>
 
-                    <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
-                      <Settings size={16} className="text-slate-500" />
-                      Settings
-                    </button>
+  <button
+    type="button"
+    className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100"
+    onClick={() => {
+      setshowReferalPopup(true);
+      setOpenExpense(false);
+      setShowProfileOptions(false);
+    }}
+  >
+    <Share2 size={16} className="text-slate-500" />
+    Referral
+  </button>
 
-                    <button type="button" className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100">
-                      <HelpCircle size={16} className="text-slate-500" />
-                      Help & Support
-                    </button>
-                  </div>
+  <button
+    type="button"
+    className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100"
+  >
+    <Shield size={16} className="text-slate-500" />
+    Security
+  </button>
+
+  <button
+    type="button"
+    className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100"
+  >
+    <Settings size={16} className="text-slate-500" />
+    Settings
+  </button>
+
+  <button
+    type="button"
+    className="w-full px-4 py-2 flex items-center gap-3 text-sm hover:bg-slate-100"
+  >
+    <HelpCircle size={16} className="text-slate-500" />
+    Help & Support
+  </button>
+</div>
+
 
                   <div className="h-px bg-gray-200" />
 
@@ -2717,7 +2776,7 @@ Contact}
 
 
         </main>
-      </div>
+      </div>}
     </div>:<UserTableList
   UpdateView={(view: DashboardView) =>{ setActiveView(view); setIsNavigating(false);}}
 />}

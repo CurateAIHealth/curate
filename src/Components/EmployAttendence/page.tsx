@@ -12,6 +12,7 @@ import { PostEmployeeAttendance } from "@/Lib/user.action";
 import axios from "axios";
 import { form } from "framer-motion/client";
 import { useSelector } from "react-redux";
+import { getDaysBetween } from "@/Lib/Actions";
 
 interface AttendanceProps {
   userId: any;
@@ -39,6 +40,7 @@ export default function MarkAttendance({
          
   const [ SickLeaves, setSickLeaves]=useState(0)
    const [ CasualLeaves,setCasualLeaves]=useState(0)
+   const [OtherLeaves,setOtherLeaves]=useState(0)
    const [LoadingLeaves,setLoadingLeaves]=useState(false)
     const [usedLeaves,setusedLeaves]=useState(0)
   const [attendance, setAttendance] = useState<any>({
@@ -51,6 +53,7 @@ export default function MarkAttendance({
     Month:`${SearchYear}-${SearchMonth}`
   });
   const [leaveType, setLeaveType] = useState<string>("")
+const [leaveDescription, setLeaveDescription] = useState("")
 const[statusMessage,setStatusMessage]=useState<any>()
   const isLeave = attendance.status === "Leave";
   const totalLeaves=SickLeaves+CasualLeaves
@@ -135,6 +138,7 @@ const updateLeave = async (ImpValue: string) => {
 
     setSickLeaves(Number(leaveData.sick ?? 0));
     setCasualLeaves(Number(leaveData.Casual ?? 0));
+    setOtherLeaves(Number(leaveData.OtherLeaves ?? 0))
     setusedLeaves(Number(leaveData.usedLeaves ?? 0));
 
     setAttendance((prev: any) => ({
@@ -158,10 +162,31 @@ const updateLeave = async (ImpValue: string) => {
   }
 };
 const UpdateDailyAttendance = async () => {
+    if (attendance.status === "Leave" && !leaveType) {
+    setStatusMessage("Please select a leave type.");
+    return;
+  }
+
+  if (
+    attendance.status === "Leave" &&
+    leaveType === "Casual" &&
+    attendance.fromDate &&
+    attendance.toDate &&
+    totalDays > 1
+  ) {
+    setStatusMessage("Casual leave can only be taken for one day.");
+    return;
+  }
+
   setStatusMessage("Please wait, marking attendance...");
 
   try {
-    let attendancePayload = { ...attendance };
+    let attendancePayload = {
+      ...attendance,
+      ...(attendance.status === "Leave"
+        ? { leaveType, leaveDescription: leaveType === "Other" ? leaveDescription : "" }
+        : {}),
+    };
 
     // Capture location for actual attendance, not leave requests
     if (attendance.status !== "Leave") {
@@ -370,6 +395,17 @@ const UpdateDailyAttendance = async () => {
                     </td>
                   </tr>
 
+                  ${leaveType === "Other" ? `
+                  <tr>
+                    <td style="padding: 14px 16px; background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #64748b;">
+                      Description
+                    </td>
+                    <td style="padding: 14px 16px; border-bottom: 1px solid #e2e8f2; font-size: 14px;">
+                      ${leaveDescription || "N/A"}
+                    </td>
+                  </tr>
+                  ` : ""}
+
                   <tr>
                     <td style="
                       padding: 14px 16px;
@@ -574,9 +610,9 @@ const openAttendanceLocation = (
       </div>
     ) : (
       <>
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-gray-700">
+        <div className="flex flex-wrap gap-x-4 gap-y-2 text-gray-700">
           <span>
-            Total Leaves <strong>{totalLeaves}</strong>
+            Total Leaves <strong>{totalLeaves+usedLeaves}</strong>
           </span>
 
           <span>
@@ -588,7 +624,7 @@ const openAttendanceLocation = (
                   : "text-[#16a34a]"
               }
             >
-              {remainingLeaves}
+              {totalLeaves+usedLeaves-usedLeaves}
             </strong>
           </span>
 
@@ -597,15 +633,19 @@ const openAttendanceLocation = (
           </span>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
-            Casual · {CasualLeaves}
-          </span>
+   <div className="flex flex-wrap gap-2">
+  <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
+    Casual · {CasualLeaves}
+  </span>
 
-          <span className="rounded-md bg-pink-50 px-2 py-0.5 text-xs text-pink-700">
-            Sick · {SickLeaves}
-          </span>
-        </div>
+  <span className="rounded-md bg-pink-50 px-2 py-0.5 text-xs text-pink-700">
+    Sick · {SickLeaves}
+  </span>
+
+  <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
+    Other · {OtherLeaves}
+  </span>
+</div>
       </>
     )}
   </div>
@@ -691,14 +731,18 @@ const openAttendanceLocation = (
         focus:border-transparent
         transition-all duration-200
       "
-      defaultValue=""
-      onChange={(e)=>setLeaveType(e.target.value)}
+      value={leaveType}
+      onChange={(e)=>{
+        setLeaveType(e.target.value)
+        if (e.target.value !== "Other") setLeaveDescription("")
+      }}
     >
       <option value="" disabled>
         Choose leave type
       </option>
       <option value="Casual">Casual Leave</option>
       <option value="Sick">Sick Leave</option>
+      <option value="Other">Other</option>
     </select>
 
 
@@ -715,6 +759,21 @@ const openAttendanceLocation = (
     </svg>
   </div>
 </div>
+          {leaveType === "Other" && (
+            <div className="mt-3">
+              <label className="text-xs font-semibold text-gray-500 uppercase" htmlFor="leave-description">
+                To describe
+              </label>
+              <textarea
+                id="leave-description"
+                value={leaveDescription}
+                onChange={(e) => setLeaveDescription(e.target.value)}
+                placeholder="Describe the reason for your leave"
+                rows={3}
+                className="mt-1 w-full rounded-xl border px-4 py-3 text-sm focus:ring-2 focus:ring-[#00A9A5]"
+              />
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4 mt-2 ">
         
 
@@ -737,7 +796,12 @@ const openAttendanceLocation = (
 
             <div>
               <label className="text-xs font-semibold text-gray-500 uppercase">
-                To Date
+                To Date <span className="inline-flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-sm font-semibold text-teal-700">
+  Total Leave Days
+  <strong className="rounded-md bg-teal-600 px-2 py-0.5 text-white">
+    {getDaysBetween(attendance.fromDate, attendance.toDate) || 0}
+  </strong>
+</span>
               </label>
               <input
                 type="date"
@@ -751,7 +815,14 @@ const openAttendanceLocation = (
                 className="mt-1 w-full rounded-xl border px-4 py-3 text-sm focus:ring-2 focus:ring-[#00A9A5]"
               />
             </div>
+            
           </div>
+          {leaveType === "Casual" && totalDays > 1 && (
+            <p className="mt-2 text-sm font-medium text-red-600" role="alert">
+              Casual leave can only be taken for one day. Please select the same
+              date for both fields.
+            </p>
+          )}
           </div>
         )}
 
@@ -783,7 +854,11 @@ const openAttendanceLocation = (
             disabled={
               !attendance.status ||
               (isLeave &&
-                (!attendance.fromDate || !attendance.toDate))
+                (!leaveType ||
+                  !attendance.fromDate ||
+                  !attendance.toDate ||
+                  (leaveType === "Other" && !leaveDescription.trim()) ||
+                  (leaveType === "Casual" && totalDays > 1)))
             }
             onClick={UpdateDailyAttendance}
             className={`
