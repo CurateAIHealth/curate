@@ -735,6 +735,7 @@ const GetHCPType = (id: string) => {
   return hcpTypeMap.get(id) || "Not Entered";
 };
 
+
 const EditAttendence = async (): Promise<void> => {
   try {
     if (!AttenseceInformation?.ClientId) {
@@ -742,240 +743,134 @@ const EditAttendence = async (): Promise<void> => {
       return;
     }
 
-    if (!status) {
+    if (!status || status === "Choose") {
       SetStatusMessage("Please select attendance status");
       return;
     }
 
     SetStatusMessage("Please Wait...");
 
-
     const normalizedMonth = String(selectedMonth).padStart(2, "0");
+    const day = String(ParticularDate).padStart(2, "0");
 
-    const flexDate = `${selectedYear}-${normalizedMonth}-${String(
-      ParticularDate
-    ).padStart(2, "0")}`;
-
+    const flexDate = `${selectedYear}-${normalizedMonth}-${day}`;
     const yearMonth = `${selectedYear}-${normalizedMonth}`;
 
-    const today = new Date();
-    const localToday = `${today.getFullYear()}-${String(
-      today.getMonth() + 1
-    ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
-    const closeModal = () => {
-      setTimeout(() => {
-        setShowFullMonth(false);
-        SetShowUpdateAttendece(false);
-        SetAttendeceEditReason("");
-      }, 1500);
-    };
-
-
-  
-      const response = await EditAttendanceByClientId(
-        AttenseceInformation.ClientId,
-        AttenseceInformation.hcpId,
-        AttenseceInformation.hcpName,
-        AttenseceInformation.clientName,
-        loggedInEmail,
-        yearMonth,
-        flexDate,
-        status,
-        loggedInEmail,
-        AbsentReason
-      );
-
- if (response?.success) {
-  setClientsInformation((prev: any) => {
-    const updated = { ...prev };
-
-    const recordIndex = updated[yearMonth].findIndex(
-      (record: any) =>
-        record.ClientId === AttenseceInformation.ClientId &&
-        record.hcpId === AttenseceInformation.hcpId
+    // Save attendance on the server first.
+    const response = await EditAttendanceByClientId(
+      AttenseceInformation.ClientId,
+      AttenseceInformation.hcpId,
+      AttenseceInformation.hcpName,
+      AttenseceInformation.clientName,
+      loggedInEmail,
+      yearMonth,
+      flexDate,
+      status,
+      loggedInEmail,
+      AbsentReason
     );
 
-    if (recordIndex === -1) return updated;
-
-    const record = {
-      ...updated[yearMonth][recordIndex],
-    };
-
-    const updatedDays = [...(record.days || [])];
-
-    const existingDayIndex = updatedDays.findIndex((day: any) => {
-      if (!day?.AttendenceDate) return false;
-
-      return (
-        new Date(day.AttendenceDate)
-          .toISOString()
-          .split("T")[0] === flexDate
+    if (!response?.success) {
+      SetStatusMessage(
+        response?.message || "Failed to update attendance"
       );
-    });
-
-    const updatedDay = {
-      ...(existingDayIndex >= 0
-        ? updatedDays[existingDayIndex]
-        : {}),
-      AttendenceDate: new Date(`${flexDate}T00:00:00.000Z`),
-      HCPAttendence:
-        status === "FULL" || status === "HALF",
-      AdminAttendece: status === "FULL",
-      UpdatedBy: loggedInEmail,
-      Reason: AbsentReason,
-      Client_Id: AttenseceInformation.ClientId,
-      Client_Name: AttenseceInformation.clientName,
-      HCA_Id: AttenseceInformation.hcpId,
-      HCA_Name: AttenseceInformation.hcpName,
-      UpdatedAt: new Date(),
-    };
-
-    if (existingDayIndex >= 0) {
-      updatedDays[existingDayIndex] = updatedDay;
-    } else {
-      updatedDays.push(updatedDay);
+      return;
     }
 
-    record.days = updatedDays;
+    // Update the UI safely, even if the month cache is missing.
+    setClientsInformation((prev: any) => {
+      const updated = { ...prev };
+      const records = Array.isArray(updated[yearMonth])
+        ? [...updated[yearMonth]]
+        : [];
 
-    updated[yearMonth] = [...updated[yearMonth]];
-    updated[yearMonth][recordIndex] = record;
+      const recordIndex = records.findIndex(
+        (record: any) =>
+          record.ClientId === AttenseceInformation.ClientId &&
+          record.hcpId === AttenseceInformation.hcpId
+      );
 
-    return updated;
-  });
+      if (recordIndex === -1) return updated;
 
-  setAttendenceInfo((prev: any) => {
-    if (!prev) return prev;
+      const record = { ...records[recordIndex] };
+      const days = [...(record.days || [])];
 
-    const updatedDays = [...(prev.days || [])];
+      const dayIndex = days.findIndex((item: any) => {
+        if (!item?.AttendenceDate) return false;
 
-    const dayIndex = ParticularDate - 1;
+        const date = new Date(item.AttendenceDate);
+        if (Number.isNaN(date.getTime())) return false;
 
-    updatedDays[dayIndex] = {
-      status:
-        status === "FULL"
-          ? "P"
-          : status === "HALF"
-          ? "HP"
-          : "A",
-      clientName: AttenseceInformation.clientName,
-      hcaName: AttenseceInformation.hcpName,
-      UpdatedBy: loggedInEmail,
-      Reason: AbsentReason,
-    };
+        return date.toISOString().slice(0, 10) === flexDate;
+      });
 
-    return {
-      ...prev,
-      days: updatedDays,
-    };
-  });
+      const updatedDay = {
+        ...(dayIndex >= 0 ? days[dayIndex] : {}),
+        AttendenceDate: new Date(`${flexDate}T00:00:00.000Z`),
+        HCPAttendence: status === "FULL" || status === "HALF",
+        AdminAttendece: status === "FULL",
+        UpdatedBy: loggedInEmail,
+        Reason: AbsentReason,
+        Client_Id: AttenseceInformation.ClientId,
+        Client_Name: AttenseceInformation.clientName,
+        HCA_Id: AttenseceInformation.hcpId,
+        HCA_Name: AttenseceInformation.hcpName,
+        UpdatedAt: new Date(),
+      };
 
-  SetStatusMessage(
-    "Attendece Updated"
-  );
+      if (dayIndex >= 0) {
+        days[dayIndex] = updatedDay;
+      } else {
+        days.push(updatedDay);
+      }
 
-  closeModal();
-  return;
-}
-    
-//     if (flexDate === localToday) {
-//       const response = await EditAttendanceByClientId(
-//         AttenseceInformation.ClientId,
-//         AttenseceInformation.hcpId,
-//         AttenseceInformation.hcpName,
-//         AttenseceInformation.clientName,
-//         loggedInEmail,
-//         yearMonth,
-//         flexDate,
-//         status,
-//         loggedInEmail,
-//         AbsentReason
-//       );
+      records[recordIndex] = { ...record, days };
+      updated[yearMonth] = records;
 
-//    if (response?.success) {
-//   setClientsInformation((prev: any) => {
-//     const updated = { ...prev };
+      return updated;
+    });
 
-//     updated[yearMonth] = updated[yearMonth].map((record: any) => {
-//       if (record.ClientId !== AttenseceInformation.ClientId) {
-//         return record;
-//       }
+    setAttendenceInfo((prev: any) => {
+      if (!prev) return prev;
 
-//       return {
-//         ...record,
-//         days: record.days.map((day: any) => {
-//           const dayDate = new Date(day.AttendenceDate)
-//             .toISOString()
-//             .split("T")[0];
+      const days = [...(prev.days || [])];
+      const dayIndex = Number(ParticularDate) - 1;
 
-//           if (dayDate !== flexDate) return day;
+      if (dayIndex < 0 || dayIndex >= days.length) return prev;
 
-//           return {
-//             ...day,
-//             HCPAttendence:
-//               status === "FULL" || status === "HALF",
-//             AdminAttendece: status === "FULL",
-//             UpdatedBy: loggedInEmail,
-//           };
-//         }),
-//       };
-//     });
+      days[dayIndex] = {
+        status:
+          status === "FULL" ? "P" :
+          status === "HALF" ? "HP" : "A",
+        clientName: AttenseceInformation.clientName,
+        hcaName: AttenseceInformation.hcpName,
+        UpdatedBy: loggedInEmail,
+        Reason: AbsentReason,
+      };
 
-//     return updated;
-//   });
+      return { ...prev, days };
+    });
 
-//   SetStatusMessage("Attendance updated successfully");
-//   closeModal();
-//   return;
-// }
-//     }
+    SetStatusMessage("Attendance Updated Successfully");
 
-    // const info = {
-    //   ...AttenseceInformation,
-    //   flexDate,
-    //   yearMonth,
-    //   status,
-    // };
+    // Close only the attendance edit popup.
+    setTimeout(() => {
+      SetShowUpdateAttendece(false);
+      SetAttendeceEditReason("");
+      setAbsentReason("");
+    }, 1500);
 
-    // const response = await PostAttendeceEditRequest(
-    //   info,
-    //   AttendeceEditReason,
-    //   loggedInEmail,
-    //   AbsentReason,
-    //   "HCAAttendece"
-
-    // );
-
-    // if (!response?.success) {
-    //   throw new Error(response?.message || "Failed to submit request");
-    // }
-
-    // try {
-    //   await axios.post("/api/Slack", {
-    //     userIds: "U04S43V513N",
-    //     message:
-    //       "Hi Madam, Kindly requesting attendance edit request update. Please check notification in the application. Thank you.",
-    //   });
-    // } catch (slackError) {
-    //   console.error("Slack notification failed:", slackError);
-    // }
-
-    // SetStatusMessage(response?.message || "Request submitted successfully");
-
-
-
-    // closeModal();
   } catch (error: any) {
     console.error("EditAttendence Error:", error);
 
     SetStatusMessage(
       error?.response?.data?.message ||
-        error?.message ||
-        "Something went wrong while updating attendance"
+      error?.message ||
+      "Something went wrong while updating attendance"
     );
-  } 
+  }
 };
+
  const monthNames = Array.from({ length: 12 }, (_, i) =>
     new Date(0, i).toLocaleString("default", { month: "long" })
   );
@@ -1065,7 +960,7 @@ const PresentScreen=()=>{
         Time Sheet {}
       </h1>
       <p className="text-gray-500 mt-1 text-xs ">
-        View invoice and attendance details by month and year.,,,
+        View invoice and attendance details by month and year.
       </p>
     </div>
 <div className="inline-flex rounded-2xl bg-gray-100 p-1.5 shadow-inner">
