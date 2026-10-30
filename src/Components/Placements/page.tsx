@@ -3707,6 +3707,7 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
               data={selectedClient}
               CompliteInfo={users}
               onSubmit={(A) => (PostRefunRequest(A))}
+              showClientAttendance={()=>{}}
             />}
 
 
@@ -4998,14 +4999,14 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
                             )}
                           </div>
                         </td>
-
-                        <td className="px-3 py-3 text-center break-words relative">
+        <td className="px-3 py-3 text-center break-words relative">
 
 
 
                           <img src="Icons/RiseRefund.png" onClick={() => { setShowRefundRequrstPopUp(true), setselectedClient(c) }} className="h-9" />
 
                         </td>
+                
                         <td className="px-3 py-3 text-center break-words">
                           <button
 

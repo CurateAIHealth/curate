@@ -1,13 +1,15 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { Stethoscope, Shirt, CircleX, Search, X, ChevronsRight, Info, Minimize2 } from "lucide-react";
-import { GetInvoiceLength, GetReasonsInfoInfo, GetRegidterdUsers, GetTerminationInfo, GetTerminationInfoForTerminationPage, GetUserInformation, GetUsersFullInfo, InsertDeployment, PostInvoiceFromDeployment, updateServicePrice } from "@/Lib/user.action";
+import { GetInvoiceLength, GetReasonsInfoInfo, GetRegidterdUsers, GetTerminationInfo, GetTerminationInfoForTerminationPage, GetUserInformation, GetUsersFullInfo, InsertDeployment, PostInvoiceFromDeployment, PostRefundRequest, updateServicePrice } from "@/Lib/user.action";
 import { LoadingData } from "../Loading/page";
 import { Placements_Filters, filterColors, months, years } from "@/Lib/Content";
 import { AssignSuitableIcon, getDaysBetween, getDaysInMonth, rupeeToNumber } from "@/Lib/Actions";
 import { useDispatch, useSelector } from "react-redux";
 import { UpdateMonthFilter, UpdateYearFilter } from "@/Redux/action";
 import { useRouter } from "next/navigation";
+import RefundPopup from "../RefundRequestPopup/page";
+import axios from "axios";
 let terminationCache: any[] | null = null;
 let ReplacementReasonsCache: any[] | null = null;
 let RegisredUsersCache: any[] | null = null;
@@ -23,9 +25,9 @@ interface TerminationData {
 
 const TerminationTable: React.FC = () => {
   const [placements, setPlacements] = useState<any[]>([]);
-
+  const [ShowRefundRequrstPopUp, setShowRefundRequrstPopUp] = useState(false)
   const [showWarning, setShowWarning] = useState(false);
-  
+    const [selectedClient, setselectedClient] = useState<any>()
   const [ReplacementReasons, setReplacementReasons] = useState<any[]>([]);
   const [updateServiceCharge, setUpdateServiceCharge] = useState(false);
   const [rawData, setRawData] = useState<any[]>([]);
@@ -57,7 +59,7 @@ const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
 const users=useSelector((state:any)=>state.AdminFullInfo)
 
 const hasData = users?.length > 0 && RegisterdUsers?.length > 0;
-
+ const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
   useEffect(() => {
     const Fetch = async () => {
       try {
@@ -107,7 +109,49 @@ const hasData = users?.length > 0 && RegisterdUsers?.length > 0;
     Number(month),
     Number(year)
   );
-  
+    const PostRefunRequest = async (data: any) => {
+
+    try {
+
+      SetActionStatusMessage("Please Wait....");
+
+      const response = await axios.post("/api/RefundRequest", {
+        data
+      });
+
+      if (!response.data.success) {
+        SetActionStatusMessage("Refund Request already submitted for this client. You will be notified once the status is updated.")
+        return
+      }
+
+      const updateSalary = await PostRefundRequest(
+        data,
+        loggedInEmail,
+
+      );
+
+      if (updateSalary?.success) {
+
+
+
+        const phoneNumber = "U04S43V513N";
+        const message =
+
+
+          await axios.post("/api/Slack", {
+            userIds: phoneNumber,
+            message: `Dear Managment, Kindly requesting Refund Request update for Client ${data?.ClientName}. Please check notification in the application. Thank you.`,
+          });
+        SetActionStatusMessage(
+          "Refund Request request submitted to management. You will be notified once the status is updated."
+        )
+
+      }
+    } catch (error) {
+      console.error("Salary update error:", error);
+      SetActionStatusMessage("Something went wrong. Please try again.");
+    }
+  };
   const GetHCPFullName = (A: any) => {
   if (!Impusers?.length || !A) return "";
 
@@ -688,6 +732,10 @@ cellDate.setHours(0, 0, 0, 0);
 
 const isFutureDate = cellDate > currentDate;
 
+
+
+
+
           return (
             <div
               key={i}
@@ -914,6 +962,17 @@ const isFutureDate = cellDate > currentDate;
             </div>
           </div>
         )}
+
+            {<RefundPopup
+                       isOpen={ShowRefundRequrstPopUp}
+                       onClose={() => setShowRefundRequrstPopUp(false)}
+                       data={selectedClient}
+                       CompliteInfo={users}
+                       onSubmit={(A) => (PostRefunRequest(A))}
+                          showClientAttendance={(as)=>{
+                           setAttendenceInfo(selectedClient),setShowFullMonth(as),setShowRefundRequrstPopUp(false) ;
+                          }}
+                     />}
         <div className="flex-1 overflow-y-auto">
           <table className="w-full text-left text-sm border-separate border-spacing-0">
 
@@ -924,7 +983,7 @@ const isFutureDate = cellDate > currentDate;
 
 
               <tr className="border-b border-gray-300">
-                {["S.No", "Client","Patient","HCA", "Contact", "Location",  "Status","TimeSheet", "Reason", "Service Continue", ].map(
+                {["S.No", "Client","Patient","HCA", "Contact", "Location",  "Status","Refund","TimeSheet", "Reason", "Service Continue", ].map(
                   (head) => (
                     <th
                       key={head}
@@ -936,7 +995,7 @@ const isFutureDate = cellDate > currentDate;
                 )}
               </tr>
             </thead>
-         
+          
             <tbody className="bg-white divide-y divide-gray-200">
               {FilterValues.map((placement, idx) => (
                 <tr
@@ -946,6 +1005,8 @@ const isFutureDate = cellDate > currentDate;
                   <td className="px-6 py-4 font-semibold text-gray-900">
                     {idx + 1}
                   </td>
+
+               
                   {/* CLIENT */}
                   <td className="px-6 py-4 font-semibold text-gray-900">
                     {placement.clientName || "Not Provided"}
@@ -1017,6 +1078,13 @@ const isFutureDate = cellDate > currentDate;
                       {placement.status}
                     </span>
                   </td>
+                               <td className="px-3 py-3 text-center break-words relative">
+
+
+
+                          <img src="Icons/RiseRefund.png" onClick={() => { setShowRefundRequrstPopUp(true), setselectedClient(placement) }} className="h-9" />
+
+                        </td>
                   <td className="px-6 py-4 text-center">
                     <button
                         onClick={()=>{setAttendenceInfo(placement),setShowFullMonth(true) ;}}
