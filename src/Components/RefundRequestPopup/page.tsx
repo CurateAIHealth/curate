@@ -10,14 +10,16 @@ interface RefundPopupProps {
   data: any;
   CompliteInfo:any
   onSubmit: (refundData: any) => void;
+  showClientAttendance:(view:any)=>void
 }
 
-export default function RefundPopup({ isOpen, onClose, data,CompliteInfo, onSubmit }: RefundPopupProps) {
+export default function RefundPopup({ isOpen, onClose, data,CompliteInfo, onSubmit,showClientAttendance }: RefundPopupProps) {
   const [refundType, setRefundType] = useState("full");
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [showBankPopup, setShowBankPopup] = useState(false);
+
   const [RefundData,setRefundData]=useState(new Date().toISOString().split("T")[0])
 
 const [bankDetails, setBankDetails] = useState({
@@ -214,6 +216,14 @@ const isProfit = resultAmount >= 0;
           <p><span className="font-medium">Location:</span> {data.location}</p>
           <p><span className="font-medium">HCP:</span> {data.HCA_Name}</p>
           <p><span className="font-medium">Contact:</span> {data.contact}</p>
+            <button
+      type="button"
+      onClick={() => showClientAttendance(true)}
+    
+      className="min-w-[180px] rounded-2xl cursor-pointer border border-blue-200 bg-blue-100 p-2 text-sm font-medium text-blue-800 shadow-md hover:bg-blue-200"
+    >
+      Client Attendance
+    </button>
         </div>
 
      {/* <div>
@@ -237,7 +247,11 @@ const isProfit = resultAmount >= 0;
       <p className="text-sm font-semibold text-gray-900">₹ {Number(RefundDays-1)*Number(rupeeToNumber(data.ServiceCharge).toFixed(2))}</p>
     </div>
 
+  
+
   </div>
+
+
 
 <div
   className={`mt-4 flex items-center justify-between px-2 py-3 rounded-2xl shadow-md ${

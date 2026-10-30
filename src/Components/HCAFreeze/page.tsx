@@ -1429,7 +1429,7 @@ setClientVerificationOTP(NewOTP)
                       Manage {GetHCPFullName(UserFullInfo, hcaId)} Status
                     </option>
                 
-                    <option value="Available">🟢 Available</option>
+             
                     <option value="Sick">🟡 Sick</option>
                     <option value="Leave">🔵 Leave</option>
                     <option value="Bench">🟣 Bench</option>

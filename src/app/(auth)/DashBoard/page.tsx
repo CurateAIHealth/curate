@@ -117,6 +117,7 @@ export default function Dashboard() {
   const [openExpense, setOpenExpense] = useState<any>(false)
   const [compliteInfo, setcompliteInfo] = useState<any>()
   const [showProfileOptions, setShowProfileOptions] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [BechListInfo, setBechListInfo] = useState<any>()
   const [loading, setLoading] = useState<boolean>(true);
   const [benchSource, setBenchSource] = useState<any>(null);
@@ -191,7 +192,45 @@ const ProfileInformation=useSelector((state:any)=>state.Useriinformation)
   const BENCH_CACHE_KEY = "benchListInfo";
   const BENCH_CACHE_TTL = 20 * 60 * 1000;
   const pathname = usePathname();
+const run = useCallback(async () => {
+  const userId = localStorage.getItem("UserId");
 
+  if (!userId) {
+    router.replace("/sign-in");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const user = await GetUserInformation(userId);
+
+    if (!user?.Email) {
+      throw new Error("Unable to load user information");
+    }
+
+    dispatch(CurrentLoginUser(user.Email));
+    SetProfileName(user.FirstName);
+    SetPasswordValues(user.PasswordValue);
+
+    const statsRes = await GetDashboardStats(user.Email);
+
+    if (!statsRes?.success) {
+      throw new Error("Unable to load dashboard statistics");
+    }
+
+    dispatch(UpdatedDashBoardNumbers(statsRes.data));
+  } catch (error) {
+    console.error("Dashboard data loading failed:", error);
+    // Keep existing Redux data visible if a refresh fails.
+  } finally {
+    setLoading(false);
+  }
+}, [dispatch, router]);;
+
+useEffect(() => {
+  void run();
+}, [run, updatedRefreshCount]);
 useEffect(() => {
   setIsNavigating(false);
 }, [pathname]);
@@ -330,56 +369,9 @@ useEffect(() => {
   //   }
   // }, [ImportedInformationOfCallEnquiry]);
 
-const run = useCallback(async () => {
-  const userId = localStorage.getItem("UserId");
 
-  if (!userId) {
-    router.replace("/sign-in");
-    return;
-  }
 
-  setLoading(true);
 
-  try {
-    const user = await GetUserInformation(userId);
-
-    if (!user?.Email) {
-      throw new Error("Unable to load user information");
-    }
-
-    dispatch(CurrentLoginUser(user.Email));
-    SetProfileName(user.FirstName);
-    SetPasswordValues(user.PasswordValue);
-
-    const statsRes = await GetDashboardStats(user.Email);
-
-    if (!statsRes?.success) {
-      throw new Error("Unable to load dashboard statistics");
-    }
-
-    dispatch(UpdatedDashBoardNumbers(statsRes.data));
-  } catch (error) {
-    console.error("Dashboard data loading failed:", error);
-    // Keep existing Redux data visible if a refresh fails.
-  } finally {
-    setLoading(false);
-  }
-}, [dispatch, router]);;
-
-useEffect(() => {
-  void run();
-}, [run, updatedRefreshCount]);
-
-useEffect(() => {
-   const userId = localStorage.getItem("UserId");
-
-  if (!userId) {
-    router.replace("/sign-in");
-    return;
-  }
-
-  run();
-}, [router, run, updatedRefreshCount, stats.registeredUsers]);
 
   const BenchList = useMemo(() => {
     if (!benchSource) return [];
@@ -1088,6 +1080,18 @@ const Switching = (tab: string) => {
 
   return (
       <div className="min-h-screen">
+        {isLoggingOut && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-white/90"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="flex flex-col items-center gap-3 text-gray-700">
+              <span className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-teal-600" />
+              <span className="text-sm font-medium">Logging out...</span>
+            </div>
+          </div>
+        )}
         {activeView === "home" ?
     <div >
       {showSkillsView?<SkillManagement Hide={(A:any)=>setSkillsView(A)}/>:showSalarySlipView?<SalarySlip Hide={(A:any)=>setSalarySlipView(A)}/>:
@@ -1317,11 +1321,55 @@ const Switching = (tab: string) => {
 
                   <button
                     type="button"
-                  onClick={() => {
-  localStorage.removeItem("UserId");
-  setShowProfileOptions(false);
-  router.replace("/sign-in");
+  
+onClick={async () => {
+  const confirmed = window.confirm(
+    "Are you sure you want to log out?"
+  );
+
+  if (!confirmed) return;
+
+  setIsLoggingOut(true);
+
+  try {
+    // 1. Clear authentication
+    localStorage.removeItem("UserId");
+
+    // 2. Clear session storage
+    sessionStorage.clear();
+
+    // 3. Clear browser Cache Storage
+    if ("caches" in window) {
+      const cacheKeys = await caches.keys();
+
+      await Promise.all(
+        cacheKeys.map((key) => caches.delete(key))
+      );
+    }
+
+    // 4. Unregister service workers, if any
+    if ("serviceWorker" in navigator) {
+      const registrations =
+        await navigator.serviceWorker.getRegistrations();
+
+      await Promise.all(
+        registrations.map((registration) =>
+          registration.unregister()
+        )
+      );
+    }
+
+    // 5. Close dropdown
+    setShowProfileOptions(false);
+
+  } catch (error) {
+    console.error("Logout cleanup error:", error);
+  } finally {
+    // 6. Force a fresh navigation
+    window.location.replace("/sign-in");
+  }
 }}
+
                     className="
           w-full px-4 py-2.5
           flex items-center gap-3
@@ -1330,7 +1378,7 @@ const Switching = (tab: string) => {
           hover:bg-red-50
         "
                   >
-                    <LogOut size={16} />
+                    <LogOut size={16} aria-hidden="true" />
                     Logout
                   </button>
                 </div>

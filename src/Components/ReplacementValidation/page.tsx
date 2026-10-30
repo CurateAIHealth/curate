@@ -2463,7 +2463,7 @@ email || "");
       hover:-translate-y-[1px]
 
       ${
-        UpdatedCareTakerStatus === "Available"
+        UpdatedCareTakerStatus === "Active"
           ? "bg-emerald-50 border-emerald-400 text-emerald-800 focus:ring-4 focus:ring-emerald-100"
           : UpdatedCareTakerStatus === "Sick"
           ? "bg-amber-50 border-amber-400 text-amber-800 focus:ring-4 focus:ring-amber-100"
@@ -2483,7 +2483,7 @@ email || "");
       Manage {GetHCPFullName(UserFullInfo, hcaRegistrationNumber)} Status
     </option>
 
-    <option value="Available">🟢 Available</option>
+    <option value="Active">🟢 Active</option>
     <option value="Sick">🟡 Sick</option>
     <option value="Leave">🔵 Leave</option>
     <option value="Bench">🟣 Bench</option>

@@ -135,6 +135,7 @@ useEffect(() => {
      const userId = localStorage.getItem("UserId");
 
 if (!userId) {
+  router.replace("/");
   setIsChecking(false);
   clearInterval(progressTimer);
   return;
