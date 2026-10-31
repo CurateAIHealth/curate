@@ -10714,11 +10714,12 @@ export const UpdateUserContactVerificationstatus = async (UserId: string,Contact
     }
     )
     if (UpdateVerificationStatus.modifiedCount === 0) {
-      return { success: false, message: 'Internal Error Try Again!' };
+      return { success: false, message: "Unable to process the request. Please check the client's status — they may already be marked as Lost." };
     }
 
     return { success: true, message: 'Verification Status updated Successfully.' };
   } catch (err: any) {
+    console.log("get----",err)
     return err
   }
 }
