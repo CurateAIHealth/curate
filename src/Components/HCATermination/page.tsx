@@ -1399,32 +1399,69 @@ setClientVerificationOTP(NewOTP)
       ...(httpStatus ? { httpStatus } : {}), ...(errorCode ? { errorCode } : {}),
     });
   };
-  const runStep = async (step: string, action: () => Promise<any>, fallback: string) => {
-    const startedAt = Date.now();
-    logStep(step, "started", startedAt);
-    try {
-      const result = await action();
-      const httpStatus = typeof result?.status === "number" ? result.status : undefined;
-      const body = result?.data ?? result;
-      if (result !== true && body?.success !== true) {
-        logStep(step, "failed", startedAt, httpStatus, "UNCONFIRMED_OR_REJECTED");
-        throw new Error(body?.message || fallback);
-      }
-      logStep(step, "succeeded", startedAt, httpStatus);
-    } catch (error: any) {
-      if (error?.message === fallback || error?.response) throw error;
-      logStep(step, "failed", startedAt,
-        typeof error?.response?.status === "number" ? error.response.status : undefined,
-        typeof error?.code === "string" ? error.code : "REQUEST_FAILED");
-      throw new Error(error?.response?.data?.message || error?.message || fallback);
+  const runStep = async (
+  step: string,
+  action: () => Promise<any>,
+  fallback: string
+) => {
+  const startedAt = Date.now();
+
+  try {
+    console.info(`[HCATermination] ${step} started`);
+
+    const result = await action();
+
+    console.log(`[HCATermination] ${step} response:`, result);
+
+    const body = result?.data ?? result;
+
+    const success =
+      result === true ||
+      body?.success === true ||
+      body?.status === "success";
+
+    if (!success) {
+      throw new Error(
+        body?.message ||
+        body?.error ||
+        fallback
+      );
     }
-  };
+
+    logStep(step, "succeeded", startedAt, result?.status);
+
+    return result;
+
+  } catch (error: any) {
+
+    console.error(`[HCATermination] ${step} FAILED:`, {
+      message: error?.message,
+      response: error?.response?.data,
+      status: error?.response?.status,
+      code: error?.code,
+    });
+
+    logStep(
+      step,
+      "failed",
+      startedAt,
+      error?.response?.status,
+      error?.code || "REQUEST_FAILED"
+    );
+
+    throw new Error(
+      error?.response?.data?.message ||
+      error?.message ||
+      fallback
+    );
+  }
+};
 
   try {
     const finalCareTakerStatus = UpdatedCareTakerStatus?.trim() || "Bench";
     SetActionStatusMessage("Step 1 of 5: Updating the HCP's current status...");
     await runStep("update_hcp_status", () => UpdateUserCurrentstatusInHCPView(HCA_Id, finalCareTakerStatus, loggedInEmail), "Could not confirm the HCP status update.");
-
+alert(Client_Id)
     SetActionStatusMessage("Step 2 of 5: Updating the client's contact verification status...");
     await runStep("update_client_verification", () => UpdateUserContactVerificationstatus(Client_Id, "Lost"), "Could not confirm the client verification update.");
 
