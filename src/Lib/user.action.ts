@@ -4847,7 +4847,7 @@ Month:ImpMonth})
   }
 
 }
-export const InserTerminationData=async(ClientUserId:any,HCAUserId:any,HCA_Name:any,Name:any,Email:any,Contact:any,ClientAdress:any,Contacthca:any,TimeSheetArray:any,ClientAttendece:any,TerminatedTimeSheet:any,ImpState:any,OTPValidations:any)=>{
+export const InserTerminationData=async(ClientUserId:any,HCAUserId:any,HCA_Name:any,Name:any,Email:any,Contact:any,ClientAdress:any,Contacthca:any,TimeSheetArray:any,ClientAttendece:any,TerminatedTimeSheet:any,ImpState:any,OTPValidations:any,ImpMonth:any,ServiceCharge:any,StartDate:any,EndDate:any)=>{
   try{
 const cluster=await clientPromise
 const db=cluster.db("CurateInformation")
@@ -4863,10 +4863,15 @@ const TimeSheetDataInsert=await collection.insertOne({
   HCAContact:Contacthca,
   Attendence:TerminatedTimeSheet,
   ClientAttendance:ClientAttendece,
-  StartDate:new Date().toLocaleDateString("en-IN"),
+  StartDate:StartDate,
+  ServiceCharge:ServiceCharge,
+   EndDate:EndDate,
+   
   TerminationDate:new Date().toLocaleDateString("en-IN"),
   ServiceState: ImpState,
-  OTPValidations:OTPValidations
+ 
+  OTPValidations:OTPValidations,
+  Month:ImpMonth
 
 })
 return {
@@ -5374,7 +5379,8 @@ const updatedAttendance = Array.isArray(existingInfo.Attendance)
       ReplacementDate:ReplacementDate,
       ReplacementTime:ReplacementTime,
       OTPValidationInfo:OTPValidationInfo,
-      ReplacementInformation:ImpReplacementInformation
+      ReplacementInformation:ImpReplacementInformation,
+      Month:ImpMonth
     };
 
     await replacementCollection.insertOne(replacementData);
@@ -7177,6 +7183,8 @@ export const GetTerminationInfoForTerminationPage = async (
     return [];
   }
 };
+
+
 export const GetUserInformation = async (UserIdFromLocal: any) => {
   try {
     const cluster = await clientPromise;

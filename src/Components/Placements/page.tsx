@@ -1512,7 +1512,10 @@ Kind regards,
       HCAContact,
       TimeSheet,
       ClientAttendance,
-      TerminatedTimeSheet
+      TerminatedTimeSheet,
+      ServiceCharge,
+      StartDate,
+      EndDate
     } = TerminationInfo;
 
     try {
@@ -1556,7 +1559,13 @@ Kind regards,
           ClientAttendance,
           TerminatedTimeSheet,
           TerminationInfo.ServiceState,
-          {}
+          {},
+        Month,
+        ServiceCharge,
+        StartDate,
+        EndDate
+          
+          
         ),
       ]);
 
