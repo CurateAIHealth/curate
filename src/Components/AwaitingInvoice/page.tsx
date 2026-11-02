@@ -47,7 +47,7 @@ const    AwaitingInvoice=({
           const [serviceCharge, setServiceCharge] = useState("");
           const [WorkingHCPId,setWorkingHCPId]=useState("")
            const [ReplacementInformation,setReplacementInformation]=useState<any[]>([])
-           const [terminationInfo,SetterminationInfo]=useState<any[]>([])
+           
        const [isChecking, setIsChecking] = useState(false);
        const [CareTakerName,SetCareTakerName]=useState('')
          const [showDeletePopup, setShowDeletePopup] = useState(false);
@@ -527,7 +527,10 @@ const confirmDelete = async (selectedReason: string) => {
        TerminationInfo. TerminatedAttendece,
       TerminationInfo.ServiceState,
       {},
-      TerminationInfo.Month
+      TerminationInfo.Month,
+    TerminationInfo.StartDate,
+      TerminationInfo.EndDate,
+      TerminationInfo.serviceCharges,
     );
 
    if (deleteTimeSheetResponse?.success) {
