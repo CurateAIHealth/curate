@@ -4095,9 +4095,9 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
                     <th className="w-[70px] px-2 py-2 text-center">
                       Team
                     </th>
-                    <th className="w-[70px] px-2 py-2 text-center">
+                    {/* <th className="w-[70px] px-2 py-2 text-center">
                       Rise Refund
-                    </th>
+                    </th> */}
                     <th className="w-[70px] min-w-[70px] px-2 py-2 text-center">
                       Terminate
                     </th>
@@ -5008,13 +5008,13 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
                             )}
                           </div>
                         </td>
-        <td className="px-3 py-3 text-center break-words relative">
+        {/* <td className="px-3 py-3 text-center break-words relative">
 
 
 
                           <img src="Icons/RiseRefund.png" onClick={() => { setShowRefundRequrstPopUp(true), setselectedClient(c) }} className="h-9" />
 
-                        </td>
+                        </td> */}
                 
                         <td className="px-3 py-3 text-center break-words">
                           <button
