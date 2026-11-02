@@ -1355,7 +1355,10 @@ setClientVerificationOTP(NewOTP)
 
   const {
     HCA_Id, Client_Id, Month, HCA_Name, name, email, contact, location,
-    HCAContact, TimeSheet, ClientAttendance, TerminatedTimeSheet,
+    HCAContact, TimeSheet, ClientAttendance, TerminatedTimeSheet,ServiceCharge,
+StartDate,
+EndDate
+
   } = TerminationInfo;
   const reject = (message: string) => {
     setFormError(message);
@@ -1474,7 +1477,9 @@ alert(Client_Id)
     SetActionStatusMessage("Step 4 of 5: Saving termination details...");
     await runStep("save_termination_details", () => InserTerminationData(
       Client_Id, HCA_Id, HCA_Name, name, email, contact, location, HCAContact,
-      TimeSheet, ClientAttendance, TerminatedTimeSheet, TerminationInfo.ServiceState, otp
+      TimeSheet, ClientAttendance, TerminatedTimeSheet, TerminationInfo.ServiceState, otp, Month,ServiceCharge,
+StartDate,
+EndDate
     ), "Could not confirm the termination details were saved.");
 
     // Refresh failure is separate from the already-saved termination writes.

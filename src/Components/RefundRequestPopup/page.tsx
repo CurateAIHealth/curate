@@ -1,8 +1,9 @@
-import { getDaysBetween, rupeeToNumber } from "@/Lib/Actions";
+import { getDaysBetween, GetHCPFullName, rupeeToNumber } from "@/Lib/Actions";
 import { GetUsersFullInfo } from "@/Lib/user.action";
 import axios from "axios";
 import { get } from "http";
 import { useState,useEffect } from "react";
+import { useSelector } from "react-redux";
 
 interface RefundPopupProps {
   isOpen: boolean;
@@ -19,9 +20,10 @@ export default function RefundPopup({ isOpen, onClose, data,CompliteInfo, onSubm
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [showBankPopup, setShowBankPopup] = useState(false);
-
+const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
+const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
   const [RefundData,setRefundData]=useState(new Date().toISOString().split("T")[0])
-
+console.log("RefundData",data)
 const [bankDetails, setBankDetails] = useState({
   accountNumber: "",
   ifsc: "",
@@ -101,8 +103,22 @@ const handleBankChange = async(e: any) => {
 
 
 
+  const GetPatientName = (A:any) => {
+  const filtered = RegisterdUsers?.find(
+    (each: any) => each.userId === A
+  );
 
+  return filtered?.patientName
+};
+const formatDateForInput = (date: any) => {
+  if (!date) return "";
 
+  const parsedDate = new Date(date);
+
+  if (isNaN(parsedDate.getTime())) return "";
+
+  return parsedDate.toISOString().split("T")[0];
+};
 
 
    const GetHCPPayment = (A: any) => {
@@ -184,14 +200,17 @@ const isProfit = resultAmount >= 0;
         </div>
 </div>
         <div className="mb-4 rounded-xl bg-gray-50 p-2 text-sm">
-          <p><span className="font-medium">Client:</span> {data.name}</p>
-          <p><span className="font-medium">Patient:</span> {data.PatientName}</p>
+          <p><span className="font-medium">Client:</span> {data.
+clientName
+}</p>
+          <p><span className="font-medium">Patient:</span> {GetPatientName(data.ClientId
+)}</p>
           <p><span className="font-medium">Duration:</span> {data.StartDate} → {data.EndDate } </p>
 <p>
   <span className="font-medium">Refund Date:</span>{" "}
   <input
     type="date"
-    value={  new Date(RefundData).toISOString().split("T")[0] || ""}
+      value={formatDateForInput(RefundData)}
     onChange={(e) =>
       setRefundData(
         new Date(e.target.value).toISOString().split("T")[0]
@@ -214,7 +233,7 @@ const isProfit = resultAmount >= 0;
                       </span></p>
                        <p><span className="font-medium">HCP Salary:</span> {CompliteInfo?.length ?  `${Math.round(Number(GetHCPPayment(data.HCA_Id)) / 30)}/Day` : "Loading...."} </p>
           <p><span className="font-medium">Location:</span> {data.location}</p>
-          <p><span className="font-medium">HCP:</span> {data.HCA_Name}</p>
+          <p><span className="font-medium">HCP:</span> {GetHCPFullName(UserFullInfo,data.HCA_Id)}</p>
           <p><span className="font-medium">Contact:</span> {data.contact}</p>
             <button
       type="button"

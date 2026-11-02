@@ -803,12 +803,12 @@ export const UpdateRefundAmount = async (
 
   
 
-    const db = client.db("CurateInformation");
-    const collection = db.collection("Invoices");
+  const db = client.db("CurateInformation");
+  const collection = db.collection("Invoices");
 
     
 
-    console.time("MongoUpdate");
+  
 
     const result = await collection.updateOne(
         {

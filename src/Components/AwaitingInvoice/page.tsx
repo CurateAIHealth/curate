@@ -526,7 +526,8 @@ const confirmDelete = async (selectedReason: string) => {
       TerminationInfo.ClientAttendance,
        TerminationInfo. TerminatedAttendece,
       TerminationInfo.ServiceState,
-      {}
+      {},
+      TerminationInfo.Month
     );
 
    if (deleteTimeSheetResponse?.success) {

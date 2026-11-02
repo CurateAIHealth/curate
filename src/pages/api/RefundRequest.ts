@@ -32,7 +32,11 @@ HCAId
 
 
 } = req.body.data;
-  ;
+
+
+
+
+
     const result = await UpdateRefundAmount(
       Client_Id,
       StartDate,
@@ -45,7 +49,7 @@ HCA_Id
 
     );
 
-  
+  console.log("Refund Update Result:", result);
 
     return res.status(200).json(result);
   } catch (error) {
