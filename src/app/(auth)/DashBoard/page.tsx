@@ -1440,9 +1440,8 @@ onClick={async () => {
               <MarkAttendance
                 userId={localStorage.getItem("UserId")}
                 userName={ProfileName}
-                SickLeaves={0}
-                CasualLeaves={0}
-                usedLeaves={0}
+             
+             
                 onSubmit={async (data) => {
                
                   await axios.post("/api/attendance", data);

@@ -1363,10 +1363,10 @@ updatingAction?.action === "Reject"
       aria-modal="true"
       aria-labelledby="monthly-attendance-title"
       onClick={(e) => e.stopPropagation()}
-      className="flex h-full max-h-[100dvh] w-full max-w-[1600px] flex-col overflow-hidden rounded-none border border-slate-200 bg-white shadow-2xl sm:h-auto sm:max-h-[98dvh] sm:rounded-[24px]"
+className="flex h-[90dvh] max-h-[850px] w-full max-w-[1200px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:h-auto sm:max-h-[85dvh] sm:rounded-[24px]"
     >
       {/* Header */}
-      <div className="flex shrink-0 flex-col gap-4 px-4 pb-4 pt-5 sm:px-7 sm:pb-5 sm:pt-7 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex shrink-0 flex-col gap-3 px-4 pb-3 pt-4 sm:px-5 sm:pb-3 sm:pt-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-center gap-4">
           <div className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-[19px] bg-white shadow-lg sm:h-[64px] sm:w-[64px]">
             <img
@@ -1403,7 +1403,7 @@ updatingAction?.action === "Reject"
 
         {/* Month, Year and Actions */}
         <div className="flex w-full items-center gap-2 sm:gap-3 lg:w-auto">
-          {/* <select
+           {/* <select
             value={selectedMonth}
             onChange={(e) => {
               const month = Number(e.target.value);
@@ -1422,9 +1422,9 @@ updatingAction?.action === "Reject"
                 })}
               </option>
             ))}
-          </select> */}
+          </select> 
 
-          {/* <select
+          <select
             value={selectedYear}
             onChange={(e) => {
               const year = Number(e.target.value);
@@ -1494,7 +1494,7 @@ updatingAction?.action === "Reject"
       </div>
 
       {/* Calendar */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-5 sm:px-6 sm:pb-6">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-5 sm:pb-4">
         {loadingMonthlyAttendance ? (
           <div className="flex min-h-[300px] items-center justify-center">
             <div className="flex flex-col items-center gap-3">
@@ -1606,9 +1606,9 @@ updatingAction?.action === "Reject"
                     { label: "Leave Days", count: dayCounts.Leave, style: "border-amber-100 bg-amber-50 text-amber-700" },
                     { label: "Not Marked", count: dayCounts["Not Marked"], style: "border-slate-200 bg-slate-50 text-slate-600" },
                   ].map((item) => (
-                    <div key={item.label} className={`rounded-xl border p-3 text-center ${item.style}`}>
+                    <div key={item.label}className={`rounded-xl border p-2 text-center ${item.style}`}>
                       <p className="text-xs font-medium">{item.label}</p>
-                      <p className="mt-1 text-2xl font-bold">{item.count}</p>
+                    <p className="mt-1 text-xl font-bold">{item.count}</p>
                     </div>
                   ))}
                 </div>
@@ -1625,7 +1625,7 @@ updatingAction?.action === "Reject"
                     return (
                       <div
                         key={day}
-                        className="flex min-h-[125px] min-w-0 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-2 shadow-[0_1px_3px_rgba(15,23,42,0.12)] transition-shadow hover:shadow-md sm:min-h-[127px] sm:px-2"
+                       className="flex min-h-[95px] min-w-0 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-1.5 shadow-[0_1px_3px_rgba(15,23,42,0.12)] transition-shadow hover:shadow-md sm:min-h-[100px] sm:px-2"
                       >
                         <p className="text-[10px] font-semibold uppercase leading-4 text-slate-500 sm:text-[11px]">
                           DAY {day}

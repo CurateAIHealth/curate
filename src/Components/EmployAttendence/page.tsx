@@ -1,892 +1,1385 @@
+
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   CheckCircle,
   XCircle,
   MinusCircle,
   ClipboardEdit,
   X,
+  Coffee,
+  LogIn,
+  LogOut,
+  Play,
+  Clock,
+  RefreshCw,
+  MapPin
 } from "lucide-react";
-import { PostEmployeeAttendance } from "@/Lib/user.action";
-import axios from "axios";
-import { form } from "framer-motion/client";
-import { useSelector } from "react-redux";
-import { getDaysBetween } from "@/Lib/Actions";
 
+import axios from "axios";
+import { useSelector } from "react-redux";
+
+import {
+  PostEmployeeAttendance,
+  StartEmployeeBreak,
+  EndEmployeeBreak,
+  CheckoutEmployee,
+  GetTodayAttendance
+} from "@/Lib/user.action";
+type AttendanceLocation = {
+  Latitude: number;
+  Longitude: number;
+  Accuracy: number;
+  CapturedAt: string;
+} | null;
+type EmployeeAttendance = {
+  Description: any;
+  LeaveType: any;
+  TotalLeaves: number;
+  ToDate: any;
+  FromDate: any;
+  UserId: string;
+  EmployeeName: string;
+  Area: string;
+  Status?: "Present" | "Absent" | "Leave";
+  AttendanceDate: string;
+  Location?: AttendanceLocation;
+  ApprovalStatus?: "Approved" | "Pending" | "Rejected";
+  CreatedAt?: string;
+  CheckoutAt?: string;
+  
+};
 interface AttendanceProps {
   userId: any;
   userName: string;
   onSubmit: (data: any) => void;
   onClose?: () => void;
-
- SickLeaves:any,
-CasualLeaves:any,
-usedLeaves:any
 }
+function getLocalDate(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+function getCoordinates(location?: AttendanceLocation) {
+  if (!location) return null;
+  const latitude = Number(location.Latitude);
+  const longitude = Number(location.Longitude);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+  return { latitude, longitude };
+}
+const getToday = () => {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata"
+  }).format(new Date());
+};
+
+const formatTime = (date: any) => {
+  if (!date) return "--";
+
+  return new Date(date).toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata"
+  });
+};
+
+const formatDuration = (minutes = 0) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+
+  return `${hours}h ${mins}m`;
+};
 
 export default function MarkAttendance({
   userId,
   userName,
   onSubmit,
-  onClose,
- 
+  onClose
 }: AttendanceProps) {
-   const SearchMonth = useSelector((state: any) => state.FilterMonth);
-         const SearchYear = useSelector((state: any) => state.FilterYear);
 
- 
-  
-         
-  const [ SickLeaves, setSickLeaves]=useState(0)
-   const [ CasualLeaves,setCasualLeaves]=useState(0)
-   const [OtherLeaves,setOtherLeaves]=useState(0)
-   const [LoadingLeaves,setLoadingLeaves]=useState(false)
-    const [usedLeaves,setusedLeaves]=useState(0)
+  const SearchMonth = useSelector(
+    (state: any) => state.FilterMonth
+  );
+
+  const SearchYear = useSelector(
+    (state: any) => state.FilterYear
+  );
+
+  const loggedInEmail = useSelector(
+    (state: any) => state.LoggedInEmail
+  );
+
   const [attendance, setAttendance] = useState<any>({
     userId,
     userName,
     status: "",
-    date: new Date().toISOString().split("T")[0],
+    date: getToday(),
     fromDate: "",
     toDate: "",
-    Month:`${SearchYear}-${SearchMonth}`
+    Month: `${SearchYear}-${SearchMonth}`
   });
-  const [leaveType, setLeaveType] = useState<string>("")
-const [leaveDescription, setLeaveDescription] = useState("")
-const[statusMessage,setStatusMessage]=useState<any>()
+
+  const [leaveType, setLeaveType] = useState("");
+  const [leaveDescription, setLeaveDescription] = useState("");
+const [selectedStaff, setSelectedStaff] = useState<any>(null);
+const [monthlyAttendance, setMonthlyAttendance] = useState<any[]>([]);
+  const [showFullMonth, setShowFullMonth] = useState(false);
+  const [loadingMonthlyAttendance, setLoadingMonthlyAttendance] = useState(false);
+  const [SickLeaves, setSickLeaves] = useState(0);
+  const [CasualLeaves, setCasualLeaves] = useState(0);
+  const [OtherLeaves, setOtherLeaves] = useState(0);
+  const [usedLeaves, setUsedLeaves] = useState(0);
+
+  const [LoadingLeaves, setLoadingLeaves] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const [statusMessage, setStatusMessage] = useState("");
+    const [selectedDate, setSelectedDate] = useState(getLocalDate());
+   const selectedDateObj = new Date(`${selectedDate}T12:00:00`);
+const selectedMonth = selectedDateObj.getMonth();
+  const selectedYear = selectedDateObj.getFullYear();
+  const [todayAttendance, setTodayAttendance] =
+    useState<any>(null);
+
+  const [loadingAttendance, setLoadingAttendance] =
+    useState(true);
+
   const isLeave = attendance.status === "Leave";
-  const totalLeaves=SickLeaves+CasualLeaves
-  const remainingLeaves = totalLeaves - usedLeaves;
- const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
-// SetStatusMessage("Please wait, marking attendance...")
-// SetStatusMessage("Attendance marked successfully")
-// SetStatusMessage("Leave requested successfully")
-const calculateLeaveDays = (fromDate: string, toDate: string) => {
-  const start = new Date(fromDate);
-  const end = new Date(toDate);
 
-  start.setHours(0, 0, 0, 0);
-  end.setHours(0, 0, 0, 0);
+  const totalLeaves = SickLeaves + CasualLeaves;
 
-  const diffTime = end.getTime() - start.getTime();
+  const remainingLeaves = totalLeaves;
 
-  return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  const calculateLeaveDays = (
+    fromDate: string,
+    toDate: string
+  ) => {
+    if (!fromDate || !toDate) return 0;
+
+    const start = new Date(`${fromDate}T00:00:00`);
+    const end = new Date(`${toDate}T00:00:00`);
+
+    return Math.floor(
+      (end.getTime() - start.getTime()) /
+      (1000 * 60 * 60 * 24)
+    ) + 1;
+  };
+
+  const totalDays = calculateLeaveDays(
+    attendance.fromDate,
+    attendance.toDate
+  );
+
+  // FETCH TODAY'S ATTENDANCE
+  const refreshAttendance = useCallback(async () => {
+    try {
+      setLoadingAttendance(true);
+
+      const result = await GetTodayAttendance(userId);
+console.log("Attendance refresh result:", result);
+      if (result?.success) {
+        setTodayAttendance(result.data);
+      }
+
+    } catch (error) {
+      console.error("Attendance refresh:", error);
+    } finally {
+      setLoadingAttendance(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    refreshAttendance();
+  }, [refreshAttendance]);
+const openFullMonthAttendance = async (employee: any) => {
+  setSelectedStaff(employee);
+  setShowFullMonth(true);
+  setLoadingMonthlyAttendance(true);
+  setMonthlyAttendance([]);
+
+  try {
+    const response = await axios.post("/api/FullMonthStaffAttendance",  {
+        UserId: employee.UserId,
+        Month: employee.Month,
+      });
+
+    setMonthlyAttendance(
+      response.data.AttendeceResuls ?? []
+    );
+  } catch (error) {
+    console.error("Failed to load monthly attendance:", error);
+  } finally {
+    setLoadingMonthlyAttendance(false);
+  }
 };
 
-const totalDays = calculateLeaveDays(
-  attendance.fromDate,
-  attendance.toDate
-);
-const getEmployeeLocation = (): Promise<{
-  latitude: number;
-  longitude: number;
-  accuracy: number;
-}> => {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error("Geolocation is not supported by this browser."));
+  const openLocation = (employee: EmployeeAttendance) => {
+    const coordinates = getCoordinates(employee.Location);
+    if (!coordinates) return;
+    window.open(`https://www.google.com/maps/search/?api=1&query=${coordinates.latitude},${coordinates.longitude}`, "_blank", "noopener,noreferrer");
+  };
+  // GET EMPLOYEE GPS LOCATION
+  const getEmployeeLocation = (): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(
+          new Error("Geolocation is not supported.")
+        );
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          });
+        },
+        (error) => {
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              reject(
+                new Error("Please allow location access.")
+              );
+              break;
+
+            case error.POSITION_UNAVAILABLE:
+              reject(
+                new Error("Your location is unavailable.")
+              );
+              break;
+
+            case error.TIMEOUT:
+              reject(
+                new Error("Location request timed out.")
+              );
+              break;
+
+            default:
+              reject(
+                new Error("Unable to get your location.")
+              );
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
+        }
+      );
+    });
+  };
+
+  // LOAD LEAVE INFORMATION
+  const updateLeave = async (value: string) => {
+    try {
+      setLoadingLeaves(true);
+
+      const response = await axios.get(
+        "/api/leavesinfo",
+        {
+          params: { userId },
+          timeout: 15000
+        }
+      );
+
+      const data = response?.data?.GetData;
+
+      if (!data) {
+        throw new Error("Leave information not found.");
+      }
+
+      setSickLeaves(Number(data.sick ?? 0));
+      setCasualLeaves(Number(data.Casual ?? 0));
+      setOtherLeaves(Number(data.OtherLeaves ?? 0));
+      setUsedLeaves(Number(data.usedLeaves ?? 0));
+
+      setAttendance((prev: any) => ({
+        ...prev,
+        status: value
+      }));
+
+    } catch (error: any) {
+      setStatusMessage(
+        error?.message || "Unable to load leave information."
+      );
+    } finally {
+      setLoadingLeaves(false);
+    }
+  };
+
+  // MARK ATTENDANCE
+  const UpdateDailyAttendance = async () => {
+
+    if (isLeave && !leaveType) {
+      setStatusMessage("Please select a leave type.");
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-         accuracy: position.coords.accuracy
-          
-        });
-      },
-      (error) => {
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            reject(new Error("Please allow location access to mark attendance."));
-            break;
-          case error.POSITION_UNAVAILABLE:
-            reject(new Error("Your current location is unavailable."));
-            break;
-          case error.TIMEOUT:
-            reject(new Error("Location request timed out. Please try again."));
-            break;
-          default:
-            reject(new Error("Unable to get your current location."));
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
-      }
-    );
-  });
-};
-const updateLeave = async (ImpValue: string) => {
-  setLoadingLeaves(true);
-
-  try {
-    const response = await axios.get("/api/leavesinfo", {
-      params: { userId },
-      timeout: 15000,
-    });
-
-    const leaveData = response?.data?.GetData;
-
-    if (!leaveData) {
-      throw new Error("Leave information not found.");
+    if (
+      isLeave &&
+      (!attendance.fromDate || !attendance.toDate)
+    ) {
+      setStatusMessage("Please select leave dates.");
+      return;
     }
 
-    setSickLeaves(Number(leaveData.sick ?? 0));
-    setCasualLeaves(Number(leaveData.Casual ?? 0));
-    setOtherLeaves(Number(leaveData.OtherLeaves ?? 0))
-    setusedLeaves(Number(leaveData.usedLeaves ?? 0));
+    if (
+      isLeave &&
+      attendance.toDate < attendance.fromDate
+    ) {
+      setStatusMessage("Invalid leave date range.");
+      return;
+    }
 
-    setAttendance((prev: any) => ({
-      ...prev,
-      status: ImpValue,
-    }));
-  } catch (err: unknown) {
-    if (axios.isAxiosError(err)) {
-      console.error(
-        "Fetch leaves API error:",
-        err.response?.data ?? err.message
+    if (
+      isLeave &&
+      leaveType === "Casual" &&
+      totalDays > 1
+    ) {
+      setStatusMessage(
+        "Casual leave can only be taken for one day."
       );
-    } else {
-      console.error("Update leave error:", err);
+      return;
     }
 
-    // Keep existing leave values if the request fails.
-    // Do not update attendance status after a failed request.
-  } finally {
-    setLoadingLeaves(false);
-  }
-};
-const UpdateDailyAttendance = async () => {
-    if (attendance.status === "Leave" && !leaveType) {
-    setStatusMessage("Please select a leave type.");
-    return;
-  }
+    if (
+      isLeave &&
+      leaveType === "Other" &&
+      !leaveDescription.trim()
+    ) {
+      setStatusMessage("Please enter leave description.");
+      return;
+    }
 
-  if (
-    attendance.status === "Leave" &&
-    leaveType === "Casual" &&
-    attendance.fromDate &&
-    attendance.toDate &&
-    totalDays > 1
-  ) {
-    setStatusMessage("Casual leave can only be taken for one day.");
-    return;
-  }
+    setLoading(true);
+    setStatusMessage("Please wait...");
 
-  setStatusMessage("Please wait, marking attendance...");
+    try {
 
-  try {
-    let attendancePayload = {
-      ...attendance,
-      ...(attendance.status === "Leave"
-        ? { leaveType, leaveDescription: leaveType === "Other" ? leaveDescription : "" }
-        : {}),
-    };
-
-    // Capture location for actual attendance, not leave requests
-    if (attendance.status !== "Leave") {
-    const location =
-  loggedInEmail === "srinivasnew0803@gmail.com"
-    ? {
-        accuracy: 50,
-        latitude:17.5186369,
-        longitude:   78.3962529
-      }
-    : await getEmployeeLocation();
-
-      attendancePayload = {
+      let payload: any = {
         ...attendance,
-     
-        location,
+        ...(isLeave
+          ? {
+              leaveType,
+              leaveDescription:
+                leaveType === "Other"
+                  ? leaveDescription
+                  : ""
+            }
+          : {})
       };
+
+      // GPS ONLY FOR CHECK-IN / NORMAL ATTENDANCE
+      if (attendance.status === "Present") {
+
+        if (attendance.date !== getToday()) {
+          throw new Error(
+            "Present attendance must be marked for today."
+          );
+        }
+
+        const location =
+          loggedInEmail === "srinivasnew0803@gmail.com"
+            ? {
+                latitude: 17.5186369,
+                longitude: 78.3962529,
+                accuracy: 50
+              }
+            : await getEmployeeLocation();
+
+        payload = {
+          ...payload,
+          location
+        };
+      }
+
+      const result = await PostEmployeeAttendance(payload);
+
+      if (!result?.success) {
+        throw new Error(
+          result?.message || "Attendance submission failed."
+        );
+      }
+
+      setStatusMessage(
+        result?.message || "Attendance marked successfully."
+      );
+
+  
+
+      if (attendance.status === "Present") {
+        await refreshAttendance();
+      } else {
+
+        // Preserve your existing leave notification workflow.
+        if (isLeave) {
+          await axios.post("/api/MailSend", {
+            to: "tsiddu805@gmail.com",
+            subject: "Leave Request Submitted – Approval Required",
+            html: `
+              <h2>New Leave Request</h2>
+              <p>Employee: ${userName}</p>
+              <p>Leave Type: ${leaveType}</p>
+              <p>From: ${attendance.fromDate}</p>
+              <p>To: ${attendance.toDate}</p>
+              <p>Total Days: ${totalDays}</p>
+              <p>Description: ${leaveDescription || "N/A"}</p>
+            `
+          });
+        }
+
+        setTimeout(() => onClose?.(), 1500);
+      }
+
+    } catch (error: any) {
+
+      setStatusMessage(
+        error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong."
+      );
+
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const result = await PostEmployeeAttendance(attendancePayload);
+  // START BREAK
+  const handleStartBreak = async () => {
+    try {
+      setLoading(true);
+      setStatusMessage("Starting break...");
 
- setStatusMessage(result?.message || "Request processed");
-    // Send the leave email only after a successful leave submission
-    if (result?.success && attendance.status === "Leave") {
-    await axios.post("/api/MailSend", {
-  to: "tsiddu805@gmail.com",
-  subject: "Leave Request Submitted – Approval Required",
-  html: `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  </head>
+      const result = await StartEmployeeBreak(userId);
 
-  <body style="
-    margin: 0;
-    padding: 0;
-    background-color: #f1f5f9;
-    font-family: Arial, Helvetica, sans-serif;
-    color: #1e293b;
-  ">
+      if (!result.success) {
+        throw new Error(result.message);
+      }
 
-    <table width="100%" cellpadding="0" cellspacing="0"
-      style="padding: 35px 12px; background-color: #f1f5f9;">
-      <tr>
-        <td align="center">
+      setStatusMessage(result.message);
 
-          <table width="100%" cellpadding="0" cellspacing="0"
-            style="
-              max-width: 620px;
-              background-color: #ffffff;
-              border-radius: 16px;
-              overflow: hidden;
-              border: 1px solid #e2e8f0;
-            ">
+      await refreshAttendance();
 
-            <!-- Header -->
-            <tr>
-              <td style="
-                background-color: #0f766e;
-                padding: 30px 28px;
-                color: #ffffff;
-              ">
-                <p style="
-                  margin: 0 0 12px;
-                  font-size: 12px;
-                  font-weight: bold;
-                  letter-spacing: 2px;
-                  color: #ccfbf1;
-                ">
-                  CURATE HEALTH CARE SERVICES
-                </p>
-
-                <h1 style="
-                  margin: 0;
-                  font-size: 26px;
-                  line-height: 1.4;
-                  font-weight: 700;
-                ">
-                  Leave Application
-                </h1>
-
-                <p style="
-                  margin: 8px 0 0;
-                  font-size: 14px;
-                  line-height: 1.6;
-                  color: #d1fae5;
-                ">
-                  A new leave request has been submitted for approval.
-                </p>
-              </td>
-            </tr>
-
-            <!-- Main Content -->
-            <tr>
-              <td style="padding: 30px 28px;">
-
-                <p style="
-                  margin: 0 0 12px;
-                  font-size: 16px;
-                  line-height: 1.7;
-                ">
-                  Hello Manager,
-                </p>
-
-                <p style="
-                  margin: 0 0 24px;
-                  font-size: 14px;
-                  line-height: 1.8;
-                  color: #475569;
-                ">
-                  An employee has submitted a leave application.
-                  Please review the details below and take the
-                  appropriate action.
-                </p>
-
-                <!-- Status -->
-                <table width="100%" cellpadding="0" cellspacing="0"
-                  style="
-                    background-color: #fffbeb;
-                    border: 1px solid #fde68a;
-                    border-radius: 10px;
-                    margin-bottom: 24px;
-                  ">
-                  <tr>
-                    <td style="padding: 15px 18px;">
-                      <span style="
-                        display: inline-block;
-                        padding: 6px 12px;
-                        border-radius: 20px;
-                        background-color: #fef3c7;
-                        color: #92400e;
-                        font-size: 12px;
-                        font-weight: bold;
-                      ">
-                        PENDING APPROVAL
-                      </span>
-
-                      <p style="
-                        margin: 10px 0 0;
-                        font-size: 13px;
-                        color: #92400e;
-                      ">
-                        Your action is required to process this request.
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-
-                <!-- Leave Details -->
-                <h2 style="
-                  margin: 0 0 16px;
-                  font-size: 18px;
-                  color: #0f172a;
-                ">
-                  Leave Details
-                </h2>
-
-                <table width="100%" cellpadding="0" cellspacing="0"
-                  style="
-                    border: 1px solid #e2e8f0;
-                    border-radius: 10px;
-                  ">
-
-                  <tr>
-                    <td style="
-                      padding: 14px 16px;
-                      width: 40%;
-                      background-color: #f8fafc;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 13px;
-                      color: #64748b;
-                    ">
-                      Employee Name
-                    </td>
-                    <td style="
-                      padding: 14px 16px;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 14px;
-                      font-weight: bold;
-                    ">
-                      ${  userName ?? "N/A"}
-                    </td>
-                  </tr>
-
-                  
-
-                  <tr>
-                    <td style="
-                      padding: 14px 16px;
-                      background-color: #f8fafc;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 13px;
-                      color: #64748b;
-                    ">
-                      Leave Type
-                    </td>
-                    <td style="
-                      padding: 14px 16px;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 14px;
-                      font-weight: bold;
-                    ">
-                      ${leaveType ?? "N/A"}
-                    </td>
-                  </tr>
-
-                  ${leaveType === "Other" ? `
-                  <tr>
-                    <td style="padding: 14px 16px; background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #64748b;">
-                      Description
-                    </td>
-                    <td style="padding: 14px 16px; border-bottom: 1px solid #e2e8f2; font-size: 14px;">
-                      ${leaveDescription || "N/A"}
-                    </td>
-                  </tr>
-                  ` : ""}
-
-                  <tr>
-                    <td style="
-                      padding: 14px 16px;
-                      background-color: #f8fafc;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 13px;
-                      color: #64748b;
-                    ">
-                      From Date
-                    </td>
-                    <td style="
-                      padding: 14px 16px;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 14px;
-                    ">
-                      ${attendance.fromDate ?? "N/A"}
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td style="
-                      padding: 14px 16px;
-                      background-color: #f8fafc;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 13px;
-                      color: #64748b;
-                    ">
-                      To Date
-                    </td>
-                    <td style="
-                      padding: 14px 16px;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 14px;
-                    ">
-                      ${attendance.toDate ?? "N/A"}
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td style="
-                      padding: 14px 16px;
-                      background-color: #f8fafc;
-                      font-size: 13px;
-                      color: #64748b;
-                    ">
-                      Total Days
-                    </td>
-                    <td style="
-                      padding: 14px 16px;
-                      font-size: 14px;
-                      font-weight: bold;
-                      color: #0f766e;
-                    ">
-                      ${totalDays ?? "N/A"}
-                    </td>
-                  </tr>
-
-                </table>
-
-               
-
-                <!-- Action -->
-                <table width="100%" cellpadding="0" cellspacing="0"
-                  style="margin-top: 28px;">
-                  <tr>
-                    <td align="center" style="
-                      padding: 20px;
-                      background-color: #f0fdfa;
-                      border-radius: 10px;
-                    ">
-                      <p style="
-                        margin: 0 0 8px;
-                        font-size: 15px;
-                        font-weight: bold;
-                        color: #115e59;
-                      ">
-                        Review Required
-                      </p>
-
-                      <p style="
-                        margin: 0;
-                        font-size: 13px;
-                        line-height: 1.7;
-                        color: #475569;
-                      ">
-                        Please log in to the Curate application to
-                        review and approve or reject this request.
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-
-                <p style="
-                  margin: 26px 0 0;
-                  font-size: 14px;
-                  line-height: 1.8;
-                  color: #475569;
-                ">
-                  Thank you,<br />
-                  <strong style="color: #0f766e;">
-                    Curate Health Care Services
-                  </strong>
-                </p>
-
-              </td>
-            </tr>
-
-            <!-- Footer -->
-            <tr>
-              <td style="
-                padding: 20px;
-                text-align: center;
-                background-color: #f8fafc;
-                border-top: 1px solid #e2e8f0;
-              ">
-                <p style="
-                  margin: 0;
-                  font-size: 11px;
-                  line-height: 1.8;
-                  color: #94a3b8;
-                ">
-                  This is an automated notification from Curate Health
-                  Care Services. Please do not reply directly to this email.
-                </p>
-              </td>
-            </tr>
-
-          </table>
-
-        </td>
-      </tr>
-    </table>
-
-  </body>
-  </html>
-  `,
-});
+    } catch (error: any) {
+      setStatusMessage(error.message);
+    } finally {
+      setLoading(false);
     }
+  };
 
-   
-  } catch (err: any) {
-    setStatusMessage(
-      err?.message || "Something went wrong"
+  // RESUME WORK
+  const handleEndBreak = async () => {
+    try {
+      setLoading(true);
+      setStatusMessage("Resuming work...");
+
+      const result = await EndEmployeeBreak(userId);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      setStatusMessage(result.message);
+
+      await refreshAttendance();
+
+    } catch (error: any) {
+      setStatusMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // CHECK OUT
+  const handleCheckout = async () => {
+
+    const confirmed = window.confirm(
+      "Are you sure you want to check out for today?"
     );
-  } finally {
-    setTimeout(() => {
-      onClose?.();
-    }, 1500);
-  }
-};
-const openAttendanceLocation = (
-  latitude: number,
-  longitude: number
-) => {
-  window.open(
-    `https://www.google.com/maps?q=${latitude},${longitude}`,
-    "_blank",
-    "noopener,noreferrer"
-  );
+
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      setStatusMessage("Checking out...");
+
+      const result = await CheckoutEmployee(userId);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      setStatusMessage(result.message);
+
+      await refreshAttendance();
+
+    } catch (error: any) {
+      setStatusMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const state = todayAttendance?.AttendanceState;
+
+  const breaks = todayAttendance?.Breaks ?? [];
+
+  const checkInTime = todayAttendance?.CheckIn?.Time;
+
+  const checkOutTime = todayAttendance?.CheckOut?.Time;
+
+  const totalBreakMinutes =
+    todayAttendance?.TotalBreakMinutes ?? 0;
+
+  const totalWorkingMinutes =
+    todayAttendance?.TotalWorkingMinutes ?? 0;
+
+  const isCheckedIn = !!todayAttendance;
+const employee = {
+  UserId: userId,
+  EmployeeName: userName,
+  Month: `${SearchYear}-${SearchMonth}`,
+  // Initialize other properties as needed
 };
   return (
-
-    <div>
-
-   
     <div className="relative w-full max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl border overflow-hidden">
-    
+
+      {/* HEADER */}
       <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-[#00A9A5] to-[#005f61]">
+
         <div className="flex items-center gap-3">
+
           <img
             src="/Icons/Curate-logoq.png"
             alt="Curate Health"
             className="h-9 w-9 bg-white rounded-full p-1"
           />
+
           <div className="text-white">
-            <h2 className="text-lg font-bold">Attendance</h2>
-            <p className="text-xs opacity-90">{userName}</p>
+            <h2 className="text-lg font-bold">
+              Attendance
+            </h2>
+
+            <p className="text-xs opacity-90">
+              {userName}
+            </p>
           </div>
         </div>
 
         {onClose && (
           <button
             onClick={onClose}
-            className="h-9 w-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
+            className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center text-white"
           >
             <X size={18} />
           </button>
         )}
       </div>
 
-   
       <div className="px-6 py-6 space-y-6">
-    
- {(isLeave||LoadingLeaves )&& (
-  <div className="flex items-center justify-between rounded-xl border-l-4 border-[#00A9A5] bg-white px-4 py-3 text-sm">
-    {LoadingLeaves ? (
-      <div className="flex w-full items-center justify-center gap-2 py-1 text-gray-500">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-[#00A9A5]" />
-        <span className="text-sm font-medium">
-          Loading leave information...
-        </span>
-      </div>
-    ) : (
-      <>
-        <div className="flex flex-wrap gap-x-4 gap-y-2 text-gray-700">
-          <span>
-            Total Leaves <strong>{totalLeaves+usedLeaves}</strong>
-          </span>
 
-          <span>
-            Left{" "}
-            <strong
-              className={
-                remainingLeaves <= 3
-                  ? "text-[#dc2626]"
-                  : "text-[#16a34a]"
-              }
-            >
-              {totalLeaves+usedLeaves-usedLeaves}
-            </strong>
-          </span>
+   
 
-          <span>
-            Absents <strong className="text-red-500">{usedLeaves}</strong>
-          </span>
-        </div>
+        {/* TODAY'S ATTENDANCE */}
+        {loadingAttendance ? (
 
-   <div className="flex flex-wrap gap-2">
-  <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
-    Casual · {CasualLeaves}
-  </span>
-
-  <span className="rounded-md bg-pink-50 px-2 py-0.5 text-xs text-pink-700">
-    Sick · {SickLeaves}
-  </span>
-
-  <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
-    Other · {OtherLeaves}
-  </span>
-</div>
-      </>
-    )}
-  </div>
-)}
-
-
-  
-        <div>
-          <label className="text-xs font-semibold text-gray-500 uppercase mb-3 block">
-            Attendance Status
-          </label>
-
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Present", value: "Present", icon: CheckCircle },
-              { label: "Absent", value: "Absent", icon: XCircle },
-              { label: "Half Day", value: "Half Day", icon: MinusCircle },
-              { label: "Leave", value: "Leave", icon: ClipboardEdit },
-            ].map((item) => {
-              const active = attendance.status === item.value;
-
-              return (
-                <button
-                  key={item.value}
-                  onClick={() =>
-
-                    item.value==="Leave"?
-                    updateLeave(item.value):
-                    setAttendance({
-                      ...attendance,
-                      status: item.value,
-                    })
-                  }
-                  className={`
-                    flex items-center gap-3 px-4 py-3 rounded-xl border
-                    text-sm font-semibold transition-all
-                    ${
-                      active
-                        ? "bg-[#00A9A5]/10 border-[#00A9A5] text-[#005f61]"
-                        : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
-                    }
-                  `}
-                >
-                  <item.icon size={18} />
-                  {item.label}
-                </button>
-              );
-            })}
+          <div className="flex justify-center py-5">
+            <RefreshCw className="animate-spin text-teal-600" />
           </div>
-        </div>
 
+        ) : isCheckedIn ? (
 
-        {!isLeave ? (
-          <div>
-            <label className="text-xs font-semibold text-gray-500 uppercase">
-              Date
-            </label>
-            <input
-              type="date"
-              value={attendance.date}
-              onChange={(e) =>
-                setAttendance({ ...attendance, date: e.target.value })
-              }
-              className="mt-1 w-full rounded-xl border px-4 py-3 text-sm focus:ring-2 focus:ring-[#00A9A5]"
+          <div className="border rounded-2xl p-4 space-y-4">
+
+            
+<div className="space-y-3">
+
+  {/* HEADER */}
+  <div className="flex items-center justify-between gap-3">
+
+    <h3 className="font-bold text-gray-800 text-base">
+      Today's Attendance
+    </h3>
+
+    <span
+      className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold ${
+        state === "Working"
+          ? "bg-green-100 text-green-700"
+          : state === "OnBreak"
+          ? "bg-yellow-100 text-yellow-700"
+          : "bg-gray-100 text-gray-600"
+      }`}
+    >
+      {state}
+    </span>
+
+  </div>
+
+  {/* MONTH ATTENDANCE BUTTON */}
+  <button
+    type="button"
+     onClick={() => openFullMonthAttendance(employee)}
+    className="w-full flex items-center justify-center gap-2 rounded-xl border border-[#00A9A5] px-4 py-2.5 text-sm font-bold text-[#005f61] hover:bg-[#00A9A5]/10 transition-colors"
+  >
+    View Full Month Attendance
+  </button>
+
+</div>
+{showFullMonth && selectedStaff && (
+  <div
+    className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/30 p-0 backdrop-blur-[2px] sm:p-3"
+    onClick={() => setShowFullMonth(false)}
+  >
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="monthly-attendance-title"
+      onClick={(e) => e.stopPropagation()}
+className="flex h-[90dvh] max-h-[850px] w-full max-w-[1200px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:h-auto sm:max-h-[85dvh] sm:rounded-[24px]"
+    >
+      {/* Header */}
+      <div className="flex shrink-0 flex-col gap-3 px-4 pb-3 pt-4 sm:px-5 sm:pb-3 sm:pt-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-[19px] bg-white shadow-lg sm:h-[64px] sm:w-[64px]">
+            <img
+              src="/Icons/Curate-logoq.png"
+              alt="Curate Logo"
+              className="h-12 w-12 object-contain"
             />
           </div>
-        ) : (
-<div>
-    <div className="space-y-1">
-  <label className="text-xs font-semibold text-gray-500 uppercase">
-    Leave Type
-  </label>
 
-  <div className="relative">
-    <select
-      className="
-        w-full appearance-none
-        rounded-2xl border border-gray-200
-        bg-white px-4 py-3 pr-10
-        text-sm font-semibold text-gray-700
-        shadow-sm
-        focus:outline-none focus:ring-2 focus:ring-[#00A9A5]
-        focus:border-transparent
-        transition-all duration-200
-      "
-      value={leaveType}
-      onChange={(e)=>{
-        setLeaveType(e.target.value)
-        if (e.target.value !== "Other") setLeaveDescription("")
-      }}
-    >
-      <option value="" disabled>
-        Choose leave type
-      </option>
-      <option value="Casual">Casual Leave</option>
-      <option value="Sick">Sick Leave</option>
-      <option value="Other">Other</option>
-    </select>
-
-
-    <svg
-      className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-    >
-      <path
-        fillRule="evenodd"
-        d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
-        clipRule="evenodd"
-      />
-    </svg>
-  </div>
-</div>
-          {leaveType === "Other" && (
-            <div className="mt-3">
-              <label className="text-xs font-semibold text-gray-500 uppercase" htmlFor="leave-description">
-                To describe
-              </label>
-              <textarea
-                id="leave-description"
-                value={leaveDescription}
-                onChange={(e) => setLeaveDescription(e.target.value)}
-                placeholder="Describe the reason for your leave"
-                rows={3}
-                className="mt-1 w-full rounded-xl border px-4 py-3 text-sm focus:ring-2 focus:ring-[#00A9A5]"
-              />
-            </div>
-          )}
-          <div className="grid grid-cols-2 gap-4 mt-2 ">
-        
-
-            <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase">
-                From Date
-              </label>
-              <input
-                type="date"
-                value={attendance.fromDate}
-                onChange={(e) =>
-                  setAttendance({
-                    ...attendance,
-                    fromDate: e.target.value,
-                  })
-                }
-                className="mt-1 w-full rounded-xl border px-4 py-3 text-sm focus:ring-2 focus:ring-[#00A9A5]"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase">
-                To Date <span className="inline-flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-sm font-semibold text-teal-700">
-  Total Leave Days
-  <strong className="rounded-md bg-teal-600 px-2 py-0.5 text-white">
-    {getDaysBetween(attendance.fromDate, attendance.toDate) || 0}
-  </strong>
-</span>
-              </label>
-              <input
-                type="date"
-                value={attendance.toDate}
-                onChange={(e) =>
-                  setAttendance({
-                    ...attendance,
-                    toDate: e.target.value,
-                  })
-                }
-                className="mt-1 w-full rounded-xl border px-4 py-3 text-sm focus:ring-2 focus:ring-[#00A9A5]"
-              />
-            </div>
-            
-          </div>
-          {leaveType === "Casual" && totalDays > 1 && (
-            <p className="mt-2 text-sm font-medium text-red-600" role="alert">
-              Casual leave can only be taken for one day. Please select the same
-              date for both fields.
+          <div className="min-w-0">
+            <p className="mb-1 truncate text-[11px] font-bold uppercase tracking-[2.5px] text-pink-500 sm:text-xs sm:tracking-[3px]">
+              {selectedStaff.EmployeeName}
             </p>
-          )}
-          </div>
-        )}
 
-{statusMessage && (
-  <div className="flex justify-center mt-4">
-    <div
-      className={`
-        px-5 py-2 rounded-full text-sm font-semibold
-        backdrop-blur-lg shadow-md border
-        transition-all duration-300
-        ${
-          statusMessage.toLowerCase().includes("please wait")
-            ? "bg-blue-100/60 text-blue-800 border-blue-200"
-            : statusMessage.toLowerCase().includes("success")
-            ? "bg-[#dcfce7] opacity-60 text-[#15803d] border-[#dcfce7]"
-            : "bg-slate-100/60 text-slate-800 border-slate-200"
-        }
-      `}
-    >
-      {statusMessage}
+            <h2
+              id="monthly-attendance-title"
+              className="text-xl font-extrabold leading-tight tracking-tight text-slate-800 sm:text-2xl"
+            >
+              Attendance Dashboard
+            </h2>
+
+            <p className="mt-1 text-sm font-medium text-slate-400">
+              {new Date(
+                selectedYear,
+                selectedMonth,
+                1
+              ).toLocaleString("en-IN", {
+                month: "long",
+              })}{" "}
+              {selectedYear}
+            </p>
+          </div>
+        </div>
+
+        {/* Month, Year and Actions */}
+        <div className="flex w-full items-center gap-2 sm:gap-3 lg:w-auto">
+           <select
+            value={selectedMonth}
+            onChange={(e) => {
+              const month = Number(e.target.value);
+
+              setSelectedDate(
+                `${selectedYear}-${String(month + 1).padStart(2, "0")}-01`
+              );
+            }}
+            aria-label="Attendance month"
+            className="h-11 min-w-0 flex-1 cursor-pointer rounded-[14px] border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none transition hover:border-slate-400 focus:border-emerald-500 sm:min-w-[145px] sm:flex-none sm:px-4"
+          >
+            {Array.from({ length: 12 }, (_, i) => (
+              <option key={i} value={i}>
+                {new Date(2026, i, 1).toLocaleString("en-IN", {
+                  month: "long",
+                })}
+              </option>
+            ))}
+          </select> 
+
+          <select
+            value={selectedYear}
+            onChange={(e) => {
+              const year = Number(e.target.value);
+
+              setSelectedDate(
+                `${year}-${String(selectedMonth + 1).padStart(2, "0")}-01`
+              );
+            }}
+            aria-label="Attendance year"
+            className="h-11 min-w-0 flex-1 cursor-pointer rounded-[14px] border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none transition hover:border-slate-400 focus:border-emerald-500 sm:min-w-[110px] sm:flex-none sm:px-4"
+          >
+            {Array.from(
+              { length: 7 },
+              (_, i) => new Date().getFullYear() - 5 + i
+            ).map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            title="Expand dashboard"
+            aria-label="Expand dashboard"
+            onClick={(e) => {
+              const dialog = e.currentTarget.closest(
+                '[role="dialog"]'
+              );
+
+              if (dialog) {
+                dialog.classList.toggle("sm:max-w-[1600px]");
+                dialog.classList.toggle("sm:max-w-none");
+                dialog.classList.toggle("sm:h-auto");
+                dialog.classList.toggle("sm:h-[98dvh]");
+              }
+            }}
+            className="ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 sm:h-11 sm:w-11"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="19"
+              height="19"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M15 3h6v6" />
+              <path d="m21 3-7 7" />
+              <path d="M9 21H3v-6" />
+              <path d="m3 21 7-7" />
+            </svg>
+          </button>
+  <button
+            type="button"
+            onClick={() => setShowFullMonth(false)}
+            aria-label="Close dashboard"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-lg text-slate-600 transition hover:bg-rose-50 hover:text-rose-600 "
+          >
+            ✕
+          </button>
+          
+        </div>
+      </div>
+
+      {/* Calendar */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-5 sm:pb-4">
+        {loadingMonthlyAttendance ? (
+          <div className="flex min-h-[300px] items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-500" />
+              <p className="text-sm text-slate-500">
+                Loading full month attendance...
+              </p>
+            </div>
+          </div>
+        ) : (
+          (() => {
+            const daysInMonth = new Date(
+              selectedYear,
+              selectedMonth + 1,
+              0
+            ).getDate();
+
+            const getDayStatus = (day: number) => {
+              const date = `${selectedYear}-${String(
+                selectedMonth + 1
+              ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+              const records = monthlyAttendance.filter((record) => {
+                if (
+                  String(record.UserId) !==
+                  String(selectedStaff.UserId)
+                ) {
+                  return false;
+                }
+
+                const from = String(
+                  record.FromDate || record.AttendanceDate || ""
+                ).slice(0, 10);
+
+                const to = String(
+                  record.ToDate || record.AttendanceDate || from
+                ).slice(0, 10);
+
+                if (record.Status === "Leave") {
+                  return (
+                    record.ApprovalStatus === "Approved" &&
+                    date >= from &&
+                    date <= to
+                  );
+                }
+
+                return (
+                  String(record.AttendanceDate || "").slice(0, 10) ===
+                  date
+                );
+              });
+
+              const attendance = records.find(
+                (record) => record.Status !== "Leave"
+              );
+
+              const leave = records.find(
+                (record) => record.Status === "Leave"
+              );
+
+              if (attendance?.Status === "Present") {
+                return {
+                  label: "P",
+                  status: "Present",
+                  circle: "border-emerald-500 text-emerald-600",
+                };
+              }
+
+              if (attendance?.Status === "Absent") {
+                return {
+                  label: "A",
+                  status: "Absent",
+                  circle: "border-rose-500 text-rose-600",
+                };
+              }
+
+              if (leave) {
+                return {
+                  label: "L",
+                  status: "Leave",
+                  circle: "border-amber-500 text-amber-600",
+                };
+              }
+
+              return {
+                label: "—",
+                status: "Not Marked",
+                circle: "border-slate-300 text-slate-400",
+              };
+            };
+
+            const dayCounts = Array.from(
+              { length: daysInMonth },
+              (_, index) => getDayStatus(index + 1).status
+            ).reduce(
+              (counts, status) => {
+                counts[status] += 1;
+                return counts;
+              },
+              { Present: 0, Absent: 0, Leave: 0, "Not Marked": 0 } as Record<string, number>
+            );
+
+            return (
+              <>
+                <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {[
+                    { label: "Present Days", count: dayCounts.Present, style: "border-emerald-100 bg-emerald-50 text-emerald-700" },
+                    { label: "Absent Days", count: dayCounts.Absent, style: "border-rose-100 bg-rose-50 text-rose-700" },
+                    { label: "Leave Days", count: dayCounts.Leave, style: "border-amber-100 bg-amber-50 text-amber-700" },
+                    { label: "Not Marked", count: dayCounts["Not Marked"], style: "border-slate-200 bg-slate-50 text-slate-600" },
+                  ].map((item) => (
+                    <div key={item.label}className={`rounded-xl border p-2 text-center ${item.style}`}>
+                      <p className="text-xs font-medium">{item.label}</p>
+                    <p className="mt-1 text-xl font-bold">{item.count}</p>
+                    </div>
+                  ))}
+                </div>
+
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+                {Array.from(
+                  { length: daysInMonth },
+                  (_, i) => {
+                    const day = i + 1;
+                    const status = getDayStatus(day);
+                    const isNotMarked =
+                      status.status === "Not Marked";
+
+                    return (
+                      <div
+                        key={day}
+                       className="flex min-h-[95px] min-w-0 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-1.5 shadow-[0_1px_3px_rgba(15,23,42,0.12)] transition-shadow hover:shadow-md sm:min-h-[100px] sm:px-2"
+                      >
+                        <p className="text-[10px] font-semibold uppercase leading-4 text-slate-500 sm:text-[11px]">
+                          DAY {day}
+                        </p>
+
+                        {isNotMarked ? (
+                          <span className="mt-4 max-w-full rounded-md bg-slate-300 px-2.5 py-1 text-center text-[9px] font-semibold leading-3 text-slate-600 sm:text-[10px]">
+                            Not Marked
+                          </span>
+                        ) : (
+                          <div
+                            title={status.status}
+                            className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 bg-white text-sm font-semibold ${status.circle}`}
+                          >
+                            {status.label}
+                          </div>
+                        )}
+
+                        
+                      {/* <button
+  type="button"
+  onClick={() => openLocation(selectedStaff)}
+  disabled={isNotMarked}
+  title="View attendance location"
+  aria-label={`View location for day ${day}`}
+  className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-full transition hover:bg-red-50 ${
+    isNotMarked
+      ? "cursor-not-allowed opacity-40"
+      : "cursor-pointer"
+  }`}
+>
+  <MapPin className="h-4 w-4 text-red-500" />
+</button> */}
+
+                        {/* <button
+                          type="button"
+                          disabled={isNotMarked}
+                          onClick={() => {
+                            // Connect your existing day-edit handler here.
+                          }}
+                          className={`mt-0.5 rounded-full px-2.5 py-[3px] text-[9px] font-semibold leading-3 transition ${
+                            isNotMarked
+                              ? "cursor-not-allowed bg-slate-100 text-slate-300"
+                              : "bg-slate-700 text-white hover:bg-emerald-600"
+                          }`}
+                        >
+                          Edit
+                        </button> */}
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+              </>
+            );
+          })()
+        )}
+      </div>
     </div>
   </div>
 )}
 
+            <div className="grid grid-cols-2 gap-3">
 
-       
-        <div className="pt-4">
-          <button
-            disabled={
-              !attendance.status ||
-              (isLeave &&
-                (!leaveType ||
+              <div className="bg-gray-50 p-3 rounded-xl">
+                <LogIn className="text-green-600 mb-2" size={20}/>
+                <p className="text-xs text-gray-500">Check In</p>
+                <p className="font-bold">
+                  {formatTime(checkInTime)}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 p-3 rounded-xl">
+                <Coffee className="text-yellow-600 mb-2" size={20}/>
+                <p className="text-xs text-gray-500">Total Break</p>
+                <p className="font-bold">
+                  {formatDuration(totalBreakMinutes)}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 p-3 rounded-xl">
+                <Clock className="text-teal-600 mb-2" size={20}/>
+                <p className="text-xs text-gray-500">
+                  Working Time
+                </p>
+                <p className="font-bold">
+                  {state === "CheckedOut"
+                    ? formatDuration(totalWorkingMinutes)
+                    : "Calculated at checkout"}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 p-3 rounded-xl">
+                <LogOut className="text-red-500 mb-2" size={20}/>
+                <p className="text-xs text-gray-500">
+                  Check Out
+                </p>
+                <p className="font-bold">
+                  {formatTime(checkOutTime)}
+                </p>
+              </div>
+
+            </div>
+
+            {/* BREAK HISTORY */}
+            {breaks.length > 0 && (
+              <div className="space-y-2">
+
+                <h4 className="text-sm font-bold text-gray-700">
+                  Break History
+                </h4>
+
+                {breaks.map((item: any, index: number) => (
+
+                  <div
+                    key={index}
+                    className="flex justify-between items-center bg-yellow-50 rounded-lg px-3 py-2 text-sm"
+                  >
+                    <div>
+                      <p className="font-semibold">
+                        Break {item.BreakNumber}
+                      </p>
+
+                      <p className="text-xs text-gray-500">
+                        {formatTime(item.StartTime)} -{" "}
+                        {item.EndTime
+                          ? formatTime(item.EndTime)
+                          : "In Progress"}
+                      </p>
+                    </div>
+
+                    <span className="font-semibold text-gray-700">
+                      {item.EndTime
+                        ? formatDuration(item.DurationMinutes)
+                        : "Active"}
+                    </span>
+
+                  </div>
+                ))}
+
+              </div>
+            )}
+
+            {/* ACTION BUTTONS */}
+            {state === "Working" && (
+
+              <div className="grid grid-cols-2 gap-3">
+
+                <button
+                  disabled={loading}
+                  onClick={handleStartBreak}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white py-3 font-bold disabled:opacity-50"
+                >
+                  <Coffee size={18}/>
+                  Start Break
+                </button>
+
+                <button
+                  disabled={loading}
+                  onClick={handleCheckout}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white py-3 font-bold disabled:opacity-50"
+                >
+                  <LogOut size={18}/>
+                  Check Out
+                </button>
+
+              </div>
+            )}
+
+            {state === "OnBreak" && (
+
+              <button
+                disabled={loading}
+                onClick={handleEndBreak}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white py-3 font-bold disabled:opacity-50"
+              >
+                <Play size={18}/>
+                Resume Work
+              </button>
+            )}
+
+            {state === "CheckedOut" && (
+
+              <div className="bg-green-50 text-green-700 rounded-xl p-3 text-center font-semibold">
+                <CheckCircle className="inline mr-2" size={18}/>
+                Attendance completed for today.
+              </div>
+            )}
+
+          </div>
+
+        ) : (
+
+          <>
+            {/* ATTENDANCE STATUS */}
+            <div>
+
+<div className="flex items-center justify-between gap-3 mb-3">
+
+  <label className="text-xs font-semibold text-gray-500 uppercase">
+    Attendance Status
+  </label>
+
+  <button
+    type="button"
+onClick={() => openFullMonthAttendance(employee)}
+    className="shrink-0 rounded-lg border border-[#00A9A5] px-3 py-2 text-xs font-bold text-[#005f61] hover:bg-[#00A9A5]/10 transition-colors"
+  >
+    View Full Month Attendance
+  </button>
+
+</div>
+
+              
+
+              <div className="grid grid-cols-2 gap-3">
+
+                {[
+                  {
+                    label: "Present",
+                    value: "Present",
+                    icon: CheckCircle
+                  },
+                  {
+                    label: "Absent",
+                    value: "Absent",
+                    icon: XCircle
+                  },
+                  {
+                    label: "Half Day",
+                    value: "Half Day",
+                    icon: MinusCircle
+                  },
+                  {
+                    label: "Leave",
+                    value: "Leave",
+                    icon: ClipboardEdit
+                  }
+                ].map((item) => {
+
+                  const active =
+                    attendance.status === item.value;
+
+                  return (
+
+                    <button
+                      key={item.value}
+                      disabled={loading}
+                      onClick={() => {
+
+                        if (item.value === "Leave") {
+                          updateLeave(item.value);
+                        } else {
+                          setAttendance({
+                            ...attendance,
+                            status: item.value
+                          });
+                        }
+
+                      }}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-semibold ${
+                        active
+                          ? "bg-[#00A9A5]/10 border-[#00A9A5] text-[#005f61]"
+                          : "bg-gray-50 border-gray-200 text-gray-700"
+                      }`}
+                    >
+                      <item.icon size={18}/>
+                      {item.label}
+                    </button>
+
+                  );
+                })}
+
+              </div>
+
+            </div>
+
+            {/* DATE */}
+            {!isLeave ? (
+
+              <div>
+
+                <label className="text-xs font-semibold text-gray-500 uppercase">
+                  Date
+                </label>
+
+                <input
+                  type="date"
+                  value={attendance.date}
+                  max={getToday()}
+                  onChange={(e) =>
+                    setAttendance({
+                      ...attendance,
+                      date: e.target.value
+                    })
+                  }
+                  className="mt-1 w-full rounded-xl border px-4 py-3 text-sm"
+                />
+
+              </div>
+
+            ) : (
+
+              <div className="space-y-4">
+
+                {/* LEAVE BALANCE */}
+                <div className="rounded-xl bg-teal-50 p-3">
+
+                  {LoadingLeaves ? (
+                    <p className="text-sm text-gray-500">
+                      Loading leave information...
+                    </p>
+                  ) : (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span>Total Leaves</span>
+                        <strong>
+                          {totalLeaves + usedLeaves}
+                        </strong>
+                      </div>
+
+                      <div className="flex justify-between text-sm mt-1">
+                        <span>Remaining</span>
+                        <strong>{remainingLeaves}</strong>
+                      </div>
+
+                      <div className="flex gap-2 mt-3 flex-wrap text-xs">
+                        <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                          Casual: {CasualLeaves}
+                        </span>
+
+                        <span className="bg-pink-100 text-pink-700 px-2 py-1 rounded">
+                          Sick: {SickLeaves}
+                        </span>
+
+                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
+                          Other: {OtherLeaves}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                </div>
+
+                {/* LEAVE TYPE */}
+                <div>
+
+                  <label className="text-xs font-semibold text-gray-500">
+                    Leave Type
+                  </label>
+
+                  <select
+                    value={leaveType}
+                    onChange={(e) => {
+                      setLeaveType(e.target.value);
+
+                      if (e.target.value !== "Other") {
+                        setLeaveDescription("");
+                      }
+                    }}
+                    className="mt-1 w-full rounded-xl border px-4 py-3"
+                  >
+                    <option value="">Choose leave type</option>
+                    <option value="Casual">Casual Leave</option>
+                    <option value="Sick">Sick Leave</option>
+                    <option value="Other">Other</option>
+                  </select>
+
+                </div>
+
+                {leaveType === "Other" && (
+
+                  <textarea
+                    value={leaveDescription}
+                    onChange={(e) =>
+                      setLeaveDescription(e.target.value)
+                    }
+                    placeholder="Describe your leave reason"
+                    rows={3}
+                    className="w-full rounded-xl border p-3"
+                  />
+
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500">
+                      From Date
+                    </label>
+
+                    <input
+                      type="date"
+                      value={attendance.fromDate}
+                      onChange={(e) =>
+                        setAttendance({
+                          ...attendance,
+                          fromDate: e.target.value
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border px-3 py-3"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500">
+                      To Date
+                    </label>
+
+                    <input
+                      type="date"
+                      value={attendance.toDate}
+                      min={attendance.fromDate || undefined}
+                      onChange={(e) =>
+                        setAttendance({
+                          ...attendance,
+                          toDate: e.target.value
+                        })
+                      }
+                      className="mt-1 w-full rounded-xl border px-3 py-3"
+                    />
+                  </div>
+
+                </div>
+
+                <p className="text-sm text-teal-700 font-semibold">
+                  Total Leave Days: {totalDays || 0}
+                </p>
+
+                {leaveType === "Casual" && totalDays > 1 && (
+                  <p className="text-sm text-red-600">
+                    Casual leave can only be taken for one day.
+                  </p>
+                )}
+
+              </div>
+
+            )}
+
+            {/* SUBMIT */}
+            <button
+              disabled={
+                loading ||
+                !attendance.status ||
+                (isLeave && (
+                  !leaveType ||
                   !attendance.fromDate ||
                   !attendance.toDate ||
-                  (leaveType === "Other" && !leaveDescription.trim()) ||
-                  (leaveType === "Casual" && totalDays > 1)))
-            }
-            onClick={UpdateDailyAttendance}
-            className={`
-              w-full py-3 rounded-full text-sm font-bold text-white shadow-lg
-              ${
-                attendance.status
-                  ? "bg-gradient-to-r from-[#00A9A5] to-[#005f61]"
-                  : "bg-gray-300 cursor-not-allowed"
+                  totalDays < 1 ||
+                  (leaveType === "Other" &&
+                    !leaveDescription.trim()) ||
+                  (leaveType === "Casual" &&
+                    totalDays > 1)
+                ))
               }
-            `}
-          >
-            Submit Attendance
-          </button>
-          {/* <button
-  onClick={() =>
-    openAttendanceLocation(
-     17.5186369,
-     78.3962529
-    )
-  }
+              onClick={UpdateDailyAttendance}
+              className="w-full py-3 rounded-full text-sm font-bold text-white bg-gradient-to-r from-[#00A9A5] to-[#005f61] disabled:bg-gray-300 disabled:opacity-50"
+            >
+              {loading
+                ? "Processing..."
+                : attendance.status === "Present"
+                ? "Check In"
+                : "Submit Attendance"}
+            </button>
 
-  className="rounded-lg bg-blue-600 px-3 py-2 text-white disabled:opacity-50"
->
-  View Location
-</button> */}
-        </div>
+          </>
+
+        )}
+
+        {/* STATUS MESSAGE */}
+        {statusMessage && (
+
+          <div className="rounded-xl bg-gray-100 border px-4 py-3 text-center text-sm font-semibold text-gray-700">
+            {statusMessage}
+          </div>
+
+        )}
+
       </div>
+
     </div>
-      </div>
   );
 }

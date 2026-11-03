@@ -9343,13 +9343,75 @@ try{
 
 
 
-export const PostEmployeeAttendance = async (EmployInfo: any) => {
-  try {
-    const cluster = await clientPromise;
-    const db = cluster.db("CurateInformation");
 
-    const attendanceCollection = db.collection("EmployeesAttendance");
-    // const notificationCollection = db.collection("Notifications");
+
+/* =========================================
+   COMMON HELPERS
+========================================= */
+
+
+
+// Always calculate attendance date using India timezone.
+const getIndiaDate = (date = new Date()) => {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(date);
+};
+
+const getCreatedAt = (date = new Date()) => {
+  return date.toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  });
+};
+
+const isValidDateString = (value: any) => {
+  if (
+    typeof value !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(value)
+  ) {
+    return false;
+  }
+
+  const date = new Date(`${value}T00:00:00Z`);
+
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.toISOString().slice(0, 10) === value
+  );
+};
+
+const calculateDays = (fromDate: string, toDate: string) => {
+  const start = new Date(`${fromDate}T00:00:00Z`);
+  const end = new Date(`${toDate}T00:00:00Z`);
+
+  return (
+    Math.floor(
+      (end.getTime() - start.getTime()) / 86400000
+    ) + 1
+  );
+};
+
+/* =========================================
+   1. POST EMPLOYEE ATTENDANCE
+   Present / Absent / Half Day / Leave
+========================================= */
+
+export const PostEmployeeAttendance = async (
+  EmployInfo: any
+) => {
+  try {
+
+        const Cluster=await clientPromise
+   const Db = Cluster.db("CurateInformation");
+    const attendanceCollection = Db.collection("EmployeesAttendance");
+  
 
     const {
       userId,
@@ -9364,20 +9426,55 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
       leaveDescription
     } = EmployInfo;
 
-    /* ================= DAILY ATTENDANCE FLOW ================= */
+    if (!userId || !userName || !status) {
+      return {
+        success: false,
+        message: "Employee information is required."
+      };
+    }
+
+    /* =====================================
+       DAILY ATTENDANCE FLOW
+    ===================================== */
 
     if (status !== "Leave") {
-      // Require employee location
-      if (!location) {
+
+      if (!["Present", "Absent", "Half Day"].includes(status)) {
         return {
           success: false,
-          message: "Location is required to mark attendance.",
+          message: "Invalid attendance status."
         };
       }
 
-      const { latitude, longitude, accuracy } = location;
+      if (!isValidDateString(date)) {
+        return {
+          success: false,
+          message: "Invalid attendance date."
+        };
+      }
 
-      // Validate coordinates and accuracy
+      // Present check-in must be for today.
+      if (status === "Present" && date !== getIndiaDate()) {
+        return {
+          success: false,
+          message: "Check-in is allowed only for today's attendance."
+        };
+      }
+
+      // Preserve your existing GPS requirement.
+      if (!location) {
+        return {
+          success: false,
+          message: "Location is required to mark attendance."
+        };
+      }
+
+      const {
+        latitude,
+        longitude,
+        accuracy
+      } = location;
+
       if (
         typeof latitude !== "number" ||
         typeof longitude !== "number" ||
@@ -9393,165 +9490,650 @@ export const PostEmployeeAttendance = async (EmployInfo: any) => {
       ) {
         return {
           success: false,
-          message: "Invalid location data. Please try again.",
+          message: "Invalid location data. Please try again."
         };
       }
 
-      // Accept only reported accuracy of 10 meters or better
-
-
-      // Check existing attendance
+      // Check existing attendance.
       const exists = await attendanceCollection.findOne({
         UserId: userId,
-        AttendanceDate: date,
+        AttendanceDate: date
       });
 
       if (exists) {
         return {
           success: false,
-          message: "Attendance already marked for today",
+          message: "Attendance already marked for this date."
         };
       }
 
-      // Insert attendance with location
+      const now = new Date();
+
+      /* =================================
+         PRESENT ATTENDANCE
+      ================================= */
+
+      if (status === "Present") {
+
+        const attendanceDocument = {
+          UserId: userId,
+          EmployeeName: userName,
+          Status: "Present",
+
+          AttendanceDate: date,
+          Month: Month || date.slice(0, 7),
+
+          // Preserve existing field for old reports.
+          Location: {
+            Latitude: latitude,
+            Longitude: longitude,
+            Accuracy: accuracy,
+            CapturedAt: now
+          },
+
+          // New check-in information.
+          CheckIn: {
+            Time: now,
+            Location: {
+              Latitude: latitude,
+              Longitude: longitude,
+              Accuracy: accuracy
+            }
+          },
+
+          // Break management.
+          Breaks: [],
+
+          // Checkout information.
+          CheckOut: {
+            Time: null
+          },
+
+          // Employee workflow status.
+          AttendanceState: "Working",
+
+          TotalBreakMinutes: 0,
+          TotalWorkingMinutes: 0,
+
+          ApprovalStatus: "Approved",
+
+          CreatedAt: getCreatedAt(now)
+        };
+
+        const result =
+          await attendanceCollection.insertOne(
+            attendanceDocument
+          );
+
+        return {
+          success: true,
+          message: "Attendance marked successfully.",
+          insertedId: result.insertedId.toString()
+        };
+      }
+
+      /* =================================
+         ABSENT / HALF DAY
+         Preserve existing attendance format.
+      ================================= */
+
       const result = await attendanceCollection.insertOne({
         UserId: userId,
         EmployeeName: userName,
         Status: status,
+
         AttendanceDate: date,
-        Month:Month,
+        Month: Month || date.slice(0, 7),
 
         Location: {
           Latitude: latitude,
           Longitude: longitude,
           Accuracy: accuracy,
-          CapturedAt: new Date(),
+          CapturedAt: now
         },
 
         ApprovalStatus: "Approved",
-       CreatedAt: new Date().toLocaleTimeString("en-IN", {
-  timeZone: "Asia/Kolkata",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-  hour12: true,
-}),
+        CreatedAt: getCreatedAt(now)
       });
 
       return {
         success: true,
-        message: "Attendance marked successfully",
-        insertedId: result.insertedId.toString(),
+        message: `${status} attendance marked successfully.`,
+        insertedId: result.insertedId.toString()
       };
     }
 
-    /* ================= LEAVE FLOW (ONE RECORD) ================= */
+    /* =====================================
+       LEAVE FLOW
+       ONE RECORD IN SAME COLLECTION
+    ===================================== */
 
-    const start = new Date(fromDate);
-    const end = new Date(toDate);
+    if (!userId || !userName) {
+      return {
+        success: false,
+        message: "Employee information is required."
+      };
+    }
 
     if (
-      !fromDate ||
-      !toDate ||
-      Number.isNaN(start.getTime()) ||
-      Number.isNaN(end.getTime()) ||
-      start > end
+      !isValidDateString(fromDate) ||
+      !isValidDateString(toDate) ||
+      fromDate > toDate
     ) {
       return {
         success: false,
-        message: "Invalid leave date range",
+        message: "Invalid leave date range."
       };
     }
 
-    // Calculate total leave days
-    const totalDays =
-      Math.floor(
-        (end.getTime() - start.getTime()) /
-          (1000 * 60 * 60 * 24)
-      ) + 1;
+    if (!["Casual", "Sick", "Other"].includes(leaveType)) {
+      return {
+        success: false,
+        message: "Invalid leave type."
+      };
+    }
 
-    /* BLOCK OVERLAPPING PENDING LEAVE */
+    if (
+      leaveType === "Other" &&
+      !leaveDescription?.trim()
+    ) {
+      return {
+        success: false,
+        message: "Please provide leave description."
+      };
+    }
 
-    const overlappingLeave = await attendanceCollection.findOne({
-      UserId: userId,
-      Status: "Leave",
-      ApprovalStatus: "Pending",
-      $or: [
-        { FromDate: { $lte: toDate, $gte: fromDate } },
-        { ToDate: { $gte: fromDate, $lte: toDate } },
-        {
-          $and: [
-            { FromDate: { $lte: fromDate } },
-            { ToDate: { $gte: toDate } },
-          ],
-        },
-      ],
-    });
+    const totalDays = calculateDays(fromDate, toDate);
+
+    if (leaveType === "Casual" && totalDays > 1) {
+      return {
+        success: false,
+        message: "Casual leave can only be taken for one day."
+      };
+    }
+
+    /* =================================
+       BLOCK OVERLAPPING PENDING LEAVES
+    ================================= */
+
+    const overlappingLeave =
+      await attendanceCollection.findOne({
+        UserId: userId,
+        Status: "Leave",
+        ApprovalStatus: "Pending",
+
+        FromDate: { $lte: toDate },
+        ToDate: { $gte: fromDate }
+      });
 
     if (overlappingLeave) {
       return {
-        success: true,
+        success: false,
         message:
-          "A leave request for the selected dates is already submitted and pending approval.",
+          "A leave request for the selected dates is already submitted and pending approval."
       };
     }
 
-    /* INSERT SINGLE LEAVE RECORD */
+    /* =================================
+       INSERT LEAVE
+    ================================= */
 
-    const leaveResult = await attendanceCollection.insertOne({
-      UserId: userId,
-      EmployeeName: userName,
-      Status: "Leave",
-      FromDate: fromDate,
-      leaveType:leaveType,
-      Description:leaveDescription,
-      AttendanceDate:fromDate,
-      ToDate: toDate,
-      TotalDays: totalDays,
-      ApprovalStatus: "Pending",
-      Month:Month,
-      ApprovedBy: null,
-      ApprovedAt: null,
-        CreatedAt: new Date().toLocaleTimeString("en-IN", {
-  timeZone: "Asia/Kolkata",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-  hour12: true,
-}),
-    });
+    const now = new Date();
 
-    /* INSERT NOTIFICATION */
+    const leaveResult =
+      await attendanceCollection.insertOne({
+        UserId: userId,
+        EmployeeName: userName,
 
-    // await notificationCollection.insertOne({
-    //   Type: "LEAVE_REQUEST",
-    //   LeaveId: leaveResult.insertedId.toString(),
-    //   UserId: userId,
-    //   EmployeeName: userName,
-    //   FromDate: fromDate,
-    //   ToDate: toDate,
-    //   TotalDays: totalDays,
-    //   Status: "Pending",
-    //   Message: `${userName} requested leave from ${fromDate} to ${toDate}`,
-    //   IsRead: false,
-    //   ActionTaken: false,
-    //   CreatedAt: new Date(),
-    // });
+        Status: "Leave",
+
+        FromDate: fromDate,
+        ToDate: toDate,
+
+        AttendanceDate: fromDate,
+
+        leaveType: leaveType,
+        Description: leaveDescription || "",
+
+        TotalDays: totalDays,
+
+        ApprovalStatus: "Pending",
+
+        Month: Month || fromDate.slice(0, 7),
+
+        ApprovedBy: null,
+        ApprovedAt: null,
+
+        CreatedAt: getCreatedAt(now)
+      });
 
     return {
       success: true,
-      message: "Leave request sent for manager approval",
+      message: "Leave request sent for manager approval.",
       daysRequested: totalDays,
+      insertedId: leaveResult.insertedId.toString()
     };
+
   } catch (err: any) {
-    console.error("PostEmployeeAttendance Error:", err);
+
+    console.error(
+      "PostEmployeeAttendance Error:",
+      err
+    );
+
+    // Duplicate key protection.
+    if (err?.code === 11000) {
+      return {
+        success: false,
+        message: "Attendance already exists for this date."
+      };
+    }
 
     return {
       success: false,
-      message: "Failed to submit attendance or leave request",
+      message: "Failed to submit attendance or leave request."
     };
   }
 };
+
+/* =========================================
+   2. START EMPLOYEE BREAK
+   Multiple breaks supported
+========================================= */
+
+export const StartEmployeeBreak = async (
+  userId: string
+) => {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        message: "User ID is required."
+      };
+    }
+    const Cluster=await clientPromise
+   const Db = Cluster.db("CurateInformation");
+    const collection = Db.collection("EmployeesAttendance");
+  
+
+    const today = getIndiaDate();
+    const now = new Date();
+
+    /*
+      Atomic MongoDB update.
+
+      Only an employee currently in Working
+      state can start a break.
+
+      BreakNumber is calculated inside MongoDB,
+      avoiding duplicate numbering during concurrent requests.
+    */
+
+    const result = await collection.updateOne(
+      {
+        UserId: userId,
+        AttendanceDate: today,
+        Status: "Present",
+        AttendanceState: "Working",
+        "CheckOut.Time": null
+      },
+      [
+        {
+          $set: {
+            Breaks: {
+              $concatArrays: [
+                { $ifNull: ["$Breaks", []] },
+                [
+                  {
+                    BreakNumber: {
+                      $add: [
+                        {
+                          $size: {
+                            $ifNull: ["$Breaks", []]
+                          }
+                        },
+                        1
+                      ]
+                    },
+                    StartTime: { $literal: now },
+                    EndTime: null,
+                    DurationMinutes: 0
+                  }
+                ]
+              ]
+            },
+            AttendanceState: "OnBreak"
+          }
+        }
+      ] as any
+    );
+
+    if (result.modifiedCount === 0) {
+      return {
+        success: false,
+        message:
+          "Cannot start break. You are not currently working or have already started a break."
+      };
+    }
+
+    return {
+      success: true,
+      message: "Break started successfully."
+    };
+
+  } catch (err: any) {
+
+    console.error("StartEmployeeBreak Error:", err);
+
+    return {
+      success: false,
+      message: "Unable to start break."
+    };
+  }
+};
+
+/* =========================================
+   3. END EMPLOYEE BREAK
+   Resume Work
+========================================= */
+
+export const EndEmployeeBreak = async (
+  userId: string
+) => {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        message: "User ID is required."
+      };
+    }
+
+     const Cluster=await clientPromise
+   const Db = Cluster.db("CurateInformation");
+    const collection = Db.collection("EmployeesAttendance");
+
+    const today = getIndiaDate();
+
+    const attendance = await collection.findOne({
+      UserId: userId,
+      AttendanceDate: today,
+      Status: "Present",
+      AttendanceState: "OnBreak",
+      "CheckOut.Time": null
+    });
+
+    if (!attendance) {
+      return {
+        success: false,
+        message: "No active break found."
+      };
+    }
+
+    const breaks = attendance.Breaks || [];
+
+    const activeIndex = breaks.findIndex(
+      (item: any) => item.EndTime == null
+    );
+
+    if (activeIndex === -1) {
+      return {
+        success: false,
+        message: "No active break found."
+      };
+    }
+
+    const now = new Date();
+
+    const startTime = new Date(
+      breaks[activeIndex].StartTime
+    );
+
+    if (
+      Number.isNaN(startTime.getTime()) ||
+      startTime.getTime() > now.getTime()
+    ) {
+      return {
+        success: false,
+        message: "Invalid break start time."
+      };
+    }
+
+    const durationMinutes = Math.floor(
+      (now.getTime() - startTime.getTime()) / 60000
+    );
+
+    /*
+      Update only the active break.
+
+      The filter prevents a second request from
+      completing the same break again.
+    */
+
+    const result = await collection.updateOne(
+      {
+        _id: attendance._id,
+        AttendanceState: "OnBreak",
+        [`Breaks.${activeIndex}.EndTime`]: null
+      },
+      {
+        $set: {
+          [`Breaks.${activeIndex}.EndTime`]: now,
+
+          [`Breaks.${activeIndex}.DurationMinutes`]:
+            durationMinutes,
+
+          AttendanceState: "Working"
+        },
+
+        $inc: {
+          TotalBreakMinutes: durationMinutes
+        }
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return {
+        success: false,
+        message: "Break already completed. Please refresh."
+      };
+    }
+
+    return {
+      success: true,
+      message: `Break completed successfully. Duration: ${durationMinutes} minutes.`,
+      durationMinutes
+    };
+
+  } catch (err: any) {
+
+    console.error("EndEmployeeBreak Error:", err);
+
+    return {
+      success: false,
+      message: "Unable to end break."
+    };
+  }
+};
+
+/* =========================================
+   4. EMPLOYEE CHECKOUT
+   No GPS required
+========================================= */
+
+export const CheckoutEmployee = async (
+  userId: string
+) => {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        message: "User ID is required."
+      };
+    }
+
+    const Cluster=await clientPromise
+   const Db = Cluster.db("CurateInformation");
+    const collection = Db.collection("EmployeesAttendance");
+
+    const today = getIndiaDate();
+    const now = new Date();
+
+    const attendance = await collection.findOne({
+      UserId: userId,
+      AttendanceDate: today,
+      Status: "Present",
+      AttendanceState: "Working",
+      "CheckOut.Time": null
+    });
+
+    if (!attendance) {
+      return {
+        success: false,
+        message:
+          "You must be checked in and not on an active break to checkout."
+      };
+    }
+
+    const checkInTime = new Date(
+      attendance.CheckIn?.Time
+    );
+
+    if (
+      Number.isNaN(checkInTime.getTime()) ||
+      checkInTime.getTime() > now.getTime()
+    ) {
+      return {
+        success: false,
+        message: "Invalid check-in time."
+      };
+    }
+
+    // Total elapsed time.
+    const totalDuration = Math.floor(
+      (now.getTime() - checkInTime.getTime()) / 60000
+    );
+
+    // Total completed break time.
+    const totalBreakMinutes = Number(
+      attendance.TotalBreakMinutes || 0
+    );
+
+    // Net working time.
+    const totalWorkingMinutes = Math.max(
+      0,
+      totalDuration - totalBreakMinutes
+    );
+
+    /*
+      Atomic checkout.
+
+      If another request checks out first,
+      this update will not modify the record.
+    */
+
+    const result = await collection.updateOne(
+      {
+        _id: attendance._id,
+        AttendanceState: "Working",
+        "CheckOut.Time": null
+      },
+      {
+        $set: {
+          "CheckOut.Time": now,
+
+          AttendanceState: "CheckedOut",
+
+          TotalBreakMinutes: totalBreakMinutes,
+
+          TotalWorkingMinutes: totalWorkingMinutes
+        }
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return {
+        success: false,
+        message: "Checkout already completed or attendance changed."
+      };
+    }
+
+    const hours = Math.floor(
+      totalWorkingMinutes / 60
+    );
+
+    const minutes = totalWorkingMinutes % 60;
+
+    return {
+      success: true,
+      message:
+        `Checkout successful. Working time: ${hours}h ${minutes}m.`,
+
+      totalDurationMinutes: totalDuration,
+      totalBreakMinutes,
+      totalWorkingMinutes
+    };
+
+  } catch (err: any) {
+
+    console.error("CheckoutEmployee Error:", err);
+
+    return {
+      success: false,
+      message: "Unable to checkout."
+    };
+  }
+};
+
+/* =========================================
+   5. GET TODAY'S EMPLOYEE ATTENDANCE
+========================================= */
+
+export const GetTodayAttendance = async (
+  userId: string
+) => {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        message: "User ID is required."
+      };
+    }
+     const Cluster=await clientPromise
+   const Db = Cluster.db("CurateInformation");
+    const collection = Db.collection("EmployeesAttendance");
+
+    const today = getIndiaDate();
+
+    const attendance = await collection.findOne({
+      UserId: userId,
+      AttendanceDate: today
+    });
+
+    if (!attendance) {
+      return {
+        success: true,
+        data: null
+      };
+    }
+
+    return {
+      success: true,
+      data: JSON.parse(
+        JSON.stringify(attendance)
+      )
+    };
+
+  } catch (err: any) {
+
+    console.error("GetTodayAttendance Error:", err);
+
+    return {
+      success: false,
+      message: "Unable to fetch today's attendance."
+    };
+  }
+};
+
 
 
 
