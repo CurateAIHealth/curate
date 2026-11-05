@@ -9,6 +9,7 @@ import {
   ReceiptIndianRupee,
   HandCoins,
   Building2,
+  WalletCards,
   BadgeCheck,
   CircleX,
   CheckCircle2,
@@ -54,6 +55,12 @@ export default function AccountingSub(){
       count: stats.ClientPaymentCount || 0,
       icon: Building2,
       bg: "bg-cyan-500",
+    },
+    {
+      name: "Staff Payment",
+      count: stats.StaffPaymentCount || 0,
+      icon: WalletCards,
+      bg: "bg-purple-500",
     },
     // {
     //   name: "Payable",
@@ -114,6 +121,7 @@ const routeMap: Record<string, () => void> = {
   RevenueAnalytics: () => router.replace("/RevenueAnalytics"),
   "HCA Payment": () => router.replace("/HCAAccounts"),
   "Client Payment": () => router.replace("/ClientPayment"),
+  "Staff Payment": () => router.replace("/StaffPayment"),
   Invoices: () => router.replace("/Invoices")
 };
 
@@ -169,7 +177,7 @@ setIsNavigating(true);
        
 
             <button
-              onClick={handleLogout}
+            onClick={() => router.back()}
               className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
             >
               DashBoard

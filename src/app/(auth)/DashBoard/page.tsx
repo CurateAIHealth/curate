@@ -983,6 +983,50 @@ const Switching = (tab: string) => {
   setIsNavigating(false);
 };
 
+
+const SubmitExpense = async (formData: any) => {
+  try {
+    
+
+    const response = await axios.post("/api/expenses", formData);
+
+    const result = response.data;
+
+    if (!result?.success) {
+      throw new Error(result?.message || "Expense submission failed.");
+    }
+
+    alert("Expense submitted successfully!");
+    setOpenExpense(false);
+
+    return {
+      success: true,
+      message: result.message || "Expense submitted successfully.",
+      data: result.data ?? null,
+      expenseId: result.expenseId ?? null,
+    };
+
+  } catch (error: unknown) {
+    console.error("Submit Expense Error:", error);
+
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.message ||
+        (!error.response
+          ? "Network error. Please check your internet connection."
+          : "Unable to submit expense. Please try again.")
+      );
+    }
+
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Something went wrong while submitting expense."
+    );
+  }
+};
+
+
   const PostNotificationInfo = async (Emails: string[]) => {
     try {
       setNotificationStatus("Please Wait.....")
@@ -1233,7 +1277,7 @@ const Switching = (tab: string) => {
     className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
   >
     <ClipboardCheck size={16} className="text-slate-500" />
-    Attendance
+    My Attendance
   </button>
 
   {/* Skills */}
@@ -1456,7 +1500,7 @@ onClick={async () => {
         {openExpense && (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
             <PostExpense
-              employeeId="EMP123"
+              employeeId={localStorage.getItem("UserId") || ""}
               employeeName={ProfileName}
               expenseTypes={[
                 "Travel",
@@ -1465,7 +1509,7 @@ onClick={async () => {
                 "Medical",
                 "Other",
               ]}
-              onSubmit={(data) => console.log(data)}
+              onSubmit={(data) =>SubmitExpense(data)}
               onClose={() => setOpenExpense(false)}
             />
           </div>

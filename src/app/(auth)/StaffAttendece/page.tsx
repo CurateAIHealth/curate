@@ -23,6 +23,13 @@ type Employee = {
   Longitude: number;
 };
 
+type EmployeeBreak = {
+  BreakNumber: number;
+  StartTime?: string;
+  EndTime?: string;
+  DurationMinutes?: number;
+};
+
 type EmployeeAttendance = {
   Description: any;
   LeaveType: any;
@@ -37,8 +44,20 @@ type EmployeeAttendance = {
   Location?: AttendanceLocation;
   ApprovalStatus?: "Approved" | "Pending" | "Rejected";
   CreatedAt?: string;
-  CheckoutAt?: string;
-  
+
+  CheckIn?: {
+    Time?: string;
+    Location?: AttendanceLocation;
+  };
+
+  CheckOut?: {
+    Time?: string;
+  };
+
+  Breaks?: EmployeeBreak[];
+  TotalBreakMinutes?: number;
+  TotalWorkingMinutes?: number;
+  AttendanceState?: string;
 };
 
 // const employeeRoster: Employee[] = [
@@ -84,7 +103,38 @@ function formatTime(value?: string) {
   if (Number.isNaN(date.getTime())) return "—";
   return date.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: true });
 }
+function formatWorkingHours(minutes?: number) {
+  if (minutes == null || !Number.isFinite(Number(minutes))) {
+    return "—";
+  }
 
+  const total = Math.max(0, Number(minutes));
+  const hours = Math.floor(total / 60);
+  const mins = total % 60;
+
+  return `${hours}h ${mins}m`;
+}
+
+function getBreakDuration(breakItem: EmployeeBreak) {
+  if (breakItem.DurationMinutes != null && breakItem.DurationMinutes > 0) {
+    return `${breakItem.DurationMinutes} min`;
+  }
+
+  // Handle short breaks that were rounded down to zero minutes.
+  if (breakItem.StartTime && breakItem.EndTime) {
+    const seconds =
+      (new Date(breakItem.EndTime).getTime() -
+        new Date(breakItem.StartTime).getTime()) / 1000;
+
+    if (Number.isFinite(seconds) && seconds > 0) {
+      return seconds < 60
+        ? "<1 min"
+        : `${Math.floor(seconds / 60)} min`;
+    }
+  }
+
+  return "—";
+}
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     Present: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -162,24 +212,40 @@ useEffect(() => {
         selectedDate,
       });
 
-      const filtered = response.data.AttendeceResuls.map(
-        (each: any) => ({
-          UserId: each.UserId,
-          EmployeeName: each.EmployeeName?.trim() || "Unknown",
-          Area: each.Area || "—",
-          Latitude: each.Location?.Latitude ?? null,
-          Longitude: each.Location?.Longitude ?? null,
-          CreatedAt:each.CreatedAt,
-          Status:each.Status,
-          ApprovalStatus:each.ApprovalStatus,
-          TotalDays:each.TotalDays,
-           ToDate: each.ToDate,
-           Month:each.Month,
-  FromDate: each.FromDate,
-  LeaveType:each.leaveType,
-  Description:each.Description
-        })
-      );
+  const filtered = response.data.AttendeceResuls.map(
+  (each: any) => ({
+    UserId: each.UserId,
+    EmployeeName: each.EmployeeName?.trim() || "Unknown",
+    Area: each.Area || "—",
+
+    Latitude: each.Location?.Latitude ?? null,
+    Longitude: each.Location?.Longitude ?? null,
+    Location: each.Location ?? null,
+
+    CreatedAt: each.CreatedAt,
+    Status: each.Status,
+    ApprovalStatus: each.ApprovalStatus,
+
+    // Check-in and check-out
+    CheckIn: each.CheckIn ?? null,
+    CheckOut: each.CheckOut ?? null,
+
+    // Break information
+    Breaks: Array.isArray(each.Breaks) ? each.Breaks : [],
+    TotalBreakMinutes: each.TotalBreakMinutes ?? 0,
+
+    // Working hours
+    TotalWorkingMinutes: each.TotalWorkingMinutes ?? 0,
+    AttendanceState: each.AttendanceState,
+
+    TotalDays: each.TotalDays,
+    ToDate: each.ToDate,
+    Month: each.Month,
+    FromDate: each.FromDate,
+    LeaveType: each.leaveType,
+    Description: each.Description,
+  })
+);
 
       cachedAttendeceInfo = {
         date: selectedDate,
@@ -208,6 +274,8 @@ useEffect(() => {
     isMounted = false;
   };
 }, [selectedDate]);
+
+console.log("employeeRoster:", employeeRoster);
 const updateLeave = async (ImpValue: any) => {
  setLeaveBalanceStaff(ImpValue)
           setLoadingLeaves(true);
@@ -283,9 +351,14 @@ function makeTestAttendance(date: string): EmployeeAttendance[] {
       FromDate:employee.FromDate,
       Month:employee.Month,
       ToDate:employee.ToDate,
-       CreatedAt: employee.CreatedAt,
-            CheckoutAt: checkoutAt,
-            ApprovalStatus: employee.ApprovalStatus,
+      CreatedAt: employee.CreatedAt,
+CheckIn: employee.CheckIn,
+CheckOut: employee.CheckOut,
+Breaks: employee.Breaks ?? [],
+TotalBreakMinutes: employee.TotalBreakMinutes ?? 0,
+TotalWorkingMinutes: employee.TotalWorkingMinutes ?? 0,
+AttendanceState: employee.AttendanceState,
+ApprovalStatus: employee.ApprovalStatus,
       ...(status ? { Status: status } : {}),
       ...(hasLocation
         ? {
@@ -893,96 +966,153 @@ const updateLeaveBalance = async () => {
         </div>
 
         {/* Information Panel */}
-        <div className="mx-3 mb-3 rounded-xl bg-slate-50 p-3 sm:mx-4 sm:mb-4 sm:p-4">
-          <div
-            className={`grid gap-3 ${
-              status === "Leave"
-                ? "grid-cols-1"
-                : "grid-cols-1"
-            }`}
-          >
-            {/* Applied At / Check-in */}
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-slate-500">
-                {status === "Leave" ? "Applied At" : "Check-in"}
-              </p>
+       {/* Information Panel */}
+<div className="mx-3 mb-3 rounded-xl bg-slate-50 p-3 sm:mx-4 sm:mb-4 sm:p-4">
 
-              <p className="mt-1 break-words text-sm font-semibold text-slate-800">
-                {employee.CreatedAt || "—"}
-              </p>
-            </div>
+  {status === "Leave" ? (
+    <>
+      {/* Keep your existing Leave Dates JSX here */}
+    </>
+  ) : (
+    <div className="space-y-3">
 
-            {/* Leave Dates */}
-            {status === "Leave" && (
-              <div className="border-t border-slate-200 pt-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.8}
-                    >
-                      <rect x="3" y="5" width="18" height="16" rx="2" />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16 3v4M8 3v4M3 10h18"
-                      />
-                    </svg>
+      {/* Check-in and Check-out */}
+      <div className="grid grid-cols-2 gap-3">
+
+        {/* Check-in */}
+        <div className="rounded-lg border border-emerald-100 bg-white p-3">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <p className="text-xs font-medium text-slate-500">
+              Check-in
+            </p>
+          </div>
+
+          <p className="mt-2 text-sm font-bold text-slate-800">
+            {employee.CheckIn?.Time
+              ? formatTime(employee.CheckIn.Time)
+              : "—"}
+          </p>
+        </div>
+
+        {/* Check-out */}
+        <div className="rounded-lg border border-rose-100 bg-white p-3">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-rose-500" />
+            <p className="text-xs font-medium text-slate-500">
+              Check-out
+            </p>
+          </div>
+
+          <p className="mt-2 text-sm font-bold text-slate-800">
+            {employee.CheckOut?.Time
+              ? formatTime(employee.CheckOut.Time)
+              : "Not checked out"}
+          </p>
+        </div>
+
+      </div>
+
+      {/* Total Working Hours */}
+      <div className="flex items-center justify-between rounded-lg border border-indigo-100 bg-white p-3">
+        <div>
+          <p className="text-xs font-medium text-slate-500">
+            Total Working Hours
+          </p>
+
+          <p className="mt-1 text-lg font-bold text-indigo-700">
+            {formatWorkingHours(employee.TotalWorkingMinutes)}
+          </p>
+        </div>
+
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+          <Clock className="h-5 w-5" />
+        </div>
+      </div>
+
+      {/* Break Information */}
+      <div className="rounded-lg border border-amber-100 bg-white p-3">
+
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-amber-600" />
+
+            <p className="text-xs font-semibold text-slate-700">
+              Breaks
+            </p>
+          </div>
+
+          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+            {employee.Breaks?.length ?? 0} Breaks
+          </span>
+        </div>
+
+        {employee.Breaks && employee.Breaks.length > 0 ? (
+          <div className="space-y-2">
+
+            {employee.Breaks.map((breakItem, index) => (
+              <div
+                key={breakItem.BreakNumber ?? index}
+                className="rounded-lg bg-slate-50 p-3"
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-xs font-semibold text-slate-700">
+                    Break {breakItem.BreakNumber ?? index + 1}
+                  </p>
+
+                  <span className="text-xs font-semibold text-amber-700">
+                    {getBreakDuration(breakItem)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+
+                  <div>
+                    <p className="text-[11px] text-slate-400">
+                      Started
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-slate-700">
+                      {formatTime(breakItem.StartTime)}
+                    </p>
                   </div>
 
-                <div className="space-y-1">
-  <p className="text-sm font-semibold text-slate-800">
-    Leave Period
-  </p>
+                  <div>
+                    <p className="text-[11px] text-slate-400">
+                      Ended
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-slate-700">
+                      {breakItem.EndTime
+                        ? formatTime(breakItem.EndTime)
+                        : "Ongoing"}
+                    </p>
+                  </div>
 
-  <p className="text-sm text-slate-600">
-    <span className="text-slate-800  font-bold">Leave Type:</span> {employee.LeaveType}
-  </p>
-
-  {employee.LeaveType === "Other" && (
-    <p className="text-sm text-slate-500">
-      {employee.Description}
-    </p>
-  )}
-
-  <p className="pt-1 text-xs text-slate-500">
-    Requested Dates
-  </p>
-</div>
-                </div>
-
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <span className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 sm:text-sm">
-                    {employee.FromDate || "—"}
-                  </span>
-
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 shrink-0 text-slate-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 12h14m-7-7 7 7-7 7"
-                    />
-                  </svg>
-
-                  <span className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 sm:text-sm">
-                    {employee.ToDate || "—"}
-                  </span> <span>{getDaysBetween(employee.FromDate,employee.ToDate)} days</span>
                 </div>
               </div>
-            )}
+            ))}
+
+            <div className="flex items-center justify-between border-t border-slate-100 pt-2">
+              <span className="text-xs font-medium text-slate-500">
+                Total Break Duration
+              </span>
+
+              <span className="text-xs font-bold text-amber-700">
+                {formatWorkingHours(employee.TotalBreakMinutes)}
+              </span>
+            </div>
+
           </div>
-        </div>
+        ) : (
+          <p className="py-2 text-center text-xs text-slate-400">
+            No breaks taken
+          </p>
+        )}
+
+      </div>
+
+    </div>
+  )}
+</div>
 
         {/* Leave Approval */}
         {status === "Leave" &&
