@@ -1350,7 +1350,7 @@ const formatCurrency = (
         ];
 
   // Total days in the selected month
-  const daysInMonth = getDaysInMonth(searchMonth, searchYear);
+  const daysInMonth = 30
 
   let total = 0;
 
@@ -1401,7 +1401,7 @@ const formatCurrency = (
     // Calculate daily salary
     // --------------------------------------------------
 
-const dailySalary = Math.round(salary / daysInMonth);
+const dailySalary = Math.floor(salary / daysInMonth);
     // --------------------------------------------------
     // Attendance status
     // --------------------------------------------------
@@ -1438,7 +1438,7 @@ const dailySalary = Math.round(salary / daysInMonth);
   });
 
   // Round only final amount
-  return Math.round(total);
+  return Math.floor(total);
 };
 
 const handleSave = async (row: any) => {
@@ -1673,12 +1673,12 @@ const handleChange = (
     }
 
   return (
-    <div className="w-full min-h-screen bg-[#f4f7fb] p-3 md:p-2 overflow-x-hidden">
+    <div className="w-full min-h-screen bg-[#f4f7fb] p-2 sm:p-3 lg:p-4 overflow-x-hidden">
       <div className="flex flex-wrap items-center gap-4 mb-6">
-        <div className="relative flex items-center justify-between w-full rounded-2xl bg-white p-4 shadow-sm">
+        <div className="relative flex flex-wrap items-center justify-between gap-3 w-full rounded-2xl bg-white p-3 sm:p-4 shadow-sm">
 
   {/* Left */}
-  <div className="flex items-center gap-3">
+  <div className="flex min-w-0 items-center gap-2 sm:gap-3">
     {/* Mobile Menu */}
     <button
       onClick={() => setMenuOpen(!menuOpen)}
@@ -1796,14 +1796,14 @@ const handleChange = (
         
         <div className="flex flex-wrap gap-3 w-full justify-between items-center">
          
-<div className="flex w-full flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+  <div className="flex w-full min-w-0 flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
   {/* Left Section */}
-  <div className="flex flex-wrap gap-3">
+  <div className="flex flex-wrap gap-2 sm:gap-3">
     {statuses.map((status) => (
       <button
         key={status}
         onClick={() => setActiveStatus(status)}
-        className={`rounded-xl px-5 cursor-pointer py-2.5 text-sm font-semibold transition-all duration-200 border whitespace-nowrap
+        className={`rounded-xl px-3 sm:px-5 cursor-pointer py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 border whitespace-nowrap
           ${
             activeStatus === status
               ? "bg-teal-600 text-white border-teal-600 shadow-lg scale-105"
@@ -1816,7 +1816,7 @@ const handleChange = (
   </div>
 
   {/* Right Section */}
-  <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
+  <div className="grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:flex xl:items-center xl:w-auto">
     <div className="w-full relative md:col-span-2">
      
       
@@ -1840,7 +1840,7 @@ const handleChange = (
         </select>
       </div>
     {/* Search */}
-    <div className="relative w-full sm:min-w-[260px] xl:min-w-[320px]">
+    <div className="relative w-full min-w-0 sm:col-span-2 xl:w-80">
       <Search
         size={16}
         className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -1857,7 +1857,7 @@ const handleChange = (
     </div>
 
     {/* Filters */}
-    <div className="flex gap-3 sm:w-auto">
+    <div className="flex min-w-0 gap-2 sm:w-auto sm:col-span-2 xl:col-span-1">
       <select
         value={SearchMonth}
         onChange={(e) => GetMonthFreshData(e.target.value)}
@@ -1911,7 +1911,7 @@ const handleChange = (
     <div className="w-full bg-white rounded-2xl shadow-md overflow-hidden">
       {showFullMonth && (
   <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-2">
-    <div className="bg-white w-[70vw] h-[96vh] rounded-xl shadow-xl overflow-hidden flex flex-col">
+    <div className="bg-white w-full max-w-6xl h-[96dvh] rounded-xl shadow-xl overflow-hidden flex flex-col">
       {(() => {
        
         const attendanceSummary = attendanceInfo.attendanceInfo?.reduce(
@@ -1976,8 +1976,8 @@ const handleChange = (
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 px-4 py-3 bg-gray-50 shrink-0">
-              <div className="rounded-lg bg-[#f0fdf4] border border-[#dcfce7] p-3 text-center">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 px-2 sm:px-4 py-3 bg-gray-50 shrink-0">
+              <div className="rounded-lg bg-[#f0fdf4] border border-[#dcfce7] p-2 sm:p-3 text-center">
                 <p className="text-xs text-[#16a34a] font-medium">
                   Present Days
                 </p>
@@ -1986,14 +1986,14 @@ const handleChange = (
                 </p>
               </div>
 
-              <div className="rounded-lg bg-[#fffbeb] border border-[#fde68a] p-3 text-center">
+              <div className="rounded-lg bg-[#fffbeb] border border-[#fde68a] p-2 sm:p-3 text-center">
                 <p className="text-xs text-[#d97706] font-medium">Half Days</p>
                 <p className="text-xl font-bold text-[#b45309]">
                   {attendanceSummary?.halfDay || 0}
                 </p>
               </div>
 
-              <div className="rounded-lg bg-[#fef2f2] border border-[#fecaca] p-3 text-center">
+              <div className="rounded-lg bg-[#fef2f2] border border-[#fecaca] p-2 sm:p-3 text-center">
                 <p className="text-xs text-[#dc2626] font-medium">Absent Days</p>
                 <p className="text-xl font-bold text-[#b91c1c]">
                   {attendanceSummary?.absent || 0}
@@ -2001,8 +2001,8 @@ const handleChange = (
               </div>
             </div>
 
-            <div className="flex-1 p-2 md:p-3">
-              <div className="grid grid-cols-7 gap-2 h-full">
+            <div className="flex-1 min-h-0 overflow-y-auto p-2 md:p-3">
+              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 gap-2 auto-rows-fr">
                 {Array.from({ length: NumberOfDaysInMonth }, (_, i) => {
                   const today = new Date().getDate();
 
@@ -2095,7 +2095,8 @@ const handleChange = (
     </div>
   </div>
 )}
-  <table className="w-full table-auto">
+  <div className="w-full overflow-x-auto">
+  <table className="w-full min-w-[1180px] table-auto">
           <thead>
             <tr className="bg-gradient-to-r from-teal-600 to-emerald-500 text-white">
                <th className=" p-2 md:p-4 text-left text-[10px] sm:text-xs md:text-sm whitespace-normal break-words">S No</th>
@@ -2226,7 +2227,7 @@ const totalExpenses =
   <p className="mt-2">
     <span className="font-medium">Per Day:</span>{" "}
     {
-      Math.round((HCPPayment / getDaysInMonth(SearchMonth, SearchYear)))
+      Math.floor((HCPPayment / 30))
     }
   </p>
     <p>
@@ -2253,7 +2254,7 @@ const totalExpenses =
   </p>
     <p>
     * Per Day  Befor{" "}
-    {new Date(row.SalaryHistory[row.SalaryHistory.length - 1].EffectiveFrom).toLocaleDateString("en-In")} {Math.round(Number(row.SalaryHistory[0].Salary)/ getDaysInMonth(SearchMonth, SearchYear))}
+    {new Date(row.SalaryHistory[row.SalaryHistory.length - 1].EffectiveFrom).toLocaleDateString("en-In")} {Math.floor(Number(row.SalaryHistory[0].Salary)/ 30)}
   </p>
   </div>
 )}
@@ -2399,6 +2400,7 @@ const totalExpenses =
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {selectedTransactions && (
