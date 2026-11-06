@@ -3196,142 +3196,363 @@ export const FullMonthStaffAttendecebyDate = async (ImpData: any) => {
 
 
 
+
 export const UpdateStaffLeaveStatus = async (ImpData: any) => {
+  const {
+    UserId,
+    AttendanceDate,
+    ApprovalStatus,
+    loggedInEmail,
+  } = ImpData;
+
+  if (!UserId || !AttendanceDate || !loggedInEmail) {
+    throw new Error("UserId, AttendanceDate and loggedInEmail are required");
+  }
+
+  if (!["Approved", "Rejected", "Revert"].includes(ApprovalStatus)) {
+    throw new Error("Invalid leave approval status");
+  }
+
+  const client = await clientPromise;
+  const session = client.startSession();
+
   try {
-    if (
-      !ImpData?.UserId ||
-      !ImpData?.AttendanceDate ||
-      !["Approved", "Rejected"].includes(ImpData?.ApprovalStatus)
-    ) {
-      return {
-        success: false,
-        message: "Invalid leave approval details.",
-      };
-    }
+    let result: any = null;
 
-    const client = await clientPromise;
-    const db = client.db("CurateInformation");
+    await session.withTransaction(async () => {
+      const db = client.db("CurateInformation");
 
-    const StaffAttendeceCollection = db.collection(
-      "EmployeesAttendance"
-    );
-    const Registerdb = db.collection("Registration");
+      const attendanceCollection = db.collection("EmployeesAttendance");
+      const registrationCollection = db.collection("Registration");
 
-    const now = new Date();
-
-    // Find the requested leave record
-    const leaveRecord = await StaffAttendeceCollection.findOne({
-      UserId: ImpData.UserId,
-      AttendanceDate: ImpData.AttendanceDate,
-      Status: "Leave",
-    });
-
-    if (!leaveRecord) {
-      return {
-        success: false,
-        message: "Leave record not found.",
-      };
-    }
-
-    // Prevent duplicate approval and duplicate balance updates
-    if (leaveRecord.ApprovalStatus === ImpData.ApprovalStatus) {
-      return {
-        success: true,
-        message: "Leave status is already up to date.",
-      };
-    }
-
-    // Update leave approval status
-    const updateResult = await StaffAttendeceCollection.updateOne(
-      {
-        _id: leaveRecord._id,
-        ApprovalStatus: leaveRecord.ApprovalStatus ?? { $exists: false },
-      },
-      {
-        $set: {
-          ApprovalStatus: ImpData.ApprovalStatus,
-          UpdatedAt: now,
-          ApprovedBy: ImpData.loggedInEmail,
-          ApprovedAt: now,
+      // Find the exact leave request selected by the manager.
+      const leaveRecord = await attendanceCollection.findOne(
+        {
+          UserId,
+          AttendanceDate,
+          Status: "Leave",
         },
-      }
-    );
-
-    if (updateResult.matchedCount === 0) {
-      return {
-        success: false,
-        message: "Leave record was updated by another request. Please refresh.",
-      };
-    }
-
-    // Update leave balance only when approved
-    if (ImpData.ApprovalStatus === "Approved") {
-      const LeaveType = ImpData.employee?.LeaveType;
-      const NoOfDays = Number(ImpData.employee?.TotalDays);
-
-      if (!Number.isFinite(NoOfDays) || NoOfDays <= 0) {
-        return {
-          success: false,
-          message: "Invalid number of leave days.",
-        };
-      }
-
-      let leaveUpdate: any;
-
-     if (LeaveType === "Other") {
-  leaveUpdate = {
-    $inc: {
-      OtherLeaves: NoOfDays,
-    },
-  };
-} else if (LeaveType === "Casual") {
-  leaveUpdate = {
-    $inc: {
-      Casual: -NoOfDays,
-      usedLeaves: NoOfDays,
-    },
-  };
-} else if (LeaveType === "Sick") {
-  leaveUpdate = {
-    $inc: {
-      sick: -NoOfDays,
-      usedLeaves: NoOfDays,
-    },
-  };
-} else {
-        return {
-          success: false,
-          message: "Invalid leave type.",
-        };
-      }
-
-      const registrationUpdate = await Registerdb.updateOne(
-        { userId: ImpData.UserId },
-        leaveUpdate
+        { session }
       );
 
-      if (registrationUpdate.matchedCount === 0) {
-        return {
-          success: false,
-          message: "Registration record not found.",
-        };
+      if (!leaveRecord) {
+        throw new Error("Leave request not found");
       }
-    }
 
-    return {
-      success: true,
-      message: "Leave status updated successfully.",
-      ApprovalStatus: ImpData.ApprovalStatus,
-    };
+      const previousStatus = leaveRecord.ApprovalStatus || "Pending";
+
+      const leaveType = String(
+        leaveRecord.leaveType || leaveRecord.LeaveType || ""
+      ).toLowerCase();
+
+      const noOfDays = Number(leaveRecord.TotalDays);
+
+      if (!Number.isFinite(noOfDays) || noOfDays <= 0) {
+        throw new Error("Invalid leave days in the leave record");
+      }
+
+      // Restore or deduct the employee's leave balance.
+      const updateLeaveBalance = async (direction: "deduct" | "restore") => {
+        const amount = direction === "deduct" ? -noOfDays : noOfDays;
+
+        let balanceUpdate: any;
+
+        if (leaveType.includes("other")) {
+          // Preserve your existing OtherLeaves approval behaviour.
+          balanceUpdate = {
+            $inc: {
+              OtherLeaves: direction === "deduct" ? -noOfDays : noOfDays,
+            },
+          };
+        } else if (leaveType.includes("casual")) {
+          balanceUpdate = {
+            $inc: {
+              Casual: amount,
+              usedLeaves: -amount,
+            },
+          };
+        } else if (leaveType.includes("sick")) {
+          balanceUpdate = {
+            $inc: {
+              sick: amount,
+              usedLeaves: -amount,
+            },
+          };
+        } else {
+          throw new Error(`Unsupported leave type: ${leaveType}`);
+        }
+
+        const balanceResult = await registrationCollection.updateOne(
+          { userId: UserId },
+          balanceUpdate,
+          { session }
+        );
+
+        if (balanceResult.matchedCount === 0) {
+          throw new Error("Employee registration record not found");
+        }
+      };
+
+      // ------------------------------------------------
+      // REVERT: Restore balance and permanently delete.
+      // ------------------------------------------------
+      if (ApprovalStatus === "Revert") {
+        if (previousStatus === "Approved") {
+          await updateLeaveBalance("restore");
+        }
+
+        // Delete all daily records belonging to this request.
+        // If the request has no date range, delete only the selected record.
+        const requestFilter: any = {
+          UserId,
+          Status: "Leave",
+        };
+
+        if (leaveRecord.FromDate != null && leaveRecord.ToDate != null) {
+          requestFilter.FromDate = leaveRecord.FromDate;
+          requestFilter.ToDate = leaveRecord.ToDate;
+        } else {
+          requestFilter.AttendanceDate = AttendanceDate;
+        }
+
+        const deleteResult = await attendanceCollection.deleteMany(
+          requestFilter,
+          { session }
+        );
+
+        if (deleteResult.deletedCount === 0) {
+          throw new Error("Unable to delete the leave request");
+        }
+
+        result = {
+          success: true,
+          action: "Reverted",
+          deletedCount: deleteResult.deletedCount,
+          restoredDays:
+            previousStatus === "Approved" ? noOfDays : 0,
+          message: "Leave request reverted and deleted successfully",
+        };
+
+        return;
+      }
+
+      // ------------------------------------------------
+      // APPROVE / REJECT
+      // ------------------------------------------------
+      if (previousStatus === ApprovalStatus) {
+        result = {
+          success: true,
+          unchanged: true,
+          message: `Leave is already ${ApprovalStatus}`,
+        };
+        return;
+      }
+
+      // If an approved leave changes to Rejected, restore its balance.
+      if (previousStatus === "Approved" && ApprovalStatus === "Rejected") {
+        await updateLeaveBalance("restore");
+      }
+
+      // Deduct balance only when moving into Approved.
+      if (previousStatus !== "Approved" && ApprovalStatus === "Approved") {
+        await updateLeaveBalance("deduct");
+      }
+
+  
+const updateResult = await attendanceCollection.updateOne(
+  {
+    _id: leaveRecord._id,
+    UserId,
+    AttendanceDate,
+    Status: "Leave",
+    ApprovalStatus: previousStatus,
+  },
+  {
+    $set: {
+      ApprovalStatus,
+      UpdatedAt: new Date(),
+      ApprovedBy: loggedInEmail,
+      ApprovedAt:
+        ApprovalStatus === "Approved" ? new Date() : null,
+    },
+  },
+  { session }
+);
+
+if (updateResult.matchedCount === 0) {
+  throw new Error("Leave status was changed by another request");
+}
+
+      if (updateResult.matchedCount === 0) {
+        throw new Error("Leave status was changed by another request");
+      }
+
+      result = {
+        success: true,
+        action: ApprovalStatus,
+        message: `Leave ${ApprovalStatus.toLowerCase()} successfully`,
+      };
+    });
+
+    return result;
   } catch (error) {
     console.error("UpdateStaffLeaveStatus error:", error);
+    throw error;
+  } finally {
+    await session.endSession();
+  }
+};
+
+export const Updatedailystatus = async (ImpData: any) => {
+  const client = await clientPromise;
+  const db = client.db("CurateInformation");
+
+  const StaffAttendanceCollection = db.collection("EmployeesAttendance");
+  const CountCollection = db.collection("Registration");
+
+  const session = client.startSession();
+
+  try {
+    const { UserId, AttendanceDate, Status, ApprovalStatus } = ImpData;
+
+    // 1. Validate request data
+    if (!UserId || !AttendanceDate || !Status) {
+      return {
+        success: false,
+        message: "UserId, AttendanceDate and Status are required.",
+      };
+    }
+
+    const allowedStatuses = ["Present", "Absent", "Leave"];
+
+    if (!allowedStatuses.includes(Status)) {
+      return {
+        success: false,
+        message: "Invalid attendance status.",
+      };
+    }
+
+    let response: any = null;
+
+    await session.withTransaction(async () => {
+      // 2. Find existing attendance record
+      const existingAttendance =
+        await StaffAttendanceCollection.findOne(
+          { UserId, AttendanceDate },
+          { session }
+        );
+
+      if (!existingAttendance) {
+        throw new Error("ATTENDANCE_NOT_FOUND");
+      }
+
+      const previousStatus = existingAttendance.Status;
+
+      // 3. Prevent unnecessary updates and duplicate leave deductions
+      if (previousStatus === Status) {
+        response = {
+          success: true,
+          message: "Attendance status is already up to date.",
+        };
+        return;
+      }
+
+      // 4. Update attendance
+      const updateResult = await StaffAttendanceCollection.updateOne(
+        {
+          _id: existingAttendance._id,
+          Status: previousStatus,
+        },
+        {
+          $set: {
+            Status,
+            UpdatedAt: new Date(),
+          },
+        },
+        { session }
+      );
+
+      if (updateResult.matchedCount !== 1) {
+        throw new Error("ATTENDANCE_UPDATE_FAILED");
+      }
+
+      // 5. Update leave balance only for approved leave
+    if (Status === "Leave") {
+  const leaveResult = await CountCollection.updateOne(
+    {
+      userId: UserId,
+      Casual: { $gt: 0 },
+    },
+    {
+      $inc: {
+        usedLeaves: 1,
+        Casual: -1,
+      },
+    },
+    { session }
+  );
+
+
+
+  if (leaveResult.matchedCount !== 1) {
+    throw new Error("INSUFFICIENT_LEAVE_BALANCE");
+  }
+}
+
+      // 6. Restore leave balance if an approved leave is changed
+      if (previousStatus === "Leave" && Status !== "Leave") {
+        const restoreResult = await CountCollection.updateOne(
+          { userId: UserId },
+          {
+            $inc: {
+              usedLeaves: -1,
+              casual: 1,
+            },
+          },
+          { session }
+        );
+
+        if (restoreResult.matchedCount !== 1) {
+          throw new Error("LEAVE_RESTORE_FAILED");
+        }
+      }
+
+      response = {
+        success: true,
+        message: "Attendance status updated successfully.",
+        data: {
+          UserId,
+          AttendanceDate,
+          PreviousStatus: previousStatus,
+          UpdatedStatus: Status,
+        },
+      };
+    });
+
+    return response;
+
+  } catch (error: any) {
+    console.error("Updatedailystatus error:", error);
+
+    const errorMessages: Record<string, string> = {
+      ATTENDANCE_NOT_FOUND: "No matching attendance record found.",
+      ATTENDANCE_UPDATE_FAILED: "Attendance update failed. Please retry.",
+      INSUFFICIENT_LEAVE_BALANCE: "Insufficient casual leave balance.",
+      LEAVE_RESTORE_FAILED: "Failed to restore leave balance.",
+    };
 
     return {
       success: false,
-      message: "Failed to update leave status.",
+      message:
+        errorMessages[error.message] ||
+        "Failed to update attendance status.",
     };
+
+  } finally {
+    await session.endSession();
   }
 };
+
 
 
 export const FetchLeavesInfo = async (ImpId: string) => {

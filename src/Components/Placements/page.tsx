@@ -7,7 +7,7 @@ let cachedRegisterdUsers: any[] = [];
 let terminationCache: any[] | null = null;
 
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarCheck2, CircleCheckBig, ChevronsRight, FilePenLine, MapPin, Trash, CircleX, Plus, X, CirclePause, CircleAlert, EllipsisVertical, CalendarDays, Minimize2, Info, ChevronDown, Sparkles, Pencil, FileText } from "lucide-react";
 import { DeleteHCAStatus, DeleteHCAStatusInFullInformation, DeleteDeployMent, GetDeploymentInfo, GetRegidterdUsers, GetReplacementInfo, GetTerminationInfo, GetTimeSheetInfo, GetUserInformation, GetUsersFullInfo, InserTerminationData, InserTimeSheet, PostReason, TestInserTimeSheet, UpdateHCAnstatus, UpdateHCAnstatusInFullInformation, UpdateReason, UpdateReplacmentData, UpdateUserContactVerificationstatus, TestInsertTimeSheet, updateServicePrice, InsertDeployment, PostInvoice, GetInvoiceInfo, RemoveClient, RemoveClientFromTimeSheet, HCASalaryUpdate, GetAllUsersData, getCreatedInvoiceInfo, PostInvoiceFromDeployment, UpdateDeploymentStatus, PostRefundRequest, UpdateClientDailyAttendance, PostAttendeceEditRequest, EditAttendanceByClientId, UpdateClientAttendanceStatus, GetApplicationData, UpdateHCAnstatusInDeplyoment, UpdateUserCurrentstatusInHCPView, } from "@/Lib/user.action";
 import { useDispatch, useSelector } from "react-redux";
@@ -200,6 +200,8 @@ const ClientTable = ({
     monthNamesList[Number(SearchMonth) - 1] || "";
 
   const [status, setStatus] = useState("Active");
+  const attendanceSaveInProgress = useRef(false);
+  const [isSavingAttendance, setIsSavingAttendance] = useState(false);
 
 
   const [enableStatus, setenableStatus] = useState(false)
@@ -287,7 +289,6 @@ const ClientTable = ({
   //       console.time("GET_DEPLOYMENT_API");
 
   //       const { data } = await axios.get("/api/Deployentinfo");
-  //       console.log("Check Deployment Data------",data.deploymentInfo)
 
   //       console.timeEnd("GET_DEPLOYMENT_API");
 
@@ -2035,19 +2036,21 @@ Kind regards,
   }
 
   const EditAttendence = async (): Promise<void> => {
+    if (attendanceSaveInProgress.current) return;
+    if (!AttenseceInformation?.Client_Id || !AttenseceInformation?.HCA_Id) {
+      SetActionStatusMessage("Client or HCA information is missing");
+      return;
+    }
 
-
-    if (!AttenseceInformation?.Client_Id) return;
+    if (!EditDate ) {
+      SetActionStatusMessage("Please select a valid attendance date");
+      return;
+    }
 
     try {
+      attendanceSaveInProgress.current = true;
+      setIsSavingAttendance(true);
       SetActionStatusMessage("Please Wait...");
-
-      const today = new Intl.DateTimeFormat("en-CA", {
-        timeZone: "Asia/Kolkata",
-      }).format(new Date());
-
-      const flexDate = `${SearchYear}-${String(SearchMonth).padStart(2, "0")}-${String(ParticularDate).padStart(2, "0")}`;
-      const yearMonth = `${SearchYear}-${String(SearchMonth).padStart(2, "0")}`;
 
       const currentStatus = status;
 
@@ -2055,6 +2058,13 @@ Kind regards,
         SetActionStatusMessage("Please select a valid status");
         return;
       }
+
+      console.info("Attendance save started", {
+        hasClientId: Boolean(AttenseceInformation.Client_Id),
+        hasHcaId: Boolean(AttenseceInformation.HCA_Id),
+        attendanceDate: EditDate,
+        status: currentStatus,
+      });
 
       const payload = {
         Client_Id: AttenseceInformation.Client_Id,
@@ -2073,6 +2083,9 @@ Kind regards,
         AbsentReason
       );
 
+      console.info("Attendance API response", {
+        success: Boolean(dateResponse?.success),
+      });
 
       if (dateResponse?.success) {
 
@@ -2108,9 +2121,17 @@ Kind regards,
                 return false;
               }
 
-              const dbDate = new Date(att.AttendanceDate)
-                .toISOString()
-                .split("T")[0];
+              const rawDate = String(att.AttendanceDate);
+              const dbDate = /^\d{4}-\d{2}-\d{2}/.test(rawDate)
+                ? rawDate.slice(0, 10)
+                : (() => {
+                    const parsedDate = new Date(rawDate);
+                    return Number.isNaN(parsedDate.getTime())
+                      ? ""
+                      : new Intl.DateTimeFormat("en-CA", {
+                          timeZone: "Asia/Kolkata",
+                        }).format(parsedDate);
+                  })();
 
 
               return dbDate === EditDate;
@@ -2159,9 +2180,13 @@ Kind regards,
 
 
         SetActionStatusMessage("Attendance Updated Successfully");
+        console.info("Attendance local state updated", {
+          attendanceDate: EditDate,
+        });
 
         return;
       }
+      SetActionStatusMessage(dateResponse?.message || "Attendance update failed");
       // setTimeout(() => {
       //   setShowTimeSheet(false);
       //   SetShowUpdateAttendece(false);
@@ -2178,9 +2203,6 @@ Kind regards,
       //         date: EditDate,
       //         status: currentStatus,
       //       };
-      // console.log(
-      //   "Check Attendece Status",currentStatus
-      // )
       //       const dateResponse = await UpdateClientAttendanceStatus(
       //         SearchYear,
       //         SearchMonth,
@@ -2240,7 +2262,6 @@ Kind regards,
       //       yearMonth,
       //       status: currentStatus,
       //     };
-      // console.log ("Check Client Info Details------",info)
       //     const response = await PostAttendeceEditRequest(
       //       info,
       //       AttendeceEditReason,
@@ -2279,6 +2300,9 @@ Kind regards,
 
       console.error("EditAttendence Error:", error);
       SetActionStatusMessage(message);
+    } finally {
+      attendanceSaveInProgress.current = false;
+      setIsSavingAttendance(false);
     }
   };
   const AskAI = async () => {
@@ -2965,9 +2989,7 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
   show={selectedCase}
   onShowChange={(show) => {setSelectedCase(null);setShowReassignmentPopUp(false)}}
   data={selectedCase}
-  onSubmit={(data) => {
-    console.log("Replacement Data:", data);
-  }}
+    onSubmit={(data) => {}}
     filterProfilePic={filterProfilePic}
   HCA_List={HCA_List}
 />:<HCAFreeze
@@ -3500,7 +3522,6 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
       setBillingRecord(null);
     }}
     onConfirm={(billingResult: any) => {
-      console.log("Saving billing:", billingResult);
     }}
   />
 )} */}
@@ -4374,7 +4395,7 @@ Margin: ₹${Number(totalMargin || 0).toLocaleString("en-IN")}`
   Reassignment
 </button> */}
 
-                          <img src="Icons/Repleasement.png" alt="Repleasement Icons" className="h-6 ml-4 cursor-pointer " onClick={() => { setShowReassignmentPopUp(!ShowReassignmentPopUp), setFreezeOperation(false), setPopuptype("Repleasment"), SetCareTakerName(GetHCPFullName(c.HCA_Id)), setselectedHCP(null), setselectedAssignHCP(null), setSelectedCase(c), setReplacementDate(""); SetActionStatusMessage(""), setShowWarning(false), setUpdatedCareTakerStatus(""), setSearchHCA(""), console.log("Check Test Data-----",c) }} />
+                          <img src="Icons/Repleasement.png" alt="Repleasement Icons" className="h-6 ml-4 cursor-pointer " onClick={() => { setShowReassignmentPopUp(!ShowReassignmentPopUp), setFreezeOperation(false), setPopuptype("Repleasment"), SetCareTakerName(GetHCPFullName(c.HCA_Id)), setselectedHCP(null), setselectedAssignHCP(null), setSelectedCase(c), setReplacementDate(""); SetActionStatusMessage(""), setShowWarning(false), setUpdatedCareTakerStatus(""), setSearchHCA("") }} />
 
                           {ShowReassignmentPopUp && (
                             <div

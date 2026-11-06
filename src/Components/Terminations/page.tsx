@@ -62,9 +62,8 @@ const TerminationTable: React.FC = () => {
   const dispatch = useDispatch()
 const router=useRouter()
 const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
-
+const DeploymentInfo=useSelector((state:any)=>state.AdminDeployment)
 const users=useSelector((state:any)=>state.AdminFullInfo)
-console.log("users",attendanceInfo)
 const hasData = users?.length > 0 && RegisterdUsers?.length > 0;
  const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
   useEffect(() => {

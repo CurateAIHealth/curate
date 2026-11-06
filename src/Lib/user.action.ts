@@ -9557,7 +9557,8 @@ export const PostEmployeeAttendance = async (
 
           ApprovalStatus: "Approved",
 
-          CreatedAt: getCreatedAt(now)
+          CreatedAt: getCreatedAt(now),
+          City: EmployInfo.City || "Hyderabad",
         };
 
         const result =
@@ -9591,7 +9592,7 @@ export const PostEmployeeAttendance = async (
           Accuracy: accuracy,
           CapturedAt: now
         },
-
+ City: EmployInfo.City || "Hyderabad",
         ApprovalStatus: "Approved",
         CreatedAt: getCreatedAt(now)
       });
@@ -9689,7 +9690,7 @@ export const PostEmployeeAttendance = async (
 
         FromDate: fromDate,
         ToDate: toDate,
-
+ City: EmployInfo.City || "Hyderabad",
         AttendanceDate: fromDate,
 
         leaveType: leaveType,

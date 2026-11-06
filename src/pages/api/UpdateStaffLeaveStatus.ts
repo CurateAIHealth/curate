@@ -1,25 +1,64 @@
-import { StaffAttendecebyDate, UpdateStaffLeaveStatus } from "@/Lib/auth";
-import { NextApiRequest, NextApiResponse } from "next";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    try {
-        if (req.method !== "POST") {
-            return res.status(405).json({ message: "Methode Not Allowed" })
-        }
+import type { NextApiRequest, NextApiResponse } from "next";
+import { UpdateStaffLeaveStatus } from "@/Lib/auth";
 
-        const { UserId,
-            AttendanceDate,
-            ApprovalStatus,loggedInEmail,employee } = req.body
-        if (!UserId ||
-            !AttendanceDate ||
-            !ApprovalStatus||!loggedInEmail!) {
-            return res.status(405).json({ message: "Attendece Date Missing" })
-        }
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      success: false,
+      message: "Method not allowed",
+    });
+  }
 
-        const AttendeceResuls = await UpdateStaffLeaveStatus( req.body)
+  try {
+    const {
+      UserId,
+      AttendanceDate,
+      ApprovalStatus,
+      loggedInEmail,
+    } = req.body || {};
 
-        return res.status(200).json({ AttendeceResuls })
-    } catch (err: any) {
-
+    if (!UserId || !AttendanceDate || !loggedInEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "UserId, AttendanceDate and loggedInEmail are required",
+      });
     }
+
+    const allowedStatuses = ["Approved", "Rejected", "Revert"];
+
+    if (!allowedStatuses.includes(ApprovalStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ApprovalStatus",
+      });
+    }
+
+    const result = await UpdateStaffLeaveStatus({
+      UserId,
+      AttendanceDate,
+      ApprovalStatus,
+      loggedInEmail,
+    });
+
+    if (!result?.success) {
+      return res.status(400).json({
+        success: false,
+        message: result?.message || "Unable to process leave request",
+      });
+    }
+
+    return res.status(200).json(result);
+
+  } catch (error: any) {
+    console.error("UpdateStaffLeaveStatus API error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Unable to update leave request",
+    });
+  }
 }
