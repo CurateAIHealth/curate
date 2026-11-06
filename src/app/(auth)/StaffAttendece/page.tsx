@@ -1200,7 +1200,7 @@ setPopupMessage("Saving attendance update...");
                       onChange={(e) => setSelectedCity(e.target.value)}
                       className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 sm:w-52"
                     >
-                      <option value="All cities">Branch Offices</option>
+                      <option value="All cities"> Service State</option>
                       {[
                         "Agra", "Ahmedabad", "Amritsar", "Bengaluru", "Bhopal", "Bhubaneswar",
                         "Chandigarh", "Chennai", "Coimbatore", "Delhi", "Dehradun", "Faridabad",
@@ -1216,7 +1216,7 @@ setPopupMessage("Saving attendance update...");
                       onClick={() => setShowDutyRoster(true)}
                       className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-800 px-4 py-2 font-semibold text-white shadow-lg transition-all duration-150 hover:from-indigo-500 hover:to-indigo-700 sm:w-auto"
                     >
-                      Roaster
+                     Holiday  Roaster
                     </button>
                     <button
                onClick={() =>router.push("/DashBoard")}
