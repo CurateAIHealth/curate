@@ -22,7 +22,7 @@ export default function RefundPopup({ isOpen, onClose, data,CompliteInfo, onSubm
   const [showBankPopup, setShowBankPopup] = useState(false);
 const UserFullInfo=useSelector((state:any)=>state.AdminFullInfo)
 const RegisterdUsers=useSelector((state:any)=>state.AdminUsers)
-  const [RefundData,setRefundData]=useState(new Date().toISOString().split("T")[0])
+const [RefundData, setRefundData] = useState("");
 console.log("RefundData",data)
 const [bankDetails, setBankDetails] = useState({
   accountNumber: "",
@@ -32,7 +32,15 @@ const [bankDetails, setBankDetails] = useState({
   passBook:"",
   branch:"",
 });
+useEffect(() => {
+  if (isOpen && data?.EndDate) {
+    const date = new Date(data.EndDate);
 
+   
+      setRefundData(data?.EndDate);
+    
+  }
+}, [isOpen, data?.EndDate]);
 const handleAddBankInfo = () => {
   setShowBankPopup(true);
 };

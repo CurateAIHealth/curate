@@ -1,11 +1,13 @@
 "use client";
 
 import { LoadingData } from "@/Components/Loading/page";
+import SundayDutyRoster from "@/Components/Roaster/page";
 import { getDaysBetween, GetEmail } from "@/Lib/Actions";
 import axios from "axios";
-import { CalendarDays, CheckCircle2, Clock, FileText, MapPin } from "lucide-react";
+import { AnyAaaaRecord } from "dns";
+import { CalendarDays, CheckCircle2, Clock, FileText, Info, Loader2, MapPin, RotateCcw, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 let cachedAttendeceInfo: any = null;
 type AttendanceLocation = {
@@ -31,6 +33,8 @@ type EmployeeBreak = {
 };
 
 type EmployeeAttendance = {
+  TotalDays: number;
+  City: string;
   Description: any;
   LeaveType: any;
   TotalLeaves: number;
@@ -59,6 +63,49 @@ type EmployeeAttendance = {
   TotalWorkingMinutes?: number;
   AttendanceState?: string;
 };
+
+const rosterStaffList: any[] = [
+ 
+  {
+    id: "STAFF002",
+    name: "Prasad",
+    designation: "HR Executive",
+  },
+  {
+    id: "STAFF003",
+    name: "Chamanthi",
+    designation: "Accountant",
+  },
+  {
+    id: "STAFF004",
+    name: "Pandu",
+    designation: "Office Administrator",
+  },
+ 
+];
+const monthlyRoster: any[] = [
+  {
+    Date: "2026-11-01",
+    Day: "Sunday",
+    StaffId: "STAFF001",
+    StaffName: "Srinivas",
+    CompOffDate: "2026-11-06",
+  },
+  {
+    Date: "2026-11-08",
+    Day: "Sunday",
+    StaffId: "STAFF002",
+    StaffName: "Prasad",
+    CompOffDate: "2026-11-13",
+  },
+  {
+    Date: "2026-11-15",
+    Day: "Sunday",
+    StaffId: "STAFF003",
+    StaffName: "Chamanthi",
+    CompOffDate: "2026-11-20",
+  },
+];
 
 // const employeeRoster: Employee[] = [
 //   { UserId: "TEST001", EmployeeName: "Srinivas", Area: "Hitech City", Latitude: 17.4435, Longitude: 78.3772 },
@@ -135,6 +182,60 @@ function getBreakDuration(breakItem: EmployeeBreak) {
 
   return "—";
 }
+function getAttendanceWorkingMinutes(record: any) {
+  const recordedMinutes = Number(record?.TotalWorkingMinutes ?? 0);
+
+  // Use backend working hours when available.
+  if (recordedMinutes > 0) {
+    return recordedMinutes;
+  }
+
+  // Calculate live working time if the employee is still working.
+  if (
+    record?.AttendanceState === "Working" &&
+    record?.CheckIn?.Time
+  ) {
+    const checkInTime = new Date(record.CheckIn.Time).getTime();
+
+    if (!Number.isFinite(checkInTime)) return 0;
+
+    const elapsedMinutes = Math.max(
+      0,
+      Math.floor((Date.now() - checkInTime) / 60000)
+    );
+
+    const breakMinutes = getAttendanceBreakMinutes(record);
+
+    return Math.max(0, elapsedMinutes - breakMinutes);
+  }
+
+  return recordedMinutes;
+}
+
+function getAttendanceBreakMinutes(record: any) {
+  const breaks = Array.isArray(record?.Breaks)
+    ? record.Breaks
+    : [];
+
+  return breaks.reduce((total: number, item: any) => {
+    if (item.DurationMinutes != null && Number(item.DurationMinutes) > 0) {
+      return total + Number(item.DurationMinutes);
+    }
+
+    if (item.StartTime) {
+      const start = new Date(item.StartTime).getTime();
+      const end = item.EndTime
+        ? new Date(item.EndTime).getTime()
+        : Date.now();
+
+      if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+        return total + Math.floor((end - start) / 60000);
+      }
+    }
+
+    return total;
+  }, 0);
+}
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     Present: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -151,18 +252,26 @@ function StatusBadge({ status }: { status: string }) {
 export default function ManagerAttendanceDashboard() {
   const [selectedDate, setSelectedDate] = useState(getLocalDate());
   const [search, setSearch] = useState("");
+  const [selectedCity, setSelectedCity] = useState("All cities");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showFullMonth, setShowFullMonth] = useState(false);
   const [LoadingLeaves,setLoadingLeaves]=useState(false)
 const [selectedStaff, setSelectedStaff] = useState<any>(null);
   const [leaveBalanceStaff, setLeaveBalanceStaff] = useState<any>(null);
-
+const [attendanceInfoStaff, setAttendanceInfoStaff] = useState<any>(null);
+const [showDutyRoster, setShowDutyRoster] = useState(false);
+const [revertEmployee, setRevertEmployee] =
+  useState<EmployeeAttendance | null>(null);
   const [spentLeaves,setspentLeaves]=useState(0)
   const [OtherLeaves,setOtherLeaves]=useState(0)
   const [updatingLeaveBalance, setUpdatingLeaveBalance] = useState(false);
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
 const [monthlyAttendance, setMonthlyAttendance] = useState<any[]>([]);
 const [loadingMonthlyAttendance, setLoadingMonthlyAttendance] = useState(false);
+const [attendanceEdit, setAttendanceEdit] = useState<{ day: number; date: string } | null>(null);
+const [attendanceEditStatus, setAttendanceEditStatus] = useState("Present");
+const [savingAttendanceEdit, setSavingAttendanceEdit] = useState(false);
+const attendanceEditSaveInProgress = useRef(false);
 const [isEditingCasualLeaves, setIsEditingCasualLeaves] =
   useState(false);
 
@@ -172,9 +281,9 @@ const [isEditingSickLeaves, setIsEditingSickLeaves] =
   
   const [CasualLeaves,setCasualLeaves]=useState<any>()
     const [leaveTotalInput, setLeaveTotalInput] = useState(Number(SickLeaves)+Number(CasualLeaves));
-  const [updatingAction, setUpdatingAction] = useState<{
+const [updatingAction, setUpdatingAction] = useState<{
   userId: string;
-  action: "Approve" | "Reject";
+  action: "Approve" | "Reject" | "Revert";
 } | null>(null);
 const [isEditingLeaveTotal, setIsEditingLeaveTotal] = useState(false);
   const [leaveDecisions, setLeaveDecisions] = useState<Record<string, "Approved" | "Rejected">>({});
@@ -217,7 +326,8 @@ useEffect(() => {
     UserId: each.UserId,
     EmployeeName: each.EmployeeName?.trim() || "Unknown",
     Area: each.Area || "—",
-
+    City:
+each.City,
     Latitude: each.Location?.Latitude ?? null,
     Longitude: each.Location?.Longitude ?? null,
     Location: each.Location ?? null,
@@ -275,7 +385,6 @@ useEffect(() => {
   };
 }, [selectedDate]);
 
-console.log("employeeRoster:", employeeRoster);
 const updateLeave = async (ImpValue: any) => {
  setLeaveBalanceStaff(ImpValue)
           setLoadingLeaves(true);
@@ -343,6 +452,7 @@ function makeTestAttendance(date: string): EmployeeAttendance[] {
       UserId: employee.UserId,
       EmployeeName: employee.EmployeeName,
       Area: employee.Area,
+      City: employee.City,
       AttendanceDate: date,
       LeaveType:employee.LeaveType,
       Description:employee.Description,
@@ -400,8 +510,9 @@ const openFullMonthAttendance = async (employee: any) => {
   const filteredEmployees = useMemo(() => employees.filter((employee) => {
     const matchesSearch = `${employee.EmployeeName} ${employee.UserId} ${employee.Area}`.toLowerCase().includes(search.trim().toLowerCase());
     const status = employee.Status || "Not marked";
-    return matchesSearch && (statusFilter === "All" || status === statusFilter);
-  }), [employees, search, statusFilter]);
+    const matchesCity = selectedCity === "All cities" ||employee.City === selectedCity;
+    return matchesSearch && matchesCity && (statusFilter === "All" || status === statusFilter);
+  }), [employees, search, selectedCity, statusFilter]);
 
   const summary = useMemo(() => ({
     total: employees.length,
@@ -433,376 +544,143 @@ const openFullMonthAttendance = async (employee: any) => {
   };
 
 
+
 const UpdateStatus = async (
   employee: EmployeeAttendance,
-  ImpStatus: "Approve" | "Reject"
+  ImpStatus: "Approve" | "Reject" | "Revert"
 ) => {
-  if (!employee?.UserId) {
-    console.error("Employee UserId is missing");
+  if (!employee?.UserId || updatingUserId === employee.UserId) {
     return;
   }
-setUpdatingAction({
-  userId: employee.UserId,
-  action: ImpStatus,
-});
-  if (updatingUserId === employee.UserId) return;
+
+  if (ImpStatus === "Revert") {
+    const confirmed = window.confirm(
+      `Permanently delete the leave request for ${employee.EmployeeName}? ${
+        employee.ApprovalStatus === "Approved"
+          ? "The approved leave balance will be restored."
+          : "No leave balance will be changed."
+      }`
+    );
+
+    if (!confirmed) return;
+  }
+
+  setUpdatingUserId(employee.UserId);
+  setUpdatingAction({
+    userId: employee.UserId,
+    action: ImpStatus,
+  });
 
   const approvalStatus =
-    ImpStatus === "Approve" ? "Approved" : "Rejected";
+    ImpStatus === "Approve"
+      ? "Approved"
+      : ImpStatus === "Reject"
+        ? "Rejected"
+        : "Revert";
+
+  // Match the complete leave request, not ordinary attendance.
+  const isSameLeaveRequest = (item: any) => {
+    if (
+      item.UserId !== employee.UserId ||
+      item.Status !== "Leave"
+    ) {
+      return false;
+    }
+
+    if (employee.FromDate && employee.ToDate) {
+      return (
+        item.FromDate === employee.FromDate &&
+        item.ToDate === employee.ToDate
+      );
+    }
+
+    return item.AttendanceDate === employee.AttendanceDate;
+  };
 
   try {
-    setUpdatingUserId(employee.UserId);
-
-    // Replace this URL and payload with your actual update API.
     const response = await axios.post("/api/UpdateStaffLeaveStatus", {
       UserId: employee.UserId,
       AttendanceDate: employee.AttendanceDate,
       ApprovalStatus: approvalStatus,
-      loggedInEmail:loggedInEmail,
-      employee:employee
-        
+      loggedInEmail,
     });
 
-    if (response.status < 200 || response.status >= 300) {
-      throw new Error("Failed to update leave status");
+    if (!response.data?.success) {
+      throw new Error(
+        response.data?.message || "Unable to update leave request"
+      );
     }
 
-    // Update the UI immediately after a successful API response.
-    setemployeeRoster((previous: any[]) =>
-      previous.map((item: any) =>
-        item.UserId === employee.UserId
-          ? { ...item, ApprovalStatus: approvalStatus }
-          : item
-      )
-    );
+    if (ImpStatus === "Revert") {
+      // Remove the complete leave request from the current UI.
+      setemployeeRoster((previous: any[]) =>
+        previous.filter((item) => !isSameLeaveRequest(item))
+      );
 
+      // Keep the local cache consistent.
+      if (cachedAttendeceInfo?.date === selectedDate) {
+        cachedAttendeceInfo = {
+          ...cachedAttendeceInfo,
+          data: cachedAttendeceInfo.data.filter(
+            (item: any) => !isSameLeaveRequest(item)
+          ),
+        };
+      }
 
-// Send employee notification email
-await axios.post("/api/MailSend", {
-  // to:   GetEmail(
-  //     users,
-  //     employee.UserId
-  //   ), 
-  to:"tsiddu805@gmail.com",
-  subject:
-    approvalStatus === "Approved"
-      ? "Leave Request Approved"
-      : "Leave Request Rejected",
-
-  html: `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  </head>
-
-  <body style="
-    margin: 0;
-    padding: 0;
-    background-color: #f1f5f9;
-    font-family: Arial, Helvetica, sans-serif;
-    color: #1e293b;
-  ">
-
-    <table width="100%" cellpadding="0" cellspacing="0"
-      style="padding: 35px 12px; background-color: #f1f5f9;">
-      <tr>
-        <td align="center">
-
-          <table width="100%" cellpadding="0" cellspacing="0"
-            style="
-              max-width: 620px;
-              background-color: #ffffff;
-              border-radius: 16px;
-              overflow: hidden;
-              border: 1px solid #e2e8f0;
-            ">
-
-            <!-- Header -->
-            <tr>
-              <td style="
-                background-color: #0f766e;
-                padding: 30px 28px;
-                color: #ffffff;
-              ">
-                <p style="
-                  margin: 0 0 12px;
-                  font-size: 12px;
-                  font-weight: bold;
-                  letter-spacing: 2px;
-                  color: #ccfbf1;
-                ">
-                  CURATE HEALTH CARE SERVICES
-                </p>
-
-                <h1 style="
-                  margin: 0;
-                  font-size: 26px;
-                  line-height: 1.4;
-                  font-weight: 700;
-                ">
-                  Leave Request Update
-                </h1>
-
-                <p style="
-                  margin: 8px 0 0;
-                  font-size: 14px;
-                  line-height: 1.6;
-                  color: #d1fae5;
-                ">
-                  Your leave request has been reviewed by your manager.
-                </p>
-              </td>
-            </tr>
-
-            <!-- Main Content -->
-            <tr>
-              <td style="padding: 30px 28px;">
-
-                <p style="
-                  margin: 0 0 12px;
-                  font-size: 16px;
-                  line-height: 1.7;
-                ">
-                  Hello ${employee.EmployeeName ?? "Employee"},
-                </p>
-
-                <p style="
-                  margin: 0 0 24px;
-                  font-size: 14px;
-                  line-height: 1.8;
-                  color: #475569;
-                ">
-                  Your leave application has been reviewed. Please find
-                  the details and final status below.
-                </p>
-
-                <!-- Status -->
-                <table width="100%" cellpadding="0" cellspacing="0"
-                  style="
-                    background-color: ${
-                      approvalStatus === "Approved"
-                        ? "#f0fdf4"
-                        : "#fef2f2"
-                    };
-                    border: 1px solid ${
-                      approvalStatus === "Approved"
-                        ? "#bbf7d0"
-                        : "#fecaca"
-                    };
-                    border-radius: 10px;
-                    margin-bottom: 24px;
-                  ">
-                  <tr>
-                    <td style="padding: 18px;">
-
-                      <span style="
-                        display: inline-block;
-                        padding: 7px 14px;
-                        border-radius: 20px;
-                        background-color: ${
-                          approvalStatus === "Approved"
-                            ? "#dcfce7"
-                            : "#fee2e2"
-                        };
-                        color: ${
-                          approvalStatus === "Approved"
-                            ? "#166534"
-                            : "#991b1b"
-                        };
-                        font-size: 12px;
-                        font-weight: bold;
-                      ">
-                        LEAVE ${approvalStatus.toUpperCase()}
-                      </span>
-
-                      <p style="
-                        margin: 12px 0 0;
-                        font-size: 14px;
-                        line-height: 1.7;
-                        color: #475569;
-                      ">
-                        ${
-                          approvalStatus === "Approved"
-                            ? "Your leave request has been approved. Please plan accordingly."
-                            : "Your leave request has not been approved. Please contact your manager if you need clarification."
-                        }
-                      </p>
-
-                    </td>
-                  </tr>
-                </table>
-
-                <!-- Leave Details -->
-                <h2 style="
-                  margin: 0 0 16px;
-                  font-size: 18px;
-                  color: #0f172a;
-                ">
-                  Leave Details
-                </h2>
-
-                <table width="100%" cellpadding="0" cellspacing="0"
-                  style="border: 1px solid #e2e8f0;">
-
-                  <tr>
-                    <td style="
-                      padding: 14px 16px;
-                      width: 40%;
-                      background-color: #f8fafc;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 13px;
-                      color: #64748b;
-                    ">
-                      Employee Name
-                    </td>
-                    <td style="
-                      padding: 14px 16px;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 14px;
-                      font-weight: bold;
-                    ">
-                      ${employee.EmployeeName ?? "N/A"}
-                    </td>
-                  </tr>
-
-                
-
-                  <tr>
-                    <td style="
-                      padding: 14px 16px;
-                      background-color: #f8fafc;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 13px;
-                      color: #64748b;
-                    ">
-                      From Date
-                    </td>
-                    <td style="
-                      padding: 14px 16px;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 14px;
-                    ">
-                      ${employee.FromDate ?? "N/A"}
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td style="
-                      padding: 14px 16px;
-                      background-color: #f8fafc;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 13px;
-                      color: #64748b;
-                    ">
-                      To Date
-                    </td>
-                    <td style="
-                      padding: 14px 16px;
-                      border-bottom: 1px solid #e2e8f0;
-                      font-size: 14px;
-                    ">
-                      ${employee.ToDate ?? "N/A"}
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td style="
-                      padding: 14px 16px;
-                      background-color: #f8fafc;
-                      font-size: 13px;
-                      color: #64748b;
-                    ">
-                      Approval Status
-                    </td>
-                    <td style="
-                      padding: 14px 16px;
-                      font-size: 14px;
-                      font-weight: bold;
-                      color: ${
-                        approvalStatus === "Approved"
-                          ? "#15803d"
-                          : "#b91c1c"
-                      };
-                    ">
-                      ${approvalStatus}
-                    </td>
-                  </tr>
-
-                </table>
-
-                <p style="
-                  margin: 26px 0 0;
-                  font-size: 14px;
-                  line-height: 1.8;
-                  color: #475569;
-                ">
-                  Thank you,<br />
-                  <strong style="color: #0f766e;">
-                    Curate Health Care Services
-                  </strong>
-                </p>
-
-              </td>
-            </tr>
-
-            <!-- Footer -->
-            <tr>
-              <td style="
-                padding: 20px;
-                text-align: center;
-                background-color: #f8fafc;
-                border-top: 1px solid #e2e8f0;
-              ">
-                <p style="
-                  margin: 0;
-                  font-size: 11px;
-                  line-height: 1.8;
-                  color: #94a3b8;
-                ">
-                  This is an automated notification from Curate Health
-                  Care Services. Please do not reply directly to this email.
-                </p>
-              </td>
-            </tr>
-
-          </table>
-
-        </td>
-      </tr>
-    </table>
-
-  </body>
-  </html>
-  `,
-});
-    // Keep the local cache consistent.
-    if (cachedAttendeceInfo?.date === selectedDate) {
-      cachedAttendeceInfo = {
-        ...cachedAttendeceInfo,
-        data: cachedAttendeceInfo.data.map((item: any) =>
-          item.UserId === employee.UserId
+      setPopupMessage(
+        "Leave request reverted successfully. Leave balance restored."
+      );
+    } else {
+      // Update the complete leave request in the current UI.
+      setemployeeRoster((previous: any[]) =>
+        previous.map((item: any) =>
+          isSameLeaveRequest(item)
             ? { ...item, ApprovalStatus: approvalStatus }
             : item
-        ),
-      };
+        )
+      );
+
+      if (cachedAttendeceInfo?.date === selectedDate) {
+        cachedAttendeceInfo = {
+          ...cachedAttendeceInfo,
+          data: cachedAttendeceInfo.data.map((item: any) =>
+            isSameLeaveRequest(item)
+              ? { ...item, ApprovalStatus: approvalStatus }
+              : item
+          ),
+        };
+      }
+
+      setPopupMessage(
+        `Leave request ${ImpStatus === "Approve" ? "approved" : "rejected"} successfully.`
+      );
+
+      // KEEP YOUR EXISTING MAILSEND EMAIL TEMPLATE HERE.
+      // Send the notification only for Approve and Reject.
+      try {
+        // Paste your existing axios.post("/api/MailSend", {...})
+        // block here without changing its email HTML.
+      } catch (emailError) {
+        console.error("Leave notification email failed:", emailError);
+      }
     }
   } catch (error: any) {
     console.error(
-      "Failed to update leave approval:",
-      error.response?.data || error.message || error
+      "Leave action failed:",
+      error.response?.data || error.message
     );
 
     setPopupMessage(
       error.response?.data?.message ||
-        "Unable to update leave status. Please try again."
+        error.message ||
+        "Unable to process leave request."
     );
   } finally {
     setUpdatingUserId(null);
     setUpdatingAction(null);
   }
 };
+
 
 const getSpentLeaves = (userId: string) => {
   const approvedLeaves = employeeRoster.filter(
@@ -848,11 +726,426 @@ const updateLeaveBalance = async () => {
   }
 };
 
+const saveAttendanceEdit = async () => {
+  if (attendanceEditSaveInProgress.current) return;
+
+  if (!attendanceEdit || !selectedStaff) {
+    setPopupMessage("Select an employee and attendance date before saving.");
+    return;
+  }
+setPopupMessage("Saving attendance update...");
+  const userId = String(selectedStaff.UserId ?? "").trim();
+  const employeeName = String(selectedStaff.EmployeeName ?? "").trim();
+  const { date } = attendanceEdit;
+  const parsedDate = new Date(`${date}T00:00:00.000Z`);
+  const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+    !Number.isNaN(parsedDate.getTime()) &&
+    parsedDate.toISOString().slice(0, 10) === date;
+  const validStatuses = ["Present", "Absent", "Leave", "Halfday"];
+
+  if (!userId || !employeeName|| !validStatuses.includes(attendanceEditStatus)) {
+    setPopupMessage("Attendance details are incomplete or invalid. Please review them and try again.");
+    return;
+  }
+
+  attendanceEditSaveInProgress.current = true;
+  setSavingAttendanceEdit(true);
+
+  try {
+    const response = await axios.post(
+      "/api/UpdateDailyStaffAttendance",
+      {
+        UserId: userId,
+        EmployeeName: employeeName,
+        AttendanceDate: date,
+        Status: attendanceEditStatus,
+      },
+      { timeout: 15000 }
+    );
+
+    if (!response?.data || typeof response.data !== "object" || response.data.success === false) {
+      const message = typeof response?.data?.message === "string"
+        ? response.data.message
+        : "The attendance update was not confirmed by the server.";
+      throw new Error(message);
+    }
+
+    const sameEmployeeAndDate = (record: any) =>
+      String(record?.UserId ?? "") === userId &&
+      String(record?.AttendanceDate ?? "").slice(0, 10) === date;
+    const existingMonthlyRecord = monthlyAttendance.find(sameEmployeeAndDate);
+    const existingRosterRecord = date === selectedDate
+      ? employeeRoster.find(sameEmployeeAndDate)
+      : undefined;
+    const updatedRecord = {
+      ...(selectedStaff as Record<string, unknown>),
+      ...(existingRosterRecord ?? {}),
+      ...(existingMonthlyRecord ?? {}),
+      UserId: userId,
+      EmployeeName: employeeName,
+      AttendanceDate: date,
+      Status: attendanceEditStatus,
+      ApprovalStatus: attendanceEditStatus === "Leave"
+        ? "Approved"
+        : undefined,
+    };
+
+    setMonthlyAttendance((previous: any[]) => [
+      ...previous.filter((record) => !sameEmployeeAndDate(record)),
+      updatedRecord,
+    ]);
+
+    if (date === selectedDate) {
+      setemployeeRoster((previous: any[]) => {
+        const hasEmployee = previous.some(sameEmployeeAndDate);
+        return hasEmployee
+          ? previous.map((record) => sameEmployeeAndDate(record)
+              ? { ...record, ...updatedRecord }
+              : record)
+          : [...previous, updatedRecord];
+      });
+
+      if (cachedAttendeceInfo?.date === selectedDate) {
+        const cachedRecords = Array.isArray(cachedAttendeceInfo.data)
+          ? cachedAttendeceInfo.data
+          : [];
+        const hasCachedRecord = cachedRecords.some(sameEmployeeAndDate);
+        cachedAttendeceInfo = {
+          ...cachedAttendeceInfo,
+          data: hasCachedRecord
+            ? cachedRecords.map((record: any) => sameEmployeeAndDate(record)
+                ? { ...record, ...updatedRecord }
+                : record)
+            : [...cachedRecords, updatedRecord],
+        };
+      }
+    }
+
+    setAttendanceEdit(null);
+    setPopupMessage("Attendance updated successfully.");
+  } catch (error: unknown) {
+    console.error("Failed to update staff attendance:", error);
+    const responseMessage = axios.isAxiosError(error) &&
+      typeof error.response?.data?.message === "string"
+      ? error.response.data.message
+      : null;
+    const message = responseMessage ||
+      (error instanceof Error && error.message !== "" ? error.message : null) ||
+      "Unable to update attendance. Please check your connection and try again.";
+    setPopupMessage(message);
+  } finally {
+    attendanceEditSaveInProgress.current = false;
+    setSavingAttendanceEdit(false);
+  }
+};
+
   if (isChecking) {
    return <LoadingData />
   }
   return (
     <main className="w-full min-w-0 bg-slate-50 p-3 text-slate-900 sm:p-5 lg:p-7">
+      {attendanceInfoStaff && (() => {
+  const record = attendanceInfoStaff;
+
+  const breaks = Array.isArray(record.Breaks)
+    ? record.Breaks
+    : [];
+
+  const workingMinutes = getAttendanceWorkingMinutes(record);
+
+  const totalBreakMinutes = getAttendanceBreakMinutes(record);
+
+  const isWorking = record.AttendanceState === "Working";
+
+  return (
+    <div
+      className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm sm:p-5"
+      onClick={() => setAttendanceInfoStaff(null)}
+      role="presentation"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Attendance information"
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+      >
+
+        {/* Header */}
+        <div className="relative shrink-0 overflow-hidden bg-gradient-to-r from-[#087F8C] to-[#075985] px-5 py-5 text-white">
+
+          <div className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/10" />
+
+          <div className="relative flex items-center justify-between gap-3">
+
+            <div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+
+                <h3 className="text-lg font-bold">
+                  Attendance Details
+                </h3>
+              </div>
+
+              <p className="mt-1 text-sm text-white/80">
+                {record.EmployeeName}
+              </p>
+
+              <p className="mt-1 text-xs text-white/70">
+                {new Date(
+                  `${record.DisplayDate}T12:00:00`
+                ).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setAttendanceInfoStaff(null)}
+              aria-label="Close attendance details"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xl transition hover:bg-white/15"
+            >
+              ×
+            </button>
+
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
+
+          {/* Working Summary */}
+          <div className="grid grid-cols-2 gap-3">
+
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4">
+
+              <div className="flex items-center gap-2 text-indigo-600">
+                <Clock className="h-4 w-4" />
+
+                <span className="text-xs font-semibold">
+                  Working Hours
+                </span>
+              </div>
+
+              <p className="mt-2 text-2xl font-bold text-indigo-800">
+                {formatWorkingHours(workingMinutes)}
+              </p>
+
+            </div>
+
+            <div className="rounded-xl border border-amber-100 bg-amber-50/70 p-4">
+
+              <div className="flex items-center gap-2 text-amber-600">
+                <CalendarDays className="h-4 w-4" />
+
+                <span className="text-xs font-semibold">
+                  Total Breaks
+                </span>
+              </div>
+
+              <p className="mt-2 text-2xl font-bold text-amber-800">
+                {formatWorkingHours(totalBreakMinutes)}
+              </p>
+
+              <p className="mt-1 text-xs text-amber-700">
+                {breaks.length} break{breaks.length !== 1 ? "s" : ""}
+              </p>
+
+            </div>
+
+          </div>
+
+          {/* Attendance Status */}
+          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3">
+
+            <div>
+              <p className="text-xs font-medium text-slate-500">
+                Attendance Status
+              </p>
+
+              <p className="mt-1 text-sm font-bold text-slate-800">
+                {record.Status || "Not marked"}
+              </p>
+            </div>
+
+            <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+              isWorking
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-slate-100 text-slate-700"
+            }`}>
+              {isWorking ? "Currently Working" : "Completed"}
+            </span>
+
+          </div>
+
+          {/* Check-in / Check-out */}
+          <div>
+
+            <h4 className="mb-3 text-sm font-bold text-slate-800">
+              Attendance Timeline
+            </h4>
+
+            <div className="grid grid-cols-2 gap-3">
+
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3">
+
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+
+                  <span className="text-xs font-medium text-slate-500">
+                    Check-in
+                  </span>
+                </div>
+
+                <p className="mt-2 text-sm font-bold text-slate-800">
+                  {formatTime(record.CheckIn?.Time)}
+                </p>
+
+              </div>
+
+              <div className="rounded-xl border border-rose-100 bg-rose-50/40 p-3">
+
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-rose-500" />
+
+                  <span className="text-xs font-medium text-slate-500">
+                    Check-out
+                  </span>
+                </div>
+
+                <p className="mt-2 text-sm font-bold text-slate-800">
+                  {record.CheckOut?.Time
+                    ? formatTime(record.CheckOut.Time)
+                    : "Not checked out"}
+                </p>
+
+              </div>
+
+            </div>
+          </div>
+
+          {/* Break Details */}
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+
+            <div className="mb-4 flex items-center justify-between">
+
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-amber-600" />
+
+                <h4 className="text-sm font-bold text-slate-800">
+                  Break Information
+                </h4>
+              </div>
+
+              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                {breaks.length} Breaks
+              </span>
+
+            </div>
+
+            {breaks.length > 0 ? (
+
+              <div className="space-y-3">
+
+                {breaks.map((item: any, index: number) => (
+
+                  <div
+                    key={item.BreakNumber ?? index}
+                    className="rounded-xl border border-amber-100 bg-amber-50/40 p-3"
+                  >
+
+                    <div className="mb-3 flex items-center justify-between">
+
+                      <p className="text-sm font-bold text-slate-800">
+                        Break {item.BreakNumber ?? index + 1}
+                      </p>
+
+                      <span className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-amber-700">
+                        {getBreakDuration(item)}
+                      </span>
+
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+
+                      <div>
+                        <p className="text-[11px] font-medium text-slate-400">
+                          Started At
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-slate-700">
+                          {formatTime(item.StartTime)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-[11px] font-medium text-slate-400">
+                          Ended At
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-slate-700">
+                          {item.EndTime
+                            ? formatTime(item.EndTime)
+                            : "Ongoing"}
+                        </p>
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+                <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+
+                  <span className="text-xs font-semibold text-slate-500">
+                    Total Break Duration
+                  </span>
+
+                  <span className="text-sm font-bold text-amber-700">
+                    {formatWorkingHours(totalBreakMinutes)}
+                  </span>
+
+                </div>
+
+              </div>
+
+            ) : (
+
+              <div className="rounded-lg bg-slate-50 py-5 text-center">
+                <Clock className="mx-auto h-6 w-6 text-slate-300" />
+
+                <p className="mt-2 text-xs font-medium text-slate-500">
+                  No breaks taken
+                </p>
+              </div>
+
+            )}
+
+          </div>
+
+        </div>
+
+        {/* Footer */}
+        <div className="shrink-0 border-t border-slate-100 bg-slate-50 p-4">
+
+          <button
+            type="button"
+            onClick={() => setAttendanceInfoStaff(null)}
+            className="w-full rounded-xl bg-slate-800 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
+          >
+            Close Details
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  );
+})()}
       {popupMessage && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm"
@@ -864,8 +1157,16 @@ const updateLeaveBalance = async () => {
             aria-modal="true"
             aria-label="Notification"
             onClick={(event) => event.stopPropagation()}
-            className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+            className="relative w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
           >
+            <button
+              type="button"
+              onClick={() => setPopupMessage(null)}
+              aria-label="Close notification"
+              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+            >
+              ×
+            </button>
             <p className="text-sm leading-6 text-slate-700">{popupMessage}</p>
             <button
               type="button"
@@ -877,6 +1178,7 @@ const updateLeaveBalance = async () => {
           </div>
         </div>
       )}
+     
       <div className="mx-auto w-full max-w-screen-2xl space-y-5">
         <header className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             
@@ -891,14 +1193,52 @@ const updateLeaveBalance = async () => {
           </div>
           {selectedDate !== getLocalDate() && <button type="button" onClick={() => { setSelectedDate(getLocalDate()); setSearch(""); setStatusFilter("All"); }} className="inline-flex shrink-0 items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Today&apos;s Attendance</button>}
       
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <select
+                      aria-label="Filter by Indian city"
+                      value={selectedCity}
+                      onChange={(e) => setSelectedCity(e.target.value)}
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 sm:w-52"
+                    >
+                      <option value="All cities">Branch Offices</option>
+                      {[
+                        "Agra", "Ahmedabad", "Amritsar", "Bengaluru", "Bhopal", "Bhubaneswar",
+                        "Chandigarh", "Chennai", "Coimbatore", "Delhi", "Dehradun", "Faridabad",
+                        "Ghaziabad", "Gurugram", "Guwahati", "Hyderabad", "Indore", "Jaipur",
+                        "Kanpur", "Kochi", "Kolkata", "Lucknow", "Ludhiana", "Madurai", "Mangaluru",
+                        "Meerut", "Mumbai", "Mysuru", "Nagpur", "Nashik", "Noida", "Patna",
+                        "Prayagraj", "Pune", "Raipur", "Rajkot", "Ranchi", "Surat", "Thiruvananthapuram",
+                        "Vadodara", "Varanasi", "Visakhapatnam",
+                      ].map((city) => <option key={city} value={city}>{city}</option>)}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setShowDutyRoster(true)}
+                      className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-800 px-4 py-2 font-semibold text-white shadow-lg transition-all duration-150 hover:from-indigo-500 hover:to-indigo-700 sm:w-auto"
+                    >
+                      Roaster
+                    </button>
                     <button
                onClick={() =>router.push("/DashBoard")}
               className="flex cursor-pointer items-center gap-2 w-full sm:w-auto justify-center px-4 py-2 bg-gradient-to-br from-[#00A9A5] to-[#005f61] hover:from-[#01cfc7] hover:to-[#00403e] text-white rounded-xl font-semibold shadow-lg transition-all duration-150"
             >
               DashBoard
             </button>
+                    
+                    </div>
         </header>
-
+<SundayDutyRoster
+  isOpen={showDutyRoster}
+  onClose={() => setShowDutyRoster(false)}
+  staffList={rosterStaffList}
+  initialRoster={monthlyRoster}
+   onSave={async (month, year, entries) => {
+    console.log("Roster saved successfully.");
+    console.log("Month:", month);
+    console.log("Year:", year);
+    console.log("Roster Entries:", entries);
+  }}
+/>
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="mb-4 flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">⌕</span><div><h2 className="text-sm font-semibold">Find attendance</h2><p className="text-xs text-slate-500">Choose a date or search by employee and area.</p></div></div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -930,13 +1270,13 @@ const updateLeaveBalance = async () => {
             <>
               {/* Responsive employee cards avoid clipped columns in narrow dialogs and side panels. */}
             <div className="grid w-full min-w-0 grid-cols-1 items-stretch gap-3 p-2 sm:grid-cols-2 sm:gap-4 sm:p-3 lg:grid-cols-3">
-  {filteredEmployees.map((employee) => {
+  {filteredEmployees.map((employee,Index) => {
     const coordinates = getCoordinates(employee.Location);
     const status = employee.Status || "Not marked";
 
     return (
       <article
-        key={employee.UserId}
+        key={Index}
         className="relative flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:border-indigo-200 hover:shadow-md"
       >
         {/* Employee Header */}
@@ -954,9 +1294,18 @@ const updateLeaveBalance = async () => {
               <h3 className="truncate text-sm font-semibold text-slate-900 sm:text-base">
                 {employee.EmployeeName}
               </h3>
-              <p className="mt-0.5 text-xs text-slate-500">
-                {status === "Leave" ? "Leave application" : "Attendance"}
-              </p>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+  <p className="text-xs font-medium text-slate-500">
+    {status === "Leave" ? "Leave Application" : "Attendance"}
+  </p>
+
+  {employee.City && (
+    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">
+      <MapPin className="h-3 w-3 text-slate-400" />
+      {employee.City}
+    </span>
+  )}
+</div>
             </div>
           </div>
 
@@ -970,10 +1319,101 @@ const updateLeaveBalance = async () => {
 <div className="mx-3 mb-3 rounded-xl bg-slate-50 p-3 sm:mx-4 sm:mb-4 sm:p-4">
 
   {status === "Leave" ? (
-    <>
-      {/* Keep your existing Leave Dates JSX here */}
-    </>
-  ) : (
+  <div className="space-y-3">
+
+    {/* Leave Date Range */}
+    <div className="rounded-xl border border-amber-200 bg-white p-3 sm:p-4">
+
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+            <CalendarDays className="h-5 w-5" />
+          </div>
+
+          <div>
+            <p className="text-sm font-bold text-slate-800">
+              Leave Details
+            </p>
+            <p className="text-xs text-slate-500">
+              Employee leave information
+            </p>
+          </div>
+        </div>
+
+        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">
+          {employee.LeaveType || "Leave"}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+
+        <div className="rounded-lg bg-slate-50 p-3">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+            From Date
+          </p>
+          <p className="mt-1 text-sm font-bold text-slate-800">
+            {employee.FromDate
+              ? new Date(employee.FromDate).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "—"}
+          </p>
+        </div>
+
+        <div className="rounded-lg bg-slate-50 p-3">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+            To Date
+          </p>
+          <p className="mt-1 text-sm font-bold text-slate-800">
+            {employee.ToDate
+              ? new Date(employee.ToDate).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "—"}
+          </p>
+        </div>
+
+      </div>
+
+      {/* Leave Duration */}
+      <div className="mt-3 flex items-center justify-between rounded-lg border border-amber-100 bg-amber-50/70 p-3">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-amber-600" />
+          <span className="text-xs font-semibold text-slate-600">
+            Total Leave Days
+          </span>
+        </div>
+
+        <span className="text-lg font-bold text-amber-700">
+          {employee.TotalDays ?? 0} Days
+        </span>
+      </div>
+
+      {/* Description */}
+      {employee.Description && (
+        <div className="mt-3">
+          <p className="mb-1.5 text-xs font-semibold text-slate-500">
+            Reason for Leave
+          </p>
+
+          <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+            <p className="text-sm leading-6 text-slate-700">
+              {employee.Description}
+            </p>
+          </div>
+        </div>
+      )}
+
+    </div>
+
+   
+
+  </div>
+)  : (
     <div className="space-y-3">
 
       {/* Check-in and Check-out */}
@@ -1121,37 +1561,96 @@ const updateLeaveBalance = async () => {
             const decision = employee.ApprovalStatus
 
             return (
-              <div className="flex flex-wrap items-center gap-2 px-3 pb-3 sm:px-4 sm:pb-4">
-                {decision==="Approved" ? (
-                  <StatusBadge status={decision} />
-                ) : (
-                  <>
-                   <button
-  type="button"
-  disabled={updatingUserId === employee.UserId}
-  onClick={() => UpdateStatus(employee, "Approve")}
-  className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
->
-  {updatingAction?.userId === employee.UserId &&
-updatingAction?.action === "Approve"
-  ? "Approving..."
-  : "Approve"}
-</button>
+            
+<div className="px-3 pb-3 sm:px-4 sm:pb-4">
+  <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
 
+   
+
+    {decision === "Approved" ? (
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-100 bg-emerald-50 p-3">
+
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+
+          <div>
+            <p className="text-xs font-bold text-emerald-800">
+              Leave Approved
+            </p>
+            <p className="text-[11px] text-emerald-700">
+              This request has been approved
+            </p>
+          </div>
+        </div>
+
+     
 <button
   type="button"
   disabled={updatingUserId === employee.UserId}
-  onClick={() => UpdateStatus(employee, "Reject")}
-  className="rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+  onClick={() => UpdateStatus(employee, "Revert")}
+  className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs font-bold text-amber-700 shadow-sm transition hover:border-amber-400 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50"
 >
   {updatingAction?.userId === employee.UserId &&
-updatingAction?.action === "Reject"
-  ? "Rejecting..."
-  : "Reject"}
+  updatingAction?.action === "Revert" ? (
+    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+  ) : (
+    <RotateCcw className="h-3.5 w-3.5" />
+  )}
+
+  {updatingAction?.userId === employee.UserId &&
+  updatingAction?.action === "Revert"
+    ? "Reverting..."
+    : "Revert Approval"}
 </button>
-                  </>
-                )}
-              </div>
+
+
+      </div>
+    ) : (
+      <div className="grid grid-cols-2 gap-2">
+
+        <button
+          type="button"
+          disabled={updatingUserId === employee.UserId}
+          onClick={() => UpdateStatus(employee, "Approve")}
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {updatingAction?.userId === employee.UserId &&
+          updatingAction?.action === "Approve" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <CheckCircle2 className="h-4 w-4" />
+          )}
+
+          {updatingAction?.userId === employee.UserId &&
+          updatingAction?.action === "Approve"
+            ? "Approving..."
+            : "Approve"}
+        </button>
+
+        <button
+          type="button"
+          disabled={updatingUserId === employee.UserId}
+          onClick={() => UpdateStatus(employee, "Reject")}
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
+        >
+          {updatingAction?.userId === employee.UserId &&
+          updatingAction?.action === "Reject" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <XCircle className="h-4 w-4" />
+          )}
+
+          {updatingAction?.userId === employee.UserId &&
+          updatingAction?.action === "Reject"
+            ? "Rejecting..."
+            : "Reject"}
+        </button>
+
+      </div>
+    )}
+  </div>
+</div>
+
             );
           })()}
 
@@ -1641,7 +2140,41 @@ className="flex h-[90dvh] max-h-[850px] w-full max-w-[1200px] flex-col overflow-
               selectedMonth + 1,
               0
             ).getDate();
+const getDayAttendanceRecord = (day: number) => {
+  const date = `${selectedYear}-${String(
+    selectedMonth + 1
+  ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
+  return monthlyAttendance.find((record) => {
+    if (
+      String(record.UserId) !== String(selectedStaff.UserId)
+    ) {
+      return false;
+    }
+
+    const attendanceDate = String(
+      record.AttendanceDate || ""
+    ).slice(0, 10);
+
+    if (record.Status !== "Leave") {
+      return attendanceDate === date;
+    }
+
+    const from = String(
+      record.FromDate || record.AttendanceDate || ""
+    ).slice(0, 10);
+
+    const to = String(
+      record.ToDate || record.AttendanceDate || from
+    ).slice(0, 10);
+
+    return (
+      record.ApprovalStatus === "Approved" &&
+      date >= from &&
+      date <= to
+    );
+  });
+};
             const getDayStatus = (day: number) => {
               const date = `${selectedYear}-${String(
                 selectedMonth + 1
@@ -1701,6 +2234,14 @@ className="flex h-[90dvh] max-h-[850px] w-full max-w-[1200px] flex-col overflow-
                 };
               }
 
+              if (attendance?.Status === "Halfday") {
+                return {
+                  label: "H",
+                  status: "Halfday",
+                  circle: "border-indigo-500 text-indigo-600",
+                };
+              }
+
               if (leave) {
                 return {
                   label: "L",
@@ -1724,17 +2265,71 @@ className="flex h-[90dvh] max-h-[850px] w-full max-w-[1200px] flex-col overflow-
                 counts[status] += 1;
                 return counts;
               },
-              { Present: 0, Absent: 0, Leave: 0, "Not Marked": 0 } as Record<string, number>
+              { Present: 0, Absent: 0, Leave: 0, Halfday: 0, "Not Marked": 0 } as Record<string, number>
+            );
+            const totalMonthWorkingMinutes = Array.from(
+              { length: daysInMonth },
+              (_, index) => getDayAttendanceRecord(index + 1)
+            ).reduce(
+              (total, record) =>
+                total + (record && record.Status !== "Leave"
+                  ? getAttendanceWorkingMinutes(record)
+                  : 0),
+              0
             );
 
             return (
               <>
-                <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
+                   {attendanceEdit && (
+        <div
+          className="fixed inset-0 z-[210] flex items-center justify-center bg-slate-950/50 p-4"
+          role="presentation"
+          onClick={() => setAttendanceEdit(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="attendance-edit-title"
+            onClick={(event) => event.stopPropagation()}
+            className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+          >
+            <h2 id="attendance-edit-title" className="text-lg font-semibold text-slate-900">Edit attendance</h2>
+            <p className="mt-1 text-sm text-slate-500">{selectedStaff?.EmployeeName} · {attendanceEdit.date}</p>
+            {popupMessage && (
+  <div
+    role="alert"
+    aria-live="polite"
+    className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2.5 text-sm font-medium text-indigo-700"
+  >
+    {popupMessage}
+  </div>
+)}
+            <label htmlFor="attendance-edit-status" className="mt-5 block text-sm font-medium text-slate-700">Status</label>
+            <select
+              id="attendance-edit-status"
+              value={attendanceEditStatus}
+              onChange={(event) => setAttendanceEditStatus(event.target.value)}
+              className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+            >
+              <option value="Present">Present</option>
+              <option value="Absent">Absent</option>
+              <option value="Leave">Leave</option>
+              <option value="Halfday">Halfday</option>
+            </select>
+            <div className="mt-6 flex justify-end gap-3">
+              <button type="button" onClick={() => setAttendanceEdit(null)} className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Cancel</button>
+              <button type="button" onClick={saveAttendanceEdit} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Save</button>
+            </div>
+          </div>
+        </div>
+      )}
                   {[
                     { label: "Present Days", count: dayCounts.Present, style: "border-emerald-100 bg-emerald-50 text-emerald-700" },
                     { label: "Absent Days", count: dayCounts.Absent, style: "border-rose-100 bg-rose-50 text-rose-700" },
                     { label: "Leave Days", count: dayCounts.Leave, style: "border-amber-100 bg-amber-50 text-amber-700" },
                     { label: "Not Marked", count: dayCounts["Not Marked"], style: "border-slate-200 bg-slate-50 text-slate-600" },
+                    { label: "Month Working Hours", count: formatWorkingHours(totalMonthWorkingMinutes), style: "border-indigo-100 bg-indigo-50 text-indigo-700" },
                   ].map((item) => (
                     <div key={item.label}className={`rounded-xl border p-2 text-center ${item.style}`}>
                       <p className="text-xs font-medium">{item.label}</p>
@@ -1775,20 +2370,59 @@ className="flex h-[90dvh] max-h-[850px] w-full max-w-[1200px] flex-col overflow-
                         )}
 
                         
-                      <button
+                 
+<div className="mt-0.5 flex items-center gap-1">
+  <button
+    type="button"
+    onClick={() => openLocation(selectedStaff)}
+    disabled={isNotMarked}
+    title="View attendance location"
+    aria-label={`View location for day ${day}`}
+    className={`flex h-5 w-5 items-center justify-center rounded-full transition hover:bg-red-50 ${
+      isNotMarked ? "cursor-not-allowed opacity-40" : "cursor-pointer"
+    }`}
+  >
+    <MapPin className="h-4 w-4 text-red-500" />
+  </button>
+
+  <button
   type="button"
-  onClick={() => openLocation(selectedStaff)}
-  disabled={isNotMarked}
-  title="View attendance location"
-  aria-label={`View location for day ${day}`}
-  className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-full transition hover:bg-red-50 ${
-    isNotMarked
-      ? "cursor-not-allowed opacity-40"
-      : "cursor-pointer"
-  }`}
+  disabled={!getDayAttendanceRecord(day) ||
+    getDayAttendanceRecord(day)?.Status === "Leave"}
+  onClick={() => {
+    const record = getDayAttendanceRecord(day);
+
+    if (!record) return;
+
+    setAttendanceInfoStaff({
+      ...record,
+      DisplayDate: `${selectedYear}-${String(
+        selectedMonth + 1
+      ).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+    });
+  }}
+  title="View attendance information"
+  aria-label={`View attendance information for day ${day}`}
+  className="flex h-5 w-5 items-center justify-center rounded-full transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-30"
 >
-  <MapPin className="h-4 w-4 text-red-500" />
+  <Info className="h-4 w-4 text-blue-500" />
 </button>
+</div>
+
+
+<button
+  type="button"
+  onClick={() => {
+    const date = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const currentStatus = getDayStatus(day).status;
+    setAttendanceEditStatus(["Present", "Absent", "Leave", "Halfday"].includes(currentStatus) ? currentStatus : "Present");
+    setAttendanceEdit({ day, date });
+  }}
+  className="mt-1 rounded-full bg-slate-700 px-2 py-[2px] text-[8px] text-white hover:bg-indigo-600"
+>
+  Edit
+</button>
+
 
                         {/* <button
                           type="button"

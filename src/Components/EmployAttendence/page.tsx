@@ -14,7 +14,8 @@ import {
   Play,
   Clock,
   RefreshCw,
-  MapPin
+  MapPin,
+  Info
 } from "lucide-react";
 
 import axios from "axios";
@@ -89,7 +90,57 @@ const formatDuration = (minutes = 0) => {
 
   return `${hours}h ${mins}m`;
 };
+const getAttendanceBreakMinutes = (record: any) => {
+  if (record?.TotalBreakMinutes != null) {
+    return Number(record.TotalBreakMinutes) || 0;
+  }
 
+  return (record?.Breaks ?? []).reduce(
+    (total: number, item: any) => {
+      if (item.DurationMinutes != null) {
+        return total + Number(item.DurationMinutes);
+      }
+
+      if (item.StartTime) {
+        const start = new Date(item.StartTime).getTime();
+        const end = item.EndTime
+          ? new Date(item.EndTime).getTime()
+          : Date.now();
+
+        if (Number.isFinite(start) && end > start) {
+          return total + Math.floor((end - start) / 60000);
+        }
+      }
+
+      return total;
+    },
+    0
+  );
+};
+
+const getAttendanceWorkingMinutes = (record: any) => {
+  const recordedMinutes = Number(record?.TotalWorkingMinutes ?? 0);
+
+  if (record?.AttendanceState === "Working" ||
+      record?.AttendanceState === "OnBreak") {
+
+    const checkIn = new Date(record?.CheckIn?.Time).getTime();
+
+    if (!Number.isFinite(checkIn)) return recordedMinutes;
+
+    const elapsed = Math.max(
+      0,
+      Math.floor((Date.now() - checkIn) / 60000)
+    );
+
+    return Math.max(
+      0,
+      elapsed - getAttendanceBreakMinutes(record)
+    );
+  }
+
+  return recordedMinutes;
+};
 export default function MarkAttendance({
   userId,
   userName,
@@ -120,6 +171,7 @@ export default function MarkAttendance({
   });
 
   const [leaveType, setLeaveType] = useState("");
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [leaveDescription, setLeaveDescription] = useState("");
 const [selectedStaff, setSelectedStaff] = useState<any>(null);
 const [monthlyAttendance, setMonthlyAttendance] = useState<any[]>([]);
@@ -132,7 +184,8 @@ const [monthlyAttendance, setMonthlyAttendance] = useState<any[]>([]);
 
   const [LoadingLeaves, setLoadingLeaves] = useState(false);
   const [loading, setLoading] = useState(false);
-
+const [attendanceInfoStaff, setAttendanceInfoStaff] =
+  useState<any>(null);
   const [statusMessage, setStatusMessage] = useState("");
     const [selectedDate, setSelectedDate] = useState(getLocalDate());
    const selectedDateObj = new Date(`${selectedDate}T12:00:00`);
@@ -169,14 +222,27 @@ const selectedMonth = selectedDateObj.getMonth();
     attendance.fromDate,
     attendance.toDate
   );
+const handleOpenLeaveForm = async () => {
+  setLeaveType("");
+  setLeaveDescription("");
 
+  setAttendance((prev: any) => ({
+    ...prev,
+    status: "Leave",
+    fromDate: getToday(),
+    toDate: getToday(),
+  }));
+
+  setShowLeaveModal(true);
+  await updateLeave("Leave");
+};
   // FETCH TODAY'S ATTENDANCE
   const refreshAttendance = useCallback(async () => {
     try {
       setLoadingAttendance(true);
 
       const result = await GetTodayAttendance(userId);
-console.log("Attendance refresh result:", result);
+
       if (result?.success) {
         setTodayAttendance(result.data);
       }
@@ -192,6 +258,7 @@ console.log("Attendance refresh result:", result);
     refreshAttendance();
   }, [refreshAttendance]);
 const openFullMonthAttendance = async (employee: any) => {
+  
   setSelectedStaff(employee);
   setShowFullMonth(true);
   setLoadingMonthlyAttendance(true);
@@ -391,7 +458,8 @@ const openFullMonthAttendance = async (employee: any) => {
 
         payload = {
           ...payload,
-          location
+          location,
+          City: "Hyderabad"
         };
       }
 
@@ -523,6 +591,9 @@ const openFullMonthAttendance = async (employee: any) => {
   };
 
   const state = todayAttendance?.AttendanceState;
+  const isOnApprovedLeave =
+  todayAttendance?.Status === "Leave" &&
+  todayAttendance?.ApprovalStatus === "Approved";
 
   const breaks = todayAttendance?.Breaks ?? [];
 
@@ -536,7 +607,9 @@ const openFullMonthAttendance = async (employee: any) => {
   const totalWorkingMinutes =
     todayAttendance?.TotalWorkingMinutes ?? 0;
 
-  const isCheckedIn = !!todayAttendance;
+  const isCheckedIn =
+  !!todayAttendance &&
+  todayAttendance?.Status !== "Leave";
 const employee = {
   UserId: userId,
   EmployeeName: userName,
@@ -545,88 +618,6 @@ const employee = {
 };
   return (
     <div className="relative w-full max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl border overflow-hidden">
-
-      {/* HEADER */}
-      <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-[#00A9A5] to-[#005f61]">
-
-        <div className="flex items-center gap-3">
-
-          <img
-            src="/Icons/Curate-logoq.png"
-            alt="Curate Health"
-            className="h-9 w-9 bg-white rounded-full p-1"
-          />
-
-          <div className="text-white">
-            <h2 className="text-lg font-bold">
-              Attendance
-            </h2>
-
-            <p className="text-xs opacity-90">
-              {userName}
-            </p>
-          </div>
-        </div>
-
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center text-white"
-          >
-            <X size={18} />
-          </button>
-        )}
-      </div>
-
-      <div className="px-6 py-6 space-y-6">
-
-   
-
-        {/* TODAY'S ATTENDANCE */}
-        {loadingAttendance ? (
-
-          <div className="flex justify-center py-5">
-            <RefreshCw className="animate-spin text-teal-600" />
-          </div>
-
-        ) : isCheckedIn ? (
-
-          <div className="border rounded-2xl p-4 space-y-4">
-
-            
-<div className="space-y-3">
-
-  {/* HEADER */}
-  <div className="flex items-center justify-between gap-3">
-
-    <h3 className="font-bold text-gray-800 text-base">
-      Today's Attendance
-    </h3>
-
-    <span
-      className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold ${
-        state === "Working"
-          ? "bg-green-100 text-green-700"
-          : state === "OnBreak"
-          ? "bg-yellow-100 text-yellow-700"
-          : "bg-gray-100 text-gray-600"
-      }`}
-    >
-      {state}
-    </span>
-
-  </div>
-
-  {/* MONTH ATTENDANCE BUTTON */}
-  <button
-    type="button"
-     onClick={() => openFullMonthAttendance(employee)}
-    className="w-full flex items-center justify-center gap-2 rounded-xl border border-[#00A9A5] px-4 py-2.5 text-sm font-bold text-[#005f61] hover:bg-[#00A9A5]/10 transition-colors"
-  >
-    View Full Month Attendance
-  </button>
-
-</div>
 {showFullMonth && selectedStaff && (
   <div
     className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/30 p-0 backdrop-blur-[2px] sm:p-3"
@@ -859,7 +850,25 @@ className="flex h-[90dvh] max-h-[850px] w-full max-w-[1200px] flex-col overflow-
                 circle: "border-slate-300 text-slate-400",
               };
             };
+const getDayAttendanceRecord = (day: number) => {
+  const date = `${selectedYear}-${String(
+    selectedMonth + 1
+  ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
+  return monthlyAttendance.find((record) => {
+    if (
+      String(record.UserId) !== String(selectedStaff.UserId)
+    ) {
+      return false;
+    }
+
+    if (record.Status === "Leave") return false;
+
+    return (
+      String(record.AttendanceDate || "").slice(0, 10) === date
+    );
+  });
+};
             const dayCounts = Array.from(
               { length: daysInMonth },
               (_, index) => getDayStatus(index + 1).status
@@ -870,23 +879,336 @@ className="flex h-[90dvh] max-h-[850px] w-full max-w-[1200px] flex-col overflow-
               },
               { Present: 0, Absent: 0, Leave: 0, "Not Marked": 0 } as Record<string, number>
             );
+            const monthlyWorkingMinutes = monthlyAttendance.reduce(
+              (total, record) => {
+                if (
+                  String(record.UserId) !== String(selectedStaff.UserId) ||
+                  record.Status === "Leave"
+                ) {
+                  return total;
+                }
+
+                return total + getAttendanceWorkingMinutes(record);
+              },
+              0
+            );
 
             return (
               <>
-                <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                   {[
-                    { label: "Present Days", count: dayCounts.Present, style: "border-emerald-100 bg-emerald-50 text-emerald-700" },
-                    { label: "Absent Days", count: dayCounts.Absent, style: "border-rose-100 bg-rose-50 text-rose-700" },
-                    { label: "Leave Days", count: dayCounts.Leave, style: "border-amber-100 bg-amber-50 text-amber-700" },
-                    { label: "Not Marked", count: dayCounts["Not Marked"], style: "border-slate-200 bg-slate-50 text-slate-600" },
+                    { label: "Present Days", value: dayCounts.Present, style: "border-emerald-100 bg-emerald-50 text-emerald-700" },
+                    { label: "Absent Days", value: dayCounts.Absent, style: "border-rose-100 bg-rose-50 text-rose-700" },
+                    { label: "Leave Days", value: dayCounts.Leave, style: "border-amber-100 bg-amber-50 text-amber-700" },
+                    { label: "Not Marked", value: dayCounts["Not Marked"], style: "border-slate-200 bg-slate-50 text-slate-600" },
+                    { label: "Total Working Hours", value: formatDuration(monthlyWorkingMinutes), style: "border-indigo-100 bg-indigo-50 text-indigo-700" },
                   ].map((item) => (
                     <div key={item.label}className={`rounded-xl border p-2 text-center ${item.style}`}>
                       <p className="text-xs font-medium">{item.label}</p>
-                    <p className="mt-1 text-xl font-bold">{item.count}</p>
+                    <p className="mt-1 text-xl font-bold">{item.value}</p>
                     </div>
                   ))}
                 </div>
+{attendanceInfoStaff && (() => {
+  const record = attendanceInfoStaff;
 
+  const breaks = Array.isArray(record.Breaks)
+    ? record.Breaks
+    : [];
+
+  const workingMinutes = getAttendanceWorkingMinutes(record);
+  const breakMinutes = getAttendanceBreakMinutes(record);
+
+  const isWorking = record.AttendanceState === "Working";
+  const isOnBreak = record.AttendanceState === "OnBreak";
+
+  const formatAttendanceDuration = (minutes: number) => {
+    const safeMinutes = Math.max(0, Math.floor(minutes || 0));
+
+    return `${Math.floor(safeMinutes / 60)}h ${safeMinutes % 60}m`;
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm"
+      onClick={() => setAttendanceInfoStaff(null)}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Attendance information"
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+      >
+
+        {/* HEADER */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-[#087F8C] to-[#075985] px-5 py-5 text-white">
+
+          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
+
+          <div className="relative flex items-center justify-between">
+
+            <div>
+              <div className="flex items-center gap-2">
+                <Clock size={20} />
+
+                <h3 className="text-lg font-bold">
+                  Attendance Details
+                </h3>
+              </div>
+
+              <p className="mt-1 text-sm text-white/80">
+                {record.EmployeeName || userName}
+              </p>
+
+              <p className="mt-1 text-xs text-white/70">
+                {new Date(
+                  `${record.DisplayDate}T12:00:00`
+                ).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setAttendanceInfoStaff(null)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-xl hover:bg-white/15"
+            >
+              ×
+            </button>
+
+          </div>
+        </div>
+
+        {/* BODY */}
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
+
+          {/* SUMMARY */}
+          <div className="grid grid-cols-2 gap-3">
+
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4">
+              <div className="flex items-center gap-2 text-indigo-600">
+                <Clock size={17} />
+                <span className="text-xs font-semibold">
+                  Working Hours
+                </span>
+              </div>
+
+              <p className="mt-2 text-2xl font-bold text-indigo-800">
+                {formatAttendanceDuration(workingMinutes)}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
+              <div className="flex items-center gap-2 text-amber-600">
+                <Coffee size={17} />
+                <span className="text-xs font-semibold">
+                  Total Breaks
+                </span>
+              </div>
+
+              <p className="mt-2 text-2xl font-bold text-amber-800">
+                {formatAttendanceDuration(breakMinutes)}
+              </p>
+
+              <p className="mt-1 text-xs text-amber-700">
+                {breaks.length} break{breaks.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+
+          </div>
+
+          {/* STATUS */}
+          <div className="flex items-center justify-between rounded-xl border border-slate-200 p-3">
+
+            <div>
+              <p className="text-xs text-slate-500">
+                Attendance Status
+              </p>
+
+              <p className="mt-1 text-sm font-bold text-slate-800">
+                {record.Status || "Present"}
+              </p>
+            </div>
+
+            <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+              isWorking
+                ? "bg-emerald-100 text-emerald-700"
+                : isOnBreak
+                ? "bg-amber-100 text-amber-700"
+                : "bg-slate-100 text-slate-700"
+            }`}>
+              {isWorking
+                ? "Currently Working"
+                : isOnBreak
+                ? "On Break"
+                : "Completed"}
+            </span>
+
+          </div>
+
+          {/* CHECK IN / OUT */}
+          <div>
+            <h4 className="mb-3 text-sm font-bold text-slate-800">
+              Attendance Timeline
+            </h4>
+
+            <div className="grid grid-cols-2 gap-3">
+
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3">
+                <LogIn size={17} className="mb-2 text-emerald-600" />
+
+                <p className="text-xs text-slate-500">
+                  Check In
+                </p>
+
+                <p className="mt-1 text-sm font-bold text-slate-800">
+                  {formatTime(record.CheckIn?.Time)}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-rose-100 bg-rose-50/40 p-3">
+                <LogOut size={17} className="mb-2 text-rose-600" />
+
+                <p className="text-xs text-slate-500">
+                  Check Out
+                </p>
+
+                <p className="mt-1 text-sm font-bold text-slate-800">
+                  {record.CheckOut?.Time
+                    ? formatTime(record.CheckOut.Time)
+                    : "Not checked out"}
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+          {/* BREAK HISTORY */}
+          <div className="rounded-xl border border-slate-200 p-4">
+
+            <div className="mb-4 flex items-center justify-between">
+
+              <div className="flex items-center gap-2">
+                <Coffee size={17} className="text-amber-600" />
+
+                <h4 className="text-sm font-bold text-slate-800">
+                  Break Information
+                </h4>
+              </div>
+
+              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                {breaks.length} Breaks
+              </span>
+
+            </div>
+
+            {breaks.length > 0 ? (
+
+              <div className="space-y-3">
+
+                {breaks.map((item: any, index: number) => (
+
+                  <div
+                    key={item.BreakNumber ?? index}
+                    className="rounded-xl border border-amber-100 bg-amber-50/40 p-3"
+                  >
+
+                    <div className="mb-3 flex items-center justify-between">
+
+                      <p className="text-sm font-bold text-slate-800">
+                        Break {item.BreakNumber ?? index + 1}
+                      </p>
+
+                      <span className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-amber-700">
+                        {item.EndTime
+                          ? formatAttendanceDuration(
+                              Number(item.DurationMinutes) ||
+                              getAttendanceBreakMinutes({
+                                Breaks: [item],
+                              })
+                            )
+                          : "Ongoing"}
+                      </span>
+
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+
+                      <div>
+                        <p className="text-[11px] text-slate-400">
+                          Started At
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-slate-700">
+                          {formatTime(item.StartTime)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-[11px] text-slate-400">
+                          Ended At
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-slate-700">
+                          {item.EndTime
+                            ? formatTime(item.EndTime)
+                            : "In Progress"}
+                        </p>
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            ) : (
+
+              <div className="rounded-lg bg-slate-50 py-5 text-center">
+                <Coffee className="mx-auto h-6 w-6 text-slate-300" />
+
+                <p className="mt-2 text-xs text-slate-500">
+                  No breaks taken
+                </p>
+              </div>
+
+            )}
+
+            <div className="mt-4 flex justify-between border-t border-slate-100 pt-3">
+              <span className="text-xs font-semibold text-slate-500">
+                Total Break Duration
+              </span>
+
+              <span className="text-sm font-bold text-amber-700">
+                {formatAttendanceDuration(breakMinutes)}
+              </span>
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* FOOTER */}
+        <div className="shrink-0 border-t border-slate-100 bg-slate-50 p-4">
+          <button
+            type="button"
+            onClick={() => setAttendanceInfoStaff(null)}
+            className="w-full rounded-xl bg-slate-800 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
+          >
+            Close Details
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+})()}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
                 {Array.from(
                   { length: daysInMonth },
@@ -933,7 +1255,27 @@ className="flex h-[90dvh] max-h-[850px] w-full max-w-[1200px] flex-col overflow-
 >
   <MapPin className="h-4 w-4 text-red-500" />
 </button> */}
+  <button
+    type="button"
+    disabled={!getDayAttendanceRecord(day)}
+    onClick={() => {
+      const record = getDayAttendanceRecord(day);
 
+      if (!record) return;
+
+      setAttendanceInfoStaff({
+        ...record,
+        DisplayDate: `${selectedYear}-${String(
+          selectedMonth + 1
+        ).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+      });
+    }}
+    title="View attendance information"
+    aria-label={`View attendance information for day ${day}`}
+    className="flex h-6 w-6 items-center justify-center rounded-full transition hover:bg-blue-50 disabled:opacity-30"
+  >
+    <Info className="h-4 w-4 text-blue-500" />
+  </button>
                         {/* <button
                           type="button"
                           disabled={isNotMarked}
@@ -961,6 +1303,167 @@ className="flex h-[90dvh] max-h-[850px] w-full max-w-[1200px] flex-col overflow-
     </div>
   </div>
 )}
+      {/* HEADER */}
+      <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-[#00A9A5] to-[#005f61]">
+
+        <div className="flex items-center gap-3">
+
+          <img
+            src="/Icons/Curate-logoq.png"
+            alt="Curate Health"
+            className="h-9 w-9 bg-white rounded-full p-1"
+          />
+
+          <div className="text-white">
+            <h2 className="text-lg font-bold">
+              Attendance
+            </h2>
+
+            <p className="text-xs opacity-90">
+              {userName}
+            </p>
+          </div>
+        </div>
+
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center text-white"
+          >
+            <X size={18} />
+          </button>
+        )}
+      </div>
+
+      <div className="px-6 py-6 space-y-6">
+
+   
+
+        {/* TODAY'S ATTENDANCE */}
+        {loadingAttendance ? (
+
+          <div className="flex justify-center py-5">
+            <RefreshCw className="animate-spin text-teal-600" />
+          </div>
+
+        ) :isOnApprovedLeave ? (
+<div className="relative overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-5">
+
+  <div className="absolute -right-5 -top-5 h-28 w-28 rounded-full bg-amber-100/60" />
+
+  <div className="relative">
+
+    <div className="flex items-center justify-between gap-3">
+
+      <div className="flex items-center gap-3">
+
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100">
+          <ClipboardEdit className="h-6 w-6 text-amber-600" />
+        </div>
+
+        <div>
+          <h3 className="text-lg font-extrabold text-amber-900">
+            On Leave Today
+          </h3>
+
+          <p className="text-xs text-amber-700">
+            Approved leave request
+          </p>
+        </div>
+
+      </div>
+
+      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+        Approved
+      </span>
+
+    </div>
+
+    <div className="mt-5 grid grid-cols-2 gap-3">
+
+      <div className="rounded-xl border border-amber-100 bg-white/80 p-3">
+        <p className="text-xs text-gray-500">From Date</p>
+        <p className="mt-1 text-sm font-bold text-gray-800">
+          {todayAttendance?.FromDate}
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-amber-100 bg-white/80 p-3">
+        <p className="text-xs text-gray-500">To Date</p>
+        <p className="mt-1 text-sm font-bold text-gray-800">
+          {todayAttendance?.ToDate}
+        </p>
+      </div>
+
+    </div>
+
+    <div className="mt-3 rounded-xl border border-amber-100 bg-white/80 p-3">
+
+      <p className="text-xs text-gray-500">Leave Type</p>
+
+      <p className="mt-1 text-sm font-bold text-gray-800">
+        {todayAttendance?.leaveType || todayAttendance?.LeaveType || "Leave"}
+      </p>
+
+      <p className="mt-3 text-xs text-gray-500">
+        Reason
+      </p>
+
+      <p className="mt-1 text-sm font-medium text-gray-700">
+        {todayAttendance?.Description ||
+          todayAttendance?.leaveDescription ||
+          "No description provided"}
+      </p>
+
+    </div>
+
+    <div className="mt-4 flex items-center gap-2 rounded-lg bg-green-50 p-3 text-sm font-semibold text-green-700">
+      <CheckCircle size={18} />
+      Your leave has been approved. Enjoy your day!
+    </div>
+
+  </div>
+
+</div>
+): isCheckedIn ? (
+
+          <div className="border rounded-2xl p-4 space-y-4">
+
+            
+<div className="space-y-3">
+
+  {/* HEADER */}
+  <div className="flex items-center justify-between gap-3">
+
+    <h3 className="font-bold text-gray-800 text-base">
+      Today's Attendance
+    </h3>
+
+    <span
+      className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold ${
+        state === "Working"
+          ? "bg-green-100 text-green-700"
+          : state === "OnBreak"
+          ? "bg-yellow-100 text-yellow-700"
+          : "bg-gray-100 text-gray-600"
+      }`}
+    >
+      {state}
+    </span>
+
+  </div>
+
+  {/* MONTH ATTENDANCE BUTTON */}
+  <button
+    type="button"
+     onClick={() => openFullMonthAttendance(employee)}
+    className="w-full flex items-center justify-center gap-2 rounded-xl border border-[#00A9A5] px-4 py-2.5 text-sm font-bold text-[#005f61] hover:bg-[#00A9A5]/10 transition-colors"
+  >
+    View Full Month Attendance
+  </button>
+
+</div>
+
 
             <div className="grid grid-cols-2 gap-3">
 
@@ -1368,8 +1871,184 @@ onClick={() => openFullMonthAttendance(employee)}
           </>
 
         )}
+{/* APPLY LEAVE - AVAILABLE IN ALL ATTENDANCE STATES */}
+{isCheckedIn&&
+<button
+  type="button"
+  onClick={handleOpenLeaveForm}
+  disabled={loading}
+  className="w-full flex items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 font-bold text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
+>
+  <ClipboardEdit size={19} />
+  Apply for Leave
+</button>}
 
-        {/* STATUS MESSAGE */}
+{showLeaveModal && (
+  <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">
+            Apply for Leave
+          </h2>
+          <p className="text-sm text-slate-500">
+            Submit your leave request for approval.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowLeaveModal(false)}
+          className="rounded-full bg-slate-100 p-2 text-slate-600"
+        >
+          <X size={18} />
+        </button>
+      </div>
+{/* AVAILABLE LEAVE INFORMATION */}
+<div className="rounded-xl border border-teal-100 bg-teal-50 p-4">
+
+  <div className="mb-3 flex items-center justify-between">
+    <h3 className="text-sm font-bold text-teal-800">
+      Available Leave Information
+    </h3>
+
+    {LoadingLeaves && (
+      <RefreshCw size={15} className="animate-spin text-teal-600" />
+    )}
+  </div>
+
+  {LoadingLeaves ? (
+    <p className="text-sm text-gray-500">
+      Loading leave information...
+    </p>
+  ) : (
+    <>
+      <div className="flex justify-between text-sm">
+        <span>Total Leaves</span>
+        <strong>{totalLeaves + usedLeaves}</strong>
+      </div>
+
+      <div className="mt-2 flex justify-between text-sm">
+        <span>Remaining Leaves</span>
+        <strong className="text-teal-700">
+          {remainingLeaves}
+        </strong>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2 text-xs">
+        <span className="rounded bg-blue-100 px-2 py-1 text-blue-700">
+          Casual: {CasualLeaves}
+        </span>
+
+        <span className="rounded bg-pink-100 px-2 py-1 text-pink-700">
+          Sick: {SickLeaves}
+        </span>
+
+        <span className="rounded bg-green-100 px-2 py-1 text-green-700">
+          Other: {OtherLeaves}
+        </span>
+      </div>
+    </>
+  )}
+</div>
+      {/* Leave Type */}
+      <label className="text-sm font-semibold text-gray-600">
+        Leave Type
+      </label>
+
+      <select
+        value={leaveType}
+        onChange={(e) => {
+          setLeaveType(e.target.value);
+          if (e.target.value !== "Other") {
+            setLeaveDescription("");
+          }
+        }}
+        className="mt-2 w-full rounded-xl border p-3"
+      >
+        <option value="">Choose leave type</option>
+        <option value="Casual">Casual Leave</option>
+        <option value="Sick">Sick Leave</option>
+        <option value="Other">Other</option>
+      </select>
+
+      {/* Description */}
+      {leaveType === "Other" && (
+        <textarea
+          value={leaveDescription}
+          onChange={(e) => setLeaveDescription(e.target.value)}
+          placeholder="Describe your leave reason"
+          className="mt-4 w-full rounded-xl border p-3"
+          rows={3}
+        />
+      )}
+
+      {/* Dates */}
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs font-semibold text-gray-500">
+            From Date
+          </label>
+          <input
+            type="date"
+            value={attendance.fromDate}
+            onChange={(e) =>
+              setAttendance((prev: any) => ({
+                ...prev,
+                fromDate: e.target.value,
+              }))
+            }
+            className="mt-1 w-full rounded-xl border p-3"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-gray-500">
+            To Date
+          </label>
+          <input
+            type="date"
+            min={attendance.fromDate}
+            value={attendance.toDate}
+            onChange={(e) =>
+              setAttendance((prev: any) => ({
+                ...prev,
+                toDate: e.target.value,
+              }))
+            }
+            className="mt-1 w-full rounded-xl border p-3"
+          />
+        </div>
+      </div>
+
+      <p className="mt-3 text-sm font-semibold text-teal-700">
+        Total Leave Days: {totalDays}
+      </p>
+
+                {leaveType === "Casual" && totalDays > 1 && (
+                  <p className="text-sm text-red-600">
+                    Casual leave can only be taken for one day.
+                  </p>
+                )}
+      <button
+        type="button"
+        disabled={
+          loading ||
+          LoadingLeaves ||
+          !leaveType ||
+          !attendance.fromDate ||
+          !attendance.toDate ||
+          totalDays < 1 ||
+          (leaveType === "Casual" && totalDays > 1) ||
+          (leaveType === "Other" && !leaveDescription.trim())
+        }
+        onClick={UpdateDailyAttendance}
+        className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#00A9A5] to-[#005f61] py-3 font-bold text-white disabled:opacity-50"
+      >
+        {loading ? "Submitting..." : "Submit Leave Request"}
+      </button>
+   {/* STATUS MESSAGE */}
         {statusMessage && (
 
           <div className="rounded-xl bg-gray-100 border px-4 py-3 text-center text-sm font-semibold text-gray-700">
@@ -1377,7 +2056,18 @@ onClick={() => openFullMonthAttendance(employee)}
           </div>
 
         )}
+    </div>
+  </div>
+)}
+     
+   {/* STATUS MESSAGE */}
+        {statusMessage && (
 
+          <div className="rounded-xl bg-gray-100 border px-4 py-3 text-center text-sm font-semibold text-gray-700">
+            {statusMessage}
+          </div>
+
+        )}
       </div>
 
     </div>
