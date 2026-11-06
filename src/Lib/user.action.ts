@@ -7265,16 +7265,16 @@ export const updateServicePrice = async (
   }
 };
 
+
 export const UpdatePaymentVerificationStatusInDb = async (
   HCAId: string,
   ClientId: string,
   value: string,
   MonthInfo: string,
-  ImpData: any,
-  UpdateType: any[],
-  MergedClienid:any
+  UpdateType: string[],
+  MergedClienid: any,
+  SourceRows: any[]
 ) => {
-  
   try {
     if (
       !HCAId ||
@@ -7291,65 +7291,115 @@ export const UpdatePaymentVerificationStatusInDb = async (
     const cluster = await clientPromise;
     const db = cluster.db("CurateInformation");
 
-    const results = [];
-const replacementClientId =
-  UpdateType.includes("OnService Payments") &&
-  UpdateType.includes("Replacement Payments")
-    ? MergedClienid
-    : ClientId;
+    const results: any[] = [];
+
     for (const type of UpdateType) {
-      let collection;
+
+      // Find the original record for this payment type
+      const sourceRow = SourceRows.find(
+        (source: any) => source.PreviewInfo === type
+      );
+
+      if (!sourceRow) {
+        results.push({
+          type,
+          success: false,
+          message: "Source payment record not found",
+        });
+
+        continue;
+      }
+
+      let collection: any;
       let filter: any;
 
       switch (type) {
-        case "OnService Payments":
+
+        case "OnService Payments": {
           collection = db.collection("Deployment");
+
           filter = {
-            ClientId,
+            ClientId: sourceRow.ClientId || ClientId,
             HCAId,
             Month: MonthInfo,
           };
-          break;
 
-        case "Replacement Payments":
+          break;
+        }
+
+        case "Replacement Payments": {
           collection = db.collection("Replacement");
+
+          const replacementClientId =
+            UpdateType.includes("OnService Payments")
+              ? MergedClienid
+              : sourceRow.ClientId || ClientId;
+
           filter = {
-          ClientId: replacementClientId,
-            HCAId:HCAId,
+            ClientId: replacementClientId,
+            HCAId,
             Month: MonthInfo,
           };
-          break;
 
-        case "Termination Payments":
+          break;
+        }
+
+        case "Termination Payments": {
           collection = db.collection("Termination");
-          filter = {
-        
-            HCAid: HCAId, // Termination uses HCAid
-            StartDate: ImpData,
-          };
-          break;
 
-        default:
+          // IMPORTANT:
+          // Get StartDate from the actual Termination source row.
+          const terminationStartDate =
+            sourceRow.TerminationStartDate ||
+            sourceRow.StartDate;
+
+          if (!terminationStartDate) {
+            results.push({
+              type,
+              success: false,
+              message: "Termination StartDate is missing",
+            });
+
+            continue;
+          }
+
+          filter = {
+            HCAid: HCAId,
+            StartDate: terminationStartDate,
+          };
+
+          console.log("Termination Update Filter:", filter);
+
+          break;
+        }
+
+        default: {
           results.push({
             type,
             success: false,
             message: `Invalid UpdateType: ${type}`,
           });
+
           continue;
+        }
       }
- 
-      const result = await collection.updateOne(filter, {
-        $set: {
-        PaymentVerificationStatus: value,
-        UpdatedAt: new Date(),
-      },
-      });
+
+      const result = await collection.updateOne(
+        filter,
+        {
+          $set: {
+            PaymentVerificationStatus: value,
+            UpdatedAt: new Date(),
+          },
+        }
+      );
 
       results.push({
         type,
         success: result.matchedCount > 0,
         matchedCount: result.matchedCount,
         modifiedCount: result.modifiedCount,
+
         message:
           result.matchedCount === 0
             ? "Record not found"
@@ -7359,18 +7409,32 @@ const replacementClientId =
       });
     }
 
+    // ALL requested payment types must succeed
+    const allUpdated =
+      results.length === UpdateType.length &&
+      results.every((result) => result.success);
+
+    console.log("Payment Verification Results:", results);
+
     return {
-      success: results.some((r) => r.success),
+      success: allUpdated,
       results,
+      message: allUpdated
+        ? "All payment statuses updated successfully"
+        : "One or more payment statuses failed to update",
     };
+
   } catch (error) {
-    console.error("UpdatePaymentVerificationStatusInDb Error:", {
-      HCAId,
-      ClientId,
-      MonthInfo,
-      UpdateType,
-      error,
-    });
+    console.error(
+      "UpdatePaymentVerificationStatusInDb Error:",
+      {
+        HCAId,
+        ClientId,
+        MonthInfo,
+        UpdateType,
+        error,
+      }
+    );
 
     return {
       success: false,
@@ -7378,6 +7442,7 @@ const replacementClientId =
     };
   }
 };
+
 export const UpdatePaymentVerificationStatusInReplacementDb = async (
   HCAId: string,
   ClientId: string,

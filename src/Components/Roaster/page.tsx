@@ -379,7 +379,7 @@ export default function SundayDutyRoster({
         </div>
 
         <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
-          Sunday Duty Roster
+          Holidy Duty Roster
         </h2>
 
         <p className="mt-1.5 text-xs leading-relaxed text-teal-100 sm:text-sm">

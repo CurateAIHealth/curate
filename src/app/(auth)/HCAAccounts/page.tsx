@@ -60,6 +60,7 @@ type User = any;
 type Deployment = any;
 type Replace = any;
 type Termination=any;
+
 export default function HCAPayrollTable() {
   
   const [search, setSearch] = useState("");
@@ -633,6 +634,9 @@ const TerminatedData=useMemo(() => {
     Clientid: each.ClientId,
     name: each.HCAName,
     HCAId:each.HCAid,
+      TerminationStartDate: each.StartDate
+,
+    TerminationDate:each.TerminationDate,
      SalaryHistory: GetSalaryHistory(each.HCAId),
     transactions: MonthlyExpensesInfo?.Transactions||[],
     attendanceInfo: each.Attendence,
@@ -663,6 +667,7 @@ const TerminatedData=useMemo(() => {
     SearchMonth,
     SearchYear
 ]);
+
 // const TerminatedData=TerminationInformation.map((each: any) => {
 
 //      const attendanceSummary = (each.Attendence || []).reduce(
@@ -968,17 +973,19 @@ const UpdatePaymentStatus = async (
 
   try {
     // 1. Update DB
-    const UpdatedinDB =
-      await UpdatePaymentVerificationStatusInDb(
-        HCAId,
-        ClientId,
-        value,
-        MonthInfo,
-        Info?.StartDate,
-        Info?.MergedPreviewInfos,
-        Info?.MergedClienid
-      );
+    const UpdatedinDB = await UpdatePaymentVerificationStatusInDb(
+  HCAId,
+  ClientId,
+  value,
+  MonthInfo,
+  Info?.MergedPreviewInfos,
+  Info?.MergedClienid,
+  Info?.SourceRows || []
+);
 
+console.log("Payment Status Update Result:", UpdatedinDB);
+      console.log("Info:", UpdatedinDB);
+console.log("UpdatedinDB:",  Info,);
     if (!UpdatedinDB?.success) {
       setPopup({
         isOpen: true,
@@ -1253,16 +1260,27 @@ const UpdatePayablePage = async (
       );
     }
 
-    if (paymentTypes.includes("Termination Payments")) {
-      paymentUpdates.push(
-        PostINPayblePageforTermination(
-          row.HCAId,
-          row.Clientid,
-          MonthInfo,
-          row.StartDate
-        )
-      );
-    }
+if (paymentTypes.includes("Termination Payments")) {
+  const terminationRow = row.SourceRows?.find(
+    (source: any) =>
+      source.PreviewInfo === "Termination Payments"
+  );
+
+  console.log("Termination Row:", terminationRow);
+  console.log(
+    "Termination Start Date:",
+    terminationRow?.TerminationStartDate
+  );
+
+  paymentUpdates.push(
+    PostINPayblePageforTermination(
+      row.HCAId,
+      row.Clientid,
+      MonthInfo,
+      terminationRow?.TerminationStartDate
+    )
+  );
+}
 
     await Promise.all(paymentUpdates);
 
