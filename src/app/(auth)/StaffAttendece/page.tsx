@@ -3,6 +3,7 @@
 import { LoadingData } from "@/Components/Loading/page";
 import SundayDutyRoster from "@/Components/Roaster/page";
 import { getDaysBetween, GetEmail } from "@/Lib/Actions";
+import { indianStates } from "@/Lib/Content";
 import axios from "axios";
 import { AnyAaaaRecord } from "dns";
 import { CalendarDays, CheckCircle2, Clock, FileText, Info, Loader2, MapPin, RotateCcw, XCircle } from "lucide-react";
@@ -62,6 +63,15 @@ type EmployeeAttendance = {
   TotalBreakMinutes?: number;
   TotalWorkingMinutes?: number;
   AttendanceState?: string;
+};
+
+type RosterEntry = {
+  Date: string;
+  Day: string;
+  StaffId: string;
+  StaffName: string;
+  ServiceState:string,
+  CompOffDate: string;
 };
 
 const rosterStaffList: any[] = [
@@ -248,6 +258,35 @@ function StatusBadge({ status }: { status: string }) {
   };
   return <span className={`inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-semibold ${styles[status] || styles["Not marked"]}`}>{status}</span>;
 }
+const loadHolidayRoster = async (
+  month: number,
+  year: number
+) => {
+  try {
+    const response = await axios.get("/api/HolidayRoster", {
+      params: { month, year },
+      timeout: 15000,
+    });
+
+    if (!response.data?.success) {
+      throw new Error(
+        response.data?.message || "Unable to load roster."
+      );
+    }
+
+    return {
+      entries: response.data.entries ?? [],
+      revision: response.data.revision ?? 0,
+    };
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message ||
+      error.message ||
+      "Unable to load holiday roster."
+    );
+  }
+};
+
 
 export default function ManagerAttendanceDashboard() {
   const [selectedDate, setSelectedDate] = useState(getLocalDate());
@@ -270,6 +309,8 @@ const [monthlyAttendance, setMonthlyAttendance] = useState<any[]>([]);
 const [loadingMonthlyAttendance, setLoadingMonthlyAttendance] = useState(false);
 const [attendanceEdit, setAttendanceEdit] = useState<{ day: number; date: string } | null>(null);
 const [attendanceEditStatus, setAttendanceEditStatus] = useState("Present");
+const [attendanceEditLeaveType, setAttendanceEditLeaveType] = useState("Casual");
+const [attendanceEditLeaveDescription, setAttendanceEditLeaveDescription] = useState("");
 const [savingAttendanceEdit, setSavingAttendanceEdit] = useState(false);
 const attendanceEditSaveInProgress = useRef(false);
 const [isEditingCasualLeaves, setIsEditingCasualLeaves] =
@@ -295,8 +336,8 @@ const employees = useMemo(
   () => makeTestAttendance(selectedDate),
   [selectedDate, employeeRoster]
 );
-const loggedInEmail=useSelector((state:any)=>state.LoggedInEmail)
-  const selectedDateObj = new Date(`${selectedDate}T12:00:00`);
+const loggedInEmail = useSelector((state: any) => state.LoggedInEmail);
+const selectedDateObj = new Date(`${selectedDate}T12:00:00`);
   const selectedMonth = selectedDateObj.getMonth();
   const selectedYear = selectedDateObj.getFullYear();
   const users=useSelector((state:any)=>state.AdminUsers)
@@ -384,7 +425,40 @@ each.City,
     isMounted = false;
   };
 }, [selectedDate]);
+const saveHolidayRoster = async (
+  month: number,
+  year: number,
+  entries: RosterEntry[],
+  revision: number
+) => {
+  try {
+    const response = await axios.post(
+      "/api/HolidayRoster",
+      {
+        month,
+        year,
+        entries,
+        revision,
+        updatedBy: loggedInEmail,
+      },
+      { timeout: 20000 }
+    );
 
+    if (!response.data?.success) {
+      throw new Error(
+        response.data?.message || "Unable to save roster."
+      );
+    }
+
+    return response.data.revision;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message ||
+      error.message ||
+      "Unable to save holiday roster."
+    );
+  }
+};
 const updateLeave = async (ImpValue: any) => {
  setLeaveBalanceStaff(ImpValue)
           setLoadingLeaves(true);
@@ -610,7 +684,7 @@ const UpdateStatus = async (
         response.data?.message || "Unable to update leave request"
       );
     }
-
+console.log("Leave request updated successfully:", response);
     if (ImpStatus === "Revert") {
       // Remove the complete leave request from the current UI.
       setemployeeRoster((previous: any[]) =>
@@ -748,6 +822,15 @@ setPopupMessage("Saving attendance update...");
     return;
   }
 
+  if (
+    attendanceEditStatus === "Leave" &&
+    attendanceEditLeaveType === "Others" &&
+    !attendanceEditLeaveDescription.trim()
+  ) {
+    setPopupMessage("Please provide a description for Other leave.");
+    return;
+  }
+
   attendanceEditSaveInProgress.current = true;
   setSavingAttendanceEdit(true);
 
@@ -759,6 +842,15 @@ setPopupMessage("Saving attendance update...");
         EmployeeName: employeeName,
         AttendanceDate: date,
         Status: attendanceEditStatus,
+        Month: `${selectedYear}-${selectedMonth + 1}`,
+        ...(attendanceEditStatus === "Leave"
+          ? {
+              LeaveType: attendanceEditLeaveType,
+              Description: attendanceEditLeaveType === "Others"
+                ? attendanceEditLeaveDescription.trim()
+                : "",
+            }
+          : {}),
       },
       { timeout: 15000 }
     );
@@ -785,6 +877,14 @@ setPopupMessage("Saving attendance update...");
       EmployeeName: employeeName,
       AttendanceDate: date,
       Status: attendanceEditStatus,
+      ...(attendanceEditStatus === "Leave"
+        ? {
+            LeaveType: attendanceEditLeaveType,
+            Description: attendanceEditLeaveType === "Others"
+              ? attendanceEditLeaveDescription.trim()
+              : "",
+          }
+        : {}),
       ApprovalStatus: attendanceEditStatus === "Leave"
         ? "Approved"
         : undefined,
@@ -1201,15 +1301,7 @@ setPopupMessage("Saving attendance update...");
                       className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 sm:w-52"
                     >
                       <option value="All cities"> Service State</option>
-                      {[
-                        "Agra", "Ahmedabad", "Amritsar", "Bengaluru", "Bhopal", "Bhubaneswar",
-                        "Chandigarh", "Chennai", "Coimbatore", "Delhi", "Dehradun", "Faridabad",
-                        "Ghaziabad", "Gurugram", "Guwahati", "Hyderabad", "Indore", "Jaipur",
-                        "Kanpur", "Kochi", "Kolkata", "Lucknow", "Ludhiana", "Madurai", "Mangaluru",
-                        "Meerut", "Mumbai", "Mysuru", "Nagpur", "Nashik", "Noida", "Patna",
-                        "Prayagraj", "Pune", "Raipur", "Rajkot", "Ranchi", "Surat", "Thiruvananthapuram",
-                        "Vadodara", "Varanasi", "Visakhapatnam",
-                      ].map((city) => <option key={city} value={city}>{city}</option>)}
+                      {indianStates.map((city) => <option key={city} value={city}>{city}</option>)}
                     </select>
                     <button
                       type="button"
@@ -1231,13 +1323,8 @@ setPopupMessage("Saving attendance update...");
   isOpen={showDutyRoster}
   onClose={() => setShowDutyRoster(false)}
   staffList={rosterStaffList}
-  initialRoster={monthlyRoster}
-   onSave={async (month, year, entries) => {
-    console.log("Roster saved successfully.");
-    console.log("Month:", month);
-    console.log("Year:", year);
-    console.log("Roster Entries:", entries);
-  }}
+  onLoad={loadHolidayRoster}
+  onSave={saveHolidayRoster}
 />
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="mb-4 flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">⌕</span><div><h2 className="text-sm font-semibold">Find attendance</h2><p className="text-xs text-slate-500">Choose a date or search by employee and area.</p></div></div>
@@ -2309,7 +2396,13 @@ const getDayAttendanceRecord = (day: number) => {
             <select
               id="attendance-edit-status"
               value={attendanceEditStatus}
-              onChange={(event) => setAttendanceEditStatus(event.target.value)}
+              onChange={(event) => {
+                setAttendanceEditStatus(event.target.value);
+                if (event.target.value === "Leave") {
+                  setAttendanceEditLeaveType("Casual");
+                  setAttendanceEditLeaveDescription("");
+                }
+              }}
               className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
             >
               <option value="Present">Present</option>
@@ -2317,6 +2410,40 @@ const getDayAttendanceRecord = (day: number) => {
               <option value="Leave">Leave</option>
               <option value="Halfday">Halfday</option>
             </select>
+            {attendanceEditStatus === "Leave" && (
+              <>
+                <label htmlFor="attendance-edit-leave-type" className="mt-4 block text-sm font-medium text-slate-700">Leave Type</label>
+                <select
+                  id="attendance-edit-leave-type"
+                  value={attendanceEditLeaveType}
+                  onChange={(event) => {
+                    setAttendanceEditLeaveType(event.target.value);
+                    if (event.target.value !== "Others") {
+                      setAttendanceEditLeaveDescription("");
+                    }
+                  }}
+                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                >
+                  <option value="Casual">Casual</option>
+                  <option value="sick">Sick</option>
+                  <option value="Others">Others</option>
+                </select>
+                {attendanceEditLeaveType === "Others" && (
+                  <>
+                    <label htmlFor="attendance-edit-leave-description" className="mt-3 block text-sm font-medium text-slate-700">Description</label>
+                    <textarea
+                      id="attendance-edit-leave-description"
+                      value={attendanceEditLeaveDescription}
+                      onChange={(event) => setAttendanceEditLeaveDescription(event.target.value)}
+                      rows={3}
+                      maxLength={300}
+                      placeholder="Enter a brief reason for the leave"
+                      className="mt-2 w-full resize-y rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                    />
+                  </>
+                )}
+              </>
+            )}
             <div className="mt-6 flex justify-end gap-3">
               <button type="button" onClick={() => setAttendanceEdit(null)} className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Cancel</button>
               <button type="button" onClick={saveAttendanceEdit} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Save</button>

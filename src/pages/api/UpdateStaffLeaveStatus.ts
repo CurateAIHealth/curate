@@ -43,7 +43,7 @@ export default async function handler(
       ApprovalStatus,
       loggedInEmail,
     });
-
+console.log("UpdateStaffLeaveStatus result:", result);
     if (!result?.success) {
       return res.status(400).json({
         success: false,

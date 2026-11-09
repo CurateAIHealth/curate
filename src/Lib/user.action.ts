@@ -9468,15 +9468,14 @@ const calculateDays = (fromDate: string, toDate: string) => {
    Present / Absent / Half Day / Leave
 ========================================= */
 
+
 export const PostEmployeeAttendance = async (
   EmployInfo: any
 ) => {
   try {
-
-        const Cluster=await clientPromise
-   const Db = Cluster.db("CurateInformation");
+    const Cluster = await clientPromise;
+    const Db = Cluster.db("CurateInformation");
     const attendanceCollection = Db.collection("EmployeesAttendance");
-  
 
     const {
       userId,
@@ -9498,13 +9497,15 @@ export const PostEmployeeAttendance = async (
       };
     }
 
+    const DAILY_STATUSES = ["Present", "Absent", "Half Day"];
+
     /* =====================================
        DAILY ATTENDANCE FLOW
     ===================================== */
 
     if (status !== "Leave") {
 
-      if (!["Present", "Absent", "Half Day"].includes(status)) {
+      if (!DAILY_STATUSES.includes(status)) {
         return {
           success: false,
           message: "Invalid attendance status."
@@ -9526,7 +9527,49 @@ export const PostEmployeeAttendance = async (
         };
       }
 
-      // Preserve your existing GPS requirement.
+      /* =====================================
+         CHECK EXISTING LEAVE REQUEST
+      ===================================== */
+
+      const existingLeave = await attendanceCollection.findOne({
+        UserId: userId,
+        Status: "Leave",
+        ApprovalStatus: { $ne: "Rejected" },
+        FromDate: { $lte: date },
+        ToDate: { $gte: date }
+      });
+
+      if (existingLeave) {
+        return {
+          success: false,
+          message:
+            existingLeave.ApprovalStatus === "Approved"
+              ? "You already have approved leave for this date. Attendance cannot be marked."
+              : "You have a pending leave request for this date. Please wait for approval."
+        };
+      }
+
+      /* =====================================
+         CHECK DUPLICATE ATTENDANCE
+      ===================================== */
+
+      const exists = await attendanceCollection.findOne({
+        UserId: userId,
+        AttendanceDate: date,
+        Status: { $in: DAILY_STATUSES }
+      });
+
+      if (exists) {
+        return {
+          success: false,
+          message: "Attendance already marked for this date."
+        };
+      }
+
+      /* =====================================
+         GPS VALIDATION
+      ===================================== */
+
       if (!location) {
         return {
           success: false,
@@ -9559,24 +9602,11 @@ export const PostEmployeeAttendance = async (
         };
       }
 
-      // Check existing attendance.
-      const exists = await attendanceCollection.findOne({
-        UserId: userId,
-        AttendanceDate: date
-      });
-
-      if (exists) {
-        return {
-          success: false,
-          message: "Attendance already marked for this date."
-        };
-      }
-
       const now = new Date();
 
-      /* =================================
+      /* =====================================
          PRESENT ATTENDANCE
-      ================================= */
+      ===================================== */
 
       if (status === "Present") {
 
@@ -9588,7 +9618,6 @@ export const PostEmployeeAttendance = async (
           AttendanceDate: date,
           Month: Month || date.slice(0, 7),
 
-          // Preserve existing field for old reports.
           Location: {
             Latitude: latitude,
             Longitude: longitude,
@@ -9596,7 +9625,6 @@ export const PostEmployeeAttendance = async (
             CapturedAt: now
           },
 
-          // New check-in information.
           CheckIn: {
             Time: now,
             Location: {
@@ -9606,15 +9634,12 @@ export const PostEmployeeAttendance = async (
             }
           },
 
-          // Break management.
           Breaks: [],
 
-          // Checkout information.
           CheckOut: {
             Time: null
           },
 
-          // Employee workflow status.
           AttendanceState: "Working",
 
           TotalBreakMinutes: 0,
@@ -9623,13 +9648,12 @@ export const PostEmployeeAttendance = async (
           ApprovalStatus: "Approved",
 
           CreatedAt: getCreatedAt(now),
-          City: EmployInfo.City || "Hyderabad",
+          City: EmployInfo.City || "Telangana"
         };
 
-        const result =
-          await attendanceCollection.insertOne(
-            attendanceDocument
-          );
+        const result = await attendanceCollection.insertOne(
+          attendanceDocument
+        );
 
         return {
           success: true,
@@ -9638,10 +9662,9 @@ export const PostEmployeeAttendance = async (
         };
       }
 
-      /* =================================
+      /* =====================================
          ABSENT / HALF DAY
-         Preserve existing attendance format.
-      ================================= */
+      ===================================== */
 
       const result = await attendanceCollection.insertOne({
         UserId: userId,
@@ -9657,7 +9680,8 @@ export const PostEmployeeAttendance = async (
           Accuracy: accuracy,
           CapturedAt: now
         },
- City: EmployInfo.City || "Hyderabad",
+
+        City: EmployInfo.City || "Telangana",
         ApprovalStatus: "Approved",
         CreatedAt: getCreatedAt(now)
       });
@@ -9671,15 +9695,7 @@ export const PostEmployeeAttendance = async (
 
     /* =====================================
        LEAVE FLOW
-       ONE RECORD IN SAME COLLECTION
     ===================================== */
-
-    if (!userId || !userName) {
-      return {
-        success: false,
-        message: "Employee information is required."
-      };
-    }
 
     if (
       !isValidDateString(fromDate) ||
@@ -9718,60 +9734,82 @@ export const PostEmployeeAttendance = async (
       };
     }
 
-    /* =================================
-       BLOCK OVERLAPPING PENDING LEAVES
-    ================================= */
+    /* =====================================
+       CHECK EXISTING ATTENDANCE
+    ===================================== */
 
-    const overlappingLeave =
-      await attendanceCollection.findOne({
-        UserId: userId,
-        Status: "Leave",
-        ApprovalStatus: "Pending",
+    const existingAttendance = await attendanceCollection.findOne({
+      UserId: userId,
+      Status: { $in: DAILY_STATUSES },
+      AttendanceDate: {
+        $gte: fromDate,
+        $lte: toDate
+      }
+    });
 
-        FromDate: { $lte: toDate },
-        ToDate: { $gte: fromDate }
-      });
+    if (existingAttendance) {
+      return {
+        success: false,
+        message:
+          `Attendance is already marked on ${existingAttendance.AttendanceDate}. You cannot request leave for this date.`
+      };
+    }
+
+    /* =====================================
+       BLOCK OVERLAPPING LEAVE REQUESTS
+       Pending and Approved only.
+       Rejected leaves are ignored.
+    ===================================== */
+
+    const overlappingLeave = await attendanceCollection.findOne({
+      UserId: userId,
+      Status: "Leave",
+      ApprovalStatus: { $ne: "Rejected" },
+
+      FromDate: { $lte: toDate },
+      ToDate: { $gte: fromDate }
+    });
 
     if (overlappingLeave) {
       return {
         success: false,
         message:
-          "A leave request for the selected dates is already submitted and pending approval."
+          "A leave request already exists for the selected dates. Please check your existing leave status."
       };
     }
 
-    /* =================================
+    /* =====================================
        INSERT LEAVE
-    ================================= */
+    ===================================== */
 
     const now = new Date();
 
-    const leaveResult =
-      await attendanceCollection.insertOne({
-        UserId: userId,
-        EmployeeName: userName,
+    const leaveResult = await attendanceCollection.insertOne({
+      UserId: userId,
+      EmployeeName: userName,
 
-        Status: "Leave",
+      Status: "Leave",
 
-        FromDate: fromDate,
-        ToDate: toDate,
- City: EmployInfo.City || "Hyderabad",
-        AttendanceDate: fromDate,
+      FromDate: fromDate,
+      ToDate: toDate,
 
-        leaveType: leaveType,
-        Description: leaveDescription || "",
+      City: EmployInfo.City || "Telangana",
+      AttendanceDate: fromDate,
 
-        TotalDays: totalDays,
+      leaveType: leaveType,
+      Description: leaveDescription || "",
 
-        ApprovalStatus: "Pending",
+      TotalDays: totalDays,
 
-        Month: Month || fromDate.slice(0, 7),
+      ApprovalStatus: "Pending",
 
-        ApprovedBy: null,
-        ApprovedAt: null,
+      Month: Month || fromDate.slice(0, 7),
 
-        CreatedAt: getCreatedAt(now)
-      });
+      ApprovedBy: null,
+      ApprovedAt: null,
+
+      CreatedAt: getCreatedAt(now)
+    });
 
     return {
       success: true,
@@ -9787,11 +9825,11 @@ export const PostEmployeeAttendance = async (
       err
     );
 
-    // Duplicate key protection.
     if (err?.code === 11000) {
       return {
         success: false,
-        message: "Attendance already exists for this date."
+        message:
+          "Attendance already exists for this employee on this date."
       };
     }
 
@@ -9801,6 +9839,7 @@ export const PostEmployeeAttendance = async (
     };
   }
 };
+
 
 /* =========================================
    2. START EMPLOYEE BREAK
