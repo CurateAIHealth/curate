@@ -156,7 +156,8 @@ export default function SundayDutyRoster({
     getEmptyEntry(),
   ]);
 const [revision, setRevision] = useState(0);
-const [isLoading, setIsLoading] = useState(false);
+const [isLoading, setIsLoading] = useState(true);
+  const [noDataNotice, setNoDataNotice] = useState(false);
   const [search, setSearch] = useState("");
   const [serviceStateFilter, setServiceStateFilter] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -169,11 +170,13 @@ const [isLoading, setIsLoading] = useState(false);
   if (!isOpen) return;
 
   let active = true;
+  let noticeTimeout: ReturnType<typeof setTimeout> | undefined;
 
   const loadRoster = async () => {
     setIsLoading(true);
     setError("");
     setSuccess(false);
+    setNoDataNotice(false);
 
     try {
       const result = await onLoad(month, year);
@@ -198,6 +201,11 @@ const [isLoading, setIsLoading] = useState(false);
         loadedRows.length ? loadedRows : [getEmptyEntry()]
       );
 
+      if (loadedRows.length === 0) {
+        setNoDataNotice(true);
+        noticeTimeout = setTimeout(() => setNoDataNotice(false), 3500);
+      }
+
       setRevision(result.revision);
     } catch (error) {
       if (!active) return;
@@ -218,6 +226,7 @@ const [isLoading, setIsLoading] = useState(false);
 
   return () => {
     active = false;
+    if (noticeTimeout) clearTimeout(noticeTimeout);
   };
 }, [isOpen, month, year, onLoad]);
 
@@ -491,7 +500,18 @@ setRevision(newRevision);
         }
       }}
     >
-      <div className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+      <div className="relative flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        {isLoading && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-white/90" role="status" aria-live="polite">
+            <span className="h-10 w-10 animate-spin rounded-full border-4 border-teal-100 border-t-teal-600" />
+            <p className="text-sm font-medium text-slate-600">Loading roster...</p>
+          </div>
+        )}
+        {noDataNotice && !isLoading && (
+          <div className="absolute bottom-5 right-5 z-40 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 shadow-lg" role="status">
+            No saved roster data found. You can add a new entry.
+          </div>
+        )}
 
         {/* HEADER */}
         <div className="relative overflow-hidden bg-gradient-to-r from-teal-800 via-teal-700 to-cyan-700 px-5 py-6 text-white sm:px-7">
