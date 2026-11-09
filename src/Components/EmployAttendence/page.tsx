@@ -459,7 +459,7 @@ const openFullMonthAttendance = async (employee: any) => {
         payload = {
           ...payload,
           location,
-          City: "Hyderabad"
+          City: "Telangana" 
         };
       }
 

@@ -3245,7 +3245,7 @@ export const UpdateStaffLeaveStatus = async (ImpData: any) => {
         leaveRecord.leaveType || leaveRecord.LeaveType || ""
       ).toLowerCase();
 
-      const noOfDays = Number(leaveRecord.TotalDays);
+      const noOfDays = Number(leaveRecord.TotalDays)||1;
 
       if (!Number.isFinite(noOfDays) || noOfDays <= 0) {
         throw new Error("Invalid leave days in the leave record");
@@ -3403,6 +3403,8 @@ if (updateResult.matchedCount === 0) {
   }
 };
 
+
+
 export const Updatedailystatus = async (ImpData: any) => {
   const client = await clientPromise;
   const db = client.db("CurateInformation");
@@ -3413,9 +3415,14 @@ export const Updatedailystatus = async (ImpData: any) => {
   const session = client.startSession();
 
   try {
-    const { UserId, AttendanceDate, Status, ApprovalStatus } = ImpData;
+    const {
+      UserId,
+      AttendanceDate,
+      Status,
+      LeaveType,
+      Description,
+    } = ImpData;
 
-    // 1. Validate request data
     if (!UserId || !AttendanceDate || !Status) {
       return {
         success: false,
@@ -3423,7 +3430,8 @@ export const Updatedailystatus = async (ImpData: any) => {
       };
     }
 
-    const allowedStatuses = ["Present", "Absent", "Leave"];
+    const allowedStatuses = ["Present", "Absent", "Leave", "Halfday"];
+    const allowedLeaveTypes = ["Casual", "sick", "Others"];
 
     if (!allowedStatuses.includes(Status)) {
       return {
@@ -3432,83 +3440,89 @@ export const Updatedailystatus = async (ImpData: any) => {
       };
     }
 
+    if (
+      Status === "Leave" &&
+      !allowedLeaveTypes.includes(LeaveType)
+    ) {
+      return {
+        success: false,
+        message: "Invalid leave type.",
+      };
+    }
+
+    if (
+      Status === "Leave" &&
+      LeaveType === "Others" &&
+      !Description?.trim()
+    ) {
+      return {
+        success: false,
+        message: "Please provide a description for Other leave.",
+      };
+    }
+
     let response: any = null;
 
     await session.withTransaction(async () => {
-      // 2. Find existing attendance record
+      // 1. Find existing attendance
       const existingAttendance =
         await StaffAttendanceCollection.findOne(
           { UserId, AttendanceDate },
           { session }
         );
 
-      if (!existingAttendance) {
-        throw new Error("ATTENDANCE_NOT_FOUND");
-      }
+      const previousStatus = existingAttendance?.Status ?? null;
+      const previousLeaveType =
+        existingAttendance?.LeaveType ?? null;
 
-      const previousStatus = existingAttendance.Status;
-
-      // 3. Prevent unnecessary updates and duplicate leave deductions
-      if (previousStatus === Status) {
+      // 2. Check duplicate status
+      if (
+        existingAttendance &&
+        previousStatus === Status &&
+        (
+          Status !== "Leave" ||
+          (
+            previousLeaveType === LeaveType &&
+            (existingAttendance.Description || "") ===
+              (Description || "")
+          )
+        )
+      ) {
         response = {
           success: true,
-          message: "Attendance status is already up to date.",
+          message: "Attendance is already up to date.",
         };
         return;
       }
 
-      // 4. Update attendance
-      const updateResult = await StaffAttendanceCollection.updateOne(
-        {
-          _id: existingAttendance._id,
-          Status: previousStatus,
-        },
-        {
-          $set: {
-            Status,
-            UpdatedAt: new Date(),
-          },
-        },
-        { session }
-      );
+      // 3. Restore previous leave
+      if (existingAttendance && previousStatus === "Leave") {
+        if (!allowedLeaveTypes.includes(previousLeaveType)) {
+          throw new Error("INVALID_PREVIOUS_LEAVE_TYPE");
+        }
 
-      if (updateResult.matchedCount !== 1) {
-        throw new Error("ATTENDANCE_UPDATE_FAILED");
-      }
+        const restoreIncrement: Record<string, number> = {
+          usedLeaves: -1,
+        };
 
-      // 5. Update leave balance only for approved leave
-    if (Status === "Leave") {
-  const leaveResult = await CountCollection.updateOne(
-    {
-      userId: UserId,
-      Casual: { $gt: 0 },
-    },
-    {
-      $inc: {
-        usedLeaves: 1,
-        Casual: -1,
-      },
-    },
-    { session }
-  );
+        if (previousLeaveType === "Others") {
+          restoreIncrement.Others = -1;
+        } else {
+          restoreIncrement[previousLeaveType] = 1;
+        }
 
+        const restoreFilter: any = {
+          userId: UserId,
+          usedLeaves: { $gt: 0 },
+        };
 
+        if (previousLeaveType === "Others") {
+          restoreFilter.Others = { $gt: 0 };
+        }
 
-  if (leaveResult.matchedCount !== 1) {
-    throw new Error("INSUFFICIENT_LEAVE_BALANCE");
-  }
-}
-
-      // 6. Restore leave balance if an approved leave is changed
-      if (previousStatus === "Leave" && Status !== "Leave") {
         const restoreResult = await CountCollection.updateOne(
-          { userId: UserId },
-          {
-            $inc: {
-              usedLeaves: -1,
-              casual: 1,
-            },
-          },
+          restoreFilter,
+          { $inc: restoreIncrement },
           { session }
         );
 
@@ -3517,28 +3531,142 @@ export const Updatedailystatus = async (ImpData: any) => {
         }
       }
 
-      response = {
-        success: true,
-        message: "Attendance status updated successfully.",
-        data: {
-          UserId,
-          AttendanceDate,
-          PreviousStatus: previousStatus,
-          UpdatedStatus: Status,
-        },
+      // 4. Deduct new leave
+      if (Status === "Leave") {
+        if (LeaveType === "Others") {
+          const result = await CountCollection.updateOne(
+            { userId: UserId },
+            {
+              $inc: {
+                usedLeaves: 1,
+                Others: 1,
+              },
+            },
+            { session }
+          );
+
+          if (result.matchedCount !== 1) {
+            throw new Error("USER_NOT_FOUND");
+          }
+        } else {
+          const result = await CountCollection.updateOne(
+            {
+              userId: UserId,
+              [LeaveType]: { $gt: 0 },
+            },
+            {
+              $inc: {
+                usedLeaves: 1,
+                [LeaveType]: -1,
+              },
+            },
+            { session }
+          );
+
+          if (result.matchedCount !== 1) {
+            throw new Error("INSUFFICIENT_LEAVE_BALANCE");
+          }
+        }
+      }
+
+      // 5. Prepare attendance data
+      const now = new Date();
+
+      const attendanceData = {
+        Status,
+        LeaveType: Status === "Leave" ? LeaveType : null,
+        Description:
+          Status === "Leave" ? (Description || "") : "",
+        UpdatedAt: now,
       };
+
+      // 6. Update existing OR create new
+      if (existingAttendance) {
+        const updateResult =
+          await StaffAttendanceCollection.updateOne(
+            {
+              _id: existingAttendance._id,
+              Status: previousStatus,
+            },
+            {
+              $set: attendanceData,
+            },
+            { session }
+          );
+
+        if (updateResult.matchedCount !== 1) {
+          throw new Error("ATTENDANCE_UPDATE_FAILED");
+        }
+
+        response = {
+          success: true,
+          message: "Attendance updated successfully.",
+          action: "updated",
+          data: {
+            UserId,
+            AttendanceDate,
+            PreviousStatus: previousStatus,
+            UpdatedStatus: Status,
+            UpdatedLeaveType:
+              Status === "Leave" ? LeaveType : null,
+          },
+        };
+      } else {
+        // No attendance found: create new record
+        const insertResult =
+          await StaffAttendanceCollection.insertOne(
+  {
+    UserId,
+    AttendanceDate,
+    ...attendanceData,
+    CreatedAt: now,
+    UpdatedAt: now,
+    EmployeeName: ImpData.EmployeeName || "",
+    ApprovalStatus: "Approved",
+    Month: ImpData.Month || "",
+
+    ...(Status === "Present" && {
+      TotalWorkingMinutes: 480,
+    }),
+
+    ...(Status === "Halfday" && {
+      TotalWorkingMinutes: 240,
+    }),
+  },
+  { session }
+);
+
+        response = {
+          success: true,
+          message: "New attendance created successfully.",
+          action: "created",
+          data: {
+            _id: insertResult.insertedId,
+            UserId,
+            AttendanceDate,
+            Status,
+            LeaveType:
+              Status === "Leave" ? LeaveType : null,
+          },
+        };
+      }
     });
 
     return response;
-
   } catch (error: any) {
     console.error("Updatedailystatus error:", error);
 
     const errorMessages: Record<string, string> = {
-      ATTENDANCE_NOT_FOUND: "No matching attendance record found.",
-      ATTENDANCE_UPDATE_FAILED: "Attendance update failed. Please retry.",
-      INSUFFICIENT_LEAVE_BALANCE: "Insufficient casual leave balance.",
-      LEAVE_RESTORE_FAILED: "Failed to restore leave balance.",
+      ATTENDANCE_UPDATE_FAILED:
+        "Attendance update failed. Please retry.",
+      INSUFFICIENT_LEAVE_BALANCE:
+        "Insufficient leave balance.",
+      LEAVE_RESTORE_FAILED:
+        "Failed to restore leave balance.",
+      INVALID_PREVIOUS_LEAVE_TYPE:
+        "Existing attendance has an invalid leave type.",
+      USER_NOT_FOUND:
+        "Employee registration not found.",
     };
 
     return {
@@ -3547,11 +3675,11 @@ export const Updatedailystatus = async (ImpData: any) => {
         errorMessages[error.message] ||
         "Failed to update attendance status.",
     };
-
   } finally {
     await session.endSession();
   }
 };
+
 
 
 

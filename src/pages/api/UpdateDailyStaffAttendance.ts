@@ -1,6 +1,6 @@
 
 import type { NextApiRequest, NextApiResponse } from "next";
-import { Updatedailystatus, UpdateStaffLeaveStatus } from "@/Lib/auth";
+import { Updatedailystatus } from "@/Lib/auth";
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,39 +19,40 @@ export default async function handler(
       AttendanceDate,
       Status,
       EmployeeName,
+      LeaveType,
+      Description,
+      Month
     } = req.body || {};
 
-    if (!UserId || !AttendanceDate || !Status || !EmployeeName) {
+    if (!UserId || !AttendanceDate || !Status || !EmployeeName|| !Month) {
       return res.status(400).json({
         success: false,
-        message: "UserId, AttendanceDate, Status and loggedInEmail are required",
+        message: "Required attendance details are missing.",
       });
     }
-
-   
 
     const result = await Updatedailystatus({
       UserId,
       AttendanceDate,
       Status,
+      LeaveType,
+      Description,
       EmployeeName,
+      Month
     });
 
     if (!result?.success) {
-      return res.status(400).json({
-        success: false,
-        message: result?.message || "Unable to process leave request",
-      });
+      return res.status(400).json(result);
     }
 
     return res.status(200).json(result);
 
   } catch (error: any) {
-    console.error("UpdateStaffLeaveStatus API error:", error);
+    console.error("UpdateDailyStaffAttendance API error:", error);
 
     return res.status(500).json({
       success: false,
-      message: error.message || "Unable to update leave request",
+      message: "Unable to update attendance.",
     });
   }
 }
