@@ -74,7 +74,7 @@ const refreshInvoices = async (showLoader = true) => {
       yearFilter
     );
 
-  
+  console.log("Fetched Invoices:", data);
 
     setFetchedInfo(data);
   } catch (err) {
@@ -431,7 +431,7 @@ const GetTeamNumber = (A: any) => {
   },[[FetchedInfo, RegUserInfo]])
   
   
-  
+  console.log("PreviewInfo:", PreviewInfo);
   
   const statusStyles: any = {
     Draft:

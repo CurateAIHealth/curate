@@ -785,81 +785,149 @@ export const GetReplasmentandTerminationData = async () => {
     };
   }
 };
+
 export const UpdateRefundAmount = async (
   Client_Id: string,
-  ServiceStartDate: any, 
+  ServiceStartDate: any,
   RefundAmount: number,
-  RefundDate:any,
-  RefundDays:any,
-  HCAAttendece:any,
-  HCAId:any
+  RefundDate: any,
+  RefundDays: any,
+  HCAAttendece: any,
+  HCAId: any
 ) => {
-  
-
   try {
-   
-
     const client = await clientPromise;
+    const db = client.db("CurateInformation");
+    const collection = db.collection("Invoices");
 
-  
+    const filter = {
+      ClienId: Client_Id,
+      $or: [
+        { HCA_Id: HCAId },
+        { HCAId: HCAId },
+      ],
+      SeriviceStartDate: ServiceStartDate,
+    };
 
-  const db = client.db("CurateInformation");
-  const collection = db.collection("Invoices");
+    // Check whether refund is already processed
+    const existingInvoice = await collection.findOne(filter, {
+      projection: {
+        RefundAmount: 1,
+        RefundDate: 1,
+      },
+    });
 
-    
+    if (!existingInvoice) {
+      return {
+        success: false,
+        message: "No matching invoice found.",
+      };
+    }
 
-  
+    if (Number(existingInvoice.RefundAmount) > 0) {
+      return {
+        success: false,
+        alreadyRefunded: true,
+        message: `Warning: Refund of ₹${existingInvoice.RefundAmount} was already processed on ${existingInvoice.RefundDate}.`,
+      };
+    }
 
+    // Update refund details
     const result = await collection.updateOne(
-        {
-    ClienId: Client_Id,
-    $or: [
-      { HCA_Id: HCAId },
-      { HCAId: HCAId },
-    ],
-    SeriviceStartDate: ServiceStartDate,
-  },
+      filter,
       {
         $set: {
-          RefundAmount: RefundAmount,
-            RefundDate:RefundDate,
-  RefundDays:RefundDays,
-  HACAttendeceforRefund:HCAAttendece,
-  HCAId:HCAId
+          RefundAmount,
+          RefundDate,
+          RefundDays,
+          HACAttendeceforRefund: HCAAttendece,
+          HCAId,
         },
       }
     );
 
-    
-
-    if (result.matchedCount === 0) {
-      console.warn("No matching document found.");
-
-      console.timeEnd("UpdateRefundAmount");
-
+    if (result.modifiedCount === 0) {
       return {
         success: false,
-        message: "No matching document found",
+        message: "Refund details were not updated.",
       };
     }
 
-    console.timeEnd("UpdateRefundAmount");
-
     return {
       success: true,
-      message: "Refund amount updated successfully",
+      message: "Refund amount updated successfully.",
     };
+
   } catch (error) {
     console.error("UpdateRefundAmount Error:", error);
 
-    console.timeEnd("UpdateRefundAmount");
-
     return {
       success: false,
-      message: "Failed to update refund amount",
+      message: "Failed to update refund amount.",
     };
   }
 };
+export const UpdateRefundAmountFromPendingRefund = async (
+  Client_Id: string,
+  ServiceStartDate: any,
+  RefundAmount: number,
+  RefundDate: any,
+  RefundDays: any,
+  HCAAttendece: any,
+  HCAId: any
+) => {
+  try {
+    const client = await clientPromise;
+    const db = client.db("CurateInformation");
+    const collection = db.collection("Invoices");
+
+    const filter = {
+      ClienId: Client_Id,
+      $or: [
+        { HCA_Id: HCAId },
+        { HCAId: HCAId },
+      ],
+      SeriviceStartDate: ServiceStartDate,
+    };
+
+    // Check whether refund is already processed
+ 
+
+    // Update refund details
+    const result = await collection.updateOne(
+      filter,
+      {
+        $set: {
+          RefundAmount,
+       
+          RefundDays,
+       
+        },
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return {
+        success: false,
+        message: "Refund details were not updated.",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Refund amount updated successfully.",
+    };
+
+  } catch (error) {
+    console.error("UpdateRefundAmount Error:", error);
+
+    return {
+      success: false,
+      message: "Failed to update refund amount.",
+    };
+  }
+};
+
 
 
 const safeDecrypt = (value: any) => {

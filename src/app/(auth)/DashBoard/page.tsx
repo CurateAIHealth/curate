@@ -32,6 +32,7 @@ import {
   MessageSquare,
   BookOpen,
   Phone,
+  CalendarDays,
 } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -57,7 +58,7 @@ type DashboardView = "home" | "admin";
 
 
 import { UserCheck } from "lucide-react";
-import { filterColors, Health_Card, healthcareServices, healthcareServicesforCallEnquiry, hyderabadAreas, hyderabadAreasforcallEnquiry, IndianLanguages, IndianStates, LeadSources, sectionItems, StaffEmails, TAB_ACCESS_CONTROL } from "@/Lib/Content";
+import { filterColors, Health_Card, healthcareServices, healthcareServicesforCallEnquiry, hyderabadAreas, hyderabadAreasforcallEnquiry, IndianLanguages, IndianStates, LeadSources, rosterStaffList, sectionItems, StaffEmails, TAB_ACCESS_CONTROL } from "@/Lib/Content";
 
 import PermissionDeniedPopup from "@/Components/Permission/page";
 import ProfileDrawer from "@/Components/ProfileView/page";
@@ -75,6 +76,7 @@ import { useDashboardNavigation } from "@/Components/Navigation/page";
 import UserTableList from "@/Components/NewAdminPannel/page";
 import SkillManagement from "@/Components/SkillManagement/page";
 import SalarySlip from "@/Components/SalarySlip/page";
+import SundayDutyRoster from "@/Components/Roaster/page";
 
 
 const DOCUMENT_KEYS = [
@@ -114,6 +116,7 @@ export default function Dashboard() {
   const [ProfileName, SetProfileName] = useState<any>("")
   const [openProfile, setOpenProfile] = useState(false);
   const [AttendeceView, setAttendeceView] = useState(false)
+  const [showDutyRoster, setShowDutyRoster] = useState(false);
   const [openExpense, setOpenExpense] = useState<any>(false)
   const [compliteInfo, setcompliteInfo] = useState<any>()
   const [showProfileOptions, setShowProfileOptions] = useState(false)
@@ -1119,7 +1122,34 @@ const SubmitExpense = async (formData: any) => {
     router.replace("/AdminPage");
   };
 
+const loadHolidayRoster = async (
+  month: number,
+  year: number
+) => {
+  try {
+    const response = await axios.get("/api/HolidayRoster", {
+      params: { month, year },
+      timeout: 15000,
+    });
 
+    if (!response.data?.success) {
+      throw new Error(
+        response.data?.message || "Unable to load roster."
+      );
+    }
+
+    return {
+      entries: response.data.entries ?? [],
+      revision: response.data.revision ?? 0,
+    };
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message ||
+      error.message ||
+      "Unable to load holiday roster."
+    );
+  }
+};
 
 
   return (
@@ -1136,6 +1166,13 @@ const SubmitExpense = async (formData: any) => {
             </div>
           </div>
         )}
+        <SundayDutyRoster
+          isOpen={showDutyRoster}
+          onClose={() => setShowDutyRoster(false)}
+           staffList={rosterStaffList}
+          onLoad={loadHolidayRoster}
+          onSave={async (_month, _year, _entries, revision) => revision}
+        />
         {activeView === "home" ?
     <div >
       {showSkillsView?<SkillManagement Hide={(A:any)=>setSkillsView(A)}/>:showSalarySlipView?<SalarySlip Hide={(A:any)=>setSalarySlipView(A)}/>:
@@ -1271,7 +1308,7 @@ const SubmitExpense = async (formData: any) => {
     type="button"
     onClick={() => {
       setAttendeceView(true);
-      setShowProfileOptions(false);
+      setShowProfileOptions(false)
       setshowReferalPopup(false);
     }}
     className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
@@ -1279,6 +1316,19 @@ const SubmitExpense = async (formData: any) => {
     <ClipboardCheck size={16} className="text-slate-500" />
     My Attendance
   </button>
+  <button
+    type="button"
+    onClick={() => {
+      setShowDutyRoster(true);
+      setShowProfileOptions(false)
+      setshowReferalPopup(false);
+    }}
+    className="w-full px-4 py-2.5 flex items-center gap-3 text-sm hover:bg-slate-100"
+  >
+    <CalendarDays size={16} className="text-slate-500" />
+    My Roater
+  </button>
+
 
   {/* Skills */}
   <button
