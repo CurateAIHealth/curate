@@ -3,10 +3,10 @@
 import { LoadingData } from "@/Components/Loading/page";
 import SundayDutyRoster from "@/Components/Roaster/page";
 import { getDaysBetween, GetEmail } from "@/Lib/Actions";
-import { indianStates } from "@/Lib/Content";
+import { indianStates, rosterStaffList } from "@/Lib/Content";
 import axios from "axios";
 import { AnyAaaaRecord } from "dns";
-import { CalendarDays, CheckCircle2, Clock, FileText, Info, Loader2, MapPin, RotateCcw, XCircle } from "lucide-react";
+import { CalendarCheck, CalendarDays, CheckCircle2, Clock, FileText, Info, Loader2, MapPin, RotateCcw, ShieldCheck, UserRoundCheck, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -74,25 +74,7 @@ type RosterEntry = {
   CompOffDate: string;
 };
 
-const rosterStaffList: any[] = [
- 
-  {
-    id: "STAFF002",
-    name: "Prasad",
-    designation: "HR Executive",
-  },
-  {
-    id: "STAFF003",
-    name: "Chamanthi",
-    designation: "Accountant",
-  },
-  {
-    id: "STAFF004",
-    name: "Pandu",
-    designation: "Office Administrator",
-  },
- 
-];
+
 const monthlyRoster: any[] = [
   {
     Date: "2026-11-01",
@@ -799,7 +781,7 @@ const updateLeaveBalance = async () => {
     setUpdatingLeaveBalance(false);
   }
 };
-
+console.log("New Task-----",selectedStaff)
 const saveAttendanceEdit = async () => {
   if (attendanceEditSaveInProgress.current) return;
 
@@ -2262,6 +2244,8 @@ const getDayAttendanceRecord = (day: number) => {
     );
   });
 };
+
+
             const getDayStatus = (day: number) => {
               const date = `${selectedYear}-${String(
                 selectedMonth + 1
@@ -2299,6 +2283,9 @@ const getDayAttendanceRecord = (day: number) => {
 
               const attendance = records.find(
                 (record) => record.Status !== "Leave"
+              );
+ const Mod = records.find(
+                (record) => record.MOD===true
               );
 
               const leave = records.find(
@@ -2473,15 +2460,78 @@ const getDayAttendanceRecord = (day: number) => {
                     const status = getDayStatus(day);
                     const isNotMarked =
                       status.status === "Not Marked";
+const dayDate = `${selectedYear}-${String(
+  selectedMonth + 1
+).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
+const dayRecords = monthlyAttendance.filter(
+  (record: any) =>
+    String(record.UserId) === String(selectedStaff.UserId) &&
+    String(record.AttendanceDate || "").slice(0, 10) === dayDate
+);
+
+const isManagerOnDuty = dayRecords.some(
+  (record: any) => record.MOD === true
+);
+
+const isCompOff = dayRecords.some(
+  (record: any) => record.Comoff
+ === true
+);
+console.log("Check for CompOff-----",isCompOff)
                     return (
-                      <div
-                        key={day}
-                       className="flex min-h-[95px] min-w-0 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-1.5 shadow-[0_1px_3px_rgba(15,23,42,0.12)] transition-shadow hover:shadow-md sm:min-h-[100px] sm:px-2"
-                      >
-                        <p className="text-[10px] font-semibold uppercase leading-4 text-slate-500 sm:text-[11px]">
-                          DAY {day}
-                        </p>
+  <div
+  key={day}
+  className={`relative flex min-w-0 flex-col items-center justify-center overflow-hidden rounded-xl border px-1.5 py-2 transition-all duration-200 sm:px-2 ${
+    isCompOff
+      ? "min-h-[115px] sm:min-h-[120px]"
+      : "min-h-[95px] sm:min-h-[100px]"
+  } ${
+    isManagerOnDuty && isCompOff
+      ? "border-violet-300 bg-violet-50/70 shadow-sm ring-1 ring-violet-100"
+      : isManagerOnDuty
+        ? "border-blue-300 bg-blue-50/70 shadow-sm ring-1 ring-blue-100"
+        : isCompOff
+          ? "border-emerald-300 bg-emerald-50/70 shadow-sm ring-1 ring-emerald-100"
+          : "border-slate-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.08)] hover:border-slate-300 hover:shadow-md"
+  }`}
+>
+  {/* Day Header */}
+  <div className="flex flex-wrap items-center justify-center gap-1">
+    <p
+      className={`text-[10px] font-bold uppercase tracking-wide sm:text-[11px] ${
+        isManagerOnDuty
+          ? "text-blue-700"
+          : isCompOff
+            ? "text-emerald-700"
+            : "text-slate-500"
+      }`}
+    >
+      DAY {day}
+    </p>
+
+   
+  </div>
+ {isManagerOnDuty && (
+     
+       <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 shadow-sm">
+  <UserRoundCheck size={11} className="text-blue-600" />
+  <span className="text-[9px] font-bold tracking-wide text-blue-700">
+    MANAGER ON DUTY
+  </span>
+</div>
+    )}
+  {/* Comp Off Badge */}
+  {isCompOff && (
+    <div className="mt-1.5 flex items-center gap-1 rounded-full border border-emerald-200 bg-white px-2 py-1 shadow-sm">
+      <CalendarCheck size={11} className="text-emerald-600" />
+      <span className="text-[9px] font-bold tracking-wide text-emerald-700">
+        COMP OFF
+      </span>
+    </div>
+  )}
+
+  {/* Continue with your existing attendance status and buttons */}
 
                         {isNotMarked ? (
                           <span className="mt-4 max-w-full rounded-md bg-slate-300 px-2.5 py-1 text-center text-[9px] font-semibold leading-3 text-slate-600 sm:text-[10px]">
@@ -2493,6 +2543,7 @@ const getDayAttendanceRecord = (day: number) => {
                             className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 bg-white text-sm font-semibold ${status.circle}`}
                           >
                             {status.label}
+      
                           </div>
                         )}
 

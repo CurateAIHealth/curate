@@ -127,7 +127,7 @@ const hasData = users?.length > 0 && RegisterdUsers?.length > 0;
     try {
 
       SetActionStatusMessage("Please Wait....");
-console.log("Refund Request Data:", data);
+
       const response = await axios.post("/api/RefundRequest", {
         data
       });
@@ -512,7 +512,7 @@ error?.message || "Something went wrong while extending timesheet"
 
       return matchesSearch && matchesMonth && matchesYear;
     }) || [];
-  
+ 
   const GetReplacementMessage = (A: any) => {
 
     const results = ReplacementReasons?.filter((each: any) => each?.HCA_id === A) ?? [];
@@ -560,13 +560,13 @@ const EditAttendence = async (): Promise<void> => {
       UpdatedBy: loggedInEmail,
     };
 
-    console.log("Attendance Update Payload:", payload);
+   
 
     const response = await axios.post(
       "/api/UpdateClientAttendanceStatus",
       payload
     );
-console.log("Attendance Update Response:", response);
+
     if (!response.data?.success) {
       SetActionStatusMessage(
         response.data?.message || "Attendance update failed"
@@ -618,6 +618,48 @@ console.log("Attendance Update Response:", response);
         };
       })
     );
+
+// Update selectedClient data for RefundPopup
+setselectedClient((prev: any) => {
+  if (!prev || prev.ClientId !== AttenseceInformation.Client_Id) {
+    return prev;
+  }
+
+  const updateMatchingDate = (
+    records: any[],
+    dateField: string
+  ) =>
+    (records || []).map((item: any) => {
+      const itemDate = String(
+        item.dateKey || item[dateField] || ""
+      ).split("T")[0];
+
+      if (itemDate !== EditDate) return item;
+
+      return {
+        ...item,
+        Status: status,
+        Reason: payload.Reason,
+        UpdatedAt: updatedAt,
+        UpdatedBy: loggedInEmail,
+      };
+    });
+
+  return {
+    ...prev,
+
+    ClientAttendance: updateMatchingDate(
+      prev.ClientAttendance,
+      "AttendanceDate"
+    ),
+
+    TimeSheetAttendence: updateMatchingDate(
+      prev.TimeSheetAttendence,
+      "AttendenceDate"
+    ),
+  };
+});
+
 // Update HCP attendance calendar immediately
 setAttendenceInfo((prev: any) => {
   if (!prev) return prev;
@@ -1058,7 +1100,7 @@ const isFutureDate = cellDate > currentDate;
                     return itemDate === dateKey;
                   }
                 ) || null;
-console.log("Check Attendance Record",attendanceRecord)
+
               // Client Information
               const clientName =
                 attendanceRecord?.
@@ -1436,13 +1478,22 @@ Client_Name
                        onClose={() => setShowRefundRequrstPopUp(false)}
                        data={selectedClient}
                        CompliteInfo={users}
-                       onSubmit={(A) =>  PostRefunRequest({
-                         ...A,
-                         TerminatedTimeSheet:attendanceInfo.TimeSheetAttendence,
-                         Client_Id:A.
-ClientId
-,
-                       })}
+             onSubmit={(A) => {
+ 
+
+  const refundData = {
+    ...A,
+    TerminatedTimeSheet:
+      attendanceInfo?.TimeSheetAttendence ||
+      A?.TimeSheetAttendence ||
+      [],
+    Client_Id: A?.ClientId,
+  };
+
+  
+
+  PostRefunRequest(refundData);
+}}
 
 
                           showClientAttendance={(as)=>{

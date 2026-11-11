@@ -1,0 +1,63 @@
+import {  UpdateRefundAmount, UpdateRefundAmountFromPendingRefund } from "@/Lib/auth";
+import { NextApiRequest, NextApiResponse } from "next";
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      success: false,
+      message: "Method Not Allowed",
+    });
+  }
+
+  try {
+  
+
+   const {
+  Client_Id,
+  StartDate,
+  ClientRefundAmount,
+  
+RefundData,
+
+RefundDays,
+
+TerminatedTimeSheet,
+
+HCA_Id,
+HCAId
+
+
+
+} = req.body.data;
+
+
+
+
+
+    const result = await UpdateRefundAmountFromPendingRefund(
+      Client_Id,
+      StartDate,
+      ClientRefundAmount,
+      RefundData,
+      RefundDays,
+      TerminatedTimeSheet,
+      
+HCA_Id
+
+    );
+
+  console.log("Refund Update Result:", result);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+}

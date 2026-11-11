@@ -1890,7 +1890,25 @@ export const indianStates = [
   "West Bengal"
 ];
 
-
+export const rosterStaffList: any[] = [
+ 
+  {
+    id: "STAFF002",
+    name: "Prasad",
+    designation: "HR Executive",
+  },
+  {
+    id: "a6543782-4248-466d-9e1f-624658988a5a",
+    name: "Chamanthi",
+    designation: "Accountant",
+  },
+  {
+    id: "f09aac13-8757-4e5c-9d25-a98630df4b68",
+    name: "Pandu",
+    designation: "Office Administrator",
+  },
+ 
+];
 
 export const Infodata = [
   {

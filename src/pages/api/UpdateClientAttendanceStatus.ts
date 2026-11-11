@@ -249,7 +249,7 @@ const adminAttendance = isPresent
     if (result.matchedCount === 0) {
       return res.status(404).json({
         success: false,
-        message: "Attendance record not found for this client and date",
+        message: "Attendance record not found for the HCP assigned to this client on the selected date. Please ensure the HCP's attendance has been marked before proceeding.",
       });
     }
 

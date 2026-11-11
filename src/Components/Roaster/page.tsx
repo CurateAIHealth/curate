@@ -15,6 +15,8 @@ import {
   Clock,
 } from "lucide-react";
 import { indianStates } from "@/Lib/Content";
+import { LoginUserEmail } from "@/Redux/reducer";
+import { useSelector } from "react-redux";
 
 interface StaffOption {
   id: string;
@@ -163,7 +165,8 @@ const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-
+ const loggedInEmail = useSelector((state: any) => state.LoggedInEmail)
+    const canEditRoster = loggedInEmail === "srinivasnew0803@gmail.com";
   // Load saved entries for the selected month.
   // If no saved entries exist, show one empty row.
  useEffect(() => {
@@ -243,6 +246,8 @@ const [isLoading, setIsLoading] = useState(true);
     rowId: string,
     changes: Partial<RosterEntry>
   ) => {
+    if (!canEditRoster) return;
+
     setEntries((previous) =>
       previous.map((entry) =>
         entry.RowId === rowId
@@ -275,6 +280,8 @@ const handleStaffChange = (rowId: string, staffId: string) => {
 };
 
   const addRow = () => {
+    if (!canEditRoster) return;
+
     setEntries((previous) => [
       ...previous,
       getEmptyEntry(),
@@ -285,6 +292,8 @@ const handleStaffChange = (rowId: string, staffId: string) => {
   };
 
   const removeRow = (rowId: string) => {
+    if (!canEditRoster) return;
+
     setEntries((previous) => {
       const remaining = previous.filter(
         (entry) => entry.RowId !== rowId
@@ -339,7 +348,7 @@ const filteredEntries = useMemo(() => {
 }, [entries, search, serviceStateFilter, staffList]);
 
   const handleSave = async () => {
-    if (isSaving) return;
+    if (isSaving || !canEditRoster) return;
 
     setError("");
     setSuccess(false);
@@ -696,7 +705,8 @@ setRevision(newRevision);
                 <button
                   type="button"
                   onClick={addRow}
-                  className="flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700"
+                  disabled={!canEditRoster}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Plus size={17} />
                   Add Row
@@ -739,6 +749,7 @@ setRevision(newRevision);
                           <input
                             type="date"
                             value={entry.Date}
+                            disabled={!canEditRoster}
                             onChange={(event) =>
                               handleDateChange(
                                 entry.RowId,
@@ -760,6 +771,7 @@ setRevision(newRevision);
                         <td className="px-4 py-3">
                           <select
                             value={entry.StaffId}
+                            disabled={!canEditRoster}
                             onChange={(event) =>
                               handleStaffChange(
                                 entry.RowId,
@@ -789,7 +801,7 @@ setRevision(newRevision);
                                 CompOffDate: event.target.value,
                               })
                             }
-                            disabled={!entry.StaffId}
+                            disabled={!canEditRoster || !entry.StaffId}
                             className="w-full min-w-[155px] rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
                           />
                         </td>
@@ -854,7 +866,8 @@ setRevision(newRevision);
               <button
                 type="button"
                 onClick={addRow}
-                className="flex items-center justify-center gap-2 text-sm font-semibold text-teal-700 hover:text-teal-900"
+                disabled={!canEditRoster}
+                className="flex items-center justify-center gap-2 text-sm font-semibold text-teal-700 hover:text-teal-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Plus size={16} />
                 Add another row
@@ -893,7 +906,7 @@ setRevision(newRevision);
           <button
             type="button"
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || !canEditRoster}
             className="flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSaving ? (

@@ -14,6 +14,7 @@ import {
   CircleX,
   CheckCircle2,
   ChartColumn,
+  RotateCcw,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -86,6 +87,12 @@ export default function AccountingSub(){
       icon: ReceiptIndianRupee,
       bg: "bg-lime-500",
     },
+    {
+      name: "Pending refunds",
+      count: stats.PendingRefundsCount || 0,
+      icon: RotateCcw,
+      bg: "bg-orange-500",
+    },
   ],
   [stats]
 );
@@ -122,7 +129,8 @@ const routeMap: Record<string, () => void> = {
   "HCA Payment": () => router.replace("/HCAAccounts"),
   "Client Payment": () => router.replace("/ClientPayment"),
   "Staff Payment": () => router.replace("/StaffPayment"),
-  Invoices: () => router.replace("/Invoices")
+  Invoices: () => router.replace("/Invoices"),
+  "Pending refunds": () => router.replace("/PendingRefunds")
 };
 
 const Switching = (tab: string) => {
