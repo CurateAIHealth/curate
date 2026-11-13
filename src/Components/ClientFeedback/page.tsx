@@ -84,6 +84,11 @@ interface QualityQuestion {
   question: string;
   answerType: AnswerType;
   subHeading?: string;
+  sectionTitle?: string;
+  feedbackType?: ManagedClientQuestion["feedbackType"];
+  active?: boolean;
+  isDeleted?: boolean;
+  order?: number;
 }
 
 interface QualitySection {
@@ -93,10 +98,36 @@ interface QualitySection {
 }
 
 interface ManagedClientQuestion extends QualityQuestion {
+  sectionTitle: string;
   active: boolean;
   feedbackType: "Deployment" | "Replacement" | "Termination" | "Random Check-in";
   order: number;
+  isDeleted: boolean;
 }
+
+const normalizeQuestionFlag = (value: unknown, defaultValue: boolean): boolean => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+  return defaultValue;
+};
+
+const isQuestionAvailable = (question: QualityQuestion): boolean =>
+  normalizeQuestionFlag(question.active, true) &&
+  !normalizeQuestionFlag(question.isDeleted, false);
+
+const getFeedbackTypeForSectionId = (
+  sectionId: string
+): ManagedClientQuestion["feedbackType"] => {
+  const id = String(sectionId || "").toLowerCase().replace(/[^a-z]/g, "");
+  if (id.includes("replacement")) return "Replacement";
+  if (id.includes("termination")) return "Termination";
+  if (id.includes("random") && id.includes("checkin")) return "Random Check-in";
+  return "Deployment";
+};
 
 interface QualityAnswer {
   questionId: string;
@@ -929,15 +960,36 @@ interface Client {
   feedbackStatus: "Pending" | "Completed";
 }
 
-const ClientQuestionManager: React.FC<{
+interface ClientQuestionManagerProps {
   sections: QualitySection[];
+  questions: ManagedClientQuestion[];
+  trashQuestions: ManagedClientQuestion[];
   onBack: () => void;
-  onQuestionsUpdated: (sections: QualitySection[]) => void;
-}> = ({ sections, onBack, onQuestionsUpdated }) => {
-  const [questions, setQuestions] = useState<ManagedClientQuestion[]>([]);
-  const [trashQuestions, setTrashQuestions] =
-    useState<ManagedClientQuestion[]>([]);
+  onAdd: (question: ManagedClientQuestion) => Promise<boolean>;
+  onUpdate: (question: ManagedClientQuestion) => Promise<boolean>;
+  onToggle: (question: ManagedClientQuestion) => Promise<boolean>;
+  onTrash: (id: string) => Promise<boolean>;
+  onRestore: (id: string) => Promise<boolean>;
+  onRestoreAll: () => Promise<boolean>;
+  onPermanentDelete: (id: string) => Promise<boolean>;
+}
+
+const ClientQuestionManager: React.FC<ClientQuestionManagerProps> = ({
+  sections,
+  questions,
+  trashQuestions,
+  onBack,
+  onAdd,
+  onUpdate,
+  onToggle,
+  onTrash,
+  onRestore,
+  onRestoreAll,
+  onPermanentDelete,
+}) => {
   const [showTrash, setShowTrash] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [sectionFilter, setSectionFilter] = useState("All");
@@ -953,26 +1005,6 @@ const ClientQuestionManager: React.FC<{
     answerType: "textarea" as AnswerType,
     subHeading: "",
   });
-
-  useEffect(() => {
-    setQuestions(
-      sections.flatMap((section) =>
-        section.questions.map((question, index) => ({
-          ...question,
-          active: true,
-          feedbackType:
-            section.id === "termination"
-              ? "Termination"
-              : section.id === "replacement"
-                ? "Replacement"
-                : section.id === "random-checkin"
-                  ? "Random Check-in"
-                  : "Deployment",
-          order: index + 1,
-        }))
-      )
-    );
-  }, [sections]);
 
   const availableTypes = [
     "All",
@@ -994,27 +1026,15 @@ const ClientQuestionManager: React.FC<{
           text.includes(search.toLowerCase()) &&
           (typeFilter === "All" || question.feedbackType === typeFilter) &&
           (sectionFilter === "All" || question.sectionId === sectionFilter) &&
-          (statusFilter === "All" ||
-            (statusFilter === "Active" ? question.active : !question.active))
+          !normalizeQuestionFlag(question.isDeleted, false) &&
+              (statusFilter === "All" ||
+                (statusFilter === "Active"
+                  ? normalizeQuestionFlag(question.active, true)
+                  : !normalizeQuestionFlag(question.active, true)))
         );
       }),
     [questions, search, typeFilter, sectionFilter, statusFilter]
   );
-
-  const syncSections = (nextQuestions: ManagedClientQuestion[]) => {
-    const nextSections = sections.map((section) => ({
-      ...section,
-      questions: nextQuestions
-        .filter((question) => question.sectionId === section.id && question.active)
-        .sort((a, b) => a.order - b.order)
-        .map(({ active, feedbackType, order, ...question }) => ({
-          ...question,
-          number: String(order),
-        })),
-    }));
-
-    onQuestionsUpdated(nextSections);
-  };
 
   const openAdd = () => {
     setEditing(null);
@@ -1041,11 +1061,12 @@ const ClientQuestionManager: React.FC<{
   };
 
   const saveQuestion = () => {
-    if (!form.question.trim() || !form.sectionId) return;
+    if (isSubmitting || !form.question.trim() || !form.sectionId) return;
 
     const sectionQuestions = questions.filter(
       (question) => question.sectionId === form.sectionId
     );
+    const section = availableSections.find((item) => item.id === form.sectionId);
 
     const nextQuestion: ManagedClientQuestion = {
       id: editing?.id || `client-${Date.now()}`,
@@ -1057,29 +1078,36 @@ const ClientQuestionManager: React.FC<{
         ? { subHeading: form.subHeading.trim() }
         : {}),
       active: editing?.active ?? true,
+      isDeleted: false,
       feedbackType: form.feedbackType,
       order: editing?.order ?? sectionQuestions.length + 1,
+      sectionTitle: section?.title || editing?.sectionTitle || form.sectionId,
     };
 
-    const nextQuestions = editing
-      ? questions.map((question) =>
-          question.id === editing.id ? nextQuestion : question
-        )
-      : [...questions, nextQuestion];
-
-    setQuestions(nextQuestions);
-    syncSections(nextQuestions);
-    setShowModal(false);
-    setEditing(null);
+    void (async () => {
+      setIsSubmitting(true);
+      try {
+        const succeeded = editing
+          ? await onUpdate(nextQuestion)
+          : await onAdd(nextQuestion);
+        if (succeeded) {
+          setShowModal(false);
+          setEditing(null);
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
+    })();
   };
 
-  const toggleQuestion = (question: ManagedClientQuestion) => {
-    const nextQuestions = questions.map((item) =>
-      item.id === question.id ? { ...item, active: !item.active } : item
-    );
-
-    setQuestions(nextQuestions);
-    syncSections(nextQuestions);
+  const runAction = async (action: () => Promise<boolean>) => {
+    if (isSubmitting) return false;
+    setIsSubmitting(true);
+    try {
+      return await action();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   /* =========================================================
@@ -1087,35 +1115,10 @@ const ClientQuestionManager: React.FC<{
   ========================================================= */
 
   const removeQuestion = () => {
-    if (!deleting) return;
-
-    const nextQuestions = questions
-      .filter((question) => question.id !== deleting.id)
-      .map((question) => ({
-        ...question,
-        order: question.sectionId === deleting.sectionId
-          ? questions
-              .filter(
-                (item) =>
-                  item.sectionId === question.sectionId &&
-                  item.id !== deleting.id
-              )
-              .findIndex((item) => item.id === question.id) + 1
-          : question.order,
-      }));
-
-    setQuestions(nextQuestions);
-
-    setTrashQuestions((previous) => [
-      ...previous,
-      {
-        ...deleting,
-        active: false,
-      },
-    ]);
-
-    syncSections(nextQuestions);
-    setDeleting(null);
+    if (!deleting || isSubmitting) return;
+    void runAction(() => onTrash(deleting.id)).then((succeeded) => {
+      if (succeeded) setDeleting(null);
+    });
   };
 
   /* =========================================================
@@ -1123,24 +1126,7 @@ const ClientQuestionManager: React.FC<{
   ========================================================= */
 
   const restoreQuestion = (question: ManagedClientQuestion) => {
-    const sectionQuestions = questions.filter(
-      (item) => item.sectionId === question.sectionId
-    );
-
-    const restoredQuestion: ManagedClientQuestion = {
-      ...question,
-      active: true,
-      order: sectionQuestions.length + 1,
-    };
-
-    const nextQuestions = [...questions, restoredQuestion];
-
-    setQuestions(nextQuestions);
-    setTrashQuestions((previous) =>
-      previous.filter((item) => item.id !== question.id)
-    );
-
-    syncSections(nextQuestions);
+    void runAction(() => onRestore(question.id));
   };
 
   /* =========================================================
@@ -1150,9 +1136,7 @@ const ClientQuestionManager: React.FC<{
   const permanentlyDeleteQuestion = (
     question: ManagedClientQuestion
   ) => {
-    setTrashQuestions((previous) =>
-      previous.filter((item) => item.id !== question.id)
-    );
+    void runAction(() => onPermanentDelete(question.id));
   };
 
   /* =========================================================
@@ -1160,26 +1144,12 @@ const ClientQuestionManager: React.FC<{
   ========================================================= */
 
   const restoreAllQuestions = () => {
-    if (trashQuestions.length === 0) return;
-
-    const restoredQuestions = trashQuestions.map(
-      (question, index) => ({
-        ...question,
-        active: true,
-        order: questions.length + index + 1,
-      })
-    );
-
-    const nextQuestions = [
-      ...questions,
-      ...restoredQuestions,
-    ];
-
-    setQuestions(nextQuestions);
-    setTrashQuestions([]);
-    syncSections(nextQuestions);
+    if (trashQuestions.length === 0 || isSubmitting) return;
+    void runAction(onRestoreAll);
   };
-
+const toggleQuestion = (question: ManagedClientQuestion) => {
+  void runAction(() => onToggle(question));
+};
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
@@ -1657,6 +1627,16 @@ const ClientQuestionManager: React.FC<{
 const ClientFeedback: React.FC = () => {
   const [selectedClient, setSelectedClient] =
     useState<Client | null>(null);
+
+
+const [trashQuestions, setTrashQuestions] =
+  useState<ManagedClientQuestion[]>([]);
+
+const [inactiveQuestions, setInactiveQuestions] =
+  useState<ManagedClientQuestion[]>([]);
+
+const [questionsLoading, setQuestionsLoading] = useState(true);
+const [questionError, setQuestionError] = useState("");
   const [popupMessage, setPopupMessage] = useState("");
   const [finelScreenMessage, setfinelScreenMessage] = useState("")
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
@@ -1700,32 +1680,22 @@ const [PreviewType, setPreviewType] = useState<
   const [feedbackFilter, setFeedbackFilter] = useState<
     "Pending" | "Completed"
   >("Pending");
-const [clientQuestionSections, setClientQuestionSections] = useState<QualitySection[]>([
-    ...qualitySections,
-    ...replacementSections,
-    ...terminationSections,
-  ]);
+const [clientQuestionSections, setClientQuestionSections] =
+  useState<QualitySection[]>([]);
   const [ClientFeedbackInfo, setClientFeedbackInfo] = useState<any[]>([]);
   const allSections = useMemo(() => {
-    const sectionMap = new Map(
-      clientQuestionSections.map((section) => [section.id, section])
-    );
-
-    if (PreviewType === "Termination") {
-      return Array.from(sectionMap.values()).filter(
-        (section) => section.id === "termination"
-      );
-    }
-
-    if (PreviewType === "Replacement") {
-      return Array.from(sectionMap.values()).filter(
-        (section) => section.id === "replacement"
-      );
-    }
-
-    return Array.from(sectionMap.values()).filter(
-      (section) => section.id !== "termination" && section.id !== "replacement"
-    );
+    return clientQuestionSections
+      .map((section) => ({
+        ...section,
+        questions: section.questions.filter(isQuestionAvailable),
+      }))
+      .filter((section) => section.questions.length > 0)
+      .filter((section) => {
+        const type = getFeedbackTypeForSectionId(section.id);
+        return PreviewType === "Deployment"
+          ? type === "Deployment" || type === "Random Check-in"
+          : type === PreviewType;
+      });
   }, [clientQuestionSections, PreviewType]);
   const [isChecking, setIsChecking] = useState(false);
   const [showQuestionManager, setShowQuestionManager] = useState(false)
@@ -1772,6 +1742,222 @@ const [clientQuestionSections, setClientQuestionSections] = useState<QualitySect
       active = false;
     };
   }, [SearchMonth, SearchYear]);
+
+  const GetQuestionsFromDB = async () => {
+  try {
+    setQuestionsLoading(true);
+    setQuestionError("");
+
+    const response = await axios.get("/api/QualityQuestions");
+    if (!response.data.success) {
+      throw new Error("Unable to fetch questions.");
+    }
+
+    const sections = Array.isArray(response.data.sections) ? response.data.sections : [];
+    const normalizeQuestion = (question: QualityQuestion): QualityQuestion => ({
+      ...question,
+      active: normalizeQuestionFlag(question.active, true),
+      isDeleted: normalizeQuestionFlag(question.isDeleted, false),
+    });
+    setClientQuestionSections(
+      sections.map((section: QualitySection) => ({
+        ...section,
+        questions: (Array.isArray(section.questions) ? section.questions : []).map(normalizeQuestion),
+      }))
+    );
+    setTrashQuestions(
+      (Array.isArray(response.data.trashQuestions) ? response.data.trashQuestions : [])
+        .map(normalizeQuestion)
+    );
+    setInactiveQuestions(
+      (Array.isArray(response.data.inactiveQuestions) ? response.data.inactiveQuestions : [])
+        .map(normalizeQuestion)
+    );
+
+  } catch (error: any) {
+    console.error("Get Questions Error:", error);
+
+    setQuestionError(
+      error.response?.data?.message || "Failed to load questions."
+    );
+  } finally {
+    setQuestionsLoading(false);
+  }
+};
+
+useEffect(() => {
+  GetQuestionsFromDB();
+}, []);
+
+
+const managedQuestions = useMemo<ManagedClientQuestion[]>(() => {
+  const questionMap = new Map<string, ManagedClientQuestion>();
+
+  clientQuestionSections.forEach((section) => {
+    section.questions.forEach((question) => {
+      questionMap.set(question.id, {
+        ...question,
+        sectionTitle: question.sectionTitle || section.title,
+        active: normalizeQuestionFlag(question.active, true),
+        feedbackType: getFeedbackTypeForSectionId(section.id),
+        order: question.order ?? (Number(question.number) || 0),
+        isDeleted: normalizeQuestionFlag(question.isDeleted, false),
+      });
+    });
+  });
+
+  inactiveQuestions.forEach((question) => {
+    questionMap.set(question.id, {
+      ...question,
+      active: normalizeQuestionFlag(question.active, true),
+      isDeleted: normalizeQuestionFlag(question.isDeleted, false),
+      feedbackType: getFeedbackTypeForSectionId(question.sectionId),
+    });
+  });
+
+  return Array.from(questionMap.values());
+}, [clientQuestionSections, inactiveQuestions]);
+const AddQuestionToDB = async (question: ManagedClientQuestion) => {
+  try {
+    const response = await axios.post("/api/QualityQuestions", question);
+
+    if (response.data.success) {
+      await GetQuestionsFromDB();
+      return true;
+    }
+
+    return false;
+  } catch (error: any) {
+    console.error("Add Question Error:", error);
+    alert(error.response?.data?.message || "Failed to add question.");
+    return false;
+  }
+};
+const UpdateQuestionInDB = async (
+  question: ManagedClientQuestion
+) => {
+  try {
+    const response = await axios.put("/api/QualityQuestions", {
+      id: question.id,
+      sectionId: question.sectionId,
+      sectionTitle: question.sectionTitle,
+      question: question.question,
+      answerType: question.answerType,
+      subHeading: question.subHeading || "",
+      feedbackType: question.feedbackType,
+      active: question.active,
+      order: question.order,
+      number: question.number,
+    });
+
+    if (response.data.success) {
+      await GetQuestionsFromDB();
+      return true;
+    }
+
+    return false;
+  } catch (error: any) {
+    console.error("Update Question Error:", error);
+    alert(error.response?.data?.message || "Failed to update question.");
+    return false;
+  }
+};
+
+
+const ToggleQuestionInDB = async (
+  question: ManagedClientQuestion
+) => {
+  try {
+    const response = await axios.put("/api/QualityQuestions", {
+      id: question.id,
+      active: !question.active,
+    });
+
+    if (response.data.success) {
+      await GetQuestionsFromDB();
+      return true;
+    }
+
+    return false;
+  } catch (error: any) {
+    console.error("Toggle Question Error:", error);
+    alert(error.response?.data?.message || "Failed to update status.");
+    return false;
+  }
+};
+
+
+const RemoveQuestionFromDB = async (id: string) => {
+  try {
+    const response = await axios.patch("/api/QualityQuestions", {
+      action: "trash",
+      id,
+    });
+
+    if (!response.data?.success) return false;
+    await GetQuestionsFromDB();
+    return true;
+  } catch (error: any) {
+    console.error("Trash Question Error:", error);
+    alert(error.response?.data?.message || "Failed to move question to trash.");
+    return false;
+  }
+};
+const RestoreQuestionFromDB = async (
+  id: string
+): Promise<boolean> => {
+  try {
+    const response = await axios.patch("/api/QualityQuestions", {
+      action: "restore",
+      id,
+    });
+
+    if (!response.data?.success) return false;
+
+    await GetQuestionsFromDB();
+    return true;
+  } catch (error: any) {
+    console.error("Restore Question Error:", error);
+    alert(error.response?.data?.message || "Failed to restore question.");
+    return false;
+  }
+};
+
+const RestoreAllQuestionsFromDB = async (): Promise<boolean> => {
+  try {
+    const response = await axios.patch("/api/QualityQuestions", {
+      action: "restoreAll",
+    });
+
+    if (!response.data?.success) return false;
+
+    await GetQuestionsFromDB();
+    return true;
+  } catch (error: any) {
+    console.error("Restore All Error:", error);
+    alert(error.response?.data?.message || "Failed to restore questions.");
+    return false;
+  }
+};
+
+const PermanentlyDeleteQuestionFromDB = async (
+  id: string
+): Promise<boolean> => {
+  try {
+    const response = await axios.delete("/api/QualityQuestions", {
+      data: { id },
+    });
+
+    if (!response.data?.success) return false;
+
+    await GetQuestionsFromDB();
+    return true;
+  } catch (error: any) {
+    console.error("Permanent Delete Error:", error);
+    alert(error.response?.data?.message || "Failed to delete question.");
+    return false;
+  }
+};
 
 
 const handleFeedbackFilterChange = async (
@@ -2276,7 +2462,7 @@ const FetchDataReplasementData=response.data.data||[]
      START CALL
   ========================================================= */
 const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
-  if (!client) return;
+  if (!client || questionsLoading || questionError || allSections.length === 0) return;
 
   const savedFeedback = client.compliteInfo;
 
@@ -2319,7 +2505,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
   setSaved(false);
 };
   const startCall = () => {
-    if (!selectedClient) return;
+    if (!selectedClient || questionsLoading || questionError || allSections.length === 0) return;
   setAnswers([]);
   setOverallFeedback("");
   setConcerns("");
@@ -2338,7 +2524,7 @@ const openCompletedFeedback = (client: Client & { compliteInfo?: any }) => {
 
 
 const saveQualityCall = async () => {
-  if (!selectedClient) return;
+  if (!selectedClient || questionsLoading || questionError || allSections.length === 0) return;
 
   const unanswered = getUnansweredQuestions();
   if (unanswered.length > 0) {
@@ -2352,20 +2538,16 @@ const saveQualityCall = async () => {
 
   setfinelScreenMessage("Please Wait.......");
 
-  const activeSections: QualitySection[] =
-    PreviewType === "Replacement"
-      ? replacementSections
-      : PreviewType === "Termination"
-        ? terminationSections
-        : qualitySections;
 
-  const activeQuestionIds = activeSections.flatMap((section) =>
-    section.questions.map((question) => question.id)
-  );
+const activeQuestionIds = allSections.flatMap((section) =>
+  section.questions
+    .filter(isQuestionAvailable)
+    .map((question) => question.id)
+);
 
-  const filteredAnswers = answers.filter((answer) =>
-    activeQuestionIds.includes(answer.questionId)
-  );
+const filteredAnswers = answers.filter((answer) =>
+  activeQuestionIds.includes(answer.questionId)
+);
 
   const qualityCall: QualityCall = {
     clientId: selectedClient.id,
@@ -2486,20 +2668,46 @@ const saveQualityCall = async () => {
     );
   }
 
-  if (showQuestionManager) {
-    return (
-      <ClientQuestionManager
-        sections={clientQuestionSections}
-        onBack={() => setShowQuestionManager(false)}
-        onQuestionsUpdated={setClientQuestionSections}
-      />
-    );
-  }
+
+ if (showQuestionManager) {
+  return (
+    <ClientQuestionManager
+      sections={clientQuestionSections}
+      questions={managedQuestions}
+      trashQuestions={trashQuestions}
+      onBack={() => setShowQuestionManager(false)}
+      onAdd={AddQuestionToDB}
+      onUpdate={UpdateQuestionInDB}
+      onToggle={ToggleQuestionInDB}
+      onTrash={RemoveQuestionFromDB}
+      onRestore={RestoreQuestionFromDB}
+      onRestoreAll={RestoreAllQuestionsFromDB}
+      onPermanentDelete={PermanentlyDeleteQuestionFromDB}
+    />
+  );
+}
 
   if (!callStarted) {
     return (
       <div className="space-y-6">
         <PopupMessage message={popupMessage} onClose={() => setPopupMessage("")} />
+
+        {questionsLoading ? (
+          <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700" role="status">
+            Loading quality call questions...
+          </div>
+        ) : questionError ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between" role="alert">
+            <span>{questionError}</span>
+            <button type="button" onClick={GetQuestionsFromDB} className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700">
+              Retry
+            </button>
+          </div>
+        ) : allSections.length === 0 ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="status">
+            No active questions are available for {PreviewType}. Add or activate questions in Question Management.
+          </div>
+        ) : null}
 
         {/* Header */}
        <div className="w-full space-y-6">
@@ -2603,6 +2811,7 @@ const saveQualityCall = async () => {
       <Settings2 size={17} />
       Manage Questions
     </button>
+  
   </div>
 
   {/* =========================================================
@@ -3057,6 +3266,7 @@ const saveQualityCall = async () => {
                               {client.feedbackStatus === "Completed" ? (
                                 <button
                                   type="button"
+                                  disabled={questionsLoading || Boolean(questionError) || allSections.length === 0}
                                   onClick={(event) => {
   event.stopPropagation();
 
@@ -3078,7 +3288,8 @@ const saveQualityCall = async () => {
                               ) : (
                                 <button
                                   type="button"
-                                 onClick={(e) => {
+                                  disabled={questionsLoading || Boolean(questionError) || allSections.length === 0}
+                                  onClick={(e) => {
   e.stopPropagation();
 
   setAnswers([]);
