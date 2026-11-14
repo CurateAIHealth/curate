@@ -19,7 +19,7 @@ export default async function handler(
 
     const result = await SignInRessult(req.body);
 
-   
+   console.log("Check Data-----",result)
 
     return res.status(200).json(result);
   } catch (error) {
