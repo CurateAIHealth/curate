@@ -1941,7 +1941,7 @@ const GetQutions = async (
     setpreparingQuestions(true);
 
     const response = await axios.get("/api/questions");
-
+console.log("Check-----",response)
     if (!response.data.success) {
       throw new Error("Failed to fetch questions.");
     }
@@ -1964,7 +1964,9 @@ const GetQutions = async (
     );
 
     if (QutionsType === "Replacement") {
-      setReplacementReasons(filteredQuestions);
+      setReplacementReasons(response.data.
+ReplacementQuestions
+);
     } else {
       setTerminationReasons(filteredQuestions);
     }

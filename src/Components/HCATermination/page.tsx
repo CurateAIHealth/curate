@@ -87,7 +87,7 @@ export default function HCATermination({
 }: HCATerminationProps) {
     const dispatch = useDispatch();
     const TerminationInfo = data;
-    console.log("Check Dataa----",TerminationInfo)
+
     const clientName = String(data?.name ?? data?.ClientName ?? "");
     const patientName = String(data?.PatientName ?? "");
     const hcaName = String(data?.HCA_Name ?? "");
@@ -1241,27 +1241,16 @@ const GetQutions = async (
       throw new Error("Failed to fetch questions.");
     }
 
-    // Filter questions based on the requested type
-    const filteredQuestions = (
-      response.data.questions || []
-    )
-      .filter(
-        (item: any) =>
-          item.feedbackType === QutionsType &&
-          item.active === true &&
-          item.isDeleted !== true
-      )
-      .map((item: any) => item.question);
-
-    console.log(
-      `${QutionsType} Questions:`,
-      filteredQuestions
-    );
+ 
 
     if (QutionsType === "Replacement") {
-      setReplacementReasons(filteredQuestions);
+         setReplacementReasons(response.data.TerminationQuestions
+
+)
     } else {
-      setTerminationReasons(filteredQuestions);
+          setTerminationReasons(response.data.TerminationQuestions
+
+)
     }
 
   } catch (error: any) {

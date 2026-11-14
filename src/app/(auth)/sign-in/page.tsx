@@ -39,7 +39,9 @@ const { data } =await axios.post("/api/route", {
   Password: loginInfo.field_pass,
 });
 
-
+console.log(
+  'login----',data
+)
 
 
     if (!data.success) {
