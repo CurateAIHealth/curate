@@ -393,30 +393,57 @@ const ClientTable = ({
 
     Fetch();
   }, []);
-  const GetQutions = async (QutionsType: any) => {
-    try {
-      setpreparingQuestions(true)
+ 
+const GetQutions = async (
+  QutionsType: "Replacement" | "Termination"
+) => {
+  try {
+    setpreparingQuestions(true);
 
-      const GetQutionsfromDb = await axios.post("/api/questions", {
-        Type: QutionsType
-      })
-      if (GetQutionsfromDb.data.success) {
+    const response = await axios.get("/api/questions");
 
-        if(QutionsType==="Replacement"){
- setReplacementReasons(GetQutionsfromDb.
-          data.GetQuestions)
-        }else{
-           setTerminationReasons(GetQutionsfromDb.
-          data.GetQuestions)
-        }
-       
-            setpreparingQuestions(false)
-      }
-
-    } catch (err: any) {
-
+    if (!response.data.success) {
+      throw new Error("Failed to fetch questions.");
     }
+
+    // Filter questions based on the requested type
+    const filteredQuestions = (
+      response.data.questions || []
+    )
+      .filter(
+        (item: any) =>
+          item.feedbackType === QutionsType &&
+          item.active === true &&
+          item.isDeleted !== true
+      )
+      .map((item: any) => item.question);
+
+    console.log(
+      `${QutionsType} Questions:`,
+      filteredQuestions
+    );
+
+    if (QutionsType === "Replacement") {
+      setReplacementReasons(filteredQuestions);
+    } else {
+      setTerminationReasons(filteredQuestions);
+    }
+
+  } catch (error: any) {
+    console.error(
+      "Failed to load questions:",
+      error.response?.data || error.message
+    );
+
+    SetActionStatusMessage(
+      error.response?.data?.message ||
+      "Unable to load questions from database."
+    );
+
+  } finally {
+    setpreparingQuestions(false);
   }
+};
 
  
 const GetClientAgreements = async (ImpClient: any) => {

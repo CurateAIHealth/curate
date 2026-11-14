@@ -5,9 +5,7 @@ import "./globals.css";
 
 import WrapProvider from "./Provider";
 import { NotificationProvider } from "./NotificationProvider";
-import ReduxGuard from "@/Components/ReduxGuard/page";
-import AuthGuard from "@/Components/AuthGuard/page";
-import GlobalSync from "./GlobalSync";
+
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -28,22 +26,23 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
+
+
+
+
+
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-     <html lang="en" className={poppins.variable}>
+    <html lang="en" className={poppins.variable}>
       <body className="antialiased">
         <WrapProvider>
           <NotificationProvider>
-             {/* <GlobalSync /> */}
-                  <AuthGuard>
-                  <ReduxGuard>
             {children}
-              </ReduxGuard>
-                </AuthGuard>
           </NotificationProvider>
         </WrapProvider>
       </body>
