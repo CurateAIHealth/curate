@@ -22,6 +22,8 @@ import {
   Save,
   Download,
   Settings2,
+  Loader2,
+  ChevronRight,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { GetClientId, GetClientName, GetHCPFullName, GetPermanentState } from "@/Lib/Actions";
@@ -62,6 +64,8 @@ interface Question {
   required?: boolean;
   options?: string[];
   subLabel?: string;
+  active?: boolean;
+  order?: number;
 }
 
 interface FeedbackSection {
@@ -72,6 +76,7 @@ interface FeedbackSection {
   questions: Question[];
   visibleFor: HCAStatus[];
 }
+
 
 interface AudioRecording {
   url: string;
@@ -231,1515 +236,8 @@ const statusConfig: Record<
   },
 };
 
-/* =========================================================
-   ROLE 1
-   24 HOURS ACTIVITY OF ONE PATIENT
-   ACTIVE ONLY
-========================================================= */
 
-const role1Activities = [
-  {
-    time: "06:00 – 07:00",
-    activity: "Morning Wake-up, Hygiene, Medication & Hydration",
-  },
-  {
-    time: "07:00 – 08:00",
-    activity: "Breakfast, Rest & Light Conversation",
-  },
-  {
-    time: "08:00 – 09:00",
-    activity: "Physical Therapy & Bathroom Care",
-  },
-  {
-    time: "09:00 – 10:00",
-    activity: "Engagement Activity & Hydration",
-  },
-  {
-    time: "10:00 – 11:00",
-    activity: "Bathing & Rest",
-  },
-  {
-    time: "11:00 – 12:00",
-    activity: "Midday Engagement",
-  },
-  {
-    time: "12:00 – 13:00",
-    activity: "Lunch & Bathroom Care",
-  },
-  {
-    time: "13:00 – 14:00",
-    activity: "Afternoon Nap",
-  },
-  {
-    time: "14:00 – 15:00",
-    activity: "Wake-up, Hydration & Medication",
-  },
-  {
-    time: "15:00 – 16:00",
-    activity: "Snack, Conversation & Cognitive Engagement",
-  },
-  {
-    time: "16:00 – 17:00",
-    activity: "Bathroom Care & Physical Therapy",
-  },
-  {
-    time: "17:00 – 18:00",
-    activity: "Evening Rest & Dinner",
-  },
-  {
-    time: "18:00 – 19:00",
-    activity: "Hydration & Evening Engagement",
-  },
-  {
-    time: "19:00 – 20:00",
-    activity: "Bathroom Care, Medication & Relaxation",
-  },
-  {
-    time: "20:00 – 21:00",
-    activity: "Bedtime Hygiene",
-  },
-  {
-    time: "21:00 – 22:00",
-    activity: "Night Rest & Monitoring",
-  },
-  {
-    time: "22:00 – 23:00",
-    activity: "Night Rest & Monitoring",
-  },
-  {
-    time: "23:00 – 00:00",
-    activity: "Overnight Monitoring",
-  },
-  {
-    time: "00:00 – 01:00",
-    activity: "Overnight Monitoring",
-  },
-  {
-    time: "01:00 – 02:00",
-    activity: "Overnight Monitoring",
-  },
-  {
-    time: "02:00 – 03:00",
-    activity: "Overnight Monitoring",
-  },
-  {
-    time: "03:00 – 04:00",
-    activity: "Overnight Monitoring",
-  },
-  {
-    time: "04:00 – 05:00",
-    activity: "Overnight Monitoring",
-  },
-  {
-    time: "05:00 – 06:00",
-    activity: "Overnight Monitoring & Morning Preparation",
-  },
-];
 
-/* =========================================================
-   ROLE 2
-   FAMILY BACKGROUND ANALYSIS & JOB NEED
-   ALL STATUS
-========================================================= */
-
-const role2Groups = [
-  {
-    id: "stability",
-    title:
-      "1. Understand stability, family support, and possible conflicts with work schedule.",
-    questions: [
-      "Can you tell me about your family (parents, spouse, children, dependents)?",
-      "Who do you live with right now?",
-      "Are there any family members who depend on you financially or for care?",
-      "Does your family happy about your working in Hyderabad, and who will take care of your family in your absence?",
-    ],
-  },
-
-  {
-    id: "income",
-    title:
-      "2. Assess if the person needs the job and income, which can affect retention.",
-    questions: [
-      "What are your main sources of income at home?",
-      "What are your main monthly expenses or financial responsibilities?",
-      "If you did not get this job, how would you manage your finances?",
-      "Are you currently supporting anyone’s education, healthcare, or debts?",
-    ],
-  },
-
-  {
-    id: "passion",
-    title:
-      "3. Identify genuine passion vs. “just a job” mindset.",
-    questions: [
-      "Why did you choose to apply for a caregiving role?",
-      "Have you cared for elderly or dependent people before? Tell me about your experience.",
-      "What do you enjoy most about this type of work?",
-      "What challenges do you find most difficult in caregiving?",
-    ],
-  },
-
-  {
-    id: "retention",
-    title:
-      "4. Clarify how long they realistically plan to stay.",
-    questions: [
-      "How long do you see yourself working in this position?",
-      "Do you see caregiving as a long-term career or a temporary step?",
-      "Where do you see yourself in 2–3 years?",
-      "If we offered training for skill development, would you stay longer?",
-    ],
-  },
-
-  {
-    id: "job-demands",
-    title:
-      "5. Check willingness to meet the job’s demands.",
-    questions: [
-      "Are you comfortable working 24-hour shifts / live-in arrangements?",
-      "Did company tell you about holidays if required and the leave/permanent employee arrangements?",
-      "Do you have any commitments that might require frequent leave?",
-    ],
-  },
-
-  {
-    id: "own-decision",
-    title:
-      "6. Ensure the decision to work here is their own.",
-    questions: [
-      "Who encouraged you to apply for this job?",
-      "Did anyone pressure or force you to take this role?",
-      "Is this job your personal choice, or mainly for family reasons?",
-    ],
-  },
-
-  {
-    id: "short-term",
-    title:
-      "7. Spot early signs of short-term mindset.",
-    questions: [
-      "What would make you leave this job early?",
-      "What keeps you happy in a workplace?",
-      "Have you left any job suddenly before? Why?",
-      "If there is a conflict at work, how do you handle it?",
-    ],
-  },
-];
-
-/* =========================================================
-   ROLE 3
-   WELFARE PARAMETERS
-   ACTIVE ONLY
-========================================================= */
-
-const role3Questions = [
-  {
-    id: "food-water",
-    parameter: "Food & Water Quality",
-    question:
-      "Is the food quantity, taste, and timing satisfactory? Is clean water always available?",
-  },
-  {
-    id: "sleeping",
-    parameter: "Sleeping Arrangements",
-    question:
-      "Do you have a proper, safe, and private place to sleep?",
-  },
-  {
-    id: "bathroom",
-    parameter: "Bathroom & Hygiene Access",
-    question:
-      "Is there a clean bathroom with necessary facilities available for your use?",
-  },
-  {
-    id: "rest-breaks",
-    parameter: "Rest & Breaks",
-    question:
-      "Do you get enough rest and breaks during your 24-hour duty?",
-  },
-  {
-    id: "domestic-work",
-    parameter: "Domestic Work Boundaries",
-    question:
-      "Are you asked to do work unrelated to caregiving duties?",
-  },
-  {
-    id: "physical-safety",
-    parameter: "Physical Safety",
-    question:
-      "Do you feel physically safe in the client's home?",
-  },
-  {
-    id: "harassment",
-    parameter: "Harassment & Misconduct",
-    question:
-      "Have you faced any verbal, physical, or emotional harassment?",
-  },
-  {
-    id: "reporting",
-    parameter: "Reporting & Response",
-    question:
-      "Do you know how to report problems and does the company respond quickly?",
-  },
-  {
-    id: "privacy",
-    parameter: "Personal Space & Privacy",
-    question:
-      "Do you have personal space for rest and private phone calls?",
-  },
-  {
-    id: "respect",
-    parameter: "Respect from Client's Family",
-    question:
-      "Are you treated with respect by the client’s family?",
-  },
-  {
-    id: "training",
-    parameter: "Training & Support",
-    question:
-      "Have you received enough training and feel supported by your supervisor?",
-  },
-];
-
-/* =========================================================
-   RANDOM HCA CALL
-   ACTIVE ONLY
-========================================================= */
-
-const randomCallGroups = [
-  {
-    id: "general-wellbeing",
-    title: "A. General Wellbeing",
-    questions: [
-      "How are you feeling about the work and the current placement?",
-      "Are you comfortable working with this patient and family?",
-      "How are things going at the client's home overall?",
-      "Do you feel comfortable continuing with this patient?",
-      "Is there anything about the current placement that is making you uncomfortable?",
-    ],
-  },
-
-  {
-    id: "patient-family",
-    title: "B. Patient & Family",
-    questions: [
-      "How is your relationship with the patient?",
-      "How is the family treating you on a day-to-day basis?",
-      "Do you feel the family respects you and your caregiving role?",
-      "Are you being asked to do any work apart from your caregiving responsibilities?",
-      "Is the family giving you enough time to eat, rest, bathe and take care of yourself?",
-      "Do you feel the family is helping you when the patient's condition becomes difficult?",
-      "Is there any behaviour from the patient or family that is difficult for you to manage?",
-    ],
-  },
-
-  {
-    id: "workload-rest",
-    title: "C. Workload & Rest",
-    questions: [
-      "Are you getting enough sleep during your 24-hour duty?",
-      "Are you getting proper breaks during the day?",
-      "Are there any patient-care activities that you find physically or mentally difficult?",
-      "Is there anything about the patient's current condition that you are struggling to manage?",
-      "Do you feel the workload is reasonable for one caregiver?",
-    ],
-  },
-
-  {
-    id: "operations-support",
-    title: "D. Operations Support",
-    questions: [
-      "When you have a problem at the client's home, are you able to reach our operations team?",
-      "When you call or message the team, do they respond on time?",
-      "When you have raised a concern, has the team actually helped you solve it?",
-      "Is there any concern you reported to our team that is still not resolved?",
-      "Do you feel supported by the company when you are facing a difficult situation?",
-    ],
-  },
-
-  {
-    id: "salary-benefits",
-    title: "E. Salary & Benefits — Ask Indirectly",
-    questions: [
-      "Are you satisfied with your current salary compared with the work and responsibility you are handling?",
-      "Do you feel the salary is fair for the patient's care requirements and duty hours?",
-      "Is there anything about salary, incentives, leave, travel, or other benefits that you would like us to improve?",
-      "If we could improve something about your current employment, what would be most important to you?",
-    ],
-  },
-];
-
-/* =========================================================
-   TERMINATION
-   TERMINATED ONLY
-
-   Mandatory questions are deliberately LAST.
-========================================================= */
-
-const terminationQuestions = [
-  {
-    id: "patient-reason",
-    question:
-      "Patient reason — Patient difficult / dementia / night duty / personal care",
-  },
-  {
-    id: "client-family",
-    question:
-      "Client family — Domestic work / disrespect / excessive monitoring / communication",
-  },
-  {
-    id: "salary",
-    question:
-      "Salary — Low salary / another company paying more",
-  },
-  {
-    id: "operations",
-    question:
-      "Operations — Calls not answered / complaint not resolved / no support",
-  },
-  {
-    id: "leave",
-    question:
-      "Leave — Family emergency / long leave / leave not approved",
-  },
-  {
-    id: "studies",
-    question:
-      "Studies — Genuine education requirement",
-  },
-  {
-    id: "marriage",
-    question:
-      "Marriage — Genuine marriage/family reason",
-  },
-  {
-    id: "health-personal",
-    question:
-      "Health/personal — Personal circumstances",
-  },
-  {
-    id: "location",
-    question:
-      "Location — Wants job near hometown",
-  },
-  {
-    id: "accommodation-food",
-    question:
-      "Accommodation/food — Food / bathroom / sleeping / privacy",
-  },
-  {
-    id: "workload",
-    question:
-      "Workload — 24-hour duty / insufficient sleep / patient dependency",
-  },
-  {
-    id: "other-job",
-    question:
-      "Other job — Better opportunity",
-  },
-  {
-    id: "patient-no-longer-needs-care",
-    question:
-      "Patient no longer needs care — Service completed",
-  },
-  {
-    id: "other",
-    question:
-      "Other — Specify exact reason",
-  },
-
-  /* ==============================
-     MANDATORY - ALWAYS LAST
-  ============================== */
-
-  {
-    id: "actual-reason",
-    question: "Actual reason identified",
-    mandatory: true,
-  },
-  {
-    id: "secondary-reason",
-    question: "Secondary reason",
-    mandatory: true,
-  },
-  {
-    id: "reason-resolved",
-    question: "Can the reason be resolved?",
-    mandatory: true,
-    options: ["Yes", "No", "Maybe"],
-  },
-  {
-    id: "hca-continue",
-    question: "If resolved, will HCA continue?",
-    mandatory: true,
-    options: ["Yes", "No", "Maybe"],
-  },
-];
-
-/* =========================================================
-   BUILD FEEDBACK SECTIONS
-========================================================= */
-let role2QuestionNumber = 0;const benchQuestions: Question[] = [
-  {
-    id: "availability",
-    question: "Are you currently available for shift?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "availability-date-time",
-    question:
-      "If not available now, when will you be available? (Date and time)",
-    type: "textarea",
-    required: true,
-  },
-  {
-    id: "other-company",
-    question: "Are you currently working with any other company?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "join-time",
-    question:
-      "If you are offered a suitable assignment today, how soon can you join?",
-    type: "select",
-    required: true,
-    options: [
-      "Immediately",
-      "1–2 days",
-      "3–7 days",
-      "More than 1 week",
-    ],
-  },
-  {
-    id: "looking-new-job",
-    question: "Are you actively looking for a new job?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "planned-leave",
-    question:
-      "Do you have any planned leave, travel, or personal commitments in the next 30 days?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "current-locality",
-    question:
-      "Which area/locality are you currently staying in?",
-    type: "textarea",
-    required: true,
-  },
-  {
-    id: "travel-distance",
-    question:
-      "How far are you willing to travel for a client assignment?",
-    type: "select",
-    required: true,
-    options: [
-      "Same locality",
-      "Within 5 km",
-      "10 km",
-      "15+ km",
-    ],
-  },
-  {
-    id: "outside-preferred-area",
-    question:
-      "Are you willing to work outside your preferred area if the assignment is suitable?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "transport",
-    question:
-      "Do you have reliable transport to reach the client's home?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "assignment-type",
-    question:
-      "What type of assignment are you looking for?",
-    type: "select",
-    required: true,
-    options: [
-      "L.D",
-      "L.N",
-      "Stay In",
-      "Hourly",
-    ],
-  },
-  {
-    id: "male-patient",
-    question:
-      "Are you willing to work with a male patient?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "female-patient",
-    question:
-      "Are you willing to work with a female patient?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "hospital",
-    question:
-      "Are you comfortable working in a Hospital if the patient is admitted in hospital, where family members are also present, may not present?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "experience",
-    question:
-      "How many years of caregiving experience do you have?",
-    type: "textarea",
-    required: true,
-  },
-  {
-    id: "patient-types",
-    question:
-      "What type of patients have you cared for previously?",
-    type: "select",
-    required: true,
-    options: [
-      "Elderly",
-      "Bedridden",
-      "Stroke",
-      "Dementia",
-      "Parkinson's",
-      "Post-operative",
-      "Palliative",
-      "Other",
-    ],
-  },
-  {
-    id: "bedridden-experience",
-    question:
-      "Do you have experience caring for completely bedridden patients?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "nursing-skills",
-    question:
-      "Do you have experience Nursing Skills? PEG/Ryle's/NG tube feeding, urinary catheter care, pressure sore/bed sore prevention and basic wound care?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "personal-hygiene",
-    question:
-      "Are you comfortable assisting with bathing, toileting, changing clothes and personal hygiene?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "mobility",
-    question:
-      "Are you comfortable assisting with mobility, transfers and positioning of patients?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "dementia",
-    question:
-      "Do you have experience caring for patients with dementia or confusion?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-  {
-    id: "family-communication",
-    question:
-      "Are you comfortable communicating with the patient's family and providing daily updates about the patient's condition?",
-    type: "select",
-    required: true,
-    options: ["Yes", "No"],
-  },
-];
-const trainingQuestionGroups = [
-  {
-    id: "personal-joining",
-    title: "A. Personal & Joining Information",
-    questions: [
-      {
-        id: "joining-date",
-        question: "When did you join the company?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "original-place",
-        question: "Where are you originally from?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "training-stay",
-        question:
-          "Where are you currently staying during the training?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Hostel",
-          "Own accommodation",
-          "Other",
-        ],
-      },
-      {
-        id: "job-source",
-        question:
-          "How did you come to know about this job/company?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Referral",
-          "Agent",
-          "Advertisement",
-          "Social media",
-          "Friend",
-          "Other",
-        ],
-      },
-      {
-        id: "previous-work",
-        question:
-          "Before joining this company, what work were you doing?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "first-hcp-job",
-        question:
-          "Is this your first HCP (Health care assistant) job?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-    ],
-  },
-
-  {
-    id: "training-progress",
-    title: "B. Training Progress",
-    questions: [
-      {
-        id: "attending-training",
-        question:
-          "Are you currently attending the company's training programme?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "training-start",
-        question: "When did your training start?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "training-completion",
-        question:
-          "When is your expected training completion date?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "training-sessions",
-        question:
-          "Have you completed all the required training sessions?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Yes",
-          "No",
-          "Still in progress",
-        ],
-      },
-      {
-        id: "training-exam",
-        question:
-          "Have you completed the training examination/assessment?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Yes",
-          "No",
-          "Not yet scheduled",
-        ],
-      },
-      {
-        id: "exam-result",
-        question:
-          "If you completed the exam, did you pass?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Yes",
-          "No",
-          "Result pending",
-        ],
-      },
-      {
-        id: "exam-date",
-        question:
-          "If you have not completed the exam, do you know when it will take place?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "training-confidence",
-        question:
-          "Do you feel confident about the knowledge and skills taught during the training?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Very confident",
-          "Confident",
-          "Need more training",
-          "Not confident",
-        ],
-      },
-      {
-        id: "difficult-topic",
-        question:
-          "Is there any topic or skill in the training that you are finding difficult?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "additional-training",
-        question:
-          "Do you feel you need additional practical training before starting with a patient?",
-        type: "textarea" as const,
-        required: true,
-      },
-    ],
-  },
-
-  {
-    id: "job-understanding",
-    title: "C. Understanding of the Job",
-    questions: [
-      {
-        id: "role-responsibility",
-        question:
-          "Do you clearly understand what your role and responsibilities will be as an HCA?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No", "Partially"],
-      },
-      {
-        id: "patient-type-understanding",
-        question:
-          "Do you understand the type of patients you may be required to care for?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No", "Partially"],
-      },
-      {
-        id: "patient-care-duties",
-        question:
-          "Do you understand that patient care may include personal care, feeding assistance, mobility support, hygiene and other assigned duties?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "company-rules",
-        question:
-          "Do you understand the company's rules and procedures for patient care?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Yes",
-          "No",
-          "Need explanation",
-        ],
-      },
-      {
-        id: "problem-contact",
-        question:
-          "Do you understand whom you should contact if you have a problem during a patient assignment?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "attendance",
-        question:
-          "Do you understand the importance of attendance and reporting to duty on time?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "leaving-assignment",
-        question:
-          "Do you understand that you should not leave a patient assignment without informing the company?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-    ],
-  },
-
-  {
-    id: "salary-employment",
-    title: "D. Salary & Employment Understanding",
-    questions: [
-      {
-        id: "expected-pay",
-        question:
-          "Do you know your expected pay after completing your training?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "payment",
-        question:
-          "Do you understand how and when your pay will be paid?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Yes",
-          "No",
-          "Need explanation",
-        ],
-      },
-      {
-        id: "working-conditions",
-        question:
-          "Have the pay, duty hours and working conditions been explained to you clearly?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Yes",
-          "No",
-          "Partially",
-        ],
-      },
-      {
-        id: "client-requirements",
-        question:
-          "Do you understand that the actual duty/assignment may depend on client requirements and availability?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "salary-concern",
-        question:
-          "Do you have any questions or concerns regarding your salary or employment terms?",
-        type: "textarea" as const,
-        required: true,
-      },
-    ],
-  },
-
-  {
-    id: "documents-compliance",
-    title: "E. Documents & Compliance",
-    questions: [
-      {
-        id: "documents",
-        question:
-          "Have you submitted all the documents required by the company?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Yes",
-          "No",
-          "Some pending",
-        ],
-      },
-      {
-        id: "pending-documents",
-        question:
-          "If any documents are pending, which documents are still required?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "valid-documents",
-        question:
-          "Has the company explained the importance of maintaining valid identification and other required documents?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "registration",
-        question:
-          "Have you completed all required company registration/formalities?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Yes",
-          "No",
-          "In progress",
-        ],
-      },
-    ],
-  },
-
-  {
-    id: "hostel-welfare",
-    title: "F. Hostel, Food & Welfare",
-    questions: [
-      {
-        id: "accommodation-satisfaction",
-        question:
-          "Are you satisfied with the hostel/accommodation provided by the company?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Very satisfied",
-          "Satisfied",
-          "Not satisfied",
-        ],
-      },
-      {
-        id: "hostel-problems",
-        question:
-          "Are there any problems with the hostel, such as cleanliness, water, electricity, sleeping arrangements or safety?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "food",
-        question:
-          "Are you satisfied with the food arrangements?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Yes",
-          "No",
-          "Not applicable",
-        ],
-      },
-      {
-        id: "safe",
-        question:
-          "Are you comfortable and safe in the hostel/accommodation?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "personal-problem",
-        question:
-          "Do you have any personal, financial or other problem that is affecting your training or work?",
-        type: "textarea" as const,
-        required: true,
-      },
-    ],
-  },
-
-  {
-    id: "relationship-job-satisfaction",
-    title: "G. Relationship & Job Satisfaction",
-    questions: [
-      {
-        id: "staff-relationship",
-        question:
-          "Are you comfortable with the trainers, supervisors, Sir/Madam and other company staff?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "training-happiness",
-        question:
-          "Overall, are you happy with the training and interested in continuing the job after completing your training?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "leave-company",
-        question:
-          "Do you have any plan to leave the company after completing your training?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No", "Not sure"],
-      },
-      {
-        id: "leave-travel",
-        question:
-          "Do you have any leave or travel plans during or immediately after your training?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "family-aware",
-        question:
-          "Are your family members aware that you have joined this company and are staying here for training/work?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "family-support",
-        question:
-          "Is your family supportive of you continuing this job?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Yes",
-          "No",
-          "Some concerns",
-        ],
-      },
-      {
-        id: "other-offer",
-        question:
-          "Have you received any offer from another company or employer recently?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "considering-job",
-        question:
-          "Are you considering another job at the moment?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "unhappy",
-        question:
-          "Is there anything about the job, training, hostel, salary or company that you are unhappy about?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "expected-company",
-        question:
-          "Is there anything you expected from the company that has not been provided yet?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "concern",
-        question:
-          "Do you have any question or concern that you would like the company to address?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "recommend",
-        question:
-          "Would you recommend this training/job opportunity to someone you know?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No", "Maybe"],
-      },
-    ],
-  },
-];
-const sickQuestionGroups = [
-  {
-    id: "own-accommodation",
-    title: "HCP Sick — Own Accommodation",
-    questions: [
-      {
-        id: "feeling",
-        question:
-          "How are you feeling now? Are you feeling better compared with yesterday?",
-        type: "select" as const,
-        required: true,
-        options: ["Better", "Same", "Worse"],
-      },
-      {
-        id: "unwell-date",
-        question:
-          "When did you start feeling unwell?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "doctor-treatment",
-        question:
-          "Have you seen a doctor or taken any treatment?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "treatment-type",
-        question:
-          "If yes, what treatment was taken?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Doctor consultation",
-          "Medication",
-          "Other",
-        ],
-      },
-      {
-        id: "doctor-rest",
-        question:
-          "Has the doctor advised you to take rest or avoid work?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "rest-until",
-        question:
-          "If yes, until when?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "return-duty",
-        question:
-          "When do you expect to be well enough and ready to return to duty?",
-        type: "textarea" as const,
-        required: true,
-      },
-    ],
-  },
-
-  {
-    id: "company-hostel",
-    title: "HCP Sick — Staying in Company Hostel",
-    questions: [
-      {
-        id: "sick-start-date",
-        question:
-          "When did you first start feeling unwell?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "sick-start-time",
-        question:
-          "What time did you first start feeling unwell?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "current-condition",
-        question:
-          "What is your current condition?",
-        type: "select" as const,
-        required: true,
-        options: ["Better", "Same", "Worse"],
-      },
-      {
-        id: "doctor-hospital",
-        question:
-          "Have you been seen by a doctor or taken to a hospital/clinic?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "hospital-clinic",
-        question:
-          "Hospital/Clinic:",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "hospital-date",
-        question:
-          "Date of hospital/clinic visit:",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "company-staff",
-        question:
-          "Was company staff involved in taking or accompanying you?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "consultation",
-        question:
-          "Did you complete the doctor consultation?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "tests",
-        question:
-          "Were any tests or investigations advised?",
-        type: "select" as const,
-        required: true,
-        options: [
-          "Yes",
-          "No",
-          "Not required",
-        ],
-      },
-      {
-        id: "medication",
-        question:
-          "Did the doctor prescribe any medication?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "rest-advised",
-        question:
-          "Did the doctor advise you to take rest?",
-        type: "select" as const,
-        required: true,
-        options: ["Yes", "No"],
-      },
-      {
-        id: "rest-date",
-        question:
-          "If rest was advised, until what date?",
-        type: "textarea" as const,
-        required: true,
-      },
-      {
-        id: "return-support",
-        question:
-          "How are you feeling now, and when do you think you will be ready to return to duty? Do you need any support from the company while staying in the hostel?",
-        type: "textarea" as const,
-        required: true,
-      },
-    ],
-  },
-];
-const feedbackSections: FeedbackSection[] = [
-  /* =======================================================
-     ROLE 1
-  ======================================================= */
-
-  {
-    id: "role-1-24-hours",
-    role: "Role 1",
-    title: "Role 1 — 24hrs Activity of One Patient",
-    description:
-      "Record the HCA's activity for the 24-hour patient-care schedule.",
-    visibleFor: ["Active"],
-
-    questions: role1Activities.map(
-      (activity, index) => ({
-        id: `role1-${index + 1}`,
-question:
-  `${activity.time} — ${activity.activity}\n\nRecord the actual activity / observation.`,
-        type: "textarea" as const,
-        required: true,
-      })
-    ),
-  },
-
-  /* =======================================================
-     ROLE 2
-  ======================================================= */
-...role2Groups.map(
-  (group): FeedbackSection => ({
-    id: `role-2-${group.id}`,
-
-    role: "Role 2",
-
-    title: group.title,
-
-    description:
-      "Family Background Analysis and job need.",
-
-    visibleFor: [
-      "Active",
-      "Bench",
-      "Training",
-      "Sick",
-      "Leave",
-    ],
-
-    questions: group.questions.map(
-      (question) => {
-        role2QuestionNumber++;
-
-        return {
-          id: `role2-${group.id}-${role2QuestionNumber}`,
-
-          question,
-
-          type: "textarea" as const,
-
-          required: true,
-
-          subLabel: `${role2QuestionNumber}`,
-        };
-      }
-    ),
-  })
-),
-/* =======================================================
-   BENCH
-======================================================= */
-
-{
-  id: "hca-bench-questionnaire",
-  role: "HCA Status Review",
-  title: "HCP Bench Calling Questionnaire",
-  description:
-    "Check availability, placement readiness, preferences and caregiving experience.",
-  visibleFor: ["Bench"],
-  questions: benchQuestions,
-},
-
-/* =======================================================
-   TRAINING
-======================================================= */
-
-...trainingQuestionGroups.map(
-  (group): FeedbackSection => ({
-    id: `hca-training-${group.id}`,
-    role: "HCA Status Review",
-    title: `HCA Training & Welfare — ${group.title}`,
-    description:
-      "Training, employment, welfare and job-satisfaction follow-up.",
-    visibleFor: ["Training"],
-    questions: group.questions.map(
-      (question) => ({
-        id: `training-${group.id}-${question.id}`,
-        question: question.question,
-        type: question.type,
-        required: question.required,
-        options: question.options,
-      })
-    ),
-  })
-),
-
-/* =======================================================
-   SICK
-======================================================= */
-
-...sickQuestionGroups.map(
-  (group): FeedbackSection => ({
-    id: `hca-sick-${group.id}`,
-    role: "HCA Status Review",
-    title: group.title,
-    description:
-      "Sick status welfare and return-to-duty follow-up.",
-    visibleFor: ["Sick"],
-    questions: group.questions.map(
-      (question) => ({
-        id: `sick-${group.id}-${question.id}`,
-        question: question.question,
-        type: question.type,
-        required: question.required,
-        options: question.options,
-      })
-    ),
-  })
-),
-  /* =======================================================
-     ROLE 3
-  ======================================================= */
-
-  {
-    id: "role-3-welfare",
-    role: "Role 3",
-    title:
-      "Role 3 — Welfare Parameters Analysis at Client Place",
-    description:
-      "Analyze welfare, safety, rest, privacy and support at the client's place.",
-    visibleFor: ["Active"],
-
-    questions: role3Questions.map(
-      (item, index) => ({
-        id: `role3-${item.id}`,
-        question:
-          `${index + 1}. ${item.parameter}\n\n${item.question}`,
-        type: "textarea" as const,
-        required: true,
-      })
-    ),
-  },
-
-  /* =======================================================
-     RANDOM HCA CALL
-  ======================================================= */
-
-  ...randomCallGroups.map(
-    (group): FeedbackSection => ({
-      id: `random-call-${group.id}`,
-      role: "Random HCA Call",
-      title: `Random HCA Call — ${group.title}`,
-      description:
-        "Random HCA call for placement, wellbeing and retention monitoring.",
-      visibleFor: ["Active"],
-
-      questions: group.questions.map(
-        (question, index) => ({
-          id: `random-${group.id}-${index + 1}`,
-          question,
-          type: "textarea" as const,
-          required: true,
-        })
-      ),
-    })
-  ),
-
-  /* =======================================================
-     TERMINATION
-  ======================================================= */
-
-  {
-    id: "termination",
-    role: "Termination",
-    title: "Termination",
-    description:
-      "Identify and document the reason for termination.",
-
-    visibleFor: ["Terminated"],
-
-    questions: terminationQuestions.map(
-      (item, index) => ({
-        id: `termination-${item.id}`,
-
-        question: item.mandatory
-          ? `MANDATORY — ${item.question}`
-          : item.question,
-
-        type: item.options
-          ? ("select" as const)
-          : ("textarea" as const),
-
-        required: true,
-
-        options: item.options,
-
-        subLabel: item.mandatory
-          ? undefined
-          : `${index + 1}`,
-      })
-    ),
-  },
-];
 
 /* In-memory only: avoid persistent storage for potentially sensitive feedback. */
 const QUALITY_CACHE_TTL_MS = 30_000;
@@ -1814,7 +312,14 @@ const HCAFeedback: React.FC = () => {
   const UserFullInfo = useSelector(
     (state: any) => state.AdminFullInfo
   );
+const [feedbackSections, setFeedbackSections] =
+  useState<FeedbackSection[]>([]);
 
+const [trashQuestions, setTrashQuestions] =
+  useState<any[]>([]);
+
+const [questionsLoading, setQuestionsLoading] =
+  useState(true);
   const [isChecking, setIsChecking] =
     useState(false);
   const [popupMessage, setPopupMessage] = useState("");
@@ -1901,7 +406,52 @@ const yearOptions = useMemo(() => {
     (_, index) => endYear - index
   );
 }, []);
+useEffect(() => {
+  let cancelled = false;
 
+  const loadQuestions = async () => {
+    try {
+      const response = await axios.get(
+        "/api/HCPQualityQuestions"
+      );
+
+      if (cancelled) return;
+
+      const config = response.data?.data;
+
+      if (config && Array.isArray(config.sections)) {
+        setFeedbackSections(config.sections);
+
+        setTrashQuestions(
+          Array.isArray(config.trashQuestions)
+            ? config.trashQuestions
+            : []
+        );
+      } else {
+        // MongoDB is empty: retain defaults temporarily
+        // until the user runs the one-time initialization.
+        setFeedbackSections([]);
+        setTrashQuestions([]);
+      }
+    } catch (error) {
+      console.error("HCP Questions Loading Error:", error);
+
+      if (!cancelled) {
+        setPopupMessage("Unable to load questions from MongoDB.");
+      }
+    } finally {
+      if (!cancelled) {
+        setQuestionsLoading(false);
+      }
+    }
+  };
+
+  loadQuestions();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
 useEffect(() => {
   let cancelled = false;
   if (!hcaData.length) {
@@ -1910,6 +460,10 @@ useEffect(() => {
       cancelled = true;
     };
   }
+
+
+
+
 
   const fetchStatuses = async () => {
     try {
@@ -2021,7 +575,14 @@ useEffect(() => {
      CURRENT MONTH
   ======================================================= */
 
-
+const activeFeedbackSections = useMemo(() => {
+  return feedbackSections.map((section) => ({
+    ...section,
+  questions: (section.questions ?? []).filter(
+  (question: any) => question.active !== false
+),
+  }));
+}, [feedbackSections]);
 
   /* =======================================================
      USER ID
@@ -2491,10 +1052,14 @@ if (role === "HCA Status Review") {
 const getHCAFeedbackStatus = (
   item: any
 ): FeedbackStatus => {
+
+  // Wait until questions are loaded
+  if (questionsLoading) {
+    return "Pending";
+  }
+
   const status = item?.CurrentStatus as HCAStatus;
 
-  // Use the same main-role completion rules as the table:
-  // Role 2 is lifetime; the other applicable roles are monthly.
   const mainRoles: FeedbackRole[] = [
     "Role 1",
     "Role 2",
@@ -2508,6 +1073,7 @@ const getHCAFeedbackStatus = (
     feedbackSections.some(
       (section) =>
         section.role === role &&
+        Array.isArray(section.visibleFor) &&
         section.visibleFor.includes(status)
     )
   );
@@ -2604,8 +1170,7 @@ const completedCount = hcaData.filter(
             );
 
           const matchesFeedbackStatus =
-            feedbackStatus ===
-            feedbackFilter;
+            feedbackStatus ===feedbackFilter;
 const preferredWorkingState =
             item?.PreferdWorkingStatus || "Telangana";
           const matchesServiceState =
@@ -2629,7 +1194,8 @@ const preferredWorkingState =
   savedFeedback,
   SelectedServiceStates
     ]);
-
+console.log("Hcp Data----",filteredHCAData)
+console.log ("Find-----",hcaData)
   /* =======================================================
      START FEEDBACK
   ======================================================= */
@@ -2840,12 +1406,22 @@ existingFeedback={
   // if (isChecking) {
   //   return <LoadingData />;
   // }
+
 if (showQuestionManager) {
   return (
     <QualityQuestionManager
-      onBack={() => setShowQuestionManager(false)}       sections={feedbackSections}   />
+      onBack={() => setShowQuestionManager(false)}
+      sections={feedbackSections}
+      trashQuestions={trashQuestions}
+      onSaveConfig={(updatedSections, updatedTrash) => {
+        setFeedbackSections(updatedSections);
+        setTrashQuestions(updatedTrash);
+      }}
+    />
   );
 }
+
+
   /* =======================================================
      MAIN UI
   ======================================================= */
@@ -2899,33 +1475,61 @@ if (showQuestionManager) {
     QUESTION MANAGEMENT
 ===================================================== */}
 
-<div className="flex justify-end">
 
-  <button
-    type="button"
-    onClick={() =>
-      setShowQuestionManager(true)
-    }
-    className="
-      inline-flex items-center gap-2
-      rounded-xl
-      border border-[#1392d3]/20
-      bg-[#1392d3]/10
-      px-4 py-2.5
-      text-sm font-semibold
-      text-[#1392d3]
-      transition
-      hover:bg-[#1392d3]/15
-    "
-  >
+<div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
 
-    <Settings2 size={18} />
+  {/* Left: Section Info */}
+  <div className="flex items-center gap-2">
+    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1392d3]/10">
+      <Settings2 size={18} className="text-[#1392d3]" />
+    </div>
 
-    Manage Questions
+    <div>
+      <p className="text-sm font-semibold text-slate-800">
+        Question Management
+      </p>
+      <p className="text-xs text-slate-500">
+        Manage and customize questions
+      </p>
+    </div>
+  </div>
 
-  </button>
+  {/* Right: Loading + Action */}
+  <div className="flex items-center gap-3">
 
+    {questionsLoading && (
+      <div className="flex items-center gap-2 text-xs font-medium text-[#1392d3]">
+        <Loader2 size={14} className="animate-spin" />
+        Loading questions...
+      </div>
+    )}
+
+    <button
+      type="button"
+      onClick={() => setShowQuestionManager(true)}
+      disabled={questionsLoading}
+      className="
+        inline-flex items-center gap-2
+        rounded-xl
+        bg-gradient-to-r from-[#1392d3] to-[#087bb8]
+        px-4 py-2.5
+        text-sm font-semibold text-white
+        shadow-md shadow-[#1392d3]/20
+        transition-all duration-200
+        hover:-translate-y-0.5
+        hover:shadow-lg hover:shadow-[#1392d3]/30
+        active:translate-y-0
+        disabled:cursor-not-allowed disabled:opacity-50
+      "
+    >
+      <Settings2 size={17} />
+      Manage Questions
+      <ChevronRight size={16} />
+    </button>
+
+  </div>
 </div>
+
       {/* =====================================================
           MAIN CARD
       ===================================================== */}
@@ -3235,6 +1839,8 @@ if (showQuestionManager) {
   RequiredFilterData={ImportedData}
   UserFullInfo={UserFullInfo}
 
+  feedbackSections={feedbackSections}
+
   getUserId={getUserId}
   getCompletedSectionIds={getCompletedSectionIds}
 
@@ -3262,7 +1868,7 @@ interface HCATableProps {
   data: any[];
   RequiredFilterData: any[];
   UserFullInfo: any[];
-
+feedbackSections: FeedbackSection[]; // ADD THIS
   getUserId: (item: any) => string;
 
   getCompletedSectionIds: (
@@ -3297,6 +1903,7 @@ interface HCATableProps {
 const HCATable: React.FC<HCATableProps> = ({
   data,
   UserFullInfo,
+   feedbackSections,
   getUserId,
   getCompletedSectionIds,
   onStartFeedback,
@@ -3388,14 +1995,14 @@ const mainRoles: FeedbackRole[] = [
   "Termination",
 ];
 
-const applicableRoles = mainRoles.filter((role) =>
-  feedbackSections.some(
-    (section) =>
-      section.role === role &&
-      section.visibleFor.includes(status)
-  )
+const applicableRoles: FeedbackRole[] = mainRoles.filter(
+  (role: FeedbackRole) =>
+    feedbackSections.some(
+      (section: FeedbackSection) =>
+        section.role === role &&
+        section.visibleFor.includes(status)
+    )
 );
-
 const applicableCount = applicableRoles.length;
 const completedCount = Math.min(
   getCompletedMainSectionsCount(item),

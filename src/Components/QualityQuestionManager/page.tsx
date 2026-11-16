@@ -38,6 +38,7 @@ import {
   ToggleLeft,
   ToggleRight,
 } from "lucide-react";
+import axios from "axios";
 interface ManagedQuestion {
   id: string;
   question: string;
@@ -54,41 +55,45 @@ interface ManagedQuestion {
 interface QualityQuestionManagerProps {
   onBack: () => void;
   sections: any[];
+  trashQuestions: ManagedQuestion[];
+  onSaveConfig: (
+    sections: any[],
+    trashQuestions: ManagedQuestion[]
+  ) => void;
 }
-
 const QualityQuestionManager: FC<
   QualityQuestionManagerProps
-> = ({ onBack, sections }) => {
+> = ({
+  onBack,
+  sections,
+  trashQuestions: initialTrash,
+  onSaveConfig,
+}) => {
   /* =========================================================
      INITIAL QUESTIONS
      Taking the existing hard-coded sections
   ========================================================= */
 
   const initialQuestions: ManagedQuestion[] = useMemo(() => {
-    const result: ManagedQuestion[] = [];
+  const result: ManagedQuestion[] = [];
 
-    sections.forEach((section:any) => {
-      section.questions.forEach((question:any, index:any) => {
-        result.push({
-          id: question.id,
-          question: question.question,
-          type: question.type,
-          required: question.required ?? false,
-          options: question.options
-            ? [...question.options]
-            : [],
-          subLabel: question.subLabel,
-          active: true,
-          role: section.role,
-          sectionId: section.id,
-          sectionTitle: section.title,
-          order: index + 1,
-        });
+  sections.forEach((section: any) => {
+    section.questions.forEach((question: any, index: number) => {
+      result.push({
+        ...question,
+        active: question.active !== false,
+        role: section.role,
+        sectionId: section.id,
+        sectionTitle: section.title,
+        order: question.order ?? index + 1,
+        options: question.options ?? [],
       });
     });
+  });
 
-    return result;
-  }, [sections]);
+  return result;
+}, [sections]);
+
 
   const [questions, setQuestions] =
     useState<ManagedQuestion[]>(initialQuestions);
@@ -146,7 +151,45 @@ const QualityQuestionManager: FC<
   /* =========================================================
      SECTIONS
   ========================================================= */
+const persistChanges = async (
+  nextQuestions: ManagedQuestion[],
+  nextTrash: ManagedQuestion[]
+) => {
+  try {
+    const updatedSections = sections.map((section: any) => ({
+      ...section,
 
+      questions: nextQuestions
+        .filter((question) => question.sectionId === section.id)
+        .sort((a, b) => a.order - b.order)
+        .map(({ role, sectionId, sectionTitle, ...question }) => question),
+    }));
+
+    const response = await axios.put(
+      "/api/HCPQualityQuestions",
+      {
+        sections: updatedSections,
+        trashQuestions: nextTrash,
+      }
+    );
+
+    if (!response.data.success) {
+      throw new Error("Unable to save questions");
+    }
+
+    setQuestions(nextQuestions);
+    setTrashQuestions(nextTrash);
+
+    onSaveConfig(updatedSections, nextTrash);
+
+    return true;
+  } catch (error) {
+    console.error("Question Save Error:", error);
+    alert("Failed to save questions. Please try again.");
+
+    return false;
+  }
+};
   const filteredSections = useMemo(() => {
     if (form.role === "All") {
       return sections;
@@ -286,249 +329,194 @@ const QualityQuestionManager: FC<
      SAVE QUESTION
   ========================================================= */
 
-  const saveQuestion = () => {
+ const saveQuestion = async () => {
+  if (!form.question.trim()) {
+    alert("Please enter question text.");
+    return;
+  }
 
-    if (!form.question.trim()) {
-      alert("Please enter question text.");
-      return;
-    }
+  if (!form.sectionId) {
+    alert("Please select a section.");
+    return;
+  }
 
-    if (!form.sectionId) {
-      alert("Please select a section.");
-      return;
-    }
+  const options =
+    form.type === "select"
+      ? form.options.map((item) => item.trim()).filter(Boolean)
+      : [];
 
-    if (
-      form.type === "select" &&
-      form.options.filter(
-        (option) => option.trim()
-      ).length === 0
-    ) {
-      alert(
-        "Please add at least one dropdown option."
-      );
-      return;
-    }
+  if (form.type === "select" && options.length === 0) {
+    alert("Please add at least one dropdown option.");
+    return;
+  }
 
-    const selectedSection =
-      sections.find(
-        (section:any) =>
-          section.id ===
-          form.sectionId
-      );
+  const selectedSection = sections.find(
+    (section: any) => section.id === form.sectionId
+  );
 
-    if (!selectedSection) {
-      alert("Section not found.");
-      return;
-    }
+  if (!selectedSection) {
+    alert("Section not found.");
+    return;
+  }
 
-    /* =====================================================
-       EDIT
-    ===================================================== */
+  let nextQuestions: ManagedQuestion[];
 
-    if (editingQuestion) {
-
-      setQuestions((previous) =>
-        previous.map((question) => {
-
-          if (
-            question.id !==
-            editingQuestion.id
-          ) {
-            return question;
-          }
-
-          return {
+  if (editingQuestion) {
+    nextQuestions = questions.map((question) =>
+      question.id === editingQuestion.id
+        ? {
             ...question,
-            question:
-              form.question.trim(),
+            question: form.question.trim(),
             role: form.role,
-            sectionId:
-              form.sectionId,
-            sectionTitle:
-              selectedSection.title,
+            sectionId: form.sectionId,
+            sectionTitle: selectedSection.title,
             type: form.type,
-            required:
-              form.required,
-            options:
-              form.type === "select"
-                ? form.options
-                    .map((item) =>
-                      item.trim()
-                    )
-                    .filter(Boolean)
-                : [],
-          };
-        })
-      );
+            required: form.required,
+            options,
+          }
+        : question
+    );
+  } else {
+    const sectionQuestions = questions.filter(
+      (q) => q.sectionId === form.sectionId
+    );
 
-    }
+    const newQuestion: ManagedQuestion = {
+      id: `question-${Date.now()}`,
+      question: form.question.trim(),
+      type: form.type,
+      required: form.required,
+      options,
+      active: true,
+      role: form.role,
+      sectionId: form.sectionId,
+      sectionTitle: selectedSection.title,
+      order: sectionQuestions.length + 1,
+    };
 
-    /* =====================================================
-       ADD
-    ===================================================== */
+    nextQuestions = [...questions, newQuestion];
+  }
 
-    else {
+  const saved = await persistChanges(
+    nextQuestions,
+    trashQuestions
+  );
 
-      const newId =
-        `question-${Date.now()}`;
-
-      const sectionQuestions =
-        questions.filter(
-          (question) =>
-            question.sectionId ===
-            form.sectionId
-        );
-
-      const newQuestion: ManagedQuestion =
-        {
-          id: newId,
-          question:
-            form.question.trim(),
-          type: form.type,
-          required:
-            form.required,
-          options:
-            form.type === "select"
-              ? form.options
-                  .map((item) =>
-                    item.trim()
-                  )
-                  .filter(Boolean)
-              : [],
-          active: true,
-          role: form.role,
-          sectionId:
-            form.sectionId,
-          sectionTitle:
-            selectedSection.title,
-          order:
-            sectionQuestions.length + 1,
-        };
-
-      setQuestions((previous) => [
-        ...previous,
-        newQuestion,
-      ]);
-    }
-
+  if (saved) {
     setShowModal(false);
     setEditingQuestion(null);
-  };
-
+  }
+};
   /* =========================================================
      MOVE QUESTION TO TRASH
   ========================================================= */
 
-  const confirmDelete = () => {
-    if (!deleteQuestion) {
-      return;
-    }
+const confirmDelete = async () => {
+  if (!deleteQuestion) return;
 
-    // Remove from the active question list and move the complete
-    // question object into Trash so it can be restored later.
-    setQuestions((previous) =>
-      previous.filter(
-        (question) =>
-          question.id !== deleteQuestion.id
-      )
-    );
+  const nextQuestions = questions.filter(
+    (q) => q.id !== deleteQuestion.id
+  );
 
-    setTrashQuestions((previous) => [
-      ...previous,
-      {
-        ...deleteQuestion,
-        active: false,
-      },
-    ]);
+  const nextTrash = [
+    ...trashQuestions,
+    {
+      ...deleteQuestion,
+      active: false,
+    },
+  ];
 
+  const saved = await persistChanges(
+    nextQuestions,
+    nextTrash
+  );
+
+  if (saved) {
     setDeleteQuestion(null);
-  };
+  }
+};
 
   /* =========================================================
      RESTORE QUESTION FROM TRASH
   ========================================================= */
 
-  const restoreQuestion = (question: ManagedQuestion) => {
-    const sectionQuestions = questions.filter(
-      (item) => item.sectionId === question.sectionId
-    );
+const restoreQuestion = async (
+  question: ManagedQuestion
+) => {
+  const nextTrash = trashQuestions.filter(
+    (q) => q.id !== question.id
+  );
 
-    const restoredQuestion: ManagedQuestion = {
-      ...question,
-      active: true,
-      order: sectionQuestions.length + 1,
-    };
+  const sectionQuestions = questions.filter(
+    (q) => q.sectionId === question.sectionId
+  );
 
-    setQuestions((previous) => [
-      ...previous,
-      restoredQuestion,
-    ]);
-
-    setTrashQuestions((previous) =>
-      previous.filter(
-        (item) => item.id !== question.id
-      )
-    );
+  const restoredQuestion = {
+    ...question,
+    active: true,
+    order: sectionQuestions.length + 1,
   };
+
+  await persistChanges(
+    [...questions, restoredQuestion],
+    nextTrash
+  );
+};
 
   /* =========================================================
      PERMANENTLY DELETE FROM TRASH
   ========================================================= */
 
-  const permanentlyDeleteQuestion = (
-    question: ManagedQuestion
-  ) => {
-    setTrashQuestions((previous) =>
-      previous.filter(
-        (item) => item.id !== question.id
-      )
-    );
-  };
+  const permanentlyDeleteQuestion = async (
+  question: ManagedQuestion
+) => {
+  const nextTrash = trashQuestions.filter(
+    (q) => q.id !== question.id
+  );
 
+  await persistChanges(questions, nextTrash);
+};
   /* =========================================================
      RESTORE ALL QUESTIONS
   ========================================================= */
 
-  const restoreAllQuestions = () => {
-    if (trashQuestions.length === 0) {
-      return;
-    }
+const restoreAllQuestions = async () => {
+  if (!trashQuestions.length) return;
 
-    setQuestions((previous) => {
-      const restored = trashQuestions.map((question, index) => ({
-        ...question,
-        active: true,
-        order: previous.length + index + 1,
-      }));
+  const restored = trashQuestions.map((question) => {
+    const sectionQuestions = questions.filter(
+      (q) => q.sectionId === question.sectionId
+    );
 
-      return [...previous, ...restored];
-    });
+    return {
+      ...question,
+      active: true,
+      order: sectionQuestions.length + 1,
+    };
+  });
 
-    setTrashQuestions([]);
-  };
+  await persistChanges(
+    [...questions, ...restored],
+    []
+  );
+};
 
   /* =========================================================
      TOGGLE ACTIVE
   ========================================================= */
 
-  const toggleQuestionStatus = (
-    id: string
-  ) => {
+const toggleQuestionStatus = async (id: string) => {
+  const nextQuestions = questions.map((question) =>
+    question.id === id
+      ? {
+          ...question,
+          active: !question.active,
+        }
+      : question
+  );
 
-    setQuestions((previous) =>
-      previous.map((question) =>
-        question.id === id
-          ? {
-              ...question,
-              active:
-                !question.active,
-            }
-          : question
-      )
-    );
-  };
-
+  await persistChanges(nextQuestions, trashQuestions);
+};
   /* =========================================================
      ADD OPTION
   ========================================================= */
