@@ -16,6 +16,7 @@ import PaymentPopup from "@/Components/PaymentMethod/page";
 import PassbookPopup from "@/Components/Trasactions/page";
 import { ImportedinvoiceData, IndianStates, teams, } from "@/Lib/Content";
 import EmptyState from "@/Components/NoDeployments/page";
+import axios from "axios";
 
 
 type InvoiceStatus = "Draft" | "Sent" | "Overdue";
@@ -36,6 +37,7 @@ export default function InvoicesPage() {
   const [activeTeam, setActiveTeam] = useState<number | "All">("All");
   const [yearFilter, setYearFilter] =useState(String(now.getFullYear()));
     const [openTransactions, setOpenTransactions] = useState(false);
+    const [ComplteTransactionData,setComplteTransactionData]=useState()
   const [showOptions, setShowOptions] = useState(false);
   const [FetchedInfo, setFetchedInfo] = useState<any>([])
   const [isAdvancedFilterActive, setIsAdvancedFilterActive] = useState(false);
@@ -1258,9 +1260,14 @@ CheckPaymentStatus:CurrentPaymentStatus
 }
  <PassbookPopup
         open={openTransactions}
-        onClose={() => setOpenTransactions(false)}
+        onClose={() => 
+          
+          setOpenTransactions(false)
+        
+        }
         data={{
           ...invoiceTransactionData,
+          ComplteTransactionData:ComplteTransactionData,
           ClienId: (invoiceTransactionData as any).ClienId ?? "",
           StartDate:
             (invoiceTransactionData as any).StartDate ??
@@ -1728,9 +1735,18 @@ CheckPaymentStatus:CurrentPaymentStatus
                     text-gray-700
                     hover:bg-gray-50
                   "
-                  onClick={() => {
+                  onClick={async () => {
                     setOpenTransactions(true);
                     setinvoiceTransactionData(inv);
+alert(inv.ClienId)
+                    const GetData = await axios.post("api/InvoicePendingAmount", {
+                      ClienId: inv.ClienId
+                    })
+                         console.log("Check For Pending Ammount------", GetData
+
+                    )
+                    setComplteTransactionData( GetData.data)
+                  
                   }}
                 >
                   <PrinterCheck className="h-3.5 w-3.5 text-teal-700" />
@@ -2151,9 +2167,18 @@ CheckPaymentStatus:CurrentPaymentStatus
                 <PrinterCheck
                   size={17}
                   className="cursor-pointer text-teal-700 hover:text-teal-900"
-                  onClick={() => {
+                      onClick={async () => {
                     setOpenTransactions(true);
                     setinvoiceTransactionData(inv);
+
+                    const GetData = await axios.post("api/InvoicePendingAmount", {
+                      ClienId: inv.ClienId
+                    })
+     console.log("Check For Pending Ammount------", GetData
+
+                    )
+                    setComplteTransactionData( GetData.data)
+               
                   }}
                 />
 
