@@ -1,4 +1,3 @@
-
 name: Deploy Curate to Hostinger
 
 on:
@@ -21,12 +20,12 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
-          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SERVER_SSH_KEY_B64: ${{ secrets.SERVER_SSH_KEY_B64 }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          printf '%s\n' "$SERVER_SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s' "$SERVER_SSH_KEY_B64" | base64 --decode > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
           ssh-keyscan -p "$SERVER_PORT" -H "$SERVER_HOST" >> ~/.ssh/known_hosts
@@ -38,18 +37,10 @@ jobs:
               set -e
 
               cd /var/www/curate/repo-inspect
-
-              echo "Pulling latest main branch..."
               git fetch origin main
               git reset --hard origin/main
-
-              echo "Installing dependencies..."
               npm ci
-
-              echo "Building application..."
               npm run build
-
-              echo "Reloading application..."
               pm2 reload curate --update-env
 
               echo "Deployment completed successfully."
