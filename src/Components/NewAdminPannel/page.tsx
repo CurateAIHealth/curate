@@ -430,6 +430,12 @@ const UpdateCurrentstatus = async (
   e: string,
   UserId: string
 ) => {
+
+ 
+                                  if(e==="Active"){
+  setShowStatusWarning(true);
+  return;
+  }
   const previousUser = users.find(
     (user: any) => user.userId === UserId
   );
@@ -1820,10 +1826,10 @@ const UpdatePopup = async (a: any) => {
                                   onChange={(e) =>
 
                                 {
-  //                                  if(user.CurrentStatus==="Active"){
-  // setShowStatusWarning(true);
-  // return;
-  // }
+                                   if(user.CurrentStatus==="Active"){
+  setShowStatusWarning(true);
+  return;
+  }
                                     UpdateCurrentstatus(user.FirstName, e.target.value, user.userId)
                                 }
                                   }
