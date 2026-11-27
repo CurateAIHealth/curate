@@ -1,3 +1,4 @@
+
 name: Deploy Curate to Hostinger
 
 on:
@@ -22,6 +23,8 @@ jobs:
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
           SERVER_SSH_KEY_B64: ${{ secrets.SERVER_SSH_KEY_B64 }}
         run: |
+          set -e
+
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
@@ -33,15 +36,5 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 \
             -p "$SERVER_PORT" \
             -o IdentitiesOnly=yes \
-            "$SERVER_USER@$SERVER_HOST" << 'ENDSSH'
-              set -e
-
-              cd /var/www/curate/repo-inspect
-              git fetch origin main
-              git reset --hard origin/main
-              npm ci
-              npm run build
-              pm2 reload curate --update-env
-
-              echo "Deployment completed successfully."
-          ENDSSH
+            "$SERVER_USER@$SERVER_HOST" \
+            'sudo /usr/local/bin/curate-deploy'
