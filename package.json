@@ -9,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/genai": "^2.32.0",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
     "@reduxjs/toolkit": "^2.8.2",
     "@sendgrid/mail": "^8.1.5",
     "@sparticuz/chromium": "^123.0.1",
@@ -38,6 +41,7 @@
     "recharts": "^3.2.0",
     "resend": "^4.6.0",
     "swr": "^2.3.6",
+    "three": "^0.187.0",
     "twilio": "^5.8.2",
     "uuid": "^11.1.0",
     "xlsx": "^0.18.5"
@@ -50,6 +54,7 @@
     "@types/nodemailer": "^7.0.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.187.0",
     "tailwindcss": "^4.1.11",
     "typescript": "^5"
   }

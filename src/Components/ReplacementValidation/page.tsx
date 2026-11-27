@@ -3078,8 +3078,7 @@ email || "");
     disabled={
       isReplacementUpdating ||
       otp.HCA.verified !== true ||
-      otp.CLIENT.verified !== true ||
-      !privacyConfirmed
+      otp.CLIENT.verified !== true
     }
     className="w-full sm:w-auto px-7 py-3 rounded-xl bg-[#145DA0] hover:bg-[#0F4C81] text-white font-semibold text-sm shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50"
   >
