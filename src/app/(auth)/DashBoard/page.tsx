@@ -1182,9 +1182,9 @@ const loadHolidayRoster = async (
           <div className="flex items-center gap-2 min-w-0">
             <img src="/Icons/Curate-logo.png" alt="logo" className="w-8 h-8" />
             <h1 className="text-[15px] truncate font-normal">
-              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard......
+              Hi {ProfileName || "Admin"} – Welcome to Admin Dashboard
             </h1>
-            <button onClick={()=>router.push("/TestEnv")}>Try</button>
+           
 
           </div>
 
